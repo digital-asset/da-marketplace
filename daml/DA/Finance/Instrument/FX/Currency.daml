@@ -1,0 +1,29 @@
+-- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: 0BSD
+
+daml 1.2
+module DA.Finance.Instrument.FX.Currency where
+
+import DA.Next.Set
+
+import DA.Finance.Types
+
+-- | Reference data describing an equity stock.
+template Currency
+  with
+    id : Id
+      -- ^ The currency asset id.
+    isoCode : Text
+     -- ^ The ISO code of the currency.
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : Id
+    maintainer key.signatories
+
+    controller id.signatories can
+      EquityStock_SetObservers : ContractId Currency
+        with newObservers : Set Party
+        do create this with observers = newObservers

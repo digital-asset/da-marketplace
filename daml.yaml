@@ -1,0 +1,17 @@
+sdk-version: 1.3.0
+name: da-marketplace
+source: daml
+parties:
+  - Alice
+  - Bob
+  - Operator
+  - Custodian
+  - Issuer
+  - Exchange
+version: 0.0.1
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+sandbox-options:
+  - --wall-clock-time

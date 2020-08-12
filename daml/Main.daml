@@ -1,0 +1,107 @@
+daml 1.2
+
+module Main where
+
+import Marketplace.Role
+import Marketplace.Token
+import Marketplace.Trading
+import DA.Finance.Asset
+import DA.Finance.Types
+
+import DA.Next.Set
+
+
+test = scenario do
+  operator <- getParty "Operator"
+  issuer <- getParty "Issuer"
+  custodian <- getParty "Custodian"
+  exchange <- getParty "Exchange"
+
+  alice <- getParty "Alice"
+  bob <- getParty "Bob"
+
+  -- create operator
+  opCid <- operator `submit` create Operator with ..
+
+  -- onboard issuer
+  issuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with ..
+  issuer `submit` exercise issuerInvCid IssuerInvitation_Accept
+
+  -- onboard custodian
+  custodianInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardCustodian with ..
+  custodian `submit` exercise custodianInvCid CustodianInvitation_Accept
+
+  -- onboard investors
+  aliceInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = alice, ..
+  alice `submit` exercise aliceInvCid InvestorInvitation_Accept
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
+
+  bobInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = bob, ..
+  bob `submit` exercise bobInvCid InvestorInvitation_Accept
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
+
+  -- issuer issues a token
+  issuer `submit` exerciseByKey @Issuer (operator, issuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 8
+  issuer `submit` exerciseByKey @Issuer (operator, issuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2
+
+  -- alice deposits some BTC under her account and gets them in a form of a deposit
+  depositCid <- custodian `submit` exerciseByKey @Custodian (operator, custodian) CreateDeposit with tokenName = "BTC", depositQuantity = 0.01, beneficiary = alice
+
+  -- alice transfers the deposit to bob
+  depositCid <- alice `submit` exerciseByKey @Investor (operator, alice) Investor_TransferTo with receiver = bob, depositCid
+
+  -- oboard exchange
+  exchangeInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardExchange with ..
+  exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
+
+  -- bob alocates this to the exchange
+  depositCid <- bob `submit` exerciseByKey @Investor (operator, bob) Investor_AllocateToExchange with ..
+
+  -- Bob cannot claim back the asset using a transfer
+  bob `submitMustFail` exerciseByKey @Investor (operator, bob) Investor_TransferTo with receiver = bob, depositCid
+
+  -- alice deposits some USDT under her account
+  depositCid1 <- custodian `submit` exerciseByKey @Custodian (operator, custodian) CreateDeposit with tokenName = "USDT", depositQuantity = 1000.0, beneficiary = alice
+  depositCid2 <- custodian `submit` exerciseByKey @Custodian (operator, custodian) CreateDeposit with tokenName = "USDT", depositQuantity = 500.0, beneficiary = alice
+
+  -- alice merges the two assets
+  depositCid3 <- alice `submit` exercise depositCid1 AssetDeposit_Merge with depositCids = [depositCid2]
+
+  -- bob is onboarded as an exchange participant
+  (_, bobInvCid) <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = bob
+  bob `submit` exercise bobInvCid ExchangeParticipantInvitation_Accept
+
+  -- the exchange adds support for BTC/USDT pair
+  -- first the issuer discloses the tokens to everyone
+  let btcTokenId = Id with signatories = fromList [issuer], label = "BTC", version = 0
+      usdtTokenId = Id with signatories = fromList [issuer], label = "USDT", version = 0
+  issuer `submit` exerciseByKey @Token btcTokenId Token_AddObservers with party = issuer, newObservers = fromList [exchange, alice, bob]
+  issuer `submit` exerciseByKey @Token usdtTokenId Token_AddObservers with party = issuer, newObservers = fromList [exchange, alice, bob]
+  -- then the exchange adds the BTC/USDT pair to their list
+  exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+
+  -- bob places a bid for the BTC/USDT pair but he is using a deposit of bitcoin so he can only place an offer
+  bob `submitMustFail` exerciseByKey @ExchangeParticipant (exchange, bob) ExchangeParticipant_PlaceBid with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.0
+  offerOrderRequestCid <- bob `submit` exerciseByKey @ExchangeParticipant (exchange, bob) ExchangeParticipant_PlaceOffer with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.0
+  -- exchange assigns it an orderId
+  offerOrderCid <- exchange `submit` exercise offerOrderRequestCid OrderRequestAck with orderId = 1
+
+  -- alice gets onboarded as an exchange participant
+  (_, aliceInvCid) <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = alice
+  alice `submit` exercise aliceInvCid ExchangeParticipantInvitation_Accept
+
+  -- alice places a bid for the BTC/USDT pair but he is using a deposit of bitcoin so he can only place an offer
+  depositCid3 <- alice `submit` exerciseByKey @Investor (operator, alice) Investor_AllocateToExchange with depositCid = depositCid3, ..
+  bidOrderRequestCid <- alice `submit` exerciseByKey @ExchangeParticipant (exchange, alice) ExchangeParticipant_PlaceBid with depositCid = depositCid3, pair = (btcTokenId, usdtTokenId), price = 10_000.0
+  -- exchange assigns it a clorderid
+  bidOrderCid <- exchange `submit` exercise bidOrderRequestCid OrderRequestAck with orderId = 2
+
+  -- exchange matches the two orders
+  exchange `submit` exercise bidOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob
+  exchange `submit` exercise offerOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = alice
+
+  return ()

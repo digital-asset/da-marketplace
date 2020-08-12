@@ -1,0 +1,22 @@
+-- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: 0BSD
+
+daml 1.2
+module DA.Finance.RefData.Fixing where
+
+import DA.Next.Set
+import DA.Finance.Types
+
+template Fixing
+  with
+    id : Id
+    currency : Id
+    date : Date
+    value : Decimal
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+    
+    key (id, date) : (Id, Date)
+    maintainer key._1.signatories

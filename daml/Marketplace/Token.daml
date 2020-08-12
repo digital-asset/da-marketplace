@@ -1,0 +1,34 @@
+daml 1.2
+module Marketplace.Token where
+
+import DA.Next.Set
+
+import DA.Finance.Types
+
+
+-- | Reference data describing a token.
+template Token
+  with
+    id : Id
+    quantityPrecision : Int
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : Id
+    maintainer key.signatories
+
+    choice Token_AddObservers : ContractId Token
+      with
+        party : Party
+        newObservers : Set Party
+      controller party
+      do
+        assert $ member party $ union id.signatories newObservers
+        create this with observers = union observers newObservers
+
+    controller id.signatories can
+      Token_SetObservers : ContractId Token
+        with newObservers : Set Party
+        do create this with observers = newObservers

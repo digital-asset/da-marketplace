@@ -1,0 +1,26 @@
+daml 1.2
+module DA.Finance.Instrument.Equity.ACBRC where
+
+import DA.Next.Set
+import DA.Finance.Types
+
+template ACBRC
+  with
+    id : Id
+    underlyingId : Id
+    currencyId : Id
+    knockInBarrier : Decimal
+    knockInBarrierHit : Bool
+    callBarrier : Decimal
+    callBarrierHit : Bool
+    fixingDates : [Date]
+    fixingIdx : Int
+    coupon : Decimal
+    initialFixing : Decimal
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+    
+    key id : Id
+    maintainer key.signatories

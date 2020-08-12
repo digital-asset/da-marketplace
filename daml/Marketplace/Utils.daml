@@ -1,0 +1,16 @@
+daml 1.2
+module Marketplace.Utils where
+
+
+import DA.Finance.Types
+
+import DA.Next.Set
+
+getAccountId : Party -> Party -> [Party] -> Id
+getAccountId owner provider signatories = Id with
+    signatories = fromList signatories
+    label = getAccountLabel owner provider
+    version = 0
+
+getAccountLabel : Party -> Party -> Text
+getAccountLabel owner provider = show owner <> "@" <> show provider

@@ -1,0 +1,55 @@
+-- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: 0BSD
+
+daml 1.2
+module DA.Finance.Instrument.FixedIncome.FixedRateBond.Lifecycle where
+
+import DA.List
+import DA.Next.Set
+
+import DA.Finance.Asset.Lifecycle
+import DA.Finance.Instrument.FixedIncome.FixedRateBond
+import DA.Finance.Types
+import DA.Finance.Utils
+
+template FixedRateBondCouponRule
+  with
+    signatories : Set Party
+  where
+    signatory signatories
+
+    key signatories : Set Party
+    maintainer key
+
+    controller signatories can
+      nonconsuming BondCoupon_Lifecycle : (ContractId FixedRateBond, ContractId LifecycleEffects)
+        with
+          bondCid : ContractId FixedRateBond
+        do
+          bond <- fetchAndArchive bondCid
+
+          assertMsg "product already expired" $ bond.couponIdx < length bond.couponDates
+          assertOnOrAfterDateMsg "expects coupon date <= now" $ bond.couponDates!!bond.couponIdx
+          
+          let
+            isRedemption = bond.couponIdx == length bond.couponDates - 1
+            redemptionAmount = 1.0
+            newBondId = bond.id with version = bond.id.version + 1
+            effects
+              | isRedemption =
+                [ Asset with id = bond.currencyId, quantity = bond.coupon
+                , Asset with id = bond.currencyId, quantity = redemptionAmount ]
+              | otherwise =
+                [ Asset with id = newBondId, quantity = 1.0
+                , Asset with id = bond.currencyId, quantity = bond.coupon ]
+          
+          newBondCid <- create bond with
+            id = newBondId
+            couponIdx = bond.couponIdx + 1
+          lifecycleEffectsCid <- create LifecycleEffects with
+            id = bond.id
+            label = if isRedemption then "Redemption" else "Coupon Payment"
+            consuming = []
+            effects
+            observers = bond.observers
+          pure (newBondCid, lifecycleEffectsCid)
