@@ -30,9 +30,9 @@ class EXBERRY:
 
 
 class MARKETPLACE:
-    OrderRequest = 'Marketplace.Trading.OrderRequest'
-    OrderCancelRequest = 'Marketplace.Trading.OrderCancelRequest'
-    Order = 'Marketplace.Trading.Order'
+    OrderRequest = 'Marketplace.Trading:OrderRequest'
+    OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
+    Order = 'Marketplace.Trading:Order'
 
 
 def main():
