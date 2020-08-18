@@ -33,6 +33,9 @@ template OrderCancelRequest
   where
     signatory order.operator, order.exchange, order.exchParticipant
 
+    key (order.exchange, order.orderId) : (Party, Int)
+    maintainer key._1
+
     controller order.exchange can
       OrderCancelAck : ()
         do exerciseByKey @Order (order.exchange, order.orderId) OrderCancel

@@ -2,7 +2,7 @@ import logging
 import os
 
 import dazl
-from dazl import create, exercise
+from dazl import create, exercise, exercise_by_key
 
 
 dazl.setup_default_logger(logging.INFO)
@@ -103,41 +103,26 @@ def main():
     def handle_order_cancel_request(event):
         order = event.cdata['order']
         return create(EXBERRY.CancelOrderRequest, {
-            'order': {
-                'orderType': 'Limit',
-                'instrument': make_instrument(order['pair']),
-                'quantity': float(order['qty']),
-                'price': float(order['price']),
-                'side': 'Buy' if order['isBid'] else 'Sell',
-                'timeInForce': 'GTC',
-                'brokerOrderId': order['orderId'],
-                'userId': make_user_user_id(order['exchParticipant']),
-            },
-            'integrationParty': client.party
+            'integrationParty': client.party,
+            'instrument': make_instrument(order['pair']),
+            'brokerOrderId': order['orderId'],
+            'userId': make_user_user_id(order['exchParticipant'])
         })
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderSuccess)
     async def handle_cancel_order_success(event):
-        order = sid_to_order.pop(event.cdata['sid'])
-
-        req_cid, _ = await client.find_one(MARKETPLACE.OrderCancelRequest, {
-            'order': order
-        })
-
-        return [exercise(req_cid, 'OrderCancelAck', {}),
+        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
+                                {'_1': client.party, '_2': event.cdata['sid']},
+                                'OrderCancelAck', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderFailure)
     async def handle_cancel_order_failure(event):
-        order = sid_to_order.pop(event.cdata['sid'])
-
-        req_cid, _ = await client.find_one(MARKETPLACE.OrderCancelRequest, {
-            'order': order
-        })
-
-        return [exercise(req_cid, 'OrderCancelReject', {}),
+        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
+                                {'_1': client.party, '_2': event.cdata['sid']},
+                                'OrderCancelReject', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
