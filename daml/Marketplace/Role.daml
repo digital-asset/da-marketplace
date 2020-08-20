@@ -186,6 +186,9 @@ template ExchangeParticipant
             $ pair `elem` exchangeCdata.tokenPairs
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token pair._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
           let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
               order = Order with isBid = True, status = "New", orderId = -1, ..
@@ -205,6 +208,9 @@ template ExchangeParticipant
             $ pair `elem` exchangeCdata.tokenPairs
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token pair._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
           let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
               order = Order with isBid = False, status = "New", orderId = -1, ..

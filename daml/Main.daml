@@ -47,7 +47,7 @@ test = scenario do
   custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
 
   -- issuer issues a token
-  btcIssuer `submit` exerciseByKey @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 8
+  btcIssuer `submit` exerciseByKey @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6
   usdtIssuer `submit` exerciseByKey @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2
 
   let btcTokenId = Id with signatories = fromList [ btcIssuer ], label = "BTC", version = 0
@@ -92,7 +92,7 @@ test = scenario do
 
   -- bob places a bid for the BTC/USDT pair but he is using a deposit of bitcoin so he can only place an offer
   bob `submitMustFail` exerciseByKey @ExchangeParticipant (exchange, bob) ExchangeParticipant_PlaceBid with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.0
-  offerOrderRequestCid <- bob `submit` exerciseByKey @ExchangeParticipant (exchange, bob) ExchangeParticipant_PlaceOffer with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.0
+  offerOrderRequestCid <- bob `submit` exerciseByKey @ExchangeParticipant (exchange, bob) ExchangeParticipant_PlaceOffer with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.00
   -- exchange assigns it an orderId
   offerOrderCid <- exchange `submit` exercise offerOrderRequestCid OrderRequestAck with orderId = 1
 
@@ -102,12 +102,12 @@ test = scenario do
 
   -- alice places a bid for the BTC/USDT pair but he is using a deposit of bitcoin so he can only place an offer
   depositCid3 <- alice `submit` exerciseByKey @Investor (operator, alice) Investor_AllocateToExchange with depositCid = depositCid3, ..
-  bidOrderRequestCid <- alice `submit` exerciseByKey @ExchangeParticipant (exchange, alice) ExchangeParticipant_PlaceBid with depositCid = depositCid3, pair = (btcTokenId, usdtTokenId), price = 10_000.0
+  bidOrderRequestCid <- alice `submit` exerciseByKey @ExchangeParticipant (exchange, alice) ExchangeParticipant_PlaceBid with depositCid = depositCid3, pair = (btcTokenId, usdtTokenId), price = 10000.00
   -- exchange assigns it a clorderid
   bidOrderCid <- exchange `submit` exercise bidOrderRequestCid OrderRequestAck with orderId = 2
 
   -- exchange matches the two orders
   exchange `submit` exercise bidOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob
-  exchange `submit` exercise offerOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = alice
+  exchange `submit` exercise offerOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice
 
   return ()
