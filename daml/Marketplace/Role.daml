@@ -22,20 +22,19 @@ template Operator
     maintainer key
 
     controller operator can
-      nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
-        with
-          issuer : Party
-        do create IssuerInvitation with ..
-
       nonconsuming Operator_OnboardCustodian : ContractId CustodianInvitation
         with
           custodian : Party
-          issuer : Party
         do
-          (issuerCid, issuerCdata) <- fetchByKey @Issuer (operator, issuer)
-          exercise issuerCid Issuer_SetObservers
-            with ctrl = operator, newObservers = insert custodian issuerCdata.observers
           create CustodianInvitation with ..
+
+      nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
+        with
+          issuer : Party
+          custodian : Party
+        do
+          exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with ..
+          create IssuerInvitation with ..
 
       nonconsuming Operator_OnboardInvestor : ContractId InvestorInvitation
         with
@@ -216,11 +215,12 @@ template IssuerInvitation
   with
     operator : Party
     issuer : Party
+    custodian : Party
   where
     signatory operator
     controller issuer can
       IssuerInvitation_Accept : ContractId Issuer
-        do create Issuer with observers = empty, ..
+        do create Issuer with observers = fromList [custodian], ..
 
 
 template Issuer
@@ -259,20 +259,19 @@ template CustodianInvitation
   with
     operator : Party
     custodian : Party
-    issuer : Party
   where
     signatory operator
 
     controller custodian can
       CustodianInvitation_Accept : ContractId Custodian
-        do create Custodian with investors = [], exchanges = [], ..
+        do create Custodian with investors = [], exchanges = [], issuers = [], ..
 
 
 template Custodian
   with
     operator : Party
     custodian : Party
-    issuer : Party
+    issuers  : [Party]
     investors : [Party]
     exchanges : [Party]
   where
@@ -282,6 +281,13 @@ template Custodian
     maintainer key._1
 
     controller operator can
+      Custodian_AddIssuer : ContractId Custodian
+        with
+          issuer : Party
+        do
+          assertMsg ("Issuer " <> show issuer <> " already exists") $ issuer `notElem` issuers
+          create this with issuers = issuer :: issuers
+
       Custodian_AddExchange : ContractId Custodian
         with
           exchange : Party
@@ -306,11 +312,10 @@ template Custodian
 
       nonconsuming CreateDeposit : ContractId AssetDeposit
         with
-          tokenName : Text
+          tokenId : Id
           depositQuantity : Decimal
           beneficiary : Party
         do
-          let tokenId = Id with signatories = fromList [ issuer ], label = tokenName, version = 0
           (tokenCid, token) <- fetchByKey @Token tokenId
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
