@@ -18,7 +18,7 @@ template OrderRequest
   with
     order : Order
   where
-    signatory order.operator, order.exchange, order.exchParticipant
+    signatory order.exchange, order.exchParticipant
     ensure order.qty > 0.0
 
     controller order.exchange can
@@ -35,7 +35,7 @@ template OrderCancelRequest
   with
     order : Order
   where
-    signatory order.operator, order.exchange, order.exchParticipant
+    signatory order.exchange, order.exchParticipant
 
     key (order.exchange, order.orderId) : (Party, Int)
     maintainer key._1
@@ -50,7 +50,6 @@ template OrderCancelRequest
 
 template Order
   with
-    operator : Party
     exchange : Party
     exchParticipant : Party
     pair : TokenPair
@@ -61,7 +60,7 @@ template Order
     status : Text
     orderId : Int
   where
-    signatory operator, exchange, exchParticipant
+    signatory exchange, exchParticipant
     ensure qty > 0.0
 
     key (exchange, orderId) : (Party, Int)
