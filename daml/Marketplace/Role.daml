@@ -6,10 +6,55 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.List as L
 import DA.Next.Set
+import DA.Action
 
 import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Utils
+
+
+template UserSession
+  with
+    operator : Party
+    user : Party
+    role : Text
+  where
+    signatory user
+
+    controller operator can
+      UserSession_Ack : ()
+        do
+          let userKey = (operator, user)
+          case role of
+            "Custodian" -> do
+              optCustodianInvitation <- lookupByKey @CustodianInvitation userKey
+              optCustodian <- lookupByKey @Custodian userKey
+              case (optCustodianInvitation, optCustodian) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardCustodian with custodian = user
+                (Some custodianInvitationCid, Some custodianCid) -> archive custodianInvitationCid
+                _ -> return ()
+            "Issuer" -> do
+              optIssuerInvitation <- lookupByKey @IssuerInvitation userKey
+              optIssuer <- lookupByKey @Issuer userKey
+              case (optIssuerInvitation, optIssuer) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = user
+                (Some issuerInvitationCid, Some issuerCid) -> archive issuerInvitationCid
+                _ -> return ()
+            "Exchange" -> do
+              optExchangeInvitation <- lookupByKey @ExchangeInvitation userKey
+              optExchange <- lookupByKey @Exchange userKey
+              case (optExchangeInvitation, optExchange) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardExchange with exchange = user
+                (Some exchangeInvitationCid, Some exchangeCid) -> archive exchangeInvitationCid
+                _ -> return ()
+            "Investor" -> do
+              optInvestorInvitation <- lookupByKey @InvestorInvitation userKey
+              optInvestor <- lookupByKey @Investor userKey
+              case (optInvestorInvitation, optInvestor) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardInvestor with investor = user
+                (Some investorInvitationCid, Some investorCid) -> archive investorInvitationCid
+                _ -> return ()
+            _ -> return ()
 
 
 template Operator
@@ -31,25 +76,19 @@ template Operator
       nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
         with
           issuer : Party
-          custodian : Party
         do
-          exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with ..
           create IssuerInvitation with ..
 
       nonconsuming Operator_OnboardInvestor : ContractId InvestorInvitation
         with
           investor : Party
-          custodian : Party
         do
-          exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with ..
           create InvestorInvitation with ..
 
       nonconsuming Operator_OnboardExchange : ContractId ExchangeInvitation
         with
           exchange : Party
-          custodian : Party
         do
-          exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with ..
           create ExchangeInvitation with ..
 
 
@@ -59,6 +98,9 @@ template InvestorInvitation
     investor : Party
   where
     signatory operator
+
+    key (operator, investor) : (Party, Party)
+    maintainer key._1
 
     controller investor can
       InvestorInvitation_Accept : ContractId Investor
@@ -76,6 +118,11 @@ template Investor
     maintainer key._1
 
     controller investor can
+      nonconsuming Investor_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = investor, role = "Investor", ..
+
       nonconsuming Investor_TransferTo : ContractId AssetDeposit
         with
           receiver : Party
@@ -108,6 +155,9 @@ template ExchangeInvitation
   where
     signatory operator
 
+    key (operator, exchange) : (Party, Party)
+    maintainer key._1
+
     controller exchange can
       ExchangeInvitation_Accept : ContractId Exchange
         do create Exchange with tokenPairs = [], participants = [], ..
@@ -128,6 +178,11 @@ template Exchange
     observer participants
 
     controller exchange can
+      nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = exchange, role = "Exchange", ..
+
       Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
         with
           exchParticipant : Party
@@ -153,7 +208,7 @@ template ExchangeParticipantInvitation
     exchange : Party
     exchParticipant : Party
   where
-    signatory operator, exchange
+    signatory exchange
 
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
@@ -166,9 +221,9 @@ template ExchangeParticipant
     exchange : Party
     exchParticipant : Party
   where
-    signatory operator, exchange, exchParticipant
+    signatory exchange, exchParticipant
 
-    key (exchange, exchParticipant) : (Party, Party)
+    key (exchange, operator, exchParticipant) : (Party, Party, Party)
     maintainer key._1
 
     controller exchParticipant can
@@ -221,35 +276,26 @@ template IssuerInvitation
   with
     operator : Party
     issuer : Party
-    custodian : Party
   where
     signatory operator
+
+    key (operator, issuer) : (Party, Party)
+    maintainer key._1
+
     controller issuer can
       IssuerInvitation_Accept : ContractId Issuer
-        do create Issuer with observers = fromList [custodian], ..
+        do create Issuer with ..
 
 
 template Issuer
   with
     operator : Party
     issuer : Party
-    observers : Set Party
-    -- ^ the custodian needs to be part of this set. Ideally everyone needs to be an observer of the issuer
   where
     signatory operator, issuer
-    observer observers
 
     key (operator, issuer) : (Party, Party)
     maintainer key._1
-
-    choice Issuer_SetObservers : ContractId Issuer
-      with
-        ctrl : Party
-        newObservers : Set Party
-      controller ctrl
-      do
-        assert $ ctrl `elem` [operator, issuer]
-        create this with observers = newObservers
 
     controller issuer can
       nonconsuming Issuer_IssueToken : ContractId Token
@@ -258,7 +304,34 @@ template Issuer
           quantityPrecision : Int
         do
           let tokenId = Id with signatories = fromList [ issuer ], label = name, version = 0
-          create Token with id = tokenId, ..
+          create Token with id = tokenId, observers = empty, ..
+
+      nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = issuer, role = "Issuer", ..
+
+
+template CustodianRelationshipRequest
+  with
+    operator : Party
+    requester : Party
+    custodian : Party
+    role : Text
+  where
+    signatory operator, requester
+
+    controller custodian can
+      CustodianRelationshipRequest_Approve : ()
+        do
+          case role of
+            "Issuer" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
+            "Exchange" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
+            "Investor" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+            _ -> abort $ "Unknown role type: " <> role
+
+      CustodianRelationshipRequest_Reject : ()
+        do return ()
 
 
 template CustodianInvitation
@@ -267,6 +340,9 @@ template CustodianInvitation
     custodian : Party
   where
     signatory operator
+
+    key (operator, custodian) : (Party, Party)
+    maintainer key._1
 
     controller custodian can
       CustodianInvitation_Accept : ContractId Custodian
@@ -286,7 +362,7 @@ template Custodian
     key (operator, custodian) :  (Party, Party)
     maintainer key._1
 
-    controller operator can
+    controller custodian can
       Custodian_AddIssuer : ContractId Custodian
         with
           issuer : Party
@@ -308,7 +384,6 @@ template Custodian
           assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
           create this with investors = investor :: investors
 
-    controller custodian can
       nonconsuming GetAccount : Account
         with
           investor : Party
