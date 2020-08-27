@@ -47,6 +47,13 @@ template UserSession
                 (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardExchange with exchange = user
                 (Some exchangeInvitationCid, Some exchangeCid) -> archive exchangeInvitationCid
                 _ -> return ()
+            "Broker" -> do
+              optBrokerInvitation <- lookupByKey @BrokerInvitation userKey
+              optBroker <- lookupByKey @Broker userKey
+              case (optBrokerInvitation, optBroker) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
+                (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid
+                _ -> return ()
             "Investor" -> do
               optInvestorInvitation <- lookupByKey @InvestorInvitation userKey
               optInvestor <- lookupByKey @Investor userKey
@@ -85,6 +92,12 @@ template Operator
           investor : Party
         do
           create InvestorInvitation with ..
+
+      nonconsuming Operator_OnboardBroker : ContractId BrokerInvitation
+        with
+          broker : Party
+        do
+          create BrokerInvitation with ..
 
       nonconsuming Operator_OnboardExchange : ContractId ExchangeInvitation
         with
@@ -200,6 +213,11 @@ template Investor
           custodian : Party
         do create CustodianRelationshipRequest with requester = investor, role = "Investor", ..
 
+      nonconsuming Investor_RequestBrokerRelationship : ContractId BrokerRelationshipRequest
+        with
+          broker : Party
+        do create BrokerRelationshipRequest with requester = investor, ..
+
       nonconsuming Investor_TransferTo : ContractId AssetDeposit
         with
           receiver : Party
@@ -223,6 +241,73 @@ template Investor
           let exchangeAccountId = getAccountId investor exchange [deposit.account.provider]
           (exchangeAccountCid, exchangeAccount) <- fetchByKey @AssetSettlementRule exchangeAccountId
           exercise senderRuleCid AssetSettlement_Transfer with receiverAccountId = exchangeAccountId, ..
+
+template BrokerInvitation
+  with
+    operator : Party
+    broker : Party
+  where
+    signatory operator
+
+    key (operator, broker) : (Party, Party)
+    maintainer key._1
+
+    controller broker can
+      BrokerInvitation_Accept : ContractId Broker
+        do create Broker with ..
+
+template Broker
+  with
+    operator : Party
+    broker : Party
+  where
+    signatory operator, broker
+
+    key (operator, broker) : (Party, Party)
+    maintainer key._1
+
+    controller broker can
+      nonconsuming Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = broker, role = "Broker", ..
+
+template BrokerRelationshipRequest
+  with
+    operator : Party
+    requester : Party
+    broker : Party
+  where
+    signatory operator, requester
+
+    controller broker can
+      BrokerRelationshipRequest_Accept : ContractId BrokerInvestorRelationship
+        do create BrokerInvestorRelationship with investor = requester, ..
+
+      BrokerRelationshipRequest_Reject : ()
+        do return ()
+
+template BrokerInvestorRelationship
+  with
+    operator : Party
+    broker : Party
+    investor : Party
+  where
+    signatory broker
+
+    key (broker, investor) : (Party, Party)
+    maintainer key._1
+
+    controller investor can
+      BrokerInvestorRelationship_PlaceBid : ContractId OrderRequest
+        with
+          exchange : Party
+          depositCid : ContractId AssetDeposit
+          pair : TokenPair
+          price : Decimal
+        do
+          (exchParticipantCid, exchParticipant) <- fetchByKey @ExchangeParticipant (exchange, operator, broker)
+          exercise exchParticipantCid ExchangeParticipant_PlaceBid with ..
 
 
 template ExchangeInvitation
@@ -413,6 +498,7 @@ template CustodianRelationshipRequest
             "Issuer" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
             "Exchange" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
             "Investor" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+            "Broker" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
             _ -> abort $ "Unknown role type: " <> role
 
       CustodianRelationshipRequest_Reject : ()
@@ -434,7 +520,7 @@ template CustodianInvitation
       CustodianInvitation_Accept : ContractId Custodian
         do
           create RegisteredCustodian with ..
-          create Custodian with investors = [], exchanges = [], issuers = [], ..
+          create Custodian with investors = [], brokers = [], exchanges = [], issuers = [], ..
 
 
 template Custodian
@@ -443,6 +529,7 @@ template Custodian
     custodian : Party
     issuers  : [Party]
     investors : [Party]
+    brokers : [Party]
     exchanges : [Party]
   where
     signatory operator, custodian
@@ -464,6 +551,13 @@ template Custodian
         do
           assertMsg ("Exchange " <> show exchange <> " already exists") $ exchange `notElem` exchanges
           create this with exchanges = exchange :: exchanges
+
+      Custodian_AddBroker : ContractId Custodian
+        with
+          broker : Party
+        do
+          assertMsg ("Broker " <> show broker <> " already exists") $ broker `notElem` brokers
+          create this with brokers = broker :: brokers
 
       Custodian_AddInvestor : ContractId Custodian
         with
