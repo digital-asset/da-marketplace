@@ -17,6 +17,7 @@ test = scenario do
   usdtIssuer <- getParty "UsdtIssuer"
   custodian <- getParty "Custodian"
   exchange <- getParty "Exchange"
+  public <- getParty "Public"
 
   alice <- getParty "Alice"
   bob <- getParty "Bob"
@@ -37,12 +38,12 @@ test = scenario do
 
   -- onboard investors
   aliceInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = alice, ..
-  aliceInvestorCid <- alice `submit` exercise aliceInvCid InvestorInvitation_Accept
+  aliceInvestorCid <- alice `submit` exercise aliceInvCid InvestorInvitation_Accept with isPublic = True
 
   custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
 
   bobInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = bob, ..
-  bobInvestorCid <- bob `submit` exercise bobInvCid InvestorInvitation_Accept
+  bobInvestorCid <- bob `submit` exercise bobInvCid InvestorInvitation_Accept with isPublic = True
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exercise btcIssuerCid Issuer_RequestCustodianRelationship with ..
