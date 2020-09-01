@@ -13,6 +13,9 @@ import DA.Math
 
 type TokenPair = (Id, Id)
 
+-- data Bid = Bid
+-- data Offer = Offer
+data OrderType = Bid | Offer deriving (Eq, Show)
 
 template OrderRequest
   with

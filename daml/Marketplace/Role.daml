@@ -231,6 +231,17 @@ template Investor
           (receiverRuleCid, receiverRule) <- fetchByKey @AssetSettlementRule receiverAccountId
           exercise senderRuleCid AssetSettlement_Transfer with ..
 
+      nonconsuming Investor_AllocateToBroker : ContractId AssetDeposit
+        with
+          broker : Party
+          depositCid : ContractId AssetDeposit
+        do
+          deposit <- fetch depositCid
+          (senderRuleCid, senderRule) <- fetchByKey @AssetSettlementRule deposit.account.id
+          let brokerAccountId = getAccountId investor broker [deposit.account.provider]
+          (brokerAccountCid, brokerAccount) <- fetchByKey @AssetSettlementRule brokerAccountId
+          exercise senderRuleCid AssetSettlement_Transfer with receiverAccountId = brokerAccountId, ..
+
       nonconsuming Investor_AllocateToExchange : ContractId AssetDeposit
         with
           exchange : Party
@@ -299,16 +310,40 @@ template BrokerInvestorRelationship
     maintainer key._1
 
     controller investor can
-      BrokerInvestorRelationship_PlaceBid : ContractId OrderRequest
+      BrokerInvestorRelationship_OrderRequest : ContractId BrokerOrderRequest
         with
-          exchange : Party
+          orderType : OrderType
           depositCid : ContractId AssetDeposit
           pair : TokenPair
           price : Decimal
         do
-          (exchParticipantCid, exchParticipant) <- fetchByKey @ExchangeParticipant (exchange, operator, broker)
-          exercise exchParticipantCid ExchangeParticipant_PlaceBid with ..
+          create BrokerOrderRequest with ..
 
+template BrokerOrderRequest
+  with
+    operator : Party
+    broker : Party
+    investor : Party
+    orderType : OrderType
+    depositCid : ContractId AssetDeposit
+    pair : TokenPair
+    price : Decimal
+  where
+    signatory broker, investor
+
+    controller broker can
+      BrokerOrderRequestAck : ContractId OrderRequest
+        with
+          exchange : Party
+        do
+          case orderType of
+            Bid -> do
+              exerciseByKey @ExchangeParticipant (exchange, operator, broker) ExchangeParticipant_PlaceBid with ..
+            Offer -> do
+              exerciseByKey @ExchangeParticipant (exchange, operator, broker) ExchangeParticipant_PlaceOffer with ..
+
+      BrokerOrderRequestReject : ()
+        do return ()
 
 template ExchangeInvitation
   with

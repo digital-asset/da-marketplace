@@ -132,6 +132,7 @@ test = scenario do
   return ()
 
 brokers = scenario do
+  public <- getParty "Public"
   operator <- getParty "Operator"
   custodian <- getParty "Custodian"
   exchange <- getParty "Exchange"
@@ -150,6 +151,12 @@ brokers = scenario do
   issuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with ..
   issuer `submit` exercise issuerInvCid IssuerInvitation_Accept
 
+  -- issuer establishes relationship with custodian
+  relationshipReqCid <- issuer `submit` exerciseByKey @Issuer (operator, issuer) Issuer_RequestCustodianRelationship with ..
+  custodian `submit` exercise relationshipReqCid CustodianRelationshipRequest_Approve
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
+
   -- issue tokens
   issuer `submit` exerciseByKey @Issuer (operator, issuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6
   issuer `submit` exerciseByKey @Issuer (operator, issuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2
@@ -161,9 +168,28 @@ brokers = scenario do
   issuer `submit` exerciseByKey @Token btcTokenId Token_AddObservers with party = issuer, newObservers = fromList [custodian, exchange, broker, investor]
   issuer `submit` exerciseByKey @Token usdtTokenId Token_AddObservers with party = issuer, newObservers = fromList [custodian, exchange, broker, investor]
 
+  -- onboard investor
+  investorInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with ..
+  investor `submit` exercise investorInvCid InvestorInvitation_Accept with isPublic = True
+
+  -- investor gets relationship with custodian
+  relationshipReqCid <- investor `submit` exerciseByKey @Investor (operator, investor) Investor_RequestCustodianRelationship with ..
+  custodian `submit` exercise relationshipReqCid CustodianRelationshipRequest_Approve
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
+
+  -- investor gets deposit
+  depositCid <- custodian `submit` exerciseByKey @Custodian (operator, custodian) CreateDeposit
+    with tokenId = usdtTokenId, depositQuantity = 1_000.00, beneficiary = investor
+
   -- onboard exchange
   exchangeInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardExchange with ..
   exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept
+
+  relationshipReqCid <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_RequestCustodianRelationship with ..
+  custodian `submit` exercise relationshipReqCid CustodianRelationshipRequest_Approve
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
 
   -- the exchange adds support for BTC/USDT pair
   exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
@@ -173,24 +199,26 @@ brokers = scenario do
   broker `submit` exercise brokerInvCid BrokerInvitation_Accept
 
   -- broker establishes relationship with custodian
-  relationshipReqCid <- broker `submit` exercise brokerCid Broker_RequestCustodianRelationship with ..
+  relationshipReqCid <- broker `submit` exerciseByKey @Broker (operator, broker) Broker_RequestCustodianRelationship with ..
+  custodian `submit` exercise relationshipReqCid CustodianRelationshipRequest_Approve
+
+  custodian `submit` exerciseByKey @Custodian (operator, custodian) UpdateAssetSettlementRules
 
   -- broker is added as an exchange participant
   (_, brokerInvCid) <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = broker
   broker `submit` exercise brokerInvCid ExchangeParticipantInvitation_Accept
 
-  -- onboard investor
-  investorInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with ..
-  investor `submit` exercise investorInvCid InvestorInvitation_Accept
-
-  -- investor gets deposit
-  depositCid <- custodian `submit` exerciseByKey @Custodian (operator, custodian) CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.01, beneficiary = investor
-
-  -- request to broker
+  -- investor establishes relationship with broker
   brokerRequestCid <- investor `submit` exerciseByKey @Investor (operator, investor) Investor_RequestBrokerRelationship with ..
   brokerInvestorRelationCid <- broker `submit` exercise brokerRequestCid BrokerRelationshipRequest_Accept
 
+  -- investor allocates deposit to broker
+  depositCid <- investor `submit` exerciseByKey @Investor (operator, investor) Investor_AllocateToBroker with ..
+
   -- investor places bid through broker
-  investor `submit` exercise brokerInvestorRelationCid BrokerInvestorRelationship_PlaceBid with ..
+  -- brokerOrderRequestCid <- investor `submit` exercise brokerInvestorRelationCid BrokerInvestorRelationship_OrderRequest
+  --   with pair = (btcTokenId, usdtTokenId), price = 10_000.00, orderType = Bid, ..
+
+  -- broker `submit` exercise brokerOrderRequestCid BrokerOrderRequestAck with ..
 
   return ()
