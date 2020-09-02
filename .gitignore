@@ -6,3 +6,10 @@ _exberry_integration
 _matching_engine_bot
 
 target
+
+node_modules/
+build
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+daml.js/
