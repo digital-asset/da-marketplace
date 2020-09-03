@@ -67,7 +67,7 @@ template Order
     maintainer key._1
 
     controller exchange can
-      OrderFill : Optional (ContractId Order)
+      OrderFill : (Optional (ContractId AssetDeposit), Optional (ContractId Order))
         with
           fillQty : Decimal
           fillPrice : Decimal
@@ -91,16 +91,16 @@ template Order
             if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
             then do
               [filledCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [depositFillQty]
-              exercise senderRuleCid AssetSettlement_Transfer with depositCid = filledCid, ..
+              transferredCid <- exercise senderRuleCid AssetSettlement_Transfer with depositCid = filledCid, ..
               remainingCid <- create this with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
-              return $ Some remainingCid
+              return $ (Some transferredCid, Some remainingCid)
             else do
               -- the fillQty is not enough to warrant a deposit transfer
               remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
-              return $ Some remainingCid
+              return $ (None, Some remainingCid)
           else do
-            exercise senderRuleCid AssetSettlement_Transfer with ..
-            return None
+            transferredCid <-exercise senderRuleCid AssetSettlement_Transfer with ..
+            return (Some transferredCid, None)
 
       OrderCancel : ()
         do return ()

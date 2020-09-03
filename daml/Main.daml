@@ -125,7 +125,11 @@ test = scenario do
   bidOrderCid <- exchange `submit` exercise bidOrderRequestCid OrderRequestAck with orderId = 2
 
   -- exchange matches the two orders
-  exchange `submit` exercise bidOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob
+  (Some depositCid4, _) <- exchange `submit` exercise bidOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob
   exchange `submit` exercise offerOrderCid OrderFill with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice
+
+  -- claim back the deposit
+  transferReqCid <- bob `submit` exerciseByKey @Investor (operator, bob) Investor_ClaimAssetDeposit with depositCid = depositCid4
+  exchange `submit` exercise transferReqCid AssetDepositTransferRequest_Approve
 
   return ()

@@ -7,6 +7,8 @@ import DA.Finance.Types
 import DA.List as L
 import DA.Next.Set
 import DA.Action
+import DA.Optional
+import DA.Text as T
 
 import Marketplace.Token
 import Marketplace.Trading
@@ -223,6 +225,38 @@ template Investor
           let exchangeAccountId = getAccountId investor exchange [deposit.account.provider]
           (exchangeAccountCid, exchangeAccount) <- fetchByKey @AssetSettlementRule exchangeAccountId
           exercise senderRuleCid AssetSettlement_Transfer with receiverAccountId = exchangeAccountId, ..
+
+      nonconsuming Investor_ClaimAssetDeposit : ContractId AssetDepositTransferRequest
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          deposit <- fetch depositCid
+          let exchange = fromSome $ partyFromText (T.replace "'" "" (splitOn "@" deposit.account.id.label !! 1))
+          let custodian = deposit.account.provider
+          create AssetDepositTransferRequest with ..
+
+
+template AssetDepositTransferRequest
+  with
+    operator : Party
+    investor : Party
+    exchange : Party
+    custodian : Party
+    depositCid : ContractId AssetDeposit
+  where
+    signatory investor
+
+    controller exchange can
+      AssetDepositTransferRequest_Approve : ContractId AssetDeposit
+        do
+          deposit <- fetch depositCid
+          let exchangeAccountId = getAccountId investor exchange [deposit.account.provider]
+          (exchangeAccountCid, exchangeAccount) <- fetchByKey @AssetSettlementRule exchangeAccountId
+          let custodianAccountId = getAccountId investor custodian [deposit.account.provider]
+          exercise exchangeAccountCid AssetSettlement_Transfer with receiverAccountId = custodianAccountId, ..
+
+      AssetDepositTransferRequest_Reject : ()
+        do return ()
 
 
 template ExchangeInvitation
@@ -499,10 +533,10 @@ template Custodian
                 account = Account with id = accountId, provider = custodian, owner = u
             optAssetRuleCid <- lookupByKey @AssetSettlementRule accountId
             case optAssetRuleCid of
-              None -> create AssetSettlementRule with observers = fromList investors,  ctrls = fromList $ L.filter (/= u) investors, ..
+              None -> create AssetSettlementRule with observers = fromList investors,  ctrls = fromList $ investors ++ exchanges, ..
               Some ruleCid -> do
                 archive ruleCid
-                create AssetSettlementRule with observers = fromList investors, ctrls = fromList $ L.filter (/= u) investors, ..) investors
+                create AssetSettlementRule with observers = fromList investors, ctrls = fromList $ investors ++ exchanges, ..) investors
           exchangeAccounts <- mapA (\e -> do
             mapA (\u -> do
               let accountId = getAccountId u e [custodian]
