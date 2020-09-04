@@ -15,18 +15,8 @@
     background: none;
 }
 
-.role-selector {
-    background-color: var(--mediumblue);
-    padding: 48px;
-}
-
-.role-selector .ui.header > .content {
+.role-select > .ui.button {
     display: flex;
-    justify-content: center;
     align-items: center;
-}
-
-.role-selector .icon {
-    width: 24px;
-    height: 24px;
+    justify-content: space-between;
 }

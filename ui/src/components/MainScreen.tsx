@@ -2,14 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState} from 'react'
+
+import Page from './common/Page'
+import WelcomeHeader from './common/WelcomeHeader'
+
 import RoleSelectScreen from './RoleSelectScreen'
-import InvestorScreen from './InvestorScreen'
+import InvestorWallet from './InvestorWallet'
+
+import { WalletIcon } from '../icons/Icons'
 
 // May eventually want to switch to a proper routing
 // library for different pages in the app
 export enum Mode {
   ROLE_SELECT_VIEW,
-  INVESTOR_VIEW
+  INVESTOR_VIEW,
+  INVESTOR_WALLET_VIEW
 }
 
 type Props = {
@@ -24,9 +31,27 @@ const MainScreen: React.FC<Props> = ({onLogout}) => {
 
   switch(mode) {
     case Mode.ROLE_SELECT_VIEW:
-      return <RoleSelectScreen setView={view => setMode(view)} onLogout={onLogout}/>
+      return <RoleSelectScreen
+                setView={view => setMode(view)}
+                onLogout={onLogout}/>
+
     case Mode.INVESTOR_VIEW:
-      return <InvestorScreen onLogout={onLogout}/>
+      return (
+        <Page view={mode} setView={view => setMode(view)} onLogout={onLogout}>
+          <WelcomeHeader/>
+        </Page>
+      )
+
+    case Mode.INVESTOR_WALLET_VIEW:
+      return (
+        <Page
+          view={mode}
+          menuTitle={<><WalletIcon/>Wallet</>}
+          setView={view => setMode(view)} onLogout={onLogout}
+        >
+          <InvestorWallet/>
+        </Page>
+      )
     default:
       return <></>
   }

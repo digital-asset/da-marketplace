@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect } from 'react'
-import { Button, Form, Grid, Header } from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { DeploymentMode, deploymentMode, ledgerId } from '../config'
-import { ChatFaceIcon } from '../icons/Icons'
 
 import './LoginScreen.css'
+import OnboardingTile from './common/OnboardingTile'
 
 type Props = {
   onLogin: (credentials: Credentials) => void;
@@ -46,43 +46,35 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   }, [onLogin]);
 
   return (
-    <Grid textAlign='center' verticalAlign='middle'>
-      <Grid.Row>
-        <Grid.Column width={8} className='role-selector'>
-          <Header as='h1' textAlign='center' size='huge'>
-            <Header.Content>
-              <ChatFaceIcon/> Marketplace App
-            </Header.Content>
-          </Header>
-          <Form size='large' className='test-select-login-screen'>
-              {deploymentMode !== DeploymentMode.PROD_DABL
-              ? <>
-                  {/* FORM_BEGIN */}
-                  <Form.Input
-                    fluid
-                    icon='user'
-                    iconPosition='left'
-                    placeholder='Username'
-                    value={username}
-                    className='test-select-username-field'
-                    onChange={e => setUsername(e.currentTarget.value)}
-                  />
-                  <Button
-                    fluid
-                    className='test-select-login-button'
-                    onClick={handleLogin}>
-                    Log in
-                  </Button>
-                  {/* FORM_END */}
-                </>
-              : <Button primary fluid onClick={handleDablLogin}>
-                  Log in with DABL
-                </Button>
-              }
-          </Form>
-        </Grid.Column>
-      </Grid.Row>
-    </Grid>
+    <OnboardingTile>
+      <Form size='large' className='test-select-login-screen'>
+        {deploymentMode !== DeploymentMode.PROD_DABL
+        ? <>
+            {/* FORM_BEGIN */}
+            <Form.Input
+              fluid
+              icon='user'
+              iconPosition='left'
+              placeholder='Username'
+              value={username}
+              className='test-select-username-field'
+              onChange={e => setUsername(e.currentTarget.value)}
+            />
+            <Button
+              primary
+              fluid
+              className='test-select-login-button'
+              onClick={handleLogin}>
+              Log in
+            </Button>
+            {/* FORM_END */}
+          </>
+        : <Button primary fluid onClick={handleDablLogin}>
+            Log in with DABL
+          </Button>
+        }
+      </Form>
+    </OnboardingTile>
   );
 };
 

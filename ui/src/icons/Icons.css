@@ -1,0 +1,10 @@
+.arrow-right-icon > path {
+    fill-rule: evenodd;
+    clip-rule: evenodd;
+    fill: var(--textcolor);
+}
+
+.icon {
+    width: 12px;
+    height: 12px;
+}

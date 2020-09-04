@@ -1,0 +1,11 @@
+.ui.grid.page-content {
+    display: flex;
+}
+
+.ui.grid > .column.page-body {
+    flex: 1;
+    background-color: #fff;
+    padding-left: 64px;
+    padding-top: 0px;
+    padding-right: 0px;
+}

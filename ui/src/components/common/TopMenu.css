@@ -1,0 +1,25 @@
+.ui.menu.top-menu {
+    box-shadow: none;
+    border: none;
+    height: 68px;
+}
+
+.top-menu .menu > .ui.button:not(.icon) > .icon.logout-icon {
+    margin: 0 8px;
+    height: 14px;
+    width: 14px;
+}
+
+.ui.menu.top-menu > .menu > .item:before {
+    display: none;
+}
+
+.ui.menu.top-menu > .menu > .item > .header > .content {
+    display: flex;
+    align-items: center;
+}
+
+.ui.menu.top-menu > .menu > .item > .header .icon {
+    width: 32px;
+    height: 32px;
+}

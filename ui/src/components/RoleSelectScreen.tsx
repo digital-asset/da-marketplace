@@ -1,37 +1,40 @@
 import React, { useState} from 'react'
-import { Button, Card, Grid, Header } from 'semantic-ui-react'
+import { Button, Card } from 'semantic-ui-react'
 
-import { useParty, useStreamQuery, useLedger, useFetchByKey } from '@daml/react'
+import { useParty, useStreamQuery, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Role'
 
-import { ChatFaceIcon } from '../icons/Icons'
 import { OPERATOR_PARTY } from '../config'
 
-import LogoutMenu from './common/LogoutMenu'
-import {Mode} from './MainScreen'
+import TopMenu from './common/TopMenu'
+import OnboardingTile from './common/OnboardingTile'
+import { ArrowRightIcon } from '../icons/Icons'
+
+import { Mode } from './MainScreen'
 import './RoleSelectScreen.css'
 
 enum MarketRole {
     INVESTOR = "Investor",
     ISSUER = "Issuer",
-    CUSTODIAN = "Custodian",
-    EXCHANGE = "Exchange"
+    CUSTODIAN = "Custodian"
 }
 
 type RoleSelectProps = {
     loading: boolean;
     caption: string;
+    disabled?: boolean;
     roleSelectClick: () => void;
 }
 
-const RoleSelect: React.FC<RoleSelectProps> = ({ loading, caption, roleSelectClick }) => (
+const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, roleSelectClick }) => (
     <Card className='centered role-select'>
         <Button
+            disabled={disabled}
             className='ghost'
             loading={loading}
             onClick={roleSelectClick}
         >
-            { caption }
+            { caption } <ArrowRightIcon/>
         </Button>
     </Card>
 )
@@ -66,35 +69,26 @@ const RoleSelectScreen: React.FC<Props> = ({ setView, onLogout }) => {
 
     return (
         <>
-            <LogoutMenu onLogout={onLogout}/>
-            <Grid textAlign='center' verticalAlign='middle'>
-                <Grid.Row>
-                    <Grid.Column width={8} className='role-selector'>
-                        <Header as='h3' textAlign='center'>
-                            <Header.Content>
-                                <ChatFaceIcon/> Welcome to the DABL Social Marketplace
-                            </Header.Content>
-                        </Header>
+            <TopMenu onLogout={onLogout}/>
+            <OnboardingTile subtitle='What will you do?'>
+                <RoleSelect
+                    caption='I want to chat & invest'
+                    loading={loading && role === MarketRole.INVESTOR}
+                    roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR, Mode.INVESTOR_VIEW)}/>
 
-                        <Header as='h4' textAlign='center'>
-                            <Header.Content>
-                                What will you do?
-                            </Header.Content>
-                        </Header>
+                {/* disabled these buttons until the view components for them are ready */}
+                <RoleSelect
+                    disabled
+                    caption='Issue an asset'
+                    loading={loading && role === MarketRole.ISSUER}
+                    roleSelectClick={() => {}}/>
 
-                        <RoleSelect
-                            caption='I want to chat & invest'
-                            loading={loading && role === MarketRole.INVESTOR}
-                            roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR, Mode.INVESTOR_VIEW)}/>
-
-                        <Card className='centered'>
-                            <Button className='ghost' loading={loading && role === MarketRole.ISSUER}>
-                                Issue an asset
-                            </Button>
-                        </Card>
-                    </Grid.Column>
-                </Grid.Row>
-            </Grid>
+                <RoleSelect
+                    disabled
+                    caption='Bank'
+                    loading={loading && role === MarketRole.CUSTODIAN}
+                    roleSelectClick={() => {}}/>
+            </OnboardingTile>
         </>
     );
 }
