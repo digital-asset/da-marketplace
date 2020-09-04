@@ -28,8 +28,15 @@ code {
     monospace;
 }
 
+#root {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .ui.grid {
   margin: 0;
+  flex: 1;
 }
 
 .ui.button {

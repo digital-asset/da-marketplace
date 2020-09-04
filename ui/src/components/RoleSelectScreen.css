@@ -1,0 +1,32 @@
+.ui.grid.column {
+    max-width: 450px;
+}
+
+.ui.card {
+    box-shadow: none;
+}
+
+.ui.card > .ui.button {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+}
+.ui.card > .ui.button.ghost:hover {
+    background: none;
+}
+
+.role-selector {
+    background-color: var(--mediumblue);
+    padding: 48px;
+}
+
+.role-selector .ui.header > .content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.role-selector .icon {
+    width: 24px;
+    height: 24px;
+}

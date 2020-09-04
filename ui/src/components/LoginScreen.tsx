@@ -1,11 +1,14 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react'
-import { Button, Form, Grid, Header, Image, Segment, Dropdown } from 'semantic-ui-react'
+import React, { useEffect } from 'react'
+import { Button, Form, Grid, Header } from 'semantic-ui-react'
+
 import Credentials, { computeCredentials } from '../Credentials'
 import { DeploymentMode, deploymentMode, ledgerId } from '../config'
-import { useEffect } from 'react'
+import { ChatFaceIcon } from '../icons/Icons'
+
+import './LoginScreen.css'
 
 type Props = {
   onLogin: (credentials: Credentials) => void;
@@ -16,7 +19,6 @@ type Props = {
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const [username, setUsername] = React.useState('');
-  const [role, setRole] = React.useState('');
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -41,89 +43,45 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     url.search = '';
     window.history.replaceState(window.history.state, '', url.toString());
     onLogin({token, party, ledgerId});
-  }, [onLogin, role]);
+  }, [onLogin]);
 
   return (
-    <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>
-      <Grid.Column style={{ maxWidth: 450 }}>
-        <Header as='h1' textAlign='center' size='huge' style={{color: '#223668'}}>
-          <Header.Content>
-            <Image
-              as='a'
-              href='https://www.daml.com/'
-              target='_blank'
-              src='/daml.svg'
-              alt='DAML Logo'
-              spaced
-              size='small'
-              verticalAlign='middle'
-            />
-            Marketplace App
-          </Header.Content>
-        </Header>
-        <Form size='large' className='test-select-login-screen'>
-          <Segment>
-            {deploymentMode !== DeploymentMode.PROD_DABL
-            ? <>
-                {/* FORM_BEGIN */}
-                <Form.Input
-                  fluid
-                  icon='user'
-                  iconPosition='left'
-                  placeholder='Username'
-                  value={username}
-                  className='test-select-username-field'
-                  onChange={e => setUsername(e.currentTarget.value)}
-                />
-                <Segment>
-                <Dropdown
-                  placeholder='Choose your role'
-                  fluid
-                  selection
-                  options={[{
-                    key: 'operator',
-                    text: 'Operator',
-                    value: 'Operator',
-                  },
-                  {
-                    key: 'custodian',
-                    text: 'Custodian',
-                    value: 'Custodian',
-                  },
-                  {
-                    key: 'exchange',
-                    text: 'Exchange',
-                    value: 'Exchange',
-                  },
-                  {
-                    key: 'issuer',
-                    text: 'Issuer',
-                    value: 'Issuer',
-                  },
-                  {
-                    key: 'investor',
-                    text: 'Investor',
-                    value: 'Investor',
-                  }]}
-                  onChange={(_, data) => setRole(data.value as string)}
-                />
-                </Segment>
-                <Button
-                  primary
-                  fluid
-                  className='test-select-login-button'
-                  onClick={handleLogin}>
-                  Log in
+    <Grid textAlign='center' verticalAlign='middle'>
+      <Grid.Row>
+        <Grid.Column width={8} className='role-selector'>
+          <Header as='h1' textAlign='center' size='huge'>
+            <Header.Content>
+              <ChatFaceIcon/> Marketplace App
+            </Header.Content>
+          </Header>
+          <Form size='large' className='test-select-login-screen'>
+              {deploymentMode !== DeploymentMode.PROD_DABL
+              ? <>
+                  {/* FORM_BEGIN */}
+                  <Form.Input
+                    fluid
+                    icon='user'
+                    iconPosition='left'
+                    placeholder='Username'
+                    value={username}
+                    className='test-select-username-field'
+                    onChange={e => setUsername(e.currentTarget.value)}
+                  />
+                  <Button
+                    fluid
+                    className='test-select-login-button'
+                    onClick={handleLogin}>
+                    Log in
+                  </Button>
+                  {/* FORM_END */}
+                </>
+              : <Button primary fluid onClick={handleDablLogin}>
+                  Log in with DABL
                 </Button>
-                {/* FORM_END */}
-              </>
-            : <Button primary fluid onClick={handleDablLogin}>
-                Log in with DABL
-              </Button>
-            }
-          </Segment>
-        </Form>
-      </Grid.Column>
+              }
+          </Form>
+        </Grid.Column>
+      </Grid.Row>
     </Grid>
   );
 };
