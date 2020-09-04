@@ -1,6 +1,9 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+export const PUBLIC_PARTY = "Public"
+export const OPERATOR_PARTY = "Operator"
+
 export enum DeploymentMode {
   DEV,
   PROD_DABL,
@@ -24,5 +27,9 @@ export const ledgerId: string =
 
 export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
-  ? `https://api.projectdabl.com/data/${ledgerId}/`
+  ? `https://api.projectdabl.com`
+  : undefined;
+
+export const httpDataUrl = httpBaseUrl
+  ? `${httpBaseUrl}/data/${ledgerId}`
   : undefined;
