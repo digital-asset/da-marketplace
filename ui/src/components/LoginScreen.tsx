@@ -1,14 +1,11 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback } from 'react'
+import React from 'react'
 import { Button, Form, Grid, Header, Image, Segment, Dropdown } from 'semantic-ui-react'
-import Credentials, { computeCredentials } from '../Credentials';
-import Ledger from '@daml/ledger';
-import { User } from '@daml.js/da-marketplace';
-import { Role } from "@daml.js/da-marketplace/lib/Marketplace"
-import { DeploymentMode, deploymentMode, ledgerId, httpBaseUrl} from '../config';
-import { useEffect } from 'react';
+import Credentials, { computeCredentials } from '../Credentials'
+import { DeploymentMode, deploymentMode, ledgerId } from '../config'
+import { useEffect } from 'react'
 
 type Props = {
   onLogin: (credentials: Credentials) => void;
@@ -21,26 +18,10 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const [username, setUsername] = React.useState('');
   const [role, setRole] = React.useState('');
 
-  const login = useCallback(async (credentials: Credentials, role: string) => {
-    try {
-      const ledger = new Ledger({token: credentials.token, httpBaseUrl});
-      let userContract = await ledger.fetchByKey(User.User, credentials.party);
-      if (userContract === null) {
-        const user = {username: credentials.party, following: []};
-        userContract = await ledger.create(User.User, user);
-      }
-      const userSession = {operator: "Operator", user: credentials.party, role}
-      await ledger.create(Role.UserSession, userSession);
-      onLogin(credentials);
-    } catch(error) {
-      alert(`Unknown error:\n${JSON.stringify(error)}`);
-    }
-  }, [onLogin]);
-
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     const credentials = computeCredentials(username);
-    await login(credentials, role);
+    onLogin(credentials);
   }
 
   const handleDablLogin = () => {
@@ -59,8 +40,8 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     }
     url.search = '';
     window.history.replaceState(window.history.state, '', url.toString());
-    login({token, party, ledgerId}, role);
-  }, [login, role]);
+    onLogin({token, party, ledgerId});
+  }, [onLogin, role]);
 
   return (
     <Grid textAlign='center' style={{ height: '100vh' }} verticalAlign='middle'>

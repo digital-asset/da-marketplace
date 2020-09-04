@@ -1,7 +1,7 @@
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
 operator_bot_version := $(shell cd automation/operator && poetry version | cut -f 2 -d ' ')
-
+ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
 state_dir := .dev
 daml_build_log = $(state_dir)/daml_build.log
@@ -65,12 +65,13 @@ target_dir := target
 dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
 exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
 operator_bot := $(target_dir)/da-marketplace-operator-bot-$(operator_bot_version).tar.gz
+ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
 
 $(target_dir):
 	mkdir $@
 
 .PHONY: package
-package: $(operator_bot) $(exberry_adapter) $(dar)
+package: $(operator_bot) $(exberry_adapter) $(dar) $(ui)
 	cd $(target_dir) && zip da-marketplace.zip *
 
 $(dar): $(target_dir) $(daml_build_log)
@@ -81,6 +82,15 @@ $(operator_bot): $(target_dir) $(operator_bot_dir)
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
+
+$(ui):
+	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
+	cd ui && yarn install
+	cd ui && yarn build
+	zip -r da-marketplace-ui-$(ui_version).zip ui/build
+	mkdir -p $(@D)
+	mv da-marketplace-ui-$(ui_version).zip $@
+	rm -r ui/build
 
 .PHONY: clean
 clean:

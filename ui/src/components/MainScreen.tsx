@@ -3,7 +3,6 @@
 
 import React from 'react'
 import { Image, Menu } from 'semantic-ui-react'
-import MainView from './MainView';
 import { useParty } from '@daml/react';
 
 type Props = {
@@ -40,8 +39,6 @@ const MainScreen: React.FC<Props> = ({onLogout}) => {
           />
         </Menu.Menu>
       </Menu>
-
-      <MainView/>
     </>
   );
 };
