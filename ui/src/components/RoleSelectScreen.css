@@ -1,0 +1,22 @@
+.ui.grid.column {
+    max-width: 450px;
+}
+
+.ui.card {
+    box-shadow: none;
+}
+
+.ui.card > .ui.button {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+}
+.ui.card > .ui.button.ghost:hover {
+    background: none;
+}
+
+.role-select > .ui.button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

@@ -1,0 +1,35 @@
+.ui.grid > .column.page-sidemenu {
+    padding: 0;
+    width: 230px;
+}
+
+.column.page-sidemenu > .ui.secondary.menu {
+    margin: 0;
+    width: 100%;
+}
+
+.column.page-sidemenu > .ui.secondary.menu .item {
+    padding: 24px;
+    margin: 0;
+}
+
+.column.page-sidemenu > .ui.secondary.menu .item.active {
+    background-color: var(--lightblue2);
+}
+
+.column.page-sidemenu > .ui.secondary.menu .item:hover {
+    background-color: var(--lightblue2);
+}
+
+.column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p {
+    display: flex;
+    font-size: 14px;
+    align-items: center;
+    color: var(--textcolor);
+}
+
+.column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p > .icon {
+    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+}

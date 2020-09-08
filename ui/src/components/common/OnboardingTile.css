@@ -1,0 +1,20 @@
+.onboarding-tile .onboarding-tile-content {
+    background-color: var(--mediumblue);
+    padding: 48px;
+    max-width: 450px;
+}
+
+.onboarding-tile .onboarding-tile-content .ui.header > .content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.onboarding-tile .onboarding-tile-content .icon {
+    width: 24px;
+    height: 24px;
+}
+
+.onboarding-tile .onboarding-tile-content .ui.input {
+    height: 50px;
+}

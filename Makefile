@@ -87,11 +87,13 @@ $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui && yarn install
 	cd ui && yarn build
-	zip -r da-marketplace-ui-$(ui_version).zip ui/build
-	mkdir -p $(@D)
-	mv da-marketplace-ui-$(ui_version).zip $@
+	cd ui && zip -r da-marketplace-ui-$(ui_version).zip build
+	mv ui/da-marketplace-ui-$(ui_version).zip $@
 	rm -r ui/build
 
 .PHONY: clean
-clean:
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(dar)
+clean: clean-ui
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(dar) $(ui)
+
+clean-ui:
+	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
