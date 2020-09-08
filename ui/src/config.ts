@@ -31,5 +31,5 @@ export const httpBaseUrl =
   : undefined;
 
 export const httpDataUrl = httpBaseUrl
-  ? `${httpBaseUrl}/data/${ledgerId}`
+  ? `${httpBaseUrl}/data/${ledgerId}/`
   : undefined;

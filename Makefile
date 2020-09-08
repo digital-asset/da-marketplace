@@ -93,5 +93,8 @@ $(ui):
 	rm -r ui/build
 
 .PHONY: clean
-clean:
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(dar)
+clean: clean-ui
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(dar) $(ui)
+
+clean-ui:
+	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
