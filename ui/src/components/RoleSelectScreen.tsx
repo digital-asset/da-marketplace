@@ -4,7 +4,7 @@ import { Button, Card } from 'semantic-ui-react'
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Role'
 
-import { OPERATOR_PARTY } from '../config'
+import { getWellKnownParties } from '../config'
 
 import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
@@ -56,11 +56,9 @@ const RoleSelectScreen: React.FC<Props> = ({ setView, onLogout }) => {
         setRole(role);
         if (userSessions.length === 0) {
             setLoading(true);
-            await ledger.create(UserSession, {
-                user,
-                role,
-                operator: OPERATOR_PARTY
-            })
+
+            const { operator } = await getWellKnownParties();
+            await ledger.create(UserSession, { user, role, operator });
         }
         setLoading(false);
         setRole(undefined);

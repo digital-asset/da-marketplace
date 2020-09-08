@@ -1,9 +1,6 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-export const PUBLIC_PARTY = "Public"
-export const OPERATOR_PARTY = "Operator"
-
 export enum DeploymentMode {
   DEV,
   PROD_DABL,
@@ -33,3 +30,23 @@ export const httpBaseUrl =
 export const httpDataUrl = httpBaseUrl
   ? `${httpBaseUrl}/data/${ledgerId}/`
   : undefined;
+
+export const getWellKnownParties = async () => {
+  if (deploymentMode === DeploymentMode.PROD_DABL) {
+    if (wellKnownParties.public && wellKnownParties.operator) {
+      return wellKnownParties;
+    } else {
+      const { publicParty, userAdminParty } =
+        await fetch(`//${ledgerId}.projectdabl.com/.well-known/dabl.json`).then(res => res.json());
+
+      wellKnownParties.public = publicParty;
+      wellKnownParties.operator = userAdminParty;
+      return { public: publicParty, operator: userAdminParty };
+    }
+  }
+  else {
+    return { public: "Public", operator: "Operator" };
+  }
+}
+
+let wellKnownParties = { public: undefined, operator: undefined };
