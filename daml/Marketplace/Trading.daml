@@ -3,15 +3,13 @@ module Marketplace.Trading where
 
 import Marketplace.Token
 import Marketplace.Utils
+import Marketplace.Transfer
 
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import DA.Math
-
-
-type TokenPair = (Id, Id)
 
 
 template OrderRequest
@@ -67,7 +65,7 @@ template Order
     maintainer key._1
 
     controller exchange can
-      OrderFill : (Optional (ContractId AssetDeposit), Optional (ContractId Order))
+      OrderFill : (Optional (ContractId DepositTransferRequest), Optional (ContractId Order))
         with
           fillQty : Decimal
           fillPrice : Decimal
@@ -78,8 +76,7 @@ template Order
           assert $ if isBid then fillPrice <= price
                             else fillPrice >= price
           deposit <- fetch depositCid
-          let receiverAccountId = getAccountId counterParty exchange [deposit.account.provider]
-          (senderRuleCid, _) <- fetchByKey @AssetSettlementRule deposit.account.id
+          let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = (show counterParty <> "@" <> show exchange), version = 0
           (_, baseToken) <- fetchByKey @Token pair._1
           (_, quoteToken) <- fetchByKey @Token pair._2
           if fillQty < qty then do
@@ -91,16 +88,52 @@ template Order
             if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
             then do
               [filledCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [depositFillQty]
-              transferredCid <- exercise senderRuleCid AssetSettlement_Transfer with depositCid = filledCid, ..
+              txReqCid <- create DepositTransferRequest with investor = exchParticipant, senderAccountId = deposit.account.id, receiverAccountId = receiverAccountId, depositCid = filledCid
               remainingCid <- create this with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
-              return $ (Some transferredCid, Some remainingCid)
+              return $ (Some txReqCid, Some remainingCid)
             else do
               -- the fillQty is not enough to warrant a deposit transfer
               remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
               return $ (None, Some remainingCid)
           else do
-            transferredCid <-exercise senderRuleCid AssetSettlement_Transfer with ..
-            return (Some transferredCid, None)
+            txReqCid <- create DepositTransferRequest
+              with investor = exchParticipant, senderAccountId = deposit.account.id, receiverAccountId = receiverAccountId, ..
+            return $ (Some txReqCid, None)
+
+      -- OrderFill : (Optional (ContractId AssetDeposit), Optional (ContractId Order))
+      --   with
+      --     fillQty : Decimal
+      --     fillPrice : Decimal
+      --     counterParty : Party
+      --   do
+      --     assert $ fillQty > 0.0
+      --     assert $ fillQty <= qty
+      --     assert $ if isBid then fillPrice <= price
+      --                       else fillPrice >= price
+      --     deposit <- fetch depositCid
+      --     let receiverAccountId = getAccountId counterParty exchange [deposit.account.provider]
+      --     (senderRuleCid, _) <- fetchByKey @AssetSettlementRule deposit.account.id
+      --     (_, baseToken) <- fetchByKey @Token pair._1
+      --     (_, quoteToken) <- fetchByKey @Token pair._2
+      --     if fillQty < qty then do
+      --       let minFillQty = 10.0 ** (- intToDecimal if isBid then quoteToken.quantityPrecision else baseToken.quantityPrecision)
+      --       let depositFillQty = min (if isBid
+      --                                 then roundBankers quoteToken.quantityPrecision $ fillQty * fillPrice
+      --                                 else fillQty)
+      --                                (deposit.asset.quantity - minFillQty)
+      --       if (depositFillQty > 0.0 && depositFillQty < deposit.asset.quantity)
+      --       then do
+      --         [filledCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [depositFillQty]
+      --         transferredCid <- exercise senderRuleCid AssetSettlement_Transfer with depositCid = filledCid, ..
+      --         remainingCid <- create this with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
+      --         return $ (Some transferredCid, Some remainingCid)
+      --       else do
+      --         -- the fillQty is not enough to warrant a deposit transfer
+      --         remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
+      --         return $ (None, Some remainingCid)
+      --     else do
+      --       transferredCid <-exercise senderRuleCid AssetSettlement_Transfer with ..
+      --       return (Some transferredCid, None)
 
       OrderCancel : ()
         do return ()

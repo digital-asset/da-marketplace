@@ -1,0 +1,43 @@
+daml 1.2
+module Marketplace.Operator where
+
+import Marketplace.Custodian
+import Marketplace.Exchange
+import Marketplace.Investor
+import Marketplace.Issuer
+
+
+template Operator
+  with
+    operator : Party
+    public : Party
+  where
+    signatory operator
+
+    key operator : Party
+    maintainer key
+
+    controller operator can
+      nonconsuming Operator_OnboardCustodian : ContractId CustodianInvitation
+        with
+          custodian : Party
+        do
+          create CustodianInvitation with ..
+
+      nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
+        with
+          issuer : Party
+        do
+          create IssuerInvitation with ..
+
+      nonconsuming Operator_OnboardInvestor : ContractId InvestorInvitation
+        with
+          investor : Party
+        do
+          create InvestorInvitation with ..
+
+      nonconsuming Operator_OnboardExchange : ContractId ExchangeInvitation
+        with
+          exchange : Party
+        do
+          create ExchangeInvitation with ..

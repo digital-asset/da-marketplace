@@ -9,8 +9,8 @@ dazl.setup_default_logger(logging.INFO)
 
 
 class MARKETPLACE:
-    UserSession = 'Marketplace.Role.UserSession'
-    Operator = 'Marketplace.Role:Operator'
+    UserSession = 'Marketplace.Onboarding:UserSession'
+    Operator = 'Marketplace.Operator:Operator'
 
 
 def main():

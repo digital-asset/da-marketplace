@@ -9,10 +9,10 @@ dazl.setup_default_logger(logging.INFO)
 
 
 class MARKETPLACE:
-    RegisteredCustodian = 'Marketplace.Role.RegisteredCustodian'
-    RegisteredExchange = 'Marketplace.Role.RegisteredExchange'
-    RegisteredInvestor = 'Marketplace.Role.RegisteredInvestor'
-    Token = 'Marketplace.Token.Token'
+    RegisteredCustodian = 'Marketplace.Registry:RegisteredCustodian'
+    RegisteredExchange = 'Marketplace.Registry:RegisteredExchange'
+    RegisteredInvestor = 'Marketplace.Registry:RegisteredInvestor'
+    Token = 'Marketplace.Token:Token'
 
 
 def main():

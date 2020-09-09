@@ -1,0 +1,69 @@
+daml 1.2
+module Marketplace.Exchange where
+
+import Marketplace.Custodian
+import Marketplace.ExchangeParticipant
+import Marketplace.Registry
+import Marketplace.Token
+
+import DA.Finance.Types
+
+import DA.List
+
+
+template ExchangeInvitation
+  with
+    operator : Party
+    exchange : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, exchange) : (Party, Party)
+    maintainer key._1
+
+    controller exchange can
+      ExchangeInvitation_Accept : ContractId Exchange
+        do
+          create RegisteredExchange with ..
+          create Exchange with tokenPairs = [], participants = [], ..
+
+
+template Exchange
+  with
+    operator : Party
+    exchange : Party
+    public : Party
+    tokenPairs : [TokenPair] -- tokens pairs that are tradable on the exchange
+    participants : [Party]
+  where
+    signatory operator, exchange
+
+    key (operator, exchange) : (Party, Party)
+    maintainer key._1
+
+    observer participants
+
+    controller exchange can
+      nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = exchange, role = "Exchange", ..
+
+      Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
+        with
+          exchParticipant : Party
+        do
+          participantInvitationCid <- create ExchangeParticipantInvitation with ..
+          exchangeCid <- create this with participants = dedup $ exchParticipant :: participants
+          return (exchangeCid, participantInvitationCid)
+
+      Exchange_AddPair : ContractId Exchange
+        with
+          baseTokenId : Id
+          quoteTokenId : Id
+        do
+          (_, baseToken) <- fetchByKey @Token baseTokenId
+          (_, quoteToken) <- fetchByKey @Token quoteTokenId
+          assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
+          create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs

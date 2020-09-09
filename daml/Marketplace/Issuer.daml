@@ -1,0 +1,54 @@
+daml 1.2
+module Marketplace.Issuer where
+
+import Marketplace.Custodian
+import Marketplace.Registry
+import Marketplace.Token
+
+import DA.Finance.Types
+
+import DA.Next.Set
+
+
+template IssuerInvitation
+  with
+    operator : Party
+    issuer : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, issuer) : (Party, Party)
+    maintainer key._1
+
+    controller issuer can
+      IssuerInvitation_Accept : ContractId Issuer
+        do
+          create RegisteredIssuer with ..
+          create Issuer with ..
+
+
+template Issuer
+  with
+    operator : Party
+    issuer : Party
+    public : Party
+  where
+    signatory operator, issuer
+
+    key (operator, issuer) : (Party, Party)
+    maintainer key._1
+
+    controller issuer can
+      nonconsuming Issuer_IssueToken : ContractId Token
+        with
+          name : Text
+          quantityPrecision : Int
+        do
+          let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
+          create Token with id = tokenId, observers = fromList [public], ..
+
+      nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = issuer, role = "Issuer", ..

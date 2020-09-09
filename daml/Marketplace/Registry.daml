@@ -1,0 +1,71 @@
+daml 1.2
+module Marketplace.Registry where
+
+
+template RegisteredCustodian
+  with
+    operator : Party
+    public : Party
+    custodian : Party
+  where
+    signatory operator, custodian
+    observer public
+
+    key (operator, custodian) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      RegisteredCustodian_Offboard : ()
+        do return ()
+
+
+template RegisteredIssuer
+  with
+    operator : Party
+    public : Party
+    issuer : Party
+  where
+    signatory operator, issuer
+    observer public
+
+    key (operator, issuer) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      RegisteredIssuer_Offboard : ()
+        do return ()
+
+
+template RegisteredInvestor
+  with
+    operator : Party
+    public : Party
+    investor : Party
+    isPublic : Bool
+  where
+    signatory operator, investor
+    observer if isPublic then [public] else []
+
+    key (operator, investor) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      RegisteredInvestor_Offboard : ()
+        do return ()
+
+
+template RegisteredExchange
+  with
+    operator : Party
+    public : Party
+    exchange : Party
+  where
+    signatory operator, exchange
+    observer public
+
+    key (operator, exchange) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      RegisteredExchange_Offboard : ()
+        do return ()
