@@ -12,6 +12,7 @@ type Props = {
     onLogout: () => void;
 }
 
+// TODO: issued Token page with data overview 
 const Issuer: React.FC<Props> = ({ onLogout }) => (
     <Switch>
         <Route path='/role/issuer/issue-asset'>
@@ -21,11 +22,11 @@ const Issuer: React.FC<Props> = ({ onLogout }) => (
             </Page>
         </Route>
 
-        <Route path='/role/issuer/issued-token/:tokenId'>
+        {/* <Route path='/role/issuer/issued-token/:tokenId'>
             <Page sideNav={<IssuerSideNav/>} onLogout={onLogout}>
                 <IssuedToken/>
             </Page>
-        </Route>
+        </Route> */}
 
         <Route path='/'>
             <Page sideNav={<IssuerSideNav/>} onLogout={onLogout}>
