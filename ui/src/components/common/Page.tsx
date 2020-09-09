@@ -8,13 +8,14 @@ import './Page.css'
 
 type Props = {
     menuTitle?: React.ReactElement;
+    sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-const Page: React.FC<Props> = ({ children, menuTitle, onLogout }) => {
+const Page: React.FC<Props> = ({ children, menuTitle, sideNav, onLogout }) => {
     return (
         <Grid className="page-content">
-            <SideMenu/>
+            <SideMenu>{ sideNav }</SideMenu>
             <Grid.Column className="page-body">
                 <TopMenu onLogout={onLogout} title={menuTitle}/>
                 { children }

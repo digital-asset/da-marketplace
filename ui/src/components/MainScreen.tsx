@@ -4,13 +4,8 @@
 import React from 'react'
 import { Switch, Route } from 'react-router-dom'
 
-import Page from './common/Page'
-import WelcomeHeader from './common/WelcomeHeader'
-
 import RoleSelectScreen from './RoleSelectScreen'
-import InvestorWallet from './InvestorWallet'
-
-import { WalletIcon } from '../icons/Icons'
+import Investor from './investor/Investor'
 
 type Props = {
   onLogout: () => void;
@@ -19,25 +14,14 @@ type Props = {
 /**
  * React component for the main screen of the `App`.
  */
-const MainScreen: React.FC<Props> = ({onLogout}) => (
+const MainScreen: React.FC<Props> = ({ onLogout }) => (
   <Switch>
-    <Route path='/role'>
+    <Route exact path='/role'>
       <RoleSelectScreen onLogout={onLogout}/>
     </Route>
 
-    <Route path='/wallet'>
-      <Page
-        menuTitle={<><WalletIcon/>Wallet</>}
-        onLogout={onLogout}
-      >
-        <InvestorWallet/>
-      </Page>
-    </Route>
-
-    <Route path='/'>
-      <Page onLogout={onLogout}>
-        <WelcomeHeader/>
-      </Page>
+    <Route path='/role/investor'>
+      <Investor onLogout={onLogout}/>
     </Route>
   </Switch>
 );
