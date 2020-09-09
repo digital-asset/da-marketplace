@@ -1,7 +1,8 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useHistory } from 'react-router-dom'
 import { Button, Form } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
@@ -18,12 +19,14 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
-  const [username, setUsername] = React.useState('');
+  const history = useHistory();
+  const [username, setUsername] = useState('');
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     const credentials = computeCredentials(username);
     onLogin(credentials);
+    history.push("/role");
   }
 
   const handleDablLogin = () => {
@@ -43,7 +46,8 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     url.search = '';
     window.history.replaceState(window.history.state, '', url.toString());
     onLogin({token, party, ledgerId});
-  }, [onLogin]);
+    history.push("/role");
+  }, [onLogin, history]);
 
   return (
     <OnboardingTile>

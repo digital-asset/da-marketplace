@@ -1,4 +1,5 @@
 import React, { useState} from 'react'
+import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
@@ -10,7 +11,6 @@ import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
 
-import { Mode } from './MainScreen'
 import './RoleSelectScreen.css'
 
 enum MarketRole {
@@ -27,10 +27,10 @@ type RoleSelectProps = {
 }
 
 const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, roleSelectClick }) => (
-    <Card className='centered role-select'>
+    <Card className='role-select centered'>
         <Button
-            disabled={disabled}
             className='ghost'
+            disabled={disabled}
             loading={loading}
             onClick={roleSelectClick}
         >
@@ -40,29 +40,32 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
 )
 
 type Props = {
-    setView: (view: Mode) => void;
     onLogout: () => void;
 }
 
-const RoleSelectScreen: React.FC<Props> = ({ setView, onLogout }) => {
+const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
+    const history = useHistory();
+    const [ loading, setLoading ] = useState(false);
+    const [ role, setRole ] = useState<MarketRole>();
+
     const user = useParty();
     const ledger = useLedger();
     const userSessions = useStreamQuery(UserSession).contracts;
 
-    const [ loading, setLoading ] = useState(false);
-    const [ role, setRole ] = useState<MarketRole>();
-
-    const handleRoleClick = async (role: MarketRole, view: Mode) => {
+    const handleRoleClick = async (role: MarketRole) => {
         setRole(role);
+
+        // don't create a new userSession if one exists
         if (userSessions.length === 0) {
             setLoading(true);
 
             const { operator } = await getWellKnownParties();
             await ledger.create(UserSession, { user, role, operator });
         }
+
         setLoading(false);
         setRole(undefined);
-        setView(view);
+        history.push("/");
     }
 
     return (
@@ -72,7 +75,7 @@ const RoleSelectScreen: React.FC<Props> = ({ setView, onLogout }) => {
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.INVESTOR}
-                    roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR, Mode.INVESTOR_VIEW)}/>
+                    roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR)}/>
 
                 {/* disabled these buttons until the view components for them are ready */}
                 <RoleSelect

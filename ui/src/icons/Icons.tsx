@@ -4,7 +4,6 @@ import chatFace from './chatface.svg'
 import exchange from './exchange.svg'
 import lock from './lock.svg'
 import logout from './logout.svg'
-import market from './market.svg'
 import orders from './orders.svg'
 import publicIcon from './public.svg'
 import user from './user.svg'
@@ -52,8 +51,8 @@ export const LogoutIcon = () => (
 export const MarketIcon = () => (
     <svg className="icon market-icon" width="14" height="17" viewBox="0 0 14 17" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M0 4.36865L2.94737 6.05286L6.73684 4.36865L10.5263 6.05286L13.4737 4.36865V17.0002H0V4.36865Z" fill="#303132"/>
-        <path d="M2.10523 6.89474C1.96488 4.92982 2.6947 1 6.73681 1" stroke="#303132" stroke-width="1.5"/>
-        <path d="M10.9314 6.89474C11.0717 4.92982 10.3419 1 6.29981 1" stroke="#303132" stroke-width="1.5"/>
+        <path d="M2.10523 6.89474C1.96488 4.92982 2.6947 1 6.73681 1" stroke="#303132" strokeWidth="1.5"/>
+        <path d="M10.9314 6.89474C11.0717 4.92982 10.3419 1 6.29981 1" stroke="#303132" strokeWidth="1.5"/>
     </svg>
 )
 

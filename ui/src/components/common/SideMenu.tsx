@@ -1,4 +1,5 @@
 import React from 'react'
+import { NavLink } from 'react-router-dom'
 import { Grid, Header, Menu } from 'semantic-ui-react'
 
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Role'
@@ -6,33 +7,28 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Role'
 import { useParty, useStreamQuery } from '@daml/react'
 
 import { MarketIcon, ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
-import { Mode } from '../MainScreen'
 import './SideMenu.css'
 
-type Props = {
-    view: Mode;
-    setView: (viewMode: Mode) => void;
-}
-
-const Sidebar: React.FC<Props> = ({ view, setView }) => {
+const SideMenu: React.FC = () => {
     const user = useParty();
     const allExchanges = useStreamQuery(Exchange).contracts;
 
     return (
-        <Grid.Column className="page-sidemenu" stackable={false}>
+        <Grid.Column className="page-sidemenu">
             <Menu secondary vertical>
                 <Menu.Menu>
                     <Menu.Item
-                        onClick={() => setView(Mode.INVESTOR_VIEW)}
-                        active={view === Mode.INVESTOR_VIEW}
+                        as={NavLink}
+                        to='/'
+                        exact={true}
                     >
                         <Header as='h3'>@{user}</Header>
                     </Menu.Item>
 
                     <Menu.Item
+                        as={NavLink}
+                        to='/wallet'
                         className='sidemenu-item-normal'
-                        onClick={() => setView(Mode.INVESTOR_WALLET_VIEW)}
-                        active={view === Mode.INVESTOR_WALLET_VIEW}
                     >
                         <p><WalletIcon/>Wallet</p>
                     </Menu.Item>
@@ -65,4 +61,4 @@ const Sidebar: React.FC<Props> = ({ view, setView }) => {
     )
 }
 
-export default Sidebar;
+export default SideMenu;
