@@ -1,0 +1,19 @@
+.issue-asset-form {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+}
+
+.issue-asset-form .issue-asset-form-item {
+    padding-top: 48px;
+    width: 50%;
+}
+
+.issue-asset-form .issue-asset-submit-button {
+    margin-top: 48px;
+    width: fit-content;
+}
+
+.issue-asset-form .issue-asset-submit-button:hover {
+    background-color: var(--lightblue2);
+}
