@@ -3,21 +3,19 @@ import { Grid } from 'semantic-ui-react'
 
 import SideMenu from './SideMenu'
 import TopMenu from './TopMenu'
-import { Mode } from '../MainScreen'
 
 import './Page.css'
 
 type Props = {
-    view: Mode;
     menuTitle?: React.ReactElement;
-    setView: (view: Mode) => void;
+    sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-const Page: React.FC<Props> = ({ children, view, menuTitle, setView, onLogout }) => {
+const Page: React.FC<Props> = ({ children, menuTitle, sideNav, onLogout }) => {
     return (
         <Grid className="page-content">
-            <SideMenu view={view} setView={setView}/>
+            <SideMenu>{ sideNav }</SideMenu>
             <Grid.Column className="page-body">
                 <TopMenu onLogout={onLogout} title={menuTitle}/>
                 { children }
