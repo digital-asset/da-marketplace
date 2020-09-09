@@ -11,7 +11,7 @@ const IssuedToken = () => {
     const { tokenId } = useParams()
 
     const token = useStreamQuery(Token).contracts.find(c => c.contractId === tokenId)
-
+    console.log(token)
     return (
         <>
             <Header as='h3'>{token?.payload.id.label}</Header>
