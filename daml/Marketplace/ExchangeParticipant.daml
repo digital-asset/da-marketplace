@@ -40,11 +40,8 @@ template ExchangeParticipant
           price : Decimal
         do
           deposit <- fetch depositCid
-        --   (exchangeCid, exchangeCdata) <- fetchByKey @Exchange (operator, exchange)
           assertMsg "deposit is not allocated to the exchange"
             $ deposit.account.id.label == getAccountLabel exchParticipant exchange
-        --   assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
-        --     $ pair `elem` exchangeCdata.tokenPairs
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
           (_, quoteToken) <- fetchByKey @Token pair._2
@@ -62,11 +59,8 @@ template ExchangeParticipant
           price : Decimal
         do
           deposit <- fetch depositCid
-        --   (exchangeCid, exchangeCdata) <- fetchByKey @Exchange (operator, exchange)
           assertMsg "deposit is not allocated to the exchange"
             $ deposit.account.id.label == getAccountLabel exchParticipant exchange
-        --   assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
-        --     $ pair `elem` exchangeCdata.tokenPairs
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
           (_, quoteToken) <- fetchByKey @Token pair._2

@@ -1,9 +1,9 @@
 daml 1.2
 module Marketplace.Token where
 
-import DA.Next.Set
-
 import DA.Finance.Types
+
+import DA.Next.Set
 
 
 type TokenPair = (Id, Id)

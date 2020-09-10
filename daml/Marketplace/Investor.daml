@@ -6,7 +6,6 @@ import Marketplace.Registry
 import Marketplace.Transfer
 import Marketplace.Utils
 
-import DA.Finance.Asset.Settlement
 import DA.Finance.Asset
 import DA.Finance.Types
 
@@ -49,43 +48,24 @@ template Investor
           custodian : Party
         do create CustodianRelationshipRequest with requester = investor, role = "Investor", ..
 
-      nonconsuming Investor_TransferRequest : ContractId DepositTransferRequest
+      nonconsuming Investor_RequestDepositTransfer : ContractId DepositTransferRequest
         with
           depositCid : ContractId AssetDeposit
           receiverAccountId : Id
         do
            deposit <- fetch depositCid
+           assert $ deposit.account.owner == investor
            create DepositTransferRequest with senderAccountId = deposit.account.id, ..
 
-      nonconsuming Investor_TransferTo : ContractId AssetDeposit
+      nonconsuming Investor_AllocateToExchange : ContractId DepositTransferRequest
         with
-          receiver : Party
           depositCid : ContractId AssetDeposit
-        do
-          deposit <- fetch depositCid
-          assertMsg "Can only transfer deposits on main account"
-            $ deposit.account.id.label == getAccountLabel investor deposit.account.provider
-          (senderRuleCid, senderRule) <- fetchByKey @AssetSettlementRule deposit.account.id
-          let receiverAccountId = getAccountId receiver deposit.account.provider [deposit.account.provider]
-          (receiverRuleCid, receiverRule) <- fetchByKey @AssetSettlementRule receiverAccountId
-          exercise senderRuleCid AssetSettlement_Transfer with ..
-
-      nonconsuming Investor_AllocateToExchange : ContractId AssetDeposit
-        with
           exchange : Party
-          depositCid : ContractId AssetDeposit
         do
           deposit <- fetch depositCid
-          (senderRuleCid, senderRule) <- fetchByKey @AssetSettlementRule deposit.account.id
-          let exchangeAccountId = getAccountId investor exchange [deposit.account.provider]
-          (exchangeAccountCid, exchangeAccount) <- fetchByKey @AssetSettlementRule exchangeAccountId
-          exercise senderRuleCid AssetSettlement_Transfer with receiverAccountId = exchangeAccountId, ..
-
-    --   nonconsuming Investor_ClaimAssetDeposit : ContractId AssetDepositTransferRequest
-    --     with
-    --       depositCid : ContractId AssetDeposit
-    --     do
-    --       deposit <- fetch depositCid
-    --       let exchange = fromSome $ partyFromText (T.replace "'" "" (splitOn "@" deposit.account.id.label !! 1))
-    --       let custodian = deposit.account.provider
-    --       create AssetDepositTransferRequest with ..
+          let receiverAccountId = Id
+                with
+                  signatories = deposit.account.id.signatories,
+                    label = getAccountLabel investor exchange,
+                    version = 0
+          exercise self Investor_RequestDepositTransfer with ..

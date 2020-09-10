@@ -6,7 +6,6 @@ import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import DA.Action
@@ -88,14 +87,14 @@ template Custodian
           assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
           create this with investors = investor :: investors
 
-      nonconsuming GetAccount : Account
+      nonconsuming Custodian_GetAccount : Account
         with
           investor : Party
         do
           let accountId = getAccountId investor custodian [custodian]
           return Account with id = accountId, provider = custodian, owner = investor
 
-      nonconsuming CreateDeposit : ContractId AssetDeposit
+      nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit
         with
           tokenId : Id
           depositQuantity : Decimal
@@ -105,26 +104,5 @@ template Custodian
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
               depositObs = fromList $ beneficiary :: signatory token
-          account <- exercise self GetAccount with investor = beneficiary
+          account <- exercise self Custodian_GetAccount with investor = beneficiary
           create AssetDeposit with observers = depositObs, account = account, ..
-
-      -- nonconsuming UpdateAssetSettlementRules : [ContractId AssetSettlementRule]
-      --   do
-      --     custodianAccounts <- mapA (\u -> do
-      --       let accountId = getAccountId u custodian [custodian]
-      --           account = Account with id = accountId, provider = custodian, owner = u
-      --       optAssetRuleCid <- lookupByKey @AssetSettlementRule accountId
-      --       case optAssetRuleCid of
-      --         None -> create AssetSettlementRule with observers = fromList investors,  ctrls = fromList $ investors ++ exchanges, ..
-      --         Some ruleCid -> do
-      --           archive ruleCid
-      --           create AssetSettlementRule with observers = fromList investors, ctrls = fromList $ investors ++ exchanges, ..) investors
-      --     exchangeAccounts <- mapA (\e -> do
-      --       mapA (\u -> do
-      --         let accountId = getAccountId u e [custodian]
-      --             account = Account with id = accountId, provider = custodian, owner = u
-      --         optAssetRuleCid <- lookupByKey @AssetSettlementRule accountId
-      --         case optAssetRuleCid of
-      --           None -> create AssetSettlementRule with observers = fromList [u, custodian, e], ctrls = fromList investors, ..
-      --           Some ruleCid -> return ruleCid) investors) exchanges
-      --     return $ custodianAccounts ++ concat exchangeAccounts
