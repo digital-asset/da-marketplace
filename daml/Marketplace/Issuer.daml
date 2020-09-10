@@ -47,7 +47,7 @@ template Issuer
           description : Text
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
-          create Token with id = tokenId, observers = fromList [public], description = description, ..
+          create Token with id = tokenId, observers = fromList [public], ..
 
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
