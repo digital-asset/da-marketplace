@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Radio } from 'semantic-ui-react'
 
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
@@ -16,15 +16,16 @@ const IssueAsset = () => {
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
+    const [ isPublic, setIsPublic ] = useState<boolean>(true)
 
     async function submit() {
         const { operator } = await getWellKnownParties();
 
-        if (!name || !quantityPrecision) {
+        if (!name || !quantityPrecision || !description) {
             return
         }
 
-        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision, description});
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision, description, isPublic});
     }
 
     return (
@@ -40,6 +41,7 @@ const IssueAsset = () => {
                     onChange={e => setName(e.currentTarget.value)}
                 />
             </div>
+
             <div className='issue-asset-form-item'>
                 <p>Description</p>
                 <p><i>Describe the asset to potential investors.</i></p>
@@ -52,6 +54,21 @@ const IssueAsset = () => {
                 />
             </div>
             <div className='issue-asset-form-item'>
+                <p>{isPublic ? 'Public' : 'Private'}</p>
+                <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
+            </div>
+            {!isPublic &&
+             <div className='issue-asset-form-item'>
+                <p>Add Observers:</p>
+                <Form.Input
+                    fluid
+                    placeholder='quantityPrecision'
+                    value={quantityPrecision}
+                    className='issue-asset-form-field'
+                    onChange={e => setQuantityPrecision(e.currentTarget.value)}
+                />
+            </div>}
+            <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
                 <Form.Input
                     fluid
@@ -63,7 +80,7 @@ const IssueAsset = () => {
             </div>
             <Button
                 primary
-                disabled={!name || !quantityPrecision}
+                disabled={!name || !quantityPrecision || !description}
                 className='issue-asset-submit-button'
                 onClick={submit}>
                     Submit

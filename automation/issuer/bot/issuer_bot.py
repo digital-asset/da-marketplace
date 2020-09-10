@@ -42,7 +42,7 @@ def main():
         commands = []
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap']:
+            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['custodian']: {}}}
@@ -57,7 +57,7 @@ def main():
         commands = []
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap']:
+            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['exchange']: {}}}
@@ -72,7 +72,7 @@ def main():
         commands = []
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap']:
+            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['investor']: {}}}
@@ -98,11 +98,12 @@ def main():
             if total_observers == 0:
                 return
 
-            logging.info(f"adding {total_observers} observer(s)")
-            client.submit_exercise(event.cid, 'Token_AddObservers',
-                                   {'party': client.party,
-                                    'newObservers': {'textMap': {**investors, **exchanges, **custodians}}
-                                   })
+            if event.cdata['isPublic']:
+                logging.info(f"adding {total_observers} observer(s)")
+                client.submit_exercise(event.cid, 'Token_AddObservers',
+                                    {'party': client.party,
+                                        'newObservers': {'textMap': {**investors, **exchanges, **custodians}}
+                                    })
 
     network.run_forever()
 

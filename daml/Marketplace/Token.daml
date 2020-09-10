@@ -14,7 +14,8 @@ template Token
   with
     id : Id
     quantityPrecision : Int
-    description: Text
+    description : Text
+    isPublic : Bool
     observers : Set Party
   where
     signatory id.signatories
