@@ -1,0 +1,53 @@
+daml 1.2
+module Marketplace.Transfer where
+
+import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+
+import DA.List
+import DA.Next.Set
+
+
+template DepositTransferRequest
+  with
+    investor : Party
+    senderAccountId : Id
+    receiverAccountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    let senderSig = head $ toList senderAccountId.signatories
+        receiverSig = head $ toList receiverAccountId.signatories
+        custodian = senderSig
+    ensure senderSig == receiverSig
+    signatory investor
+
+    controller custodian can
+      DepositTransferRequest_Approve : ContractId AssetDeposit
+        do
+          let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
+              (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
+
+              senderAccount = Account
+                with id = senderAccountId, provider = senderProvider, owner = sender
+              receiverAccount = Account
+                with id = receiverAccountId, provider = receiverProvider, owner = receiver
+
+          senderRuleCid <- create AssetSettlementRule
+            with account = senderAccount,
+                  observers = fromList [senderProvider],
+                  ctrls = empty
+          receiverRuleCid <- create AssetSettlementRule
+            with account = receiverAccount,
+                  observers = fromList [receiverProvider],
+                  ctrls = fromList [sender]
+
+          newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
+            with receiverAccountId = receiverAccountId, ..
+
+          archive senderRuleCid
+          archive receiverRuleCid
+
+          return newDepositCid

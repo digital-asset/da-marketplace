@@ -82,7 +82,7 @@ def main():
             'order': order
         })
 
-        return [exercise(req_cid, 'OrderRequestAck', {
+        return [exercise(req_cid, 'OrderRequest_Ack', {
             'orderId': event.cdata['sid']
         }), exercise(event.cid, 'Archive', {})]
 
@@ -95,7 +95,7 @@ def main():
             'order': order
         })
 
-        return [exercise(req_cid, 'OrderRequestReject', {}),
+        return [exercise(req_cid, 'OrderRequest_Reject', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
@@ -114,7 +114,7 @@ def main():
     async def handle_cancel_order_success(event):
         return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancelAck', {}),
+                                'OrderCancel_Ack', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
@@ -122,7 +122,7 @@ def main():
     async def handle_cancel_order_failure(event):
         return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancelReject', {}),
+                                'OrderCancel_Reject', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
@@ -139,12 +139,12 @@ def main():
 
         commands = [exercise(event.cid, 'Archive', {})]
 
-        commands.append(exercise(taker_cid, 'OrderFill', {
+        commands.append(exercise(taker_cid, 'Order_Fill', {
             'fillQty': execution['executedQuantity'],
             'fillPrice': execution['executedPrice'],
             'counterParty': maker['exchParticipant']
         }))
-        commands.append(exercise(maker_cid, 'OrderFill', {
+        commands.append(exercise(maker_cid, 'Order_Fill', {
             'fillQty': execution['executedQuantity'],
             'fillPrice': execution['executedPrice'],
             'counterParty': taker['exchParticipant']

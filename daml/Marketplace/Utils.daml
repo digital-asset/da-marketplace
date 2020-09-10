@@ -1,10 +1,12 @@
 daml 1.2
 module Marketplace.Utils where
 
-
 import DA.Finance.Types
 
 import DA.Next.Set
+import DA.Optional
+import DA.Text
+
 
 getAccountId : Party -> Party -> [Party] -> Id
 getAccountId owner provider signatories = Id with
@@ -12,5 +14,12 @@ getAccountId owner provider signatories = Id with
     label = getAccountLabel owner provider
     version = 0
 
+
 getAccountLabel : Party -> Party -> Text
 getAccountLabel owner provider = show owner <> "@" <> show provider
+
+
+getAccountOwnerProvider: Text -> (Party, Party)
+getAccountOwnerProvider label =
+  let [owner, provider] = map (fromSome . partyFromText . replace "'" "") (splitOn "@" label)
+  in (owner, provider)

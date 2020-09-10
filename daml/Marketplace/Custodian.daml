@@ -1,0 +1,108 @@
+daml 1.2
+module Marketplace.Custodian where
+
+import Marketplace.Registry
+import Marketplace.Token
+import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.Finance.Types
+
+import DA.Action
+import DA.Next.Set
+
+
+template CustodianRelationshipRequest
+  with
+    operator : Party
+    requester : Party
+    custodian : Party
+    role : Text
+  where
+    signatory operator, requester
+
+    controller custodian can
+      CustodianRelationshipRequest_Approve : ()
+        do
+          case role of
+            "Issuer" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
+            "Exchange" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
+            "Investor" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+            _ -> abort $ "Unknown role type: " <> role
+
+      CustodianRelationshipRequest_Reject : ()
+        do return ()
+
+
+template CustodianInvitation
+  with
+    operator : Party
+    custodian : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, custodian) : (Party, Party)
+    maintainer key._1
+
+    controller custodian can
+      CustodianInvitation_Accept : ContractId Custodian
+        do
+          create RegisteredCustodian with ..
+          create Custodian with investors = [], exchanges = [], issuers = [], ..
+
+
+template Custodian
+  with
+    operator : Party
+    custodian : Party
+    issuers  : [Party]
+    investors : [Party]
+    exchanges : [Party]
+  where
+    signatory operator, custodian
+
+    key (operator, custodian) :  (Party, Party)
+    maintainer key._1
+
+    controller custodian can
+      Custodian_AddIssuer : ContractId Custodian
+        with
+          issuer : Party
+        do
+          assertMsg ("Issuer " <> show issuer <> " already exists") $ issuer `notElem` issuers
+          create this with issuers = issuer :: issuers
+
+      Custodian_AddExchange : ContractId Custodian
+        with
+          exchange : Party
+        do
+          assertMsg ("Exchange " <> show exchange <> " already exists") $ exchange `notElem` exchanges
+          create this with exchanges = exchange :: exchanges
+
+      Custodian_AddInvestor : ContractId Custodian
+        with
+          investor : Party
+        do
+          assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
+          create this with investors = investor :: investors
+
+      nonconsuming Custodian_GetAccount : Account
+        with
+          investor : Party
+        do
+          let accountId = getAccountId investor custodian [custodian]
+          return Account with id = accountId, provider = custodian, owner = investor
+
+      nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit
+        with
+          tokenId : Id
+          depositQuantity : Decimal
+          beneficiary : Party
+        do
+          (tokenCid, token) <- fetchByKey @Token tokenId
+          let quantity = roundBankers token.quantityPrecision depositQuantity
+              asset = Asset with id = tokenId, ..
+              depositObs = fromList $ beneficiary :: signatory token
+          account <- exercise self Custodian_GetAccount with investor = beneficiary
+          create AssetDeposit with observers = depositObs, account = account, ..

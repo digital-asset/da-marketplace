@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Role'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { useParty, useStreamQuery } from '@daml/react'
 

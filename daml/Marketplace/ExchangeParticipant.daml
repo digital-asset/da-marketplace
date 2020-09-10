@@ -1,0 +1,72 @@
+daml 1.2
+module Marketplace.ExchangeParticipant where
+
+import Marketplace.Trading
+import Marketplace.Token
+import Marketplace.Utils
+
+import DA.Finance.Asset
+
+
+template ExchangeParticipantInvitation
+  with
+    operator : Party
+    exchange : Party
+    exchParticipant : Party
+  where
+    signatory exchange
+
+    controller exchParticipant can
+      ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
+        do create ExchangeParticipant with ..
+
+
+template ExchangeParticipant
+  with
+    operator : Party
+    exchange : Party
+    exchParticipant : Party
+  where
+    signatory exchange, exchParticipant
+
+    key (exchange, operator, exchParticipant) : (Party, Party, Party)
+    maintainer key._1
+
+    controller exchParticipant can
+      nonconsuming ExchangeParticipant_PlaceBid : ContractId OrderRequest
+        with
+          depositCid : ContractId AssetDeposit
+          pair : TokenPair
+          price : Decimal
+        do
+          deposit <- fetch depositCid
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+          assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
+            $ pair._2 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token pair._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
+              order = Order with isBid = True, status = "New", orderId = -1, ..
+          create OrderRequest with ..
+
+      nonconsuming ExchangeParticipant_PlaceOffer : ContractId OrderRequest
+        with
+          depositCid : ContractId AssetDeposit
+          pair : TokenPair
+          price : Decimal
+        do
+          deposit <- fetch depositCid
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+          assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
+            $ pair._1 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token pair._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
+              order = Order with isBid = False, status = "New", orderId = -1, ..
+          create OrderRequest with ..
