@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Role'
+import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { useParty, useLedger } from '@daml/react'
 
