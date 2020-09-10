@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useEffect } from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import { Button, Form } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
@@ -10,6 +10,10 @@ import { DeploymentMode, deploymentMode, ledgerId } from '../config'
 
 import './LoginScreen.css'
 import OnboardingTile from './common/OnboardingTile'
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 type Props = {
   onLogin: (credentials: Credentials) => void;
@@ -19,6 +23,7 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
+  const query = useQuery();
   const history = useHistory();
   const [username, setUsername] = useState('');
 
@@ -26,7 +31,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     event.preventDefault();
     const credentials = computeCredentials(username);
     onLogin(credentials);
-    history.push("/role");
+    history.push('/role');
   }
 
   const handleDablLogin = () => {
@@ -34,20 +39,18 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   }
 
   useEffect(() => {
-    const url = new URL(window.location.toString());
-    const token = url.searchParams.get('token');
-    if (token === null) {
-      return;
+    const token = query.get("token");
+    const party = query.get("party");
+
+    console.log("yippee kai yey", token, party);
+
+    if (!token || !party) {
+      return
     }
-    const party = url.searchParams.get('party');
-    if (party === null) {
-      throw Error("When 'token' is passed via URL, 'party' must be passed too.");
-    }
-    url.search = '';
-    window.history.replaceState(window.history.state, '', url.toString());
+
     onLogin({token, party, ledgerId});
-    history.push("/role");
-  }, [onLogin, history]);
+    history.push('/role');
+  }, [query, history]);
 
   return (
     <OnboardingTile>
