@@ -17,7 +17,6 @@ const IssuedToken = () => {
     return (
         <>
             <Header as='h3'>{token?.payload.id.label}</Header>
-
             <Header as='h4'>Issuer:</Header>
             <List verticalAlign='middle'>
                 {signatories.map(s =>
@@ -28,10 +27,8 @@ const IssuedToken = () => {
                     </List.Item>
                 )}
             </List>
-
             <Header as='h4'>Quantity Precision:</Header>
             {token?.payload.quantityPrecision}
-
             <Header as='h4'>Observers:</Header>
             <List verticalAlign='middle'>
                 {observers.map(o =>
