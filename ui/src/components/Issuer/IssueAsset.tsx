@@ -15,6 +15,7 @@ const IssueAsset = () => {
 
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
+    const [ description, setDescription ] = useState<string>('')
 
     async function submit() {
         const { operator } = await getWellKnownParties();
@@ -23,7 +24,7 @@ const IssueAsset = () => {
             return
         }
 
-        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision });
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision, description});
     }
 
     return (
@@ -37,6 +38,17 @@ const IssueAsset = () => {
                     value={name}
                     className='issue-asset-form-field'
                     onChange={e => setName(e.currentTarget.value)}
+                />
+            </div>
+            <div className='issue-asset-form-item'>
+                <p>Description</p>
+                <p><i>Describe the asset to potential investors.</i></p>
+                <Form.Input
+                    fluid
+                    placeholder='description'
+                    value={description}
+                    className='issue-asset-form-field'
+                    onChange={e => setDescription(e.currentTarget.value)}
                 />
             </div>
             <div className='issue-asset-form-item'>
