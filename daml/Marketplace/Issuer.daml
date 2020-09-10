@@ -44,6 +44,7 @@ template Issuer
         with
           name : Text
           quantityPrecision : Int
+          description : Text
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
           create Token with id = tokenId, observers = fromList [public], ..

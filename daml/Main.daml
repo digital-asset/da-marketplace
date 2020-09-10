@@ -67,8 +67,8 @@ test = scenario do
   custodian `submit` exercise relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- issuers issue tokens
-  btcIssuer `submit` exerciseByKey @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6
-  usdtIssuer `submit` exerciseByKey @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2
+  btcIssuer `submit` exerciseByKey @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC token"
+  usdtIssuer `submit` exerciseByKey @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT token"
 
   let btcTokenId = Id with signatories = fromList [ btcIssuer ], label = "BTC", version = 0
   let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0
