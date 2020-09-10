@@ -2,6 +2,7 @@ dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
 operator_bot_version := $(shell cd automation/operator && poetry version | cut -f 2 -d ' ')
 issuer_bot_version := $(shell cd automation/issuer && poetry version | cut -f 2 -d ' ')
+custodian_bot_version := $(shell cd automation/custodian && poetry version | cut -f 2 -d ' ')
 ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
 
@@ -22,9 +23,13 @@ issuer_bot_dir := automation/issuer/bot.egg-info
 issuer_pid := $(state_dir)/issuer.pid
 issuer_log := $(state_dir)/issuer.log
 
+custodian_bot_dir := automation/custodian/bot.egg-info
+custodian_pid := $(state_dir)/custodian.pid
+custodian_log := $(state_dir)/custodian.log
+
 
 ### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_issuer stop_adapter
+.PHONY: clean stop_daml_server stop_operator stop_issuer stop_custodian stop_adapter
 
 $(state_dir):
 	mkdir $(state_dir)
@@ -65,6 +70,20 @@ start_issuer: $(issuer_pid)
 stop_issuer:
 	pkill -F $(issuer_pid) && rm -f $(issuer_pid) $(issuer_log)
 
+
+### DA Marketplace Custodian Bot
+$(custodian_bot_dir):
+	cd automation/custodian && poetry install && poetry build
+
+$(custodian_pid): |$(state_dir) $(custodian_bot_dir)
+	cd automation/custodian && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/custodian_bot.py > ../$(custodian_log) & echo "$$!" > ../$(custodian_pid))
+
+start_custodian: $(custodian_pid)
+
+stop_custodian:
+	pkill -F $(custodian_pid) && rm -f $(custodian_pid) $(custodian_log)
+
+
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
 	cd exberry_adapter && poetry install && poetry build
@@ -84,13 +103,14 @@ dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
 exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
 operator_bot := $(target_dir)/da-marketplace-operator-bot-$(operator_bot_version).tar.gz
 issuer_bot := $(target_dir)/da-marketplace-issuer-bot-$(issuer_bot_version).tar.gz
+custodian_bot := $(target_dir)/da-marketplace-custodian-bot-$(custodian_bot_version).tar.gz
 ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
 
 $(target_dir):
 	mkdir $@
 
 .PHONY: package
-package: $(operator_bot) $(issuer_bot) $(exberry_adapter) $(dar) $(ui)
+package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(exberry_adapter) $(dar) $(ui)
 	cd $(target_dir) && zip da-marketplace.zip *
 
 $(dar): $(target_dir) $(daml_build_log)
@@ -101,6 +121,9 @@ $(operator_bot): $(target_dir) $(operator_bot_dir)
 
 $(issuer_bot): $(target_dir) $(issuer_bot_dir)
 	cp automation/issuer/dist/bot-$(issuer_bot_version).tar.gz $@
+
+$(custodian_bot): $(target_dir) $(custodian_bot_dir)
+	cp automation/custodian/dist/bot-$(custodian_bot_version).tar.gz $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
@@ -115,7 +138,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(dar) $(ui)
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(dar) $(ui)
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock

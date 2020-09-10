@@ -24,7 +24,7 @@ def main():
     network = dazl.Network()
     network.set_config(url=url)
 
-    logging.info(f'Integration will run under party: {operator_party}')
+    logging.info(f'Bot will run under party: {operator_party}')
 
     client = network.aio_party(operator_party)
 
