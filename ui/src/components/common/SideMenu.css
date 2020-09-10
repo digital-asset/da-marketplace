@@ -17,7 +17,7 @@
     background-color: var(--lightblue2);
 }
 
-.column.page-sidemenu > .ui.secondary.menu .item:hover {
+.column.page-sidemenu > .ui.secondary.menu a.item:hover {
     background-color: var(--lightblue2);
 }
 

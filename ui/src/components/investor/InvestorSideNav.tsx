@@ -7,8 +7,13 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { useParty, useStreamQuery } from '@daml/react'
 
 import { MarketIcon, ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { unwrapDamlTuple } from '../common/Tuple'
 
-const InvestorSideNav: React.FC = () => {
+type Props = {
+    url: string;
+}
+
+const InvestorSideNav: React.FC<Props> = ({ url }) => {
     const user = useParty();
     const allExchanges = useStreamQuery(Exchange).contracts;
 
@@ -16,15 +21,15 @@ const InvestorSideNav: React.FC = () => {
         <Menu.Menu>
             <Menu.Item
                 as={NavLink}
-                to='/role/investor'
-                exact={true}
+                to={url}
+                exact
             >
                 <Header as='h3'>@{user}</Header>
             </Menu.Item>
 
             <Menu.Item
                 as={NavLink}
-                to='/role/investor/wallet'
+                to={`${url}/wallet`}
                 className='sidemenu-item-normal'
             >
                 <p><WalletIcon/>Wallet</p>
@@ -40,18 +45,22 @@ const InvestorSideNav: React.FC = () => {
                 <Header as="h3"><MarketIcon/> Marketplace</Header>
             </Menu.Item>
 
-            { allExchanges.map(exchanges => (
-                <Menu.Item
+            { allExchanges.map(exchange => {
+                const [ baseToken, quoteToken ] =
+                    unwrapDamlTuple(exchange.payload.tokenPairs[0]).map(t => t.label);
+
+                return <Menu.Item
+                    as={NavLink}
+                    to={{
+                        pathname: `${url}/trade/${baseToken}-${quoteToken}`,
+                        state: { exchange: exchange.payload }
+                    }}
                     className='sidemenu-item-normal'
-                    key={exchanges.contractId}
+                    key={exchange.contractId}
                 >
-                    <p>
-                        <ExchangeIcon/>
-                        {exchanges.payload.tokenPairs[0]._1.label}/
-                        {exchanges.payload.tokenPairs[0]._2.label}
-                    </p>
+                    <p><ExchangeIcon/>{baseToken}</p>
                 </Menu.Item>
-            ))}
+            })}
         </Menu.Menu>
     </>
 }
