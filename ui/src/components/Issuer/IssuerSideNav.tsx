@@ -8,7 +8,11 @@ import { useParty, useStreamQuery } from '@daml/react'
 
 import { PublicIcon } from '../../icons/Icons'
 
-const IssuerSideNav: React.FC = () => {
+type IssuerSideNavProps = {
+    url: string
+}
+
+const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
     const user = useParty();
     const allTokens = useStreamQuery(Token).contracts
 
@@ -16,14 +20,14 @@ const IssuerSideNav: React.FC = () => {
         <Menu.Menu>
             <Menu.Item
                 as={NavLink}
-                to='/role/issuer'
+                to={url}
                 exact={true}
             >
                 <Header as='h3'>@ {user}</Header>
             </Menu.Item>
             <Menu.Item
                 as={NavLink}
-                to='/role/issuer/issue-asset'
+                to={`${url}/issue-asset`}
                 className='sidemenu-item-normal'
             >
                 <p><PublicIcon/>Issue Asset</p>
@@ -38,7 +42,7 @@ const IssuerSideNav: React.FC = () => {
                 <Menu.Item
                     className='sidemenu-item-normal'
                     as={NavLink}
-                    to={`/role/issuer/issued-token/${token.contractId}`}
+                    to={`${url}/issued-token/${token.contractId}`}
                     key={token.contractId}
                 >
                     <p>{token.payload.id.label}</p>

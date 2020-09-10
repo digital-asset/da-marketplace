@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route } from 'react-router-dom'
+import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
@@ -12,27 +12,31 @@ type Props = {
     onLogout: () => void;
 }
 
-const Issuer: React.FC<Props> = ({ onLogout }) => (
-    <Switch>
-        <Route path='/role/issuer/issue-asset'>
-            <Page sideNav={<IssuerSideNav/>} onLogout={onLogout}>
-                <WelcomeHeader/>
-                <IssueAsset/>
-            </Page>
-        </Route>
+const Issuer: React.FC<Props> = ({ onLogout }) => {
+    const { path, url } = useRouteMatch();
 
-        <Route path='/role/issuer/issued-token/:tokenId'>
-            <Page sideNav={<IssuerSideNav/>} onLogout={onLogout}>
-                <IssuedToken/>
-            </Page>
-        </Route>
+    return (
+        <Switch>
+            <Route path={`${path}/issue-asset`}>
+                <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
+                    <WelcomeHeader/>
+                    <IssueAsset/>
+                </Page>
+            </Route>
 
-        <Route path='/'>
-            <Page sideNav={<IssuerSideNav/>} onLogout={onLogout}>
-                <WelcomeHeader/>
-            </Page>
-        </Route>
-    </Switch>
-)
+            <Route path={`${path}/issued-token/:tokenId`}>
+                <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
+                    <IssuedToken/>
+                </Page>
+            </Route>
+
+            <Route path='/'>
+                <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
+                    <WelcomeHeader/>
+                </Page>
+            </Route>
+        </Switch>
+    )
+}
 
 export default Issuer;
