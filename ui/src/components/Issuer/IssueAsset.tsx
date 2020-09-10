@@ -24,7 +24,7 @@ const IssueAsset = () => {
 
         await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision });
     }
-    // add Token_AddObservers choice
+
     return (
         <Form size='large' className='issue-asset-form'>
             <div className='issue-asset-form-item'>

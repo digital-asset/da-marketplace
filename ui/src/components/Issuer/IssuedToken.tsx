@@ -1,6 +1,6 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, Table } from 'semantic-ui-react'
+import { Header, List } from 'semantic-ui-react'
 
 import { useStreamQuery } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
@@ -11,34 +11,37 @@ const IssuedToken = () => {
     const { tokenId } = useParams()
 
     const token = useStreamQuery(Token).contracts.find(c => c.contractId === tokenId)
-    console.log(token)
+    const signatories = Object.keys(token?.payload.id.signatories.textMap || [])
+    const observers = Object.keys(token?.payload.observers.textMap || [])
+
     return (
         <>
             <Header as='h3'>{token?.payload.id.label}</Header>
-            <Header as='h3'>Trend Over Time</Header>
-            <Header as='h3'>Position Holdings</Header>
-            <Table basic='very' striped>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.HeaderCell></Table.HeaderCell>
-                    </Table.Row>
-                </Table.Header>
 
-                <Table.Body>
-                    <Table.Row>
-                        <Table.Cell></Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                        <Table.Cell></Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                        <Table.Cell></Table.Cell>
-                    </Table.Row>
-                    <Table.Row>
-                        <Table.Cell></Table.Cell>
-                    </Table.Row>
-                </Table.Body>
-            </Table>
+            <Header as='h4'>Issuer:</Header>
+            <List verticalAlign='middle'>
+                {signatories.map(s =>
+                    <List.Item>
+                        <List.Content>
+                            <p>{s}</p>
+                        </List.Content>
+                    </List.Item>
+                )}
+            </List>
+
+            <Header as='h4'>Quantity Precision:</Header>
+            {token?.payload.quantityPrecision}
+
+            <Header as='h4'>Observers:</Header>
+            <List verticalAlign='middle'>
+                {observers.map(o =>
+                    <List.Item>
+                        <List.Content>
+                            <p>{o}</p>
+                        </List.Content>
+                    </List.Item>
+                )}
+            </List>
         </>
     )
 }
