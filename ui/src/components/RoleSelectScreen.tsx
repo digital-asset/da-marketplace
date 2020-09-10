@@ -77,12 +77,12 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
                     loading={loading && role === MarketRole.INVESTOR}
                     roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR)}/>
 
-                {/* disabled these buttons until the view components for them are ready */}
                 <RoleSelect
-                    disabled
                     caption='Issue an asset'
                     loading={loading && role === MarketRole.ISSUER}
-                    roleSelectClick={() => {}}/>
+                    roleSelectClick={() => handleRoleClick(MarketRole.ISSUER)}/>
+
+                {/* disabled these buttons until the view components for them are ready */}
 
                 <RoleSelect
                     disabled
