@@ -36,13 +36,19 @@ def main():
 
 
     @client.ledger_created(MARKETPLACE.RegisteredCustodian)
-    def handle_handle_registered_custodian(event):
+    def handle_registered_custodian(event):
         logging.info(f"{MARKETPLACE.RegisteredCustodian} created!")
         tokens = client.find_active(MARKETPLACE.Token)
         commands = []
+
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
+
+            if not token['isPublic']:
+                logging.info(f"{MARKETPLACE.Token} is not public")
+                return
+
+            if client.party in token['id']['signatories']['textMap']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['custodian']: {}}}
@@ -51,13 +57,18 @@ def main():
         client.submit(commands)
 
     @client.ledger_created(MARKETPLACE.RegisteredExchange)
-    def handle_handle_registered_exchange(event):
+    def handle_registered_exchange(event):
         logging.info(f"{MARKETPLACE.RegisteredExchange} created!")
         tokens = client.find_active(MARKETPLACE.Token)
         commands = []
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
+
+            if not token['isPublic']:
+                logging.info(f"{MARKETPLACE.Token} is not public")
+                return
+
+            if client.party in token['id']['signatories']['textMap']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['exchange']: {}}}
@@ -66,13 +77,18 @@ def main():
         client.submit(commands)
 
     @client.ledger_created(MARKETPLACE.RegisteredInvestor)
-    def handle_handle_registered_investor(event):
+    def handle_registered_investor(event):
         logging.info(f"{MARKETPLACE.RegisteredInvestor} created!")
         tokens = client.find_active(MARKETPLACE.Token)
         commands = []
         for token_cid, token in tokens.items():
             logging.info(f"token_cid: {token_cid}, token: {token}")
-            if client.party in token['id']['signatories']['textMap'] and token['isPublic']:
+
+            if not token['isPublic']:
+                logging.info(f"{MARKETPLACE.Token} is not public")
+                return
+
+            if client.party in token['id']['signatories']['textMap']:
                 commands.append(exercise(token_cid, 'Token_AddObservers',
                                          {'party': client.party,
                                           'newObservers': {'textMap': {event.cdata['investor']: {}}}
@@ -81,8 +97,13 @@ def main():
         client.submit(commands)
 
     @client.ledger_created(MARKETPLACE.Token)
-    def handle_handle_registered_investor(event):
+    def handle_token_created(event):
         logging.info(f"{MARKETPLACE.Token} created!")
+
+        if not event.cdata['isPublic']:
+            logging.info(f"{MARKETPLACE.Token} is not public")
+            return
+
         if client.party in event.cdata['id']['signatories']['textMap'] and \
             len(event.cdata['observers']['textMap']) <= 1:
 
@@ -98,12 +119,11 @@ def main():
             if total_observers == 0:
                 return
 
-            if event.cdata['isPublic']:
-                logging.info(f"adding {total_observers} observer(s)")
-                client.submit_exercise(event.cid, 'Token_AddObservers',
-                                    {'party': client.party,
-                                        'newObservers': {'textMap': {**investors, **exchanges, **custodians}}
-                                    })
+            logging.info(f"adding {total_observers} observer(s)")
+            client.submit_exercise(event.cid, 'Token_AddObservers',
+                                {'party': client.party,
+                                    'newObservers': {'textMap': {**investors, **exchanges, **custodians}}
+                                })
 
     network.run_forever()
 

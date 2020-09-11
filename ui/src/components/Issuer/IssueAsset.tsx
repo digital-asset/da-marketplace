@@ -65,7 +65,6 @@ const IssueAsset = () => {
                         <p><i>Only a set of parties will be aware of this token.</i></p>
                     </>}
                 <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
-                {}
             </div>
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>

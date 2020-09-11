@@ -20,7 +20,8 @@ const IssuedToken = () => {
 
             <Header as='h4'>Description:</Header>
             {token?.payload.description}
-
+            <Header as='h4'>Public:</Header>
+            {token?.payload.isPublic? "True" : "False"}
             <Header as='h4'>Issuer:</Header>
             <List verticalAlign='middle'>
                 {signatories.map(s =>
