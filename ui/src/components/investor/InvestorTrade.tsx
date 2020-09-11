@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useParty, useLedger } from '@daml/react'
-
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { getWellKnownParties } from '../../config'
-import { wrapDamlTuple, unwrapDamlTuple } from '../common/Tuple'
+import { wrapDamlTuple } from '../common/Tuple'
 import Page from '../common/Page'
 
 import { DepositInfo } from './Investor'
@@ -20,9 +20,19 @@ type Props = {
     onLogout: () => void;
 }
 
-const filterDepositsForOrder = (deposits: DepositInfo[], exchange: string, symbol: string) => {
+type LocationState = {
+    exchange?: Exchange;
+    tokenPair?: Id[];
+}
+
+export enum OrderKind {
+    BID = 'bid',
+    OFFER = 'offer'
+}
+
+const filterDepositsForOrder = (deposits: DepositInfo[], accountLabel: string, symbol: string) => {
     return deposits
-        .filter(d => d.contractData.account.id.label.split("@")[1].replace(/'/g, '') === exchange)
+        .filter(d => d.contractData.account.id.label === accountLabel)
         .filter(d => d.contractData.asset.id.label === symbol);
 }
 
@@ -30,59 +40,50 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const [ bidDeposits, setBidDeposits ] = useState<DepositInfo[]>([]);
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
-    const location = useLocation<{exchange?: Exchange}>();
+    const location = useLocation<LocationState>();
     const investor = useParty();
     const ledger = useLedger();
 
     const exchangeData = location.state.exchange;
+    const tokenPair = location.state.tokenPair;
 
-    if (!exchangeData) {
-        throw new Error('Invalid exchange view.');
+    if (!exchangeData || !tokenPair) {
+        throw new Error('No exchange found.');
     }
 
-    const tokenPair = exchangeData.tokenPairs[0];
-    const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label);
+    const { exchange } = exchangeData;
+    const [ base, quote ] = tokenPair.map(t => t.label);
 
     useEffect(() => {
-        const { exchange } = exchangeData;
-        setBidDeposits(filterDepositsForOrder(deposits, exchange, quote));
-        setOfferDeposits(filterDepositsForOrder(deposits, exchange, base));
-    }, [ deposits, base, quote, exchangeData ]);
+        const label = `'${investor}'@'${exchange}'`;
+        setBidDeposits(filterDepositsForOrder(deposits, label, quote));
+        setOfferDeposits(filterDepositsForOrder(deposits, label, base));
+    }, [ deposits, base, quote, investor, exchange ]);
 
     const placeBid = async (depositCid: string, price: string) => {
-        if (exchangeData?.exchange) {
-            const { operator } = await getWellKnownParties();
-            const { exchange } = exchangeData;
+        const { operator } = await getWellKnownParties();
 
-            const key = wrapDamlTuple([exchange, operator, investor]);
-            const args = {
-                price,
-                depositCid,
-                pair: tokenPair
-            };
+        const key = wrapDamlTuple([exchange, operator, investor]);
+        const args = {
+            price,
+            depositCid,
+            pair: wrapDamlTuple(tokenPair)
+        };
 
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-        } else {
-            throw new Error('No exchange found');
-        }
+        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
     }
 
     const placeOffer = async (depositCid: string, price: string) => {
-        if (exchangeData?.exchange) {
-            const { operator } = await getWellKnownParties();
-            const { exchange } = exchangeData;
+        const { operator } = await getWellKnownParties();
 
-            const key = wrapDamlTuple([exchange, operator, investor]);
-            const args = {
-                price,
-                depositCid,
-                pair: tokenPair
-            };
+        const key = wrapDamlTuple([exchange, operator, investor]);
+        const args = {
+            price,
+            depositCid,
+            pair: wrapDamlTuple(tokenPair)
+        };
 
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
-        } else {
-            throw new Error('No exchange found');
-        }
+        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
     }
 
     return (
@@ -93,12 +94,12 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         >
             <div className='order-forms'>
                 <OrderForm
-                    kind='bid'
+                    kind={OrderKind.BID}
                     placeOrder={placeBid}
                     deposits={bidDeposits}/>
 
                 <OrderForm
-                    kind='offer'
+                    kind={OrderKind.OFFER}
                     placeOrder={placeOffer}
                     deposits={offerDeposits}/>
             </div>

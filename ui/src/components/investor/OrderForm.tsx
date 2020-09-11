@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { Button, Form, Header, Message } from 'semantic-ui-react'
 
 import { DepositInfo } from './Investor'
+import { OrderKind } from './InvestorTrade'
 
 import './OrderForm.css'
 
 type Props = {
-    kind: 'bid' | 'offer';
+    kind: OrderKind;
     deposits: DepositInfo[];
     placeOrder: (depositCid: string, price: string) => void;
 }
@@ -34,7 +35,6 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
     const title = kind[0].toUpperCase() + kind.slice(1);
 
     const options = deposits
-        .filter(deposit => deposit.contractData.asset.id.label)
         .map(deposit => ({
             key: deposit.contractId,
             value: deposit.contractId,

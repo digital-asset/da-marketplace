@@ -46,21 +46,25 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
             </Menu.Item>
 
             { exchanges.map(exchange => {
-                const [ baseToken, quoteToken ] =
-                    unwrapDamlTuple(exchange.contractData.tokenPairs[0]).map(t => t.label.toLowerCase());
+                return exchange.contractData.tokenPairs.map(tokenPair => {
+                    const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
-                return <Menu.Item
-                    as={NavLink}
-                    to={{
-                        pathname: `${url}/trade/${baseToken}-${quoteToken}`,
-                        state: { exchange: exchange.contractData }
-                    }}
-                    className='sidemenu-item-normal'
-                    key={exchange.contractId}
-                >
-                    <p><ExchangeIcon/>{baseToken.toUpperCase()}</p>
-                </Menu.Item>
-            })}
+                    return <Menu.Item
+                        as={NavLink}
+                        to={{
+                            pathname: `${url}/trade/${base}-${quote}`,
+                            state: {
+                                exchange: exchange.contractData,
+                                tokenPair: unwrapDamlTuple(tokenPair)
+                            }
+                        }}
+                        className='sidemenu-item-normal'
+                        key={exchange.contractId}
+                    >
+                        <p><ExchangeIcon/>{base}</p>
+                    </Menu.Item>
+                })
+            }).flat()}
         </Menu.Menu>
     </>
 }
