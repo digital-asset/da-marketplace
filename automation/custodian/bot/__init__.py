@@ -1,3 +1,3 @@
-from .operator_bot import main
+from .custodian_bot import main
 
 main()
