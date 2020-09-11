@@ -54,20 +54,19 @@ const IssueAsset = () => {
                 />
             </div>
             <div className='issue-asset-form-item'>
-                <p>{isPublic ? 'Public' : 'Private'}</p>
+                {isPublic?
+                    <>
+                        <p>Public</p>
+                        <p><i>All parties will be aware of this token.</i></p>
+                    </>
+                :
+                    <>
+                        <p>Private</p>
+                        <p><i>Only a set of parties will be aware of this token.</i></p>
+                    </>}
                 <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
+                {}
             </div>
-            {!isPublic &&
-             <div className='issue-asset-form-item'>
-                <p>Add Observers:</p>
-                <Form.Input
-                    fluid
-                    placeholder='quantityPrecision'
-                    value={quantityPrecision}
-                    className='issue-asset-form-field'
-                    onChange={e => setQuantityPrecision(e.currentTarget.value)}
-                />
-            </div>}
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
                 <Form.Input
