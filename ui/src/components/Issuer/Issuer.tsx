@@ -30,7 +30,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 </Page>
             </Route>
 
-            <Route path='/'>
+            <Route path={path}>
                 <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
                     <WelcomeHeader/>
                 </Page>

@@ -1,0 +1,14 @@
+.order-form {
+    margin-bottom: 50px;
+}
+
+.order-form > .field {
+    width: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.order-form > .field > input.order-input, .order-form > .field > .ui.selection.dropdown {
+    width: 350px;
+}

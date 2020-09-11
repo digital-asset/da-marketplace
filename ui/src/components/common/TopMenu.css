@@ -23,3 +23,7 @@
     width: 32px;
     height: 32px;
 }
+
+.top-right-menu > .item:first-child {
+    padding-left: 0;
+}

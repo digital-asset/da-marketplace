@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useState, useEffect } from 'react'
-import { useHistory } from 'react-router-dom'
-import { Button, Form } from 'semantic-ui-react'
+import { useHistory, useLocation } from 'react-router-dom'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { DeploymentMode, deploymentMode, ledgerId } from '../config'
 
 import './LoginScreen.css'
 import OnboardingTile from './common/OnboardingTile'
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 type Props = {
   onLogin: (credentials: Credentials) => void;
@@ -19,67 +23,126 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
+  return (
+    <OnboardingTile>
+      {deploymentMode !== DeploymentMode.PROD_DABL
+        ? <LocalLoginForm onLogin={onLogin}/>
+        : <DablLoginForm onLogin={onLogin}/>
+      }
+    </OnboardingTile>
+  );
+};
+
+
+const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
+  const [ username, setUsername ] = useState("");
   const history = useHistory();
-  const [username, setUsername] = useState('');
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
     const credentials = computeCredentials(username);
     onLogin(credentials);
-    history.push("/role");
+    history.push('/role');
   }
+
+  return (
+    <Form size='large' className='test-select-login-screen'>
+      {/* FORM_BEGIN */}
+      <Form.Input
+        fluid
+        required
+        icon='user'
+        iconPosition='left'
+        placeholder='Username'
+        value={username}
+        className='test-select-username-field'
+        onChange={e => setUsername(e.currentTarget.value)}
+      />
+      <Button
+        primary
+        fluid
+        disabled={!username}
+        className='test-select-login-button'
+        content='Log in'
+        onClick={handleLogin}/>
+      {/* FORM_END */}
+    </Form>
+  )
+}
+
+const DablLoginForm: React.FC<Props> = ({onLogin}) => {
+  const [ partyId, setPartyId ] = useState("");
+  const [ jwt, setJwt ] = useState("");
+
+  const query = useQuery();
+  const history = useHistory();
 
   const handleDablLogin = () => {
     window.location.assign(`https://login.projectdabl.com/auth/login?ledgerId=${ledgerId}`);
   }
 
+  const handleDablTokenLogin = () => {
+    history.push(`/?party=${partyId}&token=${jwt}`);
+  }
+
   useEffect(() => {
-    const url = new URL(window.location.toString());
-    const token = url.searchParams.get('token');
-    if (token === null) {
-      return;
+    const token = query.get("token");
+    const party = query.get("party");
+
+    if (!token || !party) {
+      return
     }
-    const party = url.searchParams.get('party');
-    if (party === null) {
-      throw Error("When 'token' is passed via URL, 'party' must be passed too.");
-    }
-    url.search = '';
-    window.history.replaceState(window.history.state, '', url.toString());
+
     onLogin({token, party, ledgerId});
-    history.push("/role");
-  }, [onLogin, history]);
+    history.push('/role');
+  }, [onLogin, query, history]);
 
   return (
-    <OnboardingTile>
+    <>
       <Form size='large' className='test-select-login-screen'>
-        {deploymentMode !== DeploymentMode.PROD_DABL
-        ? <>
-            {/* FORM_BEGIN */}
-            <Form.Input
-              fluid
-              icon='user'
-              iconPosition='left'
-              placeholder='Username'
-              value={username}
-              className='test-select-username-field'
-              onChange={e => setUsername(e.currentTarget.value)}
-            />
-            <Button
-              primary
-              fluid
-              className='test-select-login-button'
-              onClick={handleLogin}>
-              Log in
-            </Button>
-            {/* FORM_END */}
-          </>
-        : <Button primary fluid onClick={handleDablLogin}>
-            Log in with DABL
-          </Button>
-        }
+        <Button
+          primary
+          fluid
+          content='Log in with DABL'
+          onClick={handleDablLogin}/>
       </Form>
-    </OnboardingTile>
-  );
-};
+      <Header as='h4'>Or</Header>
+      <Form size='large' className='test-select-login-screen'>
+        <Form.Input
+          fluid
+          inline
+          required
+          icon='user'
+          iconPosition='left'
+          label='Party'
+          placeholder='Party ID'
+          value={partyId}
+          className='test-select-username-field'
+          onChange={e => setPartyId(e.currentTarget.value)}/>
+
+        <Form.Input
+          fluid
+          inline
+          required
+          icon='lock'
+          type='password'
+          iconPosition='left'
+          label='Token'
+          placeholder='Party JWT'
+          value={jwt}
+          className='test-select-username-field'
+          onChange={e => setJwt(e.currentTarget.value)}/>
+
+        <Button
+          basic
+          primary
+          fluid
+          disabled={!jwt || !partyId}
+          content='Submit'
+          onClick={handleDablTokenLogin}/>
+      </Form>
+    </>
+  )
+}
 
 export default LoginScreen;
