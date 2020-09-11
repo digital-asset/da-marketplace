@@ -27,7 +27,7 @@ const IssueAsset = () => {
         }
 
         const key = wrapDamlTuple([operator, issuer]);
-        const args = { name, quantityPrecision, description };
+        const args = { name, quantityPrecision, description, isPublic };
 
         await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
     }
