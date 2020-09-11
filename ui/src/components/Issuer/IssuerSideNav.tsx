@@ -42,7 +42,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
                 <Menu.Item
                     className='sidemenu-item-normal'
                     as={NavLink}
-                    to={`${url}/issued-token/${token.contractId}`}
+                    to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                     key={token.contractId}
                 >
                     <p>{token.payload.id.label}</p>
