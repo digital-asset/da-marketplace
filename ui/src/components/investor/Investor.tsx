@@ -3,19 +3,22 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
 
-import { WalletIcon } from '../../icons/Icons'
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 
-export type ContractInfo = {
+type ContractInfo<T> = {
     contractId: string;
-    contractData: AssetDeposit;
+    contractData: T;
 }
+
+export type ExchangeInfo = ContractInfo<Exchange>;
+export type DepositInfo = ContractInfo<AssetDeposit>;
 
 type Props = {
     onLogout: () => void;
@@ -23,26 +26,28 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const allDeposits: ContractInfo[] = useStreamQuery(AssetDeposit).contracts
+
+    const allExchanges = useStreamQuery(Exchange).contracts
+        .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
+
+    const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
-    const sideNav = <InvestorSideNav url={url}/>;
+    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
 
     return <Switch>
-        <Route exact path={`${path}`}>
+        <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
                 <WelcomeHeader/>
             </Page>
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <Page
+            <InvestorWallet
                 sideNav={sideNav}
-                menuTitle={<><WalletIcon/>Wallet</>}
                 onLogout={onLogout}
-            >
-                <InvestorWallet deposits={allDeposits}/>
-            </Page>
+                deposits={allDeposits}
+                exchanges={allExchanges}/>
         </Route>
 
         <Route path={`${path}/trade/:base-:quote`}>

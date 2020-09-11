@@ -1,59 +1,63 @@
-import React from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { useParty, useLedger } from '@daml/react'
 
-import { Investor, Exchange, ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Role'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { getWellKnownParties } from '../../config'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/Tuple'
 import Page from '../common/Page'
-import { wrapDamlTuple } from '../common/Tuple'
 
-import { ContractInfo } from './Investor'
+import { DepositInfo } from './Investor'
 import OrderForm from './OrderForm'
 
 type Props = {
-    deposits: ContractInfo[];
+    deposits: DepositInfo[];
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-function filterDepositsForOrder(deposits: ContractInfo[], exchange: string, symbol: string) {
+const filterDepositsForOrder = (deposits: DepositInfo[], exchange: string, symbol: string) => {
     return deposits
-        .filter(d => d.contractData.account.id.label.split("@")[1] !== exchange)
+        .filter(d => d.contractData.account.id.label.split("@")[1].replace(/'/g, '') === exchange)
         .filter(d => d.contractData.asset.id.label === symbol);
 }
 
 const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
-    const { base, quote } = useParams();
+    const [ bidDeposits, setBidDeposits ] = useState<DepositInfo[]>([]);
+    const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
+
     const location = useLocation<{exchange?: Exchange}>();
     const investor = useParty();
     const ledger = useLedger();
 
     const exchangeData = location.state.exchange;
-    const tokenPair = exchangeData?.tokenPairs[0];
 
-    const allocateToExchange = async (depositCid: string, exchange: string) => {
-        const { operator } = await getWellKnownParties();
-
-        const key = wrapDamlTuple([operator, investor]);
-        const args = { depositCid, exchange };
-
-        return ledger.exerciseByKey(Investor.Investor_AllocateToExchange, key, args);
+    if (!exchangeData) {
+        throw new Error('Invalid exchange view.');
     }
 
-    const placeBid = async (unallocatedDepositCid: string, price: string) => {
+    const tokenPair = exchangeData.tokenPairs[0];
+    const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label);
+
+    useEffect(() => {
+        const { exchange } = exchangeData;
+        setBidDeposits(filterDepositsForOrder(deposits, exchange, quote));
+        setOfferDeposits(filterDepositsForOrder(deposits, exchange, base));
+    }, [ deposits, base, quote, exchangeData ]);
+
+    const placeBid = async (depositCid: string, price: string) => {
         if (exchangeData?.exchange) {
             const { operator } = await getWellKnownParties();
             const { exchange } = exchangeData;
 
-            const allocatedDeposit = await allocateToExchange(unallocatedDepositCid, exchange);
-
             const key = wrapDamlTuple([exchange, operator, investor]);
             const args = {
                 price,
-                depositCid: allocatedDeposit[0],
+                depositCid,
                 pair: tokenPair
             };
 
@@ -63,17 +67,15 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         }
     }
 
-    const placeOffer = async (unallocatedDepositCid: string, price: string) => {
+    const placeOffer = async (depositCid: string, price: string) => {
         if (exchangeData?.exchange) {
             const { operator } = await getWellKnownParties();
             const { exchange } = exchangeData;
 
-            const allocatedDeposit = await allocateToExchange(unallocatedDepositCid, exchange);
-
             const key = wrapDamlTuple([exchange, operator, investor]);
             const args = {
                 price,
-                depositCid: allocatedDeposit[0],
+                depositCid,
                 pair: tokenPair
             };
 
@@ -93,12 +95,12 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                 <OrderForm
                     kind='bid'
                     placeOrder={placeBid}
-                    deposits={filterDepositsForOrder(deposits, exchangeData?.exchange || "", quote)}/>
+                    deposits={bidDeposits}/>
 
                 <OrderForm
                     kind='offer'
                     placeOrder={placeOffer}
-                    deposits={filterDepositsForOrder(deposits, exchangeData?.exchange || "", base)}/>
+                    deposits={offerDeposits}/>
             </div>
         </Page>
     )

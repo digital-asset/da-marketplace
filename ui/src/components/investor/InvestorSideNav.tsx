@@ -2,20 +2,20 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-
-import { useParty, useStreamQuery } from '@daml/react'
+import { useParty } from '@daml/react'
 
 import { MarketIcon, ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { unwrapDamlTuple } from '../common/Tuple'
 
+import { ExchangeInfo } from './Investor'
+
 type Props = {
     url: string;
+    exchanges: ExchangeInfo[];
 }
 
-const InvestorSideNav: React.FC<Props> = ({ url }) => {
-    const user = useParty();
-    const allExchanges = useStreamQuery(Exchange).contracts;
+const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
+    const investor = useParty();
 
     return <>
         <Menu.Menu>
@@ -24,7 +24,7 @@ const InvestorSideNav: React.FC<Props> = ({ url }) => {
                 to={url}
                 exact
             >
-                <Header as='h3'>@{user}</Header>
+                <Header as='h3'>@{investor}</Header>
             </Menu.Item>
 
             <Menu.Item
@@ -45,20 +45,20 @@ const InvestorSideNav: React.FC<Props> = ({ url }) => {
                 <Header as="h3"><MarketIcon/> Marketplace</Header>
             </Menu.Item>
 
-            { allExchanges.map(exchange => {
+            { exchanges.map(exchange => {
                 const [ baseToken, quoteToken ] =
-                    unwrapDamlTuple(exchange.payload.tokenPairs[0]).map(t => t.label);
+                    unwrapDamlTuple(exchange.contractData.tokenPairs[0]).map(t => t.label.toLowerCase());
 
                 return <Menu.Item
                     as={NavLink}
                     to={{
                         pathname: `${url}/trade/${baseToken}-${quoteToken}`,
-                        state: { exchange: exchange.payload }
+                        state: { exchange: exchange.contractData }
                     }}
                     className='sidemenu-item-normal'
                     key={exchange.contractId}
                 >
-                    <p><ExchangeIcon/>{baseToken}</p>
+                    <p><ExchangeIcon/>{baseToken.toUpperCase()}</p>
                 </Menu.Item>
             })}
         </Menu.Menu>

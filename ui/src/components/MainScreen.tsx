@@ -5,7 +5,7 @@ import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import RoleSelectScreen from './RoleSelectScreen'
-import Investor from './investor/Investor'
+import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
 
 type Props = {

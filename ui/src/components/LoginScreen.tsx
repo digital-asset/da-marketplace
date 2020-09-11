@@ -50,6 +50,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
       {/* FORM_BEGIN */}
       <Form.Input
         fluid
+        required
         icon='user'
         iconPosition='left'
         placeholder='Username'
@@ -60,6 +61,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
       <Button
         primary
         fluid
+        disabled={!username}
         className='test-select-login-button'
         content='Log in'
         onClick={handleLogin}/>
@@ -108,16 +110,20 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
       <Form size='large' className='test-select-login-screen'>
         <Form.Input
           fluid
+          inline
+          required
           icon='user'
           iconPosition='left'
           label='Party'
           placeholder='Party ID'
           value={partyId}
           className='test-select-username-field'
-          onChange={e => setPartyId(e.currentTarget.value)}
-        />
+          onChange={e => setPartyId(e.currentTarget.value)}/>
+
         <Form.Input
           fluid
+          inline
+          required
           icon='lock'
           type='password'
           iconPosition='left'
@@ -125,13 +131,14 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
           placeholder='Party JWT'
           value={jwt}
           className='test-select-username-field'
-          onChange={e => setJwt(e.currentTarget.value)}
-        />
+          onChange={e => setJwt(e.currentTarget.value)}/>
+
         <Button
           basic
           primary
           fluid
-          content='Sign in with token'
+          disabled={!jwt || !partyId}
+          content='Submit'
           onClick={handleDablTokenLogin}/>
       </Form>
     </>

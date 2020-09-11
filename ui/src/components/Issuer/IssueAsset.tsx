@@ -5,6 +5,7 @@ import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { useParty, useLedger } from '@daml/react'
 
+import { wrapDamlTuple } from '../common/Tuple'
 import { getWellKnownParties } from '../../config'
 
 import './IssueAsset.css'
@@ -24,7 +25,10 @@ const IssueAsset = () => {
             return
         }
 
-        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, { _1: operator, _2: issuer }, { name, quantityPrecision, description});
+        const key = wrapDamlTuple([operator, issuer]);
+        const args = { name, quantityPrecision, description };
+
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
     }
 
     return (
