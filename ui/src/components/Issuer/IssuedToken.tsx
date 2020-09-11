@@ -10,7 +10,7 @@ import './IssueAsset.css'
 const IssuedToken = () => {
     const { tokenId } = useParams()
 
-    const token = useStreamQuery(Token).contracts.find(c => c.contractId === tokenId)
+    const token = useStreamQuery(Token).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
     const signatories = Object.keys(token?.payload.id.signatories.textMap || [])
     const observers = Object.keys(token?.payload.observers.textMap || [])
 
