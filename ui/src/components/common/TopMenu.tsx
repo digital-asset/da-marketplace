@@ -11,9 +11,9 @@ type Props = {
 }
 
 const TopMenu: React.FC<Props> = ({ title, onLogout }) => (
-    <Menu className="top-menu">
+    <Menu className='top-menu'>
         { title &&
-            <Menu.Menu position='left'>
+            <Menu.Menu className='top-right-menu' position='left'>
                 <Menu.Item>
                     <Header as='h1'>
                         <Header.Content>
@@ -24,7 +24,7 @@ const TopMenu: React.FC<Props> = ({ title, onLogout }) => (
             </Menu.Menu>
         }
 
-        <Menu.Menu position='right'>
+        <Menu.Menu className='top-left-menu' position='right'>
             <Menu.Item as={() => (
                 <Button className='ghost' onClick={onLogout}>
                     Log out <LogoutIcon/>

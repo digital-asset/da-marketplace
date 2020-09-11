@@ -2,29 +2,34 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-
-import { useParty, useStreamQuery } from '@daml/react'
+import { useParty } from '@daml/react'
 
 import { MarketIcon, ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { unwrapDamlTuple } from '../common/Tuple'
 
-const InvestorSideNav: React.FC = () => {
-    const user = useParty();
-    const allExchanges = useStreamQuery(Exchange).contracts;
+import { ExchangeInfo } from './Investor'
+
+type Props = {
+    url: string;
+    exchanges: ExchangeInfo[];
+}
+
+const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
+    const investor = useParty();
 
     return <>
         <Menu.Menu>
             <Menu.Item
                 as={NavLink}
-                to='/role/investor'
-                exact={true}
+                to={url}
+                exact
             >
-                <Header as='h3'>@{user}</Header>
+                <Header as='h3'>@{investor}</Header>
             </Menu.Item>
 
             <Menu.Item
                 as={NavLink}
-                to='/role/investor/wallet'
+                to={`${url}/wallet`}
                 className='sidemenu-item-normal'
             >
                 <p><WalletIcon/>Wallet</p>
@@ -40,18 +45,26 @@ const InvestorSideNav: React.FC = () => {
                 <Header as="h3"><MarketIcon/> Marketplace</Header>
             </Menu.Item>
 
-            { allExchanges.map(exchanges => (
-                <Menu.Item
-                    className='sidemenu-item-normal'
-                    key={exchanges.contractId}
-                >
-                    <p>
-                        <ExchangeIcon/>
-                        {exchanges.payload.tokenPairs[0]._1.label}/
-                        {exchanges.payload.tokenPairs[0]._2.label}
-                    </p>
-                </Menu.Item>
-            ))}
+            { exchanges.map(exchange => {
+                return exchange.contractData.tokenPairs.map(tokenPair => {
+                    const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                    return <Menu.Item
+                        as={NavLink}
+                        to={{
+                            pathname: `${url}/trade/${base}-${quote}`,
+                            state: {
+                                exchange: exchange.contractData,
+                                tokenPair: unwrapDamlTuple(tokenPair)
+                            }
+                        }}
+                        className='sidemenu-item-normal'
+                        key={exchange.contractId}
+                    >
+                        <p><ExchangeIcon/>{base}</p>
+                    </Menu.Item>
+                })
+            }).flat()}
         </Menu.Menu>
     </>
 }

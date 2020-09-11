@@ -27,11 +27,11 @@ const App: React.FC = () => {
   return (
     <Router>
       <Switch>
-        <Route path="/login">
+        <Route exact path='/'>
           <LoginScreen onLogin={setCredentials}/>
         </Route>
 
-        <Route path="/" render={() => {
+        <Route path='/role' render={() => {
           return credentials
             ? <DamlLedger
                 token={credentials.token}
@@ -40,7 +40,7 @@ const App: React.FC = () => {
               >
                 <MainScreen onLogout={() => setCredentials(undefined)}/>
             </DamlLedger>
-          : <Redirect to='/login'/>
+            : <Redirect to='/'/>
           }}>
         </Route>
       </Switch>

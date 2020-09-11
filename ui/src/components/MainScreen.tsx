@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React from 'react'
-import { Switch, Route } from 'react-router-dom'
+import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import RoleSelectScreen from './RoleSelectScreen'
-import Investor from './investor/Investor'
+import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
 
 type Props = {
@@ -15,20 +15,24 @@ type Props = {
 /**
  * React component for the main screen of the `App`.
  */
-const MainScreen: React.FC<Props> = ({ onLogout }) => (
-  <Switch>
-    <Route exact path='/role'>
-      <RoleSelectScreen onLogout={onLogout}/>
-    </Route>
+const MainScreen: React.FC<Props> = ({ onLogout }) => {
+  const { path } = useRouteMatch();
 
-    <Route path='/role/investor'>
-      <Investor onLogout={onLogout}/>
-    </Route>
+  return (
+    <Switch>
+      <Route exact path={path}>
+        <RoleSelectScreen onLogout={onLogout}/>
+      </Route>
 
-    <Route path='/role/issuer'>
-      <Issuer onLogout={onLogout}/>
-    </Route>
-  </Switch>
-);
+      <Route path={`${path}/investor`}>
+        <Investor onLogout={onLogout}/>
+      </Route>
+
+      <Route path={`${path}/issuer`}>
+        <Issuer onLogout={onLogout}/>
+      </Route>
+    </Switch>
+  );
+}
 
 export default MainScreen;
