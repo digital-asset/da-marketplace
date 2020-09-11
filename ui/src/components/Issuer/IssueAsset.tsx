@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Radio } from 'semantic-ui-react'
 
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
@@ -17,11 +17,12 @@ const IssueAsset = () => {
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
+    const [ isPublic, setIsPublic ] = useState<boolean>(true)
 
     async function submit() {
         const { operator } = await getWellKnownParties();
 
-        if (!name || !quantityPrecision) {
+        if (!name || !quantityPrecision || !description) {
             return
         }
 
@@ -44,6 +45,7 @@ const IssueAsset = () => {
                     onChange={e => setName(e.currentTarget.value)}
                 />
             </div>
+
             <div className='issue-asset-form-item'>
                 <p>Description</p>
                 <p><i>Describe the asset to potential investors.</i></p>
@@ -54,6 +56,19 @@ const IssueAsset = () => {
                     className='issue-asset-form-field'
                     onChange={e => setDescription(e.currentTarget.value)}
                 />
+            </div>
+            <div className='issue-asset-form-item'>
+                {isPublic?
+                    <>
+                        <p>Public</p>
+                        <p><i>All parties will be aware of this token.</i></p>
+                    </>
+                :
+                    <>
+                        <p>Private</p>
+                        <p><i>Only a set of parties will be aware of this token.</i></p>
+                    </>}
+                <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
             </div>
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
@@ -67,7 +82,7 @@ const IssueAsset = () => {
             </div>
             <Button
                 primary
-                disabled={!name || !quantityPrecision}
+                disabled={!name || !quantityPrecision || !description}
                 className='issue-asset-submit-button'
                 onClick={submit}>
                     Submit

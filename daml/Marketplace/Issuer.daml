@@ -45,9 +45,10 @@ template Issuer
           name : Text
           quantityPrecision : Int
           description : Text
+          isPublic : Bool
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
-          create Token with id = tokenId, observers = fromList [public], ..
+          create Token with id = tokenId, observers = if isPublic then fromList [public] else empty, ..
 
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
