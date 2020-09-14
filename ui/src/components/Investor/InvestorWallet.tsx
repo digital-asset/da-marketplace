@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Card, Header, Form, Message } from 'semantic-ui-react'
+import { Button, Card, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -7,6 +7,7 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { getWellKnownParties } from '../../config'
 import { WalletIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/Tuple'
+import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
 import { DepositInfo, ExchangeInfo } from './Investor'
@@ -84,7 +85,7 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
     }
 
     return (
-        <Form loading={loading} error={error.length > 0}>
+        <FormErrorHandled loading={loading} error={error}>
             <Form.Group widths='equal'>
                 <Form.Select
                     value={exchange}
@@ -99,11 +100,7 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
                     content='Allocate to Exchange'
                     onClick={handleDepositAllocation}/>
             </Form.Group>
-            <Message
-                error
-                header='DAML JSON API error'
-                content={error}/>
-        </Form>
+        </FormErrorHandled>
     )
 }
 

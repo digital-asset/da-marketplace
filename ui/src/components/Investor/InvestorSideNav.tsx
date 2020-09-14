@@ -35,7 +35,11 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
                 <p><WalletIcon/>Wallet</p>
             </Menu.Item>
 
-            <Menu.Item className='sidemenu-item-normal'>
+            <Menu.Item
+                as={NavLink}
+                to={`${url}/orders`}
+                className='sidemenu-item-normal'
+            >
                 <p><OrdersIcon/>Orders</p>
             </Menu.Item>
         </Menu.Menu>
@@ -61,7 +65,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
                         className='sidemenu-item-normal'
                         key={exchange.contractId}
                     >
-                        <p><ExchangeIcon/>{base}</p>
+                        <p><ExchangeIcon/>{base.toUpperCase()}</p>
                     </Menu.Item>
                 })
             }).flat()}

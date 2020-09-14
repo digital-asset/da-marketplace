@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { Button, Form, Header, Message } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
+
+import FormErrorHandled from '../common/FormErrorHandled'
 
 import { DepositInfo } from './Investor'
 import { OrderKind } from './InvestorTrade'
@@ -42,7 +44,12 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
         }))
 
     return (
-        <Form className="order-form" loading={loading} error={error.length > 0} onSubmit={handleSubmit}>
+        <FormErrorHandled
+            className="order-form"
+            loading={loading}
+            error={error}
+            onSubmit={handleSubmit}
+        >
             <Header>{title}</Header>
             <Form.Select
                 required
@@ -64,12 +71,8 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
                     onChange={e => setPrice(e.target.value)}/>
             </Form.Field>
 
-            <Message
-                error
-                header='DAML JSON API error'
-                content={error}/>
             <Button disabled={!price || !depositCid}>{title}</Button>
-        </Form>
+        </FormErrorHandled>
     )
 }
 
