@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
-import { Button, Card, Header, Form, Message } from 'semantic-ui-react'
+import { Button, Card, Header } from 'semantic-ui-react'
 
 import { useLedger, useStreamQuery } from '@daml/react'
 import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/Tuple'
+import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
 import './InvestorOrders.css'
@@ -42,7 +43,7 @@ type OrderProps = {
 
 const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
     const base = unwrapDamlTuple(order.pair)[0].label;
-    const label = order.isBid ? `Bought ${base}` : `Sold ${base}`;
+    const label = order.isBid ? `Buy ${base}` : `Sell ${base}`;
     const amount = order.isBid ? `+ ${order.qty} ${base}` : `- ${order.qty} ${base}`;
 
     return (
@@ -78,7 +79,7 @@ const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
     }
 
     return (
-        <Form className='order-card-container' error={error.length > 0}>
+        <FormErrorHandled className='order-card-container' error={error}>
             <OrderCard order={order}>
                 <Button
                     basic
@@ -88,8 +89,7 @@ const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
                     loading={loading}
                     onClick={handleCancelOrder}/>
             </OrderCard>
-            <Message error header='DAML API error' content={error}/>
-        </Form>
+        </FormErrorHandled>
     )
 }
 
