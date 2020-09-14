@@ -9,6 +9,8 @@
   --lightblue-border: #ECF0FC;
   --mediumblue: #E5EEFD;
   --textcolor: #303132;
+  --grey1: #FAFAFA;
+  --grey2: #F0F0F0;
 }
 
 * {
@@ -52,4 +54,8 @@ code {
 
 .ui.button.ghost:hover {
   background-color: var(--lightblue);
+}
+
+.ui.basic.button.basic-button-fill {
+  background-color: #fff !important;
 }

@@ -1,0 +1,33 @@
+.order-card-container {
+    width: 600px;
+}
+
+.order-card > .ui.card.order-info {
+    background: none;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0;
+}
+
+.order-card {
+    padding: 10px;
+    background-color: var(--grey1);
+    border: 1px var(--grey2) solid;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-info .exchange-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 12px;
+    margin-left: 8px;
+}
+
+.order-info div:first-child {
+    display: flex;
+    align-items: center;
+}

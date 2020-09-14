@@ -11,6 +11,7 @@ import WelcomeHeader from '../common/WelcomeHeader'
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
+import InvestorOrders from './InvestorOrders'
 
 type ContractInfo<T> = {
     contractId: string;
@@ -48,6 +49,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 onLogout={onLogout}
                 deposits={allDeposits}
                 exchanges={allExchanges}/>
+        </Route>
+
+        <Route path={`${path}/orders`}>
+            <InvestorOrders
+                sideNav={sideNav}
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/trade/:base-:quote`}>
