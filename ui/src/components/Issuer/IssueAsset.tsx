@@ -73,7 +73,7 @@ const IssueAsset = () => {
             </div>
 
             {!isPublic &&
-                <>
+                <div className='issue-asset-form-item add-observers'>
                     <p>Add Observers</p>
                     <p><i> Input each party Id seporated by a comma </i></p>
                     <Form.Input
@@ -83,7 +83,7 @@ const IssueAsset = () => {
                         className='issue-asset-form-field'
                         onChange={e => setObservers((e.currentTarget.value).split(','))}
                     />
-                </>
+                </div>
             }
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>

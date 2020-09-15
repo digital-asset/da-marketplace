@@ -9,6 +9,10 @@
     width: 50%;
 }
 
+.issue-asset-form .issue-asset-form-item.add-observers {
+    padding-top: 24px;
+}
+
 .issue-asset-form .issue-asset-submit-button {
     margin-top: 48px;
     width: fit-content;
