@@ -50,41 +50,42 @@ const IssueAsset = () => {
             <div className='issue-asset-form-item'>
                 <p>Description</p>
                 <p><i>Describe the asset to potential investors.</i></p>
-                <Form.Input
+                <Form.TextArea
                     fluid
                     placeholder='description'
-                    value={description}
                     className='issue-asset-form-field'
                     onChange={e => setDescription(e.currentTarget.value)}
                 />
             </div>
-            <div className='issue-asset-form-item'>
-                {isPublic?
-                    <>
-                        <p>Public</p>
-                        <p><i>All parties will be aware of this token.</i></p>
-                    </>
-                :
-                    <>
-                        <p>Private</p>
-                        <p><i>Only a set of parties will be aware of this token.</i></p>
-                    </>}
-                <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
-            </div>
-
-            {!isPublic &&
-                <div className='issue-asset-form-item add-observers'>
-                    <p>Add Observers</p>
-                    <p><i> Input each party Id seporated by a comma </i></p>
-                    <Form.Input
-                        fluid
-                        placeholder='observer'
-                        value={observers}
-                        className='issue-asset-form-field'
-                        onChange={e => setObservers((e.currentTarget.value).split(','))}
-                    />
+            <div className='is-public'>
+                <div className='issue-asset-form-item'>
+                    {isPublic?
+                        <>
+                            <p>Public</p>
+                            <p><i>All parties will be aware of this token.</i></p>
+                        </>
+                    :
+                        <>
+                            <p>Private</p>
+                            <p><i>Only a set of parties will be aware of this token.</i></p>
+                        </>}
+                    <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
                 </div>
-            }
+
+                {!isPublic &&
+                    <div className='issue-asset-form-item'>
+                        <p>Add Observers</p>
+                        <p><i> Input each party Id separated by a comma </i></p>
+                        <Form.TextArea
+                            fluid
+                            placeholder='observers'
+                            // value={observers}
+                            className='issue-asset-form-field observers'
+                            onChange={e => setObservers((e.currentTarget.value).split(','))}
+                        />
+                    </div>
+                }
+            </div>
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
                 <Form.Input
