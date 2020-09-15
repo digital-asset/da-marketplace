@@ -18,6 +18,7 @@ const IssueAsset = () => {
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
+    const [ observers, setObservers ] = useState<string[]>([]);
 
     async function submit() {
         const { operator } = await getWellKnownParties();
@@ -27,7 +28,7 @@ const IssueAsset = () => {
         }
 
         const key = wrapDamlTuple([operator, issuer]);
-        const args = { name, quantityPrecision, description, isPublic };
+        const args = { name, quantityPrecision, description, isPublic, observers};
 
         await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
     }
@@ -70,6 +71,20 @@ const IssueAsset = () => {
                     </>}
                 <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
             </div>
+
+            {!isPublic &&
+                    <Form>
+                        <p>Add Observers</p>
+                        <p><i> Input each party Id seporated by a comma </i></p>
+                        <Form.Input
+                            fluid
+                            placeholder='observer'
+                            value={observers}
+                            className='issue-asset-form-field'
+                            onChange={e => setObservers((e.currentTarget.value).split(','))}
+                        />
+                   </Form>
+                }
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
                 <Form.Input
