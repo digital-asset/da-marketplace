@@ -73,18 +73,18 @@ const IssueAsset = () => {
             </div>
 
             {!isPublic &&
-                    <Form>
-                        <p>Add Observers</p>
-                        <p><i> Input each party Id seporated by a comma </i></p>
-                        <Form.Input
-                            fluid
-                            placeholder='observer'
-                            value={observers}
-                            className='issue-asset-form-field'
-                            onChange={e => setObservers((e.currentTarget.value).split(','))}
-                        />
-                   </Form>
-                }
+                <>
+                    <p>Add Observers</p>
+                    <p><i> Input each party Id seporated by a comma </i></p>
+                    <Form.Input
+                        fluid
+                        placeholder='observer'
+                        value={observers}
+                        className='issue-asset-form-field'
+                        onChange={e => setObservers((e.currentTarget.value).split(','))}
+                    />
+                </>
+            }
             <div className='issue-asset-form-item'>
                 <p>Quantity Precision</p>
                 <Form.Input
