@@ -14,9 +14,9 @@ import { ArrowRightIcon } from '../icons/Icons'
 import './RoleSelectScreen.css'
 
 enum MarketRole {
-    INVESTOR = "investor",
-    ISSUER = "issuer",
-    CUSTODIAN = "custodian"
+    INVESTOR = "Investor",
+    ISSUER = "Issuer",
+    CUSTODIAN = "Custodian"
 }
 
 type RoleSelectProps = {
@@ -65,7 +65,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role}`);
+        history.push(`/role/${role.toLowerCase()}`);
     }
 
     return (

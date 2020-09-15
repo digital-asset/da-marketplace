@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { Button, Form, Radio } from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react'
 
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { useParty, useLedger } from '@daml/react'
 
+import FormToggle from '../common/FormToggle'
 import { wrapDamlTuple } from '../common/Tuple'
 import FormErrorHandled from '../common/FormErrorHandled'
 
@@ -65,19 +66,14 @@ const IssueAsset = () => {
                     />
                 </div>
                 <div className='is-public'>
-                    <div className='issue-asset-form-item'>
-                        {isPublic?
-                            <>
-                                <p>Public</p>
-                                <p><i>All parties will be aware of this token.</i></p>
-                            </>
-                        :
-                            <>
-                                <p>Private</p>
-                                <p><i>Only a set of parties will be aware of this token.</i></p>
-                            </>}
-                        <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
-                    </div>
+                    <FormToggle
+                        defaultChecked
+                        className='issue-asset-form-item'
+                        onLabel='Public'
+                        onInfo='All parties will be aware of this token.'
+                        offLabel='Private'
+                        offInfo='Only a set of parties will be aware of this token.'
+                        onClick={val => setIsPublic(val)}/>
 
                     {!isPublic &&
                         <div className='issue-asset-form-item'>
