@@ -24,29 +24,5 @@ export const ledgerId: string =
 
 export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
-  ? `https://api.projectdabl.com`
+  ? `https://api.projectdabl.com/data/${ledgerId}/`
   : undefined;
-
-export const httpDataUrl = httpBaseUrl
-  ? `${httpBaseUrl}/data/${ledgerId}/`
-  : undefined;
-
-export const getWellKnownParties = async () => {
-  if (deploymentMode === DeploymentMode.PROD_DABL) {
-    if (wellKnownParties.public && wellKnownParties.operator) {
-      return wellKnownParties;
-    } else {
-      const { publicParty, userAdminParty } =
-        await fetch(`//${ledgerId}.projectdabl.com/.well-known/dabl.json`).then(res => res.json());
-
-      wellKnownParties.public = publicParty;
-      wellKnownParties.operator = userAdminParty;
-      return { public: publicParty, operator: userAdminParty };
-    }
-  }
-  else {
-    return { public: "Public", operator: "Operator" };
-  }
-}
-
-let wellKnownParties = { public: undefined, operator: undefined };

@@ -3,9 +3,8 @@ import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
-
-import { getWellKnownParties } from '../config'
 
 import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
@@ -50,6 +49,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
+    const operator = useWellKnownParties().userAdminParty;
     const userSessions = useStreamQuery(UserSession).contracts;
 
     const handleRoleClick = async (role: MarketRole) => {
@@ -58,8 +58,6 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
         // don't create a new userSession if one exists
         if (userSessions.length === 0) {
             setLoading(true);
-
-            const { operator } = await getWellKnownParties();
             await ledger.create(UserSession, { user, role, operator });
         }
 
