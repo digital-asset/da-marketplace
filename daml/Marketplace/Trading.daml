@@ -134,13 +134,12 @@ template BrokerOrderRequest
     controller broker can
       BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
         with
-          exchange : Party
           brokerOrderId : Int
         do
           deposit <- fetch depositCid
           assert $ deposit.account.owner == brokerCustomer
           brokerOrderCid <- create BrokerOrder with ..
-          let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker exchange, version = 0
+          let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
           depositTransferReqCid <- create DepositTransferRequest with investor = brokerCustomer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
