@@ -1,0 +1,41 @@
+daml 1.2
+module Marketplace.Broker where
+
+import Marketplace.BrokerCustomer
+import Marketplace.Registry
+
+
+template BrokerInvitation
+  with
+    operator : Party
+    broker : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, broker) : (Party, Party)
+    maintainer key._1
+
+    controller broker can
+      BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
+        do
+          brokerRegistryCid <- create RegisteredBroker with ..
+          brokerCid <- create Broker with ..
+          return (brokerRegistryCid, brokerCid)
+
+
+template Broker
+  with
+    operator : Party
+    broker : Party
+  where
+    signatory operator, broker
+
+    key (operator, broker) : (Party, Party)
+    maintainer key._2
+
+    controller broker can
+      nonconsuming Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
+        with
+          brokerCustomer : Party
+        do create BrokerCustomerInvitation with ..

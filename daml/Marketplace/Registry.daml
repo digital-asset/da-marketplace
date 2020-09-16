@@ -69,3 +69,20 @@ template RegisteredExchange
     controller operator can
       RegisteredExchange_Offboard : ()
         do return ()
+
+
+template RegisteredBroker
+  with
+    operator : Party
+    public : Party
+    broker : Party
+  where
+    signatory operator, broker
+    observer public
+
+    key (operator, broker) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      RegisteredBroker_Offboard : ()
+        do return ()
