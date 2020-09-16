@@ -33,11 +33,11 @@ def main():
     client = network.aio_party(broker_party)
 
     @client.ledger_ready()
-    def say_hellpo(event):
+    def say_hello(event):
         logging.info("DA Marketplace Broker bot is ready!")
 
     @client.ledger_created(MARKETPLACE.BrokerOrderRequest)
-    def handle_deposit_transfer_request(event):
+    def handle_broker_order_request(event):
         logging.info(f"On {MARKETPLACE.BrokerOrderRequest} created!")
         # auto-approve everything for the time being
         return client.submit_exercise(event.cid, 'BrokerOrderRequest_Accept',
