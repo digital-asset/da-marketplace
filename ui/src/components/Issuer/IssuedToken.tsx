@@ -16,9 +16,6 @@ const IssuedToken = () => {
 
     return (
         <>
-            <Header as='h3'>{token?.payload.id.label}</Header>
-
-            <Header as='h4'>Description:</Header>
             {token?.payload.description}
             <Header as='h4'>Public:</Header>
             {token?.payload.isPublic? "True" : "False"}

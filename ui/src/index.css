@@ -50,6 +50,7 @@ code {
 .ui.button.ghost {
   color: var(--textcolor);
   background: none;
+  align-items: center;
 }
 
 .ui.button.ghost:hover {

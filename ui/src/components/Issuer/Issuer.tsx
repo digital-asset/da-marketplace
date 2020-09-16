@@ -7,6 +7,7 @@ import WelcomeHeader from '../common/WelcomeHeader'
 import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
+import IssuerCustodians from './IssuerCustodians';
 
 type Props = {
     onLogout: () => void;
@@ -23,7 +24,12 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                     <IssueAsset/>
                 </Page>
             </Route>
-
+            <Route path={`${path}/custodians`}>
+                <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
+                    <WelcomeHeader/>
+                    <IssuerCustodians/>
+                </Page>
+            </Route>
             <Route path={`${path}/issued-token/:tokenId`}>
                 <Page sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}>
                     <IssuedToken/>

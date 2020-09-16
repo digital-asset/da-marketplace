@@ -17,7 +17,7 @@ const IssueAsset = () => {
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
-    const [ isPublic, setIsPublic ] = useState<boolean>(true)
+    const [ isPublic, setIsPublic ] = useState<boolean>(false)
     const [ observers, setObservers ] = useState<string[]>([]);
 
     async function submit() {
@@ -79,7 +79,6 @@ const IssueAsset = () => {
                         <Form.TextArea
                             fluid
                             placeholder='observers'
-                            // value={observers}
                             className='issue-asset-form-field observers'
                             onChange={e => setObservers((e.currentTarget.value).split(','))}
                         />
