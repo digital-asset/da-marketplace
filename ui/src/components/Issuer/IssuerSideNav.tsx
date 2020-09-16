@@ -32,6 +32,13 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
             >
                 <p><PublicIcon/>Issue Asset</p>
             </Menu.Item>
+            <Menu.Item
+                as={NavLink}
+                to={`${url}/custodians`}
+                className='sidemenu-item-normal'
+            >
+                <p><PublicIcon/>Custodians</p>
+            </Menu.Item>
         </Menu.Menu>
 
         <Menu.Menu>
