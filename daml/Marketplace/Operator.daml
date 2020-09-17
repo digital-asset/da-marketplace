@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.Operator where
 
+import Marketplace.Broker
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.Investor
@@ -41,3 +42,9 @@ template Operator
           exchange : Party
         do
           create ExchangeInvitation with ..
+
+      nonconsuming Operator_OnboardBroker : ContractId BrokerInvitation
+        with
+          broker : Party
+        do
+          create BrokerInvitation with ..
