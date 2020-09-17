@@ -6,6 +6,7 @@ import Marketplace.ExchangeParticipant
 import Marketplace.Registry
 import Marketplace.Token
 import Marketplace.Trading
+import Marketplace.Utils
 
 import DA.Finance.Types
 
@@ -49,7 +50,7 @@ template Exchange
       nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = exchange, role = "Exchange", ..
+        do create CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
 
       Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
         with

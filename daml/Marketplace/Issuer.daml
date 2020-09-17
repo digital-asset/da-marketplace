@@ -4,6 +4,7 @@ module Marketplace.Issuer where
 import Marketplace.Custodian
 import Marketplace.Registry
 import Marketplace.Token
+import Marketplace.Utils
 
 import DA.Finance.Types
 
@@ -55,4 +56,4 @@ template Issuer
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = issuer, role = "Issuer", ..
+        do create CustodianRelationshipRequest with requester = issuer, role = IssuerRole, ..

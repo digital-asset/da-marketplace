@@ -46,7 +46,7 @@ template Investor
       nonconsuming Investor_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = investor, role = "Investor", ..
+        do create CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
 
       nonconsuming Investor_RequestDepositTransfer : ContractId DepositTransferRequest
         with
