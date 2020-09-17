@@ -3,6 +3,11 @@ module Marketplace.Broker where
 
 import Marketplace.BrokerCustomer
 import Marketplace.Registry
+import Marketplace.Transfer
+import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.Finance.Types
 
 
 template BrokerInvitation
@@ -39,3 +44,25 @@ template Broker
         with
           brokerCustomer : Party
         do create BrokerCustomerInvitation with ..
+
+      nonconsuming Broker_RequestDepositTransfer : ContractId DepositTransferRequest
+        with
+          depositCid : ContractId AssetDeposit
+          receiverAccountId : Id
+        do
+           deposit <- fetch depositCid
+           assert $ deposit.account.owner == broker
+           create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
+
+      nonconsuming BrokerAllocateToProvider : ContractId DepositTransferRequest
+        with
+          depositCid : ContractId AssetDeposit
+          provider : Party
+        do
+          deposit <- fetch depositCid
+          let receiverAccountId = Id
+                with
+                  signatories = deposit.account.id.signatories,
+                    label = getAccountLabel broker provider,
+                    version = 0
+          exercise self Broker_RequestDepositTransfer with ..

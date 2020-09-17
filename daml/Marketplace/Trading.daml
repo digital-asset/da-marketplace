@@ -92,7 +92,7 @@ template Order
               [filledCid, restCid] <- exercise depositCid AssetDeposit_Split
                 with quantities = [depositFillQty]
               txReqCid <- create DepositTransferRequest
-                with investor = exchParticipant,
+                with sender = exchParticipant,
                       senderAccountId = deposit.account.id,
                       receiverAccountId = receiverAccountId,
                       depositCid = filledCid
@@ -105,7 +105,7 @@ template Order
               return $ (None, Some remainingCid)
           else do
             txReqCid <- create DepositTransferRequest
-              with investor = exchParticipant,
+              with sender = exchParticipant,
                     senderAccountId = deposit.account.id,
                     receiverAccountId = receiverAccountId,
                     ..
@@ -140,7 +140,7 @@ template BrokerOrderRequest
           assert $ deposit.account.owner == brokerCustomer
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
-          depositTransferReqCid <- create DepositTransferRequest with investor = brokerCustomer, senderAccountId = deposit.account.id, ..
+          depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
 
@@ -179,4 +179,4 @@ template BrokerOrder
             <> " does not match the requested of " <> show qty) $ depositQty == qty
           let senderAccountId = deposit.account.id
               receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
-          create DepositTransferRequest with investor = broker, ..
+          create DepositTransferRequest with sender = broker, ..
