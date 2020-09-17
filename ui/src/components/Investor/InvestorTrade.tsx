@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useParty, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { getWellKnownParties } from '../../config'
 import { wrapDamlTuple } from '../common/Tuple'
 import Page from '../common/Page'
 
@@ -41,6 +41,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
     const location = useLocation<LocationState>();
+    const operator = useWellKnownParties().userAdminParty;
     const investor = useParty();
     const ledger = useLedger();
 
@@ -61,8 +62,6 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     }, [ deposits, base, quote, investor, exchange ]);
 
     const placeBid = async (depositCid: string, price: string) => {
-        const { operator } = await getWellKnownParties();
-
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
@@ -74,8 +73,6 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     }
 
     const placeOffer = async (depositCid: string, price: string) => {
-        const { operator } = await getWellKnownParties();
-
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,

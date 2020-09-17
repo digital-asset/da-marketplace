@@ -2,11 +2,12 @@ import React, { useState } from 'react'
 import { Button, Card, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
-import { getWellKnownParties } from '../../config'
 import { WalletIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/Tuple'
+import { parseError, ErrorMessage } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
@@ -62,8 +63,9 @@ type FormProps = {
 const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
     const [ exchange, setExchange ] = useState('');
     const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState('');
+    const [ error, setError ] = useState<ErrorMessage>();
 
+    const operator = useWellKnownParties().userAdminParty;
     const investor = useParty();
     const ledger = useLedger();
 
@@ -72,14 +74,12 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
 
         setLoading(true);
         try {
-            const { operator } = await getWellKnownParties();
-
             const key = wrapDamlTuple([operator, investor]);
             const args = { depositCid, exchange };
             await ledger.exerciseByKey(Investor.Investor_AllocateToExchange, key, args);
-            setError('');
+            setError(undefined);
         } catch (err) {
-            setError(err.errors.join('\n'));
+            setError(parseError(err));
         }
         setLoading(false);
     }

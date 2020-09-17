@@ -1,31 +1,31 @@
 import React, { useState } from 'react'
-import { Button, Form, Radio } from 'semantic-ui-react'
-
-import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
+import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/Tuple'
+import { parseError, ErrorMessage } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
-
-import { getWellKnownParties } from '../../config'
+import FormToggle from '../common/FormToggle'
 
 import './IssueAsset.css'
 
 const IssueAsset = () => {
     const ledger = useLedger();
     const issuer = useParty();
+    const operator = useWellKnownParties().userAdminParty;
 
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
     const [ observers, setObservers ] = useState<string[]>([]);
-    const [ error, setError ] = useState('');
+    const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
     async function submit() {
-        const { operator } = await getWellKnownParties();
         setLoading(true);
 
         try {
@@ -33,8 +33,9 @@ const IssueAsset = () => {
             const args = { name, quantityPrecision, description, isPublic, observers};
 
             await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
+            setError(undefined);
         } catch (err) {
-            setError(err.errors.join('\n'));
+            setError(parseError(err));
         }
         setLoading(false);
     }
@@ -65,19 +66,14 @@ const IssueAsset = () => {
                     />
                 </div>
                 <div className='is-public'>
-                    <div className='issue-asset-form-item'>
-                        {isPublic?
-                            <>
-                                <p>Public</p>
-                                <p><i>All parties will be aware of this token.</i></p>
-                            </>
-                        :
-                            <>
-                                <p>Private</p>
-                                <p><i>Only a set of parties will be aware of this token.</i></p>
-                            </>}
-                        <Radio toggle defaultChecked onClick={() => setIsPublic(!isPublic)}/>
-                    </div>
+                    <FormToggle
+                        defaultChecked
+                        className='issue-asset-form-item'
+                        onLabel='Public'
+                        onInfo='All parties will be aware of this token.'
+                        offLabel='Private'
+                        offInfo='Only a set of parties will be aware of this token.'
+                        onClick={val => setIsPublic(val)}/>
 
                     {!isPublic &&
                         <div className='issue-asset-form-item'>

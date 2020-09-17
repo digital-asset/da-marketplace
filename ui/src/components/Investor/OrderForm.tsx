@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
+import { parseError, ErrorMessage } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { DepositInfo } from './Investor'
@@ -16,7 +17,7 @@ type Props = {
 
 const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
     const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState('');
+    const [ error, setError ] = useState<ErrorMessage>();
     const [ price, setPrice ] = useState('');
     const [ depositCid, setDepositCid ] = useState('');
 
@@ -25,9 +26,9 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
         setLoading(true);
         try {
             await placeOrder(depositCid, price);
-            setError('');
+            setError(undefined);
         } catch (err) {
-            setError(err.errors.join('\n'));
+            setError(parseError(err));
         }
         setLoading(false);
         setPrice('');

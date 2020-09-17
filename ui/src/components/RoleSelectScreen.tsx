@@ -3,9 +3,8 @@ import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
-
-import { getWellKnownParties } from '../config'
 
 import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
@@ -14,9 +13,9 @@ import { ArrowRightIcon } from '../icons/Icons'
 import './RoleSelectScreen.css'
 
 enum MarketRole {
-    INVESTOR = "investor",
-    ISSUER = "issuer",
-    CUSTODIAN = "custodian"
+    INVESTOR = "Investor",
+    ISSUER = "Issuer",
+    CUSTODIAN = "Custodian"
 }
 
 type RoleSelectProps = {
@@ -50,6 +49,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
+    const operator = useWellKnownParties().userAdminParty;
     const userSessions = useStreamQuery(UserSession).contracts;
 
     const handleRoleClick = async (role: MarketRole) => {
@@ -58,14 +58,12 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
         // don't create a new userSession if one exists
         if (userSessions.length === 0) {
             setLoading(true);
-
-            const { operator } = await getWellKnownParties();
             await ledger.create(UserSession, { user, role, operator });
         }
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role}`);
+        history.push(`/role/${role.toLowerCase()}`);
     }
 
     return (

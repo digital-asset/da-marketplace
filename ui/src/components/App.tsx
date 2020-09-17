@@ -10,9 +10,10 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
+import { WellKnownPartiesProvider } from '@daml/dabl-react'
 
 import Credentials from '../Credentials'
-import { httpDataUrl } from '../config'
+import { httpBaseUrl } from '../config'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
@@ -36,9 +37,13 @@ const App: React.FC = () => {
             ? <DamlLedger
                 token={credentials.token}
                 party={credentials.party}
-                httpBaseUrl={httpDataUrl}
+                httpBaseUrl={httpBaseUrl}
               >
-                <MainScreen onLogout={() => setCredentials(undefined)}/>
+                <WellKnownPartiesProvider
+                  defaultWkp={{ userAdminParty: "Operator", publicParty: "Public" }}
+                >
+                  <MainScreen onLogout={() => setCredentials(undefined)}/>
+                </WellKnownPartiesProvider>
             </DamlLedger>
             : <Redirect to='/'/>
           }}>

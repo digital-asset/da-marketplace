@@ -3,14 +3,14 @@ import React, { useState } from 'react'
 import { Button, Form, Header, List } from 'semantic-ui-react'
 
 import { useStreamQuery, useParty, useLedger } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { CustodianRelationshipRequest, Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 
+import { parseError, ErrorMessage } from '../common/utils'
 import { wrapDamlTuple } from '../common/Tuple'
 import FormErrorHandled from '../common/FormErrorHandled'
-
-import { getWellKnownParties } from '../../config'
 
 import './IssuerCustodians.css';
 
@@ -20,23 +20,22 @@ const IssuerCustodians = () => {
 
     const ledger = useLedger();
     const issuer = useParty();
+    const operator = useWellKnownParties().userAdminParty;
 
     const [ custodian, setCustodian ] = useState<string>('')
-    const [ error, setError ] = useState('');
+    const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
     async function submit() {
-        const { operator } = await getWellKnownParties();
-
         setLoading(true);
 
         try {
             const args = { custodian };
             const key = wrapDamlTuple([operator, issuer]);
             await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
-            setError('');
+            setError(undefined);
         } catch (err) {
-            setError(err.errors.join('\n'));
+            setError(parseError(err));
         }
 
         setLoading(false);

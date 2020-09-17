@@ -4,29 +4,33 @@ import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 
-import { MarketIcon, ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { unwrapDamlTuple } from '../common/Tuple'
 
 import { ExchangeInfo } from './Investor'
 
 type Props = {
     url: string;
+    disabled?: boolean;
     exchanges: ExchangeInfo[];
 }
 
-const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
+const InvestorSideNav: React.FC<Props> = ({ url, exchanges, disabled }) => {
     const investor = useParty();
 
-    return <>
-        <Menu.Menu>
-            <Menu.Item
-                as={NavLink}
-                to={url}
-                exact
-            >
-                <Header as='h3'>@{investor}</Header>
-            </Menu.Item>
+    const HomeMenuItem = (
+        <Menu.Item
+            as={NavLink}
+            to={url}
+            exact
+        >
+            <Header as='h3'>@{investor}</Header>
+        </Menu.Item>
+    )
 
+    return disabled ? HomeMenuItem :
+        <><Menu.Menu>
+            { HomeMenuItem }
             <Menu.Item
                 as={NavLink}
                 to={`${url}/wallet`}
@@ -46,7 +50,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
 
         <Menu.Menu>
             <Menu.Item>
-                <Header as="h3"><MarketIcon/> Marketplace</Header>
+                <p>Marketplace:</p>
             </Menu.Item>
 
             { exchanges.map(exchange => {
@@ -69,8 +73,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
                     </Menu.Item>
                 })
             }).flat()}
-        </Menu.Menu>
-    </>
+        </Menu.Menu></>
 }
 
 export default InvestorSideNav

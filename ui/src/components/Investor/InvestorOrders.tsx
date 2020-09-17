@@ -6,6 +6,7 @@ import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Tra
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/Tuple'
+import { parseError, ErrorMessage } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
@@ -62,7 +63,7 @@ const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
 
 const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
     const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState('');
+    const [ error, setError ] = useState<ErrorMessage>();
     const ledger = useLedger();
 
     const handleCancelOrder = async (event: React.FormEvent) => {
@@ -71,9 +72,9 @@ const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
         try {
             const key = wrapDamlTuple([order.exchange, order.orderId])
             await ledger.exerciseByKey(Order.Order_RequestCancel, key, {});
-            setError('');
+            setError(undefined);
         } catch (err) {
-            setError(err.errors.join('\n'));
+            setError(parseError(err));
         }
         setLoading(false);
     }
