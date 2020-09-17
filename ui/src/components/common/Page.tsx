@@ -14,11 +14,13 @@ type Props = {
 
 const Page: React.FC<Props> = ({ children, menuTitle, sideNav, onLogout }) => {
     return (
-        <Grid className="page-content">
+        <Grid className='page-content'>
             <SideMenu>{ sideNav }</SideMenu>
-            <Grid.Column className="page-body">
+            <Grid.Column className='page-body'>
                 <TopMenu onLogout={onLogout} title={menuTitle}/>
-                { children }
+                <div className='page-children'>
+                    { children }
+                </div>
             </Grid.Column>
         </Grid>
     )

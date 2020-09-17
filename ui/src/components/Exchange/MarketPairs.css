@@ -1,0 +1,27 @@
+.market-pairs {
+    width: 800px;
+}
+
+.market-pairs > .market-pair-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    justify-items: flex-end;
+    align-items: center;
+    padding: 15px;
+    padding-left: 20px;
+}
+
+.market-pair-row.card-table-header {
+    padding-bottom: 0px;
+}
+
+.market-pair-row.card-table-item {
+    background-color: var(--grey1);
+    border: 1px var(--grey2) solid;
+    display: flex;
+}
+
+.market-pair-column {
+    width: 100px;
+}

@@ -26,7 +26,6 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
         setLoading(true);
         try {
             await placeOrder(depositCid, price);
-            setError(undefined);
         } catch (err) {
             setError(parseError(err));
         }
@@ -49,6 +48,7 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
             className="order-form"
             loading={loading}
             error={error}
+            clearError={() => setError(undefined)}
             onSubmit={handleSubmit}
         >
             <Header>{title}</Header>

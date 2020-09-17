@@ -17,7 +17,7 @@ type Props = {
 }
 
 const TopMenu: React.FC<Props> = ({ title, onLogout }) => {
-    const { tokenId } = useParams()
+    const { tokenId } = useParams<{tokenId: string}>()
 
     const token = useStreamQuery(Token).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
 

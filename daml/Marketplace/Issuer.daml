@@ -49,7 +49,8 @@ template Issuer
           observers : [Party]
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
-          create Token with id = tokenId, observers = if isPublic then fromList [public] else fromList observers, ..
+          let tokenObservers = if isPublic then (public :: observers) else observers
+          create Token with id = tokenId, observers = fromList tokenObservers, ..
 
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with

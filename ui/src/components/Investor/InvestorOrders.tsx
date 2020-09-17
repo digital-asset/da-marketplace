@@ -72,7 +72,6 @@ const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
         try {
             const key = wrapDamlTuple([order.exchange, order.orderId])
             await ledger.exerciseByKey(Order.Order_RequestCancel, key, {});
-            setError(undefined);
         } catch (err) {
             setError(parseError(err));
         }
@@ -80,7 +79,11 @@ const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
     }
 
     return (
-        <FormErrorHandled className='order-card-container' error={error}>
+        <FormErrorHandled
+            className='order-card-container'
+            error={error}
+            clearError={() => setError(undefined)}
+        >
             <OrderCard order={order}>
                 <Button
                     basic

@@ -28,22 +28,24 @@ const IssuerCustodians = () => {
 
     async function submit() {
         setLoading(true);
-
         try {
             const args = { custodian };
             const key = wrapDamlTuple([operator, issuer]);
             await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
-            setError(undefined);
         } catch (err) {
             setError(parseError(err));
         }
-
         setLoading(false);
     }
 
     return (
-        <FormErrorHandled error={error}>
-            <Form size='large' className='issuer-custodian-form'>
+        <div>
+            <FormErrorHandled
+                size='large'
+                className='issuer-custodian-form'
+                error={error}
+                clearError={() => setError(undefined)}
+            >
                 <div className='issuer-custodian-form-item'>
                     <p>Request a relationship with a custodian.</p>
                     <p><i>Enter the custodian's party Id</i></p>
@@ -63,18 +65,15 @@ const IssuerCustodians = () => {
                     loading={loading}>
                         Submit
                 </Button>
-            </Form>
+            </FormErrorHandled>
+
             <div className='issuer-custodian-form'>
                 <div className='issuer-custodian-form-item'>
                     <Header as='h3'>Outbound Requests:</Header>
                     {requests.length === 0 ?
                         <i> There are no outbound custodian relationship requests. </i>
                         :
-                        requests.map((r) =>
-                            <p>
-                                {r.payload.custodian}
-                            </p>
-                        )
+                        requests.map(r => <p>{r.payload.custodian}</p>)
                     }
                 </div>
                 <div className='issuer-custodian-form-item'>
@@ -120,7 +119,7 @@ const IssuerCustodians = () => {
                     }
                 </div>
             </div>
-        </FormErrorHandled>
+        </div>
     )
 }
 export default IssuerCustodians;

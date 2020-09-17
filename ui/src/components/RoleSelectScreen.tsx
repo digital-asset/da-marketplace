@@ -15,6 +15,7 @@ import './RoleSelectScreen.css'
 enum MarketRole {
     INVESTOR = "Investor",
     ISSUER = "Issuer",
+    EXCHANGE = "Exchange",
     CUSTODIAN = "Custodian"
 }
 
@@ -80,8 +81,12 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
                     loading={loading && role === MarketRole.ISSUER}
                     roleSelectClick={() => handleRoleClick(MarketRole.ISSUER)}/>
 
-                {/* disabled these buttons until the view components for them are ready */}
+                <RoleSelect
+                    caption='Exchange'
+                    loading={loading && role === MarketRole.EXCHANGE}
+                    roleSelectClick={() => handleRoleClick(MarketRole.EXCHANGE)}/>
 
+                {/* disabled these buttons until the view components for them are ready */}
                 <RoleSelect
                     disabled
                     caption='Bank'

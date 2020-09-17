@@ -6,7 +6,8 @@ parties:
   - Bob
   - Operator
   - Custodian
-  - Issuer
+  - BtcIssuer
+  - UsdtIssuer
   - Public
   - Exchange
 version: 0.0.1
