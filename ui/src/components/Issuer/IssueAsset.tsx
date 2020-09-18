@@ -5,8 +5,8 @@ import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
-import { wrapDamlTuple } from '../common/Tuple'
-import { parseError, ErrorMessage } from '../common/utils'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
 

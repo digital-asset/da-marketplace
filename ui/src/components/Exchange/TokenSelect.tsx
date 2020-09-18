@@ -1,7 +1,7 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
 
-import { TokenInfo } from './Exchange'
+import { TokenInfo } from '../common/damlTypes'
 
 type Props = {
     label: string;
@@ -18,6 +18,12 @@ const TokenSelect: React.FC<Props> = ({ label, className, selected, tokens, setT
         value: t.contractId
     }));
 
+    const handleFormSelect = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setTokenCid(result.value);
+        }
+    }
+
     return (
         <div className='token-select-container'>
             <Form.Select
@@ -26,11 +32,7 @@ const TokenSelect: React.FC<Props> = ({ label, className, selected, tokens, setT
                 placeholder='Select'
                 value={selected}
                 options={options}
-                onChange={(_, result) => {
-                    if (typeof result.value === 'string') {
-                        setTokenCid(result.value);
-                    }
-                }}/>
+                onChange={handleFormSelect}/>
         </div>
     )
 }

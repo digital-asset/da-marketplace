@@ -6,12 +6,11 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import { WalletIcon } from '../../icons/Icons'
-import { wrapDamlTuple } from '../common/Tuple'
-import { parseError, ErrorMessage } from '../common/utils'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
-import { DepositInfo, ExchangeInfo } from './Investor'
 import './InvestorWallet.css'
 
 type Props = {
@@ -83,6 +82,12 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
         setLoading(false);
     }
 
+    const handleFormSelect = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setExchange(result.value);
+        }
+    }
+
     return (
         <FormErrorHandled
             loading={loading}
@@ -93,11 +98,7 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
                 <Form.Select
                     value={exchange}
                     options={options}
-                    onChange={(_, result) => {
-                        if (typeof result.value === 'string') {
-                            setExchange(result.value);
-                        }
-                    }}/>
+                    onChange={handleFormSelect}/>
                 <Button
                     primary
                     content='Allocate to Exchange'

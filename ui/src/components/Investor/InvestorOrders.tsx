@@ -5,8 +5,8 @@ import { useLedger, useStreamQuery } from '@daml/react'
 import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/Tuple'
-import { parseError, ErrorMessage } from '../common/utils'
+import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 

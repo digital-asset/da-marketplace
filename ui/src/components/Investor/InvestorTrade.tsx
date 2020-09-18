@@ -8,10 +8,9 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { wrapDamlTuple } from '../common/Tuple'
+import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
 import Page from '../common/Page'
 
-import { DepositInfo } from './Investor'
 import OrderForm from './OrderForm'
 
 type Props = {

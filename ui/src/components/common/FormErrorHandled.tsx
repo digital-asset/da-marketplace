@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { Form, Message } from 'semantic-ui-react'
 
-import { ErrorMessage } from './utils'
+import { ErrorMessage } from './errorTypes'
 
 import "./FormErrorHandled.css";
 

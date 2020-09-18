@@ -2,18 +2,17 @@ import React, { useState } from 'react'
 import { Button } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple } from '../common/Tuple'
-import { parseError, ErrorMessage } from '../common/utils'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
-import { TokenInfo } from './Exchange'
 import TokenSelect from './TokenSelect'
-import { useWellKnownParties } from '@daml/dabl-react'
 
 import "./CreateMarket.css"
 

@@ -8,8 +8,8 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { CustodianRelationshipRequest, Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 
-import { parseError, ErrorMessage } from '../common/utils'
-import { wrapDamlTuple } from '../common/Tuple'
+import { parseError, ErrorMessage } from '../common/errorTypes'
+import { wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import './IssuerCustodians.css';

@@ -1,9 +1,6 @@
 import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useStreamQuery } from '@daml/react'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
 
@@ -14,13 +11,6 @@ import CreateMarket from './CreateMarket'
 type Props = {
     onLogout: () => void;
 }
-
-type ContractInfo<T> = {
-    contractId: string;
-    contractData: T;
-}
-
-export type TokenInfo = ContractInfo<Token>;
 
 const Exchange: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();

@@ -5,9 +5,7 @@ import { Header, Menu } from 'semantic-ui-react'
 import { useParty } from '@daml/react'
 
 import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
-import { unwrapDamlTuple } from '../common/Tuple'
-
-import { ExchangeInfo } from './Investor'
+import { ExchangeInfo, unwrapDamlTuple } from '../common/damlTypes'
 
 type Props = {
     url: string;

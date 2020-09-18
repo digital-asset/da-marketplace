@@ -12,20 +12,12 @@ import {
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
-import { wrapDamlTuple } from '../common/Tuple'
+import { wrapDamlTuple } from '../common/damlTypes'
 
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-
-type ContractInfo<T> = {
-    contractId: string;
-    contractData: T;
-}
-
-export type ExchangeInfo = ContractInfo<Exchange>;
-export type DepositInfo = ContractInfo<AssetDeposit>;
 
 type Props = {
     onLogout: () => void;
