@@ -75,8 +75,8 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
         setLoading(true);
         try {
             const key = wrapDamlTuple([operator, investor]);
-            const args = { depositCid, exchange };
-            await ledger.exerciseByKey(Investor.Investor_AllocateToExchange, key, args);
+            const args = { depositCid, provider: exchange };
+            await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
             setError(undefined);
         } catch (err) {
             setError(parseError(err));

@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.Onboarding where
 
+import Marketplace.Broker
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.Investor
@@ -50,5 +51,12 @@ template UserSession
               case (optInvestorInvitation, optInvestor) of
                 (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardInvestor with investor = user
                 (Some investorInvitationCid, Some investorCid) -> archive investorInvitationCid
+                _ -> return ()
+            "Broker" -> do
+              optBrokerInvitation <- lookupByKey @BrokerInvitation userKey
+              optBroker <- lookupByKey @Broker userKey
+              case (optBrokerInvitation, optBroker) of
+                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
+                (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid
                 _ -> return ()
             _ -> return ()

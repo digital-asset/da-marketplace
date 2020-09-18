@@ -55,17 +55,17 @@ template Investor
         do
            deposit <- fetch depositCid
            assert $ deposit.account.owner == investor
-           create DepositTransferRequest with senderAccountId = deposit.account.id, ..
+           create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
 
-      nonconsuming Investor_AllocateToExchange : ContractId DepositTransferRequest
+      nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
         with
           depositCid : ContractId AssetDeposit
-          exchange : Party
+          provider : Party
         do
           deposit <- fetch depositCid
           let receiverAccountId = Id
                 with
                   signatories = deposit.account.id.signatories,
-                    label = getAccountLabel investor exchange,
+                    label = getAccountLabel investor provider,
                     version = 0
           exercise self Investor_RequestDepositTransfer with ..

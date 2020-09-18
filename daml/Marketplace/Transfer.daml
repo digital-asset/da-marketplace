@@ -13,7 +13,7 @@ import DA.Next.Set
 
 template DepositTransferRequest
   with
-    investor : Party
+    sender : Party
     senderAccountId : Id
     receiverAccountId : Id
     depositCid : ContractId AssetDeposit
@@ -22,7 +22,7 @@ template DepositTransferRequest
         receiverSig = head $ toList receiverAccountId.signatories
         custodian = senderSig
     ensure senderSig == receiverSig
-    signatory investor
+    signatory sender
 
     controller custodian can
       DepositTransferRequest_Approve : ContractId AssetDeposit
