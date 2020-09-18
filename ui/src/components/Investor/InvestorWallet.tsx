@@ -11,8 +11,6 @@ import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
 
-import './InvestorWallet.css'
-
 type Props = {
     deposits: DepositInfo[];
     exchanges: ExchangeInfo[];

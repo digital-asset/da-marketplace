@@ -3,7 +3,7 @@
     border: none;
     border-bottom: 2px var(--lightblue2) solid;
     height: 68px;
-    margin-bottom: 42px;
+    margin: 0;
 }
 
 .top-menu .menu > .ui.button:not(.icon) > .icon.logout-icon {
@@ -27,7 +27,7 @@
 }
 
 .top-right-menu > .item:first-child {
-    padding-left: 64px;
+    padding-left: 32px;
 }
 
 .top-left-menu {
