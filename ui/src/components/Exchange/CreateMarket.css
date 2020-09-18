@@ -1,0 +1,21 @@
+.create-market .create-market-save {
+    margin-top: 12px;
+}
+
+.create-market-options {
+    width: 500px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.create-market-options .exchange-icon {
+    height: 16px;
+    width: 16px;
+    margin-bottom: 8px;
+}
+
+.token-select-container {
+    width: 200px;
+}

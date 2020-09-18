@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
-import { parseError, ErrorMessage } from '../common/utils'
+import { DepositInfo } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 
-import { DepositInfo } from './Investor'
 import { OrderKind } from './InvestorTrade'
 
 import './OrderForm.css'
@@ -26,7 +26,6 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
         setLoading(true);
         try {
             await placeOrder(depositCid, price);
-            setError(undefined);
         } catch (err) {
             setError(parseError(err));
         }
@@ -44,11 +43,18 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
             text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label}`
         }))
 
+    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setDepositCid(result.value);
+        }
+    }
+
     return (
         <FormErrorHandled
             className="order-form"
             loading={loading}
             error={error}
+            clearError={() => setError(undefined)}
             onSubmit={handleSubmit}
         >
             <Header>{title}</Header>
@@ -56,11 +62,7 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
                 required
                 label='Deposit'
                 options={options}
-                onChange={(_, result) => {
-                    if (typeof result.value === 'string') {
-                        setDepositCid(result.value);
-                    }
-                }}
+                onChange={handleDepositChange}
                 value={depositCid}
             />
 

@@ -1,3 +1,6 @@
+import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
+import { Exchange, Token } from '@daml.js/da-marketplace/lib/Marketplace'
+
 type DamlTuple<T> = {
     [key: string]: T;
 }
@@ -27,3 +30,12 @@ export function unwrapDamlTuple<T>(tuple: DamlTuple<T>): T[] {
     const sortedKeys = Object.keys(tuple).sort(cmpUnderscoredKeys);
     return sortedKeys.map(key => tuple[key]);
 }
+
+type ContractInfo<T> = {
+    contractId: string;
+    contractData: T;
+}
+
+export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
+export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
+export type TokenInfo = ContractInfo<Token.Token>;

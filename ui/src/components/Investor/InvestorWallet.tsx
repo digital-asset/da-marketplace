@@ -6,13 +6,10 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import { WalletIcon } from '../../icons/Icons'
-import { wrapDamlTuple } from '../common/Tuple'
-import { parseError, ErrorMessage } from '../common/utils'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import Page from '../common/Page'
-
-import { DepositInfo, ExchangeInfo } from './Investor'
-import './InvestorWallet.css'
 
 type Props = {
     deposits: DepositInfo[];
@@ -77,24 +74,29 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
             const key = wrapDamlTuple([operator, investor]);
             const args = { depositCid, provider: exchange };
             await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
-            setError(undefined);
         } catch (err) {
             setError(parseError(err));
         }
         setLoading(false);
     }
 
+    const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setExchange(result.value);
+        }
+    }
+
     return (
-        <FormErrorHandled loading={loading} error={error}>
+        <FormErrorHandled
+            loading={loading}
+            error={error}
+            clearError={() => setError(undefined)}
+        >
             <Form.Group widths='equal'>
                 <Form.Select
                     value={exchange}
                     options={options}
-                    onChange={(_, result) => {
-                        if (typeof result.value === 'string') {
-                            setExchange(result.value);
-                        }
-                    }}/>
+                    onChange={handleExchangeChange}/>
                 <Button
                     primary
                     content='Allocate to Exchange'

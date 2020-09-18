@@ -22,7 +22,7 @@ const IssuedToken = () => {
             <Header as='h4'>Issuer:</Header>
             <List verticalAlign='middle'>
                 {signatories.map(s =>
-                    <List.Item>
+                    <List.Item key={s}>
                         <List.Content>
                             <p>{s}</p>
                         </List.Content>
@@ -35,7 +35,7 @@ const IssuedToken = () => {
             <Header as='h4'>Observers:</Header>
             <List verticalAlign='middle'>
                 {observers.map(o =>
-                    <List.Item>
+                    <List.Item key={o}>
                         <List.Content>
                             <p>{o}</p>
                         </List.Content>

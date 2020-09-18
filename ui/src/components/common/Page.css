@@ -3,9 +3,19 @@
 }
 
 .ui.grid > .column.page-body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     flex: 1;
     background-color: #fff;
-    padding-left: 64px;
-    padding-top: 0px;
-    padding-right: 0px;
+    padding: 0;
+}
+
+.ui.grid .page-children {
+    flex: 1;
+    width: 100%;
+    background-color: #fff;
+    padding-left: 32px;
+    padding-right: 32px;
+    padding-top: 32px;
 }

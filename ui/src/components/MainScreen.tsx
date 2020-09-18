@@ -7,6 +7,7 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import RoleSelectScreen from './RoleSelectScreen'
 import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
+import Exchange from './Exchange/Exchange'
 
 type Props = {
   onLogout: () => void;
@@ -30,6 +31,10 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
       <Route path={`${path}/issuer`}>
         <Issuer onLogout={onLogout}/>
+      </Route>
+
+      <Route path={`${path}/exchange`}>
+        <Exchange onLogout={onLogout}/>
       </Route>
     </Switch>
   );
