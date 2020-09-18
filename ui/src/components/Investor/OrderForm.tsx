@@ -43,7 +43,7 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
             text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label}`
         }))
 
-    const handleFormSelect = (event: React.SyntheticEvent, result: any) => {
+    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setDepositCid(result.value);
         }
@@ -62,7 +62,7 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
                 required
                 label='Deposit'
                 options={options}
-                onChange={handleFormSelect}
+                onChange={handleDepositChange}
                 value={depositCid}
             />
 

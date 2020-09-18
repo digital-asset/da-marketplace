@@ -82,7 +82,7 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
         setLoading(false);
     }
 
-    const handleFormSelect = (event: React.SyntheticEvent, result: any) => {
+    const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setExchange(result.value);
         }
@@ -98,7 +98,7 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
                 <Form.Select
                     value={exchange}
                     options={options}
-                    onChange={handleFormSelect}/>
+                    onChange={handleExchangeChange}/>
                 <Button
                     primary
                     content='Allocate to Exchange'

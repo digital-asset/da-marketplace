@@ -18,7 +18,7 @@ const TokenSelect: React.FC<Props> = ({ label, className, selected, tokens, setT
         value: t.contractId
     }));
 
-    const handleFormSelect = (event: React.SyntheticEvent, result: any) => {
+    const handleTokenChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setTokenCid(result.value);
         }
@@ -32,7 +32,7 @@ const TokenSelect: React.FC<Props> = ({ label, className, selected, tokens, setT
                 placeholder='Select'
                 value={selected}
                 options={options}
-                onChange={handleFormSelect}/>
+                onChange={handleTokenChange}/>
         </div>
     )
 }
