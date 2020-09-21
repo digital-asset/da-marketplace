@@ -5,19 +5,13 @@ import { Button, Card } from 'semantic-ui-react'
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
 
 import './RoleSelectScreen.css'
-
-enum MarketRole {
-    INVESTOR = "Investor",
-    ISSUER = "Issuer",
-    EXCHANGE = "Exchange",
-    CUSTODIAN = "Custodian"
-}
 
 type RoleSelectProps = {
     loading: boolean;
@@ -64,7 +58,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role.toLowerCase()}`);
+        history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
     }
 
     return (
@@ -73,24 +67,24 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
             <OnboardingTile subtitle='What will you do?'>
                 <RoleSelect
                     caption='I want to chat & invest'
-                    loading={loading && role === MarketRole.INVESTOR}
-                    roleSelectClick={() => handleRoleClick(MarketRole.INVESTOR)}/>
+                    loading={loading && role === MarketRole.InvestorRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.InvestorRole)}/>
 
                 <RoleSelect
                     caption='Issue an asset'
-                    loading={loading && role === MarketRole.ISSUER}
-                    roleSelectClick={() => handleRoleClick(MarketRole.ISSUER)}/>
+                    loading={loading && role === MarketRole.IssuerRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.IssuerRole)}/>
 
                 <RoleSelect
                     caption='Exchange'
-                    loading={loading && role === MarketRole.EXCHANGE}
-                    roleSelectClick={() => handleRoleClick(MarketRole.EXCHANGE)}/>
+                    loading={loading && role === MarketRole.ExchangeRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.ExchangeRole)}/>
 
                 {/* disabled these buttons until the view components for them are ready */}
                 <RoleSelect
                     disabled
                     caption='Bank'
-                    loading={loading && role === MarketRole.CUSTODIAN}
+                    loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => {}}/>
             </OnboardingTile>
         </>

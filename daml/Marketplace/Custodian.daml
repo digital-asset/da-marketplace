@@ -17,7 +17,7 @@ template CustodianRelationshipRequest
     operator : Party
     requester : Party
     custodian : Party
-    role : Text
+    role : MarketRole
   where
     signatory operator, requester
 
@@ -25,10 +25,10 @@ template CustodianRelationshipRequest
       CustodianRelationshipRequest_Approve : ()
         do
           case role of
-            "Issuer" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
-            "Exchange" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
-            "Investor" -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
-            _ -> abort $ "Unknown role type: " <> role
+            IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
+            ExchangeRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
+            InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+            _ -> return ()
 
       CustodianRelationshipRequest_Reject : ()
         do return ()
