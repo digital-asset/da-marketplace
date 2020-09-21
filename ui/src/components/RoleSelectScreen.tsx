@@ -58,7 +58,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role.replace('Role', '').toLowerCase()}`);
+        history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
     }
 
     return (
