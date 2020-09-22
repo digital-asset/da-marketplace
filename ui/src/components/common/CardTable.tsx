@@ -20,8 +20,8 @@ const CardTable: React.FC<Props> = ({ className, header, rows }) => {
                 <Table fixed className='card-table-header-table'>
                     <Table.Header className='card-table-header'>
                         <Table.Row className='card-table-row'>
-                            { header.map(headerCell => (
-                                <Table.HeaderCell className='card-table-cell'>
+                            { header.map((headerCell, index) => (
+                                <Table.HeaderCell key={index} className='card-table-cell'>
                                     {headerCell}
                                 </Table.HeaderCell>))}
                         </Table.Row>
@@ -31,10 +31,10 @@ const CardTable: React.FC<Props> = ({ className, header, rows }) => {
 
             <Table fixed className='card-table-body-table'>
                 <Table.Body>
-                { rows.map(row => (
-                    <Table.Row className='card-table-row'>
-                        { row.map(cell => (
-                            <Table.Cell className='card-table-cell'>{cell}</Table.Cell>
+                { rows.map((row, rowIndex) => (
+                    <Table.Row key={rowIndex} className='card-table-row'>
+                        { row.map((cell, cellIndex) => (
+                            <Table.Cell key={cellIndex} className='card-table-cell'>{cell}</Table.Cell>
                         )) }
                     </Table.Row>
                 ))}
