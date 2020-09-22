@@ -10,6 +10,7 @@ dazl.setup_default_logger(logging.INFO)
 
 class MARKETPLACE:
     Custodian = 'Marketplace.Custodian:Custodian'
+    CustodianRelationshipRequest = 'Marketplace.Custodian:CustodianRelationshipRequest'
     DepositTransferRequest = 'Marketplace.Transfer:DepositTransferRequest'
 
 
@@ -35,6 +36,12 @@ def main():
         logging.info(f"On {MARKETPLACE.DepositTransferRequest} created!")
         # auto-approve everything for the time being
         return client.submit_exercise(event.cid, 'DepositTransferRequest_Approve', {})
+
+    @client.ledger_created(MARKETPLACE.CustodianRelationshipRequest)
+    def handle_custodian_relationship_request(event):
+        logging.info(f"On {MARKETPLACE.CustodianRelationshipRequest} created!")
+        # auto-approve everything for the time being
+        return client.submit_exercise(event.cid, 'CustodianRelationshipRequest_Approve', {})
 
     network.run_forever()
 
