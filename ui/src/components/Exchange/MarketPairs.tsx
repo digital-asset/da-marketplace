@@ -1,5 +1,4 @@
 import React from 'react'
-import { Card, Table } from 'semantic-ui-react'
 
 import { useParty, useStreamFetchByKey } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
