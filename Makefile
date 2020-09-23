@@ -56,7 +56,7 @@ $(operator_bot_dir):
 	cd automation/operator && poetry install && poetry build
 
 $(operator_pid): |$(state_dir) $(operator_bot_dir)
-	cd automation/operator && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/operator_bot.py > ../$(operator_log) & echo "$$!" > ../$(operator_pid))
+	cd automation/operator && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/operator_bot.py > ../../$(operator_log) & echo "$$!" > ../../$(operator_pid))
 
 start_operator: $(operator_pid)
 
@@ -68,7 +68,7 @@ $(issuer_bot_dir):
 	cd automation/issuer && poetry install && poetry build
 
 $(issuer_pid): |$(state_dir) $(issuer_bot_dir)
-	cd automation/issuer && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/issuer_bot.py > ../$(issuer_log) & echo "$$!" > ../$(issuer_pid))
+	cd automation/issuer && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/issuer_bot.py > ../../$(issuer_log) & echo "$$!" > ../../$(issuer_pid))
 
 start_issuer: $(issuer_pid)
 
@@ -81,7 +81,7 @@ $(custodian_bot_dir):
 	cd automation/custodian && poetry install && poetry build
 
 $(custodian_pid): |$(state_dir) $(custodian_bot_dir)
-	cd automation/custodian && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/custodian_bot.py > ../$(custodian_log) & echo "$$!" > ../$(custodian_pid))
+	cd automation/custodian && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/custodian_bot.py > ../../$(custodian_log) & echo "$$!" > ../../$(custodian_pid))
 
 start_custodian: $(custodian_pid)
 
@@ -94,7 +94,7 @@ $(broker_bot_dir):
 	cd automation/broker && poetry install && poetry build
 
 $(broker_pid): |$(state_dir) $(broker_bot_dir)
-	cd automation/broker && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/broker_bot.py > ../$(broker_log) & echo "$$!" > ../$(broker_pid))
+	cd automation/broker && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/broker_bot.py > ../../$(broker_log) & echo "$$!" > ../../$(broker_pid))
 
 start_broker: $(broker_pid)
 
