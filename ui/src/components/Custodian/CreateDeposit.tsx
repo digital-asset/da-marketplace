@@ -83,6 +83,7 @@ const CreateDeposit: React.FC = () => {
                     placeholder='Quantity'
                     onChange={e => setDepositQuantity(e.currentTarget.value)}/>
                 <Button
+                    disabled={!beneficiary || !token || !depositQuantity}
                     content='Create Deposit'
                     className='create-deposit-btn'/>
             </Form.Group>

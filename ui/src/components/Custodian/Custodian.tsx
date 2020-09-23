@@ -25,8 +25,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const key = () => wrapDamlTuple([operator, user]);
     const custodianContract = useStreamFetchByKey(CustodianTemplate, key, [operator, user]).contract;
-    const custodianInfo = custodianContract &&
-        { contractId: custodianContract.contractId, contractData: custodianContract.payload };
+    const investors = custodianContract?.payload.investors || [];
 
     const sideNav = <CustodianSideNav disabled={!custodianContract} url={url}/>;
 
@@ -42,7 +41,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                 <Clients
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    custodianInfo={custodianInfo}/>
+                    clients={investors}/>
             </Route>
         </Switch>
     )

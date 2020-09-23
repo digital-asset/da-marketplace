@@ -5,7 +5,7 @@ import { useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { UserIcon } from '../../icons/Icons'
-import { CustodianInfo, DepositInfo } from '../common/damlTypes'
+import { DepositInfo } from '../common/damlTypes'
 import StripedTable from '../common/StripedTable'
 import Page from '../common/Page'
 
@@ -14,18 +14,17 @@ import CreateDeposit from './CreateDeposit'
 import "./Clients.css"
 
 type Props = {
-    custodianInfo: CustodianInfo | null;
+    clients: string[];
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-const Clients: React.FC<Props> = ({ custodianInfo, sideNav, onLogout }) => {
+const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({ contractId: deposit.contractId, contractData: deposit.payload }));
 
-    const investors = custodianInfo?.contractData.investors || [];
-    const tableRows = investors.map(investor => (
-        <InvestorRow key={investor} deposits={allDeposits} investor={investor}/>
+    const tableRows = clients.map(client => (
+        <InvestorRow key={client} deposits={allDeposits} investor={client}/>
     ));
 
     return (
