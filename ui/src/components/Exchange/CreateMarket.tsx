@@ -10,9 +10,8 @@ import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
+import TokenSelect from '../common/TokenSelect'
 import Page from '../common/Page'
-
-import TokenSelect from './TokenSelect'
 
 import "./CreateMarket.css"
 
