@@ -26,6 +26,9 @@ template ExchangeInvitation
 
     controller exchange can
       ExchangeInvitation_Accept : ContractId Exchange
+        with
+          name : Text
+          location : Text
         do
           create RegisteredExchange with ..
           create Exchange with tokenPairs = [], participants = [], ..

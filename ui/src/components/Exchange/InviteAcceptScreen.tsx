@@ -6,9 +6,7 @@ import { useWellKnownParties } from '@daml/dabl-react'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { ErrorMessage } from '../common/errorTypes'
-import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-
-import FormToggle from '../common/FormToggle'
+import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 type Props = {
     onLogout: () => void;
@@ -21,16 +19,14 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
 
     const [ name, setName ] = useState<string>('')
     const [ location, setLocation ] = useState<string>('')
-    const [ ssn, setSSN ] = useState<string>('')
-    const [ isPublic, setIsPublic ] = useState<boolean>(true)
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
     async function submit() {
         setLoading(true);
         const key = wrapDamlTuple([operator, issuer]);
-        const args = { name, location, ssn, isPublic };
-        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
+        const args = { name, location };
+        await ledger.exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args)
             .catch(err => console.error(err));
         setLoading(false);
     }
@@ -38,43 +34,27 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     return (
         <InviteAcceptTile
             onLogout={onLogout}
-            role='Investor'
+            role='Exchange'
             error={error}
             setError={setError}
         >
             <InviteTextField
                 label='Name'
-                placeholder='Your full legal name'
+                placeholder='The name of the exchange'
                 variable={name}
                 setter={setName}
             />
             <InviteTextField
                 label='Location'
-                placeholder='Your current location'
+                placeholder='The location of the exchange'
                 variable={location}
                 setter={setLocation}
             />
-            <InviteTextField
-                label='Social Security Number (private)'
-                placeholder='Your social security number'
-                variable={ssn}
-                setter={setSSN}
-            />
-            <div className='invite-accept-is-public'>
-                <FormToggle
-                    defaultChecked
-                    className='invite-accept-form-item'
-                    onLabel='Public'
-                    onInfo='All parties will be aware of this investor.'
-                    offLabel='Private'
-                    offInfo='Only a set of parties will be aware of this investor.'
-                    onClick={val => setIsPublic(val)}/>
-            </div>
             <InviteAcceptButton
                 loading={loading}
-                disabled={!name || !location || !ssn}
-                submit={submit}>
-            </InviteAcceptButton>
+                disabled={!name || !location}
+                submit={submit}
+            />
         </InviteAcceptTile>
     )
 }

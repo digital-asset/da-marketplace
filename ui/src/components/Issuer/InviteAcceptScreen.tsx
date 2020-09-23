@@ -38,11 +38,11 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
             onLogout={onLogout}
             role='Issuer'
             error={error}
-            setError={setError}>
-
+            setError={setError}
+        >
             <InviteTextField
                 label='Name'
-                placeholder='Your professional title'
+                placeholder='Your Legal Name'
                 variable={name}
                 setter={setName}
             />

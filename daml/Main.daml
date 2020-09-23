@@ -35,7 +35,7 @@ test = scenario do
 
   -- some empty strings to fill in registered users...
   let (name, title, issuerID, location, ssn) = ("","","","","")
-  
+
   -- create operator
   opCid <- operator `submit` create Operator with ..
 
@@ -46,7 +46,6 @@ test = scenario do
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
   btcIssuerCid <- btcIssuer `submit` exercise btcIssuerInvCid IssuerInvitation_Accept with ..
-
 
   usdtIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
   usdtIssuerCid <- usdtIssuer `submit` exercise usdtIssuerInvCid IssuerInvitation_Accept with ..
@@ -93,7 +92,7 @@ test = scenario do
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardExchange with ..
-  exchangeCid <- exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept
+  exchangeCid <- exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept with ..
 
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exercise exchangeCid Exchange_RequestCustodianRelationship with ..
@@ -159,7 +158,7 @@ testBroker = scenario do
   public <- getParty "Public"
 
   alice <- getParty "Alice"
-  
+
   -- some empty strings to fill in registered users...
   let (name, title, issuerID, location, ssn) = ("","","","","")
 
@@ -211,7 +210,7 @@ testBroker = scenario do
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardExchange with ..
-  exchangeCid <- exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept
+  exchangeCid <- exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept with ..
 
   exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
 

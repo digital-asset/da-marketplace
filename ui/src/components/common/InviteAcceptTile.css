@@ -1,3 +1,13 @@
+.invite-accept-is-public {
+    display: flex;
+    flex-direction: row;
+    width: 100;
+}
+
+.invite-accept-is-public p {
+    margin-bottom: 5px;
+}
+
 .invite-accept-form {
     margin-top: 10px;
     display: flex;

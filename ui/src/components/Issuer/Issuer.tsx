@@ -55,7 +55,6 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     return registeredIssuer.loading
         ? loadingScreen
         : registeredIssuer.contracts.length === 0 ? inviteScreen : issuerScreen
-
 };
 
 export default Issuer;

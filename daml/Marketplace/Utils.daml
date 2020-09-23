@@ -7,7 +7,6 @@ import DA.Next.Set
 import DA.Optional
 import DA.Text
 
-
 data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole
     deriving (Show, Eq)
 

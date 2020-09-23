@@ -27,7 +27,6 @@ template RegisteredIssuer
     name : Text
     title : Text
     issuerID : Text
-
   where
     signatory operator, issuer
     observer public
@@ -63,6 +62,8 @@ template RegisteredExchange
     operator : Party
     public : Party
     exchange : Party
+    name : Text
+    location : Text
   where
     signatory operator, exchange
     observer public

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { Button, Card, Header } from 'semantic-ui-react'
 
@@ -11,6 +11,7 @@ import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marke
 import {
     Investor as InvestorTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
@@ -24,7 +25,6 @@ import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
 import OnboardingTitle from '../common/OnboardingTile'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 type Props = {
     onLogout: () => void;
