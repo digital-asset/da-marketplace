@@ -4,7 +4,6 @@ import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -59,12 +58,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        const registeredIssuers = await ledger.query(RegisteredIssuer);
         history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
-        // if (registeredIssuers.length === 0)
-        //     history.push(`/role/${role.slice(0, -4).toLowerCase()}/accept`);
-        // else
-        //     history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
     }
 
     return (

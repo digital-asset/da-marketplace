@@ -1,28 +1,41 @@
-import React, { useState } from 'react'
-import { Button, Form, Grid } from 'semantic-ui-react'
-import { useHistory } from 'react-router-dom'
-import TopMenu from '../common/TopMenu'
-import OnboardingTile from '../common/OnboardingTile'
+import React from 'react'
+import { Form, Button} from 'semantic-ui-react'
+import TopMenu from './TopMenu'
+import OnboardingTile from './OnboardingTile'
 
-import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
-import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
-
-import { wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
-import FormErrorHandled from '../common/FormErrorHandled'
+import { ErrorMessage } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
 // import FormToggle from './common/FormToggle'
 
 import './InviteAcceptTile.css'
 
-type InfoFieldProps = {
+type InviteAcceptButtonProps = {
+    loading: boolean
+    disabled: boolean
+    submit: () => Promise<void>
+}
+
+const InviteAcceptButton: React.FC<InviteAcceptButtonProps> =({ loading, disabled, submit }) => (
+    <div className='invite-accept-submit-button-div'>
+        <Button
+            primary
+            loading={loading}
+            disabled={disabled}
+            className='invite-accept-submit-button'
+            onClick={submit}>
+                Submit
+        </Button>
+    </div>
+)
+
+type InviteTextFieldProps = {
     label: string
     placeholder: string
     variable: string
     setter: React.Dispatch<React.SetStateAction<string>>
 }
 
-const InfoField: React.FC<InfoFieldProps> = ({ label, variable, placeholder, setter }) => ( 
+const InviteTextField: React.FC<InviteTextFieldProps> = ({ label, variable, placeholder, setter }) => ( 
     <div className='invite-accept-form-item'>
         <Form.Input
             label={label}
@@ -59,4 +72,6 @@ const InviteAcceptTile: React.FC<Props> = ({ children, onLogout, role, error, se
         </>
     )
 }
-export default {InviteAcceptTile, InfoField};
+
+export {InviteAcceptTile, InviteTextField, InviteAcceptButton};
+export default InviteAcceptTile;

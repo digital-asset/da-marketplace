@@ -2,7 +2,7 @@ import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { useParty, useStreamQuery, useLedger } from '@daml/react'
+import { useStreamQuery } from '@daml/react'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'

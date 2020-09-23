@@ -4,9 +4,6 @@
 import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useParty, useStreamQuery, useLedger } from '@daml/react'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
 import RoleSelectScreen from './RoleSelectScreen'
 import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
@@ -21,7 +18,6 @@ type Props = {
  */
 const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
-  const registeredIssuer = useStreamQuery(RegisteredIssuer).contracts;
 
   return (
     <Switch>
