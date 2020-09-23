@@ -1,0 +1,127 @@
+module Setup where
+
+import Daml.Script
+
+import Marketplace.Broker
+import Marketplace.BrokerCustomer
+import Marketplace.Custodian
+import Marketplace.Exchange
+import Marketplace.ExchangeParticipant
+import Marketplace.Investor
+import Marketplace.Issuer
+import Marketplace.Operator
+
+import Marketplace.Token
+import Marketplace.Trading
+import Marketplace.Transfer
+import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.Finance.Types
+
+import DA.Next.Set
+
+
+
+setupBroker : Script ()
+setupBroker = do
+  operator <- allocatePartyWithHint "Operator" (PartyIdHint "Operator")
+  btcIssuer <- allocatePartyWithHint "BtcIssuer" (PartyIdHint "BtcIssuer")
+  usdtIssuer <- allocatePartyWithHint "UsdtIssuer" (PartyIdHint "UsdtIssuer")
+  custodian <- allocatePartyWithHint "Custodian" (PartyIdHint "Custodian")
+  exchange <- allocatePartyWithHint "Exchange" (PartyIdHint "Exchange")
+  broker <- allocatePartyWithHint "Broker" (PartyIdHint "Broker")
+  public <- allocatePartyWithHint "Public" (PartyIdHint "Public")
+
+  alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
+
+  -- create operator
+  opCid <- operator `submit` createCmd Operator with ..
+
+  -- onboard custodian
+  custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCustodian with ..
+  custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept
+
+  -- onboard broker
+  brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
+  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept
+
+  -- onboard issuers
+  btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
+  btcIssuerCid <- btcIssuer `submit` exerciseCmd btcIssuerInvCid IssuerInvitation_Accept
+
+  usdtIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
+  usdtIssuerCid <- usdtIssuer `submit` exerciseCmd usdtIssuerInvCid IssuerInvitation_Accept
+
+  -- onboard alice
+  aliceInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = alice, ..
+  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True
+
+  -- issuers establish a relationship with the custodian
+  relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
+  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
+  relationshipReqCid <- usdtIssuer `submit` exerciseCmd usdtIssuerCid Issuer_RequestCustodianRelationship with ..
+  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
+  -- alice establishes a relationship with the custodian
+  relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor_RequestCustodianRelationship with ..
+  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
+  -- issuers issue tokens
+  btcIssuer `submit` exerciseByKeyCmd @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC token", isPublic = False, observers = []
+  usdtIssuer `submit` exerciseByKeyCmd @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT token", isPublic = True, observers = [public]
+
+  let btcTokenId = Id with signatories = fromList [ btcIssuer ], label = "BTC", version = 0
+  let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0
+
+  -- the issuers disclose the tokens to everyone
+  btcIssuer `submit` exerciseByKeyCmd @Token btcTokenId Token_AddObservers with party = btcIssuer, newObservers = fromList [custodian, exchange, alice, broker]
+  usdtIssuer `submit` exerciseByKeyCmd @Token usdtTokenId Token_AddObservers with party = usdtIssuer, newObservers = fromList [custodian, exchange, alice, broker]
+
+  -- alice deposits some BTC under her account and gets them in a form of a deposit
+  depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.01, beneficiary = alice
+
+  -- oboard exchange
+  exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
+  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept
+
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+
+  -- exchange establishes a relationship with the custodian
+  relationshipReqCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_RequestCustodianRelationship with ..
+  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+
+  -- broker is onboarded as an exchange participant
+  (_, brokerInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = broker
+  broker `submit` exerciseCmd brokerInvCid ExchangeParticipantInvitation_Accept
+
+  -- broker invites Alice as a customer
+  aliceBrokerInvCid <- broker `submit` exerciseByKeyCmd @Broker (operator, broker) Broker_InviteCustomer with brokerCustomer = alice
+  alice `submit` exerciseCmd aliceBrokerInvCid BrokerCustomerInvitation_Accept
+
+  -- alice transfers her bitcoin deposit to her brokerage account
+  let receiverAccountId = Id with signatories = fromList [ custodian ], label = getAccountLabel alice broker, version = 0
+  depositTransferRequestCid <- alice `submit` exerciseByKeyCmd @Investor (operator, alice) Investor_RequestDepositTransfer with ..
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+
+  -- alice wants to sell 0.01 BTC for a price of 10000 USDT/BTC (ie she is looking to buy 100 USDT)
+  brokerOrderReqCid <- alice `submit` exerciseByKeyCmd @BrokerCustomer (broker, operator, alice)
+    BrokerCustomer_RequestOffer with pair = (btcTokenId, usdtTokenId), price = 10000.0, ..
+
+  -- broker accepts her request and takes her btc deposit
+  (brokerOrderCid, depositTransferRequestCid) <- broker `submit` exerciseCmd brokerOrderReqCid BrokerOrderRequest_Accept with brokerOrderId = 1, ..
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+
+  -- (at this point the broker can go and place the offer on the exchange)
+
+  -- broker deposits some USDT under for themselves
+  depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = usdtTokenId, depositQuantity = 100.0, beneficiary = broker
+
+  -- broker fills alice's order with the USDT deposit
+  depositTransferRequestCid <- broker `submit` exerciseCmd brokerOrderCid BrokerOrder_Fill with ..
+
+  -- alice gets her USDT deposit at her brokerage account
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+
+  return ()
