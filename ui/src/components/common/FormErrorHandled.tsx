@@ -21,7 +21,7 @@ const FormErrorHandled: React.FC<Props> = ({ children, className, size, error, l
                 clearError();
             }, 6000);
         }
-    }, [error]);
+    }, [error, clearError]);
 
     return (
         <Form className={className} size={size} loading={loading} error={!!error} onSubmit={onSubmit}>

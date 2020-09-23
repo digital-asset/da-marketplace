@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Button, Card, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery, useStreamFetchByKey } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { ContractId } from '@daml/types'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import {
     Investor as InvestorTemplate,
     InvestorInvitation
@@ -12,7 +15,9 @@ import {
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
-import { wrapDamlTuple } from '../common/damlTypes'
+import FormErrorHandled from '../common/FormErrorHandled'
+import { wrapDamlTuple, ExchParticipantInviteInfo } from '../common/damlTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
@@ -39,6 +44,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
+    const allExchangeInvites = useStreamQuery(ExchangeParticipantInvitation).contracts;
+
     useEffect(() => {
         if (investorInvite) {
             // accept the invite as soon as it's seen
@@ -51,10 +58,21 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const sideNav = <InvestorSideNav disabled={!investorContract} url={url} exchanges={allExchanges}/>;
 
+    const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
+        const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
+        await ledger.exercise(choice, cid, {});
+    }
+
     return <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
                 <WelcomeHeader/>
+                { allExchangeInvites && <Header as='h3' content='Exchange Participant Invitations'/> }
+                { allExchangeInvites.map(
+                    invite => <ExchangeParticipantInvite
+                                invite={{ contractId: invite.contractId, contractData: invite.payload }}
+                                invitationAccept={() => acceptExchParticipantInvite(invite.contractId)}/>
+                )}
             </Page>
         </Route>
 
@@ -79,6 +97,35 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 deposits={allDeposits}/>
         </Route>
     </Switch>
+}
+
+type ExchParticipantInviteProps = {
+    invite: ExchParticipantInviteInfo;
+    invitationAccept: () => void;
+}
+
+const ExchangeParticipantInvite: React.FC<ExchParticipantInviteProps> = ({ invite, invitationAccept }) => {
+    const [ loading, setLoading ] = useState(false);
+    const [ error, setError ] = useState<ErrorMessage>();
+
+    const acceptExchParticipantInvite = async () => {
+        setLoading(true);
+        try {
+            await invitationAccept();
+        } catch(err) {
+            setError(parseError(err));
+        }
+        setLoading(false);
+    }
+
+    return (
+        <Card>
+            <h4>Exchange: {invite.contractData.exchange} is inviting you to trade.</h4>
+            <FormErrorHandled loading={loading} error={error} clearError={() => setError(undefined)}>
+                <Button onClick={() => acceptExchParticipantInvite()}>Accept</Button>
+            </FormErrorHandled>
+        </Card>
+    )
 }
 
 export default Investor;

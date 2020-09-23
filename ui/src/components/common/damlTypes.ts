@@ -1,5 +1,9 @@
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
-import { Exchange, Token } from '@daml.js/da-marketplace/lib/Marketplace'
+import {
+    ExchangeParticipant,
+    Exchange,
+    Token
+} from '@daml.js/da-marketplace/lib/Marketplace'
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -39,3 +43,5 @@ type ContractInfo<T> = {
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
+export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
+export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;

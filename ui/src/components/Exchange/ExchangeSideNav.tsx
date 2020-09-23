@@ -4,24 +4,29 @@ import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 
-import { PublicIcon } from '../../icons/Icons'
+import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 type Props = {
     url: string;
+    disabled?: boolean;
 }
 
-const ExchangeSideNav: React.FC<Props> = ({ url }) => {
+const ExchangeSideNav: React.FC<Props> = ({ disabled, url }) => {
     const exchange = useParty();
 
-    return (
+    const HomeMenuItem = (
+        <Menu.Item
+            as={NavLink}
+            to={url}
+            exact
+        >
+            <Header as='h3'>@{exchange}</Header>
+        </Menu.Item>
+    )
+
+    return disabled ? HomeMenuItem : (
         <Menu.Menu>
-            <Menu.Item
-                as={NavLink}
-                to={url}
-                exact
-            >
-                <Header as='h3'>@{exchange}</Header>
-            </Menu.Item>
+            { HomeMenuItem }
 
             <Menu.Item
                 as={NavLink}
@@ -39,6 +44,15 @@ const ExchangeSideNav: React.FC<Props> = ({ url }) => {
                 exact
             >
                 <p><PublicIcon/> Create a Market</p>
+            </Menu.Item>
+
+            <Menu.Item
+                as={NavLink}
+                to={`${url}/participants`}
+                className='sidemenu-item-normal'
+                exact
+            >
+                <p><UserIcon/> Investors</p>
             </Menu.Item>
 
         </Menu.Menu>
