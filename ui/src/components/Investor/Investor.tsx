@@ -19,10 +19,12 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import { wrapDamlTuple, ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 
+import InviteAcceptScreen from './InviteAcceptScreen'
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 type Props = {
     onLogout: () => void;
@@ -36,7 +38,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const key = () => wrapDamlTuple([operator, user]);
     const investorContract = useStreamFetchByKey(InvestorTemplate, key, [operator, user]).contract;
-    const investorInvite = useStreamFetchByKey(InvestorInvitation, key, [operator, user]).contract;
+    const registeredInvestor = useStreamFetchByKey(RegisteredInvestor, key, [operator, user]).contract;
+    console.log(registeredInvestor);
 
     const allExchanges = useStreamQuery(Exchange).contracts
         .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
@@ -45,17 +48,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
     const allExchangeInvites = useStreamQuery(ExchangeParticipantInvitation).contracts;
-
-    useEffect(() => {
-        if (investorInvite) {
-            // accept the invite as soon as it's seen
-            const { InvestorInvitation_Accept } = InvestorInvitation;
-            const key = wrapDamlTuple([operator, user]);
-            ledger.exerciseByKey(InvestorInvitation_Accept, key, { isPublic: true })
-                .catch(err => console.error(err))
-        }
-    }, [investorInvite, ledger, operator, user]);
-
     const sideNav = <InvestorSideNav disabled={!investorContract} url={url} exchanges={allExchanges}/>;
 
     const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
@@ -63,7 +55,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         await ledger.exercise(choice, cid, {});
     }
 
-    return <Switch>
+    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const investorScreen = <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
                 <WelcomeHeader/>
@@ -97,6 +90,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 deposits={allDeposits}/>
         </Route>
     </Switch>
+    // return investorScreen;
+
+    return registeredInvestor
+         ? investorScreen
+         : inviteScreen
 }
 
 type ExchParticipantInviteProps = {

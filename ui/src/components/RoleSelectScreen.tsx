@@ -2,7 +2,7 @@ import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
-import { useParty, useStreamQuery, useLedger } from '@daml/react'
+import { useParty, useStreamQuery, useLedger, useStreamFetchByKey} from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -10,6 +10,8 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
+import {wrapDamlTuple} from './common/damlTypes'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import './RoleSelectScreen.css'
 
@@ -46,6 +48,7 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const operator = useWellKnownParties().userAdminParty;
     const userSessions = useStreamQuery(UserSession).contracts;
+    const registeredInvestor = useStreamQuery(RegisteredInvestor)
 
     const handleRoleClick = async (role: MarketRole) => {
         setRole(role);
@@ -56,6 +59,10 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
             await ledger.create(UserSession, { user, role, operator });
         }
 
+        const key = () => wrapDamlTuple([operator, user]);
+        console.log(registeredInvestor);
+        while (!registeredInvestor) {setLoading(true)}
+ 
         setLoading(false);
         setRole(undefined);
         history.push(`/role/${role.slice(0, -4).toLowerCase()}`);

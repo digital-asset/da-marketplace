@@ -25,6 +25,9 @@ template InvestorInvitation
       InvestorInvitation_Accept : ContractId Investor
         with
           isPublic : Bool
+          name : Text
+          location : Text
+          ssn : Text
         do
           create RegisteredInvestor with ..
           create Investor with ..
@@ -36,6 +39,7 @@ template Investor
    investor : Party
    isPublic : Bool
    public : Party
+   ssn : Text
   where
     signatory operator, investor
 
