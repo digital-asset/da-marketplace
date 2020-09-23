@@ -1,0 +1,39 @@
+/* .ui.grid.column {
+    max-width: 750px;
+    justify-content: left;
+    align-items: left;
+}
+
+.ui.card {
+    box-shadow: none;
+} */
+
+.invite-accept-form {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    text-align:left;
+}
+
+.invite-accept-form .invite-accept-form-item {
+    padding-top: 10px;
+    padding-right: 24px;
+    width: 100%;
+}
+
+.invite-accept-form .invite-accept-submit-button-div {
+    padding-top: 5px;
+    margin-top: 10px;
+    width: fit-content;
+}
+
+/* .invite-accept-form .invite-accept-submit-button {
+    padding-top: 15px;
+    margin-top: 48px;
+    width: fit-content;
+} */
+
+.invite-accept-form .invite-accept-submit-button:hover {
+    background-color: var(--lightblue2);
+}

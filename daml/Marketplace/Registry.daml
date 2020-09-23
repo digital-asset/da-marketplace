@@ -24,6 +24,10 @@ template RegisteredIssuer
     operator : Party
     public : Party
     issuer : Party
+    name : Text
+    title : Text
+    issuerID : Text
+
   where
     signatory operator, issuer
     observer public

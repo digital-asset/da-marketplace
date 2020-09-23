@@ -20,7 +20,7 @@ const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
                         </Header.Content>
                     </Header>
 
-                    <Header as='h4' textAlign='center'>
+                    <Header as='h4' textAlign='left'>
                         <Header.Content>
                             { subtitle }
                         </Header.Content>

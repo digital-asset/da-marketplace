@@ -42,10 +42,11 @@ test = scenario do
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
-  btcIssuerCid <- btcIssuer `submit` exercise btcIssuerInvCid IssuerInvitation_Accept
+  btcIssuerCid <- btcIssuer `submit` exercise btcIssuerInvCid IssuerInvitation_Accept with name = "", title = "", issuerID = "", ssn =""
+
 
   usdtIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
-  usdtIssuerCid <- usdtIssuer `submit` exercise usdtIssuerInvCid IssuerInvitation_Accept
+  usdtIssuerCid <- usdtIssuer `submit` exercise usdtIssuerInvCid IssuerInvitation_Accept with name = "", title = "", issuerID = "", ssn =""
 
   -- onboard investors
   aliceInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = alice, ..
@@ -169,11 +170,10 @@ testBroker = scenario do
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
-  btcIssuerCid <- btcIssuer `submit` exercise btcIssuerInvCid IssuerInvitation_Accept
+  btcIssuerCid <- btcIssuer `submit` exercise btcIssuerInvCid IssuerInvitation_Accept with name = "", title = "", issuerID = "", ssn =""
 
   usdtIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
-  usdtIssuerCid <- usdtIssuer `submit` exercise usdtIssuerInvCid IssuerInvitation_Accept
-
+  usdtIssuerCid <- usdtIssuer `submit` exercise usdtIssuerInvCid IssuerInvitation_Accept with name = "", title = "", issuerID = "", ssn =""
   -- onboard alice
   aliceInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardInvestor with investor = alice, ..
   aliceInvestorCid <- alice `submit` exercise aliceInvCid InvestorInvitation_Accept with isPublic = True
