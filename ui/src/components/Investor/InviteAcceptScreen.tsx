@@ -3,10 +3,10 @@ import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
-import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { ErrorMessage } from '../common/errorTypes'
+import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 type Props = {
     onLogout: () => void;
@@ -18,8 +18,7 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const operator = useWellKnownParties().userAdminParty;
 
     const [ name, setName ] = useState<string>('')
-    const [ title, setTitle ] = useState<string>('')
-    const [ issuerID, setIssuerID ] = useState<string>('')
+    const [ location, setLocation ] = useState<string>('')
     const [ ssn, setSSN ] = useState<string>('')
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
@@ -27,8 +26,8 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     async function submit() {
         setLoading(true);
         const key = wrapDamlTuple([operator, issuer]);
-        const args = { name, title, issuerID, ssn };
-        await ledger.exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args)
+        const args = { name, location, ssn, isPublic: true };
+        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
             .catch(err => console.error(err));
         setLoading(false);
     }
@@ -36,27 +35,21 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     return (
         <InviteAcceptTile
             onLogout={onLogout}
-            role='Issuer'
+            role='Investor'
             error={error}
             setError={setError}>
-
+        
             <InviteTextField
                 label='Name'
-                placeholder='Your professional title'
+                placeholder='Your full legal name'
                 variable={name}
                 setter={setName}
             />
             <InviteTextField
-                label='Title'
-                placeholder='Your professional title'
-                variable={title}
-                setter={setTitle}
-            />
-            <InviteTextField
-                label='Issuer ID'
-                placeholder='Your Issuer ID'
-                variable={issuerID}
-                setter={setIssuerID}
+                label='Location'
+                placeholder='Your current location'
+                variable={location}
+                setter={setLocation}
             />
             <InviteTextField
                 label='Social Security Number (private)'
@@ -66,7 +59,7 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
             />
             <InviteAcceptButton
                     loading={loading}
-                    disabled={!name || !title || !issuerID || !ssn}
+                    disabled={!name || !location || !ssn}
                     submit={submit}>
             </InviteAcceptButton>
         </InviteAcceptTile>

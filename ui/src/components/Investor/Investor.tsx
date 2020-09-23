@@ -9,8 +9,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import {
-    Investor as InvestorTemplate,
-    InvestorInvitation
+    Investor as InvestorTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import Page from '../common/Page'
@@ -24,6 +23,7 @@ import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import OnboardingTitle from '../common/OnboardingTile'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 type Props = {
@@ -38,8 +38,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const key = () => wrapDamlTuple([operator, user]);
     const investorContract = useStreamFetchByKey(InvestorTemplate, key, [operator, user]).contract;
-    const registeredInvestor = useStreamFetchByKey(RegisteredInvestor, key, [operator, user]).contract;
-    console.log(registeredInvestor);
+    const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
     const allExchanges = useStreamQuery(Exchange).contracts
         .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
@@ -56,6 +55,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     }
 
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const loadingScreen = <OnboardingTitle>Loading...</OnboardingTitle>
     const investorScreen = <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
@@ -90,11 +90,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 deposits={allDeposits}/>
         </Route>
     </Switch>
-    // return investorScreen;
 
-    return registeredInvestor
-         ? investorScreen
-         : inviteScreen
+    return registeredInvestor.loading
+         ? loadingScreen
+         : registeredInvestor.contracts.length === 0 ? inviteScreen : investorScreen
 }
 
 type ExchParticipantInviteProps = {
