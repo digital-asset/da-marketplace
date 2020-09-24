@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
-import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { ErrorMessage } from '../common/errorTypes'
-import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
 
 type Props = {
     onLogout: () => void;

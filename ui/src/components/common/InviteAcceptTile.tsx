@@ -1,11 +1,10 @@
 import React from 'react'
 import { Form, Button } from 'semantic-ui-react'
-import TopMenu from './TopMenu'
-import OnboardingTile from './OnboardingTile'
 
+import TopMenu from './TopMenu'
 import { ErrorMessage } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
-// import FormToggle from './common/FormToggle'
+import OnboardingTile from './OnboardingTile'
 
 import './InviteAcceptTile.css'
 
@@ -51,7 +50,7 @@ const InviteTextField: React.FC<InviteTextFieldProps> = ({ label, variable, plac
 type Props = {
     onLogout: () => void;
     role: string;
-    error: ErrorMessage | undefined;
+    error?: ErrorMessage;
     setError: React.Dispatch<React.SetStateAction<ErrorMessage | undefined>>
 }
 

@@ -6,14 +6,13 @@ import { useStreamQuery } from '@daml/react'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
+import OnboardingTitle from '../common/OnboardingTile';
 
 import InviteAcceptScreen from './InviteAcceptScreen'
-
 import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
 import IssuerCustodians from './IssuerCustodians';
-import OnboardingTitle from '../common/OnboardingTile';
 
 type Props = {
     onLogout: () => void;

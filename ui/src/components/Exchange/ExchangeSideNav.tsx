@@ -8,10 +8,9 @@ import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 type Props = {
     url: string;
-    disabled?: boolean;
 }
 
-const ExchangeSideNav: React.FC<Props> = ({ disabled, url }) => {
+const ExchangeSideNav: React.FC<Props> = ({ url }) => {
     const exchange = useParty();
 
     const HomeMenuItem = (
@@ -24,7 +23,7 @@ const ExchangeSideNav: React.FC<Props> = ({ disabled, url }) => {
         </Menu.Item>
     )
 
-    return disabled ? HomeMenuItem : (
+    return (
         <Menu.Menu>
             { HomeMenuItem }
 

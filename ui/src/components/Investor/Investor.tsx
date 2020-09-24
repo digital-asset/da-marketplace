@@ -2,21 +2,18 @@ import React, { useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { Button, Card, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import {
-    Investor as InvestorTemplate
-} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
+import OnboardingTitle from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { wrapDamlTuple, ExchParticipantInviteInfo } from '../common/damlTypes'
+import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 
 import InviteAcceptScreen from './InviteAcceptScreen'
@@ -24,7 +21,6 @@ import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-import OnboardingTitle from '../common/OnboardingTile'
 
 type Props = {
     onLogout: () => void;
@@ -32,12 +28,8 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
-    const user = useParty();
     const ledger = useLedger();
 
-    const key = () => wrapDamlTuple([operator, user]);
-    const investorContract = useStreamFetchByKey(InvestorTemplate, key, [operator, user]).contract;
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
     const allExchanges = useStreamQuery(Exchange).contracts
@@ -47,7 +39,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
     const allExchangeInvites = useStreamQuery(ExchangeParticipantInvitation).contracts;
-    const sideNav = <InvestorSideNav disabled={!investorContract} url={url} exchanges={allExchanges}/>;
+    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
 
     const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
