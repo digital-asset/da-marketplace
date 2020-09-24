@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
 import { DepositInfo } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
@@ -12,32 +11,10 @@ import './OrderForm.css'
 type Props = {
     kind: OrderKind;
     deposits: DepositInfo[];
-    placeOrder: (depositCid: string, price: string) => void;
+    placeOrder: (depositCid: string, price: string) => Promise<void>;
 }
 
 const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-    const [ price, setPrice ] = useState('');
-    const [ depositCid, setDepositCid ] = useState('');
-
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setLoading(true);
-        try {
-            await placeOrder(depositCid, price);
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-        clearForm()
-    }
-
-    function clearForm() {
-        setPrice('');
-        setDepositCid('');
-    }
-
     const title = kind[0].toUpperCase() + kind.slice(1);
 
     const options = deposits
@@ -47,20 +24,23 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
             text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label}`
         }))
 
+    const [ price, setPrice ] = useState('');
+    const [ depositCid, setDepositCid ] = useState('');
+
     const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setDepositCid(result.value);
         }
     }
 
+    const submit = async () => {
+        await placeOrder(depositCid, price);
+        setPrice('');
+        setDepositCid('');
+    };
+
     return (
-        <FormErrorHandled
-            className="order-form"
-            loading={loading}
-            error={error}
-            clearError={() => setError(undefined)}
-            onSubmit={handleSubmit}
-        >
+        <FormErrorHandled onSubmit={submit}>
             <Header>{title}</Header>
             <Form.Select
                 required

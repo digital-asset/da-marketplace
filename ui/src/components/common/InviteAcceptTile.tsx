@@ -9,21 +9,17 @@ import OnboardingTile from './OnboardingTile'
 import './InviteAcceptTile.css'
 
 type InviteAcceptButtonProps = {
-    loading: boolean
-    disabled: boolean
-    submit: () => Promise<void>
+    disabled?: boolean
 }
 
-const InviteAcceptButton: React.FC<InviteAcceptButtonProps> = ({ loading, disabled, submit }) => (
+export const InviteAcceptButton: React.FC<InviteAcceptButtonProps> = ({ disabled }) => (
     <div className='invite-accept-submit-button-div'>
         <Button
             primary
-            loading={loading}
-            disabled={disabled}
             className='invite-accept-submit-button'
-            onClick={submit}>
-                Submit
-        </Button>
+            content='Submit'
+            disabled={disabled}
+            type='submit'/>
     </div>
 )
 
@@ -34,43 +30,41 @@ type InviteTextFieldProps = {
     setter: React.Dispatch<React.SetStateAction<string>>
 }
 
-const InviteTextField: React.FC<InviteTextFieldProps> = ({ label, variable, placeholder, setter }) => (
+export const InviteTextField: React.FC<InviteTextFieldProps> = ({ label, variable, placeholder, setter }) => (
     <div className='invite-accept-form-item'>
         <Form.Input
-            label={label}
             fluid
+            className='invite-accept-form-field'
+            label={label}
             placeholder={placeholder}
             value={variable}
-            className='invite-accept-form-field'
             onChange={e => setter(e.currentTarget.value)}
         />
     </div>
 )
 
 type Props = {
-    onLogout: () => void;
-    role: string;
     error?: ErrorMessage;
-    setError: React.Dispatch<React.SetStateAction<ErrorMessage | undefined>>
+    role: string;
+    onLogout: () => void;
+    onSubmit: () => Promise<void>;
 }
 
-const InviteAcceptTile: React.FC<Props> = ({ children, onLogout, role, error, setError}) => {
+const InviteAcceptTile: React.FC<Props> = ({ children, role, onLogout, onSubmit }) => {
     return (
         <>
         <TopMenu onLogout={onLogout}/>
-        <OnboardingTile subtitle={'Please fill in some information about yourself as ' + role}>
+        <OnboardingTile subtitle={`Please fill in some information about yourself as ${role}`}>
                 <FormErrorHandled
-                    size='large'
                     className='invite-accept-form'
-                    error={error}
-                    clearError={() => setError(undefined)}
+                    size='large'
+                    onSubmit={onSubmit}
                 >
-                    {children}
+                    { children }
                 </FormErrorHandled>
         </OnboardingTile>
         </>
     )
 }
 
-export { InviteAcceptTile, InviteTextField, InviteAcceptButton };
 export default InviteAcceptTile;
