@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import { Button, Card, Form, Header } from 'semantic-ui-react'
 
-import { useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
@@ -18,11 +18,12 @@ import './BrokerOrders.css'
 
 type Props = {
     sideNav: React.ReactElement;
+    deposits: DepositInfo[];
     onLogout: () => void;
 };
 
 
-const BrokerOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
+const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     const allExchangeOrders = useStreamQuery(Order).contracts;
     const allBrokerOrderRequests = useStreamQuery(BrokerOrderRequest).contracts;
     const allBrokerOrders = useStreamQuery(BrokerOrder).contracts;
@@ -38,7 +39,7 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                 { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
 
                 <Header as='h4'>Open Customer Orders</Header>
-                { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload}/>)}
+                { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
 
                 <Header as='h4'>Exchange Orders</Header>
                 { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
@@ -125,6 +126,7 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
 // Broker Order
 type BrokerOrderCardProps = {
     cdata: BrokerOrder;
+    deposits: DepositInfo[];
 };
 
 
@@ -158,6 +160,21 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
         setLoading(false);
     }
 
+    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setDepositCid(result.value);
+        }
+    }
+    const broker = useParty();
+
+    const options = props.deposits
+    .filter(deposit => deposit.contractData.account.owner === broker)
+    .map(deposit => ({
+        key: deposit.contractId,
+        value: deposit.contractId,
+        text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label} | ${deposit.contractData.account.id.label}`
+    }))
+
     return (
         <FormErrorHandled
             className='order-card-container'
@@ -172,14 +189,16 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                         <div>{`@ ${price}`}</div>
                         <div>{`customer: ${customer}`}</div>
                         <div>{`id: ${props.cdata.brokerOrderId}`}</div>
+                        <div>{`deposit: ${depositCid.substr(depositCid.length - 8) || ''}`}</div>
                     </Card>
 
                     <Form.Group>
-                        <Form.Input
-                            className='orderid-input'
-                            placeholder='depositCid'
+                        <Form.Select
+                            required
+                            label='Deposit'
+                            options={options}
+                            onChange={handleDepositChange}
                             value={depositCid}
-                            onChange={e => setDepositCid(e.currentTarget.value)}
                         />
                         <Button
                             basic
