@@ -45,6 +45,8 @@ template RegisteredInvestor
     public : Party
     investor : Party
     isPublic : Bool
+    name : Text
+    location : Text
   where
     signatory operator, investor
     observer if isPublic then [public] else []
