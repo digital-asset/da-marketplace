@@ -8,6 +8,7 @@ import RoleSelectScreen from './RoleSelectScreen'
 import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
 import Exchange from './Exchange/Exchange'
+import Custodian from './Custodian/Custodian'
 
 type Props = {
   onLogout: () => void;
@@ -35,6 +36,10 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
       <Route path={`${path}/exchange`}>
         <Exchange onLogout={onLogout}/>
+      </Route>
+
+      <Route path={`${path}/custodian`}>
+        <Custodian onLogout={onLogout}/>
       </Route>
     </Switch>
   );

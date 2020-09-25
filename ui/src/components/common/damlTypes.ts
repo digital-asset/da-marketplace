@@ -2,6 +2,7 @@ import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     ExchangeParticipant,
     Exchange,
+    Custodian,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
 
@@ -45,3 +46,4 @@ export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
+export type CustodianInfo = ContractInfo<Custodian.Custodian>;

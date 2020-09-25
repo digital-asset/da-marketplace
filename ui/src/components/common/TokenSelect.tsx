@@ -1,7 +1,7 @@
 import React from 'react'
 import { Form } from 'semantic-ui-react'
 
-import { TokenInfo } from '../common/damlTypes'
+import { TokenInfo } from './damlTypes'
 
 type Props = {
     label: string;
