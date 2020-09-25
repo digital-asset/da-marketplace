@@ -4,10 +4,10 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { useStreamQuery } from '@daml/react'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import Page from '../common/Page'
-import WelcomeHeader from '../common/WelcomeHeader'
 import OnboardingTile from '../common/OnboardingTile'
+import LandingPage from '../common/LandingPage'
 
+import RequestCustodianRelationship from './RequestCustodianRelationship'
 import InviteAcceptScreen from './InviteAcceptScreen'
 import ExchangeSideNav from './ExchangeSideNav'
 import MarketPairs from './MarketPairs'
@@ -28,9 +28,10 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const exchangeScreen = <Switch>
         <Route exact path={path}>
-            <Page sideNav={sideNav} onLogout={onLogout}>
-                <WelcomeHeader/>
-            </Page>
+            <LandingPage
+                sideNav={sideNav}
+                marketRelationships={<RequestCustodianRelationship/>}
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/market-pairs`}>

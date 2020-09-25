@@ -20,6 +20,8 @@ template ExchangeParticipantInvitation
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
         do create ExchangeParticipant with ..
 
+      ExchangeParticipantInvitation_Reject : ()
+        do return ()
 
 template ExchangeParticipant
   with

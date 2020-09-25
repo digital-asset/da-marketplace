@@ -7,11 +7,10 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { UserIcon } from '../../icons/Icons'
 import { DepositInfo } from '../common/damlTypes'
 import StripedTable from '../common/StripedTable'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import CreateDeposit from './CreateDeposit'
-
-import "./Clients.css"
 
 type Props = {
     clients: string[];
@@ -33,12 +32,14 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><UserIcon/> Clients</>}
         >
-            <div className='custodian-clients'>
-                <CreateDeposit/>
-                <StripedTable
-                    header={['Id', 'Holdings']}
-                    rows={tableRows}/>
-            </div>
+            <PageSection border='blue' background='white'>
+                <div className='custodian-clients'>
+                    <CreateDeposit/>
+                    <StripedTable
+                        header={['Id', 'Holdings']}
+                        rows={tableRows}/>
+                </div>
+            </PageSection>
         </Page>
     )
 }

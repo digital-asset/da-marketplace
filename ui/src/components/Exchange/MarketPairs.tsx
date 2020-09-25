@@ -7,6 +7,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import CardTable from '../common/CardTable'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 type Props = {
@@ -34,10 +35,12 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><PublicIcon/>Market Pairs</>}
         >
-            <CardTable
-                className='market-pairs'
-                header={header}
-                rows={rows}/>
+            <PageSection border='blue' background='white'>
+                <CardTable
+                    className='market-pairs'
+                    header={header}
+                    rows={rows}/>
+            </PageSection>
         </Page>
     )
 }

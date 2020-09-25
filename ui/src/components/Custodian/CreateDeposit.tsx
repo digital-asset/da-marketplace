@@ -67,7 +67,7 @@ const CreateDeposit: React.FC = () => {
             clearError={() => setError(undefined)}
             onSubmit={handleCreateDeposit}
         >
-            <Form.Group className='client-deposit-form-fields'>
+            <Form.Group className='inline-form-group'>
                 <Form.Input
                     label='Beneficiary'
                     placeholder='Investor party ID'

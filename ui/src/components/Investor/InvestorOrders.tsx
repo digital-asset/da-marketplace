@@ -5,9 +5,10 @@ import { useStreamQuery } from '@daml/react'
 import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { OrdersIcon } from '../../icons/Icons'
-import Page from '../common/Page'
-import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import { OrderCard } from '../common/OrderCard'
+import ExchangeOrderCard from '../common/ExchangeOrderCard'
+import PageSection from '../common/PageSection'
+import Page from '../common/Page'
 
 
 type Props = {
@@ -25,13 +26,15 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             menuTitle={<><OrdersIcon/>Orders</>}
             onLogout={onLogout}
         >
-            <div className='investor-orders'>
-                <Header as='h4'>Requested Orders</Header>
-                { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
+            <PageSection border='blue' background='white'>
+                <div className='investor-orders'>
+                    <Header as='h4'>Requested Orders</Header>
+                    { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
 
-                <Header as='h4'>Open Orders</Header>
-                { allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
-            </div>
+                    <Header as='h4'>Open Orders</Header>
+                    { allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                </div>
+            </PageSection>
         </Page>
     )
 }
