@@ -1,17 +1,14 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
-import {
-    Exchange as ExchangeTemplate,
-    ExchangeInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { useStreamQuery } from '@daml/react'
+import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
-import { wrapDamlTuple } from '../common/damlTypes'
+import OnboardingTile from '../common/OnboardingTile'
 
+import InviteAcceptScreen from './InviteAcceptScreen'
 import ExchangeSideNav from './ExchangeSideNav'
 import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
@@ -23,27 +20,13 @@ type Props = {
 
 const Exchange: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
-    const user = useParty();
-    const ledger = useLedger();
 
-    const key = () => wrapDamlTuple([operator, user]);
-    const exchangeContract = useStreamFetchByKey(ExchangeTemplate, key, [operator, user]).contract;
-    const exchangeInvite = useStreamFetchByKey(ExchangeInvitation, key, [operator, user]).contract;
+    const registeredExchange = useStreamQuery(RegisteredExchange);
 
-    useEffect(() => {
-        if (exchangeInvite) {
-            // accept the invite as soon as it's seen
-            const { ExchangeInvitation_Accept } = ExchangeInvitation;
-            const key = wrapDamlTuple([operator, user]);
-            ledger.exerciseByKey(ExchangeInvitation_Accept, key, {})
-            .catch(err => console.error(err))
-        }
-    }, [exchangeInvite, ledger, operator, user]);
-
-    const sideNav = <ExchangeSideNav disabled={!exchangeContract} url={url}/>;
-
-    return <Switch>
+    const sideNav = <ExchangeSideNav url={url}/>;
+    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const exchangeScreen = <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
                 <WelcomeHeader/>
@@ -68,6 +51,10 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 onLogout={onLogout}/>
         </Route>
     </Switch>
+
+    return registeredExchange.loading
+         ? loadingScreen
+         : registeredExchange.contracts.length === 0 ? inviteScreen : exchangeScreen
 }
 
 export default Exchange;

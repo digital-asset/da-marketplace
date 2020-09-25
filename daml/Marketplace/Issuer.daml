@@ -24,6 +24,11 @@ template IssuerInvitation
 
     controller issuer can
       IssuerInvitation_Accept : ContractId Issuer
+        with
+          name : Text
+          title : Text
+          issuerID : Text
+          ssn : Text
         do
           create RegisteredIssuer with ..
           create Issuer with ..
@@ -34,6 +39,7 @@ template Issuer
     operator : Party
     issuer : Party
     public : Party
+    ssn : Text
   where
     signatory operator, issuer
 

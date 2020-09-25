@@ -9,11 +9,10 @@ import { ExchangeInfo, unwrapDamlTuple } from '../common/damlTypes'
 
 type Props = {
     url: string;
-    disabled?: boolean;
     exchanges: ExchangeInfo[];
 }
 
-const InvestorSideNav: React.FC<Props> = ({ url, exchanges, disabled }) => {
+const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
     const investor = useParty();
 
     const HomeMenuItem = (
@@ -26,7 +25,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges, disabled }) => {
         </Menu.Item>
     )
 
-    return disabled ? HomeMenuItem :
+    return (
         <><Menu.Menu>
             { HomeMenuItem }
             <Menu.Item
@@ -72,6 +71,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges, disabled }) => {
                 })
             }).flat()}
         </Menu.Menu></>
+    )
 }
 
 export default InvestorSideNav

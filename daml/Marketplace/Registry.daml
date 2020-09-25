@@ -24,6 +24,9 @@ template RegisteredIssuer
     operator : Party
     public : Party
     issuer : Party
+    name : Text
+    title : Text
+    issuerID : Text
   where
     signatory operator, issuer
     observer public
@@ -42,6 +45,8 @@ template RegisteredInvestor
     public : Party
     investor : Party
     isPublic : Bool
+    name : Text
+    location : Text
   where
     signatory operator, investor
     observer if isPublic then [public] else []
@@ -59,6 +64,8 @@ template RegisteredExchange
     operator : Party
     public : Party
     exchange : Party
+    name : Text
+    location : Text
   where
     signatory operator, exchange
     observer public

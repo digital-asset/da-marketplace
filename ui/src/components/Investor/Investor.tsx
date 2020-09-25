@@ -1,24 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { Button, Card, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import {
-    Investor as InvestorTemplate,
-    InvestorInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
+import OnboardingTitle from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { wrapDamlTuple, ExchParticipantInviteInfo } from '../common/damlTypes'
+import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 
+import InviteAcceptScreen from './InviteAcceptScreen'
 import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
@@ -30,13 +28,9 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
-    const user = useParty();
     const ledger = useLedger();
 
-    const key = () => wrapDamlTuple([operator, user]);
-    const investorContract = useStreamFetchByKey(InvestorTemplate, key, [operator, user]).contract;
-    const investorInvite = useStreamFetchByKey(InvestorInvitation, key, [operator, user]).contract;
+    const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
     const allExchanges = useStreamQuery(Exchange).contracts
         .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
@@ -45,25 +39,16 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
     const allExchangeInvites = useStreamQuery(ExchangeParticipantInvitation).contracts;
-
-    useEffect(() => {
-        if (investorInvite) {
-            // accept the invite as soon as it's seen
-            const { InvestorInvitation_Accept } = InvestorInvitation;
-            const key = wrapDamlTuple([operator, user]);
-            ledger.exerciseByKey(InvestorInvitation_Accept, key, { isPublic: true })
-                .catch(err => console.error(err))
-        }
-    }, [investorInvite, ledger, operator, user]);
-
-    const sideNav = <InvestorSideNav disabled={!investorContract} url={url} exchanges={allExchanges}/>;
+    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
 
     const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
         await ledger.exercise(choice, cid, {});
     }
 
-    return <Switch>
+    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const loadingScreen = <OnboardingTitle>Loading...</OnboardingTitle>
+    const investorScreen = <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>
                 <WelcomeHeader/>
@@ -97,6 +82,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 deposits={allDeposits}/>
         </Route>
     </Switch>
+
+    return registeredInvestor.loading
+         ? loadingScreen
+         : registeredInvestor.contracts.length === 0 ? inviteScreen : investorScreen
 }
 
 type ExchParticipantInviteProps = {
