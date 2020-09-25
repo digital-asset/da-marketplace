@@ -10,10 +10,15 @@
     width: 45%;
 }
 
+.issue-asset-form .issue-asset-form-item:first-child {
+    padding-top: 0px;
+}
+
 .issue-asset-form .is-public {
+    padding-top: 48px;
     display: flex;
     flex-direction: row;
-    width: 100;
+    width: 100%;
 }
 
 .issue-asset-form .issue-asset-submit-button {

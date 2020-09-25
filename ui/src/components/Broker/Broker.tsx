@@ -1,7 +1,7 @@
 import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamQuery, useStreamFetchByKey } from '@daml/react'
+import { useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
