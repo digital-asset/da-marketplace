@@ -21,9 +21,6 @@ type Props = {
 }
 
 const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogout }) => {
-    // const publicParty = useWellKnownParties().publicParty;
-    // const operator = useWellKnownParties().userAdminParty;
-    // const registeredExchange = useStreamFetchByKeyAsPublic(RegisteredExchange, key)
     return (
         <Page
             sideNav={sideNav}
@@ -38,11 +35,8 @@ const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogou
                     const options = exchanges.map(exchange => {
                         console.log(exchange.name);
                         return {
-                            // key:  exchange.contractId,
-                            // text: exchange.contractData.exchange, // exchange.name, // exhangeMap.get(exchange.key); // exchange.contractData.exchange,
-                            // value: exchange.contractData.exchange
                             key:  exchange.contractData.exchange, // exchange.contractId,
-                            text: exchange.name, // exchange.contractData.exchange, // exchange.name, // exhangeMap.get(exchange.key); // exchange.contractData.exchange,
+                            text: exchange.name.concat(' (', exchange.contractData.exchange, ')'),
                             value: exchange.contractData.exchange
                         }
                     })
