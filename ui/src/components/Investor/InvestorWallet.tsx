@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Button, Card, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useWellKnownParties, useStreamFetchByKeyAsPublic } from '@daml/dabl-react'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { WalletIcon } from '../../icons/Icons'
 import { ExchangeInfo, DepositInfo, wrapDamlTuple } from '../common/damlTypes'
@@ -14,11 +15,15 @@ import Page from '../common/Page'
 type Props = {
     deposits: DepositInfo[];
     exchanges: ExchangeInfo[];
+    exchangeMap: Map<any, any>;
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
 const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogout }) => {
+    // const publicParty = useWellKnownParties().publicParty;
+    // const operator = useWellKnownParties().userAdminParty;
+    // const registeredExchange = useStreamFetchByKeyAsPublic(RegisteredExchange, key)
     return (
         <Page
             sideNav={sideNav}
@@ -28,11 +33,16 @@ const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogou
             <Header as='h2'>Holdings</Header>
             <div className='investor-wallet'>
                 { deposits.map(deposit => {
+
                     const { asset, account } = deposit.contractData;
                     const options = exchanges.map(exchange => {
+                        console.log(exchange.name);
                         return {
-                            key: exchange.contractId,
-                            text: exchange.contractData.exchange,
+                            // key:  exchange.contractId,
+                            // text: exchange.contractData.exchange, // exchange.name, // exhangeMap.get(exchange.key); // exchange.contractData.exchange,
+                            // value: exchange.contractData.exchange
+                            key:  exchange.contractData.exchange, // exchange.contractId,
+                            text: exchange.name, // exchange.contractData.exchange, // exchange.name, // exhangeMap.get(exchange.key); // exchange.contractData.exchange,
                             value: exchange.contractData.exchange
                         }
                     })

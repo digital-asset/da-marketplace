@@ -2,18 +2,19 @@ import React, { useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { Button, Card, Header } from 'semantic-ui-react'
 
-import { useLedger, useStreamQuery } from '@daml/react'
+import { useLedger, useStreamQuery, } from '@daml/react'
+import { useStreamQueryAsPublic  } from '@daml/dabl-react'
 import { ContractId } from '@daml/types'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
 import OnboardingTitle from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { ExchParticipantInviteInfo } from '../common/damlTypes'
+import { ExchParticipantInviteInfo, damlTupleToString } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 
 import InviteAcceptScreen from './InviteAcceptScreen'
@@ -32,8 +33,16 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
+    const allRegisteredExchanges = useStreamQueryAsPublic(RegisteredExchange).contracts;
+    const exchangeMap = allRegisteredExchanges.reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload.name), new Map());
+    console.log(exchangeMap);
+
     const allExchanges = useStreamQuery(Exchange).contracts
-        .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
+        .map(exchange => {
+            console.log(exchangeMap.get(exchange.key));
+            return ({contractId: exchange.contractId, contractData: exchange.payload, name: exchangeMap.get(damlTupleToString(exchange.key))})
+        });
+
 
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
@@ -66,7 +75,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 sideNav={sideNav}
                 onLogout={onLogout}
                 deposits={allDeposits}
-                exchanges={allExchanges}/>
+                exchanges={allExchanges}
+                exchangeMap={exchangeMap}/>
         </Route>
 
         <Route path={`${path}/orders`}>

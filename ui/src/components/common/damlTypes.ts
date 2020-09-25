@@ -36,12 +36,23 @@ export function unwrapDamlTuple<T>(tuple: DamlTuple<T>): T[] {
     return sortedKeys.map(key => tuple[key]);
 }
 
+export function damlTupleToString<T>(tuple: DamlTuple<T>): string {
+    const sortedKeys = Object.keys(tuple).sort(cmpUnderscoredKeys);
+    return sortedKeys.reduce((accum, key) => accum + tuple[key], "");
+}
+
 type ContractInfo<T> = {
     contractId: string;
     contractData: T;
 }
 
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
+type ContractInfoName<T> = {
+    contractId: string;
+    contractData: T;
+    name: string;
+}
+
+export type ExchangeInfo = ContractInfoName<Exchange.Exchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
