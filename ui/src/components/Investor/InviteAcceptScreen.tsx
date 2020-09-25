@@ -14,7 +14,7 @@ type Props = {
 
 const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
-    const issuer = useParty();
+    const investor = useParty();
     const operator = useWellKnownParties().userAdminParty;
 
     const [ name, setName ] = useState<string>('')
@@ -25,7 +25,7 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
 
     async function submit() {
         setLoading(true);
-        const key = wrapDamlTuple([operator, issuer]);
+        const key = wrapDamlTuple([operator, investor]);
         const args = { name, location, ssn, isPublic: true};
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
             .catch(err => console.error(err));

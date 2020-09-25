@@ -3,6 +3,7 @@ import {
     ExchangeParticipant,
     Exchange,
     Custodian,
+    Registry,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
 
@@ -40,7 +41,7 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
-type ContractInfo<T> = {
+export type ContractInfo<T> = {
     contractId: string;
     contractData: T;
 }
@@ -51,3 +52,4 @@ export type TokenInfo = ContractInfo<Token.Token>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
+export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;

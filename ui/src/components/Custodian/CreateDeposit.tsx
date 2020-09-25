@@ -9,7 +9,7 @@ import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
-import TokenSelect from '../common/TokenSelect'
+import ContractSelect from '../common/ContractSelect'
 
 const CreateDeposit: React.FC = () => {
     const [ loading, setLoading ] = useState(false);
@@ -25,23 +25,6 @@ const CreateDeposit: React.FC = () => {
     const operator = useWellKnownParties().userAdminParty;
     const custodian = useParty();
     const ledger = useLedger();
-
-    const getTokenFromCid = (contractId: string): TokenInfo => {
-        const token = allTokens.find(t => t.contractId === contractId);
-        if (!token) {
-            throw new Error(`Token with contractId ${contractId} does not exist.`);
-        }
-        return token;
-    }
-
-    const handleTokenSelect = (contractId: string, setToken: (token: TokenInfo) => void) => {
-        try {
-            const token = getTokenFromCid(contractId);
-            setToken(token);
-        } catch (err) {
-            setError(parseError(err));
-        }
-    }
 
     const handleCreateDeposit = async (event: React.FormEvent<HTMLFormElement>) => {
         setLoading(true);
@@ -72,12 +55,13 @@ const CreateDeposit: React.FC = () => {
                     label='Beneficiary'
                     placeholder='Investor party ID'
                     onChange={e => setBeneficiary(e.currentTarget.value)}/>
-                <TokenSelect
-                    label='Asset'
+                <ContractSelect
+                    clearable
                     className='asset-select'
-                    tokens={allTokens}
-                    selected={token?.contractId}
-                    setTokenCid={contractId => handleTokenSelect(contractId, setToken)}/>
+                    contracts={allTokens}
+                    label='Asset'
+                    getOptionText={token => token.contractData.id.label}
+                    setContract={token => setToken(token)}/>
                 <Form.Input
                     label='Quantity'
                     placeholder='Quantity'
