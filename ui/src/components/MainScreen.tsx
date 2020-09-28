@@ -9,6 +9,8 @@ import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
 import Exchange from './Exchange/Exchange'
 import Custodian from './Custodian/Custodian'
+import Broker from './Broker/Broker'
+
 
 type Props = {
   onLogout: () => void;
@@ -40,6 +42,10 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
       <Route path={`${path}/custodian`}>
         <Custodian onLogout={onLogout}/>
+      </Route>
+
+      <Route path={`${path}/broker`}>
+        <Broker onLogout={onLogout}/>
       </Route>
     </Switch>
   );

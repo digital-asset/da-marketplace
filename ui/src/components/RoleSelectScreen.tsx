@@ -81,6 +81,11 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
                     roleSelectClick={() => handleRoleClick(MarketRole.ExchangeRole)}/>
 
                 <RoleSelect
+                    caption='Broker'
+                    loading={loading && role === MarketRole.BrokerRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.BrokerRole)}/>
+
+                <RoleSelect
                     caption='Bank'
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>

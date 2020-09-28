@@ -3,22 +3,26 @@ import { Button, Card, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
-import FormErrorHandled from '../common/FormErrorHandled'
-import Page from '../common/Page'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple } from './damlTypes'
+import { parseError, ErrorMessage } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
+import Page from './Page'
+
 
 type Props = {
     deposits: DepositInfo[];
     exchanges: ExchangeInfo[];
+    role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogout }) => {
+const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
@@ -26,7 +30,7 @@ const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogou
             onLogout={onLogout}
         >
             <Header as='h2'>Holdings</Header>
-            <div className='investor-wallet'>
+            <div className='wallet'>
                 { deposits.map(deposit => {
                     const { asset, account } = deposit.contractData;
                     const options = exchanges.map(exchange => {
@@ -39,7 +43,7 @@ const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogou
                     return (
                         <Card fluid key={deposit.contractId}>
                             {asset.quantity} {asset.id.label} | {account.id.label}
-                            <AllocationForm depositCid={deposit.contractId} options={options}/>
+                            <AllocationForm depositCid={deposit.contractId} options={options} role={role}/>
                         </Card>
                     )
                 })}
@@ -55,15 +59,16 @@ type FormProps = {
         text: string;
         value: string;
     }[];
+    role: MarketRole;
 }
 
-const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
+const AllocationForm: React.FC<FormProps> = ({ depositCid, options, role }) => {
     const [ exchange, setExchange ] = useState('');
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState<ErrorMessage>();
 
     const operator = useWellKnownParties().userAdminParty;
-    const investor = useParty();
+    const party = useParty();
     const ledger = useLedger();
 
     const handleDepositAllocation = async (event: React.FormEvent) => {
@@ -71,9 +76,13 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
 
         setLoading(true);
         try {
-            const key = wrapDamlTuple([operator, investor]);
+            const key = wrapDamlTuple([operator, party]);
             const args = { depositCid, provider: exchange };
-            await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
+            if (role === MarketRole.InvestorRole) {
+                await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
+            } else if (role === MarketRole.BrokerRole) {
+                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args)
+            }
         } catch (err) {
             setError(parseError(err));
         }
@@ -106,4 +115,4 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options }) => {
     )
 }
 
-export default InvestorWallet;
+export default Holdings;

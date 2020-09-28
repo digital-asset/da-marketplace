@@ -8,6 +8,11 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {
+    Investor as InvestorTemplate,
+    InvestorInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
@@ -15,12 +20,14 @@ import OnboardingTitle from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
+import Holdings from '../common/Holdings'
+
 
 import InviteAcceptScreen from './InviteAcceptScreen'
-import InvestorWallet from './InvestorWallet'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+
 
 type Props = {
     onLogout: () => void;
@@ -62,10 +69,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <InvestorWallet
+            <Holdings
                 sideNav={sideNav}
                 onLogout={onLogout}
                 deposits={allDeposits}
+                role={MarketRole.InvestorRole}
                 exchanges={allExchanges}/>
         </Route>
 
