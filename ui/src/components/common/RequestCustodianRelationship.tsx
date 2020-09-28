@@ -3,6 +3,7 @@ import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -35,6 +36,9 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
                 break;
             case MarketRole.IssuerRole:
                 await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
+                break;
+            case MarketRole.BrokerRole:
+                await ledger.exerciseByKey(Broker.Broker_RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.ExchangeRole:
                 await ledger.exerciseByKey(Exchange.Exchange_RequestCustodianRelationship, key, args);

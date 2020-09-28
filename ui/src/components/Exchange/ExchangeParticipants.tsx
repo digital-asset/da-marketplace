@@ -2,8 +2,10 @@ import React from 'react'
 import { Table } from 'semantic-ui-react'
 
 import { useStreamQuery } from '@daml/react'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
 import { ExchangeParticipantInfo } from '../common/damlTypes'
@@ -19,9 +21,21 @@ type Props = {
 }
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const tableRows = useStreamQuery(ExchangeParticipant).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }))
-        .map(exchp => <ExchangeParticipantRow key={exchp.contractId} exchp={exchp}/>);
+    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
+        .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));
+
+    const exchangeParticipants = useStreamQuery(ExchangeParticipant).contracts
+        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
+
+    const investorOptions = registeredInvestors.filter(ri => {
+        return !exchangeParticipants.find(ep => {
+            return ep.contractData.exchParticipant === ri.contractData.investor
+        })
+    });
+
+    const rows = exchangeParticipants.map(participant =>
+        <ExchangeParticipantRow key={participant.contractId} participant={participant}/>
+    );
 
     return (
         <Page
@@ -31,11 +45,11 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='exchange-participants'>
-                    <InviteParticipant/>
+                    <InviteParticipant registeredInvestors={investorOptions}/>
                     <StripedTable
                         className='active-participants'
                         header={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Commited (USD)']}
-                        rows={tableRows}/>
+                        rows={rows}/>
                 </div>
             </PageSection>
         </Page>
@@ -43,11 +57,11 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
 }
 
 type RowProps = {
-    exchp: ExchangeParticipantInfo
+    participant: ExchangeParticipantInfo
 }
 
-const ExchangeParticipantRow: React.FC<RowProps> = ({ exchp }) => {
-    const { exchange, exchParticipant } = exchp.contractData;
+const ExchangeParticipantRow: React.FC<RowProps> = ({ participant }) => {
+    const { exchange, exchParticipant } = participant.contractData;
 
     const query = () => ({ exchange, exchParticipant });
     const deps = [exchange, exchParticipant];

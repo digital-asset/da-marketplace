@@ -10,8 +10,8 @@ import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
-import TokenSelect from '../common/TokenSelect'
 import PageSection from '../common/PageSection'
+import ContractSelect from '../common/ContractSelect'
 import Page from '../common/Page'
 
 import "./CreateMarket.css"
@@ -62,23 +62,6 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         setLoading(false);
     }
 
-    const getTokenFromCid = (contractId: string): TokenInfo => {
-        const token = allTokens.find(t => t.contractId === contractId);
-        if (!token) {
-            throw new Error(`Token with contractId ${contractId} does not exist.`);
-        }
-        return token;
-    }
-
-    const handleTokenSelect = (contractId: string, setToken: (token: TokenInfo) => void) => {
-        try {
-            const token = getTokenFromCid(contractId);
-            setToken(token);
-        } catch (err) {
-            setError(parseError(err));
-        }
-    }
-
     return (
         <Page
             sideNav={sideNav}
@@ -94,21 +77,23 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                         onSubmit={handleTokenPairSubmit}
                     >
                         <div className='create-market-options'>
-                            <TokenSelect
-                                label='Base Token'
+                            <ContractSelect
+                                clearable
                                 className='create-market-select'
-                                tokens={allTokens}
-                                selected={baseToken?.contractId}
-                                setTokenCid={contractId => handleTokenSelect(contractId, setBaseToken)}/>
+                                contracts={allTokens}
+                                label='Base Token'
+                                getOptionText={token => token.contractData.id.label}
+                                setContract={token => setBaseToken(token)}/>
 
                             <div className='token-select-exchange-icon'><ExchangeIcon/></div>
 
-                            <TokenSelect
-                                label='Quote Token'
+                            <ContractSelect
+                                clearable
                                 className='create-market-select'
-                                tokens={allTokens}
-                                selected={quoteToken?.contractId}
-                                setTokenCid={contractId => handleTokenSelect(contractId, setQuoteToken)}/>
+                                contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
+                                label='Quote Token'
+                                getOptionText={token => token.contractData.id.label}
+                                setContract={token => setQuoteToken(token)}/>
                         </div>
                         <Button
                             basic

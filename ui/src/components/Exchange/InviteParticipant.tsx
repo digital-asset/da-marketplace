@@ -5,11 +5,16 @@ import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
-import { wrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, RegisteredInvestorInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
+import ContractSelect from '../common/ContractSelect'
 
-const InviteParticipant = () => {
+type Props = {
+    registeredInvestors: RegisteredInvestorInfo[];
+}
+
+const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState<ErrorMessage>();
     const [ exchParticipant, setExchParticipant ] = useState('');
@@ -48,12 +53,21 @@ const InviteParticipant = () => {
             onSubmit={handleExchParticipantInviteSubmit}
         >
             <Form.Group>
-                <Form.Input
+                <ContractSelect
+                    allowAdditions
+                    clearable
+                    search
+                    selection
+                    contracts={registeredInvestors}
                     placeholder='Investor party ID'
-                    onChange={e => setExchParticipant(e.currentTarget.value)}/>
+                    getOptionText={ri => ri.contractData.investor}
+                    setContract={ri => setExchParticipant(ri ? ri.contractData.investor : '')}
+                    setAddition={privateInvestorId => setExchParticipant(privateInvestorId)}/>
+
                 <Button
                     content='Invite'
-                    className='invite-investor'/>
+                    className='invite-investor'
+                    disabled={!exchParticipant}/>
             </Form.Group>
         </FormErrorHandled>
     )

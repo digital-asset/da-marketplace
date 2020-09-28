@@ -6,6 +6,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import Holdings from '../common/Holdings'
 import LandingPage from '../common/LandingPage'
 
@@ -30,6 +31,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <Route exact path={path}>
             <LandingPage
                 sideNav={sideNav}
+                marketRelationships={<RequestCustodianRelationship role={MarketRole.BrokerRole}/>}
                 onLogout={onLogout}/>
         </Route>
 
