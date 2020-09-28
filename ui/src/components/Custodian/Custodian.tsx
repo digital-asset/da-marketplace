@@ -1,5 +1,5 @@
 import React from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, Link } from 'react-router-dom'
 
 import { useParty, useStreamFetchByKey } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
@@ -7,8 +7,7 @@ import {
     Custodian as CustodianTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 
-import Page from '../common/Page'
-import WelcomeHeader from '../common/WelcomeHeader'
+import LandingPage from '../common/LandingPage'
 import { wrapDamlTuple } from '../common/damlTypes'
 
 import CustodianSideNav from './CustodianSideNav'
@@ -32,9 +31,12 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     return (
         <Switch>
             <Route exact path={path}>
-                <Page sideNav={sideNav} onLogout={onLogout}>
-                    <WelcomeHeader/>
-                </Page>
+                <LandingPage
+                    sideNav={sideNav}
+                    marketRelationships={(
+                        <Link to={`${url}/clients`}>View list of clients</Link>
+                    )}
+                    onLogout={onLogout}/>
             </Route>
 
             <Route path={`${path}/clients`}>

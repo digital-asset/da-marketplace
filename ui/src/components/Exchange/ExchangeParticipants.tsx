@@ -8,6 +8,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { UserIcon } from '../../icons/Icons'
 import { ExchangeParticipantInfo } from '../common/damlTypes'
 import StripedTable from '../common/StripedTable'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import InviteParticipant from './InviteParticipant'
@@ -28,13 +29,15 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><UserIcon/>Investors</>}
         >
-            <div className='exchange-participants'>
-                <InviteParticipant/>
-                <StripedTable
-                    className='active-participants'
-                    header={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Commited (USD)']}
-                    rows={tableRows}/>
-            </div>
+            <PageSection border='blue' background='white'>
+                <div className='exchange-participants'>
+                    <InviteParticipant/>
+                    <StripedTable
+                        className='active-participants'
+                        header={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Commited (USD)']}
+                        rows={tableRows}/>
+                </div>
+            </PageSection>
         </Page>
     )
 }

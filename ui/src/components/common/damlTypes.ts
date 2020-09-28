@@ -36,6 +36,10 @@ export function unwrapDamlTuple<T>(tuple: DamlTuple<T>): T[] {
     return sortedKeys.map(key => tuple[key]);
 }
 
+export function getAccountProvider(accountLabel: string): string | undefined {
+    return accountLabel.split('@')[1].replace(/'/g, '');
+}
+
 type ContractInfo<T> = {
     contractId: string;
     contractData: T;

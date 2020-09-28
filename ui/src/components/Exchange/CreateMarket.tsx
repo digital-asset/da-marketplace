@@ -11,6 +11,7 @@ import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import TokenSelect from '../common/TokenSelect'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import "./CreateMarket.css"
@@ -84,37 +85,39 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><PublicIcon/>Create a Market</>}
         >
-            <div className='create-market'>
-                <FormErrorHandled
-                    loading={loading}
-                    error={error}
-                    clearError={() => setError(undefined)}
-                    onSubmit={handleTokenPairSubmit}
-                >
-                    <div className='create-market-options'>
-                        <TokenSelect
-                            label='Base Token'
-                            className='create-market-select'
-                            tokens={allTokens}
-                            selected={baseToken?.contractId}
-                            setTokenCid={contractId => handleTokenSelect(contractId, setBaseToken)}/>
+            <PageSection border='blue' background='white'>
+                <div className='create-market'>
+                    <FormErrorHandled
+                        loading={loading}
+                        error={error}
+                        clearError={() => setError(undefined)}
+                        onSubmit={handleTokenPairSubmit}
+                    >
+                        <div className='create-market-options'>
+                            <TokenSelect
+                                label='Base Token'
+                                className='create-market-select'
+                                tokens={allTokens}
+                                selected={baseToken?.contractId}
+                                setTokenCid={contractId => handleTokenSelect(contractId, setBaseToken)}/>
 
-                        <div className='token-select-exchange-icon'><ExchangeIcon/></div>
+                            <div className='token-select-exchange-icon'><ExchangeIcon/></div>
 
-                        <TokenSelect
-                            label='Quote Token'
-                            className='create-market-select'
-                            tokens={allTokens}
-                            selected={quoteToken?.contractId}
-                            setTokenCid={contractId => handleTokenSelect(contractId, setQuoteToken)}/>
-                    </div>
-                    <Button
-                        basic
-                        content='Save'
-                        className='create-market-save'
-                        disabled={!baseToken || !quoteToken}/>
-                </FormErrorHandled>
-            </div>
+                            <TokenSelect
+                                label='Quote Token'
+                                className='create-market-select'
+                                tokens={allTokens}
+                                selected={quoteToken?.contractId}
+                                setTokenCid={contractId => handleTokenSelect(contractId, setQuoteToken)}/>
+                        </div>
+                        <Button
+                            basic
+                            content='Save'
+                            className='create-market-save'
+                            disabled={!baseToken || !quoteToken}/>
+                    </FormErrorHandled>
+                </div>
+            </PageSection>
         </Page>
     )
 }

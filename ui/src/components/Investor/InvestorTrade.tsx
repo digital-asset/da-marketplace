@@ -9,6 +9,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import OrderForm from './OrderForm'
@@ -88,17 +89,19 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <div className='order-forms'>
-                <OrderForm
-                    kind={OrderKind.BID}
-                    placeOrder={placeBid}
-                    deposits={bidDeposits}/>
+            <PageSection border='blue' background='white'>
+                <div className='order-forms'>
+                    <OrderForm
+                        kind={OrderKind.BID}
+                        placeOrder={placeBid}
+                        deposits={bidDeposits}/>
 
-                <OrderForm
-                    kind={OrderKind.OFFER}
-                    placeOrder={placeOffer}
-                    deposits={offerDeposits}/>
-            </div>
+                    <OrderForm
+                        kind={OrderKind.OFFER}
+                        placeOrder={placeOffer}
+                        deposits={offerDeposits}/>
+                </div>
+            </PageSection>
         </Page>
     )
 }
