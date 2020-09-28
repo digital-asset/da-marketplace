@@ -61,3 +61,8 @@ code {
 .ui.basic.button.basic-button-fill {
   background-color: #fff !important;
 }
+
+.ui.form > .fields.inline-form-group {
+  align-items: flex-end;
+  margin: 0;
+}

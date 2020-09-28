@@ -1,16 +1,15 @@
-import React, { useState } from 'react'
-import { Button, Card, Header } from 'semantic-ui-react'
+import React from 'react'
+import { Header } from 'semantic-ui-react'
 
-import { useLedger, useStreamQuery } from '@daml/react'
+import { useStreamQuery } from '@daml/react'
 import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
-import FormErrorHandled from '../common/FormErrorHandled'
+import { OrdersIcon } from '../../icons/Icons'
+import { OrderCard } from '../common/OrderCard'
+import ExchangeOrderCard from '../common/ExchangeOrderCard'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-import './InvestorOrders.css'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -27,73 +26,16 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             menuTitle={<><OrdersIcon/>Orders</>}
             onLogout={onLogout}
         >
-            <div className='investor-orders'>
-                <Header as='h4'>Requested Orders</Header>
-                { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
+            <PageSection border='blue' background='white'>
+                <div className='investor-orders'>
+                    <Header as='h4'>Requested Orders</Header>
+                    { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
 
-                <Header as='h4'>Open Orders</Header>
-                { allOrders.map(o => <OpenOrderCard key={o.contractId} order={o.payload}/>)}
-            </div>
+                    <Header as='h4'>Open Orders</Header>
+                    { allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                </div>
+            </PageSection>
         </Page>
-    )
-}
-
-type OrderProps = {
-    order: Order;
-}
-
-const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
-    const base = unwrapDamlTuple(order.pair)[0].label;
-    const label = order.isBid ? `Buy ${base}` : `Sell ${base}`;
-    const amount = order.isBid ? `+ ${order.qty} ${base}` : `- ${order.qty} ${base}`;
-
-    return (
-        <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
-                    <div><ExchangeIcon/> {label}</div>
-                    <div>{ amount }</div>
-                </Card>
-
-                { children }
-            </div>
-        </div>
-    )
-}
-
-const OpenOrderCard: React.FC<OrderProps> = ({ order }) => {
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-    const ledger = useLedger();
-
-    const handleCancelOrder = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-        try {
-            const key = wrapDamlTuple([order.exchange, order.orderId])
-            await ledger.exerciseByKey(Order.Order_RequestCancel, key, {});
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-    }
-
-    return (
-        <FormErrorHandled
-            className='order-card-container'
-            error={error}
-            clearError={() => setError(undefined)}
-        >
-            <OrderCard order={order}>
-                <Button
-                    basic
-                    color='black'
-                    content='Cancel'
-                    className='basic-button-fill'
-                    loading={loading}
-                    onClick={handleCancelOrder}/>
-            </OrderCard>
-        </FormErrorHandled>
     )
 }
 

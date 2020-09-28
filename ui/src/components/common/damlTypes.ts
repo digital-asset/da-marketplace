@@ -4,6 +4,7 @@ import {
     Exchange,
     Registry,
     Custodian,
+    Registry,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
 
@@ -42,7 +43,11 @@ export function damlTupleToString<T>(tuple: DamlTuple<T>): string {
     return sortedKeys.reduce((accum, key) => accum + tuple[key], "");
 }
 
-type ContractInfo<T> = {
+export function getAccountProvider(accountLabel: string): string | undefined {
+    return accountLabel.split('@')[1].replace(/'/g, '');
+}
+
+export type ContractInfo<T> = {
     contractId: string;
     contractData: T;
 }
@@ -52,6 +57,7 @@ type RegisteredInfo<T,R> = {
     contractData: T;
     registryData: R;
 }
+
 type ContractInfoName<T> = {
     contractId: string;
     contractData: T;
@@ -65,3 +71,4 @@ export type TokenInfo = ContractInfo<Token.Token>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
+export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;

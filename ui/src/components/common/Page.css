@@ -10,12 +10,3 @@
     background-color: #fff;
     padding: 0;
 }
-
-.ui.grid .page-children {
-    flex: 1;
-    width: 100%;
-    background-color: #fff;
-    padding-left: 32px;
-    padding-right: 32px;
-    padding-top: 32px;
-}

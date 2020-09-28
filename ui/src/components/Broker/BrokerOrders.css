@@ -1,0 +1,11 @@
+.orderid-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-right: 10px;
+    width: 80px;
+}
+
+.orderid-input > .ui.form .field {
+    margin: 0px;
+}

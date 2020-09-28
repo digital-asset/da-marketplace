@@ -1,0 +1,8 @@
+.landing-page {
+    display: flex;
+    justify-content: space-between;
+}
+
+.landing-page-column {
+    flex: 1;
+}

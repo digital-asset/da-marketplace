@@ -3,7 +3,7 @@
 }
 
 .create-market-options {
-    width: 500px;
+    width: 450px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;

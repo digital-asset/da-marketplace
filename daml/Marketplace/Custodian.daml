@@ -28,6 +28,7 @@ template CustodianRelationshipRequest
             IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
             ExchangeRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
             InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
+            BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
             _ -> return ()
 
       CustodianRelationshipRequest_Reject : ()
@@ -49,7 +50,7 @@ template CustodianInvitation
       CustodianInvitation_Accept : ContractId Custodian
         do
           create RegisteredCustodian with ..
-          create Custodian with investors = [], exchanges = [], issuers = [], ..
+          create Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
 
 
 template Custodian
@@ -58,6 +59,7 @@ template Custodian
     custodian : Party
     issuers  : [Party]
     investors : [Party]
+    brokers : [Party]
     exchanges : [Party]
   where
     signatory operator, custodian
@@ -86,6 +88,13 @@ template Custodian
         do
           assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
           create this with investors = investor :: investors
+
+      Custodian_AddBroker : ContractId Custodian
+        with
+          broker : Party
+        do
+          assertMsg ("Broker " <> show broker <> " already exists") $ broker `notElem` brokers
+          create this with brokers = broker :: brokers
 
       nonconsuming Custodian_GetAccount : Account
         with
