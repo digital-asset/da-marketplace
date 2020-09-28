@@ -5,16 +5,17 @@ import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Regist
 import { useStreamQuery } from '@daml/react'
 
 import { PublicIcon } from '../../icons/Icons'
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-import RequestCustodianRelationship from './RequestCustodianRelationship'
 import InviteAcceptScreen from './InviteAcceptScreen'
 import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 type Props = {
     onLogout: () => void;
@@ -29,7 +30,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <Switch>
             <Route exact path={path}>
                 <LandingPage
-                    marketRelationships={<RequestCustodianRelationship/>}
+                    marketRelationships={<RequestCustodianRelationship role={MarketRole.IssuerRole}/>}
                     sideNav={<IssuerSideNav url={url}/>}
                     onLogout={onLogout}/>
             </Route>

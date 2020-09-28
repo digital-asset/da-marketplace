@@ -6,11 +6,11 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import Page from '../common/Page'
-import WelcomeHeader from '../common/WelcomeHeader'
+import Holdings from '../common/Holdings'
+import LandingPage from '../common/LandingPage'
+
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
-import Holdings from '../common/Holdings'
 
 
 type Props = {
@@ -28,9 +28,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     return <Switch>
         <Route exact path={path}>
-            <Page sideNav={sideNav} onLogout={onLogout}>
-                <WelcomeHeader/>
-            </Page>
+            <LandingPage
+                sideNav={sideNav}
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/wallet`}>

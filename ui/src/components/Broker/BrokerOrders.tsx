@@ -10,6 +10,7 @@ import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
+import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 
@@ -34,17 +35,18 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             menuTitle={<><OrdersIcon/>Orders</>}
             onLogout={onLogout}
         >
-            <div className='customer-orders'>
-                <Header as='h4'>Requested Customer Orders</Header>
-                { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
+            <PageSection border='blue' background='white'>
+                <div className='customer-orders'>
+                    <Header as='h4'>Requested Customer Orders</Header>
+                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
 
-                <Header as='h4'>Open Customer Orders</Header>
-                { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
+                    <Header as='h4'>Open Customer Orders</Header>
+                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
 
-                <Header as='h4'>Exchange Orders</Header>
-                { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
-
-            </div>
+                    <Header as='h4'>Exchange Orders</Header>
+                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                </div>
+            </PageSection>
         </Page>
     )
 };
@@ -59,9 +61,7 @@ type BrokerOrderRequestCardProps = {
 
 const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children, ...props}) => {
     const [ loading, setLoading ] = useState(false);
-    const pair = unwrapDamlTuple(props.cdata.pair)
-    const base = pair[0].label;
-    const quote = pair[1].label;
+    const [ base, quote ] = unwrapDamlTuple(props.cdata.pair).map(t => t.label);
     const label = props.cdata.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
     const customer = props.cdata.brokerCustomer;
@@ -132,9 +132,7 @@ type BrokerOrderCardProps = {
 
 const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
     const [ loading, setLoading ] = useState(false);
-    const pair = unwrapDamlTuple(props.cdata.pair)
-    const base = pair[0].label;
-    const quote = pair[1].label;
+    const [ base, quote ] = unwrapDamlTuple(props.cdata.pair).map(t => t.label);
     const label = props.cdata.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
     const price = `${props.cdata.price} ${quote}`;

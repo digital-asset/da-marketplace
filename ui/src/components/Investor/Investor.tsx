@@ -7,12 +7,12 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
-import RequestCustodianRelationship from './RequestCustodianRelationship'
 import InviteAcceptScreen from './InviteAcceptScreen'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
@@ -42,7 +42,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             <LandingPage
                 sideNav={sideNav}
                 notifications={notifications}
-                marketRelationships={<RequestCustodianRelationship/>}
+                marketRelationships={<RequestCustodianRelationship role={MarketRole.InvestorRole}/>}
                 onLogout={onLogout}/>
         </Route>
 

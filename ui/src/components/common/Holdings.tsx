@@ -45,6 +45,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                         })
                         return (
                             <AllocationForm
+                                key={deposit.contractId}
                                 asset={asset}
                                 role={role}
                                 provider={getAccountProvider(account.id.label) || ''}

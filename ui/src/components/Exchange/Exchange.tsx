@@ -3,11 +3,12 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useStreamQuery } from '@daml/react'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 
-import RequestCustodianRelationship from './RequestCustodianRelationship'
 import InviteAcceptScreen from './InviteAcceptScreen'
 import ExchangeSideNav from './ExchangeSideNav'
 import MarketPairs from './MarketPairs'
@@ -30,7 +31,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <Route exact path={path}>
             <LandingPage
                 sideNav={sideNav}
-                marketRelationships={<RequestCustodianRelationship/>}
+                marketRelationships={<RequestCustodianRelationship role={MarketRole.ExchangeRole}/>}
                 onLogout={onLogout}/>
         </Route>
 
