@@ -8,10 +8,10 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
-import FormErrorHandled from '../common/FormErrorHandled'
-import Page from '../common/Page'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple } from './damlTypes'
+import { parseError, ErrorMessage } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
+import Page from './Page'
 
 
 type Props = {
@@ -22,7 +22,7 @@ type Props = {
     onLogout: () => void;
 }
 
-const WalletC: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogout }) => {
+const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
@@ -115,4 +115,4 @@ const AllocationForm: React.FC<FormProps> = ({ depositCid, options, role }) => {
     )
 }
 
-export default WalletC;
+export default Holdings;

@@ -20,7 +20,7 @@ import OnboardingTitle from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
-import Wallet from '../common/Wallet'
+import Holdings from '../common/Holdings'
 
 
 import InviteAcceptScreen from './InviteAcceptScreen'
@@ -69,7 +69,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <Wallet
+            <Holdings
                 sideNav={sideNav}
                 onLogout={onLogout}
                 deposits={allDeposits}

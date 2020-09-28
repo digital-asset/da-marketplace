@@ -11,9 +11,7 @@ export type OrderProps = {
 }
 
 const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
-    const pair = unwrapDamlTuple(order.pair)
-    const base = pair[0].label;
-    const quote = pair[1].label;
+    const [base, quote] = unwrapDamlTuple(order.pair).map(t => t.label);
     const label = order.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const price = `${order.price} ${quote}`;
     const amount = order.isBid ? `+ ${order.qty} ${base}` : `- ${order.qty} ${base}`;

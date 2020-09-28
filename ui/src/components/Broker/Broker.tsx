@@ -10,7 +10,7 @@ import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
-import Wallet from '../common/Wallet'
+import Holdings from '../common/Holdings'
 
 
 type Props = {
@@ -34,7 +34,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <Wallet
+            <Holdings
                 deposits={allDeposits}
                 exchanges={allExchanges}
                 role={MarketRole.BrokerRole}

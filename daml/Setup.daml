@@ -35,6 +35,9 @@ setupBroker = do
 
   alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
 
+  -- some empty strings to fill in registered users...
+  let (name, title, issuerID, location, ssn) = ("","","","","")
+
   -- create operator
   opCid <- operator `submit` createCmd Operator with ..
 
@@ -48,14 +51,14 @@ setupBroker = do
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
-  btcIssuerCid <- btcIssuer `submit` exerciseCmd btcIssuerInvCid IssuerInvitation_Accept
+  btcIssuerCid <- btcIssuer `submit` exerciseCmd btcIssuerInvCid IssuerInvitation_Accept with ..
 
   usdtIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
-  usdtIssuerCid <- usdtIssuer `submit` exerciseCmd usdtIssuerInvCid IssuerInvitation_Accept
+  usdtIssuerCid <- usdtIssuer `submit` exerciseCmd usdtIssuerInvCid IssuerInvitation_Accept with ..
 
   -- onboard alice
   aliceInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = alice, ..
-  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True
+  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True, ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
@@ -84,7 +87,7 @@ setupBroker = do
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
-  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept
+  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with ..
 
   exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
 
