@@ -9,19 +9,14 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import {
-    Investor as InvestorTemplate,
-    InvestorInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import Page from '../common/Page'
 import WelcomeHeader from '../common/WelcomeHeader'
-import OnboardingTitle from '../common/OnboardingTile'
+import OnboardingTile from '../common/OnboardingTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import Holdings from '../common/Holdings'
-
 
 import InviteAcceptScreen from './InviteAcceptScreen'
 import InvestorSideNav from './InvestorSideNav'
@@ -54,7 +49,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     }
 
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
-    const loadingScreen = <OnboardingTitle>Loading...</OnboardingTitle>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const investorScreen = <Switch>
         <Route exact path={path}>
             <Page sideNav={sideNav} onLogout={onLogout}>

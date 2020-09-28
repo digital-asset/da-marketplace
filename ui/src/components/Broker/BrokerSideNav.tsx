@@ -4,7 +4,7 @@ import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 
-import { PublicIcon, WalletIcon, OrdersIcon } from '../../icons/Icons'
+import { WalletIcon, OrdersIcon } from '../../icons/Icons'
 
 type Props = {
     url: string;
