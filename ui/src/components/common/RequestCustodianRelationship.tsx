@@ -46,6 +46,11 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
             default:
                 throw new Error(`The role '${role}' can not request a custodian relationship.`);
         }
+        clearForm()
+    }
+
+    function clearForm() {
+        setCustodianId('')
     }
 
     return (
@@ -67,6 +72,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
                 <Form.Input
                     label='Custodian'
                     placeholder='Enter ID'
+                    value={custodianId}
                     onChange={e => setCustodianId(e.currentTarget.value)}/>
                 <Button basic content='Send Request'/>
             </Form.Group>

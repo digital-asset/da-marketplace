@@ -21,7 +21,7 @@ const IssueAsset = () => {
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
-    const [ observers, setObservers ] = useState<string[]>([]);
+    const [ observersList, setObserversList ] = useState<string>('');
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
@@ -29,14 +29,28 @@ const IssueAsset = () => {
         setLoading(true);
 
         try {
+            let observers = observersList.split(',')
             const key = wrapDamlTuple([operator, issuer]);
             const args = { name, quantityPrecision, description, isPublic, observers};
 
             await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
+            clearForm()
+
         } catch (err) {
             setError(parseError(err));
         }
+
         setLoading(false);
+    }
+
+    function clearForm () {
+        setName('')
+        setQuantityPrecision('')
+        setDescription('')
+        setIsPublic(true)
+        setObserversList('')
+        setError(undefined)
+        setLoading(false)
     }
 
     return (
@@ -46,59 +60,47 @@ const IssueAsset = () => {
             error={error}
             clearError={() => setError(undefined)}
         >
-            <div className='issue-asset-form-item'>
-                <p>Asset ID</p>
-                <p><i>Give this asset a name.</i></p>
-                <Form.Input
-                    fluid
-                    placeholder='name'
-                    value={name}
-                    className='issue-asset-form-field'
-                    onChange={e => setName(e.currentTarget.value)}
-                />
-            </div>
-
-            <div className='issue-asset-form-item'>
-                <p>Description</p>
-                <p><i>Describe the asset to potential investors.</i></p>
-                <Form.TextArea
-                    placeholder='description'
-                    className='issue-asset-form-field'
-                    onChange={e => setDescription(e.currentTarget.value)}
-                />
-            </div>
-            <div className='is-public'>
-                <FormToggle
-                    defaultChecked
-                    className='issue-asset-form-item'
-                    onLabel='Public'
-                    onInfo='All parties will be aware of this token.'
-                    offLabel='Private'
-                    offInfo='Only a set of parties will be aware of this token.'
-                    onClick={val => setIsPublic(val)}/>
-
-                {!isPublic &&
-                    <div className='issue-asset-form-item'>
-                        <p>Add Observers</p>
-                        <p><i> Input each party Id separated by a comma </i></p>
-                        <Form.TextArea
-                            placeholder='observers'
-                            className='issue-asset-form-field observers'
-                            onChange={e => setObservers((e.currentTarget.value).split(','))}
-                        />
-                    </div>
-                }
-            </div>
-            <div className='issue-asset-form-item'>
-                <p>Quantity Precision</p>
-                <Form.Input
-                    fluid
-                    placeholder='quantityPrecision'
-                    value={quantityPrecision}
-                    className='issue-asset-form-field'
-                    onChange={e => setQuantityPrecision(e.currentTarget.value)}
-                />
-            </div>
+        <Form.Input
+            fluid
+            label='Asset ID'
+            placeholder='Give this asset a name'
+            value={name}
+            className='issue-asset-form-field'
+            onChange={e => setName(e.currentTarget.value)}
+        />
+        <Form.TextArea
+            label='Description'
+            placeholder='Describe the asset to potential investors'
+            className='issue-asset-form-field'
+            value={description}
+            onChange={e => setDescription(e.currentTarget.value)}
+        />
+        <div className='is-public'>
+            <FormToggle
+                defaultChecked
+                className='issue-asset-form-field'
+                onLabel='Public'
+                onInfo='All parties will be aware of this token.'
+                offLabel='Private'
+                offInfo='Only a set of parties will be aware of this token.'
+                onClick={val => setIsPublic(val)}/>
+            <Form.TextArea
+                disabled={isPublic}
+                label='Add Observers'
+                placeholder='Input each party Id separated by a comma'
+                className='issue-asset-form-field'
+                value={observersList}
+                onChange={e => setObserversList(e.currentTarget.value)}
+            />
+        </div>
+            <Form.Input
+                fluid
+                label='Quantity Precision'
+                placeholder='quantityPrecision'
+                value={quantityPrecision}
+                className='issue-asset-form-field'
+                onChange={e => setQuantityPrecision(e.currentTarget.value)}
+            />
             <Button
                 primary
                 loading={loading}

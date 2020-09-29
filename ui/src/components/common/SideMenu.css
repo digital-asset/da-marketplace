@@ -8,6 +8,11 @@
     width: 100%;
 }
 
+.column.page-sidemenu > .ui.secondary.menu .sub-menu{
+    border-top: 2px solid #ECF0FC;
+    border-bottom: 2px solid #ECF0FC;
+}
+
 .column.page-sidemenu > .ui.secondary.menu .item {
     padding: 24px;
     margin: 0;
@@ -24,6 +29,7 @@
 .column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p {
     display: flex;
     font-size: 14px;
+    color:red;
     align-items: center;
     color: var(--textcolor);
 }
