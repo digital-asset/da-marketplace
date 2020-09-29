@@ -7,6 +7,8 @@ template RegisteredCustodian
     operator : Party
     public : Party
     custodian : Party
+    name : Text
+    location : Text
   where
     signatory operator, custodian
     observer public
@@ -84,6 +86,7 @@ template RegisteredBroker
     public : Party
     broker : Party
     name : Text
+    location : Text
   where
     signatory operator, broker
     observer public

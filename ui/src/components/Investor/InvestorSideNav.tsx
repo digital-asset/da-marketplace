@@ -27,7 +27,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
             to={url}
             exact
         >
-            <Header as='h3'>@{(registeredInvestor?.payload.name || investor)}</Header>
+            <Header as='h3'>@{registeredInvestor?.payload.name || investor}</Header>
         </Menu.Item>
     )
 

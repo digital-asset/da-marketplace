@@ -2,11 +2,14 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { useParty, useStreamQuery, useStreamFetchByKey } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 
-import { useParty, useStreamQuery } from '@daml/react'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon } from '../../icons/Icons'
+import { wrapDamlTuple } from '../common/damlTypes'
 
 type IssuerSideNavProps = {
     url: string
@@ -16,6 +19,10 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
     const user = useParty();
     const allTokens = useStreamQuery(Token).contracts
 
+    const operator = useWellKnownParties().userAdminParty;
+    const key = () => wrapDamlTuple([operator, user]);
+    const registeredUser = useStreamFetchByKey(RegisteredInvestor, key, [operator, user]).contract;
+
     return <>
         <Menu.Menu>
             <Menu.Item
@@ -23,7 +30,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
                 to={url}
                 exact={true}
             >
-                <Header as='h3'>@ {user}</Header>
+                <Header as='h3'>@{registeredUser?.payload.name || user}</Header>
             </Menu.Item>
             <Menu.Item
                 as={NavLink}

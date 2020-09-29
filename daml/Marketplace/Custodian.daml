@@ -48,6 +48,9 @@ template CustodianInvitation
 
     controller custodian can
       CustodianInvitation_Accept : ContractId Custodian
+        with
+          name : Text
+          location : Text
         do
           create RegisteredCustodian with ..
           create Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
@@ -61,6 +64,8 @@ template Custodian
     investors : [Party]
     brokers : [Party]
     exchanges : [Party]
+    name : Text
+    location : Text
   where
     signatory operator, custodian
 

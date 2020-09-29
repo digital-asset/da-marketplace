@@ -26,6 +26,7 @@ template BrokerInvitation
       BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
         with
           name : Text
+          location : Text
         do
           brokerRegistryCid <- create RegisteredBroker with ..
           brokerCid <- create Broker with ..

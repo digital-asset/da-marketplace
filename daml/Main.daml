@@ -41,7 +41,7 @@ test = scenario do
 
   -- onboard custodian
   custodianInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardCustodian with ..
-  custodian `submit` exercise custodianInvCid CustodianInvitation_Accept
+  custodian `submit` exercise custodianInvCid CustodianInvitation_Accept with ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
@@ -167,11 +167,11 @@ testBroker = scenario do
 
   -- onboard custodian
   custodianInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardCustodian with ..
-  custodian `submit` exercise custodianInvCid CustodianInvitation_Accept
+  custodian `submit` exercise custodianInvCid CustodianInvitation_Accept with ..
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exercise brokerInvCid BrokerInvitation_Accept with name = "Broker Example"
+  broker `submit` exercise brokerInvCid BrokerInvitation_Accept with name = "Broker Example", ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..

@@ -66,45 +66,15 @@ type RegisteredInfo<T,R> = {
     registryData?: R;
 }
 
-// export function makeRegisteredInfo<T,R>(contracts: [any], registeredContracts: [R]) : RegisteredInfo<T,R> {
-export function makeRegisteredInfo<T extends Object,R extends Object>(contracts: readonly CreateEvent<T, DamlTuple<unknown>, string>[],
-     registeredContracts: readonly CreateEvent<R, DamlTuple<unknown>, string>[]) : RegisteredInfo<T,R>[] {
-    const map = registeredContracts.reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map<string, R>());
-    const allRegistered = contracts.map(contract => ({contractId: contract.contractId, contractData: contract.payload, registryData: map.get(damlTupleToString(contract.key))}));
-    console.log(contracts);
-
-    return allRegistered;
-
-    // return contracts.map(contract => ({contractId: contract.contractId,
-    //         contractData: contract.payload,
-    //         registryData: map.get(damlTupleToString(contract.key))}));
-
-}
-//
-// export function makeRegisteredInfoTwo<T extends Object,R extends Object>(contracts: QueryResult<T, DamlTuple<unknown>, string>,
-//     registeredContracts: QueryResult<R, DamlTuple<unknown>, string>) : RegisteredInfo<T, R>[] | undefined {
-//     const [allReg, setAllReg] = useState<RegisteredInfo<T, R>[]>();
-//     useEffect(() => {
-//         const map = registeredContracts.contracts.reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map<string, R>());
-//         const allRegistered = contracts.contracts.map(contract => ({contractId: contract.contractId, contractData: contract.payload, registryData: map.get(damlTupleToString(contract.key))}));
-//         setAllReg(allRegistered);
-//     }, [contracts, registeredContracts]);
-//     return allReg;
-// }
-
-
-// export function useRegisteredInfo<T, R>(
-
 type ContractInfoName<T> = {
     contractId: string;
     contractData: T;
     name: string;
 }
 
-export type ExchangeInfoRegistered = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>; // ContractInfoName<Exchange.Exchange>;
-
+export type ExchangeInfoRegistered = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
 export type RegistryExchangeInfo = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>; // ContractInfoName<Exchange.Exchange>;
+export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;

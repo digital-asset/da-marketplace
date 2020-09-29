@@ -6,15 +6,17 @@ import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
+import OnboardingTile from '../common/OnboardingTile'
 import Holdings from '../common/Holdings'
 import LandingPage from '../common/LandingPage'
 import { damlTupleToString } from '../common/damlTypes'
 
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
+import InviteAcceptScreen from './InviteAcceptScreen'
 
 
 type Props = {
@@ -23,32 +25,26 @@ type Props = {
 
 const Broker: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
+
+    const registeredBroker = useStreamQuery(RegisteredBroker);
+
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
-    // const exchangeQuery = useStreamQueryAsPublic(Exchange);
-    const exchangeContracts = useStreamQueryAsPublic(Exchange);
-    const registryContracts = useStreamQueryAsPublic(RegisteredExchange);
-    // const allExchanges = undefined; //makeRegisteredInfo(exchangeContracts, registryContracts);
-    // console.log(allExchanges);
-
-    // const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
-    //     .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-
-    // const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
-    //     .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-    //
-    // const allExchanges = useStreamQuery(Exchange).contracts
-    //     .map(exchange => ({contractId: exchange.contractId,
-    //         contractData: exchange.payload,
-    //         registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
+    const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
+        .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
 
     const allExchanges = useStreamQuery(Exchange).contracts
-        .map(exchange => ({contractId: exchange.contractId, contractData: exchange.payload}));
+        .map(exchange => ({contractId: exchange.contractId,
+            contractData: exchange.payload,
+            registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
+
+    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <BrokerSideNav url={url}/>;
 
-    return <Switch>
+    const brokerScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
                 sideNav={sideNav}
@@ -72,6 +68,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 onLogout={onLogout}/>
         </Route>
     </Switch>
+    return registeredBroker.loading
+        ? loadingScreen
+        : registeredBroker.contracts.length === 0 ? inviteScreen : brokerScreen
 }
 
 export default Broker;

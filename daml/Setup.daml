@@ -16,7 +16,6 @@ import Marketplace.Trading
 import Marketplace.Transfer
 import Marketplace.Utils
 
-import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Next.Set
@@ -43,11 +42,11 @@ setupBroker = do
 
   -- onboard custodian
   custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCustodian with ..
-  custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept
+  custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Example Custodian", ..
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker"
+  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker", ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
