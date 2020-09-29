@@ -46,6 +46,11 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
             default:
                 throw new Error(`The role '${role}' can not request a custodian relationship.`);
         }
+        clearForm()
+    }
+
+    function clearForm() {
+        setCustodianId('')
     }
 
     return (

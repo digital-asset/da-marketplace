@@ -44,7 +44,7 @@ const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
         }
         setLoading(false);
     }
-
+    
     return (
         <FormErrorHandled
             loading={loading}

@@ -1,8 +1,17 @@
 .landing-page {
     display: flex;
-    justify-content: space-between;
+    height: 100%;
+    width: 100%;
 }
 
 .landing-page-column {
-    flex: 1;
+    width: 40%;
+}
+
+.landing-page .ui.header {
+    padding-bottom: 12px;
+}
+
+.landing-page-column  .ui.form > .fields.inline-form-group > .field {
+    padding-left: 0;
 }
