@@ -18,7 +18,6 @@ import PageSection from './PageSection'
 import Page from './Page'
 
 import "./Holdings.css"
-import { connect } from 'http2'
 
 type Props = {
     deposits: DepositInfo[];
@@ -134,7 +133,6 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         setLoading(false);
     }
 
-
     const handleSplitAsset = async (event: React.FormEvent) => {
         event.preventDefault();
         setLoading(true);
@@ -145,12 +143,18 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
 
         if (splitAssetDecimal >= Number(asset.quantity)){
             setLoading(false);
-            return setError({header: 'Invalid Split Quantity', message: `The splitting quantity must be less than ${asset.quantity}`})
+            return setError({
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be less than ${asset.quantity}`
+            })
         }
 
         if (splitAssetDecimal <= 0 ){
             setLoading(false);
-            return setError({header: 'Invalid Split Quantity', message: `The splitting quantity must be greater than 0.`})
+            return setError({
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be greater than 0.`
+            })
         }
 
         try {
@@ -171,7 +175,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         }
     }
 
-    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {      
+    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {
         setMergeAssets(result.value)
     }
 
