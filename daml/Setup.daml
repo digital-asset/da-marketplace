@@ -47,7 +47,7 @@ setupBroker = do
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept
+  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker"
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
@@ -58,7 +58,7 @@ setupBroker = do
 
   -- onboard alice
   aliceInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = alice, ..
-  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True, ..
+  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True, name = "Alice the Investor", ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
@@ -87,7 +87,7 @@ setupBroker = do
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
-  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with ..
+  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
   exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
 

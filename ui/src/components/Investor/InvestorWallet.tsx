@@ -33,10 +33,10 @@ const InvestorWallet: React.FC<Props> = ({ deposits, exchanges, sideNav, onLogou
 
                     const { asset, account } = deposit.contractData;
                     const options = exchanges.map(exchange => {
-                        console.log(exchange.name);
+                        // console.log(exchange.name);
                         return {
                             key:  exchange.contractData.exchange, // exchange.contractId,
-                            text: exchange.name.concat(' (', exchange.contractData.exchange, ')'),
+                            text: exchange.contractData.exchange, // exchange.name.concat(' (', exchange.contractData.exchange, ')'),
                             value: exchange.contractData.exchange
                         }
                     })

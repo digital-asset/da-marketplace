@@ -171,7 +171,7 @@ testBroker = scenario do
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exercise brokerInvCid BrokerInvitation_Accept
+  broker `submit` exercise brokerInvCid BrokerInvitation_Accept with name = "Broker Example"
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..

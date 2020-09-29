@@ -9,7 +9,7 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import { parseError, ErrorMessage } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
@@ -18,7 +18,7 @@ import Page from './Page'
 
 type Props = {
     deposits: DepositInfo[];
-    exchanges: ExchangeInfo[];
+    exchanges: ExchangeInfoRegistered[]; // ExchangeInfo[];
     role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
@@ -39,7 +39,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                         const options = exchanges.map(exchange => {
                             return {
                                 key: exchange.contractId,
-                                text: exchange.contractData.exchange,
+                                text: exchange.registryData?.name || exchange.contractData.exchange,
                                 value: exchange.contractData.exchange
                             }
                         })

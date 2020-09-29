@@ -83,6 +83,7 @@ template RegisteredBroker
     operator : Party
     public : Party
     broker : Party
+    name : Text
   where
     signatory operator, broker
     observer public

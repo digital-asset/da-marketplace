@@ -24,6 +24,8 @@ template BrokerInvitation
 
     controller broker can
       BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
+        with
+          name : Text
         do
           brokerRegistryCid <- create RegisteredBroker with ..
           brokerCid <- create Broker with ..
