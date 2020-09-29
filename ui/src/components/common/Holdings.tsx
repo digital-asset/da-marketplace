@@ -92,6 +92,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
             } else if (role === MarketRole.BrokerRole) {
                 await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args)
             }
+            clearForm()
         } catch (err) {
             setError(parseError(err));
         }
@@ -102,6 +103,10 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         if (typeof result.value === 'string') {
             setExchange(result.value);
         }
+    }
+
+    function clearForm() {
+        setExchange('')
     }
 
     return (

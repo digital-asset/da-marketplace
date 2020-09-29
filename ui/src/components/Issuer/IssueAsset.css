@@ -4,28 +4,30 @@
     flex-wrap: wrap;
 }
 
-.issue-asset-form .issue-asset-form-item {
-    padding-top: 48px;
-    padding-right: 24px;
-    width: 45%;
-}
-
-.issue-asset-form .issue-asset-form-item:first-child {
-    padding-top: 0px;
-}
-
 .issue-asset-form .is-public {
-    padding-top: 48px;
     display: flex;
     flex-direction: row;
     width: 100%;
+    align-items: center;
 }
 
 .issue-asset-form .issue-asset-submit-button {
-    margin-top: 48px;
+    margin-top: 24px;
     width: fit-content;
 }
 
 .issue-asset-form .issue-asset-submit-button:hover {
     background-color: var(--lightblue2);
+}
+
+.issue-asset-form .issue-asset-form-field:not(:first-child){
+    padding-top: 12px;
+}
+
+.issue-asset-form .issue-asset-form-field {
+    width: 321px;
+}
+
+.issue-asset-form .issue-asset-form-field > textarea {
+    width: 642px;
 }

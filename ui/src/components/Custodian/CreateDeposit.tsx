@@ -37,10 +37,17 @@ const CreateDeposit: React.FC = () => {
             const args = { beneficiary, tokenId, depositQuantity };
             const key = wrapDamlTuple([operator, custodian]);
             await ledger.exerciseByKey(Custodian.Custodian_CreateDeposit, key, args);
+            clearForm()
         } catch(err) {
             setError(parseError(err));
         }
         setLoading(false);
+    }
+
+    function clearForm() {
+        setBeneficiary('')
+        setToken(undefined)
+        setDepositQuantity('')
     }
 
     return (
@@ -54,6 +61,7 @@ const CreateDeposit: React.FC = () => {
                 <Form.Input
                     label='Beneficiary'
                     placeholder='Investor party ID'
+                    value={beneficiary}
                     onChange={e => setBeneficiary(e.currentTarget.value)}/>
                 <ContractSelect
                     clearable
@@ -65,6 +73,7 @@ const CreateDeposit: React.FC = () => {
                 <Form.Input
                     label='Quantity'
                     placeholder='Quantity'
+                    value={depositQuantity}
                     onChange={e => setDepositQuantity(e.currentTarget.value)}/>
                 <Button
                     disabled={!beneficiary || !token || !depositQuantity}
