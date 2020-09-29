@@ -1,4 +1,5 @@
 import React from 'react'
+import { Header } from 'semantic-ui-react'
 
 import Page from './Page'
 import PageSection from './PageSection'
@@ -30,12 +31,12 @@ const LandingPage: React.FC<Props> = ({
         <PageSection border='grey' background='grey'>
             <div className='landing-page'>
                 <div className='landing-page-column'>
-                    <h3>Profile</h3>
+                    <Header as='h3'>Profile</Header>
                     { profile }
                 </div>
 
                 <div className='landing-page-column'>
-                    <h3>Market Relationships</h3>
+                    <Header as='h3'>Market Relationships</Header>
                     { marketRelationships }
                 </div>
             </div>

@@ -45,13 +45,15 @@ code {
 .ui.button {
   display: flex;
   color: var(--textcolor);
-  border-radius: 0;
+  border-radius: 2px;
+  border: 1px solid #262626;
 }
 
 .ui.button.ghost {
   color: var(--textcolor);
   background: none;
   align-items: center;
+  border: none;
 }
 
 .ui.button.ghost:hover {
@@ -65,4 +67,18 @@ code {
 .ui.form > .fields.inline-form-group {
   align-items: flex-end;
   margin: 0;
+}
+
+.ui.form .field > label{
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 16px;
+  line-height: 22px;
+  padding-bottom: 8px;
+}
+
+.ui.form .field .ui.input input, .ui.form .fields .field .ui.input input, .ui.form textarea {
+  border: 1px solid #979798;
+  background-color:#FFFFFF
 }

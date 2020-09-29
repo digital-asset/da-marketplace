@@ -4,9 +4,9 @@ import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty, useStreamFetchByKey } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
-import { wrapDamlTuple } from '../common/damlTypes'
-
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+
+import { wrapDamlTuple } from '../common/damlTypes'
 
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
 

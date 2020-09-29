@@ -17,3 +17,8 @@
     font-weight: 400;
     margin: 0;
 }
+
+.welcome-header .welcome-header-row:first-child{
+    padding-bottom: 6px;
+}
+

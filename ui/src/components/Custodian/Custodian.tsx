@@ -24,17 +24,15 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
     const operator = useWellKnownParties().userAdminParty;
     const user = useParty();
+    const key = () => wrapDamlTuple([operator, user]);
     const registeredCustodian = useStreamQuery(RegisteredCustodian);
 
-    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
-    const key = () => wrapDamlTuple([operator, user]);
     const custodianContract = useStreamFetchByKey(CustodianTemplate, key, [operator, user]).contract;
     const investors = custodianContract?.payload.investors || [];
 
     const sideNav = <CustodianSideNav disabled={!custodianContract} url={url}/>;
-
+    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const custodianScreen =  (
         <Switch>
             <Route exact path={path}>

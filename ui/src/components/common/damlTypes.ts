@@ -1,7 +1,3 @@
-// import { CreateEvent } from '@daml/react'
-//
-import { useEffect, useState } from 'react'
-
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     ExchangeParticipant,
@@ -49,7 +45,6 @@ export function damlTupleToString<T>(tuple: DamlTuple<T>): string {
 export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
-
 
 export type ContractInfo<T> = {
     contractId: string;

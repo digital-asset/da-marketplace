@@ -30,6 +30,10 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
             setError(parseError(err));
         }
         setLoading(false);
+        clearForm()
+    }
+
+    function clearForm() {
         setPrice('');
         setDepositCid('');
     }

@@ -1,7 +1,7 @@
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
+matching_engine_version := $(shell cd matching_engine && poetry version | cut -f 2 -d ' ')
 operator_bot_version := $(shell cd automation/operator && poetry version | cut -f 2 -d ' ')
-exchange_bot_version := $(shell cd automation/exchange && poetry version | cut -f 2 -d ' ')
 issuer_bot_version := $(shell cd automation/issuer && poetry version | cut -f 2 -d ' ')
 custodian_bot_version := $(shell cd automation/custodian && poetry version | cut -f 2 -d ' ')
 broker_bot_version := $(shell cd automation/broker && poetry version | cut -f 2 -d ' ')
@@ -17,13 +17,13 @@ exberry_adapter_dir := exberry_adapter/bot.egg-info
 adapter_pid := $(state_dir)/adapter.pid
 adapter_log := $(state_dir)/adapter.log
 
+matching_engine_dir := matching_engine/bot.egg-info
+matching_engine_pid := $(state_dir)/matching_engine.pid
+matching_engine_log := $(state_dir)/matching_engine.log
+
 operator_bot_dir := automation/operator/bot.egg-info
 operator_pid := $(state_dir)/operator.pid
 operator_log := $(state_dir)/operator.log
-
-exchange_bot_dir := automation/exchange/bot.egg-info
-exchange_pid := $(state_dir)/exchange.pid
-exchange_log := $(state_dir)/exchange.log
 
 issuer_bot_dir := automation/issuer/bot.egg-info
 issuer_pid := $(state_dir)/issuer.pid
@@ -39,7 +39,7 @@ broker_log := $(state_dir)/broker.log
 
 
 ### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_exchange stop_issuer stop_custodian stop_broker stop_adapter
+.PHONY: clean stop_daml_server stop_operator stop_issuer stop_custodian stop_broker stop_adapter stop_matching_engine
 
 $(state_dir):
 	mkdir $(state_dir)
@@ -53,7 +53,7 @@ $(sandbox_pid): |$(daml_build_log)
 start_daml_server: $(sandbox_pid)
 
 stop_daml_server:
-	pkill -F $(sandbox_pid) && rm -f $(sandbox_pid) $(sandbox_log)
+	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
 
 
 ### DA Marketplace Operator Bot
@@ -67,18 +67,6 @@ start_operator: $(operator_pid)
 
 stop_operator:
 	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
-
-### DA Marketplace Exchange Bot
-$(exchange_bot_dir):
-	cd automation/exchange && poetry install && poetry build
-
-$(exchange_pid): |$(state_dir) $(exchange_bot_dir)
-	cd automation/exchange && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/exchange_bot.py > ../../$(exchange_log) & echo "$$!" > ../../$(exchange_pid))
-
-start_exchange: $(exchange_pid)
-
-stop_exchange:
-	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
 
 ### DA Marketplace Issuer Bot
 $(issuer_bot_dir):
@@ -103,7 +91,7 @@ $(custodian_pid): |$(state_dir) $(custodian_bot_dir)
 start_custodian: $(custodian_pid)
 
 stop_custodian:
-	pkill -F $(custodian_pid);  rm -f $(custodian_pid) $(custodian_log)
+	pkill -F $(custodian_pid); rm -f $(custodian_pid) $(custodian_log)
 
 
 ### DA Marketplace Broker Bot
@@ -129,15 +117,28 @@ $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
 start_adapter: $(adapter_pid)
 
 stop_adapter:
-	pkill -F $(adapter_pid) && rm -f $(adapter_pid) $(adapter_log)
+	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
+
+
+### DA Marketplace Matching Engine
+$(matching_engine_dir):
+	cd matching_engine && poetry install && poetry build
+
+$(matching_engine_pid): |$(state_dir) $(matching_engine_dir)
+	cd matching_engine && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/matching_engine_bot.py > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
+
+start_matching_engine: $(matching_engine_pid)
+
+stop_matching_engine:
+	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
 
 target_dir := target
 
 dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
 exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
+matching_engine := $(target_dir)/da-marketplace-matching-engine-$(matching_engine_version).tar.gz
 operator_bot := $(target_dir)/da-marketplace-operator-bot-$(operator_bot_version).tar.gz
-exchange_bot := $(target_dir)/da-marketplace-exchange-bot-$(exchange_bot_version).tar.gz
 issuer_bot := $(target_dir)/da-marketplace-issuer-bot-$(issuer_bot_version).tar.gz
 custodian_bot := $(target_dir)/da-marketplace-custodian-bot-$(custodian_bot_version).tar.gz
 broker_bot := $(target_dir)/da-marketplace-broker-bot-$(broker_bot_version).tar.gz
@@ -147,7 +148,7 @@ $(target_dir):
 	mkdir $@
 
 .PHONY: package
-package: $(operator_bot) $(exchange_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(dar) $(ui)
+package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui)
 	cd $(target_dir) && zip da-marketplace.zip *
 
 $(dar): $(target_dir) $(daml_build_log)
@@ -155,9 +156,6 @@ $(dar): $(target_dir) $(daml_build_log)
 
 $(operator_bot): $(target_dir) $(operator_bot_dir)
 	cp automation/operator/dist/bot-$(operator_bot_version).tar.gz $@
-
-$(exchange_bot): $(target_dir) $(exchange_bot_dir)
-	cp automation/exchange/dist/bot-$(exchange_bot_version).tar.gz $@
 
 $(issuer_bot): $(target_dir) $(issuer_bot_dir)
 	cp automation/issuer/dist/bot-$(issuer_bot_version).tar.gz $@
@@ -171,6 +169,9 @@ $(broker_bot): $(target_dir) $(broker_bot_dir)
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
 
+$(matching_engine): $(target_dir) $(matching_engine_dir)
+	cp matching_engine/dist/bot-$(matching_engine_version).tar.gz $@
+
 $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui && yarn install
@@ -181,7 +182,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(operator_bot_dir) $(operator_bot) $(exchange_bot_dir) $(exchange_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(dar) $(ui)
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(dar) $(ui)
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock

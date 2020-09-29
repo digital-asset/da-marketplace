@@ -1,7 +1,5 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-//
-import * as jwt from 'jsonwebtoken'
 
 export enum DeploymentMode {
   DEV,
@@ -28,13 +26,3 @@ export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
   ? `https://api.projectdabl.com/data/${ledgerId}/`
   : undefined;
-
-const applicationId = "da-marketplace";
-
-const isLocalDev = deploymentMode === DeploymentMode.DEV
-export const defaultPublicToken = isLocalDev ? createToken('Public') : undefined;
-export const wsBaseUrl : string | undefined = isLocalDev ? 'ws://localhost:7575/' : undefined;
-
-export function createToken(party : string) {
-  return jwt.sign({ "https://daml.com/ledger-api": { ledgerId, applicationId, admin: true, actAs: [party], readAs: [party] } }, "secret");
-}
