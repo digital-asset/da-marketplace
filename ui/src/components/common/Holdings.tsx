@@ -18,7 +18,7 @@ import Page from './Page'
 
 type Props = {
     deposits: DepositInfo[];
-    exchanges: ExchangeInfoRegistered[]; // ExchangeInfo[];
+    exchanges: ExchangeInfoRegistered[];
     role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
@@ -37,9 +37,10 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
                         const options = exchanges.map(exchange => {
+                            const exchangeParty = exchange.contractData.exchange;
                             return {
                                 key: exchange.contractId,
-                                text: exchange.registryData?.name || exchange.contractData.exchange,
+                                text: exchange.registryData?.name + ' (' + exchangeParty + ')' || exchangeParty,
                                 value: exchange.contractData.exchange
                             }
                         })

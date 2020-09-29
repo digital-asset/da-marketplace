@@ -2,15 +2,17 @@ import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useStreamQuery } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
+import { damlTupleToString } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InviteAcceptScreen from './InviteAcceptScreen'
@@ -28,22 +30,13 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const notifications = useExchangeInviteNotifications();
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
-    // const allRegisteredExchanges = useStreamQueryAsPublic(RegisteredExchange).contracts;
-    // const exchangeMap = allRegisteredExchanges.reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload.name), new Map());
-    // console.log(exchangeMap);
-
-    // const allExchanges = useStreamQuery(Exchange).contracts
-    //     .map(exchange => {
-    //         console.log(exchangeMap.get(exchange.key));
-    //         return ({contractId: exchange.contractId, contractData: exchange.payload, name: exchangeMap.get(damlTupleToString(exchange.key))})
-    //     });
+    const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
+        .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
 
     const allExchanges = useStreamQuery(Exchange).contracts
-        .map(exchange => {
-            return ({contractId: exchange.contractId, contractData: exchange.payload});
-            // ({contractId: exchange.contractId, contractData: exchange.payload, name: exchangeMap.get(damlTupleToString(exchange.key))})
-        });
-
+        .map(exchange => ({contractId: exchange.contractId,
+            contractData: exchange.payload,
+            registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
 
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));

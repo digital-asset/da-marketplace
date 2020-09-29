@@ -2,11 +2,6 @@
 //
 import { useEffect, useState } from 'react'
 
-import { CreateEvent} from '@daml/ledger'
-import { QueryResult } from '@daml/react'
-import { useStreamQuery } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-// import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     ExchangeParticipant,
@@ -55,6 +50,7 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
+
 export type ContractInfo<T> = {
     contractId: string;
     contractData: T;
@@ -66,14 +62,7 @@ type RegisteredInfo<T,R> = {
     registryData?: R;
 }
 
-type ContractInfoName<T> = {
-    contractId: string;
-    contractData: T;
-    name: string;
-}
-
 export type ExchangeInfoRegistered = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
-export type RegistryExchangeInfo = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
