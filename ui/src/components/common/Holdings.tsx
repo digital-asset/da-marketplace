@@ -11,8 +11,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider, ContractInfo } from './damlTypes'
-import { parseError, ErrorMessage } from './errorTypes'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
@@ -88,86 +87,68 @@ type FormProps = {
 }
 
 const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
-    const [ exchange, setExchange ] = useState('');
-    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
-    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
-
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-
     const operator = useWellKnownParties().userAdminParty;
     const party = useParty();
     const ledger = useLedger();
 
-    const handleDepositAllocation = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
+    const [ exchange, setExchange ] = useState('');
+    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
+    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 
-        try {
-            const key = wrapDamlTuple([operator, party]);
-            const args = { depositCid, provider: exchange };
-            if (role === MarketRole.InvestorRole) {
+    function clearForm() {
+        setExchange('')
+        setMergeAssets([])
+        setSplitAssetDecimal(undefined)
+    }
+
+    const handleDepositAllocation = async () => {
+        const key = wrapDamlTuple([operator, party]);
+        const args = { depositCid, provider: exchange };
+
+        switch(role) {
+            case MarketRole.InvestorRole:
                 await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
-            } else if (role === MarketRole.BrokerRole) {
-                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args)
-            }
-            clearForm()
-        } catch (err) {
-            setError(parseError(err));
+                break;
+            case MarketRole.BrokerRole:
+                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args);
+                break;
+            default:
+                throw new Error(`The ${role} role can not allocate deposits.`)
         }
-        setLoading(false);
+
+        clearForm();
     }
 
-    const handleMergeAssets = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-
-        try {
-            const args = { depositCids: mergeAssets };
-            const cid = depositCid as ContractId<AssetDeposit>
-            await ledger.exercise(AssetDeposit.AssetDeposit_Merge, cid, args)
-            clearForm()
-
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
+    const handleMergeAssets = async () => {
+        const args = { depositCids: mergeAssets };
+        const cid = depositCid as ContractId<AssetDeposit>
+        await ledger.exercise(AssetDeposit.AssetDeposit_Merge, cid, args)
+        clearForm();
     }
 
-    const handleSplitAsset = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-
+    const handleSplitAsset = async () => {
         if (!splitAssetDecimal) {
             return
         }
 
-        if (splitAssetDecimal >= Number(asset.quantity)){
-            setLoading(false);
-            return setError({
+        if (splitAssetDecimal >= Number(asset.quantity)) {
+            throw {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be less than ${asset.quantity}`
-            })
+            };
         }
 
         if (splitAssetDecimal <= 0 ){
-            setLoading(false);
-            return setError({
+            throw {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be greater than 0.`
-            })
+            };
         }
 
-        try {
-            const args = { quantities: [String(splitAssetDecimal)] };
-            const cid = depositCid as ContractId<AssetDeposit>
-            await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
-            clearForm()
-
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
+        const args = { quantities: [String(splitAssetDecimal)] };
+        const cid = depositCid as ContractId<AssetDeposit>
+        await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
+        clearForm();
     }
 
     const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
@@ -180,56 +161,47 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         setMergeAssets(result.value)
     }
 
-    function clearForm() {
-        setExchange('')
-        setMergeAssets([])
-        setSplitAssetDecimal(undefined)
-    }
-
     return (
-        <FormErrorHandled
-            loading={loading}
-            error={error}
-            clearError={() => setError(undefined)}
-            className='holding'
-        >
-            <Form.Group className='inline-form-group label'>
-                <div><b>{asset.id.label}</b> {asset.quantity} | </div>
-                <div>Provider: <b>{provider}</b></div>
-            </Form.Group>
-            <Form.Group className='inline-form-group action'>
-                <Form.Select
-                    value={exchange}
-                    options={exchangeOptions}
-                    onChange={handleExchangeChange}/>
-                <Button
-                    primary
-                    disabled={exchange == ''}
-                    content='Allocate to Exchange'
-                    onClick={handleDepositAllocation}/>
-            </Form.Group>
-            <Form.Group className='inline-form-group action'>
-                <Form.Select
-                    multiple
-                    options={assetOptions}
-                    onChange={handleMergeAssetsChange}/>
-                <Button
-                    primary
-                    disabled={mergeAssets.length === 0}
-                    content='Merge Assets'
-                    onClick={handleMergeAssets}/>
-            </Form.Group>
-            <Form.Group className='inline-form-group action'>
-                <Form.Input
-                    type='number'
-                    value={splitAssetDecimal}
-                    onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
-                <Button
-                    primary
-                    disabled={!splitAssetDecimal}
-                    content='Split Asset'
-                    onClick={handleSplitAsset}/>
-            </Form.Group>
+        <FormErrorHandled onSubmit={handleDepositAllocation}>
+            { loadAndCatch => <>
+                <Form.Group className='inline-form-group label'>
+                    <div><b>{asset.id.label}</b> {asset.quantity} | </div>
+                    <div>Provider: <b>{provider}</b></div>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Select
+                        value={exchange}
+                        options={exchangeOptions}
+                        onChange={handleExchangeChange}/>
+                    <Button
+                        primary
+                        disabled={exchange == ''}
+                        content='Allocate to Exchange'
+                        onClick={() => loadAndCatch(handleDepositAllocation)}/>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Select
+                        multiple
+                        options={assetOptions}
+                        onChange={handleMergeAssetsChange}/>
+                    <Button
+                        primary
+                        disabled={mergeAssets.length === 0}
+                        content='Merge Assets'
+                        onClick={() => loadAndCatch(handleMergeAssets)}/>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Input
+                        type='number'
+                        value={splitAssetDecimal}
+                        onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                    <Button
+                        primary
+                        disabled={!splitAssetDecimal}
+                        content='Split Asset'
+                        onClick={() => loadAndCatch(handleSplitAsset)}/>
+                </Form.Group></>
+            }
         </FormErrorHandled>
     )
 }

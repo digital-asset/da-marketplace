@@ -7,17 +7,10 @@ import { Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
 const CreateDeposit: React.FC = () => {
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
-
     const [ beneficiary, setBeneficiary ] = useState('');
     const [ token, setToken ] = useState<TokenInfo>();
     const [ depositQuantity, setDepositQuantity ] = useState('');
@@ -26,37 +19,26 @@ const CreateDeposit: React.FC = () => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const handleCreateDeposit = async (event: React.FormEvent<HTMLFormElement>) => {
-        setLoading(true);
-        try {
-            if (!token) {
-                throw new Error('Token not selected');
-            }
+    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
+        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
 
-            const tokenId = token.contractData.id;
-            const args = { beneficiary, tokenId, depositQuantity };
-            const key = wrapDamlTuple([operator, custodian]);
-            await ledger.exerciseByKey(Custodian.Custodian_CreateDeposit, key, args);
-            clearForm()
-        } catch(err) {
-            setError(parseError(err));
+    const handleCreateDeposit = async () => {
+        if (!token) {
+            throw new Error('Token not selected');
         }
-        setLoading(false);
-    }
 
-    function clearForm() {
+        const tokenId = token.contractData.id;
+        const args = { beneficiary, tokenId, depositQuantity };
+        const key = wrapDamlTuple([operator, custodian]);
+        await ledger.exerciseByKey(Custodian.Custodian_CreateDeposit, key, args);
+
         setBeneficiary('')
         setToken(undefined)
         setDepositQuantity('')
     }
 
     return (
-        <FormErrorHandled
-            loading={loading}
-            error={error}
-            clearError={() => setError(undefined)}
-            onSubmit={handleCreateDeposit}
-        >
+        <FormErrorHandled onSubmit={handleCreateDeposit}>
             <Form.Group className='inline-form-group'>
                 <Form.Input
                     label='Beneficiary'
@@ -68,6 +50,7 @@ const CreateDeposit: React.FC = () => {
                     className='asset-select'
                     contracts={allTokens}
                     label='Asset'
+                    value={token?.contractId || ""}
                     getOptionText={token => token.contractData.id.label}
                     setContract={token => setToken(token)}/>
                 <Form.Input
