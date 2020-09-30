@@ -1,7 +1,7 @@
 .ui.menu.top-menu {
     box-shadow: none;
     border: none;
-    height: auto;
+    min-height: 92px;
     margin: 0;
 }
 
@@ -47,6 +47,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    justify-content: center;
+    height: 92px;
+
 }
 
 .notifications {

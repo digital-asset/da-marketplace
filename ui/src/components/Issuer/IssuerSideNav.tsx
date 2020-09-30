@@ -34,7 +34,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
             </Menu.Item>
         </Menu.Menu>
 
-        <Menu.Menu>
+        <Menu.Menu className='sub-menu'>
             <Menu.Item>
                 <p>Issued Tokens:</p>
             </Menu.Item>

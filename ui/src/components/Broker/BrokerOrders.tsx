@@ -79,10 +79,15 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
                 brokerOrderId
             }
             await ledger.exercise(BrokerOrderRequest.BrokerOrderRequest_Accept, props.cid, args)
+            clearForm()
         } catch (err) {
             setError(parseError(err));
         }
         setLoading(false);
+    }
+
+    function clearForm() {
+        setBrokerOrderId('')
     }
 
     return (
@@ -152,10 +157,15 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                 depositCid
             }
             await ledger.exerciseByKey(BrokerOrder.BrokerOrder_Fill, key, args);
+            clearForm()
         } catch (err) {
             setError(parseError(err));
         }
         setLoading(false);
+    }
+
+    function clearForm() {
+        setDepositCid('')
     }
 
     const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
