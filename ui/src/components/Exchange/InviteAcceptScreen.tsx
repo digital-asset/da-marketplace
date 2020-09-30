@@ -22,12 +22,19 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
+    function clearForm() {
+        setName('');
+        setLocation('');
+    }
+
     async function submit() {
         setLoading(true);
+
         const key = wrapDamlTuple([operator, issuer]);
         const args = { name, location };
         await ledger.exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args)
-            .catch(err => console.error(err));
+
+        clearForm();
         setLoading(false);
     }
 

@@ -40,7 +40,8 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                             const exchangeParty = exchange.contractData.exchange;
                             return {
                                 key: exchange.contractId,
-                                text: exchange.registryData?.name + ' (' + exchangeParty + ')' || exchangeParty,
+                                text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
+                                                                  : exchangeParty,
                                 value: exchange.contractData.exchange
                             }
                         })

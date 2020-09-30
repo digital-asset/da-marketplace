@@ -5,7 +5,7 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import { wrapDamlTuple } from '../common/damlTypes'
-import { ErrorMessage } from '../common/errorTypes'
+import { parseError, ErrorMessage } from '../common/errorTypes'
 import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
 
 type Props = {
@@ -23,12 +23,20 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
 
+    function clearForm() {
+        setName('');
+        setLocation('');
+        setSSN('');
+    }
+
     async function submit() {
         setLoading(true);
+
         const key = wrapDamlTuple([operator, investor]);
         const args = { name, location, ssn, isPublic: true};
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
-            .catch(err => console.error(err));
+
+        clearForm();
         setLoading(false);
     }
 

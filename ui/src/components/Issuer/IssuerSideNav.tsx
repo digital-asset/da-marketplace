@@ -6,7 +6,7 @@ import { useParty, useStreamQuery, useStreamFetchByKey } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -16,12 +16,12 @@ type IssuerSideNavProps = {
 }
 
 const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
-    const user = useParty();
+    const issuer = useParty();
     const allTokens = useStreamQuery(Token).contracts
 
     const operator = useWellKnownParties().userAdminParty;
-    const key = () => wrapDamlTuple([operator, user]);
-    const registeredUser = useStreamFetchByKey(RegisteredInvestor, key, [operator, user]).contract;
+    const key = () => wrapDamlTuple([operator, issuer]);
+    const registeredIssuer = useStreamFetchByKey(RegisteredIssuer, key, [operator, issuer]).contract;
 
     return <>
         <Menu.Menu>
@@ -30,7 +30,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
                 to={url}
                 exact={true}
             >
-                <Header as='h3'>@{registeredUser?.payload.name || user}</Header>
+                <Header as='h3'>@{registeredIssuer?.payload.name || issuer}</Header>
             </Menu.Item>
             <Menu.Item
                 as={NavLink}
