@@ -1,0 +1,19 @@
+.ui.form.holding:not(:last-child)  {
+    border-bottom: 2px var(--grey2) solid;
+}
+
+.ui.form > .fields.inline-form-group.action {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.ui.form > .fields.inline-form-group.action .field {
+    padding-left: 0;
+    width: 321px;
+}
+
+.ui.form > .fields.inline-form-group.label {
+    padding-top: 12px;
+    font-size: 16px;
+    line-height: 22px;
+}

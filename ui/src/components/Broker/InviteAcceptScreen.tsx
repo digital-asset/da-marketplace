@@ -5,8 +5,7 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 
 import { wrapDamlTuple } from '../common/damlTypes'
-import { ErrorMessage } from '../common/errorTypes'
-import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
+import InviteAcceptTile, { InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
 
 type Props = {
     onLogout: () => void;
@@ -19,24 +18,24 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
 
     const [ name, setName ] = useState<string>('')
     const [ location, setLocation ] = useState<string>('')
-    const [ error, setError ] = useState<ErrorMessage>();
-    const [ loading, setLoading ] = useState(false);
+
+    function clearForm() {
+        setName('');
+        setLocation('');
+    }
 
     async function submit() {
-        setLoading(true);
         const key = wrapDamlTuple([operator, issuer]);
         const args = { name, location };
         await ledger.exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
-            .catch(err => console.error(err));
-        setLoading(false);
+        clearForm();
     }
 
     return (
         <InviteAcceptTile
-            onLogout={onLogout}
             role='Broker'
-            error={error}
-            setError={setError}
+            onLogout={onLogout}
+            onSubmit={submit}
         >
             <InviteTextField
                 label='Name'
@@ -50,11 +49,7 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
                 variable={location}
                 setter={setLocation}
             />
-            <InviteAcceptButton
-                loading={loading}
-                disabled={!name || !location}
-                submit={submit}
-            />
+            <InviteAcceptButton disabled={!name || !location}/>
         </InviteAcceptTile>
     )
 }

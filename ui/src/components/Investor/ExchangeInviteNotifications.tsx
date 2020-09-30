@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger, useStreamQuery } from '@daml/react'
@@ -7,7 +7,6 @@ import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marke
 
 import Notification from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import { ExchParticipantInviteInfo } from '../common/damlTypes'
 
 type ExchParticipantInviteProps = {
@@ -42,39 +41,20 @@ const ExchangeParticipantInvite: React.FC<ExchParticipantInviteProps> = ({
     invite,
     invitationAccept,
     invitationReject
-}) => {
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-
-    const acceptExchParticipantInvite = async () => {
-        setLoading(true);
-        try {
-            await invitationAccept();
-        } catch(err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-    }
-
-    const rejectExchParticipantInvite = async () => {
-        setLoading(true);
-        try {
-            await invitationReject();
-        } catch(err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-    }
-
-    return (
-        <Notification>
-            <p>Exchange <b>@{invite.contractData.exchange}</b> is inviting you to trade.</p>
-            <FormErrorHandled loading={loading} error={error} clearError={() => setError(undefined)}>
+}) => (
+    <Notification>
+        <p>Exchange <b>@{invite.contractData.exchange}</b> is inviting you to trade.</p>
+        <FormErrorHandled onSubmit={invitationAccept}>
+            { loadAndCatch =>
                 <Form.Group className='inline-form-group'>
-                    <Button basic onClick={() => acceptExchParticipantInvite()}>Accept</Button>
-                    <Button basic onClick={() => rejectExchParticipantInvite()}>Reject</Button>
+                    <Button basic content='Accept' type='submit'/>
+                    <Button
+                        basic
+                        content='Reject'
+                        type='button'
+                        onClick={() => loadAndCatch(invitationReject)}/>
                 </Form.Group>
-            </FormErrorHandled>
-        </Notification>
-    )
-}
+            }
+        </FormErrorHandled>
+    </Notification>
+)

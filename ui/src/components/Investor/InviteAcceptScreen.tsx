@@ -5,8 +5,7 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import { wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
-import { InviteAcceptTile, InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
+import InviteAcceptTile, { InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
 
 type Props = {
     onLogout: () => void;
@@ -20,8 +19,6 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const [ name, setName ] = useState<string>('')
     const [ location, setLocation ] = useState<string>('')
     const [ ssn, setSSN ] = useState<string>('')
-    const [ error, setError ] = useState<ErrorMessage>();
-    const [ loading, setLoading ] = useState(false);
 
     function clearForm() {
         setName('');
@@ -30,22 +27,17 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     }
 
     async function submit() {
-        setLoading(true);
-
         const key = wrapDamlTuple([operator, investor]);
         const args = { name, location, ssn, isPublic: true};
-        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
-
+        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args);
         clearForm();
-        setLoading(false);
     }
 
     return (
         <InviteAcceptTile
-            onLogout={onLogout}
             role='Investor'
-            error={error}
-            setError={setError}
+            onSubmit={submit}
+            onLogout={onLogout}
         >
             <InviteTextField
                 label='Name'
@@ -66,10 +58,7 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
                 setter={setSSN}
             />
             <InviteAcceptButton
-                loading={loading}
-                disabled={!name || !location || !ssn}
-                submit={submit}>
-            </InviteAcceptButton>
+                disabled={!name || !location || !ssn}/>
         </InviteAcceptTile>
     )
 }

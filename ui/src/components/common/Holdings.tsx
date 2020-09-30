@@ -3,18 +3,20 @@ import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { ContractId } from '@daml/types'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
 import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { parseError, ErrorMessage } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
 
+import "./Holdings.css"
 
 type Props = {
     deposits: DepositInfo[];
@@ -36,7 +38,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                 <div className='wallet'>
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
-                        const options = exchanges.map(exchange => {
+                        const exchangeOptions = exchanges.map(exchange => {
                             const exchangeParty = exchange.contractData.exchange;
                             return {
                                 key: exchange.contractId,
@@ -45,6 +47,13 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                                 value: exchange.contractData.exchange
                             }
                         })
+                        const assetOptions = deposits.map(d => {
+                            return {
+                                key: d.contractId,
+                                text: `${d.contractData.asset.id.label} ${d.contractData.asset.quantity} | Provider: ${d.contractData.account.provider} `,
+                                value: d.contractId
+                            }
+                        }).filter(k => k.key !== deposit.contractId)
                         return (
                             <AllocationForm
                                 key={deposit.contractId}
@@ -52,7 +61,8 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                                 role={role}
                                 provider={getAccountProvider(account.id.label) || ''}
                                 depositCid={deposit.contractId}
-                                options={options}/>
+                                exchangeOptions={exchangeOptions}
+                                assetOptions={assetOptions}/>
                         )
                     })}
                 </div>
@@ -65,7 +75,12 @@ type FormProps = {
     asset: Asset;
     provider: string;
     depositCid: string;
-    options: {
+    exchangeOptions: {
+        key: string;
+        text: string;
+        value: string;
+    }[];
+    assetOptions: {
         key: string;
         text: string;
         value: string;
@@ -73,32 +88,69 @@ type FormProps = {
     role: MarketRole;
 }
 
-const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, options }) => {
-    const [ exchange, setExchange ] = useState('');
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-
+const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
     const operator = useWellKnownParties().userAdminParty;
     const party = useParty();
     const ledger = useLedger();
 
-    const handleDepositAllocation = async (event: React.FormEvent) => {
-        event.preventDefault();
+    const [ exchange, setExchange ] = useState('');
+    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
+    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 
-        setLoading(true);
-        try {
-            const key = wrapDamlTuple([operator, party]);
-            const args = { depositCid, provider: exchange };
-            if (role === MarketRole.InvestorRole) {
+    function clearForm() {
+        setExchange('')
+        setMergeAssets([])
+        setSplitAssetDecimal(undefined)
+    }
+
+    const handleDepositAllocation = async () => {
+        const key = wrapDamlTuple([operator, party]);
+        const args = { depositCid, provider: exchange };
+
+        switch(role) {
+            case MarketRole.InvestorRole:
                 await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
-            } else if (role === MarketRole.BrokerRole) {
-                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args)
-            }
-            clearForm()
-        } catch (err) {
-            setError(parseError(err));
+                break;
+            case MarketRole.BrokerRole:
+                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args);
+                break;
+            default:
+                throw new Error(`The ${role} role can not allocate deposits.`)
         }
-        setLoading(false);
+
+        clearForm();
+    }
+
+    const handleMergeAssets = async () => {
+        const args = { depositCids: mergeAssets };
+        const cid = depositCid as ContractId<AssetDeposit>
+        await ledger.exercise(AssetDeposit.AssetDeposit_Merge, cid, args)
+        clearForm();
+    }
+
+    const handleSplitAsset = async () => {
+        if (!splitAssetDecimal) {
+            return
+        }
+
+        if (splitAssetDecimal >= Number(asset.quantity)) {
+            throw {
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be less than ${asset.quantity}`
+            };
+        }
+
+        if (splitAssetDecimal <= 0 ){
+            throw {
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be greater than 0.`
+            };
+        }
+
+        const args = { quantities: [String(splitAssetDecimal)] };
+        const cid = depositCid as ContractId<AssetDeposit>
+        await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
+        clearForm();
     }
 
     const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
@@ -107,30 +159,51 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         }
     }
 
-    function clearForm() {
-        setExchange('')
+    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {
+        setMergeAssets(result.value)
     }
 
     return (
-        <FormErrorHandled
-            loading={loading}
-            error={error}
-            clearError={() => setError(undefined)}
-        >
-            <Form.Group className='inline-form-group'>
-                <div><b>{asset.id.label}</b> {asset.quantity} | </div>
-                <div>Provider: <b>{provider}</b></div>
-            </Form.Group>
-            <Form.Group className='inline-form-group' style={{alignItems: "center"}}>
-                <Form.Select
-                    value={exchange}
-                    options={options}
-                    onChange={handleExchangeChange}/>
-                <Button
-                    primary
-                    content='Allocate to Exchange'
-                    onClick={handleDepositAllocation}/>
-            </Form.Group>
+        <FormErrorHandled onSubmit={handleDepositAllocation}>
+            { loadAndCatch => <>
+                <Form.Group className='inline-form-group label'>
+                    <div><b>{asset.id.label}</b> {asset.quantity} | </div>
+                    <div>Provider: <b>{provider}</b></div>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Select
+                        value={exchange}
+                        options={exchangeOptions}
+                        onChange={handleExchangeChange}/>
+                    <Button
+                        primary
+                        disabled={exchange == ''}
+                        content='Allocate to Exchange'
+                        onClick={() => loadAndCatch(handleDepositAllocation)}/>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Select
+                        multiple
+                        options={assetOptions}
+                        onChange={handleMergeAssetsChange}/>
+                    <Button
+                        primary
+                        disabled={mergeAssets.length === 0}
+                        content='Merge Assets'
+                        onClick={() => loadAndCatch(handleMergeAssets)}/>
+                </Form.Group>
+                <Form.Group className='inline-form-group action'>
+                    <Form.Input
+                        type='number'
+                        value={splitAssetDecimal}
+                        onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                    <Button
+                        primary
+                        disabled={!splitAssetDecimal}
+                        content='Split Asset'
+                        onClick={() => loadAndCatch(handleSplitAsset)}/>
+                </Form.Group></>
+            }
         </FormErrorHandled>
     )
 }

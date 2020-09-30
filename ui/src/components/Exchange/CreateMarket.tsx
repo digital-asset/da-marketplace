@@ -8,7 +8,6 @@ import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
@@ -22,44 +21,31 @@ type Props = {
 }
 
 const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
     const [ quoteToken, setQuoteToken ] = useState<TokenInfo>();
-
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
 
     const ledger = useLedger();
     const exchange = useParty();
     const operator = useWellKnownParties().userAdminParty;
 
-    const clearForm = () => {
-        setLoading(false);
+    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
+        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
+
+    const handleTokenPairSubmit = async () => {
+        if (!baseToken || !quoteToken) {
+            throw new Error('Tokens not selected');
+        }
+
+        const key = wrapDamlTuple([operator, exchange]);
+        const args = {
+            baseTokenId: baseToken.contractData.id,
+            quoteTokenId: quoteToken.contractData.id
+        };
+
+        await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
+
         setBaseToken(undefined);
         setQuoteToken(undefined);
-    }
-
-    const handleTokenPairSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        setLoading(true);
-        try {
-            if (!baseToken || !quoteToken) {
-                throw new Error('Tokens not selected');
-            }
-
-            const key = wrapDamlTuple([operator, exchange]);
-            const args = {
-                baseTokenId: baseToken.contractData.id,
-                quoteTokenId: quoteToken.contractData.id
-            };
-
-            await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
-            clearForm();
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
     }
 
     return (
@@ -70,18 +56,14 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='create-market'>
-                    <FormErrorHandled
-                        loading={loading}
-                        error={error}
-                        clearError={() => setError(undefined)}
-                        onSubmit={handleTokenPairSubmit}
-                    >
+                    <FormErrorHandled onSubmit={handleTokenPairSubmit}>
                         <div className='create-market-options'>
                             <ContractSelect
                                 clearable
                                 className='create-market-select'
                                 contracts={allTokens}
                                 label='Base Token'
+                                value={baseToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setBaseToken(token)}/>
 
@@ -92,6 +74,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 className='create-market-select'
                                 contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
                                 label='Quote Token'
+                                value={quoteToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setQuoteToken(token)}/>
                         </div>
