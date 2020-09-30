@@ -3,18 +3,21 @@ import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
+import { ContractId } from '@daml/types'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider, ContractInfo } from './damlTypes'
 import { parseError, ErrorMessage } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
 
+import "./Holdings.css"
 
 type Props = {
     deposits: DepositInfo[];
@@ -36,13 +39,20 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                 <div className='wallet'>
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
-                        const options = exchanges.map(exchange => {
+                        const exchangeOptions = exchanges.map(exchange => {
                             return {
                                 key: exchange.contractId,
                                 text: exchange.contractData.exchange,
                                 value: exchange.contractData.exchange
                             }
                         })
+                        const assetOptions = deposits.map(d => {
+                            return {
+                                key: d.contractId,
+                                text: `${d.contractData.asset.id.label} ${d.contractData.asset.quantity} | Provider: ${d.contractData.account.provider} `,
+                                value: d.contractId
+                            }
+                        }).filter(k => k.key !== deposit.contractId)
                         return (
                             <AllocationForm
                                 key={deposit.contractId}
@@ -50,7 +60,8 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                                 role={role}
                                 provider={getAccountProvider(account.id.label) || ''}
                                 depositCid={deposit.contractId}
-                                options={options}/>
+                                exchangeOptions={exchangeOptions}
+                                assetOptions={assetOptions}/>
                         )
                     })}
                 </div>
@@ -63,7 +74,12 @@ type FormProps = {
     asset: Asset;
     provider: string;
     depositCid: string;
-    options: {
+    exchangeOptions: {
+        key: string;
+        text: string;
+        value: string;
+    }[];
+    assetOptions: {
         key: string;
         text: string;
         value: string;
@@ -71,8 +87,11 @@ type FormProps = {
     role: MarketRole;
 }
 
-const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, options }) => {
+const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
     const [ exchange, setExchange ] = useState('');
+    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
+    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
+
     const [ loading, setLoading ] = useState(false);
     const [ error, setError ] = useState<ErrorMessage>();
 
@@ -82,8 +101,8 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
 
     const handleDepositAllocation = async (event: React.FormEvent) => {
         event.preventDefault();
-
         setLoading(true);
+
         try {
             const key = wrapDamlTuple([operator, party]);
             const args = { depositCid, provider: exchange };
@@ -99,14 +118,72 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         setLoading(false);
     }
 
+    const handleMergeAssets = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setLoading(true);
+
+        try {
+            const args = { depositCids: mergeAssets };
+            const cid = depositCid as ContractId<AssetDeposit>
+            await ledger.exercise(AssetDeposit.AssetDeposit_Merge, cid, args)
+            clearForm()
+
+        } catch (err) {
+            setError(parseError(err));
+        }
+        setLoading(false);
+    }
+
+    const handleSplitAsset = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setLoading(true);
+
+        if (!splitAssetDecimal) {
+            return
+        }
+
+        if (splitAssetDecimal >= Number(asset.quantity)){
+            setLoading(false);
+            return setError({
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be less than ${asset.quantity}`
+            })
+        }
+
+        if (splitAssetDecimal <= 0 ){
+            setLoading(false);
+            return setError({
+                header: 'Invalid Split Quantity',
+                message: `The splitting quantity must be greater than 0.`
+            })
+        }
+
+        try {
+            const args = { quantities: [String(splitAssetDecimal)] };
+            const cid = depositCid as ContractId<AssetDeposit>
+            await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
+            clearForm()
+
+        } catch (err) {
+            setError(parseError(err));
+        }
+        setLoading(false);
+    }
+
     const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setExchange(result.value);
         }
     }
 
+    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {
+        setMergeAssets(result.value)
+    }
+
     function clearForm() {
         setExchange('')
+        setMergeAssets([])
+        setSplitAssetDecimal(undefined)
     }
 
     return (
@@ -114,20 +191,44 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
             loading={loading}
             error={error}
             clearError={() => setError(undefined)}
+            className='holding'
         >
-            <Form.Group className='inline-form-group'>
+            <Form.Group className='inline-form-group label'>
                 <div><b>{asset.id.label}</b> {asset.quantity} | </div>
                 <div>Provider: <b>{provider}</b></div>
             </Form.Group>
-            <Form.Group className='inline-form-group' style={{alignItems: "center"}}>
+            <Form.Group className='inline-form-group action'>
                 <Form.Select
                     value={exchange}
-                    options={options}
+                    options={exchangeOptions}
                     onChange={handleExchangeChange}/>
                 <Button
                     primary
+                    disabled={exchange == ''}
                     content='Allocate to Exchange'
                     onClick={handleDepositAllocation}/>
+            </Form.Group>
+            <Form.Group className='inline-form-group action'>
+                <Form.Select
+                    multiple
+                    options={assetOptions}
+                    onChange={handleMergeAssetsChange}/>
+                <Button
+                    primary
+                    disabled={mergeAssets.length === 0}
+                    content='Merge Assets'
+                    onClick={handleMergeAssets}/>
+            </Form.Group>
+            <Form.Group className='inline-form-group action'>
+                <Form.Input
+                    type='number'
+                    value={splitAssetDecimal}
+                    onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                <Button
+                    primary
+                    disabled={!splitAssetDecimal}
+                    content='Split Asset'
+                    onClick={handleSplitAsset}/>
             </Form.Group>
         </FormErrorHandled>
     )
