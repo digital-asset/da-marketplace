@@ -70,6 +70,7 @@ const IssueAsset = () => {
         setError(undefined)
         setLoading(false)
     }
+
     const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
         setObservers(result.value)
     }
@@ -113,29 +114,12 @@ const IssueAsset = () => {
                 offLabel='Private'
                 offInfo='Only a set of parties will be aware of this token.'
                 onClick={val => setIsPublic(val)}/>
-            {/* <Form.TextArea
-                disabled={isPublic}
-                label='Add Observers'
-                placeholder='Input each party Id separated by a comma'
-                className='issue-asset-form-field'
-                value={observersList}
-                onChange={e => setObserversList(e.currentTarget.value)}
-            /> */}
             <Form.Select
                 multiple
+                disabled={isPublic}
                 placeholder='Select...'
                 options={partyOptions}
                 onChange={handleObserversChange}/>
-            {/* <ContractSelect
-                multiple
-                className='custodian-select-container'
-                allowAdditions
-                clearable
-                search
-                selection
-                contracts={registeredCustodians}
-                placeholder='Custodian party ID'
-                setContract={ri => setObservers(ri ? ri.party : '')}/> */}
         </div>
             <Form.Input
                 fluid
@@ -155,8 +139,6 @@ const IssueAsset = () => {
             </Button>
         </FormErrorHandled>
     )
-
-  
 }
 
 export default IssueAsset;
