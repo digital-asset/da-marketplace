@@ -49,7 +49,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                         const assetOptions = deposits.map(d => {
                             return {
                                 key: d.contractId,
-                                text: `${d.contractData.asset.id.label} - ${d}`,
+                                text: `${d.contractData.asset.id.label} ${d.contractData.asset.quantity} | Provider: ${d.contractData.account.provider} `,
                                 value: d.contractId
                             }
                         }).filter(k => k.key !== deposit.contractId)
@@ -197,7 +197,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <div><b>{asset.id.label}</b> {asset.quantity} | </div>
                 <div>Provider: <b>{provider}</b></div>
             </Form.Group>
-            <Form.Group className='inline-form-group action' style={{alignItems: "center"}}>
+            <Form.Group className='inline-form-group action'>
                 <Form.Select
                     value={exchange}
                     options={exchangeOptions}
@@ -208,7 +208,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                     content='Allocate to Exchange'
                     onClick={handleDepositAllocation}/>
             </Form.Group>
-            <Form.Group className='inline-form-group action' style={{alignItems: "center"}}>
+            <Form.Group className='inline-form-group action'>
                 <Form.Select
                     multiple
                     options={assetOptions}
@@ -219,7 +219,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                     content='Merge Assets'
                     onClick={handleMergeAssets}/>
             </Form.Group>
-            <Form.Group className='inline-form-group action' style={{alignItems: "center"}}>
+            <Form.Group className='inline-form-group action'>
                 <Form.Input
                     type='number'
                     value={splitAssetDecimal}

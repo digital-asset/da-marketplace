@@ -7,8 +7,9 @@
     padding-bottom: 12px;
 }
 
-.ui.form > .fields.inline-form-group.action .field{
+.ui.form > .fields.inline-form-group.action .field {
     padding-left: 0;
+    width: 321px;
 }
 
 .ui.form > .fields.inline-form-group.label {
