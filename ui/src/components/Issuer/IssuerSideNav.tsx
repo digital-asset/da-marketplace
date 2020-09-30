@@ -6,7 +6,7 @@ import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { useParty, useStreamQuery } from '@daml/react'
 
-import { PublicIcon } from '../../icons/Icons'
+import { PublicIcon, CircleIcon } from '../../icons/Icons'
 
 type IssuerSideNavProps = {
     url: string
@@ -45,6 +45,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                     key={token.contractId}
                 >
+                    <CircleIcon/>
                     <p>{token.payload.id.label}</p>
                 </Menu.Item>
             ))}

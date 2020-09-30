@@ -83,3 +83,9 @@ export const WalletIcon = () => (
         src={wallet}
         alt="command"/>
 )
+
+export const CircleIcon = () => (
+    <div className="icon circle">
+        <img/>
+    </div>
+)
