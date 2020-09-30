@@ -19,13 +19,7 @@ const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
                             <ChatFaceIcon/> Welcome to the DABL Social Marketplace
                         </Header.Content>
                     </Header>
-
-                    <Header as='h4' textAlign='center'>
-                        <Header.Content>
-                            { subtitle }
-                        </Header.Content>
-                    </Header>
-
+                    <p> { subtitle } </p>
                     { children }
                 </Grid.Column>
             </Grid.Row>

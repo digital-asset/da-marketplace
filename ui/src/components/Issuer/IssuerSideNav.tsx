@@ -36,7 +36,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
 
         <Menu.Menu className='sub-menu'>
             <Menu.Item>
-                <p>Issued Tokens:</p>
+                <p className='p2'>Issued Tokens:</p>
             </Menu.Item>
             {allTokens.map(token => (
                 <Menu.Item

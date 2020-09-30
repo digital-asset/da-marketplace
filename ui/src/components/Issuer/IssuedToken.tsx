@@ -31,9 +31,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <p>{token?.payload.description}</p>
 
-                <Header as='h4'>Public:</Header>
+                <p>Public:</p>
                 {token?.payload.isPublic? "True" : "False"}
-                <Header as='h4'>Issuer:</Header>
+                <p>Issuer:</p>
                 <List verticalAlign='middle'>
                     {signatories.map(s =>
                         <List.Item key={s}>
@@ -44,9 +44,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                     )}
                 </List>
 
-                <Header as='h4'>Quantity Precision:</Header>
+                <p>Quantity Precision:</p>
                 {token?.payload.quantityPrecision}
-                <Header as='h4'>Observers:</Header>
+                <p>Observers:</p>
                 <List verticalAlign='middle'>
                     {observers.map(o =>
                         <List.Item key={o}>

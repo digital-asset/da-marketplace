@@ -37,13 +37,13 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='customer-orders'>
-                    <Header as='h4'>Requested Customer Orders</Header>
+                    <p>Requested Customer Orders</p>
                     { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
 
-                    <Header as='h4'>Open Customer Orders</Header>
+                    <p>Open Customer Orders</p>
                     { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
 
-                    <Header as='h4'>Exchange Orders</Header>
+                    <p>Exchange Orders</p>
                     { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
                 </div>
             </PageSection>

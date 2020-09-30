@@ -63,7 +63,6 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
     return (
         <>
-            <TopMenu onLogout={onLogout}/>
             <OnboardingTile subtitle='What will you do?'>
                 <RoleSelect
                     caption='I want to chat & invest'

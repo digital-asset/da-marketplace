@@ -28,10 +28,10 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='investor-orders'>
-                    <Header as='h4'>Requested Orders</Header>
+                    <p>Requested Orders</p>
                     { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
 
-                    <Header as='h4'>Open Orders</Header>
+                    <p>Open Orders</p>
                     { allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
                 </div>
             </PageSection>
