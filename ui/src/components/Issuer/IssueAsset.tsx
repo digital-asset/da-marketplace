@@ -2,13 +2,19 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
+
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import './IssueAsset.css'
 
@@ -21,15 +27,27 @@ const IssueAsset = () => {
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
-    const [ observersList, setObserversList ] = useState<string>('');
+    const [ observers, setObservers ] = useState<string[]>([]);
     const [ error, setError ] = useState<ErrorMessage>();
     const [ loading, setLoading ] = useState(false);
+
+    const allRegisteredParties = [
+            useStreamQueryAsPublic(RegisteredCustodian).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.custodian })),
+            useStreamQueryAsPublic(RegisteredIssuer).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
+            useStreamQueryAsPublic(RegisteredInvestor).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
+            useStreamQueryAsPublic(RegisteredExchange).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.exchange })),
+            useStreamQueryAsPublic(RegisteredBroker).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.broker }))
+            ].flat()
 
     async function submit() {
         setLoading(true);
 
         try {
-            let observers = observersList.split(',')
             const key = wrapDamlTuple([operator, issuer]);
             const args = { name, quantityPrecision, description, isPublic, observers};
 
@@ -48,10 +66,21 @@ const IssueAsset = () => {
         setQuantityPrecision('')
         setDescription('')
         setIsPublic(true)
-        setObserversList('')
+        setObservers([])
         setError(undefined)
         setLoading(false)
     }
+    const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
+        setObservers(result.value)
+    }
+
+    const partyOptions = allRegisteredParties.map(d => {
+        return {
+            key: d.contractId,
+            text: `${d.contractData}`,
+            value: d.contractData
+        }
+    })
 
     return (
         <FormErrorHandled
@@ -84,14 +113,29 @@ const IssueAsset = () => {
                 offLabel='Private'
                 offInfo='Only a set of parties will be aware of this token.'
                 onClick={val => setIsPublic(val)}/>
-            <Form.TextArea
+            {/* <Form.TextArea
                 disabled={isPublic}
                 label='Add Observers'
                 placeholder='Input each party Id separated by a comma'
                 className='issue-asset-form-field'
                 value={observersList}
                 onChange={e => setObserversList(e.currentTarget.value)}
-            />
+            /> */}
+            <Form.Select
+                multiple
+                placeholder='Select...'
+                options={partyOptions}
+                onChange={handleObserversChange}/>
+            {/* <ContractSelect
+                multiple
+                className='custodian-select-container'
+                allowAdditions
+                clearable
+                search
+                selection
+                contracts={registeredCustodians}
+                placeholder='Custodian party ID'
+                setContract={ri => setObservers(ri ? ri.party : '')}/> */}
         </div>
             <Form.Input
                 fluid
@@ -111,6 +155,8 @@ const IssueAsset = () => {
             </Button>
         </FormErrorHandled>
     )
+
+  
 }
 
 export default IssueAsset;
