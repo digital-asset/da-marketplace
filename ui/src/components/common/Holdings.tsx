@@ -184,6 +184,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         setExchange('')
         setMergeAssets([])
         setSplitAssetDecimal(undefined)
+    }
 
     return (
         <FormErrorHandled
