@@ -1,5 +1,6 @@
 BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml)
 VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml)
+SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
 
 TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
@@ -160,7 +161,7 @@ publish: package
 	git tag -f "${TAG_NAME}"
 	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
 
-package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta)
+package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
 	cd $(target_dir) && zip ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-[^e]*) dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
@@ -201,3 +202,9 @@ clean: clean-ui
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
+
+verify-artifacts:
+	for filename in $(SUBDEPLOYMENTS) ; do \
+		test -f $(target_dir)/$$filename || (echo could not find $$filename; exit 1;) \
+	done
+	test -f $(dabl_meta) || (echo could not find $(dabl_meta); exit 1;) \
