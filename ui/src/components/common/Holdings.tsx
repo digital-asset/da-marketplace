@@ -38,14 +38,16 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                 <div className='wallet'>
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
-                        const exchangeOptions = exchanges.map(exchange => {
-                            const exchangeParty = exchange.contractData.exchange;
-                            return {
-                                key: exchange.contractId,
-                                text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
-                                                                  : exchangeParty,
-                                value: exchange.contractData.exchange
-                            }
+                        const exchangeOptions = exchanges
+                            .filter(exchange => exchange.contractData.exchange !== getAccountProvider(account.id.label))
+                            .map(exchange => {
+                                const exchangeParty = exchange.contractData.exchange;
+                                return {
+                                    key: exchange.contractId,
+                                    text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
+                                                                    : exchangeParty,
+                                    value: exchange.contractData.exchange
+                                }
                         })
                         const assetOptions = deposits.map(d => {
                             return {

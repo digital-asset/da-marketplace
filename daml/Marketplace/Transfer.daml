@@ -21,7 +21,7 @@ template DepositTransferRequest
     let senderSig = head $ toList senderAccountId.signatories
         receiverSig = head $ toList receiverAccountId.signatories
         custodian = senderSig
-    ensure senderSig == receiverSig
+    ensure senderSig == receiverSig && senderAccountId /= receiverAccountId
     signatory sender
 
     controller custodian can
@@ -51,3 +51,6 @@ template DepositTransferRequest
           archive receiverRuleCid
 
           return newDepositCid
+
+      DepositTransferRequest_Reject : ()
+        do return ()
