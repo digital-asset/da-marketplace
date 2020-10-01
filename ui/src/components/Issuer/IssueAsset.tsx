@@ -8,7 +8,6 @@ import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
-import ContractSelect from '../common/ContractSelect';
 import {
     RegisteredCustodian,
     RegisteredIssuer,
@@ -29,8 +28,6 @@ const IssueAsset = () => {
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
     const [ observers, setObservers ] = useState<string[]>([]);
-    const [ error, setError ] = useState<ErrorMessage>();
-    const [ loading, setLoading ] = useState(false);
 
     const allRegisteredParties = [
             useStreamQueryAsPublic(RegisteredCustodian).contracts
@@ -46,20 +43,11 @@ const IssueAsset = () => {
             ].flat()
 
     async function submit() {
-        setLoading(true);
+        const key = wrapDamlTuple([operator, issuer]);
+        const args = { name, quantityPrecision, description, isPublic, observers};
 
-        try {
-            const key = wrapDamlTuple([operator, issuer]);
-            const args = { name, quantityPrecision, description, isPublic, observers};
-
-            await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
-            clearForm()
-
-        } catch (err) {
-            setError(parseError(err));
-        }
-
-        setLoading(false);
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
+        clearForm()
     }
 
     function clearForm () {
@@ -68,8 +56,6 @@ const IssueAsset = () => {
         setDescription('')
         setIsPublic(true)
         setObservers([])
-        setError(undefined)
-        setLoading(false)
     }
 
     const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
