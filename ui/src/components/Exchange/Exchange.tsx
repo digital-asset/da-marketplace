@@ -1,15 +1,19 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useStreamQuery } from '@daml/react'
+import { useLedger, useParty, useStreamQuery } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { wrapDamlTuple } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
+import ExchangeProfile, { Profile, createField } from '../common/Profile'
+import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 
-import InviteAcceptScreen from './InviteAcceptScreen'
 import ExchangeSideNav from './ExchangeSideNav'
 import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
@@ -21,17 +25,58 @@ type Props = {
 
 const Exchange: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
+    const operator = useWellKnownParties().userAdminParty;
+    const exchange = useParty();
+    const ledger = useLedger();
 
     const registeredExchange = useStreamQuery(RegisteredExchange);
 
+    const [ profile, setProfile ] = useState<Profile>({
+        'name': createField('', 'Name', 'Your legal name', 'text'),
+        'location': createField('', 'Location', 'Your current location', 'text')
+    });
+
+    useEffect(() => {
+        if (registeredExchange.contracts[0]) {
+            const reData = registeredExchange.contracts[0].payload;
+            setProfile({
+                name: { ...profile.name, value: reData.name },
+                location: { ...profile.location, value: reData.location }
+            })
+        }
+    }, [registeredExchange]);
+
+    const acceptInvite = async () => {
+        const key = wrapDamlTuple([operator, exchange]);
+        const args = {
+            name: profile.name.value,
+            location: profile.location.value
+        };
+        await ledger.exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args)
+                    .catch(err => console.error(err));
+    }
+
     const sideNav = <ExchangeSideNav url={url}/>;
-    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+
+    const inviteScreen = (
+        <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
+            <ExchangeProfile
+                defaultProfile={profile}
+                submitProfile={profile => setProfile(profile)}/>
+        </InviteAcceptTile>
+    );
+
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const exchangeScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
-                sideNav={sideNav}
+                profile={
+                    <ExchangeProfile
+                        disabled
+                        defaultProfile={profile}/>
+                }
                 marketRelationships={<RequestCustodianRelationship role={MarketRole.ExchangeRole}/>}
+                sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>
 

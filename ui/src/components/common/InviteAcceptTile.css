@@ -10,24 +10,15 @@
 
 .invite-accept-form {
     margin-top: 10px;
+    padding-left: 50px;
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    text-align:left;
+    text-align: left;
 }
 
 .invite-accept-form .invite-accept-form-item {
     padding-top: 10px;
     padding-right: 24px;
     width: 100%;
-}
-
-.invite-accept-form .invite-accept-submit-button-div {
-    padding-top: 5px;
-    margin-top: 10px;
-    width: fit-content;
-}
-
-.invite-accept-form .invite-accept-submit-button:hover {
-    background-color: var(--lightblue2);
 }

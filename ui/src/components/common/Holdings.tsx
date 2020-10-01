@@ -134,17 +134,19 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         }
 
         if (splitAssetDecimal >= Number(asset.quantity)) {
-            throw {
+            const error = {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be less than ${asset.quantity}`
             };
+            throw error;
         }
 
         if (splitAssetDecimal <= 0 ){
-            throw {
+            const error = {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be greater than 0.`
             };
+            throw error;
         }
 
         const args = { quantities: [String(splitAssetDecimal)] };
@@ -177,7 +179,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                         onChange={handleExchangeChange}/>
                     <Button
                         primary
-                        disabled={exchange == ''}
+                        disabled={exchange === ''}
                         content='Allocate to Exchange'
                         onClick={() => loadAndCatch(handleDepositAllocation)}/>
                 </Form.Group>

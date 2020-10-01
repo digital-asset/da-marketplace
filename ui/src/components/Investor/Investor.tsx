@@ -1,21 +1,28 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useStreamQuery } from '@daml/react'
+import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useWellKnownParties } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredInvestor, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {
+    Investor as InvestorModel,
+    InvestorInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { wrapDamlTuple } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
+import InvestorProfile, { Profile, createField } from '../common/Profile'
+import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
 import { damlTupleToString } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
-import InviteAcceptScreen from './InviteAcceptScreen'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
@@ -27,8 +34,13 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
+    const operator = useWellKnownParties().userAdminParty;
+    const investor = useParty();
+    const ledger = useLedger();
+
     const notifications = useExchangeInviteNotifications();
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
+    const investorModel = useStreamQuery(InvestorModel);
 
     const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
         .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
@@ -41,25 +53,70 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useStreamQuery(AssetDeposit).contracts
         .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
 
+    const [ profile, setProfile ] = useState<Profile>({
+        'name': createField('', 'Name', 'Your full legal name', 'text'),
+        'location': createField('', 'Location', 'Your current location', 'text'),
+        'ssn': createField('', 'Social Security Number (private)', 'Your social security number', 'password')
+    });
+
+    useEffect(() => {
+        if (registeredInvestor.contracts[0]) {
+            const riData = registeredInvestor.contracts[0].payload;
+            const investorContract = investorModel.contracts[0];
+            const ssn = investorContract ? investorContract.payload.ssn : 'Private';
+            setProfile({
+                name: { ...profile.name, value: riData.name },
+                location: { ...profile.location, value: riData.location },
+                ssn: { ...profile.ssn, value: ssn }
+            })
+        }
+    }, [registeredInvestor, investorModel]);
+
+    const acceptInvite = async () => {
+        const key = wrapDamlTuple([operator, investor]);
+        const args = {
+            name: profile.name.value,
+            location: profile.location.value,
+            ssn: profile.ssn.value,
+            isPublic: true
+        };
+        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
+                    .catch(err => console.error(err));
+    }
+
     const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
-    const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
+
+    const inviteScreen = (
+        <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
+            <InvestorProfile
+                defaultProfile={profile}
+                submitProfile={profile => setProfile(profile)}/>
+        </InviteAcceptTile>
+    );
+
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+
     const investorScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
-                sideNav={sideNav}
                 notifications={notifications}
+                profile={
+                    <InvestorProfile
+                        disabled
+                        defaultProfile={profile}/>
+                }
+                sideNav={sideNav}
                 marketRelationships={<RequestCustodianRelationship role={MarketRole.InvestorRole}/>}
                 onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/wallet`}>
             <Holdings
-                sideNav={sideNav}
-                onLogout={onLogout}
                 deposits={allDeposits}
+                exchanges={allExchanges}
                 role={MarketRole.InvestorRole}
-                exchanges={allExchanges}/>
+                sideNav={sideNav}
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/orders`}>
