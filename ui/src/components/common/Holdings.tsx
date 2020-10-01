@@ -173,6 +173,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Select
                         value={exchange}
+                        placeholder='Select...'
                         options={exchangeOptions}
                         onChange={handleExchangeChange}/>
                     <Button
@@ -184,6 +185,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Select
                         multiple
+                        placeholder='Select...'
                         options={assetOptions}
                         onChange={handleMergeAssetsChange}/>
                     <Button
@@ -195,6 +197,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Input
                         type='number'
+                        placeholder='0'
                         value={splitAssetDecimal}
                         onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
                     <Button

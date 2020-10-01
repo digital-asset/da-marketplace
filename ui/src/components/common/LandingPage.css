@@ -15,3 +15,7 @@
 .landing-page-column  .ui.form > .fields.inline-form-group > .field {
     padding-left: 0;
 }
+
+.landing-page .landing-page-column .custodian-select-container {
+    padding-right: 6px;
+}

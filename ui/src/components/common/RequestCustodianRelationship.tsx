@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -11,6 +11,9 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
+import ContractSelect from './ContractSelect'
+
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 type Props = {
     role: MarketRole;
@@ -21,6 +24,13 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     const ledger = useLedger();
     const party = useParty();
     const operator = useWellKnownParties().userAdminParty;
+
+    const [ loading, setLoading ] = useState(false);
+    const [ error, setError ] = useState<ErrorMessage>();
+    const [ custodianId, setCustodianId ] = useState('');
+
+    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));
 
     const requestCustodianRelationship = async () => {
         const key = wrapDamlTuple([operator, party]);
@@ -48,11 +58,15 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     return (
         <FormErrorHandled onSubmit={requestCustodianRelationship}>
             <Form.Group className='inline-form-group'>
-                <Form.Input
-                    label='Custodian'
-                    placeholder='Enter ID'
-                    value={custodianId}
-                    onChange={e => setCustodianId(e.currentTarget.value)}/>
+                <ContractSelect
+                    className='custodian-select-container'
+                    clearable
+                    search
+                    selection
+                    contracts={registeredCustodians}
+                    placeholder='Custodian party ID'
+                    getOptionText={ri => ri.contractData.custodian}
+                    setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}/>
                 <Button basic content='Send Request'/>
             </Form.Group>
         </FormErrorHandled>
