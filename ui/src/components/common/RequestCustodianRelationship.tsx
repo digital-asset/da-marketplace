@@ -12,6 +12,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { wrapDamlTuple } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
+import { ErrorMessage } from './errorTypes'
 
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
@@ -24,10 +25,6 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     const ledger = useLedger();
     const party = useParty();
     const operator = useWellKnownParties().userAdminParty;
-
-    const [ loading, setLoading ] = useState(false);
-    const [ error, setError ] = useState<ErrorMessage>();
-    const [ custodianId, setCustodianId ] = useState('');
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));
