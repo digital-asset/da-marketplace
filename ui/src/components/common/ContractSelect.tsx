@@ -86,6 +86,7 @@ function ContractSelect <T>({
     return (
         <div className='contract-select-container'>
             <Form.Select
+                additionLabel='Add a private investor by ID: '
                 allowAdditions={allowAdditions}
                 className={className}
                 clearable={clearable}
