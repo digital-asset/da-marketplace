@@ -43,13 +43,11 @@ const IssueAsset = () => {
             ].flat()
 
     async function submit() {
-        try {
-            const key = wrapDamlTuple([operator, issuer]);
-            const args = { name, quantityPrecision, description, isPublic, observers};
+        const key = wrapDamlTuple([operator, issuer]);
+        const args = { name, quantityPrecision, description, isPublic, observers};
 
-            await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
-            clearForm()
-        }
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
+        clearForm()
     }
 
     function clearForm () {
