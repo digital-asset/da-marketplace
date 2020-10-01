@@ -12,7 +12,6 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { wrapDamlTuple } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
-import { ErrorMessage } from './errorTypes'
 
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
