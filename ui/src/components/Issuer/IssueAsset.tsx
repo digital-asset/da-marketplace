@@ -9,12 +9,14 @@ import { wrapDamlTuple } from '../common/damlTypes'
 import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
-
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import ContractSelect from '../common/ContractSelect';
+import {
+    RegisteredCustodian,
+    RegisteredIssuer,
+    RegisteredInvestor,
+    RegisteredExchange,
+    RegisteredBroker
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import './IssueAsset.css'
 
@@ -33,15 +35,15 @@ const IssueAsset = () => {
 
     const allRegisteredParties = [
             useStreamQueryAsPublic(RegisteredCustodian).contracts
-                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.custodian })),
+                .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
             useStreamQueryAsPublic(RegisteredIssuer).contracts
                 .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
             useStreamQueryAsPublic(RegisteredInvestor).contracts
                 .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
             useStreamQueryAsPublic(RegisteredExchange).contracts
-                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.exchange })),
+                .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
             useStreamQueryAsPublic(RegisteredBroker).contracts
-                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.broker }))
+                .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
             ].flat()
 
     async function submit() {

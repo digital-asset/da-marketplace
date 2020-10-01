@@ -77,7 +77,6 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
             <Form.Group className='inline-form-group'>
                 <ContractSelect
                     className='custodian-select-container'
-                    allowAdditions
                     clearable
                     search
                     selection
