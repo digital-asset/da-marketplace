@@ -51,9 +51,9 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
             </Menu.Item>
         </Menu.Menu>
 
-        <Menu.Menu>
+        <Menu.Menu className='sub-menu'>
             <Menu.Item>
-                <p>Marketplace:</p>
+                <p className='p2'>Marketplace:</p>
             </Menu.Item>
 
             { exchanges.map(exchange => {

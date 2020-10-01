@@ -8,7 +8,7 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { PublicIcon } from '../../icons/Icons'
+import { PublicIcon, CircleIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/damlTypes'
 
 type IssuerSideNavProps = {
@@ -43,7 +43,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
 
         <Menu.Menu className='sub-menu'>
             <Menu.Item>
-                <p>Issued Tokens:</p>
+                <p className='p2'>Issued Tokens:</p>
             </Menu.Item>
             {allTokens.map(token => (
                 <Menu.Item
@@ -52,6 +52,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                     key={token.contractId}
                 >
+                    <CircleIcon/>
                     <p>{token.payload.id.label}</p>
                 </Menu.Item>
             ))}

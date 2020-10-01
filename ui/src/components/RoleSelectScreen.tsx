@@ -7,7 +7,6 @@ import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import TopMenu from './common/TopMenu'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
 
@@ -63,7 +62,6 @@ const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
 
     return (
         <>
-            <TopMenu onLogout={onLogout}/>
             <OnboardingTile subtitle='What will you do?'>
                 <RoleSelect
                     caption='I want to chat & invest'

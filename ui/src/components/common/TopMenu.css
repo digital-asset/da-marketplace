@@ -1,7 +1,7 @@
 .ui.menu.top-menu {
     box-shadow: none;
     border: none;
-    min-height: 92px;
+    min-height: 102px;
     margin: 0;
 }
 
@@ -11,7 +11,7 @@
 }
 
 .top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {
-    margin: 0px 8px;
+    margin-left: 8px;
     height: 14px;
     width: 14px;
 }
@@ -48,8 +48,7 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    height: 92px;
-
+    height: 100%;
 }
 
 .notifications {
