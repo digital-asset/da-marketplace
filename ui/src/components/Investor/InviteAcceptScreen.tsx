@@ -20,11 +20,17 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const [ location, setLocation ] = useState<string>('')
     const [ ssn, setSSN ] = useState<string>('')
 
+    function clearForm() {
+        setName('');
+        setLocation('');
+        setSSN('');
+    }
+
     async function submit() {
         const key = wrapDamlTuple([operator, investor]);
         const args = { name, location, ssn, isPublic: true};
-        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
-            .catch(err => console.error(err));
+        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args);
+        clearForm();
     }
 
     return (

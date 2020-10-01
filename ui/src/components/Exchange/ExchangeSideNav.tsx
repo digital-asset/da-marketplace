@@ -2,9 +2,12 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { useParty } from '@daml/react'
+import { useParty, useStreamFetchByKey } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
+import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
+import {  wrapDamlTuple } from '../common/damlTypes'
 
 type Props = {
     url: string;
@@ -12,6 +15,9 @@ type Props = {
 
 const ExchangeSideNav: React.FC<Props> = ({ url }) => {
     const exchange = useParty();
+    const operator = useWellKnownParties().userAdminParty;
+    const key = () => wrapDamlTuple([operator, exchange]);
+    const registeredExchange = useStreamFetchByKey(RegisteredExchange, key, [operator, exchange]).contract;
 
     const HomeMenuItem = (
         <Menu.Item
@@ -19,7 +25,7 @@ const ExchangeSideNav: React.FC<Props> = ({ url }) => {
             to={url}
             exact
         >
-            <Header as='h3'>@{exchange}</Header>
+            <Header as='h3'>@{registeredExchange?.payload.name || exchange}</Header>
         </Menu.Item>
     )
 

@@ -11,7 +11,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
@@ -20,7 +20,7 @@ import "./Holdings.css"
 
 type Props = {
     deposits: DepositInfo[];
-    exchanges: ExchangeInfo[];
+    exchanges: ExchangeInfoRegistered[];
     role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
@@ -39,9 +39,11 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
                         const exchangeOptions = exchanges.map(exchange => {
+                            const exchangeParty = exchange.contractData.exchange;
                             return {
                                 key: exchange.contractId,
-                                text: exchange.contractData.exchange,
+                                text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
+                                                                  : exchangeParty,
                                 value: exchange.contractData.exchange
                             }
                         })

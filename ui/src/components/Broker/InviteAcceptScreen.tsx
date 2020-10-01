@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
-import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import InviteAcceptTile, { InviteAcceptButton, InviteTextField } from '../common/InviteAcceptTile'
@@ -27,25 +27,25 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     async function submit() {
         const key = wrapDamlTuple([operator, issuer]);
         const args = { name, location };
-        await ledger.exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args);
+        await ledger.exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
         clearForm();
     }
 
     return (
         <InviteAcceptTile
-            role='Exchange'
+            role='Broker'
             onLogout={onLogout}
             onSubmit={submit}
         >
             <InviteTextField
                 label='Name'
-                placeholder='The name of the exchange'
+                placeholder='The name of the Broker'
                 variable={name}
                 setter={setName}
             />
             <InviteTextField
                 label='Location'
-                placeholder='The location of the exchange'
+                placeholder='The location of the Broker'
                 variable={location}
                 setter={setLocation}
             />

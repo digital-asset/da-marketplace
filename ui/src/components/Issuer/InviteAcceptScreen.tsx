@@ -21,11 +21,18 @@ const InviteAcceptScreen: React.FC<Props> = ({ onLogout }) => {
     const [ issuerID, setIssuerID ] = useState<string>('')
     const [ ssn, setSSN ] = useState<string>('')
 
+    function clearForm() {
+        setName('');
+        setTitle('');
+        setIssuerID('');
+        setSSN('');
+    }
+
     async function submit() {
         const key = wrapDamlTuple([operator, issuer]);
         const args = { name, title, issuerID, ssn };
-        await ledger.exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args)
-            .catch(err => console.error(err));
+        await ledger.exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args);
+        clearForm();
     }
 
     return (

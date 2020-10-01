@@ -2,8 +2,12 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { useParty } from '@daml/react'
+import { useParty, useStreamFetchByKey } from '@daml/react'
+import { useWellKnownParties } from '@daml/dabl-react'
 
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+
+import { wrapDamlTuple } from '../common/damlTypes'
 import { UserIcon } from '../../icons/Icons'
 
 type Props = {
@@ -13,6 +17,9 @@ type Props = {
 
 const CustodianSideNav: React.FC<Props> = ({ disabled, url }) => {
     const custodian = useParty();
+    const operator = useWellKnownParties().userAdminParty;
+    const key = () => wrapDamlTuple([operator, custodian]);
+    const registeredCustodian = useStreamFetchByKey(RegisteredCustodian, key, [operator, custodian]).contract;
 
     const HomeMenuItem = (
         <Menu.Item
@@ -20,7 +27,7 @@ const CustodianSideNav: React.FC<Props> = ({ disabled, url }) => {
             to={url}
             exact
         >
-            <Header as='h3'>@{custodian}</Header>
+            <Header as='h3'>@{registeredCustodian?.payload.name || custodian}</Header>
         </Menu.Item>
     )
 
