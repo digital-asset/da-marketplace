@@ -27,7 +27,7 @@ const ExchangeSideNav: React.FC<Props> = ({ url }) => {
                 to={url}
                 exact
             >
-                <Header as='h3'>@{registeredBroker?.payload.broker || broker}</Header>
+                <Header as='h3'>@{registeredBroker?.payload.name || broker}</Header>
             </Menu.Item>
 
             <Menu.Item
