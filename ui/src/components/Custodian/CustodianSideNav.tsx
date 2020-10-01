@@ -27,7 +27,7 @@ const CustodianSideNav: React.FC<Props> = ({ disabled, url }) => {
             to={url}
             exact
         >
-            <Header as='h3'>@{registeredCustodian?.payload.custodian || custodian}</Header>
+            <Header as='h3'>@{registeredCustodian?.payload.name || custodian}</Header>
         </Menu.Item>
     )
 
