@@ -25,15 +25,15 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<p>{token?.payload.id.label}</p>}
+            menuTitle={<Header as='h3'>{token?.payload.id.label}</Header>}
             onLogout={onLogout}
         >
             <PageSection border='blue' background='white'>
                 <p>{token?.payload.description}</p>
 
-                <Header as='h4'>Public:</Header>
-                {token?.payload.isPublic? "True" : "False"}
-                <Header as='h4'>Issuer:</Header>
+                <p><b>Public: </b>{token?.payload.isPublic? "True" : "False"}</p>
+
+                <p><b>Issuer:</b></p>
                 <List verticalAlign='middle'>
                     {signatories.map(s =>
                         <List.Item key={s}>
@@ -44,9 +44,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                     )}
                 </List>
 
-                <Header as='h4'>Quantity Precision:</Header>
-                {token?.payload.quantityPrecision}
-                <Header as='h4'>Observers:</Header>
+                <p><b>Quantity Precision:</b> {token?.payload.quantityPrecision}</p>
+
+                <p><b>Observers:</b></p>
                 <List verticalAlign='middle'>
                     {observers.map(o =>
                         <List.Item key={o}>

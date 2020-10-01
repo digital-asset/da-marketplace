@@ -6,7 +6,6 @@ import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
 import ContractSelect from '../common/ContractSelect';
@@ -71,6 +70,7 @@ const IssueAsset = () => {
         setObservers([])
         setError(undefined)
         setLoading(false)
+
     }
 
     const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
@@ -86,43 +86,39 @@ const IssueAsset = () => {
     })
 
     return (
-        <FormErrorHandled
-            size='large'
-            className='issue-asset-form'
-            error={error}
-            clearError={() => setError(undefined)}
-        >
-        <Form.Input
-            fluid
-            label='Asset ID'
-            placeholder='Give this asset a name'
-            value={name}
-            className='issue-asset-form-field'
-            onChange={e => setName(e.currentTarget.value)}
-        />
-        <Form.TextArea
-            label='Description'
-            placeholder='Describe the asset to potential investors'
-            className='issue-asset-form-field'
-            value={description}
-            onChange={e => setDescription(e.currentTarget.value)}
-        />
-        <div className='is-public'>
-            <FormToggle
-                defaultChecked
+        <FormErrorHandled onSubmit={submit}>
+            <Form.Input
+                fluid
+                label='Asset ID'
+                placeholder='Give this asset a name'
+                value={name}
                 className='issue-asset-form-field'
-                onLabel='Public'
-                onInfo='All parties will be aware of this token.'
-                offLabel='Private'
-                offInfo='Only a set of parties will be aware of this token.'
-                onClick={val => setIsPublic(val)}/>
-            <Form.Select
-                multiple
-                disabled={isPublic}
-                placeholder='Select...'
-                options={partyOptions}
-                onChange={handleObserversChange}/>
-        </div>
+                onChange={e => setName(e.currentTarget.value)}
+            />
+            <Form.TextArea
+                label='Description'
+                placeholder='Describe the asset to potential investors'
+                className='issue-asset-form-field'
+                value={description}
+                onChange={e => setDescription(e.currentTarget.value)}
+            />
+            <div className='is-public'>
+                <FormToggle
+                    defaultChecked
+                    className='issue-asset-form-field'
+                    onLabel='Public'
+                    onInfo='All parties will be aware of this token.'
+                    offLabel='Private'
+                    offInfo='Only a set of parties will be aware of this token.'
+                    onClick={val => setIsPublic(val)}/>
+                  <Form.Select
+                      multiple
+                      disabled={isPublic}
+                      placeholder='Select...'
+                      options={partyOptions}
+                      onChange={handleObserversChange}
+                    />
+            </div>
             <Form.Input
                 fluid
                 label='Quantity Precision'
@@ -133,11 +129,9 @@ const IssueAsset = () => {
             />
             <Button
                 primary
-                loading={loading}
                 disabled={!name || !quantityPrecision || !description}
                 className='issue-asset-submit-button'
-                onClick={submit}>
-                    Submit
+                content='Submit'>
             </Button>
         </FormErrorHandled>
     )

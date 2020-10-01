@@ -10,7 +10,6 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple } from './damlTypes'
-import { parseError, ErrorMessage } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
 
@@ -21,6 +20,7 @@ type Props = {
 }
 
 const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
+    const [ custodianId, setCustodianId ] = useState('');
     const ledger = useLedger();
     const party = useParty();
     const operator = useWellKnownParties().userAdminParty;
@@ -32,9 +32,9 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));
 
-    const requestCustodianRelationship = async (custodian: string) => {
+    const requestCustodianRelationship = async () => {
         const key = wrapDamlTuple([operator, party]);
-        const args = { custodian };
+        const args = { custodian: custodianId };
 
         switch(role) {
             case MarketRole.InvestorRole:
@@ -52,28 +52,11 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
             default:
                 throw new Error(`The role '${role}' can not request a custodian relationship.`);
         }
-        clearForm()
-    }
-
-    function clearForm() {
-        setCustodianId('')
+        setCustodianId('');
     }
 
     return (
-        <FormErrorHandled
-            loading={loading}
-            error={error}
-            clearError={() => setError(undefined)}
-            onSubmit={async () => {
-                setLoading(true);
-                try {
-                    await requestCustodianRelationship(custodianId);
-                } catch (err) {
-                    setError(parseError(err));
-                }
-                setLoading(false);
-            }}
-        >
+        <FormErrorHandled onSubmit={requestCustodianRelationship}>
             <Form.Group className='inline-form-group'>
                 <ContractSelect
                     className='custodian-select-container'

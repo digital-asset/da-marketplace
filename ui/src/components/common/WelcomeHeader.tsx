@@ -15,12 +15,7 @@ const WelcomeHeader: React.FC = () => (
                         Welcome to the DABL Social Marketplace
                     </Header.Content>
                 </Header>
-
-                <Header as='h5' className='welcome-header-row'>
-                    <Header.Content>
-                        An app written in <a href='https://daml.com'>DAML</a> and deployed using <a href='https://projectdabl.com'>project:DABL</a>
-                    </Header.Content>
-                </Header>
+                <p>An app written in <a href='https://daml.com'>DAML</a> and deployed using <a href='https://projectdabl.com'>project:DABL</a></p>
             </div>
         </div>
     </>

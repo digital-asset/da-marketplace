@@ -12,6 +12,7 @@
   --grey1: #FAFAFA;
   --grey2: #F0F0F0;
   --grey3: #F6F6F6;
+  --dabl-color: #3a62Ca;
 }
 
 * {
@@ -46,7 +47,6 @@ code {
   display: flex;
   color: var(--textcolor);
   border-radius: 2px;
-  border: 1px solid #262626;
 }
 
 .ui.button.ghost {
@@ -78,7 +78,53 @@ code {
   padding-bottom: 8px;
 }
 
-.ui.form .field .ui.input input, .ui.form .fields .field .ui.input input, .ui.form textarea {
-  border: 1px solid #979798;
-  background-color:#FFFFFF
+/* Font Styling*/
+
+h3.ui.header {
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 27px;
+  color: #303132;
+}
+
+h4.ui.header {
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 27px;
+  color: #303132;
+}
+
+p {
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 19px;
+  color: #303132;
+}
+
+p.p2 {
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 12px;
+  line-height: 16px;
+  color: #505050;
+}
+
+.ui.form .field > label {
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 19px;
+  color: #303132;
+}
+
+.ui.primary.button, .ui.primary.buttons .button {
+  background-color: var(--dabl-color);
 }

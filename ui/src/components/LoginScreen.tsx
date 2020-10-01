@@ -106,7 +106,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
           content='Log in with DABL'
           onClick={handleDablLogin}/>
       </Form>
-      <Header as='h4'>Or</Header>
+      <p>Or</p>
       <Form size='large' className='test-select-login-screen'>
         <Form.Input
           fluid

@@ -53,7 +53,7 @@ $(sandbox_pid): |$(daml_build_log)
 start_daml_server: $(sandbox_pid)
 
 stop_daml_server:
-	pkill -F $(sandbox_pid) && rm -f $(sandbox_pid) $(sandbox_log)
+	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
 
 
 ### DA Marketplace Operator Bot
@@ -66,7 +66,7 @@ $(operator_pid): |$(state_dir) $(operator_bot_dir)
 start_operator: $(operator_pid)
 
 stop_operator:
-	pkill -F $(operator_pid) && rm -f $(operator_pid) $(operator_log)
+	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
 
 ### DA Marketplace Issuer Bot
 $(issuer_bot_dir):
@@ -78,7 +78,7 @@ $(issuer_pid): |$(state_dir) $(issuer_bot_dir)
 start_issuer: $(issuer_pid)
 
 stop_issuer:
-	pkill -F $(issuer_pid) && rm -f $(issuer_pid) $(issuer_log)
+	pkill -F $(issuer_pid); rm -f $(issuer_pid) $(issuer_log)
 
 
 ### DA Marketplace Custodian Bot
@@ -91,7 +91,7 @@ $(custodian_pid): |$(state_dir) $(custodian_bot_dir)
 start_custodian: $(custodian_pid)
 
 stop_custodian:
-	pkill -F $(custodian_pid) && rm -f $(custodian_pid) $(custodian_log)
+	pkill -F $(custodian_pid); rm -f $(custodian_pid) $(custodian_log)
 
 
 ### DA Marketplace Broker Bot
@@ -104,7 +104,7 @@ $(broker_pid): |$(state_dir) $(broker_bot_dir)
 start_broker: $(broker_pid)
 
 stop_broker:
-	pkill -F $(broker_pid) && rm -f $(broker_pid) $(broker_log)
+	pkill -F $(broker_pid); rm -f $(broker_pid) $(broker_log)
 
 
 ### DA Marketplace <> Exberry Adapter
@@ -117,7 +117,7 @@ $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
 start_adapter: $(adapter_pid)
 
 stop_adapter:
-	pkill -F $(adapter_pid) && rm -f $(adapter_pid) $(adapter_log)
+	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
 
 
 ### DA Marketplace Matching Engine
@@ -130,7 +130,7 @@ $(matching_engine_pid): |$(state_dir) $(matching_engine_dir)
 start_matching_engine: $(matching_engine_pid)
 
 stop_matching_engine:
-	pkill -F $(matching_engine_pid) && rm -f $(matching_engine_pid) $(matching_engine_log)
+	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
 
 target_dir := target

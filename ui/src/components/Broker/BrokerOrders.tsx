@@ -7,12 +7,10 @@ import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
 import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
-import { parseError, ErrorMessage } from '../common/errorTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-
 
 import './BrokerOrders.css'
 
@@ -37,13 +35,13 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='customer-orders'>
-                    <Header as='h4'>Requested Customer Orders</Header>
+                    <p>Requested Customer Orders</p>
                     { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
 
-                    <Header as='h4'>Open Customer Orders</Header>
+                    <p>Open Customer Orders</p>
                     { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
 
-                    <Header as='h4'>Exchange Orders</Header>
+                    <p>Exchange Orders</p>
                     { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
                 </div>
             </PageSection>
@@ -60,69 +58,53 @@ type BrokerOrderRequestCardProps = {
 
 
 const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children, ...props}) => {
-    const [ loading, setLoading ] = useState(false);
+    const [ brokerOrderId, setBrokerOrderId ] = useState<string>('');
+    const ledger = useLedger();
+
     const [ base, quote ] = unwrapDamlTuple(props.cdata.pair).map(t => t.label);
     const label = props.cdata.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
     const customer = props.cdata.brokerCustomer;
     const depositCid = props.cdata.depositCid;
     const price = `${props.cdata.price} ${quote}`;
-    const [ brokerOrderId, setBrokerOrderId ] = useState<string>('');
-    const [ error, setError ] = useState<ErrorMessage>();
-    const ledger = useLedger();
 
-    const handleAcceptBrokerOrderRequest = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-        try {
-            const args = {
-                brokerOrderId
-            }
-            await ledger.exercise(BrokerOrderRequest.BrokerOrderRequest_Accept, props.cid, args)
-            clearForm()
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-    }
+    const handleAcceptBrokerOrderRequest = async () => {
+        const args = { brokerOrderId };
+        await ledger.exercise(BrokerOrderRequest.BrokerOrderRequest_Accept, props.cid, args);
 
-    function clearForm() {
-        setBrokerOrderId('')
+        setBrokerOrderId('');
     }
 
     return (
         <FormErrorHandled
             className='order-card-container'
-            error={error}
-            clearError={() => setError(undefined)}
+            onSubmit={handleAcceptBrokerOrderRequest}
         >
-        <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
-                    <div><ExchangeIcon/> {label}</div>
-                    <div>{ amount }</div>
-                    <div>{`@ ${price}`}</div>
-                    <div>{`customer: ${customer}`}</div>
-                    <div>{`deposit: ${depositCid.substr(depositCid.length - 8)}`}</div>
-                </Card>
+            <div className='order-card-container'>
+                <div className='order-card'>
+                    <Card fluid className='order-info'>
+                        <div><ExchangeIcon/> {label}</div>
+                        <div>{ amount }</div>
+                        <div>{`@ ${price}`}</div>
+                        <div>{`customer: ${customer}`}</div>
+                        <div>{`deposit: ${depositCid.substr(depositCid.length - 8)}`}</div>
+                    </Card>
 
-                <Form.Group>
-                    <Form.Input
-                        className='orderid-input'
-                        placeholder='id'
-                        value={brokerOrderId}
-                        onChange={e => setBrokerOrderId(e.currentTarget.value)}
-                    />
-                    <Button
-                        basic
-                        color='black'
-                        content='Accept Order'
-                        loading={loading}
-                        onClick={handleAcceptBrokerOrderRequest}
-                    />
-                </Form.Group>
+                    <Form.Group>
+                        <Form.Input
+                            className='orderid-input'
+                            placeholder='id'
+                            value={brokerOrderId}
+                            onChange={e => setBrokerOrderId(e.currentTarget.value)}
+                        />
+                        <Button
+                            basic
+                            color='black'
+                            content='Accept Order'
+                        />
+                    </Form.Group>
+                </div>
             </div>
-        </div>
         </FormErrorHandled>
     )
 };
@@ -136,44 +118,16 @@ type BrokerOrderCardProps = {
 
 
 const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
-    const [ loading, setLoading ] = useState(false);
+    const [ depositCid, setDepositCid ] = useState<string>('');
+    const broker = useParty();
+    const ledger = useLedger();
+
     const [ base, quote ] = unwrapDamlTuple(props.cdata.pair).map(t => t.label);
     const label = props.cdata.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
     const price = `${props.cdata.price} ${quote}`;
 
     const customer = props.cdata.brokerCustomer;
-
-    const [ depositCid, setDepositCid ] = useState<string>('');
-    const [ error, setError ] = useState<ErrorMessage>();
-    const ledger = useLedger();
-
-    const handleAcceptBrokerOrderFill = async (event: React.FormEvent) => {
-        event.preventDefault();
-        setLoading(true);
-        try {
-            const key = wrapDamlTuple([props.cdata.broker, props.cdata.brokerOrderId])
-            const args = {
-                depositCid
-            }
-            await ledger.exerciseByKey(BrokerOrder.BrokerOrder_Fill, key, args);
-            clearForm()
-        } catch (err) {
-            setError(parseError(err));
-        }
-        setLoading(false);
-    }
-
-    function clearForm() {
-        setDepositCid('')
-    }
-
-    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
-        if (typeof result.value === 'string') {
-            setDepositCid(result.value);
-        }
-    }
-    const broker = useParty();
 
     const options = props.deposits
     .filter(deposit => deposit.contractData.account.owner === broker)
@@ -183,11 +137,23 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
         text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label} | ${deposit.contractData.account.id.label}`
     }))
 
+    const handleAcceptBrokerOrderFill = async () => {
+        const key = wrapDamlTuple([props.cdata.broker, props.cdata.brokerOrderId])
+        const args = { depositCid }
+        await ledger.exerciseByKey(BrokerOrder.BrokerOrder_Fill, key, args);
+        setDepositCid('');
+    }
+
+    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setDepositCid(result.value);
+        }
+    }
+
     return (
         <FormErrorHandled
             className='order-card-container'
-            error={error}
-            clearError={() => setError(undefined)}
+            onSubmit={handleAcceptBrokerOrderFill}
         >
             <div className='order-card-container'>
                 <div className='order-card'>
@@ -212,8 +178,6 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                             basic
                             color='black'
                             content='Fill Order'
-                            loading={loading}
-                            onClick={handleAcceptBrokerOrderFill}
                         />
                     </Form.Group>
                 </div>
