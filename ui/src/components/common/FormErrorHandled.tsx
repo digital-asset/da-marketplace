@@ -1,31 +1,60 @@
-import React, { useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Form, Message } from 'semantic-ui-react'
 
-import { ErrorMessage } from './errorTypes'
+import { ErrorMessage, parseError } from './errorTypes'
 
 import "./FormErrorHandled.css";
 
-type Props = {
-    size?: string;
-    loading?: boolean;
-    className?: string;
-    error?: ErrorMessage;
-    clearError: () => void;
-    onSubmit?: (event: React.FormEvent<HTMLFormElement>) => void;
+type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
+type Callable = ((callback: (fn: () => Promise<void>) => void) => Renderable);
+
+const isCallable = (maybeCallable: any): maybeCallable is Callable => {
+    return typeof maybeCallable === 'function';
 }
 
-const FormErrorHandled: React.FC<Props> = ({ children, className, size, error, loading, clearError, onSubmit }) => {
+type Props = {
+    size?: string;
+    className?: string;
+    children: Callable | Renderable;
+    onSubmit: () => Promise<void>;
+}
+
+const FormErrorHandled: (props: Props) => React.ReactElement = ({
+    size,
+    className,
+    children,
+    onSubmit
+}) => {
+    const [ loading, setLoading ] = useState(false);
+    const [ error, setError ] = useState<ErrorMessage>();
+
     useEffect(() => {
         if (error) {
             setTimeout(() => {
-                clearError();
+                setError(undefined);
             }, 6000);
         }
-    }, [error, clearError]);
+    }, [error]);
+
+    const loadAndCatch = async (fn: () => Promise<void>) => {
+        setLoading(true);
+        try {
+            await fn();
+        } catch (err) {
+            setError(parseError(err));
+        }
+        setLoading(false);
+    }
 
     return (
-        <Form className={className} size={size} loading={loading} error={!!error} onSubmit={onSubmit}>
-            { children }
+        <Form
+            className={className}
+            size={size}
+            loading={loading}
+            error={!!error}
+            onSubmit={() => loadAndCatch(onSubmit)}
+        >
+            { isCallable(children) ? children(callback => loadAndCatch(callback)) : children }
             <Message error header={error?.header} content={error?.message}/>
         </Form>
     )

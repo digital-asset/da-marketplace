@@ -19,9 +19,10 @@ type Props<T> = {
     placeholder?: string;
     search?: boolean;
     selection?: boolean;
+    value?: string;
     getOptionText: (contractInfo: ContractInfo<T>) => string;
     setAddition?: (value: string) => void;
-    setContract: (contract?: ContractInfo<T>) => void;
+    setContract: (contract: ContractInfo<T>) => void;
 }
 
 function ContractSelect <T>({
@@ -33,12 +34,18 @@ function ContractSelect <T>({
     placeholder,
     search,
     selection,
+    value,
     getOptionText,
     setAddition,
     setContract
 }: Props<T>) {
     const [ cid, setCid ] = useState<string>();
     const [ options, setOptions ] = useState<DropdownOption[]>([]);
+    const searchQuery = search ? options.find(opt => opt.key === cid)?.text : undefined;
+
+    useEffect(() => {
+        setCid(value);
+    }, [value])
 
     useEffect(() => {
         const opts = contracts.map(c => ({
@@ -54,10 +61,10 @@ function ContractSelect <T>({
         setCid(data.value);
     }
 
-    const handleContractChange = (event: React.SyntheticEvent, result: any) => {
+    const handleContractChange = (event: React.SyntheticEvent, data: any) => {
         try {
-            if (typeof result.value === 'string') {
-                const value = result.value.trim();
+            if (typeof data.value === 'string') {
+                const value = data.value.trim();
                 const contract = contracts.find(t => t.contractId === value);
 
                 if (!contract && !!allowAdditions && setAddition && value) {
@@ -66,14 +73,10 @@ function ContractSelect <T>({
                     return;
                 }
 
-                if (!contract && value) {
-                    throw new Error(`Contract with contractId ${value} does not exist.`);
-                }
-
                 setCid(value);
-                setContract(contract);
+                contract && setContract(contract);
             } else {
-                throw new Error(`Unexpected result value type ${typeof result.value}.`);
+                throw new Error(`Unexpected result value type ${typeof data.value}.`);
             }
         } catch (err) {
             console.error(parseError(err));
@@ -91,6 +94,7 @@ function ContractSelect <T>({
                 options={options}
                 placeholder={placeholder}
                 search={search}
+                searchQuery={searchQuery}
                 selection={selection}
                 value={cid}
                 onAddItem={handleAddedItem}
