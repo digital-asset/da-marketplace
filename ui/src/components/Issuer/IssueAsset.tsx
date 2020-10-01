@@ -70,7 +70,6 @@ const IssueAsset = () => {
         setObservers([])
         setError(undefined)
         setLoading(false)
-
     }
 
     const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
