@@ -2,7 +2,8 @@ import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useStreamQuery } from '@daml/react'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { RegisteredExchange, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
@@ -24,6 +25,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const registeredExchange = useStreamQuery(RegisteredExchange);
 
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(custodian => ({contractId: custodian.contractId, contractData: custodian.payload}));
+
     const sideNav = <ExchangeSideNav url={url}/>;
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
@@ -31,7 +35,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <Route exact path={path}>
             <LandingPage
                 sideNav={sideNav}
-                marketRelationships={<RequestCustodianRelationship role={MarketRole.ExchangeRole}/>}
+                marketRelationships={<RequestCustodianRelationship
+                                        role={MarketRole.ExchangeRole}
+                                        registeredCustodians={allRegisteredCustodians}/>}
                 onLogout={onLogout}/>
         </Route>
 

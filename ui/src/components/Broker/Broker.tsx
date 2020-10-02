@@ -6,7 +6,7 @@ import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredExchange, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange, RegisteredBroker, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
@@ -39,6 +39,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
             contractData: exchange.payload,
             registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
 
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(custodian => ({contractId: custodian.contractId, contractData: custodian.payload}));
+
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
@@ -48,7 +51,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <Route exact path={path}>
             <LandingPage
                 sideNav={sideNav}
-                marketRelationships={<RequestCustodianRelationship role={MarketRole.BrokerRole}/>}
+                marketRelationships={<RequestCustodianRelationship
+                                        role={MarketRole.BrokerRole}
+                                        registeredCustodians={allRegisteredCustodians}/>}
                 onLogout={onLogout}/>
         </Route>
 

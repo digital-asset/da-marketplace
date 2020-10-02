@@ -9,14 +9,16 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple } from './damlTypes'
+import { wrapDamlTuple, RegisteredCustodianInfo } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
+import ContractSelect from '../common/ContractSelect'
 
 type Props = {
     role: MarketRole;
+    registeredCustodians: RegisteredCustodianInfo[];
 }
 
-const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
+const RequestCustodianRelationship: React.FC<Props> = ({ role, registeredCustodians }) => {
     const [ custodianId, setCustodianId ] = useState('');
     const ledger = useLedger();
     const party = useParty();
@@ -48,12 +50,19 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     return (
         <FormErrorHandled onSubmit={requestCustodianRelationship}>
             <Form.Group className='inline-form-group'>
-                <Form.Input
-                    label='Custodian'
-                    placeholder='Enter ID'
+                <ContractSelect
+                    allowAdditions
+                    clearable
+                    search
+                    selection
+                    contracts={registeredCustodians}
+                    placeholder='Custodian ID'
                     value={custodianId}
-                    onChange={e => setCustodianId(e.currentTarget.value)}/>
-                <Button basic content='Send Request'/>
+                    getOptionText={rc => rc.contractData.name}
+                    setContract={rc => setCustodianId(rc.contractData.custodian)}
+                    setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
+
+                <Button className='request-custodian-relationship' content='Send' disabled={!custodianId}/>
             </Form.Group>
         </FormErrorHandled>
     )

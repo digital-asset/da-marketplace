@@ -1,8 +1,9 @@
 import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { useStreamQuery } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { RegisteredIssuer, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon } from '../../icons/Icons'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
@@ -24,13 +25,17 @@ type Props = {
 const Issuer: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
     const registeredIssuer = useStreamQuery(RegisteredIssuer);
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(custodian => ({contractId: custodian.contractId, contractData: custodian.payload}));
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>;
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const issuerScreen = (
         <Switch>
             <Route exact path={path}>
                 <LandingPage
-                    marketRelationships={<RequestCustodianRelationship role={MarketRole.IssuerRole}/>}
+                    marketRelationships={<RequestCustodianRelationship
+                                            role={MarketRole.BrokerRole}
+                                            registeredCustodians={allRegisteredCustodians}/>}
                     sideNav={<IssuerSideNav url={url}/>}
                     onLogout={onLogout}/>
             </Route>

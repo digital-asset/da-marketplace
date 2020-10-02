@@ -8,7 +8,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
-import { ExchangeParticipantInfo } from '../common/damlTypes'
+import { ExchangeParticipantInfo, makeContractInfo } from '../common/damlTypes'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -21,11 +21,8 @@ type Props = {
 }
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
-        .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));
-
-    const exchangeParticipants = useStreamQuery(ExchangeParticipant).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
+    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+    const exchangeParticipants = useStreamQuery(ExchangeParticipant).contracts.map(makeContractInfo);
 
     const investorOptions = registeredInvestors.filter(ri => {
         return !exchangeParticipants.find(ep => {
