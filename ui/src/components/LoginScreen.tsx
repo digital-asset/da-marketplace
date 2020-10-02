@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import { Button, Form, Header } from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { DeploymentMode, deploymentMode, ledgerId } from '../config'

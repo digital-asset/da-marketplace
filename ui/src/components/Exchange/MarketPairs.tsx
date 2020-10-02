@@ -1,7 +1,6 @@
 import React from 'react'
 
 import { useParty, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'

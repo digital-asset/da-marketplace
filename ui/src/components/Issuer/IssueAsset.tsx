@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'

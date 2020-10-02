@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { ContractId } from '@daml/types'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'

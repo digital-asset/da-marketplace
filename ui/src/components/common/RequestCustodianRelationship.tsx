@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'

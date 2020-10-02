@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Issuer as IssuerModel,
@@ -12,6 +11,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { PublicIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -30,7 +30,7 @@ type Props = {
 
 const Issuer: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const issuer = useParty();
     const ledger = useLedger();
 

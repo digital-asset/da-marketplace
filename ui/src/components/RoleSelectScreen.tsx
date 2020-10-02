@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 

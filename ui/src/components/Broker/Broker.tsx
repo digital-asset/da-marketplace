@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredExchange, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple, damlTupleToString } from '../common/damlTypes'
-import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
+import { wrapDamlTuple, damlTupleToString } from '../common/damlTypes'
+import { useOperator } from '../common/common'
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
@@ -27,7 +28,7 @@ type Props = {
 
 const Broker: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const broker = useParty();
     const ledger = useLedger();
 

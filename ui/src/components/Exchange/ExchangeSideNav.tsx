@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
