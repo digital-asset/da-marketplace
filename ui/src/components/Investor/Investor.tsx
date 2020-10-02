@@ -21,7 +21,8 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
-import { damlTupleToString, makeContractInfo} from '../common/damlTypes'
+import MarketRelationships from '../common/MarketRelationships'
+import { makeContractInfo, makeAllRegisteredInfo } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
@@ -43,20 +44,15 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
     const investorModel = useStreamQuery(InvestorModel);
 
-    const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
-        .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-
-    const allExchanges = useStreamQuery(Exchange).contracts
-        .map(exchange => ({contractId: exchange.contractId,
-            contractData: exchange.payload,
-            registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
+    const allExchangesRegistered = makeAllRegisteredInfo(useStreamQuery(Exchange),
+                                                         useStreamQueryAsPublic(RegisteredExchange));
 
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
-    const allCustodianRelationships = useStreamQueryAsPublic(CustodianRelationship).contracts.map(makeContractInfo);
+    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
 
     const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
-        .filter(custodian => allCustodianRelationships.map(cr => cr.contractData.custodian)
+        .filter(custodian => !allCustodianRelationships.map(cr => cr.contractData.custodian)
                                                       .includes(custodian.contractData.custodian));
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -90,7 +86,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
+    const sideNav = <InvestorSideNav url={url} exchanges={allExchangesRegistered}/>;
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
@@ -112,16 +108,18 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                         defaultProfile={profile}/>
                 }
                 sideNav={sideNav}
-                marketRelationships={<RequestCustodianRelationship
+                marketRelationships={<>
+                    <MarketRelationships custodianRelationships={allCustodianRelationships}/>
+                    <RequestCustodianRelationship
                                         role={MarketRole.InvestorRole}
-                                        registeredCustodians = {allRegisteredCustodians}/>}
+                                        registeredCustodians = {allRegisteredCustodians}/></>}
                 onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/wallet`}>
             <Holdings
                 deposits={allDeposits}
-                exchanges={allExchanges}
+                exchanges={allExchangesRegistered}
                 role={MarketRole.InvestorRole}
                 sideNav={sideNav}
                 onLogout={onLogout}/>
