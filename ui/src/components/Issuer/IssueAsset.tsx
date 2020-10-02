@@ -2,12 +2,19 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
+import {
+    RegisteredCustodian,
+    RegisteredIssuer,
+    RegisteredInvestor,
+    RegisteredExchange,
+    RegisteredBroker
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import './IssueAsset.css'
 
@@ -20,20 +27,48 @@ const IssueAsset = () => {
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')
     const [ description, setDescription ] = useState<string>('')
     const [ isPublic, setIsPublic ] = useState<boolean>(true)
-    const [ observersList, setObserversList ] = useState<string>('');
+    const [ observers, setObservers ] = useState<string[]>([]);
 
-    const submit = async () => {
-        let observers = observersList.split(',')
+    const allRegisteredParties = [
+            useStreamQueryAsPublic(RegisteredCustodian).contracts
+                .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
+            useStreamQueryAsPublic(RegisteredIssuer).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
+            useStreamQueryAsPublic(RegisteredInvestor).contracts
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
+            useStreamQueryAsPublic(RegisteredExchange).contracts
+                .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
+            useStreamQueryAsPublic(RegisteredBroker).contracts
+                .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
+            ].flat()
+
+    async function submit() {
         const key = wrapDamlTuple([operator, issuer]);
         const args = { name, quantityPrecision, description, isPublic, observers};
-        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
 
+        await ledger.exerciseByKey(Issuer.Issuer_IssueToken, key, args);
+        clearForm()
+    }
+
+    function clearForm () {
         setName('')
         setQuantityPrecision('')
         setDescription('')
         setIsPublic(true)
-        setObserversList('')
+        setObservers([])
     }
+
+    const handleObserversChange = (event: React.SyntheticEvent, result: any) => {
+        setObservers(result.value)
+    }
+
+    const partyOptions = allRegisteredParties.map(d => {
+        return {
+            key: d.contractId,
+            text: `${d.contractData}`,
+            value: d.contractData
+        }
+    })
 
     return (
         <FormErrorHandled onSubmit={submit}>
@@ -61,14 +96,13 @@ const IssueAsset = () => {
                     offLabel='Private'
                     offInfo='Only a set of parties will be aware of this token.'
                     onClick={val => setIsPublic(val)}/>
-                <Form.TextArea
-                    disabled={isPublic}
-                    label='Add Observers'
-                    placeholder='Input each party Id separated by a comma'
-                    className='issue-asset-form-field'
-                    value={observersList}
-                    onChange={e => setObserversList(e.currentTarget.value)}
-                />
+                  <Form.Select
+                      multiple
+                      disabled={isPublic}
+                      placeholder='Select...'
+                      options={partyOptions}
+                      onChange={handleObserversChange}
+                    />
             </div>
             <Form.Input
                 fluid

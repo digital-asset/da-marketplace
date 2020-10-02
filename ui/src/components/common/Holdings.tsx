@@ -38,14 +38,16 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                 <div className='wallet'>
                     { deposits.map(deposit => {
                         const { asset, account } = deposit.contractData;
-                        const exchangeOptions = exchanges.map(exchange => {
-                            const exchangeParty = exchange.contractData.exchange;
-                            return {
-                                key: exchange.contractId,
-                                text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
-                                                                  : exchangeParty,
-                                value: exchange.contractData.exchange
-                            }
+                        const exchangeOptions = exchanges
+                            .filter(exchange => exchange.contractData.exchange !== getAccountProvider(account.id.label))
+                            .map(exchange => {
+                                const exchangeParty = exchange.contractData.exchange;
+                                return {
+                                    key: exchange.contractId,
+                                    text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
+                                                                    : exchangeParty,
+                                    value: exchange.contractData.exchange
+                                }
                         })
                         const assetOptions = deposits.map(d => {
                             return {
@@ -134,17 +136,19 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         }
 
         if (splitAssetDecimal >= Number(asset.quantity)) {
-            throw {
+            const error = {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be less than ${asset.quantity}`
             };
+            throw error;
         }
 
         if (splitAssetDecimal <= 0 ){
-            throw {
+            const error = {
                 header: 'Invalid Split Quantity',
                 message: `The splitting quantity must be greater than 0.`
             };
+            throw error;
         }
 
         const args = { quantities: [String(splitAssetDecimal)] };
@@ -173,17 +177,19 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Select
                         value={exchange}
+                        placeholder='Select...'
                         options={exchangeOptions}
                         onChange={handleExchangeChange}/>
                     <Button
                         primary
-                        disabled={exchange == ''}
+                        disabled={exchange === ''}
                         content='Allocate to Exchange'
                         onClick={() => loadAndCatch(handleDepositAllocation)}/>
                 </Form.Group>
                 <Form.Group className='inline-form-group action'>
                     <Form.Select
                         multiple
+                        placeholder='Select...'
                         options={assetOptions}
                         onChange={handleMergeAssetsChange}/>
                     <Button
@@ -195,6 +201,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Input
                         type='number'
+                        placeholder='0'
                         value={splitAssetDecimal}
                         onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
                     <Button

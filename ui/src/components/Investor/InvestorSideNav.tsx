@@ -72,7 +72,7 @@ const InvestorSideNav: React.FC<Props> = ({ url, exchanges }) => {
                         className='sidemenu-item-normal'
                         key={exchange.contractId}
                     >
-                        <p><ExchangeIcon/>{base.toUpperCase()}</p>
+                        <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                     </Menu.Item>
                 })
             }).flat()}

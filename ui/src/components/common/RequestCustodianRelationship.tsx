@@ -11,7 +11,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple, RegisteredCustodianInfo } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
-import ContractSelect from '../common/ContractSelect'
+import ContractSelect from './ContractSelect'
 
 type Props = {
     role: MarketRole;
@@ -51,7 +51,8 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, registeredCustodi
         <FormErrorHandled onSubmit={requestCustodianRelationship}>
             <Form.Group className='inline-form-group'>
                 <ContractSelect
-                    allowAdditions
+                    // allowAdditions
+                    className='custodian-select-container'
                     clearable
                     search
                     selection
@@ -59,7 +60,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, registeredCustodi
                     placeholder='Custodian ID'
                     value={custodianId}
                     getOptionText={rc => rc.contractData.name}
-                    setContract={rc => setCustodianId(rc.contractData.custodian)}
+                    setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
                     setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
 
                 <Button className='request-custodian-relationship' content='Send' disabled={!custodianId}/>
@@ -69,3 +70,16 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, registeredCustodi
 }
 
 export default RequestCustodianRelationship;
+// <<<<<<< HEAD
+//                     placeholder='Custodian ID'
+//                     value={custodianId}
+//                     getOptionText={rc => rc.contractData.name}
+//                     setContract={rc => setCustodianId(rc.contractData.custodian)}
+//                     setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
+//
+//                 <Button className='request-custodian-relationship' content='Send' disabled={!custodianId}/>
+// =======
+//                     placeholder='Custodian party ID'
+//                     getOptionText={ri => ri.contractData.custodian}
+//                     setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}/>
+//                 <Button basic content='Send Request'/>
