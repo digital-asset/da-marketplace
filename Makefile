@@ -1,3 +1,10 @@
+BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml)
+VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml)
+SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
+
+TAG_NAME=${BASENAME}-v${VERSION}
+NAME=${BASENAME}-${VERSION}
+
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
 matching_engine_version := $(shell cd matching_engine && poetry version | cut -f 2 -d ' ')
@@ -143,13 +150,22 @@ issuer_bot := $(target_dir)/da-marketplace-issuer-bot-$(issuer_bot_version).tar.
 custodian_bot := $(target_dir)/da-marketplace-custodian-bot-$(custodian_bot_version).tar.gz
 broker_bot := $(target_dir)/da-marketplace-broker-bot-$(broker_bot_version).tar.gz
 ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
+dabl_meta := $(target_dir)/dabl-meta.yaml
 
 $(target_dir):
 	mkdir $@
 
-.PHONY: package
-package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui)
-	cd $(target_dir) && zip da-marketplace.zip *
+.PHONY: package publish
+
+publish: package
+	git tag -f "${TAG_NAME}"
+	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
+
+package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
+	cd $(target_dir) && zip ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-[^e]*) dabl-meta.yaml
+
+$(dabl_meta): $(target_dir) dabl-meta.yaml
+	cp dabl-meta.yaml $@
 
 $(dar): $(target_dir) $(daml_build_log)
 	cp .daml/dist/da-marketplace-$(dar_version).dar $@
@@ -182,7 +198,13 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(dar) $(ui)
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
+
+verify-artifacts:
+	for filename in $(SUBDEPLOYMENTS) ; do \
+		test -f $(target_dir)/$$filename || (echo could not find $$filename; exit 1;) \
+	done
+	test -f $(dabl_meta) || (echo could not find $(dabl_meta); exit 1;) \
