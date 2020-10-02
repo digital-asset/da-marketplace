@@ -42,11 +42,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
     const allCustodianRelationships = useStreamQueryAsPublic(CustodianRelationship).contracts.map(makeContractInfo);
 
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
-    //     .map(custodian => ({contractId: custodian.contractId, contractData: custodian.payload}));
-    // console.log(allRegisteredCustodians);
-        // .filter(custodian => allCustodianRelationships.map(cr => cr.contractData.custodian).includes(custodian.payload.custodian))
-        // .map(makeContractInfo)
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(makeContractInfo)
+        .filter(custodian => allCustodianRelationships.map(cr => cr.contractData.custodian)
+                                                      .includes(custodian.contractData.custodian));
 
     const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>

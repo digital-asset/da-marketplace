@@ -6,6 +6,7 @@ import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { RegisteredExchange, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { makeContractInfo } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
@@ -25,8 +26,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const registeredExchange = useStreamQuery(RegisteredExchange);
 
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(custodian => ({contractId: custodian.contractId, contractData: custodian.payload}));
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
 
     const sideNav = <ExchangeSideNav url={url}/>;
     const inviteScreen = <InviteAcceptScreen onLogout={onLogout}/>
