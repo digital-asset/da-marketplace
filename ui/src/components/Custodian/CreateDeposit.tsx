@@ -2,11 +2,11 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
@@ -15,7 +15,7 @@ const CreateDeposit: React.FC = () => {
     const [ token, setToken ] = useState<TokenInfo>();
     const [ depositQuantity, setDepositQuantity ] = useState('');
 
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
 

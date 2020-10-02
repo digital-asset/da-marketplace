@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -41,7 +41,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
     const location = useLocation<LocationState>();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
 

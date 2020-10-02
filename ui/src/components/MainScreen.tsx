@@ -3,6 +3,11 @@
 
 import React from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Message } from 'semantic-ui-react'
+
+import { useDablParties } from './common/common'
+import { parseError } from './common/errorTypes'
+import OnboardingTile from './common/OnboardingTile'
 
 import RoleSelectScreen from './RoleSelectScreen'
 import Investor from './Investor/Investor'
@@ -21,11 +26,23 @@ type Props = {
  */
 const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
+  const { parties, loading, error } = useDablParties();
+
+  const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>;
+  const errorScreen = error &&
+    <OnboardingTile>
+      <Message error>
+        {parseError(error)?.message}
+      </Message>
+    </OnboardingTile>;
 
   return (
     <Switch>
       <Route exact path={path}>
-        <RoleSelectScreen onLogout={onLogout}/>
+        { loading || !parties
+          ? loadingScreen
+          : error ? errorScreen : <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
+        }
       </Route>
 
       <Route path={`${path}/investor`}>

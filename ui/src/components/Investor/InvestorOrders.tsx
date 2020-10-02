@@ -1,5 +1,4 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
 
 import { useStreamQuery } from '@daml/react'
 import { Order, OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading'

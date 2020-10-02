@@ -9,6 +9,7 @@ import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Reg
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { UserIcon } from '../../icons/Icons'
+import { useOperator } from '../common/common'
 
 type Props = {
     url: string;
@@ -17,7 +18,7 @@ type Props = {
 
 const CustodianSideNav: React.FC<Props> = ({ disabled, url }) => {
     const custodian = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const key = () => wrapDamlTuple([operator, custodian]);
     const registeredCustodian = useStreamFetchByKey(RegisteredCustodian, key, [operator, custodian]).contract;
 

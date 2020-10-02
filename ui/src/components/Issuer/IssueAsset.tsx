@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
 import {
@@ -21,7 +21,7 @@ import './IssueAsset.css'
 const IssueAsset = () => {
     const ledger = useLedger();
     const issuer = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
 
     const [ name, setName ] = useState<string>('')
     const [ quantityPrecision, setQuantityPrecision ] = useState<string>('')

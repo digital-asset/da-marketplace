@@ -3,12 +3,22 @@ import React, { PropsWithChildren } from "react";
  * @param userAdminParty ID of the UserAdmin party on a ledger.
  * @param publicParty ID of the Public party on a ledger.
  */
-export declare type WellKnownParties = {
+export declare type Parties = {
     userAdminParty: string;
     publicParty: string;
 };
+/**
+ * @param parties The party IDs returned by a successful response.
+ * @param loading The current status of the response.
+ * @param error The error returned by a failed response.
+ */
+export declare type WellKnownParties = {
+    parties: Parties | null;
+    loading: boolean;
+    error: string | null;
+};
 declare type WellKnownPartiesProviderProps = {
-    defaultWkp?: WellKnownParties;
+    defaultWkp?: Parties;
 };
 /**
  * A React context within which you can use the [[useWellKnowParties]] hook.

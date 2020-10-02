@@ -6,6 +6,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import CardTable from '../common/CardTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -17,7 +18,7 @@ type Props = {
 
 const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
 
     const key = () => wrapDamlTuple([operator, exchange]);
     const exchangeContract = useStreamFetchByKey(Exchange, key, [operator, exchange]).contract;

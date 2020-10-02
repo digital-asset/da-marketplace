@@ -10,6 +10,7 @@ import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Regist
 
 import { PublicIcon, CircleIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 
 type IssuerSideNavProps = {
     url: string
@@ -19,7 +20,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
     const issuer = useParty();
     const allTokens = useStreamQuery(Token).contracts
 
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const key = () => wrapDamlTuple([operator, issuer]);
     const registeredIssuer = useStreamFetchByKey(RegisteredIssuer, key, [operator, issuer]).contract;
 

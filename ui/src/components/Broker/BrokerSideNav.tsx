@@ -9,6 +9,7 @@ import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Regist
 import { wrapDamlTuple } from '../common/damlTypes'
 
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+import { useOperator } from '../common/common'
 
 type Props = {
     url: string;
@@ -16,7 +17,7 @@ type Props = {
 
 const ExchangeSideNav: React.FC<Props> = ({ url }) => {
     const broker = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const key = () => wrapDamlTuple([operator, broker]);
     const registeredBroker = useStreamFetchByKey(RegisteredBroker, key, [operator, broker]).contract;
 
