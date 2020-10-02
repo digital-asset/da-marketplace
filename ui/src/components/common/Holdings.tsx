@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
+import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { ContractId } from '@daml/types'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
@@ -9,9 +9,12 @@ import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider, ContractInfo } from './damlTypes'
+
+import { countDecimals } from './utils';
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
@@ -62,7 +65,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                                 asset={asset}
                                 role={role}
                                 provider={getAccountProvider(account.id.label) || ''}
-                                depositCid={deposit.contractId}
+                                deposit={deposit}
                                 exchangeOptions={exchangeOptions}
                                 assetOptions={assetOptions}/>
                         )
@@ -76,7 +79,7 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
 type FormProps = {
     asset: Asset;
     provider: string;
-    depositCid: string;
+    deposit:  ContractInfo<AssetDeposit>
     exchangeOptions: {
         key: string;
         text: string;
@@ -90,20 +93,29 @@ type FormProps = {
     role: MarketRole;
 }
 
-const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
+const AllocationForm: React.FC<FormProps> = ({asset, provider, role, deposit, exchangeOptions, assetOptions}) => {
     const operator = useWellKnownParties().userAdminParty;
     const party = useParty();
     const ledger = useLedger();
 
+    const tokenQuantityPercision = Number(useStreamQuery(Token).contracts
+                                   .find(t => t.payload.id.label == deposit.contractData.asset.id.label)?.payload.quantityPrecision)
+
     const [ exchange, setExchange ] = useState('');
     const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
     const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
+
+    const [ splitNumberError, setSplitNumberError ] = useState<string>()
 
     function clearForm() {
         setExchange('')
         setMergeAssets([])
         setSplitAssetDecimal(undefined)
     }
+
+    const depositCid = deposit.contractId
+
+    const filteredAssetOptions = assetOptions.filter(a => a.text.split('| Provider:')[1].trim() === deposit.contractData.account.provider)
 
     const handleDepositAllocation = async () => {
         const key = wrapDamlTuple([operator, party]);
@@ -135,22 +147,6 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
             return
         }
 
-        if (splitAssetDecimal >= Number(asset.quantity)) {
-            const error = {
-                header: 'Invalid Split Quantity',
-                message: `The splitting quantity must be less than ${asset.quantity}`
-            };
-            throw error;
-        }
-
-        if (splitAssetDecimal <= 0 ){
-            const error = {
-                header: 'Invalid Split Quantity',
-                message: `The splitting quantity must be greater than 0.`
-            };
-            throw error;
-        }
-
         const args = { quantities: [String(splitAssetDecimal)] };
         const cid = depositCid as ContractId<AssetDeposit>
         await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
@@ -167,6 +163,25 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         setMergeAssets(result.value)
     }
 
+    const validateSplitNumber = (event: React.SyntheticEvent, result: any) => {
+        const number = Number(result.value)
+
+        if (number >= Number(asset.quantity)) {
+            return setSplitNumberError(`Invalid Split Quantity: The splitting quantity must be less than ${asset.quantity}`)
+        }
+
+        if (number < 0) {
+            return setSplitNumberError(`Invalid Split Quantity: The splitting quantity must be greater than 0.`)
+        }
+
+        if (countDecimals(number) > tokenQuantityPercision) {
+            return setSplitNumberError(`Invalid Split Quantity: The decimal percision of the splitting quantity must be equal to or less than ${tokenQuantityPercision}.`)
+        }
+
+        setSplitNumberError(undefined)
+        setSplitAssetDecimal(number)
+    }
+
     return (
         <FormErrorHandled onSubmit={handleDepositAllocation}>
             { loadAndCatch => <>
@@ -178,6 +193,7 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                     <Form.Select
                         value={exchange}
                         placeholder='Select...'
+                        disabled={exchangeOptions.length === 0}
                         options={exchangeOptions}
                         onChange={handleExchangeChange}/>
                     <Button
@@ -190,7 +206,8 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                     <Form.Select
                         multiple
                         placeholder='Select...'
-                        options={assetOptions}
+                        disabled={filteredAssetOptions.length === 0}
+                        options={filteredAssetOptions}
                         onChange={handleMergeAssetsChange}/>
                     <Button
                         primary
@@ -201,9 +218,10 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
                 <Form.Group className='inline-form-group action'>
                     <Form.Input
                         type='number'
-                        placeholder='0'
+                        placeholder={`0.${"0".repeat(tokenQuantityPercision)}`}
+                        error={splitNumberError}
                         value={splitAssetDecimal}
-                        onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                        onChange={validateSplitNumber}/>
                     <Button
                         primary
                         disabled={!splitAssetDecimal}
