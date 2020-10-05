@@ -15,11 +15,11 @@ import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
 import Credentials, { computeCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
-import { RegistryLookupProvider } from './common/RegistryLookup'
 import { useDablParties } from './common/common'
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
 import OnboardingTile from './common/OnboardingTile'
+import { RegistryLookupProvider } from './common/RegistryLookup'
 
 /**
  * React component for the entry point into the application.

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
+import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Issuer as IssuerModel,
@@ -10,13 +11,13 @@ import {
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
-import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
+import MarketRelationships from '../common/MarketRelationships'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -36,6 +37,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
 
     const registeredIssuer = useStreamQuery(RegisteredIssuer);
     const issuerModel = useStreamQuery(IssuerModel);
+
+    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -89,8 +92,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             disabled
                             defaultProfile={profile}/>
                     }
-                    marketRelationships={<RequestCustodianRelationship
-                                            role={MarketRole.BrokerRole}/>}
+                    marketRelationships={
+                        <MarketRelationships role={MarketRole.IssuerRole}
+                                             custodianRelationships={allCustodianRelationships}/>}
                     sideNav={<IssuerSideNav url={url}/>}
                     onLogout={onLogout}/>
             </Route>

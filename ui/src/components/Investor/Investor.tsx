@@ -3,25 +3,23 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import {
     Investor as InvestorModel,
     InvestorInvitation
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple } from '../common/damlTypes'
-import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
 import MarketRelationships from '../common/MarketRelationships'
-import { makeContractInfo } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
@@ -100,10 +98,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                         defaultProfile={profile}/>
                 }
                 sideNav={sideNav}
-                marketRelationships={<>
-                    <MarketRelationships custodianRelationships={allCustodianRelationships}/>
-                    <RequestCustodianRelationship
-                        role={MarketRole.InvestorRole}/></>}
+                marketRelationships={
+                    <MarketRelationships role={MarketRole.InvestorRole}
+                                         custodianRelationships={allCustodianRelationships}/>}
                 onLogout={onLogout}/>
         </Route>
 

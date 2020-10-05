@@ -52,19 +52,18 @@ export function makeContractInfo<T extends object, K = unknown, I extends string
     return ({contractId: event.contractId, contractData: event.payload});
 }
 
-
 export type ContractInfo<T> = {
     contractId: string;
     contractData: T;
 }
 
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
-export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
+export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
 export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
-export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
 export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
+export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
+export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
