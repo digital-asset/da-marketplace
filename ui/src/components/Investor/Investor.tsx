@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import {
@@ -14,6 +12,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
@@ -36,7 +35,7 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
 
@@ -47,11 +46,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
-
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
-        .filter(custodian => !allCustodianRelationships.map(cr => cr.contractData.custodian)
-                                                       .includes(custodian.contractData.custodian));
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -109,8 +103,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 marketRelationships={<>
                     <MarketRelationships custodianRelationships={allCustodianRelationships}/>
                     <RequestCustodianRelationship
-                                        role={MarketRole.InvestorRole}
-                                        registeredCustodians = {allRegisteredCustodians}/></>}
+                        role={MarketRole.InvestorRole}/></>}
                 onLogout={onLogout}/>
         </Route>
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, Link } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Custodian as CustodianModel,
@@ -11,6 +10,7 @@ import {
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
@@ -25,7 +25,7 @@ type Props = {
 
 const Custodian: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
 

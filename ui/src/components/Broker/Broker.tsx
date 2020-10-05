@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredBroker, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useOperator } from '../common/common'
+import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
@@ -27,16 +28,14 @@ type Props = {
 
 const Broker: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const broker = useParty();
     const ledger = useLedger();
 
     const registeredBroker = useStreamQuery(RegisteredBroker);
 
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
-
     const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -84,8 +83,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                         defaultProfile={profile}/>
                 }
                 marketRelationships={<RequestCustodianRelationship
-                                        role={MarketRole.BrokerRole}
-                                        registeredCustodians={allRegisteredCustodians}/>}
+                                        role={MarketRole.BrokerRole}/>}
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>

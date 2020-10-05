@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { ContractId } from '@daml/types'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
@@ -13,6 +12,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { WalletIcon } from '../../icons/Icons'
 import { useRegistryLookup } from './RegistryLookup'
 import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
@@ -93,7 +93,7 @@ type FormProps = {
 }
 
 const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const party = useParty();
     const ledger = useLedger();
 

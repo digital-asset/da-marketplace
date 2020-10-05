@@ -2,10 +2,10 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { wrapDamlTuple, RegisteredInvestorInfo } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
@@ -18,7 +18,7 @@ const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
 
     const ledger = useLedger();
     const exchange = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
 
     const handleExchParticipantInviteSubmit = async () => {
         const choice = Exchange.Exchange_InviteParticipant;

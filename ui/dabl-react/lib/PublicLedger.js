@@ -98,11 +98,22 @@ function PublicLedger(_a) {
 }
 exports.PublicLedger = PublicLedger;
 exports.usePartyAsPublic = useParty;
-//  This format is necessary to correctly assign the type.
 exports.useLedgerAsPublic = useLedger;
-exports.useQueryAsPublic = useQuery;
-exports.useFetchByKeyAsPublic = useFetchByKey;
-exports.useStreamQueryAsPublic = useStreamQuery;
-exports.useStreamFetchByKeyAsPublic = useStreamFetchByKey;
+function useQueryAsPublic(template, queryFactory, queryDeps) {
+    return useQuery(template, queryFactory, queryDeps);
+}
+exports.useQueryAsPublic = useQueryAsPublic;
+function useFetchByKeyAsPublic(template, keyFactory, keyDeps) {
+    return useFetchByKey(template, keyFactory, keyDeps);
+}
+exports.useFetchByKeyAsPublic = useFetchByKeyAsPublic;
+function useStreamQueryAsPublic(template, queryFactory, queryDeps) {
+    return useStreamQuery(template, queryFactory, queryDeps);
+}
+exports.useStreamQueryAsPublic = useStreamQueryAsPublic;
+function useStreamFetchByKeyAsPublic(template, keyFactory, keyDeps) {
+    return useStreamFetchByKey(template, keyFactory, keyDeps);
+}
+exports.useStreamFetchByKeyAsPublic = useStreamFetchByKeyAsPublic;
 exports.useReloadAsPublic = useReload;
 //# sourceMappingURL=PublicLedger.js.map

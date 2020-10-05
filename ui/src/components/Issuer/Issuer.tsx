@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import { useWellKnownParties } from '@daml/dabl-react'
-import { RegisteredIssuer, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Issuer as IssuerModel,
     IssuerInvitation
@@ -12,7 +10,8 @@ import {
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -31,12 +30,11 @@ type Props = {
 
 const Issuer: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const issuer = useParty();
     const ledger = useLedger();
 
     const registeredIssuer = useStreamQuery(RegisteredIssuer);
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
     const issuerModel = useStreamQuery(IssuerModel);
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -92,8 +90,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             defaultProfile={profile}/>
                     }
                     marketRelationships={<RequestCustodianRelationship
-                                            role={MarketRole.BrokerRole}
-                                            registeredCustodians={allRegisteredCustodians}/>}
+                                            role={MarketRole.BrokerRole}/>}
                     sideNav={<IssuerSideNav url={url}/>}
                     onLogout={onLogout}/>
             </Route>
