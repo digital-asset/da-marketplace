@@ -3,13 +3,13 @@ import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useStreamFetchByKey } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { PublicIcon, CircleIcon } from '../../icons/Icons'
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 
 type IssuerSideNavProps = {
     url: string
@@ -19,7 +19,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url }) => {
     const issuer = useParty();
     const allTokens = useStreamQuery(Token).contracts
 
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const key = () => wrapDamlTuple([operator, issuer]);
     const registeredIssuer = useStreamFetchByKey(RegisteredIssuer, key, [operator, issuer]).contract;
 

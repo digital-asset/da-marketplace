@@ -10,13 +10,15 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { PublicLedger, WellKnownPartiesProvider, useWellKnownParties } from '@daml/dabl-react'
+import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
+import { useDablParties } from './common/common'
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
+import OnboardingTile from './common/OnboardingTile'
 
 /**
  * React component for the entry point into the application.
@@ -39,9 +41,7 @@ const App: React.FC = () => {
                 party={credentials.party}
                 httpBaseUrl={httpBaseUrl}
               >
-                <WellKnownPartiesProvider
-                  defaultWkp={{ userAdminParty: "Operator", publicParty: "Public" }}
-                >
+                <WellKnownPartiesProvider>
                   <PublicProvider>
                     <MainScreen onLogout={() => setCredentials(undefined)}/>
                   </PublicProvider>
@@ -57,9 +57,10 @@ const App: React.FC = () => {
 // APP_END
 
 const PublicProvider: React.FC = ({ children }) => {
-  const { party, ledgerId, token } = computeCredentials(useWellKnownParties().publicParty);
+  const { parties, loading } = useDablParties();
+  const { party, ledgerId, token } = computeCredentials(parties.publicParty);
 
-  return (
+  return loading ? <OnboardingTile>Loading...</OnboardingTile> : (
     <PublicLedger
       ledgerId={ledgerId}
       publicParty={party}

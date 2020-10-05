@@ -2,12 +2,12 @@ import React, { useState } from 'react'
 import { Button } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
@@ -26,7 +26,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const ledger = useLedger();
     const exchange = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
 
     const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
         .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));

@@ -85,7 +85,5 @@ export const WalletIcon = () => (
 )
 
 export const CircleIcon = () => (
-    <div className="icon circle">
-        <img/>
-    </div>
+    <div className="icon circle"></div>
 )

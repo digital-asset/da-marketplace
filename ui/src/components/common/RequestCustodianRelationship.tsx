@@ -2,13 +2,14 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useOperator } from './common'
 import { wrapDamlTuple } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
@@ -23,7 +24,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role }) => {
     const [ custodianId, setCustodianId ] = useState('');
     const ledger = useLedger();
     const party = useParty();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(ri => ({ contractId: ri.contractId, contractData: ri.payload }));

@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -25,7 +25,7 @@ type Props = {
 
 const Exchange: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const exchange = useParty();
     const ledger = useLedger();
 

@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom'
 import { Button, Card } from 'semantic-ui-react'
 
 import { useParty, useStreamQuery, useLedger } from '@daml/react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -33,17 +32,17 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
 )
 
 type Props = {
+    operator: string;
     onLogout: () => void;
 }
 
-const RoleSelectScreen: React.FC<Props> = ({ onLogout }) => {
+const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     const history = useHistory();
     const [ loading, setLoading ] = useState(false);
     const [ role, setRole ] = useState<MarketRole>();
 
     const user = useParty();
     const ledger = useLedger();
-    const operator = useWellKnownParties().userAdminParty;
     const userSessions = useStreamQuery(UserSession).contracts;
 
     const handleRoleClick = async (role: MarketRole) => {

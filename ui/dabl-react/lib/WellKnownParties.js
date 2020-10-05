@@ -58,7 +58,7 @@ function wellKnownEndPoint() {
 }
 function fetchWellKnownParties() {
     return __awaiter(this, void 0, void 0, function () {
-        var response, dablJson, error_1;
+        var response, dablJson, parties, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -69,11 +69,12 @@ function fetchWellKnownParties() {
                     return [4 /*yield*/, response.json()];
                 case 2:
                     dablJson = _a.sent();
-                    return [2 /*return*/, wellKnownPartiesDecoder.runWithException(dablJson)];
+                    parties = wellKnownPartiesDecoder.runWithException(dablJson);
+                    return [2 /*return*/, { parties: parties, loading: false, error: null }];
                 case 3:
                     error_1 = _a.sent();
                     console.error("Error determining well known parties " + JSON.stringify(error_1));
-                    return [2 /*return*/, null];
+                    return [2 /*return*/, { parties: null, loading: false, error: error_1 }];
                 case 4: return [2 /*return*/];
             }
         });
@@ -88,20 +89,28 @@ var WellKnownPartiesContext = react_1.createContext(undefined);
  */
 function WellKnownPartiesProvider(_a) {
     var defaultWkp = _a.defaultWkp, children = _a.children;
-    var _b = react_1.useState(defaultWkp), wellKnownParties = _b[0], setWKP = _b[1];
+    var _b = react_1.useState({
+        parties: defaultWkp || null,
+        loading: true,
+        error: null
+    }), wellKnownParties = _b[0], setWKP = _b[1];
     react_1.useEffect(function () {
         function res() {
             return __awaiter(this, void 0, void 0, function () {
                 var wkp;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [4 /*yield*/, fetchWellKnownParties()];
+                        case 0:
+                            setWKP({
+                                parties: (wellKnownParties === null || wellKnownParties === void 0 ? void 0 : wellKnownParties.parties) || null,
+                                loading: true,
+                                error: null
+                            });
+                            return [4 /*yield*/, fetchWellKnownParties()];
                         case 1:
                             wkp = _a.sent();
                             console.log("The fetched well known parties: " + JSON.stringify(wkp));
-                            if (wkp !== null) {
-                                setWKP(wkp);
-                            }
+                            setWKP(wkp);
                             return [2 /*return*/];
                     }
                 });

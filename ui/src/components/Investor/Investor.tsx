@@ -3,7 +3,6 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import { useWellKnownParties } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredInvestor, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -13,14 +12,14 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple } from '../common/damlTypes'
+import { useOperator } from '../common/common'
+import { wrapDamlTuple, damlTupleToString } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
-import { damlTupleToString } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
@@ -34,7 +33,7 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const operator = useWellKnownParties().userAdminParty;
+    const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
 
