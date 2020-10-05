@@ -1,5 +1,4 @@
 import { CreateEvent } from '@daml/ledger'
-import { QueryResult } from '@daml/react'
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
@@ -48,18 +47,6 @@ export function damlTupleToString<T>(tuple: DamlTuple<T>): string {
 export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
-
-// export function makeAllRegisteredInfo<T extends object, R extends object, I extends string = string>
-//                     (events: QueryResult<T,DamlTuple<unknown>,I>,
-//                      registeredEvents: QueryResult<R,DamlTuple<unknown>,I>) : RegisteredInfo<T,R>[] {
-//
-//     const registeredMap = registeredEvents.contracts.reduce((accum, contract) =>
-//         accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-//
-//     return events.contracts.map(contract => ({contractId: contract.contractId,
-//             contractData: contract.payload,
-//             registryData: registeredMap.get(damlTupleToString(contract.key))}));
-// }
 
 export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T> {
     return ({contractId: event.contractId, contractData: event.payload});

@@ -5,7 +5,7 @@ import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { useWellKnownParties } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor, RegisteredExchange, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import {
@@ -22,7 +22,7 @@ import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
 import MarketRelationships from '../common/MarketRelationships'
-import { makeContractInfo, makeAllRegisteredInfo } from '../common/damlTypes'
+import { makeContractInfo } from '../common/damlTypes'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
@@ -44,9 +44,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
     const investorModel = useStreamQuery(InvestorModel);
 
-    const allExchangesRegistered = makeAllRegisteredInfo(useStreamQuery(Exchange),
-                                                         useStreamQueryAsPublic(RegisteredExchange));
-
+    const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
 
@@ -86,7 +84,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <InvestorSideNav url={url} exchanges={allExchangesRegistered}/>;
+    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
@@ -119,7 +117,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/wallet`}>
             <Holdings
                 deposits={allDeposits}
-                exchanges={allExchangesRegistered}
+                exchanges={allExchanges}
                 role={MarketRole.InvestorRole}
                 sideNav={sideNav}
                 onLogout={onLogout}/>

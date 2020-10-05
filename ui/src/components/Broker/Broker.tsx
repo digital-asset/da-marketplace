@@ -5,11 +5,11 @@ import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { useWellKnownParties, useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { RegisteredExchange, RegisteredBroker, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredBroker, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple, makeContractInfo, makeAllRegisteredInfo } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -35,7 +35,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
 
-    const allExchanges = makeAllRegisteredInfo(useStreamQuery(Exchange), useStreamQueryAsPublic(RegisteredExchange));
+    const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
     const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
 
     const [ profile, setProfile ] = useState<Profile>({
