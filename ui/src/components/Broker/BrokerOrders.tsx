@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Card, Form, Header } from 'semantic-ui-react'
+import { Button, Card, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'

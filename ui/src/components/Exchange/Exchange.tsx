@@ -32,7 +32,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const registeredExchange = useStreamQuery(RegisteredExchange);
 
-    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts.map(makeContractInfo);
+    const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(makeContractInfo);
+
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')

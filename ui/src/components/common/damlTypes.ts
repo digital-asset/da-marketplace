@@ -49,26 +49,14 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
-export function makeAllRegisteredInfo<T extends object, R extends object, I extends string = string>
-                    (events: QueryResult<T,DamlTuple<unknown>,I>,
-                     registeredEvents: QueryResult<R,DamlTuple<unknown>,I>) : RegisteredInfo<T,R>[] {
-
-    const registeredMap = registeredEvents.contracts.reduce((accum, contract) =>
-        accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-
-    return events.contracts.map(contract => ({contractId: contract.contractId,
-            contractData: contract.payload,
-            registryData: registeredMap.get(damlTupleToString(contract.key))}));
-}
-
 // export function makeAllRegisteredInfo<T extends object, R extends object, I extends string = string>
-//                     (events: readonly CreateEvent<T,DamlTuple<unknown>,I>[],
-//                      registeredEvents: readonly CreateEvent<R,DamlTuple<unknown>,I>[]) : RegisteredInfo<T,R>[] {
+//                     (events: QueryResult<T,DamlTuple<unknown>,I>,
+//                      registeredEvents: QueryResult<R,DamlTuple<unknown>,I>) : RegisteredInfo<T,R>[] {
 //
-//     const registeredMap = registeredEvents.reduce((accum, contract) =>
+//     const registeredMap = registeredEvents.contracts.reduce((accum, contract) =>
 //         accum.set(damlTupleToString(contract.key), contract.payload), new Map());
 //
-//     return events.map(contract => ({contractId: contract.contractId,
+//     return events.contracts.map(contract => ({contractId: contract.contractId,
 //             contractData: contract.payload,
 //             registryData: registeredMap.get(damlTupleToString(contract.key))}));
 // }
@@ -83,13 +71,6 @@ export type ContractInfo<T> = {
     contractData: T;
 }
 
-type RegisteredInfo<T,R> = {
-    contractId: string;
-    contractData: T;
-    registryData?: R;
-}
-
-export type ExchangeInfoRegistered = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;

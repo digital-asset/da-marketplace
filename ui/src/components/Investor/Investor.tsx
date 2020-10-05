@@ -53,7 +53,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allRegisteredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
         .filter(custodian => !allCustodianRelationships.map(cr => cr.contractData.custodian)
-                                                      .includes(custodian.contractData.custodian));
+                                                       .includes(custodian.contractData.custodian));
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),

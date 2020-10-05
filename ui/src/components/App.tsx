@@ -15,6 +15,7 @@ import { PublicLedger, WellKnownPartiesProvider, useWellKnownParties } from '@da
 import Credentials, { computeCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
+import { RegistryLookupProvider } from './common/RegistryLookup'
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
 
@@ -43,7 +44,9 @@ const App: React.FC = () => {
                   defaultWkp={{ userAdminParty: "Operator", publicParty: "Public" }}
                 >
                   <PublicProvider>
-                    <MainScreen onLogout={() => setCredentials(undefined)}/>
+                    <RegistryLookupProvider>
+                      <MainScreen onLogout={() => setCredentials(undefined)}/>
+                    </RegistryLookupProvider>
                   </PublicProvider>
                 </WellKnownPartiesProvider>
             </DamlLedger>

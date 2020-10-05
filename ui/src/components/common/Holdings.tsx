@@ -11,7 +11,8 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
-import { ExchangeInfoRegistered, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { useRegistryLookup } from './RegistryLookup'
+import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
@@ -20,13 +21,14 @@ import "./Holdings.css"
 
 type Props = {
     deposits: DepositInfo[];
-    exchanges: ExchangeInfoRegistered[];
+    exchanges: ExchangeInfo[];
     role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
 const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogout }) => {
+    const exchangeLookup = useRegistryLookup().exchangeMap;
     return (
         <Page
             sideNav={sideNav}
@@ -42,10 +44,10 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
                             .filter(exchange => exchange.contractData.exchange !== getAccountProvider(account.id.label))
                             .map(exchange => {
                                 const exchangeParty = exchange.contractData.exchange;
+                                const name = exchangeLookup.get(exchange.contractData.exchange)?.name;
                                 return {
                                     key: exchange.contractId,
-                                    text: exchange.registryData?.name ? `${exchange.registryData.name} (${exchangeParty})`
-                                                                    : exchangeParty,
+                                    text: name ? `${name} (${exchangeParty})` : exchangeParty,
                                     value: exchange.contractData.exchange
                                 }
                         })
