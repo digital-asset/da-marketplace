@@ -19,6 +19,7 @@ import { useDablParties } from './common/common'
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
 import OnboardingTile from './common/OnboardingTile'
+import { RegistryLookupProvider } from './common/RegistryLookup'
 
 /**
  * React component for the entry point into the application.
@@ -43,7 +44,9 @@ const App: React.FC = () => {
               >
                 <WellKnownPartiesProvider>
                   <PublicProvider>
-                    <MainScreen onLogout={() => setCredentials(undefined)}/>
+                    <RegistryLookupProvider>
+                      <MainScreen onLogout={() => setCredentials(undefined)}/>
+                    </RegistryLookupProvider>
                   </PublicProvider>
                 </WellKnownPartiesProvider>
             </DamlLedger>

@@ -40,7 +40,7 @@ const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
                     contracts={registeredInvestors}
                     placeholder='Investor party ID'
                     value={exchParticipant}
-                    getOptionText={ri => ri.contractData.investor}
+                    getOptionText={ri => ri.contractData.name}
                     setContract={ri => setExchParticipant(ri.contractData.investor)}
                     setAddition={privateInvestorId => setExchParticipant(privateInvestorId)}/>
 

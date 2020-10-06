@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import {
     Investor as InvestorModel,
     InvestorInvitation
 } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, damlTupleToString } from '../common/damlTypes'
-import RequestCustodianRelationship from '../common/RequestCustodianRelationship'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
+import MarketRelationships from '../common/MarketRelationships'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
@@ -41,16 +41,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
     const investorModel = useStreamQuery(InvestorModel);
 
-    const exchangeMap = useStreamQueryAsPublic(RegisteredExchange).contracts
-        .reduce((accum, contract) => accum.set(damlTupleToString(contract.key), contract.payload), new Map());
-
-    const allExchanges = useStreamQuery(Exchange).contracts
-        .map(exchange => ({contractId: exchange.contractId,
-            contractData: exchange.payload,
-            registryData: exchangeMap.get(damlTupleToString(exchange.key))}));
-
-    const allDeposits = useStreamQuery(AssetDeposit).contracts
-        .map(deposit => ({contractId: deposit.contractId, contractData: deposit.payload}));
+    const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
+    const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
+    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -105,7 +98,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                         defaultProfile={profile}/>
                 }
                 sideNav={sideNav}
-                marketRelationships={<RequestCustodianRelationship role={MarketRole.InvestorRole}/>}
+                marketRelationships={
+                    <MarketRelationships role={MarketRole.InvestorRole}
+                                         custodianRelationships={allCustodianRelationships}/>}
                 onLogout={onLogout}/>
         </Route>
 

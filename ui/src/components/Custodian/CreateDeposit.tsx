@@ -5,7 +5,7 @@ import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
@@ -19,8 +19,7 @@ const CreateDeposit: React.FC = () => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
+    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts.map(makeContractInfo);
 
     const handleCreateDeposit = async () => {
         if (!token) {

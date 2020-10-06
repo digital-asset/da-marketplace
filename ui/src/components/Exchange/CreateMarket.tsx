@@ -6,7 +6,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
-import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import PageSection from '../common/PageSection'
@@ -28,8 +28,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts
-        .map(tc => ({ contractId: tc.contractId, contractData: tc.payload }));
+    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts.map(makeContractInfo);
 
     const handleTokenPairSubmit = async () => {
         if (!baseToken || !quoteToken) {

@@ -42,7 +42,7 @@ setupBroker = do
 
   -- onboard custodian
   custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCustodian with ..
-  custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Example Custodian", ..
+  custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Bank of Example", ..
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..

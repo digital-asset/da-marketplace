@@ -12,6 +12,17 @@ import DA.Action
 import DA.Next.Set
 
 
+template CustodianRelationship
+  with
+    operator : Party
+    custodian : Party
+    party : Party
+  where
+    signatory custodian, party
+    key (custodian, operator, party) : (Party, Party, Party)
+    maintainer key._1
+
+
 template CustodianRelationshipRequest
   with
     operator : Party
@@ -22,7 +33,7 @@ template CustodianRelationshipRequest
     signatory operator, requester
 
     controller custodian can
-      CustodianRelationshipRequest_Approve : ()
+      CustodianRelationshipRequest_Approve : ContractId CustodianRelationship
         do
           case role of
             IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
@@ -30,6 +41,7 @@ template CustodianRelationshipRequest
             InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
             BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
             _ -> return ()
+          create CustodianRelationship with party = requester, ..
 
       CustodianRelationshipRequest_Reject : ()
         do return ()

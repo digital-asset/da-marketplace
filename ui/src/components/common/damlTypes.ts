@@ -1,3 +1,5 @@
+import { CreateEvent } from '@daml/ledger'
+
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     ExchangeParticipant,
@@ -46,22 +48,22 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
+export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T> {
+    return ({contractId: event.contractId, contractData: event.payload});
+}
+
 export type ContractInfo<T> = {
     contractId: string;
     contractData: T;
 }
 
-type RegisteredInfo<T,R> = {
-    contractId: string;
-    contractData: T;
-    registryData?: R;
-}
-
-export type ExchangeInfoRegistered = RegisteredInfo<Exchange.Exchange, Registry.RegisteredExchange>;
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
+export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
+export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
+export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
+export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
