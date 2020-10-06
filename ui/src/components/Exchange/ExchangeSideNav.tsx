@@ -2,30 +2,21 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { useParty, useStreamFetchByKey } from '@daml/react'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
 import { PublicIcon, UserIcon } from '../../icons/Icons'
-import {  wrapDamlTuple } from '../common/damlTypes'
-import { useOperator } from '../common/common'
 
 type Props = {
     url: string;
+    name: string;
 }
 
-const ExchangeSideNav: React.FC<Props> = ({ url }) => {
-    const exchange = useParty();
-    const operator = useOperator();
-    const key = () => wrapDamlTuple([operator, exchange]);
-    const registeredExchange = useStreamFetchByKey(RegisteredExchange, key, [operator, exchange]).contract;
-
+const ExchangeSideNav: React.FC<Props> = ({ url, name }) => {
     const HomeMenuItem = (
         <Menu.Item
             as={NavLink}
             to={url}
             exact
         >
-            <Header as='h3'>@{registeredExchange?.payload.name || exchange}</Header>
+            <Header as='h3'>@{name}</Header>
         </Menu.Item>
     )
 

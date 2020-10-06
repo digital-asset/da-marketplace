@@ -73,7 +73,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <BrokerSideNav url={url}/>
+    const sideNav = <BrokerSideNav url={url} name={registeredBroker.contracts[0]?.payload.name || broker}/>
 
     const brokerScreen = <Switch>
         <Route exact path={path}>

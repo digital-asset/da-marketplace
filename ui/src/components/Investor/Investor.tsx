@@ -76,7 +76,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <InvestorSideNav url={url} exchanges={allExchanges}/>;
+    const sideNav = <InvestorSideNav url={url}
+                                     exchanges={allExchanges}
+                                     name={registeredInvestor.contracts[0]?.payload.name || investor}/>
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
