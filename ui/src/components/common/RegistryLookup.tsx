@@ -60,3 +60,5 @@ export function useRegistryLookup(){
     }
     return registryLookup;
 }
+
+export default RegistryLookupProvider;

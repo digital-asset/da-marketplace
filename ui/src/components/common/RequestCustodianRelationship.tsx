@@ -32,8 +32,9 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
-        .filter(custodian => !requestCustodians.includes(custodian.contractData.custodian)
-            && !relationshipCustodians.includes(custodian.contractData.custodian));
+        .filter(custodian =>
+            !requestCustodians.includes(custodian.contractData.custodian) &&
+            !relationshipCustodians.includes(custodian.contractData.custodian));
 
     const requestCustodianRelationship = async () => {
         const key = wrapDamlTuple([operator, party]);

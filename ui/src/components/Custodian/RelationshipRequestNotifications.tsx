@@ -6,6 +6,7 @@ import { ContractId } from '@daml/types'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useRegistryLookup } from '../common/RegistryLookup'
 import Notification from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
@@ -42,9 +43,29 @@ const RelationshipRequestNotification: React.FC<RelationshipRequestNotificationP
     request,
     requestAccept,
     requestReject
-}) => (
+}) => {
+    const lookup = useRegistryLookup();
+    const requester = request.contractData.requester;
+    let name;
+    switch(request.contractData.role) {
+        case MarketRole.InvestorRole:
+            name = <>Investor <b>@{lookup.investorMap.get(requester)?.name || requester}</b></>;
+            break;
+        case MarketRole.IssuerRole:
+            name = <>Issuer <b>@{lookup.issuerMap.get(requester)?.name || requester}</b></>;
+            break;
+        case MarketRole.BrokerRole:
+            name = <>Broker <b>@{lookup.brokerMap.get(requester)?.name || requester}</b></>;
+            break;
+        case MarketRole.ExchangeRole:
+            name = <>Exchange <b>@{lookup.exchangeMap.get(requester)?.name || requester}</b></>;
+            break;
+        default:
+            name = <b>@{requester}</b>;
+    }
+    return (
     <Notification>
-        {getRequestText(request)}
+        <p>{name} is requesting a relationship.</p>;
         <FormErrorHandled onSubmit={requestAccept}>
             { loadAndCatch =>
                 <Form.Group className='inline-form-group'>
@@ -58,22 +79,5 @@ const RelationshipRequestNotification: React.FC<RelationshipRequestNotificationP
             }
         </FormErrorHandled>
     </Notification>
-)
-
-function getRequestText(relationship: CustodianRelationshipRequestInfo) {
-    let name = '';
-    switch(relationship.contractData.role) {
-        case MarketRole.InvestorRole:
-            name = `Investor @${relationship.contractData.requester}`
-        case MarketRole.IssuerRole:
-            name = `Issuer @${relationship.contractData.requester}`
-        case MarketRole.BrokerRole:
-            name = `Broker @${relationship.contractData.requester}`
-        case MarketRole.ExchangeRole:
-            name = `Exchange @${relationship.contractData.requester}`
-        default:
-            name = relationship.contractData.requester;
-    }
-
-    return <p><b>@{name}</b> is requesting a relationship</p>;
+    )
 }

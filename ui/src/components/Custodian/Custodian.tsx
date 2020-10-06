@@ -16,7 +16,7 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 
-import { useRelationshipRequestNotifications } from './RelationshipInviteNotifications'
+import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import CustodianSideNav from './CustodianSideNav'
 import Clients from './Clients'
 
