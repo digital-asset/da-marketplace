@@ -11,6 +11,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { useOperator } from '../common/common'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -34,9 +35,29 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const registeredBroker = useStreamQuery(RegisteredBroker);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
-
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
     const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
+
+    const { custodianMap, exchangeMap } = useRegistryLookup();
+
+    const allProviders = [
+        ...allExchanges.map(exchange => {
+            const party = exchange.contractData.exchange;
+            const name = exchangeMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Exchange`,
+            }
+        }),
+        ...allCustodianRelationships.map(relationship => {
+            const party = relationship.contractData.custodian;
+            const name = custodianMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Custodian`,
+            }
+        }),
+    ]
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -93,7 +114,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/wallet`}>
             <Holdings
                 deposits={allDeposits}
-                exchanges={allExchanges}
+                providers={allProviders}
                 role={MarketRole.BrokerRole}
                 sideNav={sideNav}
                 onLogout={onLogout} />
