@@ -70,7 +70,9 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <CustodianSideNav disabled={!custodianContract} url={url}/>
+    const sideNav = <CustodianSideNav disabled={!custodianContract}
+                                      url={url}
+                                      name={registeredCustodian.contracts[0]?.payload.name || custodian}/>
 
     const custodianScreen = <Switch>
         <Route exact path={path}>

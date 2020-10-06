@@ -58,7 +58,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <ExchangeSideNav url={url}/>;
+    const sideNav = <ExchangeSideNav url={url} name={registeredExchange.contracts[0]?.payload.name || exchange}/>;
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>

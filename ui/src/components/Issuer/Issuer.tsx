@@ -82,6 +82,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     );
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const sideNav = <IssuerSideNav url={url} name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
 
     const issuerScreen = (
         <Switch>
@@ -95,14 +96,14 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                     marketRelationships={
                         <MarketRelationships role={MarketRole.IssuerRole}
                                              custodianRelationships={allCustodianRelationships}/>}
-                    sideNav={<IssuerSideNav url={url}/>}
+                    sideNav={sideNav}
                     onLogout={onLogout}/>
             </Route>
 
             <Route path={`${path}/issue-asset`}>
                 <Page
                     menuTitle={<><PublicIcon/> Issue Asset</>}
-                    sideNav={<IssuerSideNav url={url}/>}
+                    sideNav={sideNav}
                     onLogout={onLogout}
                 >
                     <PageSection border='blue' background='white'>
@@ -112,7 +113,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             </Route>
 
             <Route path={`${path}/issued-token/:tokenId`}>
-                <IssuedToken sideNav={<IssuerSideNav url={url}/>} onLogout={onLogout}/>
+                <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
             </Route>
         </Switch>
     )
