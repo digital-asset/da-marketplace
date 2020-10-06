@@ -64,6 +64,7 @@ export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeP
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
 export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
+export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianRelationshipRequest>;
 export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;

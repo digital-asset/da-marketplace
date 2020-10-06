@@ -16,6 +16,7 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 
+import { useRelationshipRequestNotifications } from './RelationshipInviteNotifications'
 import CustodianSideNav from './CustodianSideNav'
 import Clients from './Clients'
 
@@ -34,6 +35,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const custodianContract = useStreamFetchByKey(CustodianModel, key, [operator, custodian]).contract;
     const investors = custodianContract?.payload.investors || [];
+
+    const notifications = useRelationshipRequestNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -77,6 +80,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const custodianScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
+                notifications={notifications}
                 profile={
                     <CustodianProfile
                         disabled
