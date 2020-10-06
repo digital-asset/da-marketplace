@@ -18,10 +18,18 @@ template ExchangeParticipantInvitation
 
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
-        do create ExchangeParticipant with ..
+        do
+          create Notification with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation accepted."
+          create ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
-        do return ()
+        do
+          create Notification with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation rejected."
+          return ()
 
 template ExchangeParticipant
   with

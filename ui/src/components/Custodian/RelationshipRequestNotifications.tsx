@@ -65,7 +65,7 @@ const RelationshipRequestNotification: React.FC<RelationshipRequestNotificationP
     }
     return (
     <Notification>
-        <p>{name} is requesting a relationship.</p>;
+        <p>{name} is requesting a relationship.</p>
         <FormErrorHandled onSubmit={requestAccept}>
             { loadAndCatch =>
                 <Form.Group className='inline-form-group'>

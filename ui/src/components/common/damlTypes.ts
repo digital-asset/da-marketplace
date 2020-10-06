@@ -6,7 +6,8 @@ import {
     Exchange,
     Registry,
     Custodian,
-    Token
+    Token,
+    Utils
 } from '@daml.js/da-marketplace/lib/Marketplace'
 
 type DamlTuple<T> = {
@@ -68,3 +69,4 @@ export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianR
 export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
+export type NotificationInfo = ContractInfo<Utils.Notification>;

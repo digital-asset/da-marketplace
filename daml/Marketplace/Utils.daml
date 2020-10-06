@@ -7,6 +7,20 @@ import DA.Next.Set
 import DA.Optional
 import DA.Text
 
+template Notification
+  with
+    sender : Party
+    senderRole : Optional MarketRole
+    receiver : Party
+    text : Text
+  where
+    signatory sender, receiver
+
+    controller receiver can
+      Notification_Dismiss : ()
+        do return ()
+
+
 data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole
     deriving (Show, Eq)
 

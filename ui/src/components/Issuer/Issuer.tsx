@@ -13,6 +13,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { PublicIcon } from '../../icons/Icons'
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
+import { useGeneralNotifications } from '../common/DismissibleNotifications'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
@@ -39,6 +40,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const issuerModel = useStreamQuery(IssuerModel);
 
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
+    const notifications = useGeneralNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -97,6 +99,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         <MarketRelationships role={MarketRole.IssuerRole}
                                              custodianRelationships={allCustodianRelationships}/>}
                     sideNav={sideNav}
+                    notifications={notifications}
                     onLogout={onLogout}/>
             </Route>
 
