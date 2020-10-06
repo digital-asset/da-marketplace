@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
+import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -26,10 +27,14 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
     const party = useParty();
     const operator = useOperator();
 
+    const requestCustodians = useStreamQuery(CustodianRelationshipRequest).contracts.map(cr => cr.payload.custodian);
+    const relationshipCustodians = custodianRelationships.map(cr => cr.contractData.custodian);
+
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
-        .filter(custodian => !custodianRelationships.map(cr => cr.contractData.custodian)
-                                                    .includes(custodian.contractData.custodian));
+        .filter(custodian =>
+            !requestCustodians.includes(custodian.contractData.custodian) &&
+            !relationshipCustodians.includes(custodian.contractData.custodian));
 
     const requestCustodianRelationship = async () => {
         const key = wrapDamlTuple([operator, party]);

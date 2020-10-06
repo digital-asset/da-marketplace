@@ -4,7 +4,7 @@ import { Table } from 'semantic-ui-react'
 import { useStreamQuery } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
@@ -23,12 +23,11 @@ type Props = {
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
     const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
     const exchangeParticipants = useStreamQuery(ExchangeParticipant).contracts.map(makeContractInfo);
+    const currentInvitations = useStreamQuery(ExchangeParticipantInvitation).contracts.map(makeContractInfo);
 
-    const investorOptions = registeredInvestors.filter(ri => {
-        return !exchangeParticipants.find(ep => {
-            return ep.contractData.exchParticipant === ri.contractData.investor
-        })
-    });
+    const investorOptions = registeredInvestors.filter(ri =>
+        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
+        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
 
     const rows = exchangeParticipants.map(participant =>
         <ExchangeParticipantRow key={participant.contractId} participant={participant}/>
