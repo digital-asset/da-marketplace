@@ -1,16 +1,17 @@
 import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
+import { useParty, useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDeposits, sumDeposits } from './utils'
+import { groupDeposits, sumDeposits, countDecimals } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
@@ -199,6 +200,11 @@ type SplitFormProps = {
 const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
     const { asset } = deposit.contractData;
     const ledger = useLedger();
+    const [ splitNumberError, setSplitNumberError ] = useState<string>()
+
+    const tokenQuantityPercision = Number(useStreamQuery(Token).contracts
+            .find(t => t.payload.id.label == deposit.contractData.asset.id.label &&
+                       t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision) || 0
 
     const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 
@@ -207,36 +213,39 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
             return
         }
 
-        if (splitAssetDecimal >= Number(asset.quantity)) {
-            const error = {
-                header: 'Invalid Split Quantity',
-                message: `The splitting quantity must be less than ${asset.quantity}`
-            };
-            throw error;
-        }
-
-        if (splitAssetDecimal <= 0 ){
-            const error = {
-                header: 'Invalid Split Quantity',
-                message: `The splitting quantity must be greater than 0.`
-            };
-            throw error;
-        }
-
         const args = { quantities: [String(splitAssetDecimal)] };
         const cid = deposit.contractId as ContractId<AssetDeposit>
         await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
         setSplitAssetDecimal(undefined)
     }
 
+    const validateSplitNumber = (event: React.SyntheticEvent, result: any) => {
+        const number = Number(result.value)
+
+        if (number >= Number(asset.quantity)) {
+            return setSplitNumberError(`The splitting quantity must be less than ${asset.quantity}`)
+        }
+
+        if (number <= 0) {
+            return setSplitNumberError(`The splitting quantity must be greater than 0.`)
+        }
+        
+        if (countDecimals(number) > tokenQuantityPercision) {
+            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPercision !== 0 && 'or less than'} ${tokenQuantityPercision}.`)
+        }
+
+        setSplitNumberError(undefined)
+        setSplitAssetDecimal(number)
+    }
+
     return (
         <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
-            <Form.Group className='inline-form-group'>
+            <Form.Group className='inline-form-group with-error'>
                 <Form.Input
                     type='number'
-                    placeholder='0'
-                    value={splitAssetDecimal || ''}
-                    onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                    placeholder={`0.${"0".repeat(tokenQuantityPercision)}`}
+                    error={splitNumberError}
+                    onChange={validateSplitNumber}/>
                 <Button
                     primary
                     disabled={!splitAssetDecimal}
