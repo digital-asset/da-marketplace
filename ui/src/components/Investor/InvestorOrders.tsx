@@ -21,7 +21,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allOrders = useStreamQuery(Order).contracts;
     const allOrderRequests = useStreamQuery(OrderRequest).contracts;
     const allExchangeTrades = useStreamQuery(TradeSide).contracts;
-    const allBrokerTradees = useStreamQuery(BrokerTrade).contracts;
+    const allBrokerTrades = useStreamQuery(BrokerTrade).contracts;
 
     return (
         <Page
@@ -32,16 +32,16 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <div className='investor-orders'>
                     <p>Requested Orders</p>
-                    { allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
+                    {allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)}
 
                     <p>Open Orders</p>
-                    { allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                    {allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
 
                     <p>Exchange Trades</p>
-                    { allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)}
+                    {allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)}
 
                     <p>Broker Trades</p>
-                    { allBrokerTradees.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)}
+                    {allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)}
                 </div>
             </PageSection>
         </Page>
