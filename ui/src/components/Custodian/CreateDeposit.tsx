@@ -43,7 +43,7 @@ const CreateDeposit: React.FC = () => {
         const number = Number(result.value)
 
         if (number < 0) {
-            return setDepositQuantityError(`The quantity must be greater than 0.`)
+            return setDepositQuantityError(`The quantity must a positive number.`)
         }
 
         if (countDecimals(number) > quantityPrecision) {
