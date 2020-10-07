@@ -3,15 +3,14 @@ import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
-import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon } from '../../icons/Icons'
-import { useRegistryLookup } from './RegistryLookup'
-import { ExchangeInfo, DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { groupDeposits, sumDeposits } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
@@ -19,16 +18,48 @@ import Page from './Page'
 
 import "./Holdings.css"
 
+export type DepositProvider = {
+    party: string;
+    label: string;
+}
+
 type Props = {
     deposits: DepositInfo[];
-    exchanges: ExchangeInfo[];
+    providers: DepositProvider[];
     role: MarketRole;
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogout }) => {
-    const exchangeLookup = useRegistryLookup().exchangeMap;
+const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogout }) => {
+    const depositsGrouped = groupDeposits(deposits);
+    const depositsSummed = sumDeposits(deposits);
+    const assetSections = Object.entries(depositsGrouped)
+        .map(([assetLabel, depositsForAsset]) => {
+            return (
+                <div className='asset-section' key={assetLabel}>
+                    <Header as='h4'>{assetLabel}</Header>
+                    <p>Total: <b>{depositsSummed[assetLabel]}</b></p>
+                    { depositsForAsset.map(deposit => {
+                        return (
+                            <div key={deposit.contractId} className='deposit-row'>
+                                <div>{deposit.contractData.asset.quantity}</div>
+                                <div>{deposit.contractData.account.provider}</div>
+                                <ProviderForm
+                                    deposit={deposit}
+                                    providers={providers}
+                                    role={role}/>
+                                <MergeForm
+                                    availableDeposits={depositsForAsset}
+                                    deposit={deposit}/>
+                                <SplitForm deposit={deposit}/>
+                            </div>
+                        )
+                    })}
+                </div>
+            )
+        })
+
     return (
         <Page
             sideNav={sideNav}
@@ -38,78 +69,46 @@ const Holdings: React.FC<Props> = ({ deposits, exchanges, role, sideNav, onLogou
             <PageSection border='blue' background='white'>
                 <Header as='h2'>Holdings</Header>
                 <div className='wallet'>
-                    { deposits.map(deposit => {
-                        const { asset, account } = deposit.contractData;
-                        const exchangeOptions = exchanges
-                            .filter(exchange => exchange.contractData.exchange !== getAccountProvider(account.id.label))
-                            .map(exchange => {
-                                const exchangeParty = exchange.contractData.exchange;
-                                const name = exchangeLookup.get(exchange.contractData.exchange)?.name;
-                                return {
-                                    key: exchange.contractId,
-                                    text: name ? `${name} (${exchangeParty})` : exchangeParty,
-                                    value: exchange.contractData.exchange
-                                }
-                        })
-                        const assetOptions = deposits.map(d => {
-                            return {
-                                key: d.contractId,
-                                text: `${d.contractData.asset.id.label} ${d.contractData.asset.quantity} | Provider: ${d.contractData.account.provider} `,
-                                value: d.contractId
-                            }
-                        }).filter(k => k.key !== deposit.contractId)
-                        return (
-                            <AllocationForm
-                                key={deposit.contractId}
-                                asset={asset}
-                                role={role}
-                                provider={getAccountProvider(account.id.label) || ''}
-                                depositCid={deposit.contractId}
-                                exchangeOptions={exchangeOptions}
-                                assetOptions={assetOptions}/>
-                        )
-                    })}
+                    { assetSections }
                 </div>
             </PageSection>
         </Page>
     )
 }
 
-type FormProps = {
-    asset: Asset;
-    provider: string;
-    depositCid: string;
-    exchangeOptions: {
-        key: string;
-        text: string;
-        value: string;
-    }[];
-    assetOptions: {
-        key: string;
-        text: string;
-        value: string;
-    }[];
+type ProviderFormProps = {
+    deposit: DepositInfo;
+    providers: DepositProvider[];
     role: MarketRole;
 }
 
-const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid, exchangeOptions, assetOptions}) => {
+const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role }) => {
     const operator = useOperator();
     const party = useParty();
     const ledger = useLedger();
 
-    const [ exchange, setExchange ] = useState('');
-    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
-    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
+    const [ provider, setProvider ] = useState('');
 
-    function clearForm() {
-        setExchange('')
-        setMergeAssets([])
-        setSplitAssetDecimal(undefined)
+    const depositCid = deposit.contractId;
+    const { account } = deposit.contractData;
+
+    const providerOptions = providers
+        .filter(provider => provider.party !== getAccountProvider(account.id.label))
+        .map(provider => ({
+            key: provider.party,
+            text: provider.label,
+            value: provider.party
+        }));
+
+    const handleProviderChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setProvider(result.value);
+        }
     }
 
-    const handleDepositAllocation = async () => {
+    const allocateToProvider = async () => {
         const key = wrapDamlTuple([operator, party]);
-        const args = { depositCid, provider: exchange };
+        const args = { depositCid, provider };
 
         switch(role) {
             case MarketRole.InvestorRole:
@@ -121,16 +120,87 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
             default:
                 throw new Error(`The ${role} role can not allocate deposits.`)
         }
-
-        clearForm();
+        setProvider('');
     }
 
-    const handleMergeAssets = async () => {
+    return (
+        <FormErrorHandled className='inline-form' onSubmit={allocateToProvider}>
+            <Form.Group className='inline-form-group'>
+                <Form.Select
+                    clearable
+                    value={provider}
+                    placeholder='Select...'
+                    options={providerOptions}
+                    onChange={handleProviderChange}/>
+                <Button
+                    primary
+                    disabled={provider === ''}
+                    content='Allocate to Provider'/>
+            </Form.Group>
+        </FormErrorHandled>
+    )
+}
+
+type MergeFormProps = {
+    availableDeposits: DepositInfo[];
+    deposit: DepositInfo;
+}
+
+const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit }) => {
+    const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
+    const ledger = useLedger();
+
+    const { asset } = deposit.contractData;
+
+    const assetOptions = availableDeposits
+        .filter(d => d.contractId !== deposit.contractId)
+        .filter(d => d.contractData.asset.id.label === asset.id.label)
+        .filter(d => d.contractData.account.id.label === deposit.contractData.account.id.label)
+        .map(d => {
+            return {
+                key: d.contractId,
+                text: `${d.contractData.asset.id.label} ${d.contractData.asset.quantity}`,
+                value: d.contractId
+            }
+        })
+
+    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {
+        setMergeAssets(result.value)
+    }
+
+    const assetDepositMerge = async () => {
         const args = { depositCids: mergeAssets };
-        const cid = depositCid as ContractId<AssetDeposit>
+        const cid = deposit.contractId as ContractId<AssetDeposit>
         await ledger.exercise(AssetDeposit.AssetDeposit_Merge, cid, args)
-        clearForm();
+        setMergeAssets([]);
     }
+
+    return (
+        <FormErrorHandled onSubmit={assetDepositMerge}>
+            <Form.Group className='inline-form-group'>
+                <Form.Select
+                    multiple
+                    placeholder='Select...'
+                    options={assetOptions}
+                    onChange={handleMergeAssetsChange}/>
+                <Button
+                    primary
+                    disabled={mergeAssets.length === 0}
+                    content='Merge'/>
+            </Form.Group>
+        </FormErrorHandled>
+    )
+}
+
+type SplitFormProps = {
+    deposit: DepositInfo;
+}
+
+const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
+    const { asset } = deposit.contractData;
+    const ledger = useLedger();
+
+    const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 
     const handleSplitAsset = async () => {
         if (!splitAssetDecimal) {
@@ -154,65 +224,24 @@ const AllocationForm: React.FC<FormProps> = ({ asset, provider, role, depositCid
         }
 
         const args = { quantities: [String(splitAssetDecimal)] };
-        const cid = depositCid as ContractId<AssetDeposit>
+        const cid = deposit.contractId as ContractId<AssetDeposit>
         await ledger.exercise(AssetDeposit.AssetDeposit_Split, cid, args)
-        clearForm();
-    }
-
-    const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
-        if (typeof result.value === 'string') {
-            setExchange(result.value);
-        }
-    }
-
-    const handleMergeAssetsChange = (event: React.SyntheticEvent, result: any) => {
-        setMergeAssets(result.value)
+        setSplitAssetDecimal(undefined)
     }
 
     return (
-        <FormErrorHandled onSubmit={handleDepositAllocation}>
-            { loadAndCatch => <>
-                <Form.Group className='inline-form-group label'>
-                    <div><b>{asset.id.label}</b> {asset.quantity} | </div>
-                    <div>Provider: <b>{provider}</b></div>
-                </Form.Group>
-                <Form.Group className='inline-form-group action'>
-                    <Form.Select
-                        value={exchange}
-                        placeholder='Select...'
-                        options={exchangeOptions}
-                        onChange={handleExchangeChange}/>
-                    <Button
-                        primary
-                        disabled={exchange === ''}
-                        content='Allocate to Exchange'
-                        onClick={() => loadAndCatch(handleDepositAllocation)}/>
-                </Form.Group>
-                <Form.Group className='inline-form-group action'>
-                    <Form.Select
-                        multiple
-                        placeholder='Select...'
-                        options={assetOptions}
-                        onChange={handleMergeAssetsChange}/>
-                    <Button
-                        primary
-                        disabled={mergeAssets.length === 0}
-                        content='Merge Assets'
-                        onClick={() => loadAndCatch(handleMergeAssets)}/>
-                </Form.Group>
-                <Form.Group className='inline-form-group action'>
-                    <Form.Input
-                        type='number'
-                        placeholder='0'
-                        value={splitAssetDecimal}
-                        onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
-                    <Button
-                        primary
-                        disabled={!splitAssetDecimal}
-                        content='Split Asset'
-                        onClick={() => loadAndCatch(handleSplitAsset)}/>
-                </Form.Group></>
-            }
+        <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
+            <Form.Group className='inline-form-group'>
+                <Form.Input
+                    type='number'
+                    placeholder='0'
+                    value={splitAssetDecimal || ''}
+                    onChange={e => setSplitAssetDecimal(e.currentTarget.valueAsNumber)}/>
+                <Button
+                    primary
+                    disabled={!splitAssetDecimal}
+                    content='Split'/>
+            </Form.Group>
         </FormErrorHandled>
     )
 }
