@@ -5,6 +5,7 @@ import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import {
     Investor as InvestorModel,
@@ -55,27 +56,30 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Broker`,
+                label: `${name ? `${name} (${party})` : party} | Broker`
             }
         })
 
-    const allProviders = [
-        ...allExchanges.map(exchange => {
-            const party = exchange.contractData.exchange;
+    const exchangeProviders = useStreamQuery(ExchangeParticipant).contracts
+        .map(exchParticipant => {
+            const party = exchParticipant.payload.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`,
+                label: `${name ? `${name} (${party})` : party} | Exchange`
             }
-        }),
+        });
+
+    const allProviders = [
         ...allCustodianRelationships.map(relationship => {
             const party = relationship.contractData.custodian;
             const name = custodianMap.get(party)?.name;
             return {
                 party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`,
+                label: `${name ? `${name} (${party})` : party} | Custodian`
             }
         }),
+        ...exchangeProviders,
         ...brokerProviders,
     ];
 
