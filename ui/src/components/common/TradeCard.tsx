@@ -16,8 +16,8 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
     const price = `${trade.price} ${quote}`;
     const amount = trade.isBuy ? `+ ${trade.qty} ${base}` : `- ${trade.qty} ${base}`;
     const time = new Date(0);
-    // timestamp is in nanos with millisecond precision
-    time.setUTCMilliseconds(parseInt(trade.timestamp.substring(0, trade.timestamp.length-3)))
+    // timestamp is in nanos with microsecond precision
+    time.setUTCMilliseconds(parseInt(trade.timestamp.substring(0, trade.timestamp.length - 6)))
     const timeLabel = new Intl.DateTimeFormat('en-US',
         { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(time)
 
