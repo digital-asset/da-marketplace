@@ -32,10 +32,10 @@
     margin: 10px 0px;
     display: flex;
     flex-direction: row;
-    align-items: center;
 }
 
 .deposit-row > div {
     flex-grow: 1;
     flex-basis: 0;
 }
+

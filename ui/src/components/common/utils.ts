@@ -45,3 +45,9 @@ export const depositSummary = (deposits: DepositInfo[]): string => {
         .map(([label, total]) => `${label}: ${total}`)
         .join(", ");
 }
+
+export function countDecimals(value: number) {
+    if (Math.floor(value) !== value)
+        return value.toString().split(".")[1].length || 0;
+    return 0;
+}

@@ -65,8 +65,13 @@ code {
 }
 
 .ui.form > .fields.inline-form-group {
-  align-items: flex-end;
+  align-items: flex-start;
   margin: 0;
+}
+
+
+.ui.form > .fields.inline-form-group .error.field {
+  width: 196px;
 }
 
 .ui.form .field > label{
