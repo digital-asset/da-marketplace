@@ -69,6 +69,8 @@ template Order
           fillQty : Decimal
           fillPrice : Decimal
           counterParty : Party
+          counterOrderId : Int
+          timestamp : Text
         do
           assert $ fillQty > 0.0
           assert $ fillQty <= qty
@@ -98,10 +100,12 @@ template Order
                       depositCid = filledCid
               remainingCid <- create this
                 with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
+              create TradeSide with isBuy = isBid, ..
               return $ (Some txReqCid, Some remainingCid)
             else do
               -- the fillQty is not enough to warrant a deposit transfer
               remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
+              create TradeSide with isBuy = isBid, ..
               return $ (None, Some remainingCid)
           else do
             txReqCid <- create DepositTransferRequest
@@ -109,6 +113,7 @@ template Order
                     senderAccountId = deposit.account.id,
                     receiverAccountId = receiverAccountId,
                     ..
+            create TradeSide with isBuy = isBid, ..
             return $ (Some txReqCid, None)
 
       Order_Cancel : ()
@@ -179,4 +184,33 @@ template BrokerOrder
             <> " does not match the requested of " <> show qty) $ depositQty == qty
           let senderAccountId = deposit.account.id
               receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
+          create BrokerTrade with isBuy = isBid, ..
           create DepositTransferRequest with sender = broker, ..
+
+
+template TradeSide
+  with
+    exchParticipant : Party
+    exchange : Party
+    pair : TokenPair
+    price : Decimal
+    qty : Decimal
+    isBuy : Bool
+    orderId : Int
+    counterOrderId : Int
+    timestamp : Text
+  where
+    signatory exchange, exchParticipant
+
+
+template BrokerTrade
+  with
+    brokerCustomer : Party
+    broker : Party
+    pair : TokenPair
+    price : Decimal
+    qty : Decimal
+    isBuy : Bool
+    brokerOrderId : Int
+  where
+    signatory broker, brokerCustomer

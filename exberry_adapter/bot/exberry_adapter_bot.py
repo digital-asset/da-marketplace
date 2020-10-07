@@ -142,12 +142,16 @@ def main():
         commands.append(exercise(taker_cid, 'Order_Fill', {
             'fillQty': execution['executedQuantity'],
             'fillPrice': execution['executedPrice'],
-            'counterParty': maker['exchParticipant']
+            'counterOrderId': maker['orderId'],
+            'counterParty': maker['exchParticipant'],
+            'timestamp': execution['eventTimestamp']
         }))
         commands.append(exercise(maker_cid, 'Order_Fill', {
             'fillQty': execution['executedQuantity'],
             'fillPrice': execution['executedPrice'],
-            'counterParty': taker['exchParticipant']
+            'counterParty': taker['exchParticipant'],
+            'counterOrderId': taker['orderId'],
+            'timestamp': execution['eventTimestamp']
         }))
 
         return commands
