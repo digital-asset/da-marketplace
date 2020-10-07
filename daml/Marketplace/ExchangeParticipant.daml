@@ -18,6 +18,8 @@ template ExchangeParticipantInvitation
 
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
+        with
+          role: Optional MarketRole
         do
           create Notification with
             sender = exchParticipant, senderRole = None

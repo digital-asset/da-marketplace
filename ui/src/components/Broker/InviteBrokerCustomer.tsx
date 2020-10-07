@@ -14,7 +14,7 @@ type Props = {
     registeredInvestors: RegisteredInvestorInfo[];
 }
 
-const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
+const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     const [ brokerCustomer, setBrokerCustomer ] = useState('');
 
     const ledger = useLedger();
@@ -61,4 +61,4 @@ const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
     )
 }
 
-export default InviteParticipant;
+export default InviteBrokerCustomer;

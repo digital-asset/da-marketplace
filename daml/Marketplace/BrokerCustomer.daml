@@ -21,13 +21,13 @@ template BrokerCustomerInvitation
         do
           create Notification with
             sender = brokerCustomer, senderRole = Some InvestorRole
-            receiver = broker, text = "Broker customer invitation accepted"
+            receiver = broker, text = "Broker customer invitation accepted."
           create BrokerCustomer with ..
       BrokerCustomerInvitation_Reject : ()
         do
           create Notification with
             sender = brokerCustomer, senderRole = Some InvestorRole
-            receiver = broker, text = "Broker customer invitation rejected"
+            receiver = broker, text = "Broker customer invitation rejected."
           return ()
 
 

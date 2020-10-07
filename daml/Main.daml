@@ -135,8 +135,8 @@ test = scenario do
   bidOrderCid <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_ApproveOrderRequest with orderRequestCid = bidOrderRequestCid, orderId = 2
 
   -- exchange matches the two orders
-  (Some txReqCid1, _) <- exchange `submit` exercise bidOrderCid Order_Fill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob
-  (Some txReqCid2, _) <- exchange `submit` exercise offerOrderCid Order_Fill with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice
+  (Some txReqCid1, _) <- exchange `submit` exercise bidOrderCid Order_Fill with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob, counterOrderId = 1, timestamp = "1601394768171637000"
+  (Some txReqCid2, _) <- exchange `submit` exercise offerOrderCid Order_Fill with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice, counterOrderId = 2, timestamp = "1601394768171637000"
 
   bobDepositCid <- custodian `submit` exercise txReqCid1 DepositTransferRequest_Approve
   aliceDepositCid <- custodian `submit` exercise txReqCid2 DepositTransferRequest_Approve

@@ -1,5 +1,6 @@
 import logging
 import os
+import time
 
 import dazl
 from dazl import exercise
@@ -80,6 +81,7 @@ def main():
         for (cid, passive_order) in sorted(opposite_book.items(), key=sorter, reverse=(not is_bid)):
             if is_crossing(passive_order, order):
                 logging.info(f"Order crosses with \n{order_to_str(passive_order)}")
+                timestamp = f"{str(time.time()).replace('.','')}000"
 
                 fill_qty = min(passive_order['qty'], order['qty'])
                 fill_price = passive_order['price']
@@ -87,12 +89,16 @@ def main():
                 fill_passive = exercise(cid, 'Order_Fill', {
                     'fillQty': fill_qty,
                     'fillPrice': fill_price,
-                    'counterParty': order['exchParticipant']
+                    'counterOrderId': order['orderId'],
+                    'counterParty': order['exchParticipant'],
+                    'timestamp': timestamp
                 })
                 fill_aggressive = exercise(event.cid, 'Order_Fill', {
                     'fillQty': fill_qty,
                     'fillPrice': fill_price,
-                    'counterParty': passive_order['exchParticipant']
+                    'counterOrderId': passive_order['orderId'],
+                    'counterParty': passive_order['exchParticipant'],
+                    'timestamp': timestamp
                 })
 
                 return client.submit([fill_passive, fill_aggressive])

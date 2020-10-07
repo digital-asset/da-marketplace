@@ -21,7 +21,7 @@ export const useBrokerCustomerInviteNotifications = () => {
     const brokerCustomerInviteNotifications = useStreamQuery(BrokerCustomerInvitation)
         .contracts
         .map(invite => <BrokerCustomerInvite key={invite.contractId}
-            invite={ makeContractInfo(invite) }
+            invite={makeContractInfo(invite)}
             invitationAccept={async () => await acceptBrokerCustomerInvite(invite.contractId)}
             invitationReject={async () => await rejectBrokerCustomerInvite(invite.contractId)}/>);
 
