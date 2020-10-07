@@ -15,6 +15,10 @@
   --dabl-color: #3a62Ca;
 }
 
+.ui.toggle.radio {
+  background-color: var(--dabl-color);
+}
+
 * {
   font-family: 'Open Sans';
 }
@@ -66,6 +70,10 @@ code {
 
 .ui.form > .fields.inline-form-group.with-error {
   align-items: flex-start;
+}
+
+.ui.form > .fields.inline-form-group.with-error button{
+  margin-top: 32px;;
 }
 
 .ui.form > .fields.inline-form-group {
