@@ -65,7 +65,7 @@ code {
 }
 
 .ui.form > .fields.inline-form-group {
-  align-items: flex-start;
+  align-items: flex-end;
   margin: 0;
 }
 
