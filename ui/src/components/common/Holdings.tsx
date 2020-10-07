@@ -240,7 +240,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
 
     return (
         <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
-            <Form.Group className='inline-form-group'>
+            <Form.Group className='inline-form-group with-error'>
                 <Form.Input
                     type='number'
                     placeholder={`0.${"0".repeat(tokenQuantityPercision)}`}
