@@ -7,7 +7,7 @@ import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marke
 
 import Notification from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { ExchParticipantInviteInfo } from '../common/damlTypes'
+import { ExchParticipantInviteInfo, makeContractInfo } from '../common/damlTypes'
 
 type ExchParticipantInviteProps = {
     invite: ExchParticipantInviteInfo;
@@ -20,7 +20,7 @@ export const useExchangeInviteNotifications = () => {
     const exchangeInviteNotifications = useStreamQuery(ExchangeParticipantInvitation)
         .contracts
         .map(invite => <ExchangeParticipantInvite key={invite.contractId}
-            invite={{ contractId: invite.contractId, contractData: invite.payload }}
+            invite={makeContractInfo(invite)}
             invitationAccept={async () => await acceptExchParticipantInvite(invite.contractId)}
             invitationReject={async () => await rejectExchParticipantInvite(invite.contractId)}/>);
 

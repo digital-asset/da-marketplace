@@ -2,6 +2,7 @@ import { CreateEvent } from '@daml/ledger'
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
+    BrokerCustomer,
     ExchangeParticipant,
     Exchange,
     Registry,
@@ -60,6 +61,8 @@ export type ContractInfo<T> = {
 
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
+export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
+export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;

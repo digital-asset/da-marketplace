@@ -9,7 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import Notification from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
+import { CustodianRelationshipRequestInfo, makeContractInfo } from '../common/damlTypes'
 
 type RelationshipRequestNotificationProps = {
     request: CustodianRelationshipRequestInfo;
@@ -22,7 +22,7 @@ export const useRelationshipRequestNotifications = () => {
     const relationshipRequestNotifications = useStreamQuery(CustodianRelationshipRequest)
         .contracts
         .map(request => <RelationshipRequestNotification key={request.contractId}
-            request={{ contractId: request.contractId, contractData: request.payload }}
+            request={makeContractInfo(request)}
             requestAccept={async () => await acceptRelationshipRequest(request.contractId)}
             requestReject={async () => await rejectRelationshipRequest(request.contractId)}/>);
 

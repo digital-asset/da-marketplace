@@ -1,11 +1,11 @@
 import React from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useLedger, useStreamQuery, useParty } from '@daml/react'
+import { useLedger,  useParty, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { MarketRole,  Notification } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { NotificationInfo } from '../common/damlTypes'
+import { makeContractInfo, NotificationInfo } from './damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import NotificationComponent from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -15,14 +15,14 @@ type DismissibleNotificationProps = {
     notificationDismiss : () => Promise<void>;
 }
 
-export const useGeneralNotifications = () => {
+export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
     const relationshipRequestNotifications = useStreamQuery(Notification)
         .contracts
         .filter(notification => notification.payload.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}
-            notification={{ contractId: notification.contractId, contractData: notification.payload }}
+            notification={makeContractInfo(notification)}
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
     const dismissNotification = async (cid: ContractId<Notification>) => {
@@ -41,7 +41,6 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     const sender = notification.contractData.sender;
     const senderRole = notification.contractData.senderRole;
     let name;
-    console.log(senderRole);
     switch(senderRole) {
         case MarketRole.InvestorRole:
             name = <>Investor <b>@{lookup.investorMap.get(sender)?.name || sender}</b></>;
@@ -62,16 +61,16 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
             name = <b>@{sender}</b>;
     }
     return (
-    <NotificationComponent>
-        <p>Notification from {name}: {notification.contractData.text}</p>
-        <FormErrorHandled onSubmit={notificationDismiss}>
-            <Form.Group className='inline-form-group'>
-                <Button
-                    basic
-                    content='Dismiss'
-                    type='submit'/>
-            </Form.Group>
-        </FormErrorHandled>
-    </NotificationComponent>
+        <NotificationComponent>
+            <p>Notification from {name}: {notification.contractData.text}</p>
+            <FormErrorHandled onSubmit={notificationDismiss}>
+                <Form.Group className='inline-form-group'>
+                    <Button
+                        basic
+                        content='Dismiss'
+                        type='submit'/>
+                </Form.Group>
+            </FormErrorHandled>
+        </NotificationComponent>
     )
 }

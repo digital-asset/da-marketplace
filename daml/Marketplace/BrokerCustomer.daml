@@ -18,7 +18,17 @@ template BrokerCustomerInvitation
 
     controller brokerCustomer can
       BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
-        do create BrokerCustomer with ..
+        do
+          create Notification with
+            sender = brokerCustomer, senderRole = Some InvestorRole
+            receiver = broker, text = "Broker customer invitation accepted"
+          create BrokerCustomer with ..
+      BrokerCustomerInvitation_Reject : ()
+        do
+          create Notification with
+            sender = brokerCustomer, senderRole = Some InvestorRole
+            receiver = broker, text = "Broker customer invitation rejected"
+          return ()
 
 
 template BrokerCustomer

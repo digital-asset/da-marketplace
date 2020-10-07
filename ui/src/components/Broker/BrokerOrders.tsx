@@ -1,16 +1,21 @@
 import React, { useState } from 'react'
-import { Button, Card, Form } from 'semantic-ui-react'
+import { Button, Card, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, unwrapDamlTuple, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
+
+import BrokerCustomers from './BrokerCustomers'
 
 import './BrokerOrders.css'
 
@@ -27,6 +32,9 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     const allBrokerOrderRequests = useStreamQuery(BrokerOrderRequest).contracts;
     const allBrokerOrders = useStreamQuery(BrokerOrder).contracts;
 
+    const allBrokerCustomers = useStreamQuery(BrokerCustomer).contracts.map(makeContractInfo);
+    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+
     return (
         <Page
             sideNav={sideNav}
@@ -34,6 +42,11 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection border='blue' background='white'>
+                <div className='customers'>
+                    <BrokerCustomers brokerCustomers={allBrokerCustomers}
+                                     registeredInvestors={allRegisteredInvestors}/>
+                </div>
+                <Header as='h4'>Orders</Header>
                 <div className='customer-orders'>
                     <p>Requested Customer Orders</p>
                     { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
