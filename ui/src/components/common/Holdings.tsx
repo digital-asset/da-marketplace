@@ -219,8 +219,6 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
         setSplitAssetDecimal(undefined)
     }
 
-    console.log(tokenQuantityPercision)
-
     const validateSplitNumber = (event: React.SyntheticEvent, result: any) => {
         const number = Number(result.value)
 
