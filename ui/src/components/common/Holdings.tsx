@@ -204,7 +204,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
 
     const tokenQuantityPercision = Number(useStreamQuery(Token).contracts
             .find(t => t.payload.id.label == deposit.contractData.asset.id.label &&
-                       t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision)
+                       t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision) || 0
 
     const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 
@@ -226,12 +226,12 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
             return setSplitNumberError(`The splitting quantity must be less than ${asset.quantity}`)
         }
 
-        if (number < 0) {
+        if (number <= 0) {
             return setSplitNumberError(`The splitting quantity must be greater than 0.`)
         }
-
+        
         if (countDecimals(number) > tokenQuantityPercision) {
-            return setSplitNumberError(`The decimal percision of the splitting quantity must be equal to or less than ${tokenQuantityPercision}.`)
+            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPercision !== 0 && 'or less than'} ${tokenQuantityPercision}.`)
         }
 
         setSplitNumberError(undefined)
