@@ -243,6 +243,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
             <Form.Group className='inline-form-group with-error'>
                 <Form.Input
                     type='number'
+                    step={`0.${"0".repeat(tokenQuantityPercision-1)}1`}
                     placeholder={`0.${"0".repeat(tokenQuantityPercision)}`}
                     error={splitNumberError}
                     onChange={validateSplitNumber}/>
