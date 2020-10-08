@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.Custodian where
 
+import Marketplace.Notification
 import Marketplace.Registry
 import Marketplace.Token
 import Marketplace.Utils

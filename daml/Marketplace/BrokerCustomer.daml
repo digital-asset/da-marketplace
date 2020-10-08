@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.BrokerCustomer where
 
+import Marketplace.Notification
 import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Utils

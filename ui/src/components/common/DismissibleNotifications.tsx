@@ -3,11 +3,10 @@ import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger,  useParty, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
-    MarketRole,
     DismissibleNotification as DismissibleNotificationTemplate
-} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-
+} from '@daml.js/da-marketplace/lib/Marketplace/Notification'
 import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import NotificationComponent from '../common/Notification'

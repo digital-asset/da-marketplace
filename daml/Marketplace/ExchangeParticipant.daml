@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.ExchangeParticipant where
 
+import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Token
 import Marketplace.Utils
