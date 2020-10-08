@@ -16,6 +16,14 @@ template RegisteredCustodian
     key (operator, custodian) : (Party, Party)
     maintainer key._2
 
+    controller custodian can
+      RegisteredCustodian_UpdateProfile : ContractId RegisteredCustodian
+        with
+          newName : Text
+          newLocation : Text
+        do
+          create this with name = newName, location = newLocation
+
     controller operator can
       RegisteredCustodian_Offboard : ()
         do return ()
@@ -27,6 +35,7 @@ template RegisteredIssuer
     public : Party
     issuer : Party
     name : Text
+    location : Text
     title : Text
     issuerID : Text
   where
@@ -35,6 +44,16 @@ template RegisteredIssuer
 
     key (operator, issuer) : (Party, Party)
     maintainer key._2
+
+    controller issuer can
+      RegisteredIssuer_UpdateProfile : ContractId RegisteredIssuer
+        with
+          newName : Text
+          newLocation : Text
+          newTitle : Text
+          newIssuerID : Text
+        do
+          create this with name = newName, location = newLocation, title = newTitle, issuerID = newIssuerID
 
     controller operator can
       RegisteredIssuer_Offboard : ()
@@ -56,6 +75,14 @@ template RegisteredInvestor
     key (operator, investor) : (Party, Party)
     maintainer key._2
 
+    controller investor can
+      RegisteredInvestor_UpdateProfile : ContractId RegisteredInvestor
+        with
+          newName : Text
+          newLocation : Text
+        do
+          create this with name = newName, location = newLocation
+
     controller operator can
       RegisteredInvestor_Offboard : ()
         do return ()
@@ -75,6 +102,14 @@ template RegisteredExchange
     key (operator, exchange) : (Party, Party)
     maintainer key._2
 
+    controller exchange can
+      RegisteredExchange_UpdateProfile : ContractId RegisteredExchange
+        with
+          newName : Text
+          newLocation : Text
+        do
+          create this with name = newName, location = newLocation
+
     controller operator can
       RegisteredExchange_Offboard : ()
         do return ()
@@ -93,6 +128,14 @@ template RegisteredBroker
 
     key (operator, broker) : (Party, Party)
     maintainer key._2
+
+    controller broker can
+      RegisteredBroker_UpdateProfile : ContractId RegisteredBroker
+        with
+          newName : Text
+          newLocation : Text
+        do
+          create this with name = newName, location = newLocation
 
     controller operator can
       RegisteredBroker_Offboard : ()

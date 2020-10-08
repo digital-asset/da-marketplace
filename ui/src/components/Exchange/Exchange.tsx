@@ -19,6 +19,7 @@ import ExchangeSideNav from './ExchangeSideNav'
 import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
 import ExchangeParticipants from './ExchangeParticipants'
+import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -48,6 +49,16 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         }
     }, [registeredExchange]);
 
+    const updateProfile = async () => {
+        const key = wrapDamlTuple([operator, exchange]);
+        const args = {
+            newName: profile.name.value,
+            newLocation: profile.location.value,
+        };
+        await ledger.exerciseByKey(RegisteredExchange.RegisteredExchange_UpdateProfile, key, args)
+                    .catch(err => console.error(err));
+    }
+
     const acceptInvite = async () => {
         const key = wrapDamlTuple([operator, exchange]);
         const args = {
@@ -58,11 +69,13 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <ExchangeSideNav url={url} name={registeredExchange.contracts[0]?.payload.name || exchange}/>;
+    const sideNav = <ExchangeSideNav url={url}
+                                     name={registeredExchange.contracts[0]?.payload.name || exchange}/>;
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
+                content='Submit'
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -73,9 +86,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <Route exact path={path}>
             <LandingPage
                 profile={
-                    <ExchangeProfile
-                        disabled
-                        defaultProfile={profile}/>
+                    <FormErrorHandled onSubmit={updateProfile}>
+                        <ExchangeProfile
+                            content='Save'
+                            defaultProfile={profile}
+                            submitProfile={profile => setProfile(profile)}/>
+                    </FormErrorHandled>
                 }
                 marketRelationships={
                     <MarketRelationships role={MarketRole.ExchangeRole}
