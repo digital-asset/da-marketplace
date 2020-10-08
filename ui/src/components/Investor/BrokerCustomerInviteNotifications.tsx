@@ -1,14 +1,12 @@
 import React from 'react'
-import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
-import Notification from '../common/Notification'
-import FormErrorHandled from '../common/FormErrorHandled'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 import { BrokerCustomerInviteInfo, makeContractInfo } from '../common/damlTypes'
-import {useRegistryLookup} from '../common/RegistryLookup'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 type BrokerCustomerInviteProps = {
     invite: BrokerCustomerInviteInfo;
@@ -46,20 +44,8 @@ const BrokerCustomerInvite: React.FC<BrokerCustomerInviteProps> = ({
     const { brokerMap } = useRegistryLookup();
     const name = brokerMap.get(invite.contractData.broker)?.name || invite.contractData.broker;
     return (
-        <Notification>
-            <p>Broker <b>@{name}</b> is inviting you to become a customer.</p>
-            <FormErrorHandled onSubmit={invitationAccept}>
-                { loadAndCatch =>
-                    <Form.Group className='inline-form-group'>
-                        <Button basic content='Accept' type='submit'/>
-                        <Button
-                            basic
-                            content='Reject'
-                            type='button'
-                            onClick={() => loadAndCatch(invitationReject)}/>
-                    </Form.Group>
-                }
-            </FormErrorHandled>
-        </Notification>
+        <AcceptRejectNotification onAccept={invitationAccept} onReject={invitationReject}>
+            Broker <b>@{name}</b> is inviting you to become a customer.
+        </AcceptRejectNotification>
     )
 }

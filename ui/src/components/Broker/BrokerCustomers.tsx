@@ -14,7 +14,7 @@ const BrokerCustomers: React.FC<Props> = ({ brokerCustomers, registeredInvestors
     const rows = brokerCustomers.map(customer => {
         const brokerCustomer = customer.contractData.brokerCustomer;
         const name = investorMap.get(brokerCustomer)?.name || brokerCustomer;
-        return <p key={name}>{name}</p>
+        return <p key={brokerCustomer}>{name}</p>
     });
     return (
         <>

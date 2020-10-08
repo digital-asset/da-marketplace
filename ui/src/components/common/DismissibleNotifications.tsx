@@ -3,30 +3,33 @@ import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger,  useParty, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
-import { MarketRole,  Notification } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {
+    MarketRole,
+    DismissibleNotification as DismissibleNotificationTemplate
+} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { makeContractInfo, NotificationInfo } from './damlTypes'
+import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import NotificationComponent from '../common/Notification'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 type DismissibleNotificationProps = {
-    notification: NotificationInfo;
+    notification: DismissibleNotificationInfo;
     notificationDismiss : () => Promise<void>;
 }
 
 export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
-    const relationshipRequestNotifications = useStreamQuery(Notification)
+    const relationshipRequestNotifications = useStreamQuery(DismissibleNotificationTemplate)
         .contracts
         .filter(notification => notification.payload.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}
             notification={makeContractInfo(notification)}
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
-    const dismissNotification = async (cid: ContractId<Notification>) => {
-        const choice = Notification.Notification_Dismiss;
+    const dismissNotification = async (cid: ContractId<DismissibleNotificationTemplate>) => {
+        const choice = DismissibleNotificationTemplate.DismissibleNotification_Dismiss;
         await ledger.exercise(choice, cid, {});
     }
 

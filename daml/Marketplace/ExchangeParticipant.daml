@@ -18,17 +18,15 @@ template ExchangeParticipantInvitation
 
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
-        with
-          role: Optional MarketRole
         do
-          create Notification with
+          create DismissibleNotification with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation accepted."
           create ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
         do
-          create Notification with
+          create DismissibleNotification with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation rejected."
           return ()

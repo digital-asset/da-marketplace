@@ -41,14 +41,14 @@ template CustodianRelationshipRequest
             InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
             BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
             _ -> return ()
-          create Notification with
+          create DismissibleNotification with
             sender = custodian, senderRole = Some CustodianRole
             receiver = requester, text = "Relationship request accepted."
           create CustodianRelationship with party = requester, ..
 
       CustodianRelationshipRequest_Reject : ()
         do
-          create Notification with
+          create DismissibleNotification with
             sender = custodian, senderRole = Some CustodianRole
             receiver = requester, text = "Relationship request rejected."
           return ()
