@@ -3,7 +3,7 @@ import { Button, Form } from 'semantic-ui-react'
 
 import "./Profile.css"
 
-type FieldType = 'text' | 'password';
+type FieldType = 'text';
 
 type ProfileField = {
     value: string;
@@ -24,36 +24,30 @@ export type Profile = {
 };
 
 type FieldProps = {
-    disabled?: boolean;
     field: ProfileField;
     setField: (field: ProfileField) => void;
 }
 
-const ProfileField: React.FC<FieldProps> = ({ disabled, field, setField }) => {
-    switch(field.type) {
-        case 'text':
-        case 'password':
-            return (
-                <Form.Input
-                    fluid
-                    className='profile-form-field'
-                    disabled={disabled}
-                    label={field.label}
-                    placeholder={field.placeholder}
-                    value={field.value}
-                    type={field.type}
-                    onChange={e => setField({ ...field, value: e.currentTarget.value })}/>
-            )
-    }
+const ProfileField: React.FC<FieldProps> = ({ field, setField }) => {
+    return (
+        <Form.Input
+            fluid
+            className='profile-form-field'
+            label={field.label}
+            placeholder={field.placeholder}
+            value={field.value}
+            type={field.type}
+            onChange={e => setField({ ...field, value: e.currentTarget.value })}/>
+    )
 }
 
 type ProfileProps = {
-    disabled?: boolean;
+    content: string;
     defaultProfile: Profile;
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ disabled, defaultProfile, submitProfile }) => {
+const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
 
     useEffect(() => {
@@ -63,7 +57,6 @@ const Profile: React.FC<ProfileProps> = ({ disabled, defaultProfile, submitProfi
     const fields = Object.keys(profile).map(key => (
         <ProfileField
             key={key}
-            disabled={disabled}
             field={profile[key]}
             setField={field => setProfile({ ...profile, [key]: field })}/>
     ));
@@ -75,13 +68,13 @@ const Profile: React.FC<ProfileProps> = ({ disabled, defaultProfile, submitProfi
     return (
         <>
             { fields }
-            { !disabled && <Button
+            <Button
                 primary
                 className='profile-submit-button'
-                content='Submit'
+                content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}
-                type='submit'/> }
+                type='submit'/>
         </>
     )
 }

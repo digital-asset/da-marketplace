@@ -19,6 +19,7 @@ import LandingPage from '../common/LandingPage'
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import CustodianSideNav from './CustodianSideNav'
 import Clients from './Clients'
+import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -53,6 +54,16 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         }
     }, [registeredCustodian]);
 
+    const updateProfile = async () => {
+        const key = wrapDamlTuple([operator, custodian]);
+        const args = {
+            newName: profile.name.value,
+            newLocation: profile.location.value,
+        };
+        await ledger.exerciseByKey(RegisteredCustodian.RegisteredCustodian_UpdateProfile, key, args)
+                    .catch(err => console.error(err));
+    }
+
     const acceptInvite = async () => {
         const key = wrapDamlTuple([operator, custodian]);
         const args = {
@@ -66,6 +77,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
+                content='Submit'
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -73,8 +85,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <CustodianSideNav disabled={!custodianContract}
-                                      url={url}
+    const sideNav = <CustodianSideNav url={url}
                                       name={registeredCustodian.contracts[0]?.payload.name || custodian}/>
 
     const custodianScreen = <Switch>
@@ -82,9 +93,12 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             <LandingPage
                 notifications={notifications}
                 profile={
-                    <CustodianProfile
-                        disabled
-                        defaultProfile={profile}/>
+                    <FormErrorHandled onSubmit={updateProfile}>
+                        <CustodianProfile
+                            content='Save'
+                            defaultProfile={profile}
+                            submitProfile={profile => setProfile(profile)}/>
+                    </FormErrorHandled>
                 }
                 marketRelationships={(
                     <Link to={`${url}/clients`}>View list of clients</Link>

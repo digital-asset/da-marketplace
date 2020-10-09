@@ -31,7 +31,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <p>{token?.payload.description}</p>
 
-                <p><b>Public: </b>{token?.payload.isPublic? "True" : "False"}</p>
+                <p><b>Public: </b>{(!!token?.payload.isPublic).toString()}</p>
 
                 <p><b>Issuer:</b></p>
                 <List verticalAlign='middle'>
