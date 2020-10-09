@@ -1,0 +1,62 @@
+daml 1.2
+module Marketplace.BinaryOption where
+
+import DA.Finance.Types
+
+import DA.Next.Set
+
+
+type ListedBinaryOption = (Id, Id)
+
+
+-- | Reference data describing a binary option.
+template BinaryOption
+  with
+    id : Id
+    description : Text
+    minPrice : Decimal
+    maxPrice : Decimal
+    isPublic : Bool
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : Id
+    maintainer key.signatories
+
+    choice BinaryOption_AddObservers : ContractId BinaryOption
+      with
+        party : Party
+        newObservers : Set Party
+      controller party
+      do
+        assert $ member party $ union id.signatories newObservers
+        create this with observers = union observers newObservers
+
+    controller id.signatories can
+      BinaryOption_SetObservers : ContractId BinaryOption
+        with newObservers : Set Party
+        do create this with observers = newObservers
+
+      nonconsuming BinaryOption_Settle : ContractId SettledBinaryOption
+        with
+          outcome : Bool
+        do create SettledBinaryOption with ..
+
+
+template SettledBinaryOption
+  with
+    id : Id
+    description : Text
+    minPrice : Decimal
+    maxPrice : Decimal
+    isPublic : Bool
+    observers : Set Party
+    outcome : Bool
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : Id
+    maintainer key.signatories

@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.ExchangeParticipant where
 
+import Marketplace.BinaryOption
 import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Token
@@ -44,6 +45,66 @@ template ExchangeParticipant
     maintainer key._1
 
     controller exchParticipant can
+      nonconsuming ExchangeParticipant_PlaceBinaryOptionBid : ContractId OrderRequest
+        with
+          depositCid : ContractId AssetDeposit
+          binOption : TokenPair
+          price : Decimal
+          qty : Int
+        do
+          deposit <- fetch depositCid
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+          assertMsg ("deposit should be for " <> binOption._2.label <> " but it is for " <> deposit.asset.id.label)
+            $ binOption._2 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token binOption._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+          (_, binaryOption) <- fetchByKey @BinaryOption binOption._1
+          assertMsg ("price should be between " <> show binaryOption.minPrice <> " and " <> show binaryOption.maxPrice)
+            $ (price >= binaryOption.minPrice && price <= binaryOption.maxPrice)
+          let decimalQty = intToDecimal qty
+              requiredDepositAmount = decimalQty * price
+          assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
+            $ (deposit.asset.quantity >= requiredDepositAmount)
+          if requiredDepositAmount < deposit.asset.quantity then do
+            [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
+            let order = Order with isBid = True, status = "New", orderId = -1, pair = binOption, depositCid = splitCid, qty = decimalQty, ..
+            create OrderRequest with ..
+          else do
+            let order = Order with isBid = True, status = "New", orderId = -1, pair = binOption, qty = decimalQty, ..
+            create OrderRequest with ..
+
+      nonconsuming ExchangeParticipant_PlaceBinaryOptionShortOffer : ContractId OrderRequest
+        with
+          depositCid : ContractId AssetDeposit
+          binOption : TokenPair
+          price : Decimal
+          qty : Int
+        do
+          deposit <- fetch depositCid
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+          assertMsg ("deposit should be for " <> binOption._2.label <> " but it is for " <> deposit.asset.id.label)
+            $ binOption._2 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token binOption._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+          (_, binaryOption) <- fetchByKey @BinaryOption binOption._1
+          assertMsg ("price should be between " <> show binaryOption.minPrice <> " and " <> show binaryOption.maxPrice)
+            $ (price >= binaryOption.minPrice && price <= binaryOption.maxPrice)
+          let decimalQty = intToDecimal qty
+              requiredDepositAmount = decimalQty * (binaryOption.maxPrice - price)
+          assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
+            $ (deposit.asset.quantity >= requiredDepositAmount)
+          if requiredDepositAmount < deposit.asset.quantity then do
+            [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
+            let order = Order with isBid = False, status = "New", orderId = -1, pair = binOption, depositCid = splitCid, qty = decimalQty, ..
+            create OrderRequest with ..
+          else do
+            let order = Order with isBid = False, status = "New", orderId = -1, pair = binOption, qty = decimalQty, ..
+            create OrderRequest with ..
+
       nonconsuming ExchangeParticipant_PlaceBid : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
