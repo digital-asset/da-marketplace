@@ -1,13 +1,12 @@
 import React from 'react'
-import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import Notification from '../common/Notification'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { ExchParticipantInviteInfo } from '../common/damlTypes'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
+import { ExchParticipantInviteInfo, makeContractInfo } from '../common/damlTypes'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 type ExchParticipantInviteProps = {
     invite: ExchParticipantInviteInfo;
@@ -20,7 +19,7 @@ export const useExchangeInviteNotifications = () => {
     const exchangeInviteNotifications = useStreamQuery(ExchangeParticipantInvitation)
         .contracts
         .map(invite => <ExchangeParticipantInvite key={invite.contractId}
-            invite={{ contractId: invite.contractId, contractData: invite.payload }}
+            invite={makeContractInfo(invite)}
             invitationAccept={async () => await acceptExchParticipantInvite(invite.contractId)}
             invitationReject={async () => await rejectExchParticipantInvite(invite.contractId)}/>);
 
@@ -41,20 +40,12 @@ const ExchangeParticipantInvite: React.FC<ExchParticipantInviteProps> = ({
     invite,
     invitationAccept,
     invitationReject
-}) => (
-    <Notification>
-        <p>Exchange <b>@{invite.contractData.exchange}</b> is inviting you to trade.</p>
-        <FormErrorHandled onSubmit={invitationAccept}>
-            { loadAndCatch =>
-                <Form.Group className='inline-form-group'>
-                    <Button basic content='Accept' type='submit'/>
-                    <Button
-                        basic
-                        content='Reject'
-                        type='button'
-                        onClick={() => loadAndCatch(invitationReject)}/>
-                </Form.Group>
-            }
-        </FormErrorHandled>
-    </Notification>
-)
+}) => {
+    const { exchangeMap } = useRegistryLookup();
+    const name = exchangeMap.get(invite.contractData.exchange)?.name || invite.contractData.exchange;
+    return (
+        <AcceptRejectNotification onAccept={invitationAccept} onReject={invitationReject}>
+            Exchange <b>@{name}</b> is inviting you to trade.
+        </AcceptRejectNotification>
+    )
+}

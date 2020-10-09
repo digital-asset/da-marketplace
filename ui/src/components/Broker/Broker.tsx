@@ -9,6 +9,7 @@ import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -37,6 +38,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const registeredBroker = useStreamQuery(RegisteredBroker);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
+    const notifications = useDismissibleNotifications();
 
     const { custodianMap, exchangeMap } = useRegistryLookup();
 
@@ -126,6 +128,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                     <MarketRelationships role={MarketRole.BrokerRole}
                                          custodianRelationships={allCustodianRelationships}/>}
                 sideNav={sideNav}
+                notifications={notifications}
                 onLogout={onLogout}/>
         </Route>
 

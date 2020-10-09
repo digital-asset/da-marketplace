@@ -1,15 +1,13 @@
 import React from 'react'
-import { Button, Form } from 'semantic-ui-react'
 
 import { useLedger, useStreamQuery } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 import { useRegistryLookup } from '../common/RegistryLookup'
-import Notification from '../common/Notification'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
+import { CustodianRelationshipRequestInfo, makeContractInfo } from '../common/damlTypes'
 
 type RelationshipRequestNotificationProps = {
     request: CustodianRelationshipRequestInfo;
@@ -22,7 +20,7 @@ export const useRelationshipRequestNotifications = () => {
     const relationshipRequestNotifications = useStreamQuery(CustodianRelationshipRequest)
         .contracts
         .map(request => <RelationshipRequestNotification key={request.contractId}
-            request={{ contractId: request.contractId, contractData: request.payload }}
+            request={makeContractInfo(request)}
             requestAccept={async () => await acceptRelationshipRequest(request.contractId)}
             requestReject={async () => await rejectRelationshipRequest(request.contractId)}/>);
 
@@ -64,20 +62,8 @@ const RelationshipRequestNotification: React.FC<RelationshipRequestNotificationP
             name = <b>@{requester}</b>;
     }
     return (
-    <Notification>
-        <p>{name} is requesting a relationship.</p>;
-        <FormErrorHandled onSubmit={requestAccept}>
-            { loadAndCatch =>
-                <Form.Group className='inline-form-group'>
-                    <Button basic content='Accept' type='submit'/>
-                    <Button
-                        basic
-                        content='Reject'
-                        type='button'
-                        onClick={() => loadAndCatch(requestReject)}/>
-                </Form.Group>
-            }
-        </FormErrorHandled>
-    </Notification>
+        <AcceptRejectNotification onAccept={requestAccept} onReject={requestReject}>
+            {name} is requesting a relationship.
+        </AcceptRejectNotification>
     )
 }

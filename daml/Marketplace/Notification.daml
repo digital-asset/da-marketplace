@@ -1,0 +1,18 @@
+module Marketplace.Notification where
+
+import Marketplace.Utils
+
+
+template DismissibleNotification
+  with
+    sender : Party
+    senderRole : Optional MarketRole
+    receiver : Party
+    text : Text
+  where
+    signatory sender
+    observer receiver
+
+    controller receiver can
+      DismissibleNotification_Dismiss : ()
+        do return ()

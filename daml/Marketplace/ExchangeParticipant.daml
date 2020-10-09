@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.ExchangeParticipant where
 
+import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Token
 import Marketplace.Utils
@@ -18,10 +19,18 @@ template ExchangeParticipantInvitation
 
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
-        do create ExchangeParticipant with ..
+        do
+          create DismissibleNotification with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation accepted."
+          create ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
-        do return ()
+        do
+          create DismissibleNotification with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation rejected."
+          return ()
 
 template ExchangeParticipant
   with

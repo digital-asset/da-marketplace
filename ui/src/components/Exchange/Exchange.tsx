@@ -8,6 +8,7 @@ import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exch
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useOperator } from '../common/common'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -33,6 +34,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const registeredExchange = useStreamQuery(RegisteredExchange);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
+    const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -97,6 +99,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     <MarketRelationships role={MarketRole.ExchangeRole}
                                          custodianRelationships={allCustodianRelationships}/>}
                 sideNav={sideNav}
+                notifications={notifications}
                 onLogout={onLogout}/>
         </Route>
 

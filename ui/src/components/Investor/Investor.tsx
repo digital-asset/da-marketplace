@@ -14,6 +14,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { useOperator } from '../common/common'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import { wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -23,6 +24,7 @@ import LandingPage from '../common/LandingPage'
 import Holdings from '../common/Holdings'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
+import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
@@ -38,7 +40,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investor = useParty();
     const ledger = useLedger();
 
-    const notifications = useExchangeInviteNotifications();
+    const notifications = [
+        ...useExchangeInviteNotifications(),
+        ...useBrokerCustomerInviteNotifications(),
+        ...useDismissibleNotifications(),
+    ];
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
 
     const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);

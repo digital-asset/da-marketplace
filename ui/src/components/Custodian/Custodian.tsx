@@ -10,6 +10,7 @@ import {
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useOperator } from '../common/common'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -37,7 +38,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const custodianContract = useStreamFetchByKey(CustodianModel, key, [operator, custodian]).contract;
     const investors = custodianContract?.payload.investors || [];
 
-    const notifications = useRelationshipRequestNotifications();
+    const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

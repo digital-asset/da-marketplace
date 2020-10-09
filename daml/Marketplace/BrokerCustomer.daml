@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.BrokerCustomer where
 
+import Marketplace.Notification
 import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Utils
@@ -18,7 +19,17 @@ template BrokerCustomerInvitation
 
     controller brokerCustomer can
       BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
-        do create BrokerCustomer with ..
+        do
+          create DismissibleNotification with
+            sender = brokerCustomer, senderRole = Some InvestorRole
+            receiver = broker, text = "Broker customer invitation accepted."
+          create BrokerCustomer with ..
+      BrokerCustomerInvitation_Reject : ()
+        do
+          create DismissibleNotification with
+            sender = brokerCustomer, senderRole = Some InvestorRole
+            receiver = broker, text = "Broker customer invitation rejected."
+          return ()
 
 
 template BrokerCustomer
