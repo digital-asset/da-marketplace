@@ -73,7 +73,7 @@ const CreateDeposit: React.FC = () => {
                 <Form.Input
                     label='Quantity'
                     type='number'
-                    step={`0.${"0".repeat(quantityPrecision-1)}1`}
+                    step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
                     placeholder={`0.${"0".repeat(quantityPrecision)}`}
                     error={depositQuantityError}
                     disabled={!token}
