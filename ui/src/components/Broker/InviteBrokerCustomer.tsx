@@ -25,8 +25,8 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     const brokerCustomers = useStreamQuery(BrokerCustomer).contracts.map(makeContractInfo);
 
     const customerOptions = registeredInvestors.filter(ri =>
-        !brokerCustomers.find(ep => ep.contractData.brokerCustomer === ri.contractData.investor) &&
-        !currentInvitations.find(invitation => invitation.contractData.brokerCustomer === ri.contractData.investor));
+        !brokerCustomers.find(bc => bc.contractData.brokerCustomer === ri.contractData.investor) &&
+        !currentInvitations.find(bci => bci.contractData.brokerCustomer === ri.contractData.investor));
 
     const handleBrokerCustomerInviteSubmit = async () => {
         const choice = Broker.Broker_InviteCustomer;

@@ -8,9 +8,9 @@ import {
     DismissibleNotification as DismissibleNotificationTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Notification'
 import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import NotificationComponent from '../common/Notification'
-import FormErrorHandled from '../common/FormErrorHandled'
+import { useRegistryLookup } from './RegistryLookup'
+import NotificationComponent from './Notification'
+import FormErrorHandled from './FormErrorHandled'
 
 type DismissibleNotificationProps = {
     notification: DismissibleNotificationInfo;
