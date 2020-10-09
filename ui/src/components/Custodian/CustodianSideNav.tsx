@@ -6,11 +6,10 @@ import { UserIcon } from '../../icons/Icons'
 
 type Props = {
     url: string;
-    disabled?: boolean;
     name: string;
 }
 
-const CustodianSideNav: React.FC<Props> = ({ disabled, url, name }) => {
+const CustodianSideNav: React.FC<Props> = ({ url, name }) => {
     const HomeMenuItem = (
         <Menu.Item
             as={NavLink}
@@ -21,7 +20,7 @@ const CustodianSideNav: React.FC<Props> = ({ disabled, url, name }) => {
         </Menu.Item>
     )
 
-    return disabled ? HomeMenuItem : (
+    return (
         <Menu.Menu>
             { HomeMenuItem }
 

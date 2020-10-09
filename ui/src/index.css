@@ -64,9 +64,21 @@ code {
   background-color: #fff !important;
 }
 
+.ui.form > .fields.inline-form-group.with-error {
+  align-items: flex-start;
+}
+
+.ui.form > .fields.inline-form-group.with-error button {
+  margin-top: 32px;;
+}
+
 .ui.form > .fields.inline-form-group {
   align-items: flex-end;
   margin: 0;
+}
+
+.ui.form > .fields.inline-form-group .error.field {
+  width: 196px;
 }
 
 .ui.form .field > label{

@@ -5,24 +5,22 @@ import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import {
-    Investor as InvestorModel,
-    InvestorInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
+import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
+import FormErrorHandled from '../common/FormErrorHandled'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
-import MarketRelationships from '../common/MarketRelationships'
-import { useRegistryLookup } from '../common/RegistryLookup'
 import Holdings from '../common/Holdings'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
@@ -48,7 +46,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         ...useDismissibleNotifications(),
     ];
     const registeredInvestor = useStreamQuery(RegisteredInvestor);
-    const investorModel = useStreamQuery(InvestorModel);
 
     const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
@@ -91,29 +88,34 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
-        'location': createField('', 'Location', 'Your current location', 'text'),
-        'ssn': createField('', 'Social Security Number (private)', 'Your social security number', 'password')
+        'location': createField('', 'Location', 'Your current location', 'text')
     });
 
     useEffect(() => {
         if (registeredInvestor.contracts[0]) {
             const riData = registeredInvestor.contracts[0].payload;
-            const investorContract = investorModel.contracts[0];
-            const ssn = investorContract ? investorContract.payload.ssn : 'Private';
             setProfile({
                 name: { ...profile.name, value: riData.name },
-                location: { ...profile.location, value: riData.location },
-                ssn: { ...profile.ssn, value: ssn }
+                location: { ...profile.location, value: riData.location }
             })
         }
-    }, [registeredInvestor, investorModel]);
+    }, [registeredInvestor]);
+
+    const updateProfile = async () => {
+        const key = wrapDamlTuple([operator, investor]);
+        const args = {
+            newName: profile.name.value,
+            newLocation: profile.location.value
+        };
+        await ledger.exerciseByKey(RegisteredInvestor.RegisteredInvestor_UpdateProfile, key, args)
+                    .catch(err => console.error(err));
+    }
 
     const acceptInvite = async () => {
         const key = wrapDamlTuple([operator, investor]);
         const args = {
             name: profile.name.value,
             location: profile.location.value,
-            ssn: profile.ssn.value,
             isPublic: true
         };
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
@@ -127,6 +129,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <InvestorProfile
+                content='Submit'
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -139,9 +142,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             <LandingPage
                 notifications={notifications}
                 profile={
-                    <InvestorProfile
-                        disabled
-                        defaultProfile={profile}/>
+                    <FormErrorHandled onSubmit={updateProfile}>
+                        <InvestorProfile
+                            content='Save'
+                            defaultProfile={profile}
+                            submitProfile={profile => setProfile(profile)}/>
+                    </FormErrorHandled>
                 }
                 sideNav={sideNav}
                 marketRelationships={

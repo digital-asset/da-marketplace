@@ -4,10 +4,7 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { useLedger, useParty, useStreamQuery } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import {
-    Issuer as IssuerModel,
-    IssuerInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { PublicIcon } from '../../icons/Icons'
@@ -25,6 +22,7 @@ import Page from '../common/Page'
 import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
+import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -37,39 +35,47 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const registeredIssuer = useStreamQuery(RegisteredIssuer);
-    const issuerModel = useStreamQuery(IssuerModel);
-
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
+        'location': createField('', 'Location', 'Your current location', 'text'),
         'title': createField('', 'Title', 'Your professional title', 'text'),
         'issuerID': createField('', 'Issuer ID', 'Your Issuer ID', 'text'),
-        'ssn': createField('', 'Social Security Number (private)', 'Your social security number', 'password')
     });
 
     useEffect(() => {
         if (registeredIssuer.contracts[0]) {
             const riData = registeredIssuer.contracts[0].payload;
-            const issuerContract = issuerModel.contracts[0];
-            const ssn = issuerContract ? issuerContract.payload.ssn : 'Private';
             setProfile({
                 name: { ...profile.name, value: riData.name },
+                location: { ...profile.location, value: riData.location },
                 title: { ...profile.title, value: riData.title },
-                issuerID: { ...profile.issuerID, value: riData.issuerID },
-                ssn: { ...profile.ssn, value: ssn },
+                issuerID: { ...profile.issuerID, value: riData.issuerID }
             })
         }
-    }, [registeredIssuer, issuerModel]);
+    }, [registeredIssuer]);
+
+    const updateProfile = async () => {
+        const key = wrapDamlTuple([operator, issuer]);
+        const args = {
+            newName: profile.name.value,
+            newLocation: profile.location.value,
+            newTitle: profile.title.value,
+            newIssuerID: profile.issuerID.value
+        };
+        await ledger.exerciseByKey(RegisteredIssuer.RegisteredIssuer_UpdateProfile, key, args)
+                    .catch(err => console.error(err));
+    }
 
     const acceptInvite = async () => {
         const key = wrapDamlTuple([operator, issuer]);
         const args = {
             name: profile.name.value,
+            location: profile.location.value,
             title: profile.title.value,
-            issuerID: profile.issuerID.value,
-            ssn: profile.ssn.value,
+            issuerID: profile.issuerID.value
         };
         await ledger.exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args)
                     .catch(err => console.error(err));
@@ -78,22 +84,27 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
+                content='Submit'
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-    const sideNav = <IssuerSideNav url={url} name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
+    const sideNav = <IssuerSideNav url={url}
+                                   name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
 
     const issuerScreen = (
         <Switch>
             <Route exact path={path}>
                 <LandingPage
                     profile={
-                        <IssuerProfile
-                            disabled
-                            defaultProfile={profile}/>
+                        <FormErrorHandled onSubmit={updateProfile}>
+                            <IssuerProfile
+                                content='Save'
+                                defaultProfile={profile}
+                                submitProfile={profile => setProfile(profile)}/>
+                        </FormErrorHandled>
                     }
                     marketRelationships={
                         <MarketRelationships role={MarketRole.IssuerRole}

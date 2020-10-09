@@ -22,6 +22,7 @@ import Holdings from '../common/Holdings'
 
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
+import FormErrorHandled from '../common/FormErrorHandled'
 
 
 type Props = {
@@ -37,7 +38,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const registeredBroker = useStreamQuery(RegisteredBroker);
     const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
     const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
-
     const notifications = useDismissibleNotifications();
 
     const { custodianMap, exchangeMap } = useRegistryLookup();
@@ -79,6 +79,16 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         }
     }, [registeredBroker]);
 
+    const updateProfile = async () => {
+        const key = wrapDamlTuple([operator, broker]);
+        const args = {
+            newName: profile.name.value,
+            newLocation: profile.location.value,
+        };
+        await ledger.exerciseByKey(RegisteredBroker.RegisteredBroker_UpdateProfile, key, args)
+                    .catch(err => console.error(err));
+    }
+
     const acceptInvite = async () => {
         const key = wrapDamlTuple([operator, broker]);
         const args = {
@@ -92,6 +102,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
+                content='Submit'
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -99,15 +110,19 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <BrokerSideNav url={url} name={registeredBroker.contracts[0]?.payload.name || broker}/>
+    const sideNav = <BrokerSideNav url={url}
+                                   name={registeredBroker.contracts[0]?.payload.name || broker}/>
 
     const brokerScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
                 profile={
-                    <BrokerProfile
-                        disabled
-                        defaultProfile={profile}/>
+                    <FormErrorHandled onSubmit={updateProfile}>
+                        <BrokerProfile
+                            content='Save'
+                            defaultProfile={profile}
+                            submitProfile={profile => setProfile(profile)}/>
+                    </FormErrorHandled>
                 }
                 marketRelationships={
                     <MarketRelationships role={MarketRole.BrokerRole}

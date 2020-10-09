@@ -88,7 +88,7 @@ const IssueAsset = () => {
                 value={description}
                 onChange={e => setDescription(e.currentTarget.value)}
             />
-            <div className='is-public'>
+            <div className='observer-select'>
                 <FormToggle
                     defaultChecked
                     className='issue-asset-form-field'
@@ -97,13 +97,14 @@ const IssueAsset = () => {
                     offLabel='Private'
                     offInfo='Only a set of parties will be aware of this token.'
                     onClick={val => setIsPublic(val)}/>
-                  <Form.Select
-                      multiple
-                      disabled={isPublic}
-                      placeholder='Select...'
-                      options={partyOptions}
-                      onChange={handleObserversChange}
-                    />
+                <Form.Select
+                    multiple
+                    className='issue-asset-form-field'
+                    disabled={isPublic}
+                    placeholder='Select...'
+                    options={partyOptions}
+                    onChange={handleObserversChange}
+                />
             </div>
             <Form.Input
                 fluid
@@ -116,7 +117,6 @@ const IssueAsset = () => {
             <Button
                 primary
                 disabled={!name || !quantityPrecision || !description}
-                className='issue-asset-submit-button'
                 content='Submit'>
             </Button>
         </FormErrorHandled>
