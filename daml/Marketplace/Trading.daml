@@ -50,7 +50,7 @@ template Order
   with
     exchange : Party
     exchParticipant : Party
-    pair : TokenPair
+    pair : IdPair
     isBid : Bool
     price : Decimal
     qty : Decimal
@@ -65,39 +65,38 @@ template Order
     maintainer key._1
 
     controller exchange can
-      Order_FillBinaryOptionOrder : (ContractId TradeSide, Optional (ContractId Order))
+      Order_FillBinaryOption : (ContractId TradeSide, Optional (ContractId Order))
         with
-          fillQty : Int
+          fillQty : Decimal
           fillPrice : Decimal
           counterParty : Party
           counterOrderId : Int
           timestamp : Text
         do
-          assert $ fillQty > 0
-          assert $ intToDecimal fillQty <= qty
+          assert $ fillQty > 0.0
+          assert $ fillQty <= qty
           assert $ if isBid then fillPrice <= price
                             else fillPrice >= price
           deposit <- fetch depositCid
           let receiverAccountId = Id
                 with signatories = deposit.account.id.signatories,
                       label = getAccountLabel counterParty exchange, version = 0
+              isBinaryOption = True
           (_, binOption) <- fetchByKey @BinaryOption pair._1
           (_, quoteToken) <- fetchByKey @Token pair._2
-          if intToDecimal fillQty < qty then do
+          if fillQty < qty then do
             let depositFillQty = roundBankers quoteToken.quantityPrecision $
-                                    if isBid then intToDecimal fillQty * fillPrice
-                                    else intToDecimal fillQty * (binOption.maxPrice - fillPrice)
+                                    if isBid then fillQty * fillPrice
+                                    else fillQty * (binOption.maxPrice - fillPrice)
             [filledCid, restCid] <- exercise depositCid AssetDeposit_Split
               with quantities = [depositFillQty]
             remainingCid <- create this
-              with depositCid = restCid, qty = qty - intToDecimal fillQty, status = "PartiallyFilled"
-            tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some filledCid, qty = intToDecimal fillQty, ..
+              with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
+            tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some filledCid, qty = fillQty, ..
             return $ (tradeCid, Some remainingCid)
           else do
             tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some depositCid, ..
             return $ (tradeCid, None)
-
-
 
       Order_Fill : (ContractId TradeSide, Optional (ContractId Order))
         with
@@ -115,6 +114,7 @@ template Order
           let receiverAccountId = Id
                 with signatories = deposit.account.id.signatories,
                       label = getAccountLabel counterParty exchange, version = 0
+              isBinaryOption = False
           (_, baseToken) <- fetchByKey @Token pair._1
           (_, quoteToken) <- fetchByKey @Token pair._2
           if fillQty < qty then do
@@ -128,26 +128,16 @@ template Order
             then do
               [filledCid, restCid] <- exercise depositCid AssetDeposit_Split
                 with quantities = [depositFillQty]
-              -- txReqCid <- create DepositTransferRequest
-              --   with sender = exchParticipant,
-              --         senderAccountId = deposit.account.id,
-              --         receiverAccountId = receiverAccountId,
-              --         depositCid = filledCid
               remainingCid <- create this
                 with depositCid = restCid, qty = qty - fillQty, status = "PartiallyFilled"
-              tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some filledCid, ..
+              tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some filledCid, qty = fillQty, ..
               return $ (tradeCid, Some remainingCid)
             else do
               -- the fillQty is not enough to warrant a deposit transfer
               remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
-              tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = None, ..
+              tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = None, qty = fillQty, ..
               return $ (tradeCid, Some remainingCid)
           else do
-            -- txReqCid <- create DepositTransferRequest
-            --   with sender = exchParticipant,
-            --         senderAccountId = deposit.account.id,
-            --         receiverAccountId = receiverAccountId,
-            --         ..
             tradeCid <- create TradeSide with isBuy = isBid, optDepositCid = Some depositCid, ..
             return $ (tradeCid, None)
 
@@ -164,7 +154,7 @@ template BrokerOrderRequest
     brokerCustomer : Party
     broker : Party
     depositCid : ContractId AssetDeposit
-    pair : TokenPair
+    pair : IdPair
     isBid : Bool
     price : Decimal
     qty : Decimal
@@ -188,7 +178,7 @@ template BrokerOrder
   with
     brokerCustomer : Party
     broker : Party
-    pair : TokenPair
+    pair : IdPair
     isBid : Bool
     price : Decimal
     qty : Decimal
@@ -227,7 +217,7 @@ template TradeSide
   with
     exchParticipant : Party
     exchange : Party
-    pair : TokenPair
+    pair : IdPair
     price : Decimal
     qty : Decimal
     isBuy : Bool
@@ -236,12 +226,14 @@ template TradeSide
     timestamp : Text
     optDepositCid : Optional (ContractId AssetDeposit)
     receiverAccountId : Id
+    isBinaryOption : Bool
   where
     signatory exchange, exchParticipant
 
     controller exchange can
       TradeSide_Settle : (ContractId SettledTradeSide, Optional (ContractId DepositTransferRequest))
         do
+          assert $ not isBinaryOption
           optDepositTxReqCid <- case optDepositCid of
             Some depositCid -> do
               deposit <- fetch depositCid
@@ -257,6 +249,7 @@ template TradeSide
         with
           settledBinOptionCid : ContractId SettledBinaryOption
         do
+          assert isBinaryOption
           settledBinOption <- fetch settledBinOptionCid
           let needsTransfer = settledBinOption.outcome /= isBuy
           optDepositTxReqCid <- case (optDepositCid, needsTransfer) of
@@ -275,7 +268,7 @@ template SettledTradeSide
   with
     exchParticipant : Party
     exchange : Party
-    pair : TokenPair
+    pair : IdPair
     price : Decimal
     qty : Decimal
     isBuy : Bool
@@ -290,7 +283,7 @@ template BrokerTrade
   with
     brokerCustomer : Party
     broker : Party
-    pair : TokenPair
+    pair : IdPair
     price : Decimal
     qty : Decimal
     isBuy : Bool

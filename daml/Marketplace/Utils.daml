@@ -7,8 +7,12 @@ import DA.Next.Set
 import DA.Optional
 import DA.Text
 
+
+type IdPair = (Id, Id)
+
 data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole
     deriving (Show, Eq)
+
 
 getAccountId : Party -> Party -> [Party] -> Id
 getAccountId owner provider signatories = Id with

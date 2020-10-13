@@ -47,7 +47,7 @@ template BrokerCustomer
       nonconsuming BrokerCustomer_RequestBid : ContractId BrokerOrderRequest
         with
           depositCid : ContractId AssetDeposit
-          pair : TokenPair
+          pair : IdPair
           price : Decimal
         do
           deposit <- fetch depositCid
@@ -65,7 +65,7 @@ template BrokerCustomer
       nonconsuming BrokerCustomer_RequestOffer : ContractId BrokerOrderRequest
         with
           depositCid : ContractId AssetDeposit
-          pair : TokenPair
+          pair : IdPair
           price : Decimal
         do
           deposit <- fetch depositCid

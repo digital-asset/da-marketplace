@@ -45,42 +45,14 @@ template ExchangeParticipant
     maintainer key._1
 
     controller exchParticipant can
-      nonconsuming ExchangeParticipant_PlaceBinaryOptionBid : ContractId OrderRequest
-        with
-          depositCid : ContractId AssetDeposit
-          binOption : TokenPair
-          price : Decimal
-          qty : Int
-        do
-          deposit <- fetch depositCid
-          assertMsg "deposit is not allocated to the exchange"
-            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
-          assertMsg ("deposit should be for " <> binOption._2.label <> " but it is for " <> deposit.asset.id.label)
-            $ binOption._2 == deposit.asset.id
-          (_, quoteToken) <- fetchByKey @Token binOption._2
-          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision price == price
-          (_, binaryOption) <- fetchByKey @BinaryOption binOption._1
-          assertMsg ("price should be between " <> show binaryOption.minPrice <> " and " <> show binaryOption.maxPrice)
-            $ (price >= binaryOption.minPrice && price <= binaryOption.maxPrice)
-          let decimalQty = intToDecimal qty
-              requiredDepositAmount = decimalQty * price
-          assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
-            $ (deposit.asset.quantity >= requiredDepositAmount)
-          if requiredDepositAmount < deposit.asset.quantity then do
-            [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
-            let order = Order with isBid = True, status = "New", orderId = -1, pair = binOption, depositCid = splitCid, qty = decimalQty, ..
-            create OrderRequest with ..
-          else do
-            let order = Order with isBid = True, status = "New", orderId = -1, pair = binOption, qty = decimalQty, ..
-            create OrderRequest with ..
 
-      nonconsuming ExchangeParticipant_PlaceBinaryOptionShortOffer : ContractId OrderRequest
+      nonconsuming ExchangeParticipant_PlaceBinaryOptionOrder : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
-          binOption : TokenPair
+          binOption : IdPair
           price : Decimal
-          qty : Int
+          qty : Decimal
+          isBid : Bool
         do
           deposit <- fetch depositCid
           assertMsg "deposit is not allocated to the exchange"
@@ -93,22 +65,21 @@ template ExchangeParticipant
           (_, binaryOption) <- fetchByKey @BinaryOption binOption._1
           assertMsg ("price should be between " <> show binaryOption.minPrice <> " and " <> show binaryOption.maxPrice)
             $ (price >= binaryOption.minPrice && price <= binaryOption.maxPrice)
-          let decimalQty = intToDecimal qty
-              requiredDepositAmount = decimalQty * (binaryOption.maxPrice - price)
+          let requiredDepositAmount = if isBid then qty * price else qty * (binaryOption.maxPrice - price)
           assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
             $ (deposit.asset.quantity >= requiredDepositAmount)
           if requiredDepositAmount < deposit.asset.quantity then do
             [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
-            let order = Order with isBid = False, status = "New", orderId = -1, pair = binOption, depositCid = splitCid, qty = decimalQty, ..
+            let order = Order with status = "New", orderId = -1, pair = binOption, depositCid = splitCid, ..
             create OrderRequest with ..
           else do
-            let order = Order with isBid = False, status = "New", orderId = -1, pair = binOption, qty = decimalQty, ..
+            let order = Order with status = "New", orderId = -1, pair = binOption, ..
             create OrderRequest with ..
 
       nonconsuming ExchangeParticipant_PlaceBid : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
-          pair : TokenPair
+          pair : IdPair
           price : Decimal
         do
           deposit <- fetch depositCid
@@ -127,7 +98,7 @@ template ExchangeParticipant
       nonconsuming ExchangeParticipant_PlaceOffer : ContractId OrderRequest
         with
           depositCid : ContractId AssetDeposit
-          pair : TokenPair
+          pair : IdPair
           price : Decimal
         do
           deposit <- fetch depositCid

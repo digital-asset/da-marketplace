@@ -338,8 +338,8 @@ testBinaryOption = scenario do
   depositTransferRequest <- alice `submit` exerciseByKey @Investor (operator, alice) Investor_AllocateToProvider with provider = exchange, depositCid = depositCid1, ..
   depositCid1 <- custodian `submit` exercise depositTransferRequest DepositTransferRequest_Approve
 
-  -- (the price is 80 which is the equivalent of risking 80 for a payoff of 100 or "backing the 1.25 odds for a stake of 3 * 80 = 240")
-  bidOrderRequestCid <- alice `submit` exerciseByKey @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBinaryOptionBid with depositCid = depositCid1, binOption = (binaryOptionId, usdtTokenId), price = 80.00, qty = 3
+  -- (the price is 80 which is the equivalent of risking 80 for a payoff of 100 or "backing the 1.25 odds for a stake of 2.5 * 80 = 200")
+  bidOrderRequestCid <- alice `submit` exerciseByKey @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBinaryOptionOrder with depositCid = depositCid1, binOption = (binaryOptionId, usdtTokenId), price = 80.00, qty = 2.5, isBid = True
   bidOrderCid <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_ApproveOrderRequest with orderRequestCid = bidOrderRequestCid, orderId = 1
 
   -- Bob places an offer for the Binary Option
@@ -347,12 +347,12 @@ testBinaryOption = scenario do
   depositCid2 <- custodian `submit` exercise depositTransferRequest DepositTransferRequest_Approve
 
   -- (the price is 80 which is the equivalent of risking 100 - 80 = 20 for a payoff of 100 or "laying the 1.25 odds for a stake of 2 * 20 = 40")
-  offerOrderRequestCid <- bob `submit` exerciseByKey @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceBinaryOptionShortOffer with depositCid = depositCid2, binOption = (binaryOptionId, usdtTokenId), price = 80.00, qty = 2
+  offerOrderRequestCid <- bob `submit` exerciseByKey @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceBinaryOptionOrder with depositCid = depositCid2, binOption = (binaryOptionId, usdtTokenId), price = 80.00, qty = 2.0, isBid = False
   offerOrderCid <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_ApproveOrderRequest with orderRequestCid = offerOrderRequestCid, orderId = 2
 
   -- exchange matches the two orders
-  (buyTradeCid, _) <- exchange `submit` exercise bidOrderCid Order_FillBinaryOptionOrder with fillQty = 2, fillPrice = 80.0, counterParty = bob, counterOrderId = 2, timestamp = "1601394768171637000"
-  (sellTradeCid, _) <- exchange `submit` exercise offerOrderCid Order_FillBinaryOptionOrder with fillQty = 2, fillPrice = 80.00, counterParty = alice, counterOrderId = 1, timestamp = "1601394768171637000"
+  (buyTradeCid, _) <- exchange `submit` exercise bidOrderCid Order_FillBinaryOption with fillQty = 2.0, fillPrice = 80.0, counterParty = bob, counterOrderId = 2, timestamp = "1601394768171637000"
+  (sellTradeCid, _) <- exchange `submit` exercise offerOrderCid Order_FillBinaryOption with fillQty = 2.0, fillPrice = 80.00, counterParty = alice, counterOrderId = 1, timestamp = "1601394768171637000"
 
   -- issuer settles the option
   settledBinOptionCid <- optionIssuer `submit` exerciseByKey @BinaryOption binaryOptionId BinaryOption_Settle with outcome = True

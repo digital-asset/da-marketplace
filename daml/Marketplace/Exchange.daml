@@ -40,8 +40,8 @@ template Exchange
     operator : Party
     exchange : Party
     public : Party
-    tokenPairs : [TokenPair] -- tokens pairs that are tradable on the exchange
-    binOptions : [TokenPair]
+    tokenPairs : [IdPair] -- tokens pairs that are tradable on the exchange
+    binOptions : [IdPair]
     participants : [Party]
   where
     signatory operator, exchange
