@@ -6,9 +6,6 @@ import DA.Finance.Types
 import DA.Next.Set
 
 
-type TokenPair = (Id, Id)
-
-
 -- | Reference data describing a token.
 template Token
   with

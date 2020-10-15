@@ -30,7 +30,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const allTokens: TokenInfo[] = useStreamQuery(Token).contracts.map(makeContractInfo);
 
-    const handleTokenPairSubmit = async () => {
+    const handleIdPairSubmit = async () => {
         if (!baseToken || !quoteToken) {
             throw new Error('Tokens not selected');
         }
@@ -55,7 +55,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='create-market'>
-                    <FormErrorHandled onSubmit={handleTokenPairSubmit}>
+                    <FormErrorHandled onSubmit={handleIdPairSubmit}>
                         <div className='create-market-options'>
                             <ContractSelect
                                 clearable

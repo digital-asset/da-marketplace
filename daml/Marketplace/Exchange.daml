@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.Exchange where
 
+import Marketplace.BinaryOption
 import Marketplace.Custodian
 import Marketplace.ExchangeParticipant
 import Marketplace.Registry
@@ -31,7 +32,7 @@ template ExchangeInvitation
           location : Text
         do
           create RegisteredExchange with ..
-          create Exchange with tokenPairs = [], participants = [], ..
+          create Exchange with tokenPairs = [], binOptions = [], participants = [], ..
 
 
 template Exchange
@@ -39,7 +40,8 @@ template Exchange
     operator : Party
     exchange : Party
     public : Party
-    tokenPairs : [TokenPair] -- tokens pairs that are tradable on the exchange
+    tokenPairs : [IdPair] -- tokens pairs that are tradable on the exchange
+    binOptions : [IdPair]
     participants : [Party]
   where
     signatory operator, exchange
@@ -73,6 +75,15 @@ template Exchange
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
           create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 
+      Exchange_AddBinaryOption : ContractId Exchange
+        with
+          binOptionId : Id
+          quoteTokenId : Id
+        do
+          (_, binOption) <- fetchByKey @BinaryOption binOptionId
+          (_, quoteToken) <- fetchByKey @Token quoteTokenId
+          create this with binOptions = dedup $ (binOptionId, quoteTokenId) :: binOptions
+
       nonconsuming Exchange_ApproveOrderRequest : ContractId Order
         with
           orderRequestCid : ContractId OrderRequest
@@ -81,5 +92,5 @@ template Exchange
           orderRequest <- fetch orderRequestCid
           let pair = orderRequest.order.pair
           assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
-            $ pair `elem` tokenPairs
+            $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
           exercise orderRequestCid OrderRequest_Ack with ..

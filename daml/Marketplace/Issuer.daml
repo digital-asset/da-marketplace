@@ -1,6 +1,7 @@
 daml 1.2
 module Marketplace.Issuer where
 
+import Marketplace.BinaryOption
 import Marketplace.Custodian
 import Marketplace.Registry
 import Marketplace.Token
@@ -57,6 +58,19 @@ template Issuer
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
           let tokenObservers = if isPublic then (public :: observers) else observers
           create Token with id = tokenId, observers = fromList tokenObservers, ..
+
+      nonconsuming Issuer_IssueBinaryOption : ContractId BinaryOption
+        with
+          name : Text
+          description : Text
+          minPrice : Decimal
+          maxPrice : Decimal
+          isPublic : Bool
+          observers : [Party]
+        do
+          let binOptionId = Id with signatories = fromList [issuer], label = name, version = 0
+          let binOptionObservers = if isPublic then (public :: observers) else observers
+          create BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
 
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with

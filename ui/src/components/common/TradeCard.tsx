@@ -1,13 +1,13 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
 import { unwrapDamlTuple } from '../common/damlTypes'
-import { TradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeIcon } from '../../icons/Icons'
 
 import './OrderCard.css'
 
 export type TradeCardProps = {
-    trade: TradeSide;
+    trade: SettledTradeSide;
 }
 
 const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {

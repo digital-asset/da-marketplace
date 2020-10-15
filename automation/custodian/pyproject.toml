@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "bot"
-version = "0.0.1"
-description = "The DA Marketplace Operator Bot"
+version = "0.0.2"
+description = "The DA Marketplace Custodian Bot"
 authors = ["Digital Asset"]
 
 [tool.poetry.dependencies]
