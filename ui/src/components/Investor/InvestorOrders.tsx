@@ -1,7 +1,7 @@
 import React from 'react'
 
 import { useStreamQuery } from '@daml/react'
-import { BrokerTrade, Order, OrderRequest, TradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { BrokerTrade, Order, OrderRequest, SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { OrdersIcon } from '../../icons/Icons'
 import { BrokerTradeCard } from '../common/BrokerTradeCard'
@@ -20,7 +20,7 @@ type Props = {
 const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allOrders = useStreamQuery(Order).contracts;
     const allOrderRequests = useStreamQuery(OrderRequest).contracts;
-    const allExchangeTrades = useStreamQuery(TradeSide).contracts;
+    const allExchangeTrades = useStreamQuery(SettledTradeSide).contracts;
     const allBrokerTrades = useStreamQuery(BrokerTrade).contracts;
 
     return (
