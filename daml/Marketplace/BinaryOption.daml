@@ -6,9 +6,6 @@ import DA.Finance.Types
 import DA.Next.Set
 
 
-type ListedBinaryOption = (Id, Id)
-
-
 -- | Reference data describing a binary option.
 template BinaryOption
   with

@@ -269,7 +269,7 @@ testBinaryOption = scenario do
   bob <- getParty "Bob"
 
   -- some empty strings to fill in registered users...
-  let (name, title, issuerID, location, ssn) = ("","","","","")
+  let (name, title, issuerID, location) = ("", "", "", "")
 
   -- create operator
   opCid <- operator `submit` create Operator with ..
