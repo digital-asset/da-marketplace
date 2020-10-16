@@ -15,6 +15,26 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
+function raiseParamsToHash() {
+  const url = new URL(window.location.href);
+
+  // When DABL login redirects back to app, hoist the query into the hash route.
+  // This allows react-router's HashRouter to see and parse the supplied params
+
+  // i.e., we want to turn
+  // ledgerid.projectdabl.com/?party=party&token=token/#/
+  // into
+  // ledgerid.projectdabl.com/#/?party=party&token=token
+  if (url.search !== '' && url.hash === '#/') {
+    window.location.href = `${url.origin}${url.pathname}#/${url.search}`;
+  }
+}
+
+function getTokenFromCookie(): string {
+  const tokenCookiePair = document.cookie.split('; ').find(row => row.startsWith('DABL_LEDGER_ACCESS_TOKEN')) || '';
+  return tokenCookiePair.slice(tokenCookiePair.indexOf('=') + 1);
+}
+
 type Props = {
   onLogin: (credentials: Credentials) => void;
 }
@@ -76,18 +96,24 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
 
   const query = useQuery();
   const history = useHistory();
+  const location = window.location;
 
   const handleDablLogin = () => {
     window.location.assign(`https://login.projectdabl.com/auth/login?ledgerId=${ledgerId}`);
   }
 
   const handleDablTokenLogin = () => {
-    history.push(`/?party=${partyId}&token=${jwt}`);
+    onLogin({token: jwt, party: partyId, ledgerId});
+    history.push('/role');
   }
 
   useEffect(() => {
-    const token = query.get("token");
+    raiseParamsToHash();
+  }, [location]);
+
+  useEffect(() => {
     const party = query.get("party");
+    const token = getTokenFromCookie();
 
     if (!token || !party) {
       return
