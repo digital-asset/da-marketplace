@@ -3,7 +3,7 @@
 
 import React from 'react'
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Route,
   Redirect,
   Switch
@@ -12,27 +12,33 @@ import {
 import DamlLedger from '@daml/react'
 import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
 
-import Credentials, { computeCredentials } from '../Credentials'
+import Credentials, { computeCredentials, storeCredentials, retrieveCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
+import { RegistryLookupProvider } from './common/RegistryLookup'
 import { useDablParties } from './common/common'
+import OnboardingTile from './common/OnboardingTile'
+
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
-import OnboardingTile from './common/OnboardingTile'
-import { RegistryLookupProvider } from './common/RegistryLookup'
 
 /**
  * React component for the entry point into the application.
  */
 // APP_BEGIN
 const App: React.FC = () => {
-  const [credentials, setCredentials] = React.useState<Credentials>();
+  const [credentials, setCredentials] = React.useState<Credentials | undefined>(retrieveCredentials());
+
+  const handleCredentials = (credentials?: Credentials) => {
+    setCredentials(credentials);
+    storeCredentials(credentials);
+  }
 
   return (
     <Router>
       <Switch>
         <Route exact path='/'>
-          <LoginScreen onLogin={setCredentials}/>
+          <LoginScreen onLogin={handleCredentials}/>
         </Route>
 
         <Route path='/role' render={() => {
@@ -45,7 +51,7 @@ const App: React.FC = () => {
                 <WellKnownPartiesProvider>
                   <PublicProvider>
                     <RegistryLookupProvider>
-                      <MainScreen onLogout={() => setCredentials(undefined)}/>
+                      <MainScreen onLogout={() => handleCredentials(undefined)}/>
                     </RegistryLookupProvider>
                   </PublicProvider>
                 </WellKnownPartiesProvider>
