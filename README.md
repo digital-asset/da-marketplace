@@ -50,7 +50,7 @@ yarn install --force --frozen-lockfile
 
 # Running
 
-To run the sample app locally using the Makefile in the background, follow these steps:
+To run the sample app locally in the background using the Makefile, follow these steps:
 
 ```
 # start the DAML server
