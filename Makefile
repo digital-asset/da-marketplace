@@ -1,7 +1,7 @@
 BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.name')
 VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.version')
 SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
-	       || yq r dabl-meta.yaml '.subdeployements' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
+	       || yq r dabl-meta.yaml '.subdeployments' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
 
 TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
@@ -158,6 +158,9 @@ start_matching_engine: $(matching_engine_pid)
 stop_matching_engine:
 	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
+start_bots: $(broker_pid) $(custodian_pid) $(exchange_pid) $(issuer_pid) $(operator_pid)
+
+stop_bots: stop_broker stop_custodian stop_exchange stop_issuer stop_operator
 
 target_dir := target
 

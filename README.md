@@ -18,7 +18,7 @@ This is an initial example of how to setup a marketplace where digital tokens
 can be issued and exchanged.
 
 # Requirements
-To run the marketplace locally or to build to be deployed on DAML, the following requirements are necessary:
+To run the marketplace locally or to build to be deployed on DABL, the following requirements are necessary:
 1. DAML SDK (1.6)
 2. `yarn` (1.22.x)
 3. `poetry` (1.0.x)
@@ -59,11 +59,9 @@ make start_daml_server
 # wait for the navigator to pop up...
 
 # start all bots
-make start_issuer
-make start_broker
-make start_exchange
-make start_operator
-make start_custodian
+make start_bots
+
+# if you would like to use the included matching engine:
 make start_matching_engine
 
 # start the UI
@@ -81,15 +79,13 @@ To access the frontend, point your browser to `http://localhost:3000`. To view t
 
 To stop running background processes:
 ```
-# start the DAML server
+# stop the DAML server
 make stop_daml_server
 
-# start all bots
-make stop_issuer
-make stop_broker
-make stop_exchange
-make stop_operator
-make stop_custodian
+# stop all bots
+make stop_bots
+
+# if you are using the included matching engine:
 make stop_matching_engine
 ```
 
