@@ -1,6 +1,7 @@
-BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml)
-VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml)
-SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
+BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.name')
+VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.version')
+SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
+	       || yq r dabl-meta.yaml '.subdeployements' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
 
 TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
