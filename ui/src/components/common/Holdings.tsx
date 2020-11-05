@@ -202,7 +202,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
     const ledger = useLedger();
     const [ splitNumberError, setSplitNumberError ] = useState<string>()
 
-    const tokenQuantityPercision = Number(useStreamQuery(Token).contracts
+    const tokenQuantityPrecision = Number(useStreamQuery(Token).contracts
             .find(t => t.payload.id.label == deposit.contractData.asset.id.label &&
                        t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision) || 0
 
@@ -230,8 +230,8 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
             return setSplitNumberError(`The splitting quantity must be greater than 0.`)
         }
 
-        if (countDecimals(number) > tokenQuantityPercision) {
-            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPercision !== 0 && 'or less than'} ${tokenQuantityPercision}.`)
+        if (countDecimals(number) > tokenQuantityPrecision) {
+            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPrecision !== 0 && 'or less than'} ${tokenQuantityPercision}.`)
         }
 
         setSplitNumberError(undefined)
@@ -243,8 +243,8 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
             <Form.Group className='inline-form-group with-error'>
                 <Form.Input
                     type='number'
-                    step={`0.${"0".repeat(tokenQuantityPercision === 0? tokenQuantityPercision : tokenQuantityPercision-1)}1`}
-                    placeholder={`0.${"0".repeat(tokenQuantityPercision)}`}
+                    step={`0.${"0".repeat(tokenQuantityPrecision === 0? tokenQuantityPrecision : tokenQuantityPrecision-1)}1`}
+                    placeholder={`0.${"0".repeat(tokenQuantityPrecision)}`}
                     error={splitNumberError}
                     onChange={validateSplitNumber}/>
                 <Button
