@@ -231,7 +231,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
         }
 
         if (countDecimals(number) > tokenQuantityPrecision) {
-            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPrecision !== 0 && 'or less than'} ${tokenQuantityPercision}.`)
+            return setSplitNumberError(`The decimal precision of the splitting quantity must be equal to ${tokenQuantityPrecision !== 0 && 'or less than'} ${tokenQuantityPrecision}.`)
         }
 
         setSplitNumberError(undefined)
