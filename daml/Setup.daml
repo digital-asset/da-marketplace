@@ -10,10 +10,10 @@ import Marketplace.ExchangeParticipant
 import Marketplace.Investor
 import Marketplace.Issuer
 import Marketplace.Operator
-import Marketplace.Trading
 
 import Marketplace.Token
 import Marketplace.Transfer
+import Marketplace.Trading
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -22,15 +22,15 @@ import DA.Finance.Types
 import DA.Next.Set
 
 data LedgerParties = LedgerParties with
-  operator : Party
-  public : Party
-  custodian : Party
-  exchange : Party
-  btcIssuer : Party
+  userAdmin  : Party -- ^DABL uses 'UserAdmin' for 'Operator'
+  public     : Party
+  custodian  : Party
+  exchange   : Party
+  btcIssuer  : Party
   usdtIssuer : Party
-  alice : Party
-  bob : Party
-  broker : Party
+  alice      : Party
+  bob        : Party
+  broker     : Party
     deriving (Eq, Show)
 
 allocateParties : Script LedgerParties

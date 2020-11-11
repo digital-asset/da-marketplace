@@ -47,7 +47,7 @@ yarn install --force --frozen-lockfile
 
 `yarn` will automatically rebuild components as they are changed while running, or you can build them manually with `yarn build`.
 
-# Running
+# Running Locally
 
 To run the sample app locally in the background using the Makefile, follow these steps:
 
@@ -96,7 +96,7 @@ cd {bot_folder}
 (DAML_LEDGER_URL=localhost:6865 poetry run python bot/{bot_name}_bot.py
 ```
 
-## Running in DABL
+# Running in DABL
 These instructions will show you how to build and deploy the Marketplace to the DABL cloud service.
 
 ### Build the DIT file
@@ -108,7 +108,7 @@ make clean && package
 This will build the model, UI, and bots, as well as package the project in a `.dit` file which can be uploaded to DABL.
 
 ### Create, upload and launch the project
-Open http://projectdabl.com. Once you are logged in, click on "New Project:
+Open http://projectdabl.com. Once you are logged in, click on "New Project":
 
 ![1_create_project](https://user-images.githubusercontent.com/71082197/98857327-ec817480-242c-11eb-9bfe-972dd5b7aa7b.png)
 
@@ -127,7 +127,7 @@ When the file is uploaded, click "Launch" to deploy the project onto the ledger:
 ![4_click_launch](https://user-images.githubusercontent.com/71082197/98857332-ec817480-242c-11eb-956f-a2ceab185431.png)
 
 ### Add the parties
-Next, add the parties. Click on the "Live Data" tab, and first add the "Public" and "UserAdmin" parties by clicking the "Plus" next to their names:
+Next, add the parties. Click on the "Live Data" tab, and first add the `Public` and `UserAdmin` parties by clicking the "Plus" next to their names:
 
 ![5_add_public](https://user-images.githubusercontent.com/71082197/98857333-ed1a0b00-242c-11eb-809a-a7a8a5e983ef.png)
 
@@ -143,7 +143,7 @@ Click the "Ledger Settings" tab, and download the `participants.json` file:
 In your marketplace repo:
 ```
 # creates a ledger_parties.json file that maps the DABL party IDs to party names
-./create_ledger_parties.py path/to/participants.json path/to/ledger_parties.json`
+./create_ledger_parties.py path/to/participants.json ledger_parties.json
 
 # runs a DAML Script that adds all relevant information to the project ledger
 daml script --participant-config participants.json --json-api --dar .daml/dist/da-marketplace-0.0.2.dar --script-name Setup:doSetup --input-file ledger-parties.json
@@ -151,7 +151,7 @@ daml script --participant-config participants.json --json-api --dar .daml/dist/d
 If you would like to boostrap the marketplace with your own data, you can either change the `doSetup` function in `daml/Setup.daml`, or create your own setup function and change the `--script-name` to `MyModule:myFunction`.
 
 ### Configure and deploy the bots
-In the deployments tab, for each Automation bot.
+In the deployments tab, launch and configure each automation bot using the following instructions.
 
 Click the Automation bot:
 
@@ -162,21 +162,40 @@ Add the configuration (the human readable name has no bearing on the functionali
 ![9_configure_bot](https://user-images.githubusercontent.com/71082197/98857337-edb2a180-242c-11eb-9e24-6b1d032963b9.png)
 
 For the party to run as, use the following for each bot:
-| Bot             | Party                 |
-|-----------------|-----------------------|
-| operator-bot    | UserAdmin             |
-| matching-engine | Exchange              |
-| exchange-bot    | Exchange              |
-| custodian-bot   | Custodian             |
-| broker-bot      | Broker                |
-| issuer-bot      | UsdtIssuer, BtcIssuer |
+| Bot               | Party                     |
+|-------------------|---------------------------|
+| `operator-bot`    | `UserAdmin`               |
+| `matching-engine` | `Exchange`                |
+| `exchange-bot`    | `Exchange`                |
+| `custodian-bot`   | `Custodian`               |
+| `broker-bot`      | `Broker`                  |
+| `issuer-bot`      | `UsdtIssuer`, `BtcIssuer` |
+
+**Note**: If you plan on using the Exberry Exchange Integration (see below), do _not_ deploy the `matching-engine` automation bot.
 
 For the `issuer-bot`, to configure a second deployment: after launching the first deployment select "Configure New Deployment":
 
 ![10_configure_new_deployment](https://user-images.githubusercontent.com/71082197/98857339-edb2a180-242c-11eb-923a-d0e8d180f12c.png)
 
-### View UI.
+
+### View UI
 
 After all deployments are running, you can click the "View Site" button to visit the Marketplace UI:
 
 ![11_view_site](https://user-images.githubusercontent.com/71082197/98857340-edb2a180-242c-11eb-9989-55aafc66199f.png)
+
+
+The Party ID/Party JWTs to use to login with various parties can be found on the "Ledger Settings" tab of the console:
+
+![14_copy_user_id](https://user-images.githubusercontent.com/71082197/98868956-f7450500-243e-11eb-842b-a685baffa5af.png)
+
+### Exberry Matching Engine (optional)
+If you would like to use the [Exberry Matching Engine](https://exberry.io/) instead of the matching engine bot, first add the integration to your project on the "Browse Integrations" tab:
+
+![12_exberry_integration](https://user-images.githubusercontent.com/71082197/98867810-32463900-243d-11eb-862d-0a9b322c6fef.png)
+
+Next, in deployments, click on the Integration and configure it with your Exberry credentials and click "Launch". It should run as the `Exchange` party:
+
+![13_click_exberry](https://user-images.githubusercontent.com/71082197/98867872-50139e00-243d-11eb-8448-479e46fd85df.png)
+
+Finally, upload the `da-marketplace-exberry-adapter-0.0.2.tar.gz` file in the `target` folder and launch the automation as `Exchange`. See [above](#configure-and-deploy-the-bots) for instructions on deploying an automation bot.
