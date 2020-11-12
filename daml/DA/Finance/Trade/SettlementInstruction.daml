@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Trade.SettlementInstruction where
 
 import DA.Assert
@@ -81,7 +80,7 @@ template SettlementInstruction
     controller masterAgreement.id.signatories can
       SettlementInstruction_Process : [ContractId AssetDeposit]
         -- ^ Processes a settlement instruction by transferring all allocated asset deposits.
-        -- This choice is often called from the trade itself to atomically settle all 
+        -- This choice is often called from the trade itself to atomically settle all
         -- assets involved.
         do
           mapA

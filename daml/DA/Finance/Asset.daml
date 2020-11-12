@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Asset where
 
 import DA.Action
@@ -90,4 +89,3 @@ template AssetCategorization
       with newObservers : Set Party
       controller id.signatories
       do create this with observers = newObservers
-

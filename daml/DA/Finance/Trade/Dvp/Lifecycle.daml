@@ -1,4 +1,3 @@
-daml 1.2
 module DA.Finance.Trade.Dvp.Lifecycle where
 
 import DA.Assert
@@ -41,7 +40,7 @@ template DvpLifecycleRule
         let (payments1, deliveries1) = unzip $ map (apply le) dvp.payments
         let (deliveries2, payments2) = unzip $ map (apply le) dvp.deliveries
         let (payments, deliveries) = net (concat payments1 ++ concat payments2) (concat deliveries1 ++ concat deliveries2)
-        
+
         create dvp with
           tradeId = dvp.tradeId with version = dvp.tradeId.version + 1
           payments
@@ -55,7 +54,7 @@ apply le asset | le.id == asset.id =
   in (effects, consuming)
 apply _ asset = ([asset], [])
 
--- | HIDE 
+-- | HIDE
 net : [Asset] -> [Asset] -> ([Asset], [Asset])
 net payments deliveries =
   let paymentsNetted =
@@ -67,5 +66,5 @@ net payments deliveries =
         filter (\d -> d.quantity > 0.0)
         $ map (\d -> d with quantity = d.quantity - foldMap (.quantity) (filter (\p -> p.id == d.id) payments))
         deliveries
-        
+
   in (paymentsNetted, deliveriesNetted)
