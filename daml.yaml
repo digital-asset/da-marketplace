@@ -1,4 +1,4 @@
-sdk-version: 1.6.0
+sdk-version: 1.7.0
 name: da-marketplace
 source: daml
 init-script: Setup:setupBroker
