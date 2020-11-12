@@ -12,8 +12,8 @@ import Marketplace.Issuer
 import Marketplace.Operator
 
 import Marketplace.Token
-import Marketplace.Transfer
 import Marketplace.Trading
+import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset

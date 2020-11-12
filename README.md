@@ -102,7 +102,7 @@ These instructions will show you how to build and deploy the Marketplace to the 
 ### Build the DIT file
 First, rebuild the project.
 ```
-make clean && package
+make clean && make package
 ```
 
 This will build the model, UI, and bots, as well as package the project in a `.dit` file which can be uploaded to DABL.
@@ -177,13 +177,11 @@ For the `issuer-bot`, to configure a second deployment: after launching the firs
 
 ![10_configure_new_deployment](https://user-images.githubusercontent.com/71082197/98857339-edb2a180-242c-11eb-923a-d0e8d180f12c.png)
 
-
 ### View UI
 
 After all deployments are running, you can click the "View Site" button to visit the Marketplace UI:
 
 ![11_view_site](https://user-images.githubusercontent.com/71082197/98857340-edb2a180-242c-11eb-9989-55aafc66199f.png)
-
 
 The Party ID/Party JWTs to use to login with various parties can be found on the "Ledger Settings" tab of the console:
 
