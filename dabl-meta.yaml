@@ -7,7 +7,7 @@ catalog:
     author: Digital Asset (Switzerland) GmbH
     url: https://github.com/digital-asset/da-marketplace
     license: 0BSD
-    tags: [ dabl-sample-app, application, experimental ]
+    tags: [ dabl-sample-app, application ]
 subdeployments:
     - da-marketplace-model-0.0.2.dar
     - da-marketplace-broker-bot-0.0.2.tar.gz
