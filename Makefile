@@ -74,7 +74,10 @@ $(operator_bot_dir):
 	cd automation/operator && poetry install && poetry build
 
 $(operator_pid): |$(state_dir) $(operator_bot_dir)
-	cd automation/operator && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/operator_bot.py > ../../$(operator_log) & echo "$$!" > ../../$(operator_pid))
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name OperatorTrigger:handleOperator \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Operator > ../$(operator_log) & echo "$$!" > ../$(operator_pid))
 
 start_operator: $(operator_pid)
 
@@ -99,7 +102,10 @@ $(custodian_bot_dir):
 	cd automation/custodian && poetry install && poetry build
 
 $(custodian_pid): |$(state_dir) $(custodian_bot_dir)
-	cd automation/custodian && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/custodian_bot.py > ../../$(custodian_log) & echo "$$!" > ../../$(custodian_pid))
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name CustodianTrigger:handleCustodian \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Custodian > ../$(custodian_log) & echo "$$!" > ../$(custodian_pid))
 
 start_custodian: $(custodian_pid)
 
@@ -112,7 +118,10 @@ $(broker_bot_dir):
 	cd automation/broker && poetry install && poetry build
 
 $(broker_pid): |$(state_dir) $(broker_bot_dir)
-	cd automation/broker && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/broker_bot.py > ../../$(broker_log) & echo "$$!" > ../../$(broker_pid))
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name BrokerTrigger:handleBroker \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Broker > ../$(broker_log) & echo "$$!" > ../$(broker_pid))
 
 start_broker: $(broker_pid)
 
@@ -125,7 +134,10 @@ $(exchange_bot_dir):
 	cd automation/exchange && poetry install && poetry build
 
 $(exchange_pid): |$(state_dir) $(exchange_bot_dir)
-	cd automation/exchange && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/exchange_bot.py > ../../$(exchange_log) & echo "$$!" > ../../$(exchange_pid))
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name ExchangeTrigger:handleExchange \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Exchange > ../$(exchange_log) & echo "$$!" > ../$(exchange_pid))
 
 start_exchange: $(exchange_pid)
 
@@ -158,7 +170,7 @@ start_matching_engine: $(matching_engine_pid)
 stop_matching_engine:
 	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
-start_bots: $(broker_pid) $(custodian_pid) $(exchange_pid) $(issuer_pid) $(operator_pid)
+start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid) $(issuer_pid)
 
 stop_bots: stop_broker stop_custodian stop_exchange stop_issuer stop_operator
 
