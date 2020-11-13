@@ -136,7 +136,7 @@ Next, add the parties. Click on the "Live Data" tab, and first add the `Public` 
 
 ![5_add_public](https://user-images.githubusercontent.com/71082197/98857333-ed1a0b00-242c-11eb-809a-a7a8a5e983ef.png)
 
-Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Operator`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer` and `Custodian`:
+Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer` and `Custodian`:
 
 ![6_add_parties](https://user-images.githubusercontent.com/71082197/98857334-ed1a0b00-242c-11eb-8f6a-4e385baca6f8.png)
 
