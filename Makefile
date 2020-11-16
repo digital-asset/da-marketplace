@@ -7,6 +7,7 @@ TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
 
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
+trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
 matching_engine_version := $(shell cd matching_engine && poetry version | cut -f 2 -d ' ')
 operator_bot_version := $(shell cd automation/operator && poetry version | cut -f 2 -d ' ')
@@ -21,6 +22,8 @@ state_dir := .dev
 daml_build_log = $(state_dir)/daml_build.log
 sandbox_pid := $(state_dir)/sandbox.pid
 sandbox_log := $(state_dir)/sandbox.log
+
+trigger_build := triggers/.daml/dist/marketplace-triggers-$(trigger_version).dar
 
 exberry_adapter_dir := exberry_adapter/bot.egg-info
 adapter_pid := $(state_dir)/adapter.pid
@@ -73,7 +76,14 @@ stop_daml_server:
 $(operator_bot_dir):
 	cd automation/operator && poetry install && poetry build
 
-$(operator_pid): |$(state_dir) $(operator_bot_dir)
+$(trigger_build):
+	cd triggers && daml build
+
+.PHONY: clean_triggers
+clean_triggers:
+	rm $(trigger_build)
+
+$(operator_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name OperatorTrigger:handleOperator \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -88,8 +98,12 @@ stop_operator:
 $(issuer_bot_dir):
 	cd automation/issuer && poetry install && poetry build
 
-$(issuer_pid): |$(state_dir) $(issuer_bot_dir)
-	cd automation/issuer && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/issuer_bot.py > ../../$(issuer_log) & echo "$$!" > ../../$(issuer_pid))
+$(issuer_pid): |$(state_dir) $(trigger_build) # $(issuer_bot_dir)
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name PublicTrigger:handlePublic \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Operator > ../$(issuer_log) & echo "$$!" > ../$(issuer_pid))
+	# cd automation/issuer && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/issuer_bot.py > ../../$(issuer_log) & echo "$$!" > ../../$(issuer_pid))
 
 start_issuer: $(issuer_pid)
 
@@ -101,7 +115,7 @@ stop_issuer:
 $(custodian_bot_dir):
 	cd automation/custodian && poetry install && poetry build
 
-$(custodian_pid): |$(state_dir) $(custodian_bot_dir)
+$(custodian_pid): |$(state_dir) $(trigger_build) # $(custodian_bot_dir)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name CustodianTrigger:handleCustodian \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -117,7 +131,7 @@ stop_custodian:
 $(broker_bot_dir):
 	cd automation/broker && poetry install && poetry build
 
-$(broker_pid): |$(state_dir) $(broker_bot_dir)
+$(broker_pid): |$(state_dir) $(trigger_build) # $(broker_bot_dir)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name BrokerTrigger:handleBroker \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -133,7 +147,7 @@ stop_broker:
 $(exchange_bot_dir):
 	cd automation/exchange && poetry install && poetry build
 
-$(exchange_pid): |$(state_dir) $(exchange_bot_dir)
+$(exchange_pid): |$(state_dir) $(trigger_build) # $(exchange_bot_dir)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name ExchangeTrigger:handleExchange \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -162,8 +176,12 @@ stop_adapter:
 $(matching_engine_dir):
 	cd matching_engine && poetry install && poetry build
 
-$(matching_engine_pid): |$(state_dir) $(matching_engine_dir)
-	cd matching_engine && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/matching_engine_bot.py > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
+$(matching_engine_pid): |$(state_dir) $(trigger_build) # $(matching_engine_dir)
+	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	    --trigger-name MatchingEngine:handleMatchingEngine \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Exchange > ../$(exchange_log) & echo "$$!" > ../$(exchange_pid))
+	# cd matching_engine && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/matching_engine_bot.py > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
 
 start_matching_engine: $(matching_engine_pid)
 
