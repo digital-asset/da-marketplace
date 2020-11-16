@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Types where
 
 import DA.Next.Set as Set
@@ -23,7 +22,7 @@ data Id = Id
 
 instance Show Id where
   show Id{..} = "Sigs(" <> intercalate ";" (map show (Set.toList signatories)) <> ")-" <> label <> "-" <> show version
- 
+
 -- | A record that identifies an account. Also includes the account
 -- stakeholders because they cannot be looked up from another contract
 -- when specifying choice actors.

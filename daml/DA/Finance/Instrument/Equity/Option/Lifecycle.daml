@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Instrument.Equity.Option.Lifecycle where
 
 import DA.Action
@@ -18,7 +17,7 @@ import DA.Finance.Types
 import DA.Finance.Utils
 
 -- | Rule that helps with processing an option exercise.
--- 
+--
 -- For EUROPEAN options, exercise lifecycle effects are supposed
 -- to be created once at maturity. Option holder can use it to
 -- exercise their option positions at maturity.
@@ -66,7 +65,7 @@ template EquityOptionExerciseRule
                       CALL -> (stockAsset, Some cashAsset)
                       PUT -> (cashAsset, Some stockAsset)
                 create Entitlement with id = entitlementId, ..
-                
+
               CASH -> do
                 underlyingPrice <- fromSomeNote "underlying price required for CASH settlement" underlyingPrice
                 let quantity =

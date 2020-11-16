@@ -1,4 +1,3 @@
-daml 1.2
 module Marketplace.Custodian where
 
 import Marketplace.Notification

@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Base.RollConvention
   ( Period(..)
   , PeriodEnum(..)
@@ -35,7 +34,7 @@ data PeriodEnum
   -- ^ Year
   deriving (Eq, Show)
 
--- | An enum type to specify how to roll dates. 
+-- | An enum type to specify how to roll dates.
 data RollConventionEnum
   = EOM
   -- ^ Rolls on month end.
@@ -46,8 +45,8 @@ data RollConventionEnum
 -- | Get next periodic (daily `D` and weekly `W` not supported) date according
 -- to a given roll convention.
 next : Date -> Period -> RollConventionEnum -> Date
-next _ period _ | period.period == D = error "daily periodic dates not supported." 
-next _ period _ | period.period == W = error "weekly periodic dates not supported." 
+next _ period _ | period.period == D = error "daily periodic dates not supported."
+next _ period _ | period.period == W = error "weekly periodic dates not supported."
 
 next date period EOM
   | d /= monthDayCount y m = error $ "day " <> show d <> " does not match roll convention EOM."
