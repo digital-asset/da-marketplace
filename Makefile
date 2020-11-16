@@ -178,9 +178,9 @@ $(matching_engine_dir):
 
 $(matching_engine_pid): |$(state_dir) $(trigger_build) # $(matching_engine_dir)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
-	    --trigger-name MatchingEngine:handleMatchingEngine \
+	    --trigger-name MatchingEngine:handleMatching \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > ../$(exchange_log) & echo "$$!" > ../$(exchange_pid))
+	    --ledger-party Exchange > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
 	# cd matching_engine && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/matching_engine_bot.py > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
 
 start_matching_engine: $(matching_engine_pid)
