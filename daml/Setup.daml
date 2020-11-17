@@ -136,9 +136,6 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   (_, aliceInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = alice
   alice `submit` exerciseCmd aliceInvCid ExchangeParticipantInvitation_Accept
 
-  (_, bobInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = bob
-  bob `submit` exerciseCmd bobInvCid ExchangeParticipantInvitation_Accept
-
   pure ()
 
 setupBroker : Script()
