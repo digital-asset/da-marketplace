@@ -33,6 +33,7 @@ class MARKETPLACE:
     OrderRequest = 'Marketplace.Trading:OrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
+    ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
 def main():
@@ -51,6 +52,11 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
+
+    @client.ledger_created(MARKETPLACE.ExberrySID)
+    def handleExberrySID(event):
+        global SID
+        SID = event.cdata['sid']
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderRequest)
