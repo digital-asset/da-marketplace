@@ -7,14 +7,8 @@ TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
 
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
-trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
-matching_engine_version := $(shell cd matching_engine && poetry version | cut -f 2 -d ' ')
-operator_bot_version := $(shell cd automation/operator && poetry version | cut -f 2 -d ' ')
-issuer_bot_version := $(shell cd automation/issuer && poetry version | cut -f 2 -d ' ')
-custodian_bot_version := $(shell cd automation/custodian && poetry version | cut -f 2 -d ' ')
-broker_bot_version := $(shell cd automation/broker && poetry version | cut -f 2 -d ' ')
-exchange_bot_version := $(shell cd automation/exchange && poetry version | cut -f 2 -d ' ')
+trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
 ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
 
@@ -29,27 +23,21 @@ exberry_adapter_dir := exberry_adapter/bot.egg-info
 adapter_pid := $(state_dir)/adapter.pid
 adapter_log := $(state_dir)/adapter.log
 
-matching_engine_dir := matching_engine/bot.egg-info
 matching_engine_pid := $(state_dir)/matching_engine.pid
 matching_engine_log := $(state_dir)/matching_engine.log
 
-operator_bot_dir := automation/operator/bot.egg-info
 operator_pid := $(state_dir)/operator.pid
 operator_log := $(state_dir)/operator.log
 
-issuer_bot_dir := automation/issuer/bot.egg-info
 issuer_pid := $(state_dir)/issuer.pid
 issuer_log := $(state_dir)/issuer.log
 
-custodian_bot_dir := automation/custodian/bot.egg-info
 custodian_pid := $(state_dir)/custodian.pid
 custodian_log := $(state_dir)/custodian.log
 
-broker_bot_dir := automation/broker/bot.egg-info
 broker_pid := $(state_dir)/broker.pid
 broker_log := $(state_dir)/broker.log
 
-exchange_bot_dir := automation/exchange/bot.egg-info
 exchange_pid := $(state_dir)/exchange.pid
 exchange_log := $(state_dir)/exchange.log
 
@@ -73,8 +61,6 @@ stop_daml_server:
 
 
 ### DA Marketplace Operator Bot
-$(operator_bot_dir):
-	cd automation/operator && poetry install && poetry build
 
 $(trigger_build):
 	cd triggers && daml build
@@ -95,10 +81,8 @@ stop_operator:
 	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
 
 ### DA Marketplace Issuer Bot
-$(issuer_bot_dir):
-	cd automation/issuer && poetry install && poetry build
 
-$(issuer_pid): |$(state_dir) $(trigger_build) # $(issuer_bot_dir)
+$(issuer_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name PublicTrigger:handlePublic \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -112,10 +96,8 @@ stop_issuer:
 
 
 ### DA Marketplace Custodian Bot
-$(custodian_bot_dir):
-	cd automation/custodian && poetry install && poetry build
 
-$(custodian_pid): |$(state_dir) $(trigger_build) # $(custodian_bot_dir)
+$(custodian_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name CustodianTrigger:handleCustodian \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -126,12 +108,9 @@ start_custodian: $(custodian_pid)
 stop_custodian:
 	pkill -F $(custodian_pid); rm -f $(custodian_pid) $(custodian_log)
 
-
 ### DA Marketplace Broker Bot
-$(broker_bot_dir):
-	cd automation/broker && poetry install && poetry build
 
-$(broker_pid): |$(state_dir) $(trigger_build) # $(broker_bot_dir)
+$(broker_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name BrokerTrigger:handleBroker \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -144,10 +123,8 @@ stop_broker:
 
 
 ### DA Marketplace Exchange Bot
-$(exchange_bot_dir):
-	cd automation/exchange && poetry install && poetry build
 
-$(exchange_pid): |$(state_dir) $(trigger_build) # $(exchange_bot_dir)
+$(exchange_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name ExchangeTrigger:handleExchange \
 	    --ledger-host localhost --ledger-port 6865 \
@@ -173,15 +150,11 @@ stop_adapter:
 
 
 ### DA Marketplace Matching Engine
-$(matching_engine_dir):
-	cd matching_engine && poetry install && poetry build
-
-$(matching_engine_pid): |$(state_dir) $(trigger_build) # $(matching_engine_dir)
+$(matching_engine_pid): |$(state_dir) $(trigger_build)
 	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
 	    --trigger-name MatchingEngine:handleMatching \
 	    --ledger-host localhost --ledger-port 6865 \
 	    --ledger-party Exchange > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
-	# cd matching_engine && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/matching_engine_bot.py > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
 
 start_matching_engine: $(matching_engine_pid)
 
@@ -196,12 +169,6 @@ target_dir := target
 
 dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
 exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
-matching_engine := $(target_dir)/da-marketplace-matching-engine-$(matching_engine_version).tar.gz
-operator_bot := $(target_dir)/da-marketplace-operator-bot-$(operator_bot_version).tar.gz
-issuer_bot := $(target_dir)/da-marketplace-issuer-bot-$(issuer_bot_version).tar.gz
-custodian_bot := $(target_dir)/da-marketplace-custodian-bot-$(custodian_bot_version).tar.gz
-broker_bot := $(target_dir)/da-marketplace-broker-bot-$(broker_bot_version).tar.gz
-exchange_bot := $(target_dir)/da-marketplace-exchange-bot-$(exchange_bot_version).tar.gz
 ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
 dabl_meta := $(target_dir)/dabl-meta.yaml
 
@@ -214,9 +181,7 @@ publish: package
 	git tag -f "${TAG_NAME}"
 	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
 
-# some_files = $(shell cd $(target_dir) && echo da-marketplace-*)
-# helloooo = $(filter-out da-marketplace-exberry%.gz, $(some_files))
-package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exchange_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
+package: $(exberry_adapter) $(trigger) $(dar) $(ui) $(dabl_meta) verify-artifacts
 	cd $(target_dir) && zip ${NAME}.dit $(filter-out da-marketplace-exberry%.tar.gz, $(shell cd $(target_dir) && echo da-marketplace-*)) dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
@@ -225,26 +190,11 @@ $(dabl_meta): $(target_dir) dabl-meta.yaml
 $(dar): $(target_dir) $(daml_build_log)
 	cp .daml/dist/da-marketplace-$(dar_version).dar $@
 
-$(operator_bot): $(target_dir) $(operator_bot_dir)
-	cp automation/operator/dist/bot-$(operator_bot_version).tar.gz $@
-
-$(issuer_bot): $(target_dir) $(issuer_bot_dir)
-	cp automation/issuer/dist/bot-$(issuer_bot_version).tar.gz $@
-
-$(custodian_bot): $(target_dir) $(custodian_bot_dir)
-	cp automation/custodian/dist/bot-$(custodian_bot_version).tar.gz $@
-
-$(broker_bot): $(target_dir) $(broker_bot_dir)
-	cp automation/broker/dist/bot-$(broker_bot_version).tar.gz $@
-
-$(exchange_bot): $(target_dir) $(exchange_bot_dir)
-	cp automation/exchange/dist/bot-$(exchange_bot_version).tar.gz $@
+$(trigger): $(target_dir) $(trigger_build)
+	cp $(trigger_build) $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
-
-$(matching_engine): $(target_dir) $(matching_engine_dir)
-	cp matching_engine/dist/bot-$(matching_engine_version).tar.gz $@
 
 $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
