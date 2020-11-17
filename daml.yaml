@@ -12,7 +12,7 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.0.2
+version: 0.0.3
 dependencies:
   - daml-prim
   - daml-stdlib
