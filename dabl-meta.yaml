@@ -1,6 +1,6 @@
 catalog:
     name: da-marketplace
-    version: 0.0.2
+    version: 0.0.3
     short_description: DA Marketplace
     description: A marketplace for issuing and trading digital tokens.
     release_date: 2020-10-14
@@ -9,11 +9,12 @@ catalog:
     license: 0BSD
     tags: [ dabl-sample-app, application ]
 subdeployments:
-    - da-marketplace-model-0.0.2.dar
-    - da-marketplace-broker-bot-0.0.2.tar.gz
-    - da-marketplace-custodian-bot-0.0.2.tar.gz
-    - da-marketplace-issuer-bot-0.0.2.tar.gz
-    - da-marketplace-exchange-bot-0.0.2.tar.gz
-    - da-marketplace-matching-engine-0.0.2.tar.gz
-    - da-marketplace-operator-bot-0.0.2.tar.gz
-    - da-marketplace-ui-0.0.2.zip
+    - da-marketplace-model-0.0.3.dar
+    - da-marketplace-broker-bot-0.0.3.tar.gz
+    - da-marketplace-custodian-bot-0.0.3.tar.gz
+    - da-marketplace-issuer-bot-0.0.3.tar.gz
+    - da-marketplace-exchange-bot-0.0.3.tar.gz
+    - da-marketplace-matching-engine-0.0.3.tar.gz
+    - da-marketplace-operator-bot-0.0.3.tar.gz
+    - da-marketplace-exberry-adapter-0.0.3.tar.gz
+    - da-marketplace-ui-0.0.3.zip
