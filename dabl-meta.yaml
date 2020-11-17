@@ -12,4 +12,4 @@ subdeployments:
     - da-marketplace-model-0.0.3.dar
     - da-marketplace-triggers-0.0.3.dar
     - da-marketplace-exberry-adapter-0.0.3.tar.gz
-    - da-marketplace-ui-0.0.2.zip
+    - da-marketplace-ui-0.0.3.zip

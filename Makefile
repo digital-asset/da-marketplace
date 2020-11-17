@@ -181,7 +181,7 @@ publish: package
 	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
 
 package: $(exberry_adapter) $(trigger) $(dar) $(ui) $(dabl_meta) verify-artifacts
-	cd $(target_dir) && zip ${NAME}.dit $(filter-out da-marketplace-exberry%.tar.gz, $(shell cd $(target_dir) && echo da-marketplace-*)) dabl-meta.yaml
+	cd $(target_dir) && zip ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-*) dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
 	cp dabl-meta.yaml $@
