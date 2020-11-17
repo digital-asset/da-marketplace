@@ -7,10 +7,12 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
+export const dablHostname = window.location.hostname.split('.').find(host => host.includes('projectdabl'));
+
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
   ? DeploymentMode.DEV
-  : window.location.hostname.endsWith('.projectdabl.com')
+  : dablHostname
   ? DeploymentMode.PROD_DABL
   : DeploymentMode.PROD_OTHER;
 
@@ -24,5 +26,5 @@ export const ledgerId: string =
 
 export const httpBaseUrl =
   deploymentMode === DeploymentMode.PROD_DABL
-  ? `https://api.projectdabl.com/data/${ledgerId}/`
+  ? `https://api.${dablHostname}.com/data/${ledgerId}/`
   : undefined;
