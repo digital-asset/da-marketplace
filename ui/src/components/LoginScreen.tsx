@@ -6,7 +6,7 @@ import { useHistory, useLocation } from 'react-router-dom'
 import { Button, Form } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
-import { DeploymentMode, deploymentMode, ledgerId } from '../config'
+import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
 import './LoginScreen.css'
 import OnboardingTile from './common/OnboardingTile'
@@ -99,7 +99,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
   const location = window.location;
 
   const handleDablLogin = () => {
-    window.location.assign(`https://login.projectdabl.com/auth/login?ledgerId=${ledgerId}`);
+    window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }
 
   const handleDablTokenLogin = () => {
