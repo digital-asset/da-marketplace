@@ -1,0 +1,25 @@
+sdk-version: 1.7.0
+name: marketplace-triggers
+source: src
+parties:
+  - Alice
+  - Bob
+  - Operator
+  - Custodian
+  - BtcIssuer
+  - UsdtIssuer
+  - Public
+  - Exchange
+  - Broker
+version: 0.0.1
+# trigger-dependencies-begin
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-trigger
+  # - ../.daml/dist/proposal-model-0.0.1.dar
+data-dependencies:
+  - ../.daml/dist/da-marketplace-0.0.2.dar
+# trigger-dependencies-end
+sandbox-options:
+  - --wall-clock-time
