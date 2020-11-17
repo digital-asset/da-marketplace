@@ -7,7 +7,7 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 100  # TODO: pass this as a configuration
+SID = 1 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
@@ -54,9 +54,11 @@ def main():
         logging.info("DA Marketplace <> Exberry adapter is ready!")
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
-    def handleExberrySID(event):
+    def handle_exberry_SID(event):
         global SID
         SID = event.cdata['sid']
+        logging.info(f'Changed current SID to {SID}')
+        return exercise(event.cid, 'ExberrySID_Ack', {})
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderRequest)

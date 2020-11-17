@@ -21,6 +21,10 @@ template ExberrySID
   where
     signatory exchange
 
+    controller exchange can
+      ExberrySID_Ack : ()
+        do return ()
+
 
 getAccountId : Party -> Party -> [Party] -> Id
 getAccountId owner provider signatories = Id with
