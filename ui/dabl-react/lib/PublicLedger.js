@@ -38,17 +38,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var react_1 = require("react");
 var react_2 = require("@daml/react");
-function publicPartyEndPoint(ledgerId) {
-    return "api.projectdabl.com/api/ledger/" + ledgerId + "/public/token";
+function publicPartyEndPoint(ledgerId, hostname) {
+    return hostname + "/api/ledger/" + ledgerId + "/public/token";
 }
-function fetchPublicPartyToken(ledgerId) {
+function fetchPublicPartyToken(ledgerId, httpBaseUrl) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, json, error_1;
+        var hostname, response, json, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 3, , 4]);
-                    return [4 /*yield*/, fetch('//' + publicPartyEndPoint(ledgerId), { method: "POST" })];
+                    hostname = new URL(httpBaseUrl || 'https://api.projectdabl.com').hostname;
+                    return [4 /*yield*/, fetch('//' + publicPartyEndPoint(ledgerId, hostname), { method: "POST" })];
                 case 1:
                     response = _a.sent();
                     return [4 /*yield*/, response.json()];
@@ -74,7 +75,7 @@ function PublicLedger(_a) {
                 var pt;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
-                        case 0: return [4 /*yield*/, fetchPublicPartyToken(ledgerId)];
+                        case 0: return [4 /*yield*/, fetchPublicPartyToken(ledgerId, httpBaseUrl)];
                         case 1:
                             pt = _a.sent();
                             console.log("The fetched publicToken " + JSON.stringify(pt));
