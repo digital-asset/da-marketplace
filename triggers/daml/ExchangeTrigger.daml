@@ -13,8 +13,8 @@ handleExchange = Trigger
   { initialize = return ()
   , updateState = \_ -> pure ()
   , rule = handleExchangeRule
-  , registeredTemplates = RegisteredTemplates  [registeredTemplate @TradeSide
-                                              , registeredTemplate @SettledBinaryOption]
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
+                                               , registeredTemplate @SettledBinaryOption ]
   , heartbeat = None
   }
 
