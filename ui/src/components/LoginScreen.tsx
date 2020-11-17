@@ -99,7 +99,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
   const location = window.location;
 
   const handleDablLogin = () => {
-    window.location.assign(`https://login.${dablHostname}.com/auth/login?ledgerId=${ledgerId}`);
+    window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }
 
   const handleDablTokenLogin = () => {
