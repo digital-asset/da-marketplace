@@ -29,9 +29,6 @@ matching_engine_log := $(state_dir)/matching_engine.log
 operator_pid := $(state_dir)/operator.pid
 operator_log := $(state_dir)/operator.log
 
-issuer_pid := $(state_dir)/issuer.pid
-issuer_log := $(state_dir)/issuer.log
-
 custodian_pid := $(state_dir)/custodian.pid
 custodian_log := $(state_dir)/custodian.log
 
@@ -43,7 +40,7 @@ exchange_log := $(state_dir)/exchange.log
 
 
 ### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_issuer stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine
+.PHONY: clean stop_daml_server stop_operator stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine
 
 $(state_dir):
 	mkdir $(state_dir)
@@ -70,37 +67,23 @@ clean_triggers:
 	rm $(trigger_build)
 
 $(operator_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	(daml trigger --dar $(trigger_build) \
 	    --trigger-name OperatorTrigger:handleOperator \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Operator > ../$(operator_log) & echo "$$!" > ../$(operator_pid))
+	    --ledger-party Operator > $(operator_log) & echo "$$!" > $(operator_pid))
 
 start_operator: $(operator_pid)
 
 stop_operator:
 	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
 
-### DA Marketplace Issuer Bot
-
-$(issuer_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
-	    --trigger-name PublicTrigger:handlePublic \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Operator > ../$(issuer_log) & echo "$$!" > ../$(issuer_pid))
-
-start_issuer: $(issuer_pid)
-
-stop_issuer:
-	pkill -F $(issuer_pid); rm -f $(issuer_pid) $(issuer_log)
-
-
 ### DA Marketplace Custodian Bot
 
 $(custodian_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	(daml trigger --dar $(trigger_build) \
 	    --trigger-name CustodianTrigger:handleCustodian \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Custodian > ../$(custodian_log) & echo "$$!" > ../$(custodian_pid))
+	    --ledger-party Custodian > $(custodian_log) & echo "$$!" > $(custodian_pid))
 
 start_custodian: $(custodian_pid)
 
@@ -110,10 +93,10 @@ stop_custodian:
 ### DA Marketplace Broker Bot
 
 $(broker_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	(daml trigger --dar $(trigger_build) \
 	    --trigger-name BrokerTrigger:handleBroker \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Broker > ../$(broker_log) & echo "$$!" > ../$(broker_pid))
+	    --ledger-party Broker > $(broker_log) & echo "$$!" > $(broker_pid))
 
 start_broker: $(broker_pid)
 
@@ -124,10 +107,10 @@ stop_broker:
 ### DA Marketplace Exchange Bot
 
 $(exchange_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	(daml trigger --dar $(trigger_build) \
 	    --trigger-name ExchangeTrigger:handleExchange \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > ../$(exchange_log) & echo "$$!" > ../$(exchange_pid))
+	    --ledger-party Exchange > $(exchange_log) & echo "$$!" > $(exchange_pid))
 
 start_exchange: $(exchange_pid)
 
@@ -150,19 +133,19 @@ stop_adapter:
 
 ### DA Marketplace Matching Engine
 $(matching_engine_pid): |$(state_dir) $(trigger_build)
-	cd triggers && (daml trigger --dar .daml/dist/marketplace-triggers-0.0.1.dar \
+	(daml trigger --dar $(trigger_build) \
 	    --trigger-name MatchingEngine:handleMatching \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > ../$(matching_engine_log) & echo "$$!" > ../$(matching_engine_pid))
+	    --ledger-party Exchange > $(matching_engine_log) & echo "$$!" > $(matching_engine_pid))
 
 start_matching_engine: $(matching_engine_pid)
 
 stop_matching_engine:
 	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
-start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid) $(issuer_pid)
+start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid)
 
-stop_bots: stop_broker stop_custodian stop_exchange stop_issuer stop_operator
+stop_bots: stop_broker stop_custodian stop_exchange stop_operator
 
 target_dir := target
 
@@ -170,6 +153,7 @@ dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
 exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
 ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
 dabl_meta := $(target_dir)/dabl-meta.yaml
+trigger := $(target_dir)/da-marketplace-triggers-$(trigger_version).dar
 
 $(target_dir):
 	mkdir $@
