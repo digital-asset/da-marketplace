@@ -21,6 +21,7 @@ template ExberrySID
   where
     signatory exchange
 
+
 getAccountId : Party -> Party -> [Party] -> Id
 getAccountId owner provider signatories = Id with
     signatories = fromList signatories
