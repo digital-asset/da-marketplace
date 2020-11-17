@@ -87,7 +87,6 @@ $(issuer_pid): |$(state_dir) $(trigger_build)
 	    --trigger-name PublicTrigger:handlePublic \
 	    --ledger-host localhost --ledger-port 6865 \
 	    --ledger-party Operator > ../$(issuer_log) & echo "$$!" > ../$(issuer_pid))
-	# cd automation/issuer && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/issuer_bot.py > ../../$(issuer_log) & echo "$$!" > ../../$(issuer_pid))
 
 start_issuer: $(issuer_pid)
 
@@ -206,7 +205,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(exchange_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
