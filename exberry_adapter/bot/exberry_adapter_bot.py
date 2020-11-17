@@ -52,6 +52,12 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
+        sids = client.find_active(MARKETPLACE.ExberrySID)
+        global SID
+        for (_,item) in sids.items():
+            SID = item['sid']
+            logging.info(f'Changed current SID to {SID}')
+        return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
     def handle_exberry_SID(event):
