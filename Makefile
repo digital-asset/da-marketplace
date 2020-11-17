@@ -17,7 +17,7 @@ daml_build_log = $(state_dir)/daml_build.log
 sandbox_pid := $(state_dir)/sandbox.pid
 sandbox_log := $(state_dir)/sandbox.log
 
-trigger_build := triggers/.daml/dist/marketplace-triggers-$(trigger_version).dar
+trigger_build := triggers/.daml/dist/da-marketplace-triggers-$(trigger_version).dar
 
 exberry_adapter_dir := exberry_adapter/bot.egg-info
 adapter_pid := $(state_dir)/adapter.pid
