@@ -8,7 +8,7 @@ catalog:
     url: https://github.com/digital-asset/da-marketplace
     license: 0BSD
     tags: [ dabl-sample-app, application ]
-    icon_file: marketplace.png
+    icon_file: marketplace.svg
 subdeployments:
     - da-marketplace-model-0.0.3.dar
     - da-marketplace-broker-bot-0.0.3.tar.gz

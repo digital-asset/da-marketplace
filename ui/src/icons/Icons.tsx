@@ -1,6 +1,6 @@
 import React from 'react'
 
-import chatFace from './chatface.svg'
+import marketplaceLogo from './marketplace.svg'
 import exchange from './exchange.svg'
 import lock from './lock.svg'
 import logout from './logout.svg'
@@ -20,10 +20,10 @@ export const ArrowRightIcon = () => (
     </svg>
 )
 
-export const ChatFaceIcon = () => (
+export const LogoIcon = () => (
     <img
-        className="icon chat-icon"
-        src={chatFace}
+        className="icon logo-icon"
+        src={marketplaceLogo}
         alt="command"/>
 )
 
