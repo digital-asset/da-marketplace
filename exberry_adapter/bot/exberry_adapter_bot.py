@@ -75,7 +75,7 @@ def main():
                 'price': float(order['price']),
                 'side': 'Buy' if order['isBid'] else 'Sell',
                 'timeInForce': 'GTC',
-                'brokerOrderId': sid,  # we use sid for order ids
+                'mpOrderId': sid,  # we use sid for order ids
                 'userId': make_user_user_id(order['exchParticipant']),
             },
             'integrationParty': client.party
@@ -113,7 +113,7 @@ def main():
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': make_instrument(order['pair']),
-            'brokerOrderId': order['orderId'],
+            'mpOrderId': order['orderId'],
             'userId': make_user_user_id(order['exchParticipant'])
         })
 
@@ -139,10 +139,10 @@ def main():
         execution = event.cdata
 
         taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['takerBrokerOrderId']
+            'orderId': execution['takerMpOrderId']
         })
         maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['makerBrokerOrderId']
+            'orderId': execution['makerMpOrderId']
         })
 
         commands = [exercise(event.cid, 'Archive', {})]
