@@ -44,6 +44,7 @@ const App: React.FC = () => {
         <Route path='/role' render={() => {
           return credentials
             ? <DamlLedger
+                reconnectThreshold={0}
                 token={credentials.token}
                 party={credentials.party}
                 httpBaseUrl={httpBaseUrl}

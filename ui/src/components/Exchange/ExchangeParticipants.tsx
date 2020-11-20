@@ -1,7 +1,7 @@
 import React from 'react'
 import { Table } from 'semantic-ui-react'
 
-import { useStreamQuery } from '@daml/react'
+import { useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
@@ -23,10 +23,16 @@ type Props = {
 }
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+        console.log("Unexpected close from assetDeposit: ", e);
+    }).contracts.map(makeContractInfo);
     const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
-    const exchangeParticipants = useStreamQuery(ExchangeParticipant).contracts.map(makeContractInfo);
-    const currentInvitations = useStreamQuery(ExchangeParticipantInvitation).contracts.map(makeContractInfo);
+    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts.map(makeContractInfo);
+    const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
+    }).contracts.map(makeContractInfo);
 
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
@@ -66,8 +72,10 @@ type RowProps = {
 const ExchangeParticipantRow: React.FC<RowProps> = ({ deposits, participant }) => {
     const { exchange, exchParticipant } = participant.contractData;
 
-    const query = () => ({ exchange, exchParticipant });
-    const activeOrders = useStreamQuery(Order, query, [exchange, exchParticipant]).contracts.length;
+    const query = () => [({ exchange, exchParticipant })];
+    const activeOrders = useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
+        console.log("Unexpected close from Order: ", e);
+    }).contracts.length;
 
     const investorDeposits = deposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
 

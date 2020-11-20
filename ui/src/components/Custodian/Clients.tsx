@@ -1,7 +1,7 @@
 import React from 'react'
 import { Table } from 'semantic-ui-react'
 
-import { useStreamQuery } from '@daml/react'
+import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { UserIcon } from '../../icons/Icons'
@@ -20,7 +20,9 @@ type Props = {
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+        console.log("Unexpected close from assetDeposit: ", e);
+    }).contracts.map(makeContractInfo);
 
     const tableRows = clients.map(client => (
         <InvestorRow

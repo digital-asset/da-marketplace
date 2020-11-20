@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQuery } from '@daml/react'
+import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
@@ -45,15 +45,25 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         ...useBrokerCustomerInviteNotifications(),
         ...useDismissibleNotifications(),
     ];
-    const registeredInvestor = useStreamQuery(RegisteredInvestor);
+    const registeredInvestor = useStreamQueries(RegisteredInvestor, () => [], [], (e) => {
+        console.log("Unexpected close from registeredInvestor: ", e);
+    });
 
-    const allExchanges = useStreamQuery(Exchange).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
-    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
+    const allExchanges = useStreamQueries(Exchange, () => [], [], (e) => {
+        console.log("Unexpected close from exchange: ", e);
+    }).contracts.map(makeContractInfo);
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+        console.log("Unexpected close from assetDeposit: ", e);
+    }).contracts.map(makeContractInfo);
+    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationship: ", e);
+    }).contracts.map(makeContractInfo);
 
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
 
-    const brokerProviders = useStreamQuery(BrokerCustomer).contracts
+    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomer: ", e);
+    }).contracts
         .map(broker => {
             const party = broker.payload.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
@@ -63,7 +73,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const exchangeProviders = useStreamQuery(ExchangeParticipant).contracts
+    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts
         .map(exchParticipant => {
             const party = exchParticipant.payload.exchange;
             const name = exchangeMap.get(party)?.name;

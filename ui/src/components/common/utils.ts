@@ -1,4 +1,4 @@
-import { DepositInfo } from "./damlTypes";
+import { DepositInfo } from './damlTypes'
 
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 

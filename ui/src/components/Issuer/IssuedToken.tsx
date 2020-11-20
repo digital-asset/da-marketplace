@@ -2,7 +2,7 @@ import React from 'react'
 import { useParams } from 'react-router-dom'
 import { Header, List } from 'semantic-ui-react'
 
-import { useStreamQuery } from '@daml/react'
+import { useStreamQueries } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import Page from '../common/Page'
@@ -18,7 +18,9 @@ type Props = {
 const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const { tokenId } = useParams<{tokenId: string}>()
 
-    const token = useStreamQuery(Token).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
+    const token = useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from token: ", e);
+    }).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
     const signatories = Object.keys(token?.payload.id.signatories.textMap || [])
     const observers = Object.keys(token?.payload.observers.textMap || [])
 

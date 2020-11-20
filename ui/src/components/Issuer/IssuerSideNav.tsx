@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { Header, Menu } from 'semantic-ui-react'
 
-import { useStreamQuery } from '@daml/react'
+import { useStreamQueries } from '@daml/react'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
@@ -14,7 +14,9 @@ type IssuerSideNavProps = {
 }
 
 const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url, name }) => {
-    const allTokens = useStreamQuery(Token).contracts
+    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from Token: ", e);
+    }).contracts
 
     return <>
         <Menu.Menu>
