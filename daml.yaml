@@ -1,7 +1,7 @@
 sdk-version: 1.7.0
 name: da-marketplace
 source: daml
-init-script: Setup:setupBroker
+init-script: Setup:setup
 parties:
   - Alice
   - Bob
@@ -12,7 +12,7 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.0.2
+version: 0.1.0
 dependencies:
   - daml-prim
   - daml-stdlib

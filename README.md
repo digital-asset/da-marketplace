@@ -136,7 +136,7 @@ Next, add the parties. Click on the "Live Data" tab, and first add the `Public` 
 
 ![5_add_public](https://user-images.githubusercontent.com/71082197/98857333-ed1a0b00-242c-11eb-809a-a7a8a5e983ef.png)
 
-Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Operator`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer` and `Custodian`:
+Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer` and `Custodian`:
 
 ![6_add_parties](https://user-images.githubusercontent.com/71082197/98857334-ed1a0b00-242c-11eb-8f6a-4e385baca6f8.png)
 
@@ -214,3 +214,5 @@ Next, in deployments, click on the Integration and configure it with your Exberr
 ![13_click_exberry](https://user-images.githubusercontent.com/71082197/98867872-50139e00-243d-11eb-8448-479e46fd85df.png)
 
 Finally, upload the `da-marketplace-exberry-adapter-0.0.2.tar.gz` file in the `target` folder and launch the automation as `Exchange`. See [above](#configure-and-deploy-the-bots) for instructions on deploying an automation bot.
+
+If you would like to change which `SID` the Exberry adapter begins counting at for the `orderId` calls to Exberry, create a `Marketplace.Utils.ExberrySID` contract as the `Exchange` party _after_ launching the adapter.

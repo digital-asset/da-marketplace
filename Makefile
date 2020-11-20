@@ -187,7 +187,7 @@ publish: package
 # some_files = $(shell cd $(target_dir) && echo da-marketplace-*)
 # helloooo = $(filter-out da-marketplace-exberry%.gz, $(some_files))
 package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exchange_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
-	cd $(target_dir) && zip ${NAME}.dit $(filter-out da-marketplace-exberry%.tar.gz, $(shell cd $(target_dir) && echo da-marketplace-*)) dabl-meta.yaml
+	cd $(target_dir) && zip ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-*) dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
 	cp dabl-meta.yaml $@
@@ -226,7 +226,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(exchange_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(exchange_bot_dir) $(exchange_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
