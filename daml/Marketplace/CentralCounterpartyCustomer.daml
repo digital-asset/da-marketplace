@@ -1,0 +1,40 @@
+module Marketplace.CentralCounterpartyCustomer where
+
+
+import Marketplace.Notification
+import Marketplace.Utils
+
+
+template CCPCustomerInvitation
+  with
+    operator : Party
+    ccp : Party
+    ccpCustomer : Party
+  where
+    signatory ccp
+
+    controller ccpCustomer can
+      CCPCustomerInvitation_Accept : ContractId CCPCustomer
+        do
+          create DismissibleNotification with
+            sender = ccpCustomer, senderRole = Some InvestorRole
+            receiver = ccp, text = "CCP customer invitation accepted."
+          create CCPCustomer with ..
+      CCPCustomerInvitation_Reject : ()
+        do
+          create DismissibleNotification with
+            sender = ccpCustomer, senderRole = Some InvestorRole
+            receiver = ccp, text = "CCP customer invitation rejected."
+          return ()
+
+
+template CCPCustomer
+  with
+    operator : Party
+    ccp : Party
+    ccpCustomer : Party
+  where
+    signatory ccp, ccpCustomer
+
+    key (ccp, operator, ccpCustomer) : (Party, Party, Party)
+    maintainer key._1

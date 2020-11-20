@@ -1,0 +1,50 @@
+module Marketplace.CentralCounterparty where
+
+import Marketplace.CentralCounterpartyCustomer
+import Marketplace.Custodian
+import Marketplace.Registry
+import Marketplace.Utils
+
+
+template CCPInvitation
+  with
+    operator : Party
+    ccp : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, ccp) : (Party, Party)
+    maintainer key._1
+
+    controller ccp can
+      CCPInvitation_Accept : (ContractId RegisteredCCP, ContractId CCP)
+        with
+          name : Text
+          location : Text
+        do
+          ccpRegistryCid <- create RegisteredCCP with ..
+          ccpCid <- create CCP with ..
+          return (ccpRegistryCid, ccpCid)
+
+
+template CCP
+  with
+    operator : Party
+    ccp : Party
+  where
+    signatory operator, ccp
+
+    key (operator, ccp) : (Party, Party)
+    maintainer key._2
+
+    controller ccp can
+      nonconsuming CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
+
+      nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
+        with
+          ccpCustomer : Party
+        do create CCPCustomerInvitation with ..

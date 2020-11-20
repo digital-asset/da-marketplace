@@ -212,6 +212,57 @@ template BrokerOrder
           create DepositTransferRequest with sender = broker, ..
 
 
+template Trade
+  with
+    ccp : Party
+    exchange : Party
+    eventId : Int
+    eventTimestamp : Text
+    instrument : IdPair
+    trackingNumber : Int
+    buyer : Party
+    buyerOrderId : Int
+    seller : Party
+    sellerOrderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+  where
+    signatory exchange
+
+    controller ccp can
+      Trade_Novate : (ContractId TradeSide, ContractId TradeSide)
+        do
+          buyCid <- create TradeSide with
+            exchParticipant = buyer
+            pair = instrument
+            price = executedPrice
+            qty = executedQuantity
+            isBuy = True
+            orderId = buyerOrderId
+            counterOrderId = sellerOrderId
+            timestamp = eventTimestamp
+            optDepositCid = None
+            receiverAccountId = instrument._1  -- todo: get rid of this
+            isBinaryOption = False
+            ..
+          sellCid <- create TradeSide with
+            exchParticipant = seller
+            pair = instrument
+            price = executedPrice
+            qty = executedQuantity
+            isBuy = False
+            orderId = sellerOrderId
+            counterOrderId = buyerOrderId
+            timestamp = eventTimestamp
+            optDepositCid = None
+            receiverAccountId = instrument._1
+            isBinaryOption = False
+            ..
+          return (buyCid, sellCid)
+
+
+-- need to modify this to add a ccp if this is a trade that needs to be cleared
 template TradeSide
   with
     exchParticipant : Party

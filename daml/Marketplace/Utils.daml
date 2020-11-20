@@ -9,7 +9,7 @@ import DA.Text
 
 type IdPair = (Id, Id)
 
-data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole
+data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole | CCPRole
     deriving (Show, Eq)
 
 
