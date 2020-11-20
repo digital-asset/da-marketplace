@@ -14,6 +14,7 @@ issuer_bot_version := $(shell cd automation/issuer && poetry version | cut -f 2 
 custodian_bot_version := $(shell cd automation/custodian && poetry version | cut -f 2 -d ' ')
 broker_bot_version := $(shell cd automation/broker && poetry version | cut -f 2 -d ' ')
 exchange_bot_version := $(shell cd automation/exchange && poetry version | cut -f 2 -d ' ')
+ccp_bot_version := $(shell cd automation/ccp && poetry version | cut -f 2 -d ' ')
 ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
 
@@ -50,9 +51,13 @@ exchange_bot_dir := automation/exchange/bot.egg-info
 exchange_pid := $(state_dir)/exchange.pid
 exchange_log := $(state_dir)/exchange.log
 
+ccp_bot_dir := automation/ccp/bot.egg-info
+ccp_pid := $(state_dir)/ccp.pid
+ccp_log := $(state_dir)/ccp.log
+
 
 ### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_issuer stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine
+.PHONY: clean stop_daml_server stop_operator stop_issuer stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine stop_ccp
 
 $(state_dir):
 	mkdir $(state_dir)
@@ -133,6 +138,19 @@ stop_exchange:
 	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
 
 
+### DA Marketplace CCP Bot
+$(ccp_bot_dir):
+	cd automation/ccp && poetry install && poetry build
+
+$(ccp_pid): |$(state_dir) $(ccp_bot_dir)
+	cd automation/ccp && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/ccp_bot.py > ../../$(ccp_log) & echo "$$!" > ../../$(ccp_pid))
+
+start_ccp: $(ccp_pid)
+
+stop_ccp:
+	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
+
+
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
 	cd exberry_adapter && poetry install && poetry build
@@ -160,7 +178,7 @@ stop_matching_engine:
 
 start_bots: $(broker_pid) $(custodian_pid) $(exchange_pid) $(issuer_pid) $(operator_pid)
 
-stop_bots: stop_broker stop_custodian stop_exchange stop_issuer stop_operator
+stop_bots: stop_broker stop_custodian stop_exchange stop_issuer stop_operator stop_ccp
 
 target_dir := target
 
@@ -172,6 +190,7 @@ issuer_bot := $(target_dir)/da-marketplace-issuer-bot-$(issuer_bot_version).tar.
 custodian_bot := $(target_dir)/da-marketplace-custodian-bot-$(custodian_bot_version).tar.gz
 broker_bot := $(target_dir)/da-marketplace-broker-bot-$(broker_bot_version).tar.gz
 exchange_bot := $(target_dir)/da-marketplace-exchange-bot-$(exchange_bot_version).tar.gz
+ccp_bot := $(target_dir)/da-marketplace-ccp-bot-$(ccp_bot_version).tar.gz
 ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
 dabl_meta := $(target_dir)/dabl-meta.yaml
 
@@ -186,7 +205,7 @@ publish: package
 
 # some_files = $(shell cd $(target_dir) && echo da-marketplace-*)
 # helloooo = $(filter-out da-marketplace-exberry%.gz, $(some_files))
-package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exchange_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
+package: $(operator_bot) $(issuer_bot) $(custodian_bot) $(broker_bot) $(exchange_bot) $(ccp_bot) $(exberry_adapter) $(matching_engine) $(dar) $(ui) $(dabl_meta) verify-artifacts
 	cd $(target_dir) && zip ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-*) dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
@@ -210,6 +229,9 @@ $(broker_bot): $(target_dir) $(broker_bot_dir)
 $(exchange_bot): $(target_dir) $(exchange_bot_dir)
 	cp automation/exchange/dist/bot-$(exchange_bot_version).tar.gz $@
 
+$(ccp_bot): $(target_dir) $(ccp_bot_dir)
+	cp automation/ccp/dist/bot-$(ccp_bot_version).tar.gz $@
+
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
 
@@ -226,7 +248,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(exchange_bot_dir) $(exchange_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(matching_engine_dir) $(matching_engine) $(operator_bot_dir) $(operator_bot) $(issuer_bot_dir) $(issuer_bot) $(custodian_bot_dir) $(custodian_bot) $(broker_bot_dir) $(broker_bot) $(exchange_bot_dir) $(exchange_bot) $(ccp_bot) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
