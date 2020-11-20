@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Instrument.FixedIncome.FixedRateBond.Lifecycle where
 
 import DA.List
@@ -30,7 +29,7 @@ template FixedRateBondCouponRule
 
           assertMsg "product already expired" $ bond.couponIdx < length bond.couponDates
           assertOnOrAfterDateMsg "expects coupon date <= now" $ bond.couponDates!!bond.couponIdx
-          
+
           let
             isRedemption = bond.couponIdx == length bond.couponDates - 1
             redemptionAmount = 1.0
@@ -42,7 +41,7 @@ template FixedRateBondCouponRule
               | otherwise =
                 [ Asset with id = newBondId, quantity = 1.0
                 , Asset with id = bond.currencyId, quantity = bond.coupon ]
-          
+
           newBondCid <- create bond with
             id = newBondId
             couponIdx = bond.couponIdx + 1

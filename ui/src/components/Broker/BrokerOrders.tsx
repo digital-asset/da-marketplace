@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Card, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -28,11 +28,19 @@ type Props = {
 
 
 const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
-    const allExchangeOrders = useStreamQuery(Order).contracts;
-    const allBrokerOrderRequests = useStreamQuery(BrokerOrderRequest).contracts;
-    const allBrokerOrders = useStreamQuery(BrokerOrder).contracts;
+    const allExchangeOrders = useStreamQueries(Order, () => [], [], (e) => {
+        console.log("Unexpected close from order: ", e);
+    }).contracts;
+    const allBrokerOrderRequests = useStreamQueries(BrokerOrderRequest, () => [], [], (e) => {
+        console.log("Unexpected close from brokerOrderRequest: ", e);
+    }).contracts;
+    const allBrokerOrders = useStreamQueries(BrokerOrder, () => [], [], (e) => {
+        console.log("Unexpected close from brokerOrder: ", e);
+    }).contracts;
 
-    const allBrokerCustomers = useStreamQuery(BrokerCustomer).contracts.map(makeContractInfo);
+    const allBrokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomer: ", e);
+    }).contracts.map(makeContractInfo);
     const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
 
     return (

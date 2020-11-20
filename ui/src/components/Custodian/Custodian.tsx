@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, Link } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQuery, useStreamFetchByKey } from '@daml/react'
+import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Custodian as CustodianModel,
@@ -32,11 +32,13 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const key = () => wrapDamlTuple([operator, custodian]);
-    const registeredCustodian = useStreamQuery(RegisteredCustodian);
+    const keys = () => [wrapDamlTuple([operator, custodian])];
+    const registeredCustodian = useStreamQueries(RegisteredCustodian, () => [], [], (e) => {
+        console.log("Unexpected close from registeredCustodian: ", e);
+    });
 
-    const custodianContract = useStreamFetchByKey(CustodianModel, key, [operator, custodian]).contract;
-    const investors = custodianContract?.payload.investors || [];
+    const custodianContract = useStreamFetchByKeys(CustodianModel, keys, [operator, custodian]).contracts;
+    const investors = custodianContract[0]?.payload.investors || [];
 
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -202,7 +202,9 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
     const ledger = useLedger();
     const [ splitNumberError, setSplitNumberError ] = useState<string>()
 
-    const tokenQuantityPrecision = Number(useStreamQuery(Token).contracts
+    const tokenQuantityPrecision = Number(useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from Token: ", e);
+    }).contracts
             .find(t => t.payload.id.label == deposit.contractData.asset.id.label &&
                        t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision) || 0
 

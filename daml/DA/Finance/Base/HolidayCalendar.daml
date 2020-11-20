@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Base.HolidayCalendar where
 
 import DA.Date as D
@@ -22,7 +21,7 @@ data HolidayCalendarData = HolidayCalendarData
 merge : [HolidayCalendarData] -> HolidayCalendarData
 merge [] = HolidayCalendarData with id = "Empty", holidays = [], weekend = []
 merge cals = foldl1
-              (\cal1 cal2 -> 
+              (\cal1 cal2 ->
                 HolidayCalendarData
                   { id = cal1.id <> "," <> cal2.id
                   , weekend = dedup $ cal1.weekend ++ cal2.weekend

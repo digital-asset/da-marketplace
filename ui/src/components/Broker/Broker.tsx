@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQuery } from '@daml/react'
+import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
@@ -35,14 +35,22 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const broker = useParty();
     const ledger = useLedger();
 
-    const registeredBroker = useStreamQuery(RegisteredBroker);
-    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQuery(AssetDeposit).contracts.map(makeContractInfo);
+    const registeredBroker = useStreamQueries(RegisteredBroker, () => [], [], (e) => {
+        console.log("Unexpected close from registeredBroker: ", e);
+    });
+    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationship: ", e);
+    }).contracts.map(makeContractInfo);
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+        console.log("Unexpected close from assetDepositBroker: ", e);
+    }).contracts.map(makeContractInfo);
     const notifications = useDismissibleNotifications();
 
     const { custodianMap, exchangeMap } = useRegistryLookup();
 
-    const exchangeProviders = useStreamQuery(ExchangeParticipant).contracts
+    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts
         .map(exchParticipant => {
             const party = exchParticipant.payload.exchange;
             const name = exchangeMap.get(party)?.name;
