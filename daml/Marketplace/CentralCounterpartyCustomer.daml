@@ -2,7 +2,11 @@ module Marketplace.CentralCounterpartyCustomer where
 
 
 import Marketplace.Notification
+import Marketplace.Transfer
 import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.Finance.Types
 
 
 template CCPCustomerInvitation
@@ -20,6 +24,7 @@ template CCPCustomerInvitation
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
           create CCPCustomer with ..
+
       CCPCustomerInvitation_Reject : ()
         do
           create DismissibleNotification with
@@ -38,3 +43,16 @@ template CCPCustomer
 
     key (ccp, operator, ccpCustomer) : (Party, Party, Party)
     maintainer key._1
+
+    controller ccp can
+      nonconsuming CCPCustomer_RequestTransfer : ContractId DepositTransferRequest
+        with
+          depositCid : ContractId AssetDeposit  -- ccp needs visibility to those
+                                                -- otherwise we add a custodian <> ccp relationship
+          receiverAccountId : Id
+          amount : Decimal
+        do
+          deposit <- fetch depositCid
+          assert $ deposit.account.owner == ccpCustomer
+          [newDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [amount]
+          create DepositTransferRequest with sender = ccpCustomer, senderAccountId = deposit.account.id, depositCid = newDepositCid, ..

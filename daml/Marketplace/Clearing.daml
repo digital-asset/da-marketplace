@@ -1,0 +1,20 @@
+module Marketplace.Clearing where
+
+import DA.Finance.Types
+
+
+template MarginCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    targetAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+
+    observer customer
+
+    key (ccp, calculationId) : (Party, Text)
+    maintainer key._1
