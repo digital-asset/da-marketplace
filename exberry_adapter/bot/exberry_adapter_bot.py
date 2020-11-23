@@ -52,6 +52,12 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
+        sids = client.find_active(MARKETPLACE.ExberrySID)
+        global SID
+        for (_,item) in sids.items():
+            SID = item['sid']
+            logging.info(f'Changed current SID to {SID}')
+        return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
     def handle_exberry_SID(event):
@@ -75,7 +81,7 @@ def main():
                 'price': float(order['price']),
                 'side': 'Buy' if order['isBid'] else 'Sell',
                 'timeInForce': 'GTC',
-                'brokerOrderId': sid,  # we use sid for order ids
+                'mpOrderId': sid,  # we use sid for order ids
                 'userId': make_user_user_id(order['exchParticipant']),
             },
             'integrationParty': client.party
@@ -113,7 +119,7 @@ def main():
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': make_instrument(order['pair']),
-            'brokerOrderId': order['orderId'],
+            'mpOrderId': order['orderId'],
             'userId': make_user_user_id(order['exchParticipant'])
         })
 
@@ -139,10 +145,10 @@ def main():
         execution = event.cdata
 
         taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['takerBrokerOrderId']
+            'orderId': execution['takerMpOrderId']
         })
         maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['makerBrokerOrderId']
+            'orderId': execution['makerMpOrderId']
         })
 
         commands = [exercise(event.cid, 'Archive', {})]
