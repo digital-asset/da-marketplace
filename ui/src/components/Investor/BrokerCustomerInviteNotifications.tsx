@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useLedger, useStreamQuery } from '@daml/react'
+import { useLedger, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
@@ -16,7 +16,9 @@ type BrokerCustomerInviteProps = {
 
 export const useBrokerCustomerInviteNotifications = () => {
     const ledger = useLedger();
-    const brokerCustomerInviteNotifications = useStreamQuery(BrokerCustomerInvitation)
+    const brokerCustomerInviteNotifications = useStreamQueries(BrokerCustomerInvitation, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomerInvitation: ", e);
+    })
         .contracts
         .map(invite => <BrokerCustomerInvite key={invite.contractId}
             invite={makeContractInfo(invite)}

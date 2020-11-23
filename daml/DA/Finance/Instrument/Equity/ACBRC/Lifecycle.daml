@@ -1,7 +1,6 @@
 -- Copyright (c) 2020, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: 0BSD
 
-daml 1.2
 module DA.Finance.Instrument.Equity.ACBRC.Lifecycle where
 
 import DA.Assert
@@ -95,7 +94,7 @@ template ACBRCFixingRule
               | otherwise =
                 [ Asset with id = acbrc.currencyId, quantity = acbrc.coupon
                 , Asset with id = newAcbrcId, quantity = 1.0  ]
-          
+
           newAcbrcCid <- create acbrc with
             id = newAcbrcId
             knockInBarrierHit

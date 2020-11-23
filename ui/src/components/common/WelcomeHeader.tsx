@@ -1,13 +1,13 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { ChatFaceIcon } from '../../icons/Icons'
+import { LogoIcon } from '../../icons/Icons'
 
 import './WelcomeHeader.css'
 
 const WelcomeHeader: React.FC = () => (
     <>
-        <ChatFaceIcon/>
+        <LogoIcon/>
         <div className="welcome-header">
             <div>
                 <Header as='h3' className='welcome-header-row'>

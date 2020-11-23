@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { BrokerCustomerInvitation, BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
@@ -21,8 +21,12 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const currentInvitations = useStreamQuery(BrokerCustomerInvitation).contracts.map(makeContractInfo);
-    const brokerCustomers = useStreamQuery(BrokerCustomer).contracts.map(makeContractInfo);
+    const currentInvitations = useStreamQueries(BrokerCustomerInvitation, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomerInvitation: ", e);
+    }).contracts.map(makeContractInfo);
+    const brokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomer: ", e);
+    }).contracts.map(makeContractInfo);
 
     const customerOptions = registeredInvestors.filter(ri =>
         !brokerCustomers.find(bc => bc.contractData.brokerCustomer === ri.contractData.investor) &&

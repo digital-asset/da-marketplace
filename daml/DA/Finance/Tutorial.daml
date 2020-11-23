@@ -1,5 +1,3 @@
-daml 1.2
-
 module DA.Finance.Tutorial where
 
 import DA.Next.Set
@@ -25,7 +23,7 @@ scenario1 = do
   cb <- getParty "CentralBank"
   acme <- getParty "AcmeBank"
   alice <- getParty "Alice"
-  
+
   let
     cbUsdId         = Id with signatories = fromList [ ]; label = "USD"; version = 0
     cbUsdAsset      = Asset with id = cbUsdId; quantity = 1_000.0
@@ -76,7 +74,7 @@ scenario2 = do
       depositCid = aliceDepositCid
 
   pure ()
-  
+
 {-
 
 Now, if Bob would hold his account at a different bank a direct transfer doesn't work anymore as in this case the authorization from Bob's bank to credit his account is missing.
@@ -113,7 +111,7 @@ scenario3 = do
       receiverAccountId = bobAccountId
       depositCid = aliceDepositCid
 
-{- 
+{-
 
 This also intuitively makes sense, as directly transferring Alice's deposit to Bob would create a net new claim against Bob's bank without receiving offsetting funds from Alice's bank. So to model such a cross-entity transfer we have to implement settlement across multiple steps. First, Alice transfers the funds to Bob's bank, which needs to also hold an account with Alice's bank for this case. Then, Bob's bank can credit Bob's account with the same amount, as they now hold offseting funds at Alice's bank and are therefore net flat on the transaction. To do this, Bob's bank first creates an asset deposit for itself, which it then transfers to Bob.
 
@@ -348,7 +346,7 @@ scenario6 = do
   siCid <- submit alice do exercise siCid SettlementInstruction_AllocateNext with depositCid = aliceDepositCid; ctrl = alice
   siCid <- submit acme do exercise siCid SettlementInstruction_AllocateNext with depositCid = acmeDepositCid; ctrl = acme
   siCid <- submit genco do exercise siCid SettlementInstruction_AllocateNext with depositCid = gencoDepositCid; ctrl = genco
-  
+
   submit alice do
     exercise dsCid DvpSettlement_Process with
       dvpCid
@@ -396,7 +394,7 @@ scenario7 = do
   pure ()
 
 {-
-In this model we have chosen the bank as the only signatory on the account, which means it can directly create the `AssetDeposit` for Alice. We refer to this as the _unilateral trust model_, where only the account provider signs deposits. This means that the bank is allowed to credit Alice with arbitrary assets, which might not be desirable from Alice's perspective as some assets carry associated obligations with it (eg. a loan). Therefore, we can move this to a _bilateral trust model_ where both the account provider and the owner have to sign a deposit. Since the `AssetDeposit` now cannot be created by the bank alone anymore, we have to establish a workflow to also collect Alice's signature. This could for example be done via an `AssetDepositRequest` template, that Alice creates for the bank to process. Another way is for the bank to first create an `AssetDeposit` for itself (which it can since it's both, the provider and the owner of its account), and then transfer the deposit to Alice using Alice's `AssetSettlementRule`. This rule contract explicitly grants the permission to credit Alice's , which 
+In this model we have chosen the bank as the only signatory on the account, which means it can directly create the `AssetDeposit` for Alice. We refer to this as the _unilateral trust model_, where only the account provider signs deposits. This means that the bank is allowed to credit Alice with arbitrary assets, which might not be desirable from Alice's perspective as some assets carry associated obligations with it (eg. a loan). Therefore, we can move this to a _bilateral trust model_ where both the account provider and the owner have to sign a deposit. Since the `AssetDeposit` now cannot be created by the bank alone anymore, we have to establish a workflow to also collect Alice's signature. This could for example be done via an `AssetDepositRequest` template, that Alice creates for the bank to process. Another way is for the bank to first create an `AssetDeposit` for itself (which it can since it's both, the provider and the owner of its account), and then transfer the deposit to Alice using Alice's `AssetSettlementRule`. This rule contract explicitly grants the permission to credit Alice's , which
 
 Alice deposits cash into her account at the bank
 

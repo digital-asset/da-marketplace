@@ -1,4 +1,3 @@
-daml 1.2
 module DA.Finance.Asset.Lifecycle where
 
 import DA.Assert
@@ -10,7 +9,7 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils
 
--- | Rule that allows to lifecycle deposits in a specified account. 
+-- | Rule that allows to lifecycle deposits in a specified account.
 template AssetLifecycleRule
   with
     account : Account
@@ -50,7 +49,7 @@ template AssetLifecycleRule
 
           case accountIds of
             None ->
-              mapA 
+              mapA
                 (\effect -> do
                   let asset = effect with quantity = effect.quantity * deposit.asset.quantity
                   create deposit with asset

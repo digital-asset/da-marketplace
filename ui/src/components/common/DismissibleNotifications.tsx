@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useLedger,  useParty, useStreamQuery } from '@daml/react'
+import { useLedger,  useParty, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
@@ -20,7 +20,9 @@ type DismissibleNotificationProps = {
 export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
-    const relationshipRequestNotifications = useStreamQuery(DismissibleNotificationTemplate)
+    const relationshipRequestNotifications = useStreamQueries(DismissibleNotificationTemplate, () => [], [], (e) => {
+        console.log("Unexpected close from dismissibleNotification: ", e);
+    })
         .contracts
         .filter(notification => notification.payload.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}

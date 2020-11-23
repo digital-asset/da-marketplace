@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bot"
-version = "0.0.3"
+version = "0.1.1"
 description = "The DA Marketplace Exchange Bot"
 authors = ["Digital Asset"]
 

@@ -1,13 +1,13 @@
 {
   "name": "da-marketplace",
-  "version": "0.0.3",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
-    "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.0.3",
+    "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.1",
     "@daml/dabl-react": "file:./dabl-react",
-    "@daml/ledger": "1.6.0",
-    "@daml/react": "1.6.0",
-    "@daml/types": "1.6.0",
+    "@daml/ledger": "1.7.0",
+    "@daml/react": "1.7.0",
+    "@daml/types": "1.7.0",
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
     "jwt-simple": "^0.5.6",
