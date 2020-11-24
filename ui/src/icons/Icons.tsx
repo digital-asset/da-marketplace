@@ -95,4 +95,3 @@ export const IconClose = () => (
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
     </svg>
   );
-  
