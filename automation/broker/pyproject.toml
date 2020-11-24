@@ -5,7 +5,7 @@ description = "The DA Marketplace Broker Bot"
 authors = ["Digital Asset"]
 
 [tool.poetry.dependencies]
-python = "3.8"
+python = "^3.7"
 dazl = "^6.7.4"
 aiohttp = "^3.6.2"
 
