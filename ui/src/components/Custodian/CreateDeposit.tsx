@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
@@ -21,7 +21,9 @@ const CreateDeposit: React.FC = () => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from Token: ", e);
+    }).contracts.map(makeContractInfo);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
 
     const handleCreateDeposit = async () => {

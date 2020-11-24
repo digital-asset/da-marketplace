@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { useParty, useStreamFetchByKey } from '@daml/react'
+import { useParty, useStreamFetchByKeys } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
@@ -19,11 +19,11 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const key = () => wrapDamlTuple([operator, exchange]);
-    const exchangeContract = useStreamFetchByKey(Exchange, key, [operator, exchange]).contract;
+    const keys = () => [wrapDamlTuple([operator, exchange])];
+    const exchangeContract = useStreamFetchByKeys(Exchange, keys, [operator, exchange]).contracts;
 
     const header = ['Pair', 'Current Price', 'Change', 'Volume']
-    const rows = exchangeContract?.payload.tokenPairs.map(pair => {
+    const rows = exchangeContract[0]?.payload.tokenPairs.map(pair => {
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
         return [pairLabel, '-', '-', '-'];

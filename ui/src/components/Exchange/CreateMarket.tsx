@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQuery } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
@@ -28,7 +28,9 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const allTokens: TokenInfo[] = useStreamQuery(Token).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from Token: ", e);
+    }).contracts.map(makeContractInfo);
 
     const handleIdPairSubmit = async () => {
         if (!baseToken || !quoteToken) {

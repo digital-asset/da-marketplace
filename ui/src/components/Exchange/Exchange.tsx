@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQuery } from '@daml/react'
+import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -32,8 +32,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const exchange = useParty();
     const ledger = useLedger();
 
-    const registeredExchange = useStreamQuery(RegisteredExchange);
-    const allCustodianRelationships = useStreamQuery(CustodianRelationship).contracts.map(makeContractInfo);
+    const registeredExchange = useStreamQueries(RegisteredExchange, () => [], [], (e) => {
+        console.log("Unexpected close from registeredExchange: ", e);
+    });
+    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationship: ", e);
+    }).contracts.map(makeContractInfo);
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({

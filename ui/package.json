@@ -1,9 +1,9 @@
 {
   "name": "da-marketplace",
-  "version": "0.0.3",
+  "version": "0.1.2",
   "private": true,
   "dependencies": {
-    "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.0.3",
+    "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.2",
     "@daml/dabl-react": "file:./dabl-react",
     "@daml/ledger": "1.7.0",
     "@daml/react": "1.7.0",
