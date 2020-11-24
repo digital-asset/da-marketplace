@@ -25,7 +25,10 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout }) => (
             <Menu.Menu className='top-left-menu' position='right'>
                 <Menu.Item as={() => (
                     <Button className='ghost item' onClick={onLogout}>
-                        <p className='log-out'>Log out <LogoutIcon/></p>
+                        <div className='log-out'>
+                            <p>Log out</p> 
+                            <LogoutIcon/>
+                        </div>
                     </Button>
                 )}/>
             </Menu.Menu>

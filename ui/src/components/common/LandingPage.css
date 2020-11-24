@@ -1,11 +1,13 @@
 .landing-page {
     display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     height: 100%;
     width: 100%;
 }
 
 .landing-page-column {
-    width: 40%;
+    width: 45%;
 }
 
 .landing-page .ui.header {
@@ -18,4 +20,10 @@
 
 .landing-page .landing-page-column .custodian-select-container {
     padding-right: 6px;
+}
+
+@media screen and (max-width: 1000px) {
+    .landing-page-column {
+        width: 100% !important;
+    }
 }

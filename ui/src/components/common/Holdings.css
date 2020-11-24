@@ -9,7 +9,7 @@
 
 .ui.form > .fields.inline-form-group.action .field {
     padding-left: 0;
-    width: 321px;
+    //width: 321px;
 }
 
 .ui.form > .fields.inline-form-group.label {
@@ -18,9 +18,18 @@
     line-height: 22px;
 }
 
+.ui.form > .fields.inline-form-group.deposit-field {
+    background-color: red;
+    display: flex;
+}
+
 .asset-section {
-    border-bottom: 2px var(--grey2) solid;
+    background: #FAFAFA;
+    border: 2px solid #F0F0F0;
+    box-sizing: border-box;
+    border-radius: 2px;
     margin-bottom: 25px;
+    padding: 16px;
 }
 
 .asset-section:last-child {
@@ -32,9 +41,17 @@
     margin: 10px 0px;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .deposit-row > div {
     flex-grow: 1;
     flex-basis: 0;
+}
+
+
+@media screen and (max-width: 1000px) {
+    /* .deposit-row {
+        display
+    } */
 }

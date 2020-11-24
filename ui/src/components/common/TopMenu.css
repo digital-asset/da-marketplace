@@ -7,7 +7,17 @@
 
 .top-menu .menu > .ui.button:not(.icon) > .log-out {
     display: flex;
-    align-items: center;
+    align-items: center;  
+}
+
+.top-menu .menu > .ui.button:not(.icon) > .log-out > p {
+    margin: 0;
+}
+
+@media screen and (max-width: 1000px) {
+    .top-menu .menu > .ui.button:not(.icon) > .log-out > p {
+        display: none;
+    }
 }
 
 .top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {

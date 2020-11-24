@@ -87,3 +87,12 @@ export const WalletIcon = () => (
 export const CircleIcon = () => (
     <div className="icon circle"></div>
 )
+
+export const IconClose = () => (
+    <svg className='icon close' viewBox="0 0 15 16">
+      <path className="fill-primary" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
+          L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
+          c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
+    </svg>
+  );
+  

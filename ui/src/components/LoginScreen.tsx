@@ -69,7 +69,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
     <Form size='large' className='test-select-login-screen'>
       {/* FORM_BEGIN */}
       <Form.Input
-        fluid
+        centered
         required
         icon='user'
         iconPosition='left'
