@@ -9,27 +9,20 @@
 
 .ui.form > .fields.inline-form-group.action .field {
     padding-left: 0;
-    //width: 321px;
+    width: 321px;
 }
 
 .ui.form > .fields.inline-form-group.label {
     padding-top: 12px;
     font-size: 16px;
+    background-color: red;
+
     line-height: 22px;
 }
 
-.ui.form > .fields.inline-form-group.deposit-field {
-    background-color: red;
-    display: flex;
-}
-
 .asset-section {
-    background: #FAFAFA;
-    border: 2px solid #F0F0F0;
-    box-sizing: border-box;
-    border-radius: 2px;
+    border-bottom: 2px var(--grey2) solid;
     margin-bottom: 25px;
-    padding: 16px;
 }
 
 .asset-section:last-child {
@@ -42,6 +35,7 @@
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .deposit-row > div {
@@ -49,9 +43,18 @@
     flex-basis: 0;
 }
 
+.ui.form > .fields.inline-form-group.deposit-action {
+    margin: 4px 0;
+}
 
 @media screen and (max-width: 1000px) {
-    /* .deposit-row {
-        display
-    } */
+    .deposit-row {
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 0px;
+    }
+
+    .deposit-row > div {
+        padding-left: .5em;
+    }
 }

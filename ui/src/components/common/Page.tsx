@@ -19,6 +19,9 @@ const Page: React.FC<Props> = ({ children, menuTitle, sideNav, notifications, on
             <SideMenu>{ sideNav }</SideMenu>
             <Grid.Column className='page-body'>
                 <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications}/>
+                <div className='narrow-width-menu'>
+                    {sideNav}
+                </div>
                 { children }
             </Grid.Column>
         </Grid>

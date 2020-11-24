@@ -1,0 +1,13 @@
+
+@media screen and (max-width: 1000px) {
+    .custodian-clients .ui.form > .fields.inline-form-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
+        padding-left: .5em;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    
+}

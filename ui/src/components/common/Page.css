@@ -10,3 +10,21 @@
     background-color: #fff;
     padding: 0;
 }
+
+.ui.grid > .column.page-body .narrow-width-menu {
+    display: none;
+}
+
+/* @media screen and (max-width: 750px) {
+    .ui.grid > .column.page-body .narrow-width-menu {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--lightblue2);
+        padding-left: 32px;
+    }
+
+    .ui.grid > .column.page-sidemenu{
+        display: none;
+    } 
+} */
+

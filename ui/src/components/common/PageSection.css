@@ -23,3 +23,7 @@
     border-top: 2px var(--lightblue2) solid;
     border-radius: 0;
 }
+
+.ui.grid .page-section .order-forms > .ui.form {
+    padding-bottom: 32px;
+}

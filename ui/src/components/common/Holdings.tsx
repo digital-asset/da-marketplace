@@ -9,7 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { WalletIcon, IconClose } from '../../icons/Icons'
+import { WalletIcon } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import { groupDeposits, sumDeposits, countDecimals } from './utils'
 import { useOperator } from './common'
@@ -33,7 +33,6 @@ type Props = {
 }
 
 const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogout }) => {
-    const [ selectedForm, setSelectedForm ] = useState<string>()
     const depositsGrouped = groupDeposits(deposits);
     const depositsSummed = sumDeposits(deposits);
     const assetSections = Object.entries(depositsGrouped)
@@ -47,35 +46,14 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogou
                             <div key={deposit.contractId} className='deposit-row'>
                                 <div>{deposit.contractData.asset.quantity}</div>
                                 <div>{deposit.contractData.account.provider}</div>
-                                <div className='form-selector'>
-                                    <button onClick={() => setSelectedForm('allocate')}>
-                                        Allocate to Different Provider
-                                    </button>
-                                    <button onClick={() => setSelectedForm('merge')}>
-                                        Merge
-                                    </button>
-                                    <button onClick={() => setSelectedForm('split')}>
-                                        Split
-                                    </button>
-                                </div>
-                                {selectedForm === 'allocate' && 
-                                    <ProviderForm
-                                        deposit={deposit}
-                                        providers={providers}
-                                        role={role}
-                                        onRequestClose={() => setSelectedForm(undefined)}/>
-                                }
-                                {selectedForm === 'merge' && 
-                                    <MergeForm
-                                        availableDeposits={depositsForAsset}
-                                        deposit={deposit}
-                                        onRequestClose={() => setSelectedForm(undefined)}/>
-                                }
-                                {selectedForm === 'split' && 
-                                    <SplitForm 
-                                        deposit={deposit}
-                                        onRequestClose={() =>  setSelectedForm(undefined)}/>
-                                }
+                                <ProviderForm
+                                    deposit={deposit}
+                                    providers={providers}
+                                    role={role}/>
+                                <MergeForm
+                                    availableDeposits={depositsForAsset}
+                                    deposit={deposit}/>
+                                <SplitForm deposit={deposit}/>
                             </div>
                         )
                     })}
@@ -103,10 +81,9 @@ type ProviderFormProps = {
     deposit: DepositInfo;
     providers: DepositProvider[];
     role: MarketRole;
-    onRequestClose: () => void;
 }
 
-const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, onRequestClose }) => {
+const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role }) => {
     const operator = useOperator();
     const party = useParty();
     const ledger = useLedger();
@@ -149,10 +126,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, o
 
     return (
         <FormErrorHandled className='inline-form' onSubmit={allocateToProvider}>
-            <div onClick={onRequestClose}>
-                <IconClose/>
-            </div>
-            <Form.Group className='inline-form-group deposit-field'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Select
                     clearable
                     value={provider}
@@ -171,10 +145,9 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, o
 type MergeFormProps = {
     availableDeposits: DepositInfo[];
     deposit: DepositInfo;
-    onRequestClose: () => void;
 }
 
-const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onRequestClose }) => {
+const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit }) => {
     const [ mergeAssets, setMergeAssets ] = useState<string[]>([])
     const ledger = useLedger();
 
@@ -205,11 +178,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
 
     return (
         <FormErrorHandled onSubmit={assetDepositMerge}>
-            <div onClick={onRequestClose}>
-                <IconClose/>
-            </div>
-            
-            <Form.Group className='inline-form-group deposit-field'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Select
                     multiple
                     placeholder='Select...'
@@ -226,10 +195,9 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
 
 type SplitFormProps = {
     deposit: DepositInfo;
-    onRequestClose: () => void;
 }
 
-const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
+const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
     const { asset } = deposit.contractData;
     const ledger = useLedger();
     const [ splitNumberError, setSplitNumberError ] = useState<string>()
@@ -274,10 +242,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
 
     return (
         <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
-            <div onClick={onRequestClose}>
-                <IconClose/>
-            </div>
-            <Form.Group className='inline-form-group deposit-field'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Input
                     type='number'
                     step={`0.${"0".repeat(tokenQuantityPrecision === 0? tokenQuantityPrecision : tokenQuantityPrecision-1)}1`}
