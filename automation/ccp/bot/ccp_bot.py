@@ -2,14 +2,15 @@ import logging
 import os
 
 import dazl
-from dazl import exercise
+from dazl import exercise_by_key
 
 
 dazl.setup_default_logger(logging.INFO)
 
 
 class MARKETPLACE:
-    Trade = 'Marketplace.Trading:Trade'
+    CCP = 'Marketplace.CentralCounterparty:CCP'
+    Trade = 'Marketplace.Trading:DerivativeTrade'
 
 
 def main():
@@ -17,6 +18,7 @@ def main():
     ccp = os.getenv('DAML_LEDGER_PARTY')
 
     ccp_party = "CCP" if not ccp else ccp
+    operator_party = "Operator"
 
     network = dazl.Network()
     network.set_config(url=url)
@@ -28,12 +30,21 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace CCP bot is ready!")
+        ccps = client.find_active(Marketplace.CCP, {})
+        for _, cdata in ccps.items():
+            logging.info(f"Setting operator party to {cdata['operator']}")
+            operator_party = cdata['operator']
 
-    @client.ledger_created(MARKETPLACE.Trade)
+    @client.ledger_created(Marketplace.CCP)
+    def handle_ccp(event):
+        logging.info(f"Setting operator party to {cdata['operator']}")
+        operator_party = event.cdata['operator']
+
+    @client.ledger_created(MARKETPLACE.DerivativeTrade)
     def handle_trade(event):
-        logging.info(f"On {MARKETPLACE.Trade} created!")
-
-        return client.submit_exercise(event.cid, 'Trade_Novate', {})
+        logging.info(f"On {MARKETPLACE.DerivativeTrade} created!")
+        return [exercise_by_key(Marketplace.CCP, {'_1': operator_party, '_2': client.party},
+                                'CCP_NovateDerivativeTrade', {'derivativeTradeCid': event.cid})]
 
     network.run_forever()
 

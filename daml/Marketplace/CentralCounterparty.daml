@@ -3,6 +3,7 @@ module Marketplace.CentralCounterparty where
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Custodian
 import Marketplace.Registry
+import Marketplace.Trading
 import Marketplace.Utils
 
 
@@ -22,6 +23,7 @@ template CCPInvitation
         with
           name : Text
           location : Text
+          custodian : Party
         do
           ccpRegistryCid <- create RegisteredCCP with ..
           ccpCid <- create CCP with ..
@@ -31,6 +33,7 @@ template CCPInvitation
 template CCP
   with
     operator : Party
+    custodian : Party
     ccp : Party
   where
     signatory operator, ccp
@@ -40,11 +43,38 @@ template CCP
 
     controller ccp can
       nonconsuming CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        with
-          custodian : Party
         do create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
 
       nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
         with
           ccpCustomer : Party
         do create CCPCustomerInvitation with ..
+
+      nonconsuming CCP_NovateDerivativeTrade : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
+        with
+          derivativeTradeCid : ContractId DerivativeTrade
+        do
+          derivativeTrade <- fetch derivativeTradeCid
+          -- verify that both buyer and seller are ccp customers
+          fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.buyer)
+          fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.seller)
+          let exchange = derivativeTrade.exchange
+              eventId = derivativeTrade.eventId
+              eventTimestamp = derivativeTrade.eventTimestamp
+              instrument = derivativeTrade.instrument
+              matchId = derivativeTrade.matchId
+              executedQuantity = derivativeTrade.executedQuantity
+              executedPrice = derivativeTrade.executedQuantity
+              buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
+              sellerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
+          buyCid <- create DerivativeTradeSide with
+            participant = derivativeTrade.buyer
+            orderId = derivativeTrade.buyerOrderId
+            accountId = buyerAccountId
+            ..
+          sellCid <- create DerivativeTradeSide with
+            participant = derivativeTrade.seller
+            orderId = derivativeTrade.sellerOrderId
+            accountId = buyerAccountId
+            ..
+          return (buyCid, sellCid)

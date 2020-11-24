@@ -18,3 +18,20 @@ template MarginCalculation
 
     key (ccp, calculationId) : (Party, Text)
     maintainer key._1
+
+
+template MarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    mtmAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+
+    observer customer
+
+    key (ccp, calculationId) : (Party, Text)
+    maintainer key._1

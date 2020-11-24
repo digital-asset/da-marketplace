@@ -212,13 +212,13 @@ template BrokerOrder
           create DepositTransferRequest with sender = broker, ..
 
 
-template Trade
+template DerivativeTrade
   with
     ccp : Party
     exchange : Party
     eventId : Int
     eventTimestamp : Text
-    instrument : IdPair
+    instrument : Id
     trackingNumber : Int
     buyer : Party
     buyerOrderId : Int
@@ -230,39 +230,24 @@ template Trade
   where
     signatory exchange
 
-    controller ccp can
-      Trade_Novate : (ContractId TradeSide, ContractId TradeSide)
-        do
-          buyCid <- create TradeSide with
-            exchParticipant = buyer
-            pair = instrument
-            price = executedPrice
-            qty = executedQuantity
-            isBuy = True
-            orderId = buyerOrderId
-            counterOrderId = sellerOrderId
-            timestamp = eventTimestamp
-            optDepositCid = None
-            receiverAccountId = instrument._1  -- todo: get rid of this
-            isBinaryOption = False
-            ..
-          sellCid <- create TradeSide with
-            exchParticipant = seller
-            pair = instrument
-            price = executedPrice
-            qty = executedQuantity
-            isBuy = False
-            orderId = sellerOrderId
-            counterOrderId = buyerOrderId
-            timestamp = eventTimestamp
-            optDepositCid = None
-            receiverAccountId = instrument._1
-            isBinaryOption = False
-            ..
-          return (buyCid, sellCid)
+
+template DerivativeTradeSide
+  with
+    participant : Party
+    ccp : Party
+    exchange : Party
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id
+    orderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+    accountId : Id  -- the investor account at the ccp
+  where
+    signatory exchange, ccp
 
 
--- need to modify this to add a ccp if this is a trade that needs to be cleared
 template TradeSide
   with
     exchParticipant : Party
