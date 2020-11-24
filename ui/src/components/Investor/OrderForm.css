@@ -9,10 +9,6 @@
     justify-content: space-between;
 }
 
-/* .order-form > .field > input.order-input, .order-form > .field > .ui.selection.dropdown {
-    max-width: 350px;
-} */
-
 .ui.form .field >.selection.dropdown {
     max-width: 350px;
 }
