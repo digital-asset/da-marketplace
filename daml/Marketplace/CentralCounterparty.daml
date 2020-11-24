@@ -75,6 +75,6 @@ template CCP
           sellCid <- create DerivativeTradeSide with
             participant = derivativeTrade.seller
             orderId = derivativeTrade.sellerOrderId
-            accountId = buyerAccountId
+            accountId = sellerAccountId
             ..
           return (buyCid, sellCid)
