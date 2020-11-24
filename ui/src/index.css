@@ -128,6 +128,10 @@ p.p2 {
   color: #505050;
 }
 
+.ui.form .fluid input {
+  max-width: 300px;
+}
+
 .ui.form .field > label {
   font-family: Open Sans;
   font-style: normal;

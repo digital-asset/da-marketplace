@@ -10,3 +10,7 @@
     background-color: #fff;
     padding: 0;
 }
+
+.ui.grid > .column.page-body .narrow-width-menu {
+    display: none;
+}
