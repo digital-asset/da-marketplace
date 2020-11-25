@@ -1,6 +1,8 @@
 import React from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
+import { IconClose } from '../../icons/Icons';
+
 import { useLedger,  useParty, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -70,9 +72,8 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
             <FormErrorHandled onSubmit={notificationDismiss}>
                 <Form.Group className='inline-form-group'>
                     <Button
-                        basic
-                        content='Dismiss'
-                        type='submit'/>
+                        className='close-button'
+                        type='submit'><IconClose/></Button>
                 </Form.Group>
             </FormErrorHandled>
         </NotificationComponent>

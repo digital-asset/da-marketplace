@@ -8,11 +8,3 @@
     align-items: center;
     justify-content: space-between;
 }
-
-.ui.form .field >.selection.dropdown {
-    max-width: 350px;
-}
-
-.ui.form .field > input.order-input {
-    max-width: 350px;
-}

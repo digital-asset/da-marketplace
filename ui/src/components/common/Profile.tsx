@@ -32,10 +32,10 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField }) => {
     return (
         <Form.Input
             fluid
-            className='profile-form-field'
             label={field.label}
             placeholder={field.placeholder}
             value={field.value}
+            className='profile-form-field'
             type={field.type}
             onChange={e => setField({ ...field, value: e.currentTarget.value })}/>
     )
@@ -49,32 +49,27 @@ type ProfileProps = {
 
 const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
-
+    
     useEffect(() => {
         setProfile(defaultProfile);
     }, [ defaultProfile ]);
 
-    const fields = Object.keys(profile).map(key => (
-        <ProfileField
-            key={key}
-            field={profile[key]}
-            setField={field => setProfile({ ...profile, [key]: field })}/>
-    ));
-
-    const disableButton = Object.keys(profile).reduce((accumulator, key) => {
-        return accumulator || !profile[key].value;
-    }, false);
-
     return (
         <>
-            { fields }
-            <Button
-                primary
-                className='profile-submit-button'
-                content={content}
-                disabled={disableButton}
-                onClick={() => submitProfile && submitProfile(profile)}
-                type='submit'/>
+            {Object.keys(profile).map(key => (
+                <Form.Group className='inline-form-group profile'>            
+                    <ProfileField
+                        key={key}
+                        field={profile[key]}
+                        setField={field => setProfile({ ...profile, [key]: field })}/>
+                    <Button
+                        secondary
+                        content={content}
+                        disabled={!profile[key].value}
+                        onClick={() => submitProfile && submitProfile(profile)}
+                        type='submit'/>
+                </Form.Group>
+            ))}
         </>
     )
 }

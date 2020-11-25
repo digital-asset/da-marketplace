@@ -1,5 +1,6 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
+import WelcomeHeader from './WelcomeHeader';
 
 import { LogoIcon } from '../../icons/Icons'
 
@@ -14,11 +15,11 @@ const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
         <Grid className='onboarding-tile' textAlign='center' verticalAlign='middle'>
             <Grid.Row>
                 <Grid.Column width={8} className='onboarding-tile-content'>
-                    <Header as='h3' textAlign='center'>
+                     <Header as='h3' textAlign='center'>
                         <Header.Content>
-                            <LogoIcon/> Welcome to the DABL Social Marketplace
+                        <WelcomeHeader/>
                         </Header.Content>
-                    </Header>
+                </Header> 
                     <p> { subtitle } </p>
                     { children }
                 </Grid.Column>
