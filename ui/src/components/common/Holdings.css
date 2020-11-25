@@ -32,9 +32,27 @@
     margin: 10px 0px;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .deposit-row > div {
     flex-grow: 1;
     flex-basis: 0;
+}
+
+.ui.form > .fields.inline-form-group.deposit-action {
+    margin: 4px 0;
+}
+
+@media screen and (max-width: 1000px) {
+    .deposit-row {
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 0px;
+    }
+
+    .deposit-row > div {
+        padding-left: .5em;
+    }
 }

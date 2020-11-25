@@ -1,16 +1,13 @@
 .ui.form .field.issue-asset-form-field {
-    width: 321px;
     padding-bottom: 12px;
 }
 
-.issue-asset-form .issue-asset-form-field > textarea {
-    width: 642px;
-}
-
-.ui.form .observer-select{
+.ui.form .observer-select {
     display: flex;
-    flex-direction: row;
-    width: 654px;
-    justify-content: space-between;
+    flex-direction: column;
     padding-bottom: 12px;
+}
+
+.ui.form .observer-select > .issue-asset-form-field.select-observer {
+    padding-top: 12px;
 }

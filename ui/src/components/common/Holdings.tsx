@@ -126,7 +126,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role })
 
     return (
         <FormErrorHandled className='inline-form' onSubmit={allocateToProvider}>
-            <Form.Group className='inline-form-group'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Select
                     clearable
                     value={provider}
@@ -178,7 +178,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit }) => 
 
     return (
         <FormErrorHandled onSubmit={assetDepositMerge}>
-            <Form.Group className='inline-form-group'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Select
                     multiple
                     placeholder='Select...'
@@ -242,7 +242,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit }) => {
 
     return (
         <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
-            <Form.Group className='inline-form-group with-error'>
+            <Form.Group className='inline-form-group deposit-action'>
                 <Form.Input
                     type='number'
                     step={`0.${"0".repeat(tokenQuantityPrecision === 0? tokenQuantityPrecision : tokenQuantityPrecision-1)}1`}

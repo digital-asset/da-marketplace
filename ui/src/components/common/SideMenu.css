@@ -1,6 +1,10 @@
 .ui.grid > .column.page-sidemenu {
     padding: 0;
     width: 230px;
+    display: flex;
+    top: 0;
+    position: sticky;
+    align-self: flex-start; 
 }
 
 .column.page-sidemenu > .ui.secondary.menu {
