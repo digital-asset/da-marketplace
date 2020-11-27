@@ -33,3 +33,26 @@ template Token
       Token_SetObservers : ContractId Token
         with newObservers : Set Party
         do create this with observers = newObservers
+
+data InstrumentStatus = InstrumentActive
+                      | InstrumentDisabled deriving (Show, Eq)
+
+-- | Reference data describing a market pair of tokens
+template MarketPair
+  with
+    id : Id
+    exchange : Party
+    description : Text
+    baseTokenId : Id
+    quoteTokenId : Id
+    pricePrecision : Int
+    quantityPrecision : Int
+    minQuantity : Decimal
+    maxQuantity : Decimal
+    status : InstrumentStatus
+    observers : Set Party
+  where
+    signatory exchange
+    key id : Id
+    maintainer key.signatories
+    observer observers

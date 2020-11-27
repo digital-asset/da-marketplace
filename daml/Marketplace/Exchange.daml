@@ -11,6 +11,7 @@ import Marketplace.Utils
 import DA.Finance.Types
 
 import DA.List
+import DA.Next.Set
 
 
 template ExchangeInvitation
@@ -72,6 +73,21 @@ template Exchange
           (_, baseToken) <- fetchByKey @Token baseTokenId
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
+          let instrumentName = baseToken.id.label <> quoteToken.id.label
+          let newMarket = MarketPair with
+                id                = Id with signatories = fromList [exchange], label = instrumentName, version = 0
+                exchange
+                description       = baseToken.description <> " vs " <> quoteToken.description
+                baseTokenId
+                quoteTokenId
+                pricePrecision    = quoteToken.quantityPrecision
+                quantityPrecision = baseToken.quantityPrecision
+                -- TODO: add these as options in UI
+                minQuantity       = 0.0001  : Decimal
+                maxQuantity       = 1000000.0 : Decimal
+                status            = InstrumentActive
+                observers         = fromList participants
+          create newMarket
           create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 
       Exchange_AddBinaryOption : ContractId Exchange

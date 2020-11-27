@@ -33,6 +33,8 @@ class MARKETPLACE:
     OrderRequest = 'Marketplace.Trading:OrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
+    Token = 'Marketplace.Token:Token'
+    MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
@@ -111,6 +113,50 @@ def main():
 
         return [exercise(req_cid, 'OrderRequest_Reject', {}),
                 exercise(event.cid, 'Archive', {})]
+
+    # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.Token)
+    def handle_new_token(event):
+        token = event.cdata
+        label = token['id']['label']
+        description = token['description']
+        quantity_precision = token['quantityPrecision']
+        return create(EXBERRY.CreateInstrumentRequest, {
+            'integrationParty': client.party,
+            'symbol': label,
+            'instrumentDescription': description,
+            'calendarId': '1261007448', # TODO: add to UI
+            'pricePrecision': 2, # TODO: add to UI
+            'quantityPrecision': quantity_precision,
+            'minQuantity': 0.0001,
+            'maxQuantity': 100000.0,
+            'status': 'Active'
+        })
+
+    # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.MarketPair)
+    def handle_new_market_pair(event):
+        pair = event.cdata
+        symbol = pair['id']['label']
+        description = pair['description']
+        quote_currency = pair['quoteTokenId']['label']
+        price_precision = pair['pricePrecision']
+        quantity_precision = pair['quantityPrecision']
+        min_quantity = pair['minQuantity']
+        max_quantity = pair['maxQuantity']
+        status = pair['status'][10:]
+        return create(EXBERRY.CreateInstrumentRequest, {
+            'integrationParty': client.party,
+            'symbol': symbol,
+            'quoteCurrency': quote_currency,
+            'instrumentDescription': description,
+            'calendarId': '1261007448', # TODO: add to UI
+            'pricePrecision': price_precision, # TODO: add to UI
+            'quantityPrecision': quantity_precision,
+            'minQuantity': min_quantity,
+            'maxQuantity': max_quantity,
+            'status': status
+        })
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderCancelRequest)
