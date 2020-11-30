@@ -54,22 +54,27 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         setProfile(defaultProfile);
     }, [ defaultProfile ]);
 
+    const fields = Object.keys(profile).map(key => (
+        <ProfileField
+            key={key}
+            field={profile[key]}
+            setField={field => setProfile({ ...profile, [key]: field })}/>
+    ));
+
+    const disableButton = Object.keys(profile).reduce((accumulator, key) => {
+        return accumulator || !profile[key].value;
+    }, false);
+
     return (
         <>
-            {Object.keys(profile).map(key => (
-                <Form.Group className='inline-form-group profile'>            
-                    <ProfileField
-                        key={key}
-                        field={profile[key]}
-                        setField={field => setProfile({ ...profile, [key]: field })}/>
-                    <Button
-                        secondary
-                        content={content}
-                        disabled={!profile[key].value}
-                        onClick={() => submitProfile && submitProfile(profile)}
-                        type='submit'/>
-                </Form.Group>
-            ))}
+            { fields }
+            <Button
+                primary
+                className='profile-submit-button'
+                content={content}
+                disabled={disableButton}
+                onClick={() => submitProfile && submitProfile(profile)}
+                type='submit'/>
         </>
     )
 }
