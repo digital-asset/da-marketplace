@@ -73,7 +73,9 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
                 <Form.Group className='inline-form-group'>
                     <Button
                         className='close-button'
-                        type='submit'><IconClose/></Button>
+                        type='submit'>
+                        <IconClose/>
+                    </Button>
                 </Form.Group>
             </FormErrorHandled>
         </NotificationComponent>

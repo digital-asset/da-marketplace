@@ -11,14 +11,13 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon, IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDeposits, sumDeposits, countDecimals } from './utils'
+import { groupDeposits, countDecimals } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
 
 import "./Holdings.css"
-import { unwatchFile } from 'fs'
 
 export type DepositProvider = {
     party: string;
@@ -32,7 +31,6 @@ type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
-
 
 const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogout }) => {
     const depositsGrouped = groupDeposits(deposits);

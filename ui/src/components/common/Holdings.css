@@ -54,7 +54,6 @@
 .deposit-row .selected-form {
     display: flex;
     flex-direction: column;
-   
 }
 
 .deposit-row .selected-form .selected-form-heading {
@@ -72,7 +71,6 @@
 }
 
 @media screen and (max-width: 1000px) {
-
     .deposit-row .deposit-row-body {
         flex-direction: column;
         align-content: flex-start;
