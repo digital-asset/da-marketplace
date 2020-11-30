@@ -15,6 +15,13 @@ def get_sid() -> int:
 
 sid_to_order = {}
 
+# creates the lowest minimum quantity possible from the
+# quantity precision
+def make_minimum_quantity(precision):
+    if precision == 0:
+        return 1
+    zeros = '0' * (precision - 1)
+    return float(f'0.{zeros}1')
 
 class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
@@ -124,9 +131,9 @@ def main():
         quote_currency = pair['quoteTokenId']['label']
         price_precision = pair['pricePrecision']
         quantity_precision = pair['quantityPrecision']
-        min_quantity = pair['minQuantity']
+        min_quantity = make_minimum_quantity(quantity_precision) # TODO: enforce this at DAML level
         max_quantity = pair['maxQuantity']
-        status = pair['status'][10:] # drop 'Instrument'
+        # status = pair['status'][10:] # drop 'Instrument'
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
             'symbol': symbol,
@@ -137,7 +144,7 @@ def main():
             'quantityPrecision': quantity_precision,
             'minQuantity': min_quantity,
             'maxQuantity': max_quantity,
-            'status': status
+            'status': 'Active'
         })
 
     # Marketplace --> Exberry
