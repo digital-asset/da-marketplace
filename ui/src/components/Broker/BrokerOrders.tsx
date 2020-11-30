@@ -119,8 +119,7 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
                             onChange={e => setBrokerOrderId(e.currentTarget.value)}
                         />
                         <Button
-                            basic
-                            color='black'
+                            secondary
                             content='Accept Order'
                         />
                     </Form.Group>
@@ -196,8 +195,7 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                             value={depositCid}
                         />
                         <Button
-                            basic
-                            color='black'
+                            secondary
                             content='Fill Order'
                         />
                     </Form.Group>
