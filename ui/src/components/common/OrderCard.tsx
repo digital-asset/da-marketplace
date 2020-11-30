@@ -20,7 +20,9 @@ const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
         <div className='order-card-container'>
             <div className='order-card'>
                 <Card fluid className='order-info'>
-                    <div><ExchangeIcon/> {label}</div>
+                    <div><ExchangeIcon/>
+                    {label}
+                    </div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                 </Card>

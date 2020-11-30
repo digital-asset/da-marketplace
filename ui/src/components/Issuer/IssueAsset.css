@@ -2,6 +2,14 @@
     padding-bottom: 12px;
 }
 
+.ui.form .field.issue-asset-form-field  > .ui.input {
+    max-width: 260px;
+}
+
+.ui.form textarea {
+    max-width: 500px;
+}
+
 .ui.form .observer-select {
     display: flex;
     flex-direction: column;
