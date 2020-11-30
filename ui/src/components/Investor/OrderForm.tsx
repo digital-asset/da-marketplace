@@ -58,7 +58,7 @@ const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
                     onChange={e => setPrice(e.target.value)}/>
             </Form.Field>
 
-            <Button disabled={!price || !depositCid}>{title}</Button>
+            <Button secondary disabled={!price || !depositCid}>{title}</Button>
         </FormErrorHandled>
     )
 }

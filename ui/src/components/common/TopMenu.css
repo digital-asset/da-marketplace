@@ -59,6 +59,7 @@
     align-items: flex-start;
     justify-content: center;
     height: 100%;
+    margin:0;
 }
 
 .notifications {

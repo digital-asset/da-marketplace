@@ -2,18 +2,22 @@
     background: none;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     margin: 0;
 }
 
 .order-card {
-    padding: 10px;
-    background-color: var(--grey1);
-    border: 1px var(--grey2) solid;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: center; 
+    padding: 12px;
+    margin: 12px 0px;
+    background: var(--grey1);
+    border: 2px solid var(--grey2);
+    box-sizing: border-box;
+    border-radius: 2px;
 }
 
 .order-info .exchange-icon {
@@ -26,4 +30,16 @@
 .order-info div:first-child {
     display: flex;
     align-items: center;
+}
+
+
+@media screen and (max-width: 800px) {
+    .order-card > .ui.card.order-info {
+        flex-direction: column;
+        align-content: flex-start;
+    }
+
+    .order-card > .ui.card.order-info > div:not(:last-child){
+        padding-bottom: 12px;
+    }
 }
