@@ -2,6 +2,7 @@
     background: none;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     margin: 0;
@@ -29,4 +30,16 @@
 .order-info div:first-child {
     display: flex;
     align-items: center;
+}
+
+
+@media screen and (max-width: 800px) {
+    .order-card > .ui.card.order-info {
+        flex-direction: column;
+        align-content: flex-start;
+    }
+
+    .order-card > .ui.card.order-info > div:not(:last-child){
+        padding-bottom: 12px;
+    }
 }
