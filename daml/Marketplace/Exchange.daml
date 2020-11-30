@@ -77,13 +77,14 @@ template Exchange
           let newMarket = MarketPair with
                 id                = Id with signatories = fromList [exchange], label = instrumentName, version = 0
                 exchange
-                description       = baseToken.description <> " vs " <> quoteToken.description
+                description       = baseToken.id.label <> " vs " <> quoteToken.id.label
                 baseTokenId
                 quoteTokenId
+                calendarId        = "1261007448"
                 pricePrecision    = quoteToken.quantityPrecision
                 quantityPrecision = baseToken.quantityPrecision
                 -- TODO: add these as options in UI
-                minQuantity       = 0.0001  : Decimal
+                minQuantity       = 0.0001    : Decimal
                 maxQuantity       = 1000000.0 : Decimal
                 status            = InstrumentActive
                 observers         = fromList participants

@@ -45,6 +45,7 @@ template MarketPair
     description : Text
     baseTokenId : Id
     quoteTokenId : Id
+    calendarId : Text
     pricePrecision : Int
     quantityPrecision : Int
     minQuantity : Decimal
