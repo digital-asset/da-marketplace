@@ -108,6 +108,24 @@ p.p2 {
   border-radius: 2px;
 }
 
+.ui.toggle.checkbox input:focus:checked ~ .box:before,
+.ui.toggle.checkbox input:focus:checked ~ label:before,
+.ui.toggle.checkbox input:checked ~ .box:before,
+.ui.toggle.checkbox input:checked ~ label:before {
+    background-color: var(--dabl-color) !important
+}
+
+.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
+    background-color: var(--grey2);
+}
+
+.ui.form .fluid textarea , .ui.form textarea {
+  background: #FFFFFF;
+  border: 1px solid var(--grey4) !important;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
 .ui.form .field > .selection.dropdown {
   width: 260px !important;
   background: white;
