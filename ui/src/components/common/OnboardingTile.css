@@ -19,10 +19,3 @@
 .onboarding-tile .onboarding-tile-content .ui.input {
     height: 50px;
 }
-
-
-@media screen and (max-width: 900px) {
-    .onboarding-tile .onboarding-tile-content .icon {
-        display: none;
-    }
-}

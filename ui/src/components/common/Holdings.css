@@ -14,6 +14,7 @@
     border: 2px solid var(--grey2);
     box-sizing: border-box;
     border-radius: 2px;
+    height: fit-content;
 }
 
 .deposit-row .deposit-row-body {
@@ -53,7 +54,7 @@
 .deposit-row .selected-form {
     display: flex;
     flex-direction: column;
-    margin-top: 12px;
+   
 }
 
 .deposit-row .selected-form .selected-form-heading {
@@ -63,6 +64,7 @@
     justify-content: space-between;
     border-top: 1px solid var(--grey2);
     padding-top: 12px;
+    margin-top: 12px;
 }
 
 .ui.form > .fields.inline-form-group .field {
