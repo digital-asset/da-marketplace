@@ -66,7 +66,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
     }, false);
 
     return (
-        <>
+         <Form>
             { fields }
             <Button
                 secondary
@@ -75,7 +75,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}
                 type='submit'/>
-        </>
+        </Form>
     )
 }
 
