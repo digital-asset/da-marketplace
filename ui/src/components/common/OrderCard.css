@@ -8,12 +8,15 @@
 }
 
 .order-card {
-    padding: 10px;
-    background-color: var(--grey1);
-    border: 1px var(--grey2) solid;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: center; 
+    padding: 12px;
+    margin: 12px 0px;
+    background: var(--grey1);
+    border: 2px solid var(--grey2);
+    box-sizing: border-box;
+    border-radius: 2px;
 }
 
 .order-info .exchange-icon {

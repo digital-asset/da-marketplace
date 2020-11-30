@@ -60,7 +60,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogou
             onLogout={onLogout}
         >
             <PageSection border='blue' background='white'>
-                <Header as='h4'>Holdings</Header>
+                <Header as='h3'>Holdings</Header>
                 <div className='wallet'>
                     { assetSections }
                 </div>
