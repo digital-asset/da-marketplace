@@ -116,7 +116,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/create-pair`}>
             <CreateMarket
                 sideNav={sideNav}
-                onLogout={onLogout}/>s
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/participants`}>

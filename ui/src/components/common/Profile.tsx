@@ -49,7 +49,7 @@ type ProfileProps = {
 
 const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
-    
+
     useEffect(() => {
         setProfile(defaultProfile);
     }, [ defaultProfile ]);
