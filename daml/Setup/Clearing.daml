@@ -9,13 +9,12 @@ import Marketplace.Investor
 import Marketplace.Issuer
 import Marketplace.Operator
 
+import Marketplace.Derivative
 import Marketplace.CentralCounterparty
 import Marketplace.CentralCounterpartyCustomer
 
-import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Transfer
-import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -71,9 +70,13 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer _ al
 
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
 
-  btcTokenId <- createToken operator issuer "BTCF21" "BTC January 21" 6 observers
-  ethTokenId <- createToken operator issuer "ETH21" "ETH January 21" 6 observers
+  btcTokenId <- createToken operator issuer "BTC" "Bitcoin" 2 observers
+  ethTokenId <- createToken operator issuer "ETH" "ETH Coin" 2 observers
   usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
+
+  btcF21DerId <- createSimpleDerivative operator issuer "BTCF21" "BTC" "BTC January 21" 6 1 "coins" btcTokenId observers
+  ethF21DerId <- createSimpleDerivative operator issuer "ETHF21" "ETH" "ETH January 21" 6 1 "coins" ethTokenId observers
+
 
   let btcPair = (btcTokenId, usdTokenId)
   let ethPair = (btcTokenId, usdTokenId)
@@ -87,12 +90,12 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer _ al
   carlAccts <- setupInvestorAccount lp usdTokenId carl
   danaAccts <- setupInvestorAccount lp usdTokenId dana
 
-  let tradePairs = [ (alice, bob, btcPair, 50.0, 1000.0)
-                   , (alice, carl, btcPair, 10.0, 3000.0)
-                   , (alice, carl, ethPair, 34.0, 5044.0)
-                   , (carl, bob, ethPair, 10.0, 5044.0)
-                   , (dana, alice, btcPair, 10.0, 100.0)
-                   , (bob, dana, ethPair, 456.0, 1434.0) ]
+  let tradePairs = [ (alice, bob, btcF21DerId, 50.0, 1000.0)
+                   , (alice, carl, ethF21DerId, 10.0, 3000.0)
+                   , (alice, dana, ethF21DerId, 34.0, 5044.0)
+                   , (carl, bob, btcF21DerId, 10.0, 5044.0)
+                   , (dana, alice, ethF21DerId, 10.0, 100.0)
+                   , (bob, dana, btcF21DerId, 456.0, 1434.0) ]
 
   let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
   forA_ trades (\t -> exchange `submit` createCmd t)
@@ -159,6 +162,27 @@ createToken operator issuer name description quantityPrecision observers = do
   issuer `submit` exerciseByKeyCmd @Issuer (operator, issuer) Issuer_IssueToken with name, description, quantityPrecision, isPublic = True, observers
   return $ Id with signatories = fromList [ issuer ], label = name, version = 0
 
+createSimpleDerivative : Party -> Party -> Text -> Text -> Text -> Int -> Int -> Text -> Id -> [Party] -> Script Id
+createSimpleDerivative operator issuer prodSym prodCode description pricePrecision mult uom underlying observers = do
+  let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
+  let derivative = Derivative with
+        id
+        pricePrecision
+        description
+        prodSym
+        prodCode
+        secType = FRA
+        mmy = "YYYYMM"
+        mult
+        uom
+        optionData = None
+        underlying
+        observers = fromList observers
+
+
+  issuer `submit` createCmd derivative
+  return id
+
 handleOnboarding : LedgerParties -> Script ()
 handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer usdtIssuer alice bob broker ccp) = do
   let name = "default name"
@@ -202,7 +226,7 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- ccp establishes relationship with the custodian
-  relationshipReqCid <- ccp `submit` exerciseCmd ccpCid CCP_RequestCustodianRelationship with ..
+  relationshipReqCid <- ccp `submit` exerciseCmd ccpCid CCP_RequestCustodianRelationship
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
 
@@ -211,8 +235,8 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
 
   return ()
 
-createTrade : Party -> Party -> Int -> (Party, Party, IdPair, Decimal, Decimal) -> Trade
-createTrade ccp exchange currentId (buyer, seller, instrument, quantity, price) = Trade with
+createTrade : Party -> Party -> Int -> (Party, Party, Id, Decimal, Decimal) -> DerivativeTrade
+createTrade ccp exchange currentId (buyer, seller, instrument, quantity, price) = DerivativeTrade with
       ccp = ccp
       exchange = exchange
       eventId = currentId + 50
