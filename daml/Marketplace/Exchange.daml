@@ -94,7 +94,6 @@ template Exchange
                 calendarId = "1261007448"
                 pricePrecision = quoteToken.quantityPrecision
                 quantityPrecision = baseToken.quantityPrecision
-                -- TODO: add these as options in UI
                 minQuantity = minQuantity : Decimal
                 maxQuantity = maxQuantity : Decimal
                 status = InstrumentActive
