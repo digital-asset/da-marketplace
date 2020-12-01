@@ -10,6 +10,11 @@
     align-items: flex-end;
 }
 
+.create-market-quantities {
+    margin-top: 10px;
+    width: 250px;
+}
+
 .create-market-options .exchange-icon {
     height: 16px;
     width: 16px;

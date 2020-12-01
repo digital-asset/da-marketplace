@@ -69,9 +69,20 @@ template Exchange
         with
           baseTokenId : Id
           quoteTokenId : Id
+          minQuantity : Decimal
+          maxQuantity : Decimal
         do
           (_, baseToken) <- fetchByKey @Token baseTokenId
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
+
+          assertMsg ("minimum quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision minQuantity == minQuantity
+          assertMsg ("max quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision maxQuantity == maxQuantity
+
+          assertMsg "minimum quantity should be less than the maximum quantity"
+            $ minQuantity < maxQuantity
+
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
           let instrumentName = baseToken.id.label <> quoteToken.id.label
           let newMarket = MarketPair with
@@ -84,8 +95,8 @@ template Exchange
                 pricePrecision = quoteToken.quantityPrecision
                 quantityPrecision = baseToken.quantityPrecision
                 -- TODO: add these as options in UI
-                minQuantity = 0.0001    : Decimal
-                maxQuantity = 1000000.0 : Decimal
+                minQuantity = minQuantity : Decimal
+                maxQuantity = maxQuantity : Decimal
                 status = InstrumentActive
                 observers = fromList participants
           create newMarket

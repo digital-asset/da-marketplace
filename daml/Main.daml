@@ -112,7 +112,7 @@ test = scenario do
   bob `submit` exercise bobInvCid ExchangeParticipantInvitation_Accept
 
   -- the exchange adds support for BTC/USDT pair
-  exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+  exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 100000.0
 
   -- Bob places a bid for the BTC/USDT pair but he is using a deposit of bitcoin so he can only place an offer
   bob `submitMustFail` exerciseByKey @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceBid with depositCid, pair = (btcTokenId, usdtTokenId), price = 10_000.0
@@ -214,7 +214,7 @@ testBroker = scenario do
   exchangeInvCid <- operator `submit` exerciseByKey @Operator operator Operator_OnboardExchange with ..
   exchangeCid <- exchange `submit` exercise exchangeInvCid ExchangeInvitation_Accept with ..
 
-  exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+  exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 10000.0
 
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exerciseByKey @Exchange (operator, exchange) Exchange_RequestCustodianRelationship with ..
