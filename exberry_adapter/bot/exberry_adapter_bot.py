@@ -125,10 +125,8 @@ def main():
         quantity_precision = pair['quantityPrecision']
         min_quantity = pair['minQuantity']
         max_quantity = pair['maxQuantity']
-        logging.info(type(pair['status']))
-        logging.info((pair['status']))
+        status = pair['status'][10:]
 
-        # status = pair['status'][10:] # drop 'Instrument'
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
             'symbol': symbol,
@@ -139,7 +137,7 @@ def main():
             'quantityPrecision': quantity_precision,
             'minQuantity': min_quantity,
             'maxQuantity': max_quantity,
-            'status': 'Active'
+            'status': status
         })
 
     # Marketplace --> Exberry
