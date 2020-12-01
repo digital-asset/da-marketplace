@@ -4,6 +4,7 @@ import os
 import dazl
 from dazl import create, exercise, exercise_by_key
 
+dazl.setup_default_logger(logging.INFO)
 
 SID = 1 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
