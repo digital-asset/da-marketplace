@@ -9,6 +9,7 @@ template MarginCalculation
     customer : Party
     accountId : Id
     targetAmount : Decimal
+    netDiff : Decimal
     calculationTime : Time
     calculationId : Text
   where
@@ -26,6 +27,7 @@ template MarkToMarketCalculation
     customer : Party
     accountId : Id
     mtmAmount : Decimal
+    netDiff : Decimal
     calculationTime : Time
     calculationId : Text
   where

@@ -14,12 +14,15 @@ template CCPCustomerInvitation
     operator : Party
     ccp : Party
     ccpCustomer : Party
+    custodian : Party
   where
     signatory ccp
 
     controller ccpCustomer can
       CCPCustomerInvitation_Accept : ContractId CCPCustomer
         do
+          let custodianAccountId = getAccountId ccpCustomer custodian [custodian]
+              accountId = getAccountId ccpCustomer ccp [custodian]
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
@@ -38,6 +41,8 @@ template CCPCustomer
     operator : Party
     ccp : Party
     ccpCustomer : Party
+    accountId : Id
+    custodianAccountId : Id
   where
     signatory ccp, ccpCustomer
 
@@ -45,14 +50,15 @@ template CCPCustomer
     maintainer key._1
 
     controller ccp can
-      nonconsuming CCPCustomer_RequestTransfer : ContractId DepositTransferRequest
+      nonconsuming CCPCustomer_RequestInternalTransfer : ContractId DepositTransferRequest
         with
           depositCid : ContractId AssetDeposit  -- ccp needs visibility to those
                                                 -- otherwise we add a custodian <> ccp relationship
-          receiverAccountId : Id
+          isInbound : Bool  -- from the point of view of the clearer
           amount : Decimal
         do
           deposit <- fetch depositCid
           assert $ deposit.account.owner == ccpCustomer
+          let receiverAccountId = if isInbound then accountId else custodianAccountId
           [newDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [amount]
           create DepositTransferRequest with sender = ccpCustomer, senderAccountId = deposit.account.id, depositCid = newDepositCid, ..

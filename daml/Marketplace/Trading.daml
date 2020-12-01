@@ -218,7 +218,7 @@ template DerivativeTrade
     exchange : Party
     eventId : Int
     eventTimestamp : Text
-    instrument : Id
+    instrument : Id  -- id of Derivative
     trackingNumber : Int
     buyer : Party
     buyerOrderId : Int
@@ -246,6 +246,7 @@ template DerivativeTradeSide
     accountId : Id  -- the investor account at the ccp
   where
     signatory exchange, ccp
+    observer participant
 
 
 template TradeSide

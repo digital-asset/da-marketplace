@@ -32,7 +32,7 @@ template Derivative
     description : Text
     prodSym : Text  -- BTCF21
     prodCode : Text  -- BTC
-    secType : Text
+    secType : SecType
     mmy : Text  -- YYYYMM or YYYYMMDD or YYYMMwN
     mult : Int  -- Contract Multiplier
     uom : Text  -- Unit of measure (barrels, troy ounces, bushels, coins etc..)
@@ -42,3 +42,6 @@ template Derivative
   where
     signatory id.signatories
     observer observers
+
+    key id : Id
+    maintainer key.signatories
