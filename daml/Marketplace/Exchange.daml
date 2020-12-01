@@ -76,9 +76,9 @@ template Exchange
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
 
           assertMsg ("minimum quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision minQuantity == minQuantity
+            $ roundBankers baseToken.quantityPrecision minQuantity == minQuantity
           assertMsg ("max quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision maxQuantity == maxQuantity
+            $ roundBankers baseToken.quantityPrecision maxQuantity == maxQuantity
 
           assertMsg "minimum quantity should be less than the maximum quantity"
             $ minQuantity < maxQuantity
