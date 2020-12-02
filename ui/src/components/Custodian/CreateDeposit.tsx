@@ -120,6 +120,7 @@ const CreateDeposit: React.FC = () => {
                     getOptionText={token => token.contractData.id.label}
                     setContract={token => setToken(token)}/>
                 <Form.Input
+                    className='create-deposit-quantity'
                     label='Quantity'
                     type='number'
                     step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
