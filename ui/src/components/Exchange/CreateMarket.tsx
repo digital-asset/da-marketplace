@@ -107,7 +107,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 clearable
                                 className='create-market-select'
                                 contracts={allTokens}
-                                label='Base Token'
+                                label='Base Asset'
                                 value={baseToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setBaseToken(token)}/>
@@ -118,7 +118,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 clearable
                                 className='create-market-select'
                                 contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
-                                label='Quote Token'
+                                label='Quote Asset'
                                 value={quoteToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setQuoteToken(token)}/>

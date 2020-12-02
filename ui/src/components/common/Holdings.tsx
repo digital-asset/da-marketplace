@@ -41,7 +41,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogou
                     <Header as='h5'>
                         {assetLabel}
                     </Header>
-                    { depositsForAsset.map(deposit => 
+                    { depositsForAsset.map(deposit =>
                         <DepositRow
                             role={role}
                             key={deposit.contractId}
@@ -119,7 +119,7 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
                         availableDeposits={depositsForAsset}
                         deposit={deposit}/>}
                 {selectedForm== 'split' &&
-                    <SplitForm 
+                    <SplitForm
                     onRequestClose={() => setSelectedForm(undefined)}
                     deposit={deposit}/>}
             </div>
@@ -179,7 +179,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, o
         <>
             <div className='selected-form-heading'>
                <h3>Allocate to a Different Provider</h3>
-                <Button 
+                <Button
                     className='close-button'
                     onClick={onRequestClose}>
                     <IconClose/>
@@ -243,7 +243,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
         <>
             <div className='selected-form-heading'>
                <h3>Merge</h3>
-                <Button 
+                <Button
                     className='close-button'
                     onClick={onRequestClose}>
                     <IconClose/>
@@ -318,7 +318,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
         <>
             <div className='selected-form-heading'>
                <h3>Split</h3>
-                <Button 
+                <Button
                     className='close-button'
                     onClick={onRequestClose}>
                     <IconClose/>

@@ -41,7 +41,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <div className='investor-orders'>
                     <Header as='h4'>Requested Orders</Header>
-                    {allOrderRequests.length > 0 ? 
+                    {allOrderRequests.length > 0 ?
                         allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)
                         :
                         <i>none</i>
