@@ -1,0 +1,94 @@
+-- Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module MatchingEngine where
+
+import DA.Action
+import DA.Foldable hiding (elem, null)
+import DA.List
+
+import Daml.Trigger
+
+import Marketplace.Trading
+import Utils
+
+type CurrentOrderId = Int
+
+handleMatching : Trigger CurrentOrderId
+handleMatching = Trigger
+  { initialize = return 0
+  , updateState = \_ -> pure ()
+  , rule = handleMatchingRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @OrderRequest
+                                              , registeredTemplate @OrderCancelRequest
+                                              , registeredTemplate @Order ]
+  , heartbeat = None
+  }
+
+handleMatchingRule : Party -> TriggerA CurrentOrderId ()
+handleMatchingRule party = do
+
+  -- Acknowledge all 'OrderRequest' and update current ID
+  orderRequests <- query @OrderRequest
+  forA_ orderRequests \(cid,_) -> do
+    currentOrderId <- get
+    emitExerciseCmd cid OrderRequest_Ack with orderId = currentOrderId
+    debug "Acknowledging order"
+    modify (+ 1)
+
+  -- Acknowledge all 'OrderCancelRequest'
+  orderCancelRequests <- query @OrderCancelRequest
+  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid OrderCancel_Ack
+                                     >> debug "Acknowledging order cancel"
+
+  -- Check for matches on all 'Order'
+  orders <- query @Order
+  forA_ orders (handleOrder party orders)
+
+-- |Check for crossing orders. If found, fill both orders. Matches by price.
+handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA CurrentOrderId ()
+handleOrder party orders (orderCid, order) = do
+  debug $ "Handling order: " <> show order
+  let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeOrder orders
+      oppositeBook' = if order.isBid
+                      then reverse oppositeBook
+                      else oppositeBook
+      crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
+
+  unless (null crossing) $ fill (orderCid,order) (head crossing)
+
+  where
+    isOppositeOrder : ContractPair Order -> Bool
+    isOppositeOrder (opoCid, opo) = opoCid /= orderCid
+                                 && not opo.isBid
+                                 && opo.pair == order.pair
+
+    isCrossing : ContractPair Order -> ContractPair Order -> Bool
+    isCrossing (_,aggressive) (_,passive)
+      | passive.exchParticipant == aggressive.exchParticipant = False
+      | aggressive.isBid = passive.price <= aggressive.price
+      | otherwise        = passive.price >= aggressive.price
+
+    fill : ContractPair Order -> ContractPair Order -> TriggerA CurrentOrderId ()
+    fill (aggressiveCid,aggressive) (passiveCid, passive) = do
+
+      let fillQty   = min passive.qty aggressive.qty
+          fillPrice = passive.price
+
+      time <- getTime
+
+      emitExerciseCmd aggressiveCid Order_Fill with
+          fillQty = fillQty
+          fillPrice = fillPrice
+          counterOrderId = passive.orderId
+          counterParty = passive.exchParticipant
+          timestamp = show time
+
+      emitExerciseCmd passiveCid Order_Fill with
+          fillQty = fillQty
+          fillPrice = fillPrice
+          counterOrderId = aggressive.orderId
+          counterParty = aggressive.exchParticipant
+          timestamp = show time
+
+      return ()

@@ -55,7 +55,7 @@ template Issuer
           observers : [Party]
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
-          let tokenObservers = if isPublic then (public :: observers) else observers
+          let tokenObservers = if isPublic then (public :: operator :: observers) else (operator :: observers)
           create Token with id = tokenId, observers = fromList tokenObservers, ..
 
       nonconsuming Issuer_IssueBinaryOption : ContractId BinaryOption

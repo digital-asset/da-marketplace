@@ -10,12 +10,7 @@ catalog:
     tags: [ dabl-sample-app, application ]
     icon_file: marketplace.svg
 subdeployments:
-    - da-marketplace-model-0.1.6.dar
-    - da-marketplace-broker-bot-0.1.6.tar.gz
-    - da-marketplace-custodian-bot-0.1.6.tar.gz
-    - da-marketplace-issuer-bot-0.1.6.tar.gz
-    - da-marketplace-exchange-bot-0.1.6.tar.gz
-    - da-marketplace-matching-engine-0.1.6.tar.gz
-    - da-marketplace-operator-bot-0.1.6.tar.gz
-    - da-marketplace-exberry-adapter-0.1.6.tar.gz
-    - da-marketplace-ui-0.1.6.zip
+    - da-marketplace-model-0.1.2.dar
+    - da-marketplace-triggers-0.1.2.dar
+    - da-marketplace-exberry-adapter-0.1.2.tar.gz
+    - da-marketplace-ui-0.1.2.zip
