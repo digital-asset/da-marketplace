@@ -11,7 +11,7 @@ import Marketplace.Utils
 import DA.Finance.Types
 
 import DA.List
-import DA.Next.Set
+import DA.Next.Set hiding (delete)
 
 
 template ExchangeInvitation
@@ -33,6 +33,27 @@ template ExchangeInvitation
         do
           create RegisteredExchange with ..
           create Exchange with tokenPairs = [], binOptions = [], participants = [], ..
+
+
+-- |Request from an investor or broker to be added to the exchange
+template ExchangeParticipantInvitationRequest
+  with
+    operator : Party
+    exchange : Party
+    participant : Party
+  where
+    signatory participant
+    key (operator, exchange, participant) : (Party, Party, Party)
+    maintainer key._3
+
+    controller exchange can
+      ExchangeParticipantInvitationRequest_Accept : ContractId ExchangeParticipant
+        do
+          exerciseByKey @Exchange (operator,exchange) Exchange_AddParticipant with exchParticipant = participant
+          create ExchangeParticipant with exchParticipant = participant, ..
+
+      ExchangeInvtationRequest_Reject : ()
+        do return ()
 
 
 template Exchange
@@ -64,6 +85,18 @@ template Exchange
           participantInvitationCid <- create ExchangeParticipantInvitation with ..
           exchangeCid <- create this with participants = dedup $ exchParticipant :: participants
           return (exchangeCid, participantInvitationCid)
+
+      Exchange_AddParticipant : ContractId Exchange
+        with
+          exchParticipant : Party
+        do
+          create this with participants = dedup $ exchParticipant :: participants
+
+      Exchange_RemovePair : ContractId Exchange
+        with
+          pair : IdPair
+        do
+          create this with tokenPairs = delete pair tokenPairs
 
       Exchange_AddPair : ContractId Exchange
         with
