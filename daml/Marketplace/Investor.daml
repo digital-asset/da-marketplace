@@ -1,5 +1,6 @@
 module Marketplace.Investor where
 
+import Marketplace.Exchange
 import Marketplace.Custodian
 import Marketplace.Registry
 import Marketplace.Transfer
@@ -48,6 +49,12 @@ template Investor
         with
           custodian : Party
         do create CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
+
+      nonconsuming Investor_RequestExchangeParticipantInvitation : ContractId ExchangeParticipantInvitationRequest
+        with
+          exchange : Party
+        do
+          create ExchangeParticipantInvitationRequest with operator, exchange, participant = investor
 
       nonconsuming Investor_RequestDepositTransfer : ContractId DepositTransferRequest
         with
