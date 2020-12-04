@@ -2,14 +2,18 @@ import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { Custodian } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 import { countDecimals } from '../common/utils';
+
+import './CreateDeposit.css'
 
 const CreateDeposit: React.FC = () => {
     const [ beneficiary, setBeneficiary ] = useState('');
@@ -25,6 +29,47 @@ const CreateDeposit: React.FC = () => {
         console.log("Unexpected close from Token: ", e);
     }).contracts.map(makeContractInfo);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
+
+    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationships: ", e);
+    }).contracts.map(relationship => { return relationship.payload.party })
+
+    const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
+        .filter(broker => relationshipParties.find(p => broker.payload.broker === p))
+        .map(broker => {
+            const party = broker.payload.broker;
+            const name = broker.payload.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Broker`
+            }
+        })
+
+    const investorBeneficiaries = useStreamQueryAsPublic(RegisteredInvestor).contracts
+        .filter(investor => relationshipParties.find(p => investor.payload.investor === p))
+        .map(investor => {
+            const party = investor.payload.investor;
+            const name = investor.payload.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Investor`
+            }
+        })
+
+    const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
+
+    const beneficiaryOptions = allBeneficiaries
+        .map(beneficiary => ({
+            key: beneficiary.party,
+            text: beneficiary.label,
+            value: beneficiary.party
+        }));
+
+    const handleBeneficiaryChange = (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setBeneficiary(result.value);
+        }
+    }
 
     const handleCreateDeposit = async () => {
         if (!token) {
@@ -59,11 +104,13 @@ const CreateDeposit: React.FC = () => {
     return (
         <FormErrorHandled onSubmit={handleCreateDeposit}>
             <Form.Group className='inline-form-group with-error'>
-                <Form.Input
-                    label='Beneficiary'
-                    placeholder='Investor party ID'
+                <Form.Select
+                    clearable
+                    label='Select Provider'
                     value={beneficiary}
-                    onChange={e => setBeneficiary(e.currentTarget.value)}/>
+                    placeholder='Select...'
+                    options={beneficiaryOptions}
+                    onChange={handleBeneficiaryChange}/>
                 <ContractSelect
                     clearable
                     className='asset-select'
@@ -73,6 +120,7 @@ const CreateDeposit: React.FC = () => {
                     getOptionText={token => token.contractData.id.label}
                     setContract={token => setToken(token)}/>
                 <Form.Input
+                    className='create-deposit-quantity'
                     label='Quantity'
                     type='number'
                     step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}

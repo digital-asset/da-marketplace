@@ -11,6 +11,7 @@ import Marketplace.Utils
 import DA.Finance.Types
 
 import DA.List
+import DA.Next.Set
 
 
 template ExchangeInvitation
@@ -68,10 +69,36 @@ template Exchange
         with
           baseTokenId : Id
           quoteTokenId : Id
+          minQuantity : Decimal
+          maxQuantity : Decimal
         do
           (_, baseToken) <- fetchByKey @Token baseTokenId
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
+
+          assertMsg ("minimum quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
+            $ roundBankers baseToken.quantityPrecision minQuantity == minQuantity
+          assertMsg ("max quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
+            $ roundBankers baseToken.quantityPrecision maxQuantity == maxQuantity
+
+          assertMsg "minimum quantity should be less than the maximum quantity"
+            $ minQuantity < maxQuantity
+
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
+          let instrumentName = baseToken.id.label <> quoteToken.id.label
+          let newMarket = MarketPair with
+                id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
+                exchange
+                description = baseToken.id.label <> " vs " <> quoteToken.id.label
+                baseTokenId
+                quoteTokenId
+                calendarId = "1261007448"
+                pricePrecision = quoteToken.quantityPrecision
+                quantityPrecision = baseToken.quantityPrecision
+                minQuantity = minQuantity : Decimal
+                maxQuantity = maxQuantity : Decimal
+                status = InstrumentActive
+                observers = fromList participants
+          create newMarket
           create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 
       Exchange_AddBinaryOption : ContractId Exchange

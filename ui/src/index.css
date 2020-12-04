@@ -12,6 +12,7 @@
   --grey1: #FAFAFA;
   --grey2: #F0F0F0;
   --grey3: #F6F6F6;
+  --grey4: #262626;
   --dabl-color: #3a62Ca;
 }
 
@@ -41,35 +42,6 @@ code {
 .ui.grid {
   margin: 0;
   flex: 1;
-}
-
-.ui.button {
-  display: flex;
-  color: var(--textcolor);
-  border-radius: 2px;
-}
-
-.ui.button.ghost {
-  color: var(--textcolor);
-  background: none;
-  align-items: center;
-  border: none;
-}
-
-.ui.button.ghost:hover {
-  background-color: var(--lightblue);
-}
-
-.ui.basic.button.basic-button-fill {
-  background-color: #fff !important;
-}
-
-.ui.form > .fields.inline-form-group.with-error {
-  align-items: flex-start;
-}
-
-.ui.form > .fields.inline-form-group.with-error button {
-  margin-top: 32px;;
 }
 
 .ui.form > .fields.inline-form-group {
@@ -128,6 +100,40 @@ p.p2 {
   color: #505050;
 }
 
+.ui.form .fluid input , .ui.form input {
+  width: 260px !important;
+  background: #FFFFFF;
+  border: 1px solid var(--grey4) !important;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.ui.toggle.checkbox input:focus:checked ~ .box:before,
+.ui.toggle.checkbox input:focus:checked ~ label:before,
+.ui.toggle.checkbox input:checked ~ .box:before,
+.ui.toggle.checkbox input:checked ~ label:before {
+    background-color: var(--dabl-color) !important
+}
+
+.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
+    background-color: var(--grey2);
+}
+
+.ui.form .fluid textarea , .ui.form textarea {
+  background: #FFFFFF;
+  border: 1px solid var(--grey4) !important;
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
+.ui.form .field > .selection.dropdown {
+  width: 260px !important;
+  background: white;
+  border: 1px solid var(--grey4);
+  box-sizing: border-box;
+  border-radius: 2px;
+}
+
 .ui.form .field > label {
   font-family: Open Sans;
   font-style: normal;
@@ -137,6 +143,59 @@ p.p2 {
   color: #303132;
 }
 
+/* buttons */
+
+.ui.button {
+  display: flex;
+  color: var(--textcolor);
+  border-radius: 2px;
+}
+
+.ui.button.ghost {
+  color: var(--textcolor);
+  background: none;
+  align-items: center;
+  border: none;
+}
+
+.ui.button.ghost:hover {
+  background-color: var(--lightblue);
+}
+
+.ui.basic.button.basic-button-fill {
+  background-color: #fff !important;
+}
+
+.ui.form > .fields.inline-form-group.with-error {
+  align-items: flex-start;
+}
+
+.ui.form > .fields.inline-form-group.with-error button {
+  margin-top: 32px;;
+}
+
 .ui.primary.button, .ui.primary.buttons .button {
   background-color: var(--dabl-color);
+}
+
+.ui.secondary.button, .ui.secondary.buttons .button, .ui.secondary.button:focus  {
+  border: 1px solid var(--grey4);
+  border-radius: 2px;
+  background-color: white;
+  color: var(--textcolor);
+}
+
+.ui.secondary.button:hover {
+  background: var(--grey2);
+  color: var(--textcolor);
+}
+
+.ui.secondary.button.disabled, .ui.secondary.buttons.disabled .button {
+  border: 1px solid var(--grey4);
+  border-radius: 2px;
+  color: var(--textcolor);
+}
+
+.ui.button.close-button, .ui.buttons.close-button .button {
+  display: contents;
 }

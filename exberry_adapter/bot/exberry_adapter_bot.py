@@ -4,7 +4,6 @@ import os
 import dazl
 from dazl import create, exercise, exercise_by_key
 
-
 dazl.setup_default_logger(logging.INFO)
 
 SID = 1 # default SID, use ExberrySID contract to change while running
@@ -14,7 +13,6 @@ def get_sid() -> int:
     return SID
 
 sid_to_order = {}
-
 
 class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
@@ -33,6 +31,8 @@ class MARKETPLACE:
     OrderRequest = 'Marketplace.Trading:OrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
+    Token = 'Marketplace.Token:Token'
+    MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
@@ -111,6 +111,33 @@ def main():
 
         return [exercise(req_cid, 'OrderRequest_Reject', {}),
                 exercise(event.cid, 'Archive', {})]
+
+    # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.MarketPair)
+    def handle_new_market_pair(event):
+        pair = event.cdata
+        symbol = pair['id']['label']
+        description = pair['description']
+        calendar_id = pair['calendarId']
+        quote_currency = pair['quoteTokenId']['label']
+        price_precision = pair['pricePrecision']
+        quantity_precision = pair['quantityPrecision']
+        min_quantity = pair['minQuantity']
+        max_quantity = pair['maxQuantity']
+        status = pair['status'][10:]
+
+        return create(EXBERRY.CreateInstrumentRequest, {
+            'integrationParty': client.party,
+            'symbol': symbol,
+            'quoteCurrency': quote_currency,
+            'instrumentDescription': description,
+            'calendarId': calendar_id,
+            'pricePrecision': price_precision,
+            'quantityPrecision': quantity_precision,
+            'minQuantity': min_quantity,
+            'maxQuantity': max_quantity,
+            'status': status
+        })
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderCancelRequest)

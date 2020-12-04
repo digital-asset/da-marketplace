@@ -99,7 +99,7 @@ const IssueAsset = () => {
                     onClick={val => setIsPublic(val)}/>
                 <Form.Select
                     multiple
-                    className='issue-asset-form-field'
+                    className='issue-asset-form-field select-observer'
                     disabled={isPublic}
                     placeholder='Select...'
                     options={partyOptions}
@@ -115,7 +115,7 @@ const IssueAsset = () => {
                 onChange={e => setQuantityPrecision(e.currentTarget.value)}
             />
             <Button
-                primary
+                secondary
                 disabled={!name || !quantityPrecision || !description}
                 content='Submit'>
             </Button>

@@ -24,8 +24,7 @@ const ExchangeOrderCard: React.FC<OrderProps> = ({ order }) => {
         >
             <OrderCard order={order}>
                 <Button
-                    basic
-                    color='black'
+                    secondary
                     content='Cancel'
                     className='basic-button-fill'
                 />

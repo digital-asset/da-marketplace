@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "bot"
 version = "0.1.6"
-description = "The DA Marketplace <> Exberry Adapter Bot"
+description = "The DA Marketplace Broker Bot"
 authors = ["Digital Asset"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-dazl = "^7.3.1"
+dazl = "^6.7.4"
 aiohttp = "^3.6.2"
 
 [tool.poetry.dev-dependencies]

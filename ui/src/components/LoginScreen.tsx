@@ -69,7 +69,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
     <Form size='large' className='test-select-login-screen'>
       {/* FORM_BEGIN */}
       <Form.Input
-        fluid
+        centered
         required
         icon='user'
         iconPosition='left'
@@ -136,7 +136,6 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
       <Form size='large' className='test-select-login-screen'>
         <Form.Input
           fluid
-          inline
           required
           icon='user'
           iconPosition='left'
@@ -148,7 +147,6 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
 
         <Form.Input
           fluid
-          inline
           required
           icon='lock'
           type='password'

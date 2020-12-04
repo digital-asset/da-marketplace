@@ -32,10 +32,10 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField }) => {
     return (
         <Form.Input
             fluid
-            className='profile-form-field'
             label={field.label}
             placeholder={field.placeholder}
             value={field.value}
+            className='profile-form-field'
             type={field.type}
             onChange={e => setField({ ...field, value: e.currentTarget.value })}/>
     )
@@ -66,16 +66,16 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
     }, false);
 
     return (
-        <>
+         <Form>
             { fields }
             <Button
-                primary
+                secondary
                 className='profile-submit-button'
                 content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}
                 type='submit'/>
-        </>
+        </Form>
     )
 }
 
