@@ -10,7 +10,7 @@ catalog:
     tags: [ dabl-sample-app, application ]
     icon_file: marketplace.svg
 subdeployments:
-    - da-marketplace-model-0.1.2.dar
-    - da-marketplace-triggers-0.1.2.dar
-    - da-marketplace-exberry-adapter-0.1.2.tar.gz
-    - da-marketplace-ui-0.1.2.zip
+    - da-marketplace-model-0.1.6.dar
+    - da-marketplace-triggers-0.1.6.dar
+    - da-marketplace-exberry-adapter-0.1.6.tar.gz
+    - da-marketplace-ui-0.1.6.zip
