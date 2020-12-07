@@ -68,8 +68,6 @@ template DepositDebitRequest
       DepositDebitRequest_Approve : Asset
         do
           let (owner, provider) = getAccountOwnerProvider ownerAccount.id.label
-              -- ownerAccount = Account
-              --   with id = ownerAccountId, provider = provider, owner = owner
 
           depositRuleCid <- create AssetSettlementRule
             with account = ownerAccount
