@@ -69,15 +69,17 @@ template ExchangeParticipant
           assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
             $ (deposit.asset.quantity >= requiredDepositAmount)
 
-          let asset = deposit.asset
-              account = deposit.account
-
           if requiredDepositAmount < deposit.asset.quantity then do
             [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
-            let order = Order with status = "New", orderId = -1, pair = binOption,  ..
+            splitDeposit <- fetch splitCid
+            let order = Order with
+                  status = "New", orderId = -1, pair = binOption
+                  asset = splitDeposit.asset, account = splitDeposit.account, ..
             create OrderRequest with ..
           else do
-            let order = Order with status = "New", orderId = -1, pair = binOption, ..
+            let order = Order with
+                  status = "New", orderId = -1, pair = binOption
+                  asset = deposit.asset, account = deposit.account, ..
             create OrderRequest with ..
 
       nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
@@ -96,17 +98,15 @@ template ExchangeParticipant
             $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
 
-
-          let asset = deposit.asset
-              account = deposit.account
-
           debitRequestCid <- create DepositDebitRequest with
               owner = exchParticipant
-              ownerAccount = account
+              ownerAccount = deposit.account
               depositCid = depositCid
 
           let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
-              order = Order with isBid = True, status = "New", orderId = -1, ..
+              order = Order with
+                  isBid = True, status = "New", orderId = -1
+                  asset = deposit.asset, account = deposit.account, ..
           orderRequestCid <- create OrderRequest with ..
 
           return (orderRequestCid, debitRequestCid)
@@ -128,17 +128,15 @@ template ExchangeParticipant
             $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
 
-
-          let asset = deposit.asset
-              account = deposit.account
-
           debitRequestCid <- create DepositDebitRequest with
               owner = exchParticipant
-              ownerAccount = account
+              ownerAccount = deposit.account
               depositCid = depositCid
 
           let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
-              order = Order with isBid = False, status = "New", orderId = -1, ..
+              order = Order with
+                  isBid = False, status = "New", orderId = -1
+                  asset = deposit.asset, account = deposit.account, ..
           orderRequestCid <- create OrderRequest with ..
 
           return (orderRequestCid, debitRequestCid)
