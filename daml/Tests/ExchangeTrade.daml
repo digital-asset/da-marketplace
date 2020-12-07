@@ -1,4 +1,4 @@
-module Setup.ExchangeTrade where
+module Tests.ExchangeTrade where
 
 import Daml.Script
 
