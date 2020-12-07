@@ -11,6 +11,22 @@
 
 }
 
+.create-deposit {
+    background-color: var(--grey3);
+    padding: 12px;
+}
+
 .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
     margin-left: 0.5em;
+}
+
+@media screen and (max-width: 1000px) {
+    .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
+        margin-left: 0px;
+        margin-bottom: 12px;
+    }
+
+    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
+        padding-left: 0;
+    }
 }

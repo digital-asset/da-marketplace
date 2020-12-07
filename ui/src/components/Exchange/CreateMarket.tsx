@@ -108,6 +108,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 className='create-market-select'
                                 contracts={allTokens}
                                 label='Base Asset'
+                                placeholder='Select..'
                                 value={baseToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setBaseToken(token)}/>
@@ -119,6 +120,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 className='create-market-select'
                                 contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
                                 label='Quote Asset'
+                                placeholder='Select..'
                                 value={quoteToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setQuoteToken(token)}/>
@@ -145,8 +147,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 onChange={validateMaxQuantity}/>
                         </div>
                             <Button
-                                basic
-                                content='Save'
+                                secondary
+                                content='Submit'
                                 className='create-market-save'
                                 disabled={!baseToken || !quoteToken}/>
                         </FormErrorHandled>

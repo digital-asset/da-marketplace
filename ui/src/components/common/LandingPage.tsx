@@ -9,7 +9,7 @@ import "./LandingPage.css"
 
 type Props = {
     profile?: React.ReactElement;
-    marketRelationships?: React.ReactElement;
+    marketRelationships?: React.ReactElement[];
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
@@ -25,6 +25,7 @@ const LandingPage: React.FC<Props> = ({
     <Page
         sideNav={sideNav}
         onLogout={onLogout}
+        isLandingPage={true}
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
     >

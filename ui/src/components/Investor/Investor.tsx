@@ -163,8 +163,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 }
                 sideNav={sideNav}
                 marketRelationships={
-                    <MarketRelationships role={MarketRole.InvestorRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
+                    [<MarketRelationships role={MarketRole.InvestorRole}
+                                         custodianRelationships={allCustodianRelationships}/>]}
                 onLogout={onLogout}/>
         </Route>
 

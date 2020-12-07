@@ -8,6 +8,9 @@ import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Regist
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
@@ -22,6 +25,7 @@ import Holdings from '../common/Holdings'
 
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
+import BrokerCustomers from './BrokerCustomers'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 
@@ -71,6 +75,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
             }
         }),
     ]
+
+    const allBrokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomer: ", e);
+    }).contracts.map(makeContractInfo);
+
+    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -133,8 +143,10 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                     </FormErrorHandled>
                 }
                 marketRelationships={
+                   [ <BrokerCustomers brokerCustomers={allBrokerCustomers}
+                    registeredInvestors={allRegisteredInvestors}/>,
                     <MarketRelationships role={MarketRole.BrokerRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
+                                         custodianRelationships={allCustodianRelationships}/>]}
                 sideNav={sideNav}
                 notifications={notifications}
                 onLogout={onLogout}/>

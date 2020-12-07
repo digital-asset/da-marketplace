@@ -103,9 +103,9 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             submitProfile={profile => setProfile(profile)}/>
                     </FormErrorHandled>
                 }
-                marketRelationships={(
+                marketRelationships={[(
                     <Link to={`${url}/clients`}>View list of clients</Link>
-                )}
+                )]}
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>
