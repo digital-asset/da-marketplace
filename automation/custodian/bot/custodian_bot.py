@@ -12,6 +12,8 @@ class MARKETPLACE:
     Custodian = 'Marketplace.Custodian:Custodian'
     CustodianRelationshipRequest = 'Marketplace.Custodian:CustodianRelationshipRequest'
     DepositTransferRequest = 'Marketplace.Transfer:DepositTransferRequest'
+    DepositDebitRequest = 'Marketplace.Transfer:DepositDebitRequest'
+    DepositCreditRequest = 'Marketplace.Transfer:DepositCreditRequest'
 
 
 def main():
@@ -36,6 +38,18 @@ def main():
         logging.info(f"On {MARKETPLACE.DepositTransferRequest} created!")
         # auto-approve everything for the time being
         return client.submit_exercise(event.cid, 'DepositTransferRequest_Approve', {})
+
+    @client.ledger_created(MARKETPLACE.DepositDebitRequest)
+    def handle_deposit_debit_request(event):
+        logging.info(f"On {MARKETPLACE.DepositDebitRequest} created!")
+        # auto-approve everything for the time being
+        return client.submit_exercise(event.cid, 'DepositDebitRequest_Approve', {})
+
+    @client.ledger_created(MARKETPLACE.DepositCreditRequest)
+    def handle_deposit_credit_request(event):
+        logging.info(f"On {MARKETPLACE.DepositCreditRequest} created!")
+        # auto-approve everything for the time being
+        return client.submit_exercise(event.cid, 'DepositCreditRequest_Approve', {})
 
     @client.ledger_created(MARKETPLACE.CustodianRelationshipRequest)
     def handle_custodian_relationship_request(event):

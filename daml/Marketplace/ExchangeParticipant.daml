@@ -3,6 +3,7 @@ module Marketplace.ExchangeParticipant where
 import Marketplace.BinaryOption
 import Marketplace.Notification
 import Marketplace.Trading
+import Marketplace.Transfer
 import Marketplace.Token
 import Marketplace.Utils
 
@@ -67,15 +68,19 @@ template ExchangeParticipant
           let requiredDepositAmount = if isBid then qty * price else qty * (binaryOption.maxPrice - price)
           assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
             $ (deposit.asset.quantity >= requiredDepositAmount)
+
+          let asset = deposit.asset
+              account = deposit.account
+
           if requiredDepositAmount < deposit.asset.quantity then do
             [splitCid, restCid] <- exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
-            let order = Order with status = "New", orderId = -1, pair = binOption, depositCid = splitCid, ..
+            let order = Order with status = "New", orderId = -1, pair = binOption,  ..
             create OrderRequest with ..
           else do
             let order = Order with status = "New", orderId = -1, pair = binOption, ..
             create OrderRequest with ..
 
-      nonconsuming ExchangeParticipant_PlaceBid : ContractId OrderRequest
+      nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
@@ -90,11 +95,24 @@ template ExchangeParticipant
           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
             $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
+
+
+          let asset = deposit.asset
+              account = deposit.account
+
+          debitRequestCid <- create DepositDebitRequest with
+              owner = exchParticipant
+              ownerAccount = account
+              depositCid = depositCid
+
           let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
               order = Order with isBid = True, status = "New", orderId = -1, ..
-          create OrderRequest with ..
+          orderRequestCid <- create OrderRequest with ..
 
-      nonconsuming ExchangeParticipant_PlaceOffer : ContractId OrderRequest
+          return (orderRequestCid, debitRequestCid)
+
+
+      nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
@@ -109,6 +127,18 @@ template ExchangeParticipant
           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
             $ roundBankers quoteToken.quantityPrecision price == price
           (_, baseToken) <- fetchByKey @Token pair._1
+
+
+          let asset = deposit.asset
+              account = deposit.account
+
+          debitRequestCid <- create DepositDebitRequest with
+              owner = exchParticipant
+              ownerAccount = account
+              depositCid = depositCid
+
           let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
               order = Order with isBid = False, status = "New", orderId = -1, ..
-          create OrderRequest with ..
+          orderRequestCid <- create OrderRequest with ..
+
+          return (orderRequestCid, debitRequestCid)

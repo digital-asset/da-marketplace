@@ -53,3 +53,55 @@ template DepositTransferRequest
 
       DepositTransferRequest_Reject : ()
         do return ()
+
+template DepositDebitRequest
+  with
+    owner : Party
+    ownerAccount : Account
+    depositCid : ContractId AssetDeposit
+  where
+    let senderSig = head $ toList ownerAccount.id.signatories
+        custodian = senderSig
+    signatory owner
+
+    controller custodian can
+      DepositDebitRequest_Approve : Asset
+        do
+          let (owner, provider) = getAccountOwnerProvider ownerAccount.id.label
+              -- ownerAccount = Account
+              --   with id = ownerAccountId, provider = provider, owner = owner
+
+          depositRuleCid <- create AssetSettlementRule
+            with account = ownerAccount
+                 observers = fromList [provider]
+                 ctrls = empty
+
+          newAsset <- exercise depositRuleCid AssetSettlement_Debit
+            with depositCid
+
+          archive depositRuleCid
+          return newAsset
+
+template DepositCreditRequest
+  with
+    owner : Party
+    account : Account
+    asset : Asset
+  where
+    let senderSig = head $ toList account.id.signatories
+        custodian = senderSig
+    signatory owner
+
+    controller custodian can
+      DepositCreditRequest_Approve : ContractId AssetDeposit
+        do
+          let (owner, provider) = getAccountOwnerProvider account.id.label
+
+          depositRuleCid <- create AssetSettlementRule
+            with account = account
+                 observers = fromList [provider]
+                 ctrls = fromList [custodian]
+
+          newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
+          archive depositRuleCid
+          return newDepositCid
