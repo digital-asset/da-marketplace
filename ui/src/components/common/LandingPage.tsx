@@ -9,7 +9,7 @@ import "./LandingPage.css"
 
 type Props = {
     profile?: React.ReactElement;
-    marketRelationships?: React.ReactElement[];
+    marketRelationships?: React.ReactElement;
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;

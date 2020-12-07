@@ -57,7 +57,6 @@
     border-left: 2px var(--lightblue2) solid;
 }
 
-
 .top-menu.menu > .top-left-menu > .item {
     display: flex;
     flex-direction: column;
