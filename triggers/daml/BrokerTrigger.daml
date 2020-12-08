@@ -4,7 +4,6 @@
 module BrokerTrigger where
 
 import DA.Foldable hiding (elem, null)
-
 import Daml.Trigger
 
 import Marketplace.Trading
@@ -18,7 +17,7 @@ handleBroker = Trigger
   { initialize = return 0
   , updateState = \_ -> pure ()
   , rule = handleBrokerRule
-  , registeredTemplates = RegisteredTemplates [registeredTemplate @BrokerOrderRequest]
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @BrokerOrderRequest ]
   , heartbeat = None
   }
 

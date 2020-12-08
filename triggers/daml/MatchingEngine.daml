@@ -6,10 +6,10 @@ module MatchingEngine where
 import DA.Action
 import DA.Foldable hiding (elem, null)
 import DA.List
-
 import Daml.Trigger
 
 import Marketplace.Trading
+
 import Utils
 
 type CurrentOrderId = Int
