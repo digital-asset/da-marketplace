@@ -27,6 +27,7 @@ handleMatching = Trigger
 
 handleMatchingRule : Party -> TriggerA CurrentOrderId ()
 handleMatchingRule party = do
+  debug "Running matching rule..."
 
   -- Acknowledge all 'OrderRequest' and update current ID
   orderRequests <- query @OrderRequest
@@ -55,7 +56,7 @@ handleOrder party orders (orderCid, order) = do
                       else oppositeBook
       crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
 
-  unless (null crossing) $ fill (orderCid,order) (head crossing)
+  unless (null crossing) $ fill (orderCid, order) (head crossing)
 
   where
     isOppositeOrder : ContractPair Order -> Bool
@@ -64,13 +65,13 @@ handleOrder party orders (orderCid, order) = do
                                  && opo.pair == order.pair
 
     isCrossing : ContractPair Order -> ContractPair Order -> Bool
-    isCrossing (_,aggressive) (_,passive)
+    isCrossing (_, aggressive) (_, passive)
       | passive.exchParticipant == aggressive.exchParticipant = False
       | aggressive.isBid = passive.price <= aggressive.price
       | otherwise        = passive.price >= aggressive.price
 
     fill : ContractPair Order -> ContractPair Order -> TriggerA CurrentOrderId ()
-    fill (aggressiveCid,aggressive) (passiveCid, passive) = do
+    fill (aggressiveCid, aggressive) (passiveCid, passive) = do
 
       let fillQty   = min passive.qty aggressive.qty
           fillPrice = passive.price
@@ -78,15 +79,13 @@ handleOrder party orders (orderCid, order) = do
       time <- getTime
 
       emitExerciseCmd aggressiveCid Order_Fill with
-          fillQty = fillQty
-          fillPrice = fillPrice
+          fillQty, fillPrice
           counterOrderId = passive.orderId
           counterParty = passive.exchParticipant
           timestamp = show time
 
       emitExerciseCmd passiveCid Order_Fill with
-          fillQty = fillQty
-          fillPrice = fillPrice
+          fillQty, fillPrice
           counterOrderId = aggressive.orderId
           counterParty = aggressive.exchParticipant
           timestamp = show time

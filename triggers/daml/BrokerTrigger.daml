@@ -24,9 +24,11 @@ handleBroker = Trigger
 -- |Accept all 'BrokerOrderRequest'
 handleBrokerRule : Party -> TriggerA CurrentOrderId ()
 handleBrokerRule party = do
-  orderRequests <- query @BrokerOrderRequest
+  debug "Running broker rule..."
 
   -- Accept all 'BrokerOrderReqest'
+  orderRequests <- query @BrokerOrderRequest
+
   forA_ orderRequests \(cid,or) -> do
     currentOrderId <- get
     debug $ "Accepting order: " <> show or

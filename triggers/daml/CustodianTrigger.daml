@@ -21,6 +21,7 @@ handleCustodian = Trigger
 -- |Accept 'DepositTransferRequest' and 'CustodianRelationshipRequest'
 handleCustodianRule : Party -> TriggerA () ()
 handleCustodianRule party = do
+  debug "Running custodian rule..."
 
   -- Accept all 'DepositTransferRequest'
   transferRequests <- query @DepositTransferRequest
@@ -32,4 +33,4 @@ handleCustodianRule party = do
   relationshipRequests <- query @CustodianRelationshipRequest
   forA_ relationshipRequests
     $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
-               >> debug ("Approving relationship request from " <> show rq.requester)
+                >> debug ("Approving relationship request from " <> show rq.requester)

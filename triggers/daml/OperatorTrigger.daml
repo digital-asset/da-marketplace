@@ -56,5 +56,6 @@ handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
 handleToken party parties (cid,token) = do
   let partiesToAdd = Set.difference (Set.fromList parties) token.observers
   unless (Set.null partiesToAdd || not token.isPublic )
-    $ void $ emitExerciseCmd cid Token_AddObservers with party = party, newObservers = (Set.insert party partiesToAdd)
-    >> debug "adding parties to token..."
+    $ void $ emitExerciseCmd cid Token_AddObservers with
+        party = party, newObservers = (Set.insert party partiesToAdd)
+   >> debug "adding parties to token..."

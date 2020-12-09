@@ -21,6 +21,7 @@ handleExchange = Trigger
 
 handleExchangeRule : Party -> TriggerA () ()
 handleExchangeRule party = do
+  debug "Running exchange rule..."
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
