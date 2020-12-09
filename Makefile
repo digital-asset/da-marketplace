@@ -190,7 +190,6 @@ $(ui):
 .PHONY: clean
 clean: clean-ui
 	rm -rf $(state_dir) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
-# rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
