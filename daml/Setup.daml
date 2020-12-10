@@ -98,8 +98,8 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- issuers issue tokens
-  btcIssuer `submit` exerciseByKeyCmd @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker]
-  usdtIssuer `submit` exerciseByKeyCmd @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker]
+  btcIssuer `submit` exerciseByKeyCmd @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker, public, operator]
+  usdtIssuer `submit` exerciseByKeyCmd @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker, public, operator]
 
   let btcTokenId = Id with signatories = fromList [ btcIssuer ], label = "BTC", version = 0
   let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0

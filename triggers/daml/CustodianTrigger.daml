@@ -1,0 +1,36 @@
+module CustodianTrigger where
+
+import DA.Foldable hiding (elem, null)
+import Daml.Trigger
+
+import Marketplace.Custodian
+import Marketplace.Transfer
+
+import Utils
+
+handleCustodian : Trigger ()
+handleCustodian = Trigger
+  { initialize = return ()
+  , updateState = \_ -> pure ()
+  , rule = handleCustodianRule
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @DepositTransferRequest
+                                               , registeredTemplate @CustodianRelationshipRequest ]
+  , heartbeat = None
+  }
+
+-- |Accept 'DepositTransferRequest' and 'CustodianRelationshipRequest'
+handleCustodianRule : Party -> TriggerA () ()
+handleCustodianRule party = do
+  debug "Running custodian rule..."
+
+  -- Accept all 'DepositTransferRequest'
+  transferRequests <- query @DepositTransferRequest
+  forA_ transferRequests
+    $ \(cid,_) -> emitExerciseCmd cid DepositTransferRequest_Approve
+               >> debug "Accepting transfer request"
+
+  -- Accept all 'CustodianRelationshipRequest'
+  relationshipRequests <- query @CustodianRelationshipRequest
+  forA_ relationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
+                >> debug ("Approving relationship request from " <> show rq.requester)
