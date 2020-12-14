@@ -14,6 +14,8 @@ handleCustodian = Trigger
   , updateState = \_ -> pure ()
   , rule = handleCustodianRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @DepositTransferRequest
+                                               , registeredTemplate @DepositCreditRequest
+                                               , registeredTemplate @DepositDebitRequest
                                                , registeredTemplate @CustodianRelationshipRequest ]
   , heartbeat = None
   }
@@ -34,3 +36,15 @@ handleCustodianRule party = do
   forA_ relationshipRequests
     $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
                 >> debug ("Approving relationship request from " <> show rq.requester)
+
+  -- Accept all 'DepositCreditRequest'
+  relationshipRequests <- query @DepositCreditRequest
+  forA_ relationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid DepositCreditRequest_Approve
+                >> debug ("Approving credit request from " <> show rq.owner)
+
+  -- Accept all 'DepositDebitRequest'
+  relationshipRequests <- query @DepositDebitRequest
+  forA_ relationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid DepositDebitRequest_Approve
+                >> debug ("Approving credit request from " <> show rq.owner)

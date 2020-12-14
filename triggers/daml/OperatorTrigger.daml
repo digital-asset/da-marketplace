@@ -5,7 +5,6 @@ module OperatorTrigger where
 
 import DA.Action
 import DA.Foldable hiding (elem, null)
-import DA.Optional
 import qualified DA.Next.Set as Set
 
 import Daml.Trigger
