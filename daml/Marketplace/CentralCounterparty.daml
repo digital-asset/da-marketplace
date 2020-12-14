@@ -58,23 +58,7 @@ template CCP
           -- verify that both buyer and seller are ccp customers
           fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.buyer)
           fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.seller)
-          let exchange = derivativeTrade.exchange
-              eventId = derivativeTrade.eventId
-              eventTimestamp = derivativeTrade.eventTimestamp
-              instrument = derivativeTrade.instrument
-              matchId = derivativeTrade.matchId
-              executedQuantity = derivativeTrade.executedQuantity
-              executedPrice = derivativeTrade.executedQuantity
-              buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
+
+          let buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
-          buyCid <- create DerivativeTradeSide with
-            participant = derivativeTrade.buyer
-            orderId = derivativeTrade.buyerOrderId
-            accountId = buyerAccountId
-            ..
-          sellCid <- create DerivativeTradeSide with
-            participant = derivativeTrade.seller
-            orderId = derivativeTrade.sellerOrderId
-            accountId = sellerAccountId
-            ..
-          return (buyCid, sellCid)
+          exercise derivativeTradeCid DerivativeTrade_Novate with ..

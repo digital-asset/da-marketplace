@@ -1,5 +1,6 @@
 module Marketplace.Trading where
 
+import Marketplace.CentralCounterpartyCustomer
 import Marketplace.BinaryOption
 import Marketplace.Token
 import Marketplace.Transfer
@@ -229,6 +230,25 @@ template DerivativeTrade
     executedPrice : Decimal
   where
     signatory exchange
+    observer ccp
+    controller ccp can
+      DerivativeTrade_Novate : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
+        with
+          buyerAccountId : Id
+          sellerAccountId : Id
+        do
+
+          buyCid <- create DerivativeTradeSide with
+            participant = buyer
+            orderId = buyerOrderId
+            accountId = buyerAccountId
+            ..
+          sellCid <- create DerivativeTradeSide with
+            participant = seller
+            orderId = sellerOrderId
+            accountId = sellerAccountId
+            ..
+          return (buyCid, sellCid)
 
 
 template DerivativeTradeSide
@@ -245,8 +265,8 @@ template DerivativeTradeSide
     executedPrice : Decimal
     accountId : Id  -- the investor account at the ccp
   where
-    signatory exchange, ccp
-    observer participant
+    signatory ccp, exchange
+    observer exchange, participant
 
 
 template TradeSide

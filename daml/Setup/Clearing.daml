@@ -78,13 +78,6 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer _ al
   ethF21DerId <- createSimpleDerivative operator issuer "ETHF21" "ETH" "ETH January 21" 6 1 "coins" ethTokenId observers
 
 
-  let btcPair = (btcTokenId, usdTokenId)
-  let ethPair = (btcTokenId, usdTokenId)
-
-  -- the exchange adds support for BTC/USDT pair
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdTokenId
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = ethTokenId, quoteTokenId = usdTokenId
-
   aliceAccts <- setupInvestorAccount lp usdTokenId alice
   bobAccts <- setupInvestorAccount lp usdTokenId bob
   carlAccts <- setupInvestorAccount lp usdTokenId carl
@@ -98,7 +91,10 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer _ al
                    , (bob, dana, btcF21DerId, 456.0, 1434.0) ]
 
   let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
-  forA_ trades (\t -> exchange `submit` createCmd t)
+
+  tradeCids <- mapA (\t -> exchange `submit` createCmd t) trades
+  forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
+      CCP_NovateDerivativeTrade with derivativeTradeCid = tCid)
 
 onboardInvestor : LedgerParties -> Party -> Text-> Script ()
 onboardInvestor lp investor name = do
