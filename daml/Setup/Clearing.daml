@@ -23,41 +23,40 @@ import DA.Foldable (forA_)
 import DA.Next.Set
 
 data LedgerParties = LedgerParties with
-  userAdmin  : Party -- ^DABL uses 'UserAdmin' for 'Operator'
-  public     : Party
-  custodian  : Party
-  exchange   : Party
-  btcIssuer  : Party
-  usdtIssuer : Party
-  alice      : Party
-  bob        : Party
-  broker     : Party
-  ccp        : Party
+  userAdmin : Party -- ^DABL uses 'UserAdmin' for 'Operator'
+  public    : Party
+  custodian : Party
+  exchange  : Party
+  issuer    : Party
+  alice     : Party
+  bob       : Party
+  carl      : Party
+  dana      : Party
+  ccp       : Party
     deriving (Eq, Show)
 
 allocateParties : Script LedgerParties
 allocateParties = do
   operator <- allocatePartyWithHint "Operator" (PartyIdHint "Operator")
-  btcIssuer <- allocatePartyWithHint "BtcIssuer" (PartyIdHint "BtcIssuer")
-  usdtIssuer <- allocatePartyWithHint "UsdtIssuer" (PartyIdHint "UsdtIssuer")
+  issuer <- allocatePartyWithHint "Issuer" (PartyIdHint "Issuer")
   custodian <- allocatePartyWithHint "Custodian" (PartyIdHint "Custodian")
   exchange <- allocatePartyWithHint "Exchange" (PartyIdHint "Exchange")
   broker <- allocatePartyWithHint "Broker" (PartyIdHint "Broker")
   ccp <- allocatePartyWithHint "Ccp" (PartyIdHint "Ccp")
   public <- allocatePartyWithHint "Public" (PartyIdHint "Public")
-
   alice <- allocatePartyWithHint "Alice" (PartyIdHint "Alice")
   bob <- allocatePartyWithHint "Bob" (PartyIdHint "Bob")
-  return $ LedgerParties operator public custodian exchange btcIssuer usdtIssuer alice bob broker ccp
+  carl <- allocatePartyWithHint "Carl" (PartyIdHint "Carl")
+  dana <- allocatePartyWithHint "Dana" (PartyIdHint "Dana")
+
+  return $ LedgerParties operator public custodian exchange issuer alice bob carl dana ccp
 
 setupClearing : Script ()
 setupClearing = allocateParties >>= doSetupClearing
 
 doSetupClearing : LedgerParties -> Script ()
-doSetupClearing lp@(LedgerParties operator public custodian exchange issuer _ alice bob _ ccp) = do
+doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
 
-  carl <- allocatePartyWithHint "Carl" (PartyIdHint "Carl")
-  dana <- allocatePartyWithHint "Dana" (PartyIdHint "Dana")
 
   -- Onboard and create relationships
   handleOnboarding lp
@@ -180,7 +179,7 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
   return id
 
 handleOnboarding : LedgerParties -> Script ()
-handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer usdtIssuer alice bob broker ccp) = do
+handleOnboarding lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
   let name = "default name"
       title = "default title"
       issuerID = "default issuerID"
@@ -194,11 +193,8 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
   custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Bank of Example", ..
 
   -- onboard issuers
-  btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
-  btcIssuerCid <- btcIssuer `submit` exerciseCmd btcIssuerInvCid IssuerInvitation_Accept with name = "BTC Issuer", ..
-
-  usdtIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
-  usdtIssuerCid <- usdtIssuer `submit` exerciseCmd usdtIssuerInvCid IssuerInvitation_Accept with name = "USDT Issuer", ..
+  issuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with ..
+  issuerCid <- issuer `submit` exerciseCmd issuerInvCid IssuerInvitation_Accept with name = "Issuer", ..
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
@@ -210,10 +206,7 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
 
 
   -- issuers establish a relationship with the custodian
-  relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
-  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
-
-  relationshipReqCid <- usdtIssuer `submit` exerciseCmd usdtIssuerCid Issuer_RequestCustodianRelationship with ..
+  relationshipReqCid <- issuer `submit` exerciseCmd issuerCid Issuer_RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
 

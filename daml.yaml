@@ -5,10 +5,11 @@ init-script: Setup.Clearing:setupClearing
 parties:
   - Alice
   - Bob
+  - Carl
+  - Dana
   - Operator
   - Custodian
-  - BtcIssuer
-  - UsdtIssuer
+  - Issuer
   - Public
   - Exchange
   - Broker
