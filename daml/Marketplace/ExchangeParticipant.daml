@@ -73,18 +73,9 @@ template ExchangeParticipant
           orderDepositCid <- if requiredDepositAmount < deposit.asset.quantity
                              then head <$> exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
                              else return depositCid
-          orderDeposit <- fetch orderDepositCid
 
-          debitRequestCid <- create DepositDebitRequest with
-              owner = exchParticipant
-              ownerAccount = orderDeposit.account
-              depositCid = orderDepositCid
-
-          let order = Order with
-                status = "New", orderId = -1, pair = binOption
-                asset = orderDeposit.asset, account = orderDeposit.account, ..
-          orderRequestId <- create OrderRequest with ..
-          return (orderRequestId, debitRequestCid)
+          exercise self ExchangeParticipant_MakeOrder
+              with depositCid = orderDepositCid, pair = binOption, ..
 
       nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
