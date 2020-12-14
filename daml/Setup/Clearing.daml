@@ -57,7 +57,7 @@ setupClearing = allocateParties >>= doSetupClearing
 doSetupClearing : LedgerParties -> Script ()
 doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
 
-
+  time <- getTime
   -- Onboard and create relationships
   handleOnboarding lp
 

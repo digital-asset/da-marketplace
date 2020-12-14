@@ -16,7 +16,6 @@ data ExerciseStyle = European | American | Bermudan
 data PutOrCall = Call | Put
   deriving (Eq, Show)
 
-
 data OptionData = OptionData
   with
     putCall : PutOrCall  -- put or call option

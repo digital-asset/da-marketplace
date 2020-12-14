@@ -1,6 +1,5 @@
 module Marketplace.Trading where
 
-import Marketplace.CentralCounterpartyCustomer
 import Marketplace.BinaryOption
 import Marketplace.Token
 import Marketplace.Transfer
@@ -242,11 +241,13 @@ template DerivativeTrade
             participant = buyer
             orderId = buyerOrderId
             accountId = buyerAccountId
+            isBuy = True
             ..
           sellCid <- create DerivativeTradeSide with
             participant = seller
             orderId = sellerOrderId
             accountId = sellerAccountId
+            isBuy = False
             ..
           return (buyCid, sellCid)
 
@@ -256,6 +257,7 @@ template DerivativeTradeSide
     participant : Party
     ccp : Party
     exchange : Party
+    isBuy : Bool
     eventId : Int
     eventTimestamp : Text
     instrument : Id
