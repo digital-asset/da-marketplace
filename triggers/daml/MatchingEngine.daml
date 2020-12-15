@@ -51,7 +51,7 @@ handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA Cu
 handleOrder party orders (orderCid, order) = do
   debug $ "Handling order: " <> show order
   let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeOrder orders
-      oppositeBook' = if order.isBid
+      oppositeBook' = if not order.isBid
                       then reverse oppositeBook
                       else oppositeBook
       crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
@@ -61,7 +61,7 @@ handleOrder party orders (orderCid, order) = do
   where
     isOppositeOrder : ContractPair Order -> Bool
     isOppositeOrder (opoCid, opo) = opoCid /= orderCid
-                                 && not opo.isBid
+                                 && opo.isBid == (not order.isBid)
                                  && opo.pair == order.pair
 
     isCrossing : ContractPair Order -> ContractPair Order -> Bool
