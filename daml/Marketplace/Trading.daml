@@ -94,13 +94,13 @@ template Order
             let [filledAsset, restAsset] = assetSplit asset [depositFillQty]
             remainingCid <- create this
               with qty = qty - fillQty, status = "PartiallyFilled", asset = restAsset
+            tradeCid <- create TradeSide with
+                isBuy = isBid, optAsset = Some filledAsset
+                qty = fillQty, price = fillPrice, ..
 
-            tradeCid <- create TradeSide
-              with isBuy = isBid, optAsset = Some filledAsset
-                   qty = fillQty, ..
             return $ (tradeCid, Some remainingCid)
           else do
-            tradeCid <- create TradeSide with isBuy = isBid, optAsset = Some asset, ..
+            tradeCid <- create TradeSide with isBuy = isBid, optAsset = Some asset, price = fillPrice, ..
             return $ (tradeCid, None)
 
       Order_Fill : (ContractId TradeSide, Optional (ContractId Order))
@@ -138,18 +138,23 @@ template Order
                      asset = restAsset
 
               tradeCid <- create TradeSide with
-                  isBuy = isBid
-                  optAsset = Some filledAsset
-                  qty = fillQty, ..
+                  isBuy = isBid, optAsset = Some filledAsset
+                  qty = fillQty, price = fillPrice, ..
 
               return $ (tradeCid, Some remainingCid)
             else do
               -- the fillQty is not enough to warrant a deposit transfer
               remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
-              tradeCid <- create TradeSide with isBuy = isBid, optAsset = None, qty = fillQty, ..
+              tradeCid <- create TradeSide with
+                  isBuy = isBid, optAsset = None
+                  qty = fillQty, price = fillPrice, ..
+
               return $ (tradeCid, Some remainingCid)
           else do
-            tradeCid <- create TradeSide with isBuy = isBid, optAsset = Some asset, ..
+            tradeCid <- create TradeSide with
+                isBuy = isBid, optAsset = Some asset
+                price = fillPrice, ..
+
             return $ (tradeCid, None)
 
       Order_Cancel : ContractId DepositCreditRequest
