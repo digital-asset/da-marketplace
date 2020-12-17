@@ -1,24 +1,23 @@
 sdk-version: 1.7.0
-name: da-marketplace
+name: da-marketplace-triggers
 source: daml
-init-script: Setup.Clearing:setupClearing
 parties:
   - Alice
   - Bob
-  - Carl
-  - Dana
   - Operator
   - Custodian
-  - Issuer
+  - BtcIssuer
+  - UsdtIssuer
   - Public
   - Exchange
   - Broker
-  - Ccp
 version: 0.1.7
+# trigger-dependencies-begin
 dependencies:
   - daml-prim
   - daml-stdlib
-  - daml-script
+  - daml-trigger
+data-dependencies:
+  - ../.daml/dist/da-marketplace-0.1.7.dar
 sandbox-options:
   - --wall-clock-time
-  - --ledgerid=da-marketplace-sandbox

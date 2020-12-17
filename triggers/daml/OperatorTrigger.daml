@@ -1,0 +1,60 @@
+-- Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module OperatorTrigger where
+
+import DA.Action
+import DA.Foldable hiding (elem, null)
+import qualified DA.Next.Set as Set
+
+import Daml.Trigger
+
+import Marketplace.Operator hiding (broker, custodian, exchange, investor)
+import Marketplace.Onboarding
+import Marketplace.Registry
+import Marketplace.Token hiding (exchange)
+
+import Utils
+
+handleOperator : Trigger ()
+handleOperator = Trigger
+  { initialize = return ()
+  , updateState = \_ -> return ()
+  , rule = handleOperatorRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator
+                                              , registeredTemplate @UserSession
+                                              , registeredTemplate @Token
+                                              , registeredTemplate @RegisteredBroker
+                                              , registeredTemplate @RegisteredCustodian
+                                              , registeredTemplate @RegisteredExchange
+                                              , registeredTemplate @RegisteredInvestor ]
+  , heartbeat = None
+  }
+
+-- |Create 'Operator' contract for self and automatically acknowledge all 'UserSession's
+handleOperatorRule : Party -> TriggerA () ()
+handleOperatorRule party = do
+  debug "Running operator rule..."
+
+  -- Acknowledge all active 'UserSession's
+  userSessions <- query @UserSession
+  forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
+                               >> debug ("Acknowledging user session: " <> show us)
+
+  -- Add all current parties to 'Token' observers if 'isPublic'
+  tokens     <- query @Token
+  brokers    <- map (broker . snd)    <$> query @RegisteredBroker
+  custodians <- map (custodian . snd) <$> query @RegisteredCustodian
+  exchanges  <- map (exchange . snd)  <$> query @RegisteredExchange
+  investors  <- map (investor . snd)  <$> query @RegisteredInvestor
+  let parties = brokers <> custodians <> exchanges <> investors
+  forA_ tokens (handleToken party parties)
+
+-- |Add all parties as observers to a 'Token'
+handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
+handleToken party parties (cid,token) = do
+  let partiesToAdd = Set.difference (Set.fromList parties) token.observers
+  unless (Set.null partiesToAdd || not token.isPublic )
+    $ void $ emitExerciseCmd cid Token_AddObservers with
+        party = party, newObservers = (Set.insert party partiesToAdd)
+   >> debug "adding parties to token..."

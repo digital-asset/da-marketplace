@@ -1,6 +1,7 @@
 .profile-form-field {
-    width: 300px;
     margin-top: 15px;
+    margin-right: 15px;
+    max-width: 260px;
 }
 
 .profile-submit-button {

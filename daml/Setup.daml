@@ -98,8 +98,8 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- issuers issue tokens
-  btcIssuer `submit` exerciseByKeyCmd @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker]
-  usdtIssuer `submit` exerciseByKeyCmd @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker]
+  btcIssuer `submit` exerciseByKeyCmd @Issuer (operator, btcIssuer) Issuer_IssueToken with name = "BTC", quantityPrecision = 6, description = "My BTC Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker, public, operator]
+  usdtIssuer `submit` exerciseByKeyCmd @Issuer (operator, usdtIssuer) Issuer_IssueToken with name = "USDT", quantityPrecision = 2, description = "My USDT Token", isPublic = True, observers = [custodian, exchange, alice, bob, broker, public, operator]
 
   let btcTokenId = Id with signatories = fromList [ btcIssuer ], label = "BTC", version = 0
   let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0
@@ -130,11 +130,17 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   depositCid3 <- alice `submit` exerciseCmd depositCid1 AssetDeposit_Merge with depositCids = [depositCid2]
 
   -- the exchange adds support for BTC/USDT pair
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 10000.0
 
   -- Alice gets onboarded as an exchange participant
   (_, aliceInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = alice
   alice `submit` exerciseCmd aliceInvCid ExchangeParticipantInvitation_Accept
+
+  -- Bob gets onboarded as an exchange participant
+  (_, bobInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = bob
+  bob `submit` exerciseCmd bobInvCid ExchangeParticipantInvitation_Accept
+
+  depositCid1 <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.05, beneficiary = bob
 
   pure ()
 
@@ -201,7 +207,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
   exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 10000.0
 
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_RequestCustodianRelationship with ..

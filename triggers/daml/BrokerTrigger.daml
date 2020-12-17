@@ -1,0 +1,36 @@
+-- Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module BrokerTrigger where
+
+import DA.Foldable hiding (elem, null)
+import Daml.Trigger
+
+import Marketplace.Trading
+
+import Utils
+
+type CurrentOrderId = Int
+
+handleBroker : Trigger CurrentOrderId
+handleBroker = Trigger
+  { initialize = return 0
+  , updateState = \_ -> pure ()
+  , rule = handleBrokerRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @BrokerOrderRequest ]
+  , heartbeat = None
+  }
+
+-- |Accept all 'BrokerOrderRequest'
+handleBrokerRule : Party -> TriggerA CurrentOrderId ()
+handleBrokerRule party = do
+  debug "Running broker rule..."
+
+  -- Accept all 'BrokerOrderReqest'
+  orderRequests <- query @BrokerOrderRequest
+
+  forA_ orderRequests \(cid,or) -> do
+    currentOrderId <- get
+    debug $ "Accepting order: " <> show or
+    emitExerciseCmd cid BrokerOrderRequest_Accept with brokerOrderId = currentOrderId
+    modify (+ 1)

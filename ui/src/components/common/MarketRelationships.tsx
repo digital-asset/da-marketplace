@@ -21,7 +21,6 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
 
     return (
         <>
-            <p><b>Custodians</b></p>
             {rows}
             <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
         </>

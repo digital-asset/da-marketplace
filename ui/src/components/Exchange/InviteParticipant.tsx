@@ -45,6 +45,7 @@ const InviteParticipant: React.FC<Props> = ({ registeredInvestors }) => {
                     setAddition={privateInvestorId => setExchParticipant(privateInvestorId)}/>
 
                 <Button
+                    secondary
                     content='Invite'
                     className='invite-investor'
                     disabled={!exchParticipant}/>

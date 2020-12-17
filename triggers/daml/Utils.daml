@@ -1,0 +1,9 @@
+module Utils where
+
+import Daml.Trigger
+
+type ContractPair a = (ContractId a, a)
+
+-- |Helper function to exercise a choice
+emitExerciseCmd : (Template t, Choice t c r) => ContractId t -> c -> TriggerA s CommandId
+emitExerciseCmd cid c = emitCommands [exerciseCmd cid c] [toAnyContractId cid]

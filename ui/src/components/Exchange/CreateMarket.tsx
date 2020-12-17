@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button } from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -12,6 +12,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
 import Page from '../common/Page'
+import { countDecimals } from '../common/utils';
 
 import "./CreateMarket.css"
 
@@ -24,6 +25,12 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
     const [ quoteToken, setQuoteToken ] = useState<TokenInfo>();
 
+    const [ minQuantity, setMinQuantity ] = useState('');
+    const [ maxQuantity, setMaxQuantity ] = useState('');
+
+    const [ minQuantityError, setMinQuantityError ] = useState<string>()
+    const [ maxQuantityError, setMaxQuantityError ] = useState<string>()
+
     const ledger = useLedger();
     const exchange = useParty();
     const operator = useOperator();
@@ -31,22 +38,59 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from Token: ", e);
     }).contracts.map(makeContractInfo);
+    const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
     const handleIdPairSubmit = async () => {
         if (!baseToken || !quoteToken) {
             throw new Error('Tokens not selected');
         }
 
+        if (minQuantity > maxQuantity) {
+            throw new Error('min quantity is greater than max quantity');
+        }
+
         const key = wrapDamlTuple([operator, exchange]);
         const args = {
             baseTokenId: baseToken.contractData.id,
-            quoteTokenId: quoteToken.contractData.id
+            quoteTokenId: quoteToken.contractData.id,
+            minQuantity: minQuantity,
+            maxQuantity: maxQuantity
         };
 
         await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
 
         setBaseToken(undefined);
         setQuoteToken(undefined);
+    }
+
+    const validateMinQuantity = (event: React.SyntheticEvent, result: any) => {
+        const number = Number(result.value)
+
+        if (number < 0) {
+            return setMinQuantityError(`The min quantity must a positive number.`)
+        }
+
+        if (countDecimals(number) > quantityPrecision) {
+            return setMinQuantityError(`The decimal precision of this quantity must be equal to ${quantityPrecision !== 0 && 'or less than'} ${quantityPrecision}.`)
+        }
+
+        setMinQuantityError(undefined)
+        setMinQuantity(number.toString())
+    }
+
+    const validateMaxQuantity = (event: React.SyntheticEvent, result: any) => {
+
+        const newMaxQuantity = Number(result.value)
+        if (newMaxQuantity < 0) {
+            return setMaxQuantityError(`The max quantity must a positive number.`)
+        }
+
+        if (countDecimals(newMaxQuantity) > quantityPrecision) {
+            return setMaxQuantityError(`The decimal precision of this quantity must be equal to ${quantityPrecision !== 0 && 'or less than'} ${quantityPrecision}.`)
+        }
+
+        setMaxQuantityError(undefined)
+        setMaxQuantity(newMaxQuantity.toString())
     }
 
     return (
@@ -63,7 +107,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 clearable
                                 className='create-market-select'
                                 contracts={allTokens}
-                                label='Base Token'
+                                label='Base Asset'
+                                placeholder='Select...'
                                 value={baseToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setBaseToken(token)}/>
@@ -74,17 +119,39 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 clearable
                                 className='create-market-select'
                                 contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
-                                label='Quote Token'
+                                label='Quote Asset'
+                                placeholder='Select...'
                                 value={quoteToken?.contractId || ''}
                                 getOptionText={token => token.contractData.id.label}
                                 setContract={token => setQuoteToken(token)}/>
+
                         </div>
-                        <Button
-                            basic
-                            content='Save'
-                            className='create-market-save'
-                            disabled={!baseToken || !quoteToken}/>
-                    </FormErrorHandled>
+
+                        <div className='create-market-quantities'>
+                            <Form.Input
+                                label='Minimum Quantity'
+                                type='number'
+                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
+                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
+                                error={minQuantityError}
+                                disabled={!quoteToken || !baseToken}
+                                onChange={validateMinQuantity}/>
+
+                            <Form.Input
+                                label='Maximum Quantity'
+                                type='number'
+                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
+                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
+                                error={maxQuantityError}
+                                disabled={!quoteToken || !baseToken}
+                                onChange={validateMaxQuantity}/>
+                        </div>
+                            <Button
+                                secondary
+                                content='Submit'
+                                className='create-market-save'
+                                disabled={!baseToken || !quoteToken}/>
+                        </FormErrorHandled>
                 </div>
             </PageSection>
         </Page>

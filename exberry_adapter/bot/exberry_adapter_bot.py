@@ -4,7 +4,6 @@ import os
 import dazl
 from dazl import create, exercise, exercise_by_key
 
-
 dazl.setup_default_logger(logging.INFO)
 
 SID = 1 # default SID, use ExberrySID contract to change while running
@@ -14,7 +13,6 @@ def get_sid() -> int:
     return SID
 
 sid_to_order = {}
-
 
 class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
@@ -33,6 +31,8 @@ class MARKETPLACE:
     OrderRequest = 'Marketplace.Trading:OrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
+    Token = 'Marketplace.Token:Token'
+    MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
@@ -52,6 +52,12 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
+        sids = client.find_active(MARKETPLACE.ExberrySID)
+        global SID
+        for (_,item) in sids.items():
+            SID = item['sid']
+            logging.info(f'Changed current SID to {SID}')
+        return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
     def handle_exberry_SID(event):
@@ -75,7 +81,7 @@ def main():
                 'price': float(order['price']),
                 'side': 'Buy' if order['isBid'] else 'Sell',
                 'timeInForce': 'GTC',
-                'brokerOrderId': sid,  # we use sid for order ids
+                'mpOrderId': sid,  # we use sid for order ids
                 'userId': make_user_user_id(order['exchParticipant']),
             },
             'integrationParty': client.party
@@ -107,13 +113,40 @@ def main():
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.MarketPair)
+    def handle_new_market_pair(event):
+        pair = event.cdata
+        symbol = pair['id']['label']
+        description = pair['description']
+        calendar_id = pair['calendarId']
+        quote_currency = pair['quoteTokenId']['label']
+        price_precision = pair['pricePrecision']
+        quantity_precision = pair['quantityPrecision']
+        min_quantity = pair['minQuantity']
+        max_quantity = pair['maxQuantity']
+        status = pair['status'][10:]
+
+        return create(EXBERRY.CreateInstrumentRequest, {
+            'integrationParty': client.party,
+            'symbol': symbol,
+            'quoteCurrency': quote_currency,
+            'instrumentDescription': description,
+            'calendarId': calendar_id,
+            'pricePrecision': price_precision,
+            'quantityPrecision': quantity_precision,
+            'minQuantity': min_quantity,
+            'maxQuantity': max_quantity,
+            'status': status
+        })
+
+    # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderCancelRequest)
     def handle_order_cancel_request(event):
         order = event.cdata['order']
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': make_instrument(order['pair']),
-            'brokerOrderId': order['orderId'],
+            'mpOrderId': order['orderId'],
             'userId': make_user_user_id(order['exchParticipant'])
         })
 
@@ -139,10 +172,10 @@ def main():
         execution = event.cdata
 
         taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['takerBrokerOrderId']
+            'orderId': execution['takerMpOrderId']
         })
         maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['makerBrokerOrderId']
+            'orderId': execution['makerMpOrderId']
         })
 
         commands = [exercise(event.cid, 'Archive', {})]

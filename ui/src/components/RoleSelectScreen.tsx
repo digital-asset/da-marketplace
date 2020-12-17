@@ -63,7 +63,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
     return (
         <>
-            <OnboardingTile subtitle='What will you do?'>
+            <OnboardingTile>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}

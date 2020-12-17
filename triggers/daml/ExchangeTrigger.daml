@@ -1,0 +1,40 @@
+module ExchangeTrigger where
+
+import DA.Foldable
+import Daml.Trigger
+
+import Marketplace.Trading
+import Marketplace.BinaryOption
+
+import Utils
+
+handleExchange : Trigger ()
+handleExchange = Trigger
+  { initialize = return ()
+  , updateState = \_ -> pure ()
+  , rule = handleExchangeRule
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
+                                               , registeredTemplate @SettledBinaryOption ]
+  , heartbeat = None
+  }
+
+
+handleExchangeRule : Party -> TriggerA () ()
+handleExchangeRule party = do
+  debug "Running exchange rule..."
+
+  -- |Settle all 'TradeSide' and 'SettledBinaryOption'
+  tradeSides <- query @TradeSide
+  binaryOptions <- query @SettledBinaryOption
+  forA_ tradeSides (handleTradeSide party binaryOptions)
+
+
+handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
+handleTradeSide party  options (cid,tradeSide) = do
+  debug $ "Handling trade side: " <> show tradeSide
+  if not $ tradeSide.isBinaryOption
+  then emitExerciseCmd cid TradeSide_Settle >> pure ()
+  else do
+    let settledOptions = filter (\(_,opt) -> opt.id == tradeSide.pair._1) options
+    forA_ settledOptions
+      $ \(soCid,_) -> emitExerciseCmd cid TradeSide_SettleBinaryOption with settledBinOptionCid = soCid

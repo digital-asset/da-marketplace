@@ -12,7 +12,7 @@ type StringToDepositInfoArray = {
 
 export const groupDeposits = (deposits: DepositInfo[]): StringToDepositInfoArray => {
     return deposits.reduce((group, deposit) => {
-        const label = deposit.contractData.asset.id.label;
+        const label = deposit.contractData.account.provider;
         const existingValue = group[label] || [];
 
         return { ...group, [label]: [...existingValue, deposit] };

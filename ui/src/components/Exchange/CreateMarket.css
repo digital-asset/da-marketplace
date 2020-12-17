@@ -10,12 +10,30 @@
     align-items: flex-end;
 }
 
+.create-market-quantities {
+    margin-top: 10px;
+    width: 250px;
+}
+
 .create-market-options .exchange-icon {
     height: 16px;
     width: 16px;
-    margin-bottom: 8px;
+    margin: 8px 12px;
 }
 
 .token-select-container {
     width: 200px;
+}
+
+
+
+@media screen and (max-width: 1000px) {
+    .create-market-options  {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .create-market-options .exchange-icon {
+        margin: 16px 12px 12px 12px;
+    }
 }
