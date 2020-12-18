@@ -17,7 +17,32 @@ template MarginCalculation
 
     observer customer
 
-    key (ccp, calculationId) : (Party, Text)
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+    controller ccp can
+      MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
+        with
+          note : Text
+        do
+          create FulfilledMarginCalculation {..}
+
+
+template FulfilledMarginCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    targetAmount : Decimal
+    netDiff : Decimal
+    calculationTime : Time
+    calculationId : Text
+    note : Text
+  where
+    signatory ccp
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
 
@@ -35,5 +60,30 @@ template MarkToMarketCalculation
 
     observer customer
 
-    key (ccp, calculationId) : (Party, Text)
+    key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
+
+    controller ccp can
+      MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
+        with
+          note : Text
+        do
+          create FulfilledMarkToMarketCalculation {..}
+
+template FulfilledMarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    mtmAmount : Decimal
+    netDiff : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+
