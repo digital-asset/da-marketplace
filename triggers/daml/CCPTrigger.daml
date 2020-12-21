@@ -1,0 +1,125 @@
+module CCPTrigger where
+
+import DA.Action
+import DA.Optional
+import DA.List
+import DA.Foldable hiding (elem, null, foldl)
+import Daml.Trigger
+
+import DA.Finance.Asset
+import DA.Finance.Types
+
+import Marketplace.Trading
+import Marketplace.CentralCounterparty
+import Marketplace.Clearing
+import Marketplace.CentralCounterpartyCustomer
+
+import Utils
+
+data CCPState = CCPState {
+   operatorParty : Party
+ } deriving (Show,Eq)
+
+handleCCP : Trigger CCPState
+handleCCP = Trigger
+  { initialize = return $ CCPState (fromSome $ partyFromText "Operator")
+  , updateState = \_ -> pure ()
+  , rule = handleCCPRule
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @CCP
+                                               , registeredTemplate @DerivativeTrade
+                                               , registeredTemplate @MarginCalculation
+                                               , registeredTemplate @MarkToMarketCalculation ]
+  , heartbeat = None
+  }
+
+-- |Accept 'DepositTransferRequest' and 'CustodianRelationshipRequest'
+handleCCPRule : Party -> TriggerA CCPState ()
+handleCCPRule party = do
+  debug "Running custodian rule..."
+  state <- get
+
+  -- > Set Operator
+  ccpRoles <- query @CCP
+  forA_ ccpRoles
+    $ \(_,ccp) -> void $ put (state { operatorParty = ccp.operator })
+               >> debug ("Setting operator party to: " <> show ccp.operator)
+
+  -- > Handle DerivativeTrades
+  derivativeTrades <- query @DerivativeTrade
+  forA_ derivativeTrades
+    $ \(cid,dt) -> dedupExerciseByKey @CCP (state.operatorParty,party)
+                    CCP_NovateDerivativeTrade { derivativeTradeCid = cid }
+               >> debug ("Novating trade: " <> show dt)
+
+  -- > Handle MarginCalculation
+  marginCalculations <- query @MarginCalculation
+  forA_ marginCalculations (handleMarginCalculation party)
+
+  -- > Handle MarkToMarketCalculation
+  markToMarketCalculations <- query @MarkToMarketCalculation
+  forA_ markToMarketCalculations (handleMarkToMarketCalculation party)
+
+
+handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
+handleMarginCalculation ccp (mcCid, mc@MarginCalculation { netDiff, accountId, customer }) = do
+  CCPState { operatorParty } <- get
+  (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
+  let accountId = ccpCustomer.accountId
+  -- ^ Find deposits for the account
+  (ccpDepositCid,_) <- head  . filter (depositIsAccount ccpCustomer.accountId)  <$> query @AssetDeposit
+  (custodianDepositCid,_) <- head  . filter (\(_,deposit) -> deposit.account.id == ccpCustomer.custodianAccountId) <$> query @AssetDeposit
+
+  return ()
+
+  -- -- let currentFunds = foldl (\acc d -> (snd d).asset.quantity + acc) 0.0 deposits
+  -- unless (netDiff == 0.0)
+  --   $ if netDiff > 0.0
+  --     then dedupExercise ccpCustomerCid CCPCustomer_RequestInternalTransfer
+  --            with depositCid = depositCid
+  --                 isInbound  = True
+  --                 amount = netDiff
+  --     else dedupExercise ccpCustomerCid CCPCustomer_RequestInternalTransfer
+  --       with depositCid = depositCid
+  --            isInbound = False
+  --            amount = netDiff
+  where
+    depositIsAccount : Id -> ContractPair AssetDeposit -> Id -> Bool
+    depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
+
+handleMarkToMarketCalculation
+  : Party
+  -> ContractPair MarkToMarketCalculation
+  -> TriggerA CCPState ()
+handleMarkToMarketCalculation party (mtmCid, mtm@MarkToMarketCalculation { accountId, netDiff }) = do
+  return ()
+
+
+
+
+
+  -- return ()
+
+
+  -- -- Accept all 'DepositTransferRequest'
+  -- transferRequests <- query @CCP
+  -- forA_ transferRequests
+  --   $ \(cid,_) -> emitExerciseCmd cid DepositTransferRequest_Approve
+  --              >> debug "Accepting transfer request"
+  --
+  -- -- Accept all 'CustodianRelationshipRequest'
+  -- relationshipRequests <- query @CustodianRelationshipRequest
+  -- forA_ relationshipRequests
+  --   $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
+  --               >> debug ("Approving relationship request from " <> show rq.requester)
+  --
+  -- -- Accept all 'DepositCreditRequest'
+  -- relationshipRequests <- query @DepositCreditRequest
+  -- forA_ relationshipRequests
+  --   $ \(cid,rq) -> emitExerciseCmd cid DepositCreditRequest_Approve
+  --               >> debug ("Approving credit request from " <> show rq.owner)
+  --
+  -- -- Accept all 'DepositDebitRequest'
+  -- relationshipRequests <- query @DepositDebitRequest
+  -- forA_ relationshipRequests
+  --   $ \(cid,rq) -> emitExerciseCmd cid DepositDebitRequest_Approve
+  --               >> debug ("Approving credit request from " <> show rq.owner)
