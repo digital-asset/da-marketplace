@@ -1,12 +1,15 @@
 module Marketplace.CentralCounterpartyCustomer where
 
+import qualified DA.Next.Set as Set
 
 import Marketplace.Notification
 import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import DA.List
 
 
 template CCPCustomerInvitation
@@ -20,13 +23,38 @@ template CCPCustomerInvitation
 
     controller ccpCustomer can
       CCPCustomerInvitation_Accept : ContractId CCPCustomer
+        with
+          clearingDepositCid : ContractId AssetDeposit
+          marginDepositCid : ContractId AssetDeposit
         do
+          -- custCcpRelationshipCid <- fetchByKey @CCPCustodianRelationship (custodian, ccp)
           let custodianAccountId = getAccountId ccpCustomer custodian [custodian]
               accountId = getAccountId ccpCustomer ccp [custodian]
+
+              custodianAccount = Account
+                with id = custodianAccountId, provider = custodian, owner = ccpCustomer
+
+              ccpAccount = Account
+                with id = accountId, provider = ccp, owner = ccpCustomer
+          --
+          -- deposit <- fetch custodianDepositCid
+          -- newDepositCid <- exercise custodianDepositCid AssetDeposit_SetObservers with
+          --   newObservers = Set.union (Set.fromList [ccp]) deposit.observers
+
+          -- custodianSettlementRuleCid <- create AssetSettlementRule
+          --   with account = custodianAccount
+          --        observers = Set.fromList [ccp, ccpCustomer]
+          --        ctrls = Set.fromList [ccp]
+
+          -- ccpSettlementRuleCid <- create AssetSettlementRule
+          --   with account = ccpAccount
+          --        observers = Set.fromList [ccp, ccpCustomer]
+          --        ctrls = Set.fromList [ccp]
+
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
-          create CCPCustomer with ..
+          create CCPCustomer with inGoodStanding = True, .. -- custodianSettlementRuleCid = ccpSettlementRuleCid,  ..
 
       CCPCustomerInvitation_Reject : ()
         do
@@ -40,9 +68,11 @@ template CCPCustomer
   with
     operator : Party
     ccp : Party
+    custodian : Party
     ccpCustomer : Party
-    accountId : Id
-    custodianAccountId : Id
+    clearingDepositCid : ContractId AssetDeposit
+    marginDepositCid : ContractId AssetDeposit
+    inGoodStanding : Bool
   where
     signatory ccp, ccpCustomer
 
@@ -50,15 +80,51 @@ template CCPCustomer
     maintainer key._1
 
     controller ccp can
-      nonconsuming CCPCustomer_RequestInternalTransfer : ContractId DepositTransferRequest
+      CCPCustomer_PerformMarginFill : ContractId CCPCustomer
         with
-          depositCid : ContractId AssetDeposit  -- ccp needs visibility to those
-                                                -- otherwise we add a custodian <> ccp relationship
-          isInbound : Bool  -- from the point of view of the clearer
           amount : Decimal
         do
-          deposit <- fetch depositCid
-          assert $ deposit.account.owner == ccpCustomer
-          let receiverAccountId = if isInbound then accountId else custodianAccountId
-          [newDepositCid] <- exercise depositCid AssetDeposit_Split with quantities = [amount]
-          create DepositTransferRequest with sender = ccpCustomer, senderAccountId = deposit.account.id, depositCid = newDepositCid, ..
+          (custCcpRelationshipCid,_) <- fetchByKey @CCPCustodianRelationship (custodian, ccp)
+
+          newDepositCids <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
+          case newDepositCids of
+            []               -> create this with inGoodStanding = False
+            [diffDepositCid] -> create this with inGoodStanding = False, clearingDepositCid = diffDepositCid
+            (diffDepositCid::remainingClearingCids) -> do
+              newMarginDepositCid <- exercise marginDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
+              create this with clearingDepositCid = (head remainingClearingCids), marginDepositCid = newMarginDepositCid
+
+template CCPCustodianRelationshipRequest
+  with
+    operator : Party
+    custodian : Party
+    ccp : Party
+  where
+    signatory ccp
+
+    -- TODO: Move to custodian relationship request
+    controller custodian can
+      CCPCustodianRelationshipRequest_Approve : ContractId CCPCustodianRelationship
+        do
+          create CCPCustodianRelationship
+            with operator, custodian, ccp
+
+template CCPCustodianRelationship
+  with
+    operator : Party
+    custodian : Party
+    ccp : Party
+  where
+    signatory custodian, ccp
+    key (custodian, ccp) : (Party, Party)
+    maintainer key._1
+
+    controller ccp can
+      nonconsuming CCPCustodianRelationship_CreateSettlementRule : ContractId AssetSettlementRule
+        with
+          account : Account
+          observers : Set.Set Party
+          ctrls : Set.Set Party
+        do
+          create AssetSettlementRule
+            with account, observers, ctrls

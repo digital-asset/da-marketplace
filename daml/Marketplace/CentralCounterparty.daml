@@ -1,5 +1,10 @@
 module Marketplace.CentralCounterparty where
 
+import DA.Next.Set
+
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Custodian
 import Marketplace.Registry
@@ -42,8 +47,11 @@ template CCP
     maintainer key._2
 
     controller ccp can
-      nonconsuming CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        do create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
+      nonconsuming CCP_RequestCustodianRelationship : (ContractId CustodianRelationshipRequest, ContractId CCPCustodianRelationshipRequest)
+        do
+          cusRequestCid <- create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
+          ccpRequestCid <- create CCPCustodianRelationshipRequest with ..
+          return (cusRequestCid, ccpRequestCid)
 
       nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
         with
@@ -62,3 +70,4 @@ template CCP
           let buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
           exercise derivativeTradeCid DerivativeTrade_Novate with ..
+

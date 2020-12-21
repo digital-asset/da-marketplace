@@ -82,6 +82,9 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
   carlAccts <- setupInvestorAccount lp usdTokenId carl
   danaAccts <- setupInvestorAccount lp usdTokenId dana
 
+  ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
+    with amount = 100.0
+
   let tradePairs = [ (alice, bob, btcF21DerId, 50.0, 1000.0)
                    , (alice, carl, ethF21DerId, 10.0, 3000.0)
                    , (alice, dana, ethF21DerId, 34.0, 5044.0)
@@ -119,15 +122,21 @@ onboardInvestor lp investor name = do
   (_, exchInviteCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = investor
   investor `submit` exerciseCmd exchInviteCid ExchangeParticipantInvitation_Accept
 
+  -- -- become CCP customer
+  -- ccpInviteCid <- investor `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
+  -- ccpCustomerId <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept
   -- become CCP customer
-  ccpInviteCid <- ccp `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
-  ccpCustomerId <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept
+
+  -- ccpInviteCid <- investor `submit` createCmd CCPCustomerRequest with operator, ccp, ccpCustomer = investor, custodian
+  -- ccpCustomerId <- ccp `submit` exerciseCmd ccpInviteCid CCPCustomerRequest_Accept
+  -- exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
 
   return ()
 
 data InvestorAccounts = InvestorAccounts with
     iaCustodian : ContractId AssetDeposit
-    iaCcp : ContractId AssetDeposit
+    iaMargin : ContractId AssetDeposit
+    iaClearing : ContractId AssetDeposit
   deriving (Show,Eq)
 
 setupInvestorAccount : LedgerParties -> Id -> Party -> Script InvestorAccounts
@@ -141,16 +150,22 @@ setupInvestorAccount lp usdTokenId investor = do
   -- deposit USD into account
   depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = usdTokenId, depositQuantity = 500.0, beneficiary = investor
 
-  -- move to ccp account
   transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider with depositCid = depositCid, provider = ccp
+  clearingDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
 
-  -- bank accepts transfer
-  ccpDespositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+  -- deposit USD into account
+  depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = usdTokenId, depositQuantity = 100000.0, beneficiary = investor
+
+  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider with depositCid = depositCid, provider = ccp
+  marginDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
 
   -- deposit more USD in Bob and Alice's custodian account
   custodianDepositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = usdTokenId, depositQuantity = 100000.0, beneficiary = investor
 
-  return $ InvestorAccounts ccpDespositCid custodianDepositCid
+  ccpInviteCid <- ccp `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
+  ccpCustomerCid <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept with clearingDepositCid, marginDepositCid
+
+  return $ InvestorAccounts custodianDepositCid clearingDepositCid marginDepositCid
 
 createToken : Party -> Party -> Text -> Text -> Int -> [Party] -> Script Id
 createToken operator issuer name description quantityPrecision observers = do
@@ -215,8 +230,9 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange issuer ali
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- ccp establishes relationship with the custodian
-  relationshipReqCid <- ccp `submit` exerciseCmd ccpCid CCP_RequestCustodianRelationship
+  (relationshipReqCid, ccpRelationshipReqCid) <- ccp `submit` exerciseCmd ccpCid CCP_RequestCustodianRelationship
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+  custodian `submit` exerciseCmd ccpRelationshipReqCid CCPCustodianRelationshipRequest_Approve
 
 
   -- exchange participants --
