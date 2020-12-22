@@ -122,15 +122,6 @@ onboardInvestor lp investor name = do
   (_, exchInviteCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = investor
   investor `submit` exerciseCmd exchInviteCid ExchangeParticipantInvitation_Accept
 
-  -- -- become CCP customer
-  -- ccpInviteCid <- investor `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
-  -- ccpCustomerId <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept
-  -- become CCP customer
-
-  -- ccpInviteCid <- investor `submit` createCmd CCPCustomerRequest with operator, ccp, ccpCustomer = investor, custodian
-  -- ccpCustomerId <- ccp `submit` exerciseCmd ccpInviteCid CCPCustomerRequest_Accept
-  -- exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
-
   return ()
 
 data InvestorAccounts = InvestorAccounts with

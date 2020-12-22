@@ -27,7 +27,6 @@ template CCPCustomerInvitation
           clearingDepositCid : ContractId AssetDeposit
           marginDepositCid : ContractId AssetDeposit
         do
-          -- custCcpRelationshipCid <- fetchByKey @CCPCustodianRelationship (custodian, ccp)
           let custodianAccountId = getAccountId ccpCustomer custodian [custodian]
               accountId = getAccountId ccpCustomer ccp [custodian]
 
@@ -36,25 +35,11 @@ template CCPCustomerInvitation
 
               ccpAccount = Account
                 with id = accountId, provider = ccp, owner = ccpCustomer
-          --
-          -- deposit <- fetch custodianDepositCid
-          -- newDepositCid <- exercise custodianDepositCid AssetDeposit_SetObservers with
-          --   newObservers = Set.union (Set.fromList [ccp]) deposit.observers
-
-          -- custodianSettlementRuleCid <- create AssetSettlementRule
-          --   with account = custodianAccount
-          --        observers = Set.fromList [ccp, ccpCustomer]
-          --        ctrls = Set.fromList [ccp]
-
-          -- ccpSettlementRuleCid <- create AssetSettlementRule
-          --   with account = ccpAccount
-          --        observers = Set.fromList [ccp, ccpCustomer]
-          --        ctrls = Set.fromList [ccp]
 
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
-          create CCPCustomer with inGoodStanding = True, .. -- custodianSettlementRuleCid = ccpSettlementRuleCid,  ..
+          create CCPCustomer with inGoodStanding = True, ..
 
       CCPCustomerInvitation_Reject : ()
         do

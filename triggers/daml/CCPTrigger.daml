@@ -65,23 +65,13 @@ handleMarginCalculation ccp (mcCid, mc@MarginCalculation { netDiff, accountId, c
   CCPState { operatorParty } <- get
   (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
   let accountId = ccpCustomer.accountId
+
   -- ^ Find deposits for the account
   (ccpDepositCid,_) <- head  . filter (depositIsAccount ccpCustomer.accountId)  <$> query @AssetDeposit
   (custodianDepositCid,_) <- head  . filter (\(_,deposit) -> deposit.account.id == ccpCustomer.custodianAccountId) <$> query @AssetDeposit
 
   return ()
 
-  -- -- let currentFunds = foldl (\acc d -> (snd d).asset.quantity + acc) 0.0 deposits
-  -- unless (netDiff == 0.0)
-  --   $ if netDiff > 0.0
-  --     then dedupExercise ccpCustomerCid CCPCustomer_RequestInternalTransfer
-  --            with depositCid = depositCid
-  --                 isInbound  = True
-  --                 amount = netDiff
-  --     else dedupExercise ccpCustomerCid CCPCustomer_RequestInternalTransfer
-  --       with depositCid = depositCid
-  --            isInbound = False
-  --            amount = netDiff
   where
     depositIsAccount : Id -> ContractPair AssetDeposit -> Id -> Bool
     depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
@@ -92,34 +82,3 @@ handleMarkToMarketCalculation
   -> TriggerA CCPState ()
 handleMarkToMarketCalculation party (mtmCid, mtm@MarkToMarketCalculation { accountId, netDiff }) = do
   return ()
-
-
-
-
-
-  -- return ()
-
-
-  -- -- Accept all 'DepositTransferRequest'
-  -- transferRequests <- query @CCP
-  -- forA_ transferRequests
-  --   $ \(cid,_) -> emitExerciseCmd cid DepositTransferRequest_Approve
-  --              >> debug "Accepting transfer request"
-  --
-  -- -- Accept all 'CustodianRelationshipRequest'
-  -- relationshipRequests <- query @CustodianRelationshipRequest
-  -- forA_ relationshipRequests
-  --   $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
-  --               >> debug ("Approving relationship request from " <> show rq.requester)
-  --
-  -- -- Accept all 'DepositCreditRequest'
-  -- relationshipRequests <- query @DepositCreditRequest
-  -- forA_ relationshipRequests
-  --   $ \(cid,rq) -> emitExerciseCmd cid DepositCreditRequest_Approve
-  --               >> debug ("Approving credit request from " <> show rq.owner)
-  --
-  -- -- Accept all 'DepositDebitRequest'
-  -- relationshipRequests <- query @DepositDebitRequest
-  -- forA_ relationshipRequests
-  --   $ \(cid,rq) -> emitExerciseCmd cid DepositDebitRequest_Approve
-  --               >> debug ("Approving credit request from " <> show rq.owner)
