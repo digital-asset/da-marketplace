@@ -97,10 +97,11 @@ template DepositCreditRequest
       DepositCreditRequest_Approve : ContractId AssetDeposit
         do
           let (owner, provider) = getAccountOwnerProvider account.id.label
+          let tokenSignatories = asset.id.signatories
 
           depositRuleCid <- create AssetSettlementRule
             with account = account
-                 observers = fromList [provider]
+                 observers = tokenSignatories <> fromList [provider]
                  ctrls = fromList [custodian]
 
           newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian

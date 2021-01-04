@@ -3,6 +3,7 @@ module Marketplace.Investor where
 import Marketplace.Custodian
 import Marketplace.Registry
 import Marketplace.Transfer
+import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -57,6 +58,28 @@ template Investor
            deposit <- fetch depositCid
            assert $ deposit.account.owner == investor
            create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
+
+      nonconsuming Investor_RequestDeposit : ContractId DepositCreditRequest
+        with
+          tokenId : Id
+          depositQuantity : Decimal
+          custodian : Party
+        do
+          (tokenCid, token) <- fetchByKey @Token tokenId
+          let accountId = getAccountId investor custodian [custodian]
+              quantity = roundBankers token.quantityPrecision depositQuantity
+              account = Account with id = accountId, provider = custodian, owner = investor
+              asset = Asset with id = tokenId, ..
+
+          create DepositCreditRequest with owner = investor, ..
+
+      nonconsuming Investor_RequestWithdrawl : ContractId DepositDebitRequest
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          deposit <- fetch depositCid
+          create DepositDebitRequest with
+              owner = investor, ownerAccount = deposit.account, ..
 
       nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
         with
