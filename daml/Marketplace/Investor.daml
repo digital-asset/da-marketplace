@@ -2,8 +2,8 @@ module Marketplace.Investor where
 
 import Marketplace.Custodian
 import Marketplace.Registry
-import Marketplace.Transfer
 import Marketplace.Token
+import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset
