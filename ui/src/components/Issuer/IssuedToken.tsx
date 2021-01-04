@@ -1,12 +1,15 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, List } from 'semantic-ui-react'
+import { Header, List, Table } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { makeContractInfo } from '../common/damlTypes'
 
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
+import ReactJson from 'react-json-view'
 
 import './IssueAsset.css'
 
@@ -21,8 +24,20 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
     }).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
-    const signatories = Object.keys(token?.payload.id.signatories.textMap || [])
-    const observers = Object.keys(token?.payload.observers.textMap || [])
+
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+        console.log("Unexpected close from assetDeposit: ", e);
+    }).contracts.map(makeContractInfo)
+    console.log(allDeposits)
+
+    const totalAllocatedQuantity = allDeposits.length > 0 ? 
+        allDeposits.map(deposit => { return Number(deposit.contractData.asset.quantity) })
+                   .reduce(function(a, b) { return a + b })
+        : 0
+    console.log(totalAllocatedQuantity)
+    
+    const tokenDeposits = allDeposits.filter(deposit => deposit.contractData.asset.id.label === token?.payload.id.label
+                                                        && deposit.contractData.asset.id.version === token?.payload.id.version);
 
     return (
         <Page
@@ -32,32 +47,42 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <p>{token?.payload.description}</p>
-
-                <p><b>Public: </b>{(!!token?.payload.isPublic).toString()}</p>
-
-                <p><b>Issuer:</b></p>
-                <List verticalAlign='middle'>
-                    {signatories.map(s =>
-                        <List.Item key={s}>
-                            <List.Content>
-                                <p>{s}</p>
-                            </List.Content>
-                        </List.Item>
-                    )}
-                </List>
-
-                <p><b>Quantity Precision:</b> {token?.payload.quantityPrecision}</p>
-
-                <p><b>Observers:</b></p>
-                <List verticalAlign='middle'>
-                    {observers.map(o =>
-                        <List.Item key={o}>
-                            <List.Content>
-                                <p>{o}</p>
-                            </List.Content>
-                        </List.Item>
-                    )}
-                </List>
+                <Header as='h3'>Token Details</Header>
+                <p>Public: {(!!token?.payload.isPublic).toString()}</p>
+                <ReactJson
+                    src={token}
+                    collapsed={true}
+                    name='contract'
+                    displayDataTypes={false}/>
+                <Header as='h3'>Position Holdings</Header>
+                <Table className='issuer-cap-table' >
+                    <Table.Header>
+                        <Table.Row>
+                            <Table.HeaderCell>Investor</Table.HeaderCell>
+                            <Table.HeaderCell>Broker</Table.HeaderCell>
+                            <Table.HeaderCell textAlign='right' >Amount</Table.HeaderCell>
+                            <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {tokenDeposits.length > 0 ?
+                            tokenDeposits.map(deposit => 
+                                <Table.Row>
+                                    <Table.Cell>{deposit.contractData.account.owner || '-'}</Table.Cell>
+                                    <Table.Cell>{deposit.contractData.account.provider || '-'}</Table.Cell>
+                                    <Table.Cell textAlign='right'>{deposit.contractData.asset.quantity || '-'}</Table.Cell>
+                                    <Table.Cell textAlign='right'>{(Number(deposit.contractData.asset.quantity)/totalAllocatedQuantity)*100}%</Table.Cell>
+                                </Table.Row>
+                            )
+                        :
+                            <Table.Row className='empty-table' >
+                                <Table.Cell textAlign={'center'} colSpan={4}>
+                                    <i>none</i>
+                                </Table.Cell>
+                            </Table.Row>
+                        }
+                    </Table.Body>
+                </Table>
             </PageSection>
         </Page>
     )

@@ -47,8 +47,7 @@ const IssuerSideNav: React.FC<IssuerSideNavProps> = ({ url, name }) => {
                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                     key={token.contractId}
                 >
-                    <CircleIcon/>
-                    <p>{token.payload.id.label}</p>
+                <p>{token.payload.id.label}</p>
                 </Menu.Item>
             ))}
         </Menu.Menu>
