@@ -1,11 +1,11 @@
 import React from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, List, Table } from 'semantic-ui-react'
+import { Header, Table } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { makeContractInfo, ContractInfo } from '../common/damlTypes'
+import { makeContractInfo } from '../common/damlTypes'
 
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
@@ -29,16 +29,11 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo)
 
-    const tokenDeposits = allDeposits.filter(deposit => deposit.contractData.asset.id.label === token?.payload.id.label &&
-                                                        deposit.contractData.asset.id.version === token?.payload.id.version);
+    const tokenDeposits = allDeposits.filter(deposit => 
+        deposit.contractData.asset.id.label === token?.payload.id.label && deposit.contractData.asset.id.version === token?.payload.id.version);
 
-    const totalAllocatedQuantity = tokenDeposits.length > 0 ? tokenDeposits.map(deposit => Number(deposit.contractData.asset.quantity))
-                                                                           .reduce(function(a, b) { return a + b })
-                                                            : 0
-    
-    function calculatePercentage(num: string) {
-        return (Number(num)/totalAllocatedQuantity)*100
-    }
+    const totalAllocatedQuantity = tokenDeposits.length > 0 ? 
+        tokenDeposits.map(deposit => Number(deposit.contractData.asset.quantity)).reduce(function(a, b) { return a + b }): 0
 
     return (
         <Page
@@ -71,7 +66,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                                     <Table.Cell>{deposit.contractData.account.owner || '-'}</Table.Cell>
                                     <Table.Cell>{deposit.contractData.account.provider || '-'}</Table.Cell>
                                     <Table.Cell textAlign='right'>{deposit.contractData.asset.quantity || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{calculatePercentage(deposit.contractData.asset.quantity)}%</Table.Cell>
+                                    <Table.Cell textAlign='right'>{(Number(deposit.contractData.asset.quantity)/totalAllocatedQuantity)*100}%</Table.Cell>
                                 </Table.Row>
                             )
                         :

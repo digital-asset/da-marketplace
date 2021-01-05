@@ -28,7 +28,7 @@
 }
 
 .ui.table.issuer-cap-table tr th {
-    background-color: white;  
+    background-color: var(--white);  
     border-bottom: 0px !important;
 }
 
