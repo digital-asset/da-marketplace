@@ -5,7 +5,7 @@ import { Header, List, Table } from 'semantic-ui-react'
 import { useStreamQueries } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { makeContractInfo } from '../common/damlTypes'
+import { makeContractInfo, ContractInfo } from '../common/damlTypes'
 
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
@@ -28,16 +28,17 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo)
-    console.log(allDeposits)
 
-    const totalAllocatedQuantity = allDeposits.length > 0 ? 
-        allDeposits.map(deposit => { return Number(deposit.contractData.asset.quantity) })
-                   .reduce(function(a, b) { return a + b })
-        : 0
-    console.log(totalAllocatedQuantity)
+    const tokenDeposits = allDeposits.filter(deposit => deposit.contractData.asset.id.label === token?.payload.id.label &&
+                                                        deposit.contractData.asset.id.version === token?.payload.id.version);
+
+    const totalAllocatedQuantity = tokenDeposits.length > 0 ? tokenDeposits.map(deposit => Number(deposit.contractData.asset.quantity))
+                                                                           .reduce(function(a, b) { return a + b })
+                                                            : 0
     
-    const tokenDeposits = allDeposits.filter(deposit => deposit.contractData.asset.id.label === token?.payload.id.label
-                                                        && deposit.contractData.asset.id.version === token?.payload.id.version);
+    function calculatePercentage(num: string) {
+        return (Number(num)/totalAllocatedQuantity)*100
+    }
 
     return (
         <Page
@@ -48,7 +49,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <p>{token?.payload.description}</p>
                 <Header as='h3'>Token Details</Header>
-                <p>Public: {(!!token?.payload.isPublic).toString()}</p>
                 <ReactJson
                     src={token}
                     collapsed={true}
@@ -71,13 +71,13 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                                     <Table.Cell>{deposit.contractData.account.owner || '-'}</Table.Cell>
                                     <Table.Cell>{deposit.contractData.account.provider || '-'}</Table.Cell>
                                     <Table.Cell textAlign='right'>{deposit.contractData.asset.quantity || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{(Number(deposit.contractData.asset.quantity)/totalAllocatedQuantity)*100}%</Table.Cell>
+                                    <Table.Cell textAlign='right'>{calculatePercentage(deposit.contractData.asset.quantity)}%</Table.Cell>
                                 </Table.Row>
                             )
                         :
                             <Table.Row className='empty-table' >
                                 <Table.Cell textAlign={'center'} colSpan={4}>
-                                    <i>none</i>
+                                     <i>There are no position holdings for this token</i>
                                 </Table.Cell>
                             </Table.Row>
                         }
