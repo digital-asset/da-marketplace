@@ -53,7 +53,7 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
 
   -- > alice places a bid for BTC
   (bidOrderRequestCid, debitRequestCid) <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCid = aliceUsdId, pair = (btcTokenId, usdTokenId), price = 10000.00
+      with depositCid = aliceUsdId, amount = 10000.0, pair = (btcTokenId, usdTokenId), price = 10000.00
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
 
   -- > exchange rejects bid
@@ -62,14 +62,14 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
 
   -- > alice places a new bid for BTC
   (bidOrderRequestCid, debitRequestCid) <- alice `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, alice) ExchangeParticipant_PlaceBid
-      with depositCid = aliceUsdId, pair = (btcTokenId, usdTokenId), price = 10000.00
+      with depositCid = aliceUsdId, amount = 10000.0, pair = (btcTokenId, usdTokenId), price = 10000.00
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
   bidOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = bidOrderRequestCid, orderId = 1
 
   -- > bob places a new offer for BTC
   (offerOrderRequestCid, debitRequestCid) <- bob `submit` exerciseByKeyCmd @ExchangeParticipant (exchange, operator, bob) ExchangeParticipant_PlaceOffer
-      with depositCid = bobBtcId, pair = (btcTokenId, usdTokenId), price = 10000.00
+      with depositCid = bobBtcId, amount = 10.0, pair = (btcTokenId, usdTokenId), price = 10000.00
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
   offerOrderCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_ApproveOrderRequest
       with orderRequestCid = offerOrderRequestCid, orderId = 2
