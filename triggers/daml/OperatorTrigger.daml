@@ -13,7 +13,7 @@ import Daml.Trigger
 import Marketplace.Operator hiding (broker, custodian, exchange, investor)
 import Marketplace.Onboarding
 import Marketplace.Registry
-import Marketplace.Token
+import Marketplace.Token hiding (exchange)
 
 import Utils
 
