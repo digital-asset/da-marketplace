@@ -11,7 +11,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { WalletIcon, IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDeposits, countDecimals } from './utils'
+import { groupDeposits, countDecimals, preciseInputSteps } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
@@ -314,6 +314,8 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
         setSplitAssetDecimal(number)
     }
 
+    const { step, placeholder } = preciseInputSteps(tokenQuantityPrecision);
+
     return (
         <>
             <div className='selected-form-heading'>
@@ -328,8 +330,8 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
                 <Form.Group className='inline-form-group'>
                     <Form.Input
                         type='number'
-                        step={`0.${"0".repeat(tokenQuantityPrecision === 0? tokenQuantityPrecision : tokenQuantityPrecision-1)}1`}
-                        placeholder={`0.${"0".repeat(tokenQuantityPrecision)}`}
+                        step={step}
+                        placeholder={placeholder}
                         error={splitNumberError}
                         onChange={validateSplitNumber}/>
                     <Button

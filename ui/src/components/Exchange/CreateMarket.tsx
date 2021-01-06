@@ -12,7 +12,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
 import Page from '../common/Page'
-import { countDecimals } from '../common/utils';
+import { countDecimals, preciseInputSteps } from '../common/utils';
 
 import "./CreateMarket.css"
 
@@ -93,6 +93,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         setMaxQuantity(newMaxQuantity.toString())
     }
 
+    const { step, placeholder } = preciseInputSteps(quantityPrecision);
+
     return (
         <Page
             sideNav={sideNav}
@@ -131,8 +133,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                             <Form.Input
                                 label='Minimum Quantity'
                                 type='number'
-                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
-                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
+                                step={step}
+                                placeholder={placeholder}
                                 error={minQuantityError}
                                 disabled={!quoteToken || !baseToken}
                                 onChange={validateMinQuantity}/>
@@ -140,8 +142,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                             <Form.Input
                                 label='Maximum Quantity'
                                 type='number'
-                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
-                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
+                                step={step}
+                                placeholder={placeholder}
                                 error={maxQuantityError}
                                 disabled={!quoteToken || !baseToken}
                                 onChange={validateMaxQuantity}/>

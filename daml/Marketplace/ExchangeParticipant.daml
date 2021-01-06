@@ -80,31 +80,47 @@ template ExchangeParticipant
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
+          amount : Decimal
           price : Decimal
         do
           deposit <- fetch depositCid
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
+          assertMsg ("amount should be less than or equal to deposit amount") $ amount <= deposit.asset.quantity
+
+          newDepositCid <- if amount < deposit.asset.quantity
+                  then head <$> exercise depositCid AssetDeposit_Split with quantities = [ amount ]
+                  else return depositCid
+
+          newDeposit <- fetch newDepositCid
 
           (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
+          let qty = roundBankers baseToken.quantityPrecision $ newDeposit.asset.quantity / price
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid, pair, price, qty, isBid = True
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True
 
       nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
+          amount : Decimal
           price : Decimal
         do
           deposit <- fetch depositCid
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
+          assertMsg ("amount should be less than or equal to deposit amount") $ amount <= deposit.asset.quantity
+
+          newDepositCid <- if amount < deposit.asset.quantity
+                           then head <$> exercise depositCid AssetDeposit_Split with quantities = [ amount ]
+                           else return depositCid
+
+          newDeposit <- fetch newDepositCid
 
           (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
+          let qty = roundBankers baseToken.quantityPrecision newDeposit.asset.quantity
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid, pair, price, qty, isBid = False
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False
 
       nonconsuming ExchangeParticipant_MakeOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with

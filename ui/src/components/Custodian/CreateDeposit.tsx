@@ -8,10 +8,10 @@ import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/li
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { TokenInfo, wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
+import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
-import { countDecimals } from '../common/utils';
 
 import './CreateDeposit.css'
 
@@ -90,7 +90,7 @@ const CreateDeposit: React.FC = () => {
         const number = Number(result.value)
 
         if (number < 0) {
-            return setDepositQuantityError(`The quantity must a positive number.`)
+            return setDepositQuantityError(`The quantity must be a positive number.`)
         }
 
         if (countDecimals(number) > quantityPrecision) {
@@ -100,6 +100,8 @@ const CreateDeposit: React.FC = () => {
         setDepositQuantityError(undefined)
         setDepositQuantity(number.toString())
     }
+
+    const { step, placeholder } = preciseInputSteps(quantityPrecision);
 
     return (
         <FormErrorHandled onSubmit={handleCreateDeposit}>
@@ -124,8 +126,8 @@ const CreateDeposit: React.FC = () => {
                     className='create-deposit-quantity'
                     label='Quantity'
                     type='number'
-                    step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
-                    placeholder={`0.${"0".repeat(quantityPrecision)}`}
+                    step={step}
+                    placeholder={placeholder}
                     error={depositQuantityError}
                     disabled={!token}
                     onChange={validateTokenQuantity}/>

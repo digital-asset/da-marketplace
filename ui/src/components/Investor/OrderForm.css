@@ -4,7 +4,15 @@
 
 .order-form > .field {
     width: 450px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+}
+
+.order-form > .field > .asset-label {
+    position: relative;
+    right: 0px;
+    top: 5px;
+}
+
+.order-form > .field > input.uncontrolled:disabled {
+    opacity: 1.0;
+    color: grey;
 }
