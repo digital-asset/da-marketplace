@@ -31,6 +31,8 @@ template CustodianRelationshipRequest
     role : MarketRole
   where
     signatory operator, requester
+    key (operator, requester, custodian, role) : (Party, Party, Party, MarketRole)
+    maintainer key._1
 
     controller custodian can
       CustodianRelationshipRequest_Approve : ContractId CustodianRelationship

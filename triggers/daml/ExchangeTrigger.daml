@@ -3,6 +3,7 @@ module ExchangeTrigger where
 import DA.Foldable
 import Daml.Trigger
 
+import Marketplace.Exchange
 import Marketplace.Trading
 import Marketplace.BinaryOption
 
@@ -27,6 +28,12 @@ handleExchangeRule party = do
   tradeSides <- query @TradeSide
   binaryOptions <- query @SettledBinaryOption
   forA_ tradeSides (handleTradeSide party binaryOptions)
+
+  -- Accept all 'ExchangeParticipantInvitationRequest'
+  participantRequests <- query @ExchangeParticipantInvitationRequest
+  forA_ participantRequests
+    $ \(cid,rq) -> emitExerciseCmd cid ExchangeParticipantInvitationRequest_Accept
+               >> debug ("Approving participant request from " <> show rq.participant)
 
 
 handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
