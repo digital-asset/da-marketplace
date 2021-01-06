@@ -4,13 +4,13 @@
 }
 
 .card-table > .ui.table .card-table-cell:first-child {
-    padding-left: 20px;
+    padding-left: var(--spacing-m);;
 }
 
 /* Header Table Styling */
 
 .card-table > .ui.table.card-table-header-table {
-    margin-bottom: -20px;
+    margin-bottom: -(var(--spacing-m));
 }
 
 .card-table > .ui.table.card-table-header-table th {
@@ -21,7 +21,7 @@
 /* Body Table Styling */
 
 .card-table > .ui.table.card-table-body-table {
-    border-spacing: 0px 20px;
+    border-spacing: 0px var(--spacing-m);;
     border-collapse: separate;
     margin-top: 0px;
 }

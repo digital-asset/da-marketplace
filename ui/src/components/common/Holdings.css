@@ -1,6 +1,6 @@
 
 .asset-section {
-  margin-top: 36px;
+  margin-top: var(--spacing-l);;
 }
 
 .deposit-row {
@@ -8,8 +8,8 @@
     flex-direction: column;
     flex-wrap: wrap;
     justify-content: flex-end;
-    padding: 12px;
-    margin: 12px 0px;
+    padding: var(--spacing-s);
+    margin: var(--spacing-s) 0px;
     background: var(--grey1);
     border: 2px solid var(--grey2);
     box-sizing: border-box;
@@ -33,7 +33,7 @@
 
 .deposit-row .deposit-info h3 {
     margin: 0;
-    margin-right: 12px;
+    margin-right: var(--spacing-s);
 }
 
 .deposit-row .deposit-info h3:nth-of-type(2) {
@@ -48,7 +48,7 @@
 }
 
 .deposit-row .form-selector .button {
-    margin-right: 12px;
+    margin-right: var(--spacing-s);
 }
 
 .deposit-row .selected-form {
@@ -62,8 +62,8 @@
     align-items: center;
     justify-content: space-between;
     border-top: 1px solid var(--grey2);
-    padding-top: 12px;
-    margin-top: 12px;
+    padding-top: var(--spacing-s);
+    margin-top: var(--spacing-s);
 }
 
 .ui.form > .fields.inline-form-group .field {
@@ -80,6 +80,6 @@
     }
 
     .deposit-row .form-selector .button  {
-        margin-top: 12px;
+        margin-top: var(--spacing-s);
     }
 }

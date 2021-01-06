@@ -5,15 +5,17 @@
 }
 
 .icon {
-    width: 12px;
-    height: 12px;
+    height: var(--spacing-s);
 }
-
 
 .icon.circle {
     border-radius: 50px/50px;
     border: solid 1px var(--textcolor);
     width: 16px;
     height: 16px;
-    margin-right: 8px;
+    margin-right: var(--spacing-xs);
+}
+
+.icon.chevron-up {
+    transform: scaleY(-1);
 }

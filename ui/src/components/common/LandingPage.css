@@ -11,7 +11,7 @@
 }
 
 .landing-page .ui.header {
-    padding-bottom: 12px;
+    padding-bottom: var(--spacing-s);
 }
 
 .landing-page-column  .ui.form > .fields.inline-form-group > .field {
@@ -19,12 +19,12 @@
 }
 
 .landing-page .landing-page-column .custodian-select-container {
-    padding-right: 6px;
+    padding-right: var(--spacing-xs);
 }
 
 @media screen and (max-width: 1000px) {
     .landing-page-column {
         width: 100% !important;
-        padding-bottom: 32px;
+        padding-bottom: var(--spacing-l);
     }
 }

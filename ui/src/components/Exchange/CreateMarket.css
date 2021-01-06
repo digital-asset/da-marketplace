@@ -1,5 +1,5 @@
 .create-market .create-market-save {
-    margin-top: 12px;
+    margin-top: var(--spacing-s);
 }
 
 .create-market-options {
@@ -11,21 +11,19 @@
 }
 
 .create-market-quantities {
-    margin-top: 10px;
+    margin-top: var(--spacing-s);
     width: 250px;
 }
 
 .create-market-options .exchange-icon {
     height: 16px;
     width: 16px;
-    margin: 8px 12px;
+    margin: var(--spacing-s);
 }
 
 .token-select-container {
     width: 200px;
 }
-
-
 
 @media screen and (max-width: 1000px) {
     .create-market-options  {
@@ -34,6 +32,6 @@
     }
 
     .create-market-options .exchange-icon {
-        margin: 16px 12px 12px 12px;
+        margin: var(--spacing-s);
     }
 }

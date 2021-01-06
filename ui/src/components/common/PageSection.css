@@ -1,9 +1,9 @@
 .ui.grid .page-section {
     flex: 1;
     width: 100%;
-    padding-left: 32px;
-    padding-right: 32px;
-    padding-top: 32px;
+    padding-left: var(--spacing-l);
+    padding-right: var(--spacing-l);
+    padding-top: var(--spacing-l);
 }
 
 .ui.grid .page-section.white {
@@ -25,5 +25,5 @@
 }
 
 .ui.grid .page-section .order-forms > .ui.form {
-    padding-bottom: 32px;
+    padding-bottom: var(--spacing-l);
 }

@@ -1,6 +1,6 @@
 .profile-form-field {
-    margin-top: 15px;
-    margin-right: 15px;
+    margin-top: var(--spacing-s);
+    margin-right: var(--spacing-s);
     max-width: 260px;
 }
 

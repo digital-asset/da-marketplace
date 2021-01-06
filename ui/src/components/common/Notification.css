@@ -1,5 +1,5 @@
 .notification {
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-s);
 }
 
 .notification > .message {

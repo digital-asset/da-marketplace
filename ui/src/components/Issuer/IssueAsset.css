@@ -1,5 +1,5 @@
 .ui.form .field.issue-asset-form-field {
-    padding-bottom: 12px;
+    padding-bottom: var(--spacing-s);
 }
 
 .ui.form .field.issue-asset-form-field  > .ui.input {
@@ -13,45 +13,9 @@
 .ui.form .observer-select {
     display: flex;
     flex-direction: column;
-    padding-bottom: 12px;
+    padding-bottom: var(--spacing-s);
 }
 
 .ui.form .observer-select > .issue-asset-form-field.select-observer {
-    padding-top: 12px;
-}
-.ui.table.issuer-cap-table tr td {
-    border-top: 0px !important;
-}
-
-.ui.table.issuer-cap-table tr:nth-child(odd) {
-    background-color: var(--grey3);
-}
-
-.ui.table.issuer-cap-table tr th {
-    background-color: var(--white);  
-    border-bottom: 0px !important;
-}
-
-.ui.table.issuer-cap-table tr th:nth-of-type(1){
-    padding-left: 0px;
-}
-
-.ui.table.issuer-cap-table {
-    border: 0px !important;
-}
-
-.react-json-view {
-    background-color: var(--grey3) !important;
-    padding: 12px;
-    border-radius: 2px;
-}
-
-@media screen and (max-width: 1000px) {
-    .ui.table.issuer-cap-table tr th, .ui.table.issuer-cap-table tr td {
-        text-align: left;
-    }
-
-    .ui.table.issuer-cap-table tr:nth-child(odd) {
-        background-color: unset;
-    }
+    padding-top: var(--spacing-s);
 }

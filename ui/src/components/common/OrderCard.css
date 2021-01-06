@@ -12,8 +12,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center; 
-    padding: 12px;
-    margin: 12px 0px;
+    padding: var(--spacing-s);
+    margin: var(--spacing-s) 0px;
     background: var(--grey1);
     border: 2px solid var(--grey2);
     box-sizing: border-box;
@@ -23,8 +23,8 @@
 .order-info .exchange-icon {
     width: 16px;
     height: 16px;
-    margin-right: 12px;
-    margin-left: 8px;
+    margin-right: var(--spacing-s);
+    margin-left: var(--spacing-s);
 }
 
 .order-info div:first-child {
@@ -40,6 +40,6 @@
     }
 
     .order-card > .ui.card.order-info > div:not(:last-child){
-        padding-bottom: 12px;
+        padding-bottom: var(--spacing-s);
     }
 }

@@ -1,17 +1,27 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, Table } from 'semantic-ui-react'
+import { Header, Table, List, Button } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
+
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { makeContractInfo } from '../common/damlTypes'
 
+import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
+
+import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import ReactJson from 'react-json-view'
 
-import './IssueAsset.css'
+import AddParticipantModal from './AddParticipantModal'
+
+import './IssuedToken.css'
+
+type DepositInfo = {
+    investor: string,
+    provider: string,
+    quantity: number
+}
 
 type Props = {
     sideNav: React.ReactElement;
@@ -19,54 +29,90 @@ type Props = {
 }
 
 const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
+    const [ showParticipants, setShowParticipants ] = useState(false)
+    const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
+
     const { tokenId } = useParams<{tokenId: string}>()
 
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
     }).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
+    
+    const isPublic = !!token?.payload.isPublic
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+    const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo)
+    }).contracts.map(makeContractInfo).filter(deposit =>
+        deposit.contractData.asset.id.label === token?.payload.id.label &&
+        deposit.contractData.asset.id.version === token?.payload.id.version
+    );
 
-    const tokenDeposits = allDeposits.filter(deposit => 
-        deposit.contractData.asset.id.label === token?.payload.id.label && deposit.contractData.asset.id.version === token?.payload.id.version);
+    const participants = new Set<string>(Object.keys(token?.payload.observers.textMap || []))
 
-    const totalAllocatedQuantity = tokenDeposits.length > 0 ? 
-        tokenDeposits.map(deposit => Number(deposit.contractData.asset.quantity)).reduce(function(a, b) { return a + b }): 0
+    const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
+
+    const totalAllocatedQuantity = nettedTokenDeposits.length > 0 ? nettedTokenDeposits.reduce((a, b) => +a + +b.quantity, 0) : 0
 
     return (
         <Page
             sideNav={sideNav}
             menuTitle={<Header as='h3'>{token?.payload.id.label}</Header>}
-            onLogout={onLogout}
-        >
+            onLogout={onLogout}>
             <PageSection border='blue' background='white'>
-                <p>{token?.payload.description}</p>
-                <Header as='h3'>Token Details</Header>
-                <ReactJson
-                    src={token}
-                    collapsed={true}
-                    name='contract'
-                    displayDataTypes={false}/>
+                <div className='token-subheading'>
+                    <p>{token?.payload.description}</p>
+                    <div className='token-details'>
+                        <p> {isPublic ? <> <GlobeIcon/> Public </> : <> <LockIcon/> Private </>} </p>
+                        <p> Quantity Precision: {token?.payload.quantityPrecision} </p>
+                    </div>
+                </div>
+                {!isPublic && 
+                    <div className='participants-viewer'>
+                        <Button className='ghost' onClick={() => setShowParticipants(!showParticipants)}>
+                            {showParticipants? 
+                                <> Hide Participants <IconChevronUp/></>
+                                :
+                                <> View/Add Participants <IconChevronDown/></>
+                            }
+                        </Button>
+                        {showParticipants &&
+                            <>
+                            <div className='list-heading'>
+                                <b>Participants</b>
+                                <Button className='ghost' onClick={() => setShowAddParticipantModal(true)}>
+                                    <AddPlusIcon/> Add Participant
+                                </Button>
+                            </div>
+                                <ul className='participants-list'>
+                                    {Array.from(participants).map(o =>
+                                        <li key={o}>
+                                            <List.Content>
+                                                <p>{o}</p>
+                                            </List.Content>
+                                        </li>
+                                    )}
+                                </ul>
+                            </>}
+                    </div>
+                }
                 <Header as='h3'>Position Holdings</Header>
-                <Table className='issuer-cap-table' >
+                <Table className='issuer-cap-table'>
                     <Table.Header>
                         <Table.Row>
                             <Table.HeaderCell>Investor</Table.HeaderCell>
-                            <Table.HeaderCell>Broker</Table.HeaderCell>
-                            <Table.HeaderCell textAlign='right' >Amount</Table.HeaderCell>
+                            <Table.HeaderCell>Provider</Table.HeaderCell>
+                            <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
                             <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {tokenDeposits.length > 0 ?
-                            tokenDeposits.map(deposit => 
+                        {nettedTokenDeposits.length > 0 ?
+                            nettedTokenDeposits.map(deposit => 
                                 <Table.Row>
-                                    <Table.Cell>{deposit.contractData.account.owner || '-'}</Table.Cell>
-                                    <Table.Cell>{deposit.contractData.account.provider || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{deposit.contractData.asset.quantity || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{(Number(deposit.contractData.asset.quantity)/totalAllocatedQuantity)*100}%</Table.Cell>
+                                    <Table.Cell>{deposit.investor || '-'}</Table.Cell>
+                                    <Table.Cell>{deposit.provider || '-'}</Table.Cell>
+                                    <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
+                                    <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
                                 </Table.Row>
                             )
                         :
@@ -79,8 +125,30 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                     </Table.Body>
                 </Table>
             </PageSection>
+            <AddParticipantModal
+                tokenId={token?.payload.id}
+                onRequestClose={() => setShowAddParticipantModal(false)}
+                show={showAddParticipantModal}
+                currentParticipants={participants}/>
         </Page>
     )
+
+    function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
+        let netTokenDeposits: DepositInfo[] = []
+    
+        tokenDeposits.forEach(deposit => {
+            const { account, asset } = deposit.contractData
+            const token = netTokenDeposits.find(d => d.provider === account.provider && d.investor === account.owner)
+
+            if (token) {
+                return token.quantity += Number(asset.quantity)
+            }
+
+            return netTokenDeposits = [...netTokenDeposits, {investor: account.owner, provider: account.provider, quantity: Number(asset.quantity) }]
+        })
+
+        return netTokenDeposits
+    }
 }
 
 export default IssuedToken;

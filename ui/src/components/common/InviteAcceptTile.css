@@ -5,12 +5,12 @@
 }
 
 .invite-accept-is-public p {
-    margin-bottom: 5px;
+    margin-bottom: var(--spacing-xs);
 }
 
 .invite-accept-form {
-    margin-top: 10px;
-    padding-left: 50px;
+    margin-top: var(--spacing-s);
+    padding-left: var(--spacing-l);
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -18,7 +18,7 @@
 }
 
 .invite-accept-form .invite-accept-form-item {
-    padding-top: 10px;
-    padding-right: 24px;
+    padding-top: var(--spacing-s);
+    padding-right: var(--spacing-m);
     width: 100%;
 }
