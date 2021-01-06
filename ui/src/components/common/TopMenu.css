@@ -46,7 +46,7 @@
 }
 
 .top-menu.menu > .top-right-menu > .item:first-child {
-    padding-left: var(--spacing-l);
+    padding-left: var(--spacing-m);
 }
 
 .top-menu.menu > .top-left-menu {

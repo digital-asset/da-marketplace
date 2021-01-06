@@ -37,7 +37,7 @@
 }
 
 .participants-viewer {
-    padding-bottom: var(--spacing-m);
+    padding: var(--spacing-m) 0 var(--spacing-m) 0;
     border-bottom: 2px solid var(--grey3)
 }
 
@@ -68,7 +68,7 @@ ul.participants-list  {
 }
 
 ul.participants-list li {
-    padding: 0px var(--spacing-l) var(--spacing-s) 0;
+    padding: var(--spacing-s) var(--spacing-l) 0 0;
     width: fit-content;
 }
 

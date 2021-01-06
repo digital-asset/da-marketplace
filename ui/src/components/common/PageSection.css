@@ -1,9 +1,9 @@
 .ui.grid .page-section {
     flex: 1;
     width: 100%;
-    padding-left: var(--spacing-l);
-    padding-right: var(--spacing-l);
-    padding-top: var(--spacing-l);
+    padding-left: var(--spacing-m);
+    padding-right: var(--spacing-m);
+    padding-top: var(--spacing-m);
 }
 
 .ui.grid .page-section.white {

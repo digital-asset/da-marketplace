@@ -68,7 +68,6 @@ code {
   padding-bottom: 8px;
 }
 
-
 /* Font Styling*/
 
 h3.ui.header {
@@ -165,6 +164,11 @@ p.p2 {
   background: none;
   align-items: center;
   border: none;
+  font-weight: 400;
+}
+
+.ui.button.ghost.smaller {
+  padding: 6px 3px;
 }
 
 .ui.button.ghost:hover {

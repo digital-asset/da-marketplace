@@ -16,8 +16,6 @@ type DamlTuple<T> = {
     [key: string]: T;
 }
 
-export type ITextMap<T> = { [key: string]: T };
-
 function cmpUnderscoredKeys(keyA: string, keyB: string): number {
     const numA = Number(keyA.slice(1));
     const numB = Number(keyB.slice(1));

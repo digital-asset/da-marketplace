@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useHistory } from 'react-router-dom';
+
 import { Button, Modal, Form } from 'semantic-ui-react'
 
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
@@ -18,8 +20,6 @@ import {
 import FormErrorHandled from '../common/FormErrorHandled'
 import { wrapTextMap } from '../common/damlTypes';
 
-export type ITextMap<T> = { [key: string]: T };
-
 interface IProps {
     onRequestClose: () => void;
     show: boolean;
@@ -30,8 +30,10 @@ interface IProps {
 const ValueEntryModal = (props: IProps) => {
     const ledger = useLedger();
     const party = useParty();
+    const history = useHistory()
 
     const [ selectedObservers, setSelectedObservers ] = useState<string[]>([]);
+    const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
     const allRegisteredParties = [
         useStreamQueryAsPublic(RegisteredCustodian).contracts
@@ -67,8 +69,9 @@ const ValueEntryModal = (props: IProps) => {
         const newObservers = wrapTextMap([...props.currentParticipants, ...selectedObservers])
 
         await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, { party, newObservers })
-
-        props.onRequestClose()
+            .then(resp => history.push(`${baseUrl}/${resp[0]}`))
+        
+        props.onRequestClose()   
     }   
 
     return (

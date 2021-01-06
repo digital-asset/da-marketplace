@@ -130,14 +130,14 @@ export const IconClose = () => (
   );
 
 export const IconChevronDown = () => (
-<svg className='icon chevron-down' viewBox="0 -6 16 16" width={'25px'}>
+<svg className='icon chevron-down' viewBox="0 -6 16 16">
     <path className="fill-primary"
         d="M7,7L1,1h2l4.5,4.4L12,1h2.1l-6,6C7.9,7.1,7.7,7.2,7.5,7.2C7.3,7.2,7.1,7.1,7,7z"/>
 </svg>
 );
 
 export const IconChevronUp = () => (
-    <svg className='icon chevron-up' viewBox="0 3 16 16" width={'25px'}>
+    <svg className='icon chevron-up' viewBox="0 3 16 16">
         <IconChevronDown/>
     </svg>
 );

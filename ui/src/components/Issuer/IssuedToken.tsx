@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Header, Table, List, Button } from 'semantic-ui-react'
 
@@ -31,23 +31,22 @@ type Props = {
 const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
     const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
-
     const { tokenId } = useParams<{tokenId: string}>()
-
+    
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
-    }).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
-    const observers = token?.payload.observers
-    const isPublic = !!token?.payload.isPublic
+    }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
+
+    const isPublic = !!token?.contractData.isPublic
 
     const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo).filter(deposit =>
-        deposit.contractData.asset.id.label === token?.payload.id.label &&
-        deposit.contractData.asset.id.version === token?.payload.id.version
+        deposit.contractData.asset.id.label === token?.contractData.id.label &&
+        deposit.contractData.asset.id.version === token?.contractData.id.version
     );
 
-    const participants = Object.keys(token?.payload.observers.textMap || [])
+    const participants = Object.keys(token?.contractData.observers.textMap || [])
 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
 
@@ -56,31 +55,31 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h3'>{token?.payload.id.label}</Header>}
+            menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
             <PageSection border='blue' background='white'>
                 <div className='token-subheading'>
-                    <p>{token?.payload.description}</p>
+                    <p>{token?.contractData.description}</p>
                     <div className='token-details'>
-                        <p> {isPublic ? <> <GlobeIcon/> Public </> : <> <LockIcon/> Private </>} </p>
-                        <p> Quantity Precision: {token?.payload.quantityPrecision} </p>
+                        {isPublic ? <p> <GlobeIcon/> Public </p> : <p> <LockIcon/> Private </p>}
+                        <p> Quantity Precision: {token?.contractData.quantityPrecision} </p>
                     </div>
                 </div>
                 {!isPublic && 
                     <div className='participants-viewer'>
-                        <Button className='ghost' onClick={() => setShowParticipants(!showParticipants)}>
+                        <Button className='ghost smaller' onClick={() => setShowParticipants(!showParticipants)}>
                             {showParticipants? 
-                                <> Hide Participants <IconChevronUp/></>
+                                <p> Hide Participants <IconChevronUp/></p>
                                 :
-                                <> View/Add Participants <IconChevronDown/></>
+                                <p> View/Add Participants <IconChevronDown/></p>
                             }
                         </Button>
                         {showParticipants &&
                             <>
                             <div className='list-heading'>
-                                <b>Participants</b>
-                                <Button className='ghost' onClick={() => setShowAddParticipantModal(true)}>
-                                    <AddPlusIcon/> Add Participant
+                                <p><b>Participants</b></p>
+                                <Button className='ghost smaller' onClick={() => setShowAddParticipantModal(true)}>
+                                    <AddPlusIcon/> <p>Add Participant</p>
                                 </Button>
                             </div>
                                 <ul className='participants-list'>
@@ -126,7 +125,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                 </Table>
             </PageSection>
             <AddParticipantModal
-                tokenId={token?.payload.id}
+                tokenId={token?.contractData.id}
                 onRequestClose={() => setShowAddParticipantModal(false)}
                 show={showAddParticipantModal}
                 currentParticipants={participants}/>

@@ -18,4 +18,11 @@
 
 .icon.chevron-up {
     transform: scaleY(-1);
+    padding-left: var(--spacing-xs);
+    margin-right: var(--spacing-xs) !important;
+}
+
+.icon.chevron-down {
+    padding-left: var(--spacing-xs);
+    margin-right: var(--spacing-xs) !important;
 }
