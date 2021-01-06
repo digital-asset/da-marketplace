@@ -16,12 +16,14 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import FormErrorHandled from '../common/FormErrorHandled'
+import { wrapTextMap } from '../common/damlTypes';
+
 export type ITextMap<T> = { [key: string]: T };
 
 interface IProps {
     onRequestClose: () => void;
     show: boolean;
-    currentParticipants: Set<string>;
+    currentParticipants: string[];
     tokenId?: Id;
 }
 
@@ -29,7 +31,7 @@ const ValueEntryModal = (props: IProps) => {
     const ledger = useLedger();
     const party = useParty();
 
-    const [ newParticipants, setNewParticipants ] = useState<Set<string>>();
+    const [ selectedObservers, setSelectedObservers ] = useState<string[]>([]);
 
     const allRegisteredParties = [
         useStreamQueryAsPublic(RegisteredCustodian).contracts
@@ -53,22 +55,19 @@ const ValueEntryModal = (props: IProps) => {
             }
         })
 
-    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {
-        setNewParticipants(result.value)
+    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {  
+        setSelectedObservers(result.value)
     }
 
     async function submit() {
-        if (!newParticipants || !props.tokenId) {
+        if (!props.tokenId) {
             return
         }
-    
-        const newObservers: ITextMap<string> = {};
 
-        // [...Array.from(props.currentParticipants), ...Array.from(newParticipants)].forEach(f => newObservers[f] = '');
-    
-        const args = { party, };
+        const newObservers = wrapTextMap([...props.currentParticipants, ...selectedObservers])
 
-        await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, args);
+        await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, { party, newObservers })
+
         props.onRequestClose()
     }   
 
@@ -81,22 +80,24 @@ const ValueEntryModal = (props: IProps) => {
             onClose={() => props.onRequestClose()}>
             <Modal.Header>Add participants</Modal.Header>
             <Modal.Content>
-                {partyOptions.length == 0 && <i>All registered parties have been added</i>}
-                <FormErrorHandled onSubmit={submit}>
-                    <Form.Select
-                        multiple
-                        className='issue-asset-form-field select-observer'
-                        disabled={partyOptions.length == 0}
-                        placeholder='Select...'
-                        options={partyOptions}
-                        onChange={handleSelectNewParticipants}/>
-                    <Button
-                        secondary
-                        content='Add'
-                        disabled={!newParticipants}/>
-                </FormErrorHandled>
+                {partyOptions.length == 0 ?
+                    <i>All registered parties have been added</i>
+                    :
+                    <FormErrorHandled onSubmit={submit}>
+                        <Form.Select
+                            multiple
+                            className='issue-asset-form-field select-observer'
+                            disabled={partyOptions.length == 0}
+                            placeholder='Select...'
+                            options={partyOptions}
+                            onChange={handleSelectNewParticipants}/>
+                        <Button
+                            secondary
+                            content='Add'/>
+                    </FormErrorHandled>
+                }
             </Modal.Content>
-            </Modal>
+        </Modal>
     );
 }
 

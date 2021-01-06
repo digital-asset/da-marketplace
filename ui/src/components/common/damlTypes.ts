@@ -57,6 +57,16 @@ export function makeContractInfo<T extends object, K = unknown, I extends string
     return ({contractId: event.contractId, contractData: event.payload});
 }
 
+export function wrapTextMap(items: string[]) {
+    let textMapValue = Object.create(null);
+
+    items.forEach((key: string) => {
+        textMapValue[key] = {}
+    });
+
+    return { textMap: textMapValue }
+}
+
 export type ContractInfo<T> = {
     contractId: string;
     contractData: T;

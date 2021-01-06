@@ -37,7 +37,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
     }).contracts.find(c => c.contractId === decodeURIComponent(tokenId))
-    
+    const observers = token?.payload.observers
     const isPublic = !!token?.payload.isPublic
 
     const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
@@ -47,7 +47,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
         deposit.contractData.asset.id.version === token?.payload.id.version
     );
 
-    const participants = new Set<string>(Object.keys(token?.payload.observers.textMap || []))
+    const participants = Object.keys(token?.payload.observers.textMap || [])
 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
 
