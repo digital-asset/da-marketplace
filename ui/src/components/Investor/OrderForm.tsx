@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
 import { DepositInfo } from '../common/damlTypes'
+import { AppError } from '../common/errorTypes'
+import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
@@ -10,55 +12,95 @@ import './OrderForm.css'
 
 type Props = {
     kind: OrderKind;
+    assetPrecisions: [number, number];
     deposits: DepositInfo[];
-    placeOrder: (depositCid: string, price: string) => Promise<void>;
+    quotePrecision: number;
+    labels: [string, string];
+    placeOrder: (depositCid: string, price: string, amount: string) => Promise<void>;
 }
 
-const OrderForm: React.FC<Props> = ({ kind, deposits, placeOrder }) => {
+const OrderForm: React.FC<Props> = ({
+    kind,
+    assetPrecisions,
+    quotePrecision,
+    deposits,
+    labels,
+    placeOrder
+}) => {
     const title = kind[0].toUpperCase() + kind.slice(1);
 
-    const options = deposits
-        .map(deposit => ({
-            key: deposit.contractId,
-            value: deposit.contractId,
-            text: `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label}`
-        }))
-
     const [ price, setPrice ] = useState('');
-    const [ depositCid, setDepositCid ] = useState('');
+    const [ amount, setAmount ] = useState('');
 
-    const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
-        if (typeof result.value === 'string') {
-            setDepositCid(result.value);
-        }
-    }
+    const total = kind === OrderKind.OFFER
+        ? Number(amount) * Number(price)
+        : Number(price) !== 0 ? Number(amount) / Number(price) : 0;
 
     const submit = async () => {
-        await placeOrder(depositCid, price);
+        const depositCid = deposits.find(deposit => Number(amount) <= Number(deposit.contractData.asset.quantity))?.contractId;
+
+        if (!depositCid) {
+            throw new AppError(`Insufficient ${labels[0]} amount`, [
+                `Add a new deposit,`,
+                `Allocate a deposit to the exchange,`,
+                `or merge existing ${labels[0]} deposits in your wallet.`
+            ]);
+        }
+
+        await placeOrder(depositCid, price, amount);
         setPrice('');
-        setDepositCid('');
+        setAmount('');
     };
 
+    const validateInput = (
+        value: string,
+        precision: number,
+        callback: (value: React.SetStateAction<string>) => void
+    ) => {
+        const fractional = value.split(".")[1];
+        if (fractional && fractional.length > precision) {
+            return;
+        }
+
+        callback(value);
+    }
+
+    const amountInput = preciseInputSteps(assetPrecisions[0]);
+    const priceInput = preciseInputSteps(quotePrecision);
+
     return (
-        <FormErrorHandled onSubmit={submit}>
+        <FormErrorHandled onSubmit={submit} className='order-form'>
             <Header>{title}</Header>
-            <Form.Select
-                required
-                label='Deposit'
-                options={options}
-                onChange={handleDepositChange}
-                value={depositCid}
-            />
+            <Form.Field required>
+                <label>Amount {labels[0]}</label>
+                <input
+                    className='order-input'
+                    type='number'
+                    step={amountInput.step}
+                    placeholder={amountInput.placeholder}
+                    value={amount}
+                    onChange={e => validateInput(e.target.value, assetPrecisions[0], setAmount)}/>
+            </Form.Field>
 
             <Form.Field required>
                 <label>Price</label>
                 <input
                     className='order-input'
                     value={price}
-                    onChange={e => setPrice(e.target.value)}/>
+                    step={priceInput.step}
+                    placeholder={priceInput.placeholder}
+                    onChange={e => validateInput(e.target.value, quotePrecision, setPrice)}/>
             </Form.Field>
 
-            <Button secondary disabled={!price || !depositCid}>{title}</Button>
+            <Form.Field>
+                <label>Total {labels[1]}</label>
+                <input
+                    disabled
+                    className='order-input uncontrolled'
+                    value={total.toFixed(assetPrecisions[1])}/>
+            </Form.Field>
+
+            <Button secondary disabled={!price || !amount}>{title}</Button>
         </FormErrorHandled>
     )
 }

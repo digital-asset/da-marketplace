@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { useParty, useLedger } from '@daml/react'
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -45,8 +46,8 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const investor = useParty();
     const ledger = useLedger();
 
-    const exchangeData = location.state.exchange;
-    const tokenPair = location.state.tokenPair;
+    const exchangeData = location.state && location.state.exchange;
+    const tokenPair = location.state && location.state.tokenPair;
 
     if (!exchangeData || !tokenPair) {
         throw new Error('No exchange found.');
@@ -55,16 +56,22 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const { exchange } = exchangeData;
     const [ base, quote ] = tokenPair.map(t => t.label);
 
+    const tokens = useStreamQueries(Token).contracts.map(makeContractInfo);
+
+    const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
+    const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;
+
     useEffect(() => {
         const label = `'${investor}'@'${exchange}'`;
         setBidDeposits(filterDepositsForOrder(deposits, label, quote));
         setOfferDeposits(filterDepositsForOrder(deposits, label, base));
     }, [ deposits, base, quote, investor, exchange ]);
 
-    const placeBid = async (depositCid: string, price: string) => {
+    const placeBid = async (depositCid: string, price: string, amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
+            amount,
             depositCid,
             pair: wrapDamlTuple(tokenPair)
         };
@@ -72,10 +79,11 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
     }
 
-    const placeOffer = async (depositCid: string, price: string) => {
+    const placeOffer = async (depositCid: string, price: string, amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
+            amount,
             depositCid,
             pair: wrapDamlTuple(tokenPair)
         };
@@ -92,13 +100,19 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             <PageSection border='blue' background='white'>
                 <div className='order-forms'>
                     <OrderForm
+                        quotePrecision={quotePrecision}
                         kind={OrderKind.BID}
                         placeOrder={placeBid}
+                        assetPrecisions={[quotePrecision, basePrecision]}
+                        labels={[quote, base]}
                         deposits={bidDeposits}/>
 
                     <OrderForm
+                        quotePrecision={quotePrecision}
                         kind={OrderKind.OFFER}
                         placeOrder={placeOffer}
+                        assetPrecisions={[basePrecision, quotePrecision]}
+                        labels={[base, quote]}
                         deposits={offerDeposits}/>
                 </div>
             </PageSection>
