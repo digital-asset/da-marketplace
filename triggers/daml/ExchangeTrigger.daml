@@ -21,6 +21,7 @@ handleExchange = Trigger
 
 handleExchangeRule : Party -> TriggerA () ()
 handleExchangeRule party = do
+  debug "Running exchange rule..."
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
@@ -37,10 +38,3 @@ handleTradeSide party  options (cid,tradeSide) = do
     let settledOptions = filter (\(_,opt) -> opt.id == tradeSide.pair._1) options
     forA_ settledOptions
       $ \(soCid,_) -> emitExerciseCmd cid TradeSide_SettleBinaryOption with settledBinOptionCid = soCid
-
--- handleBinaryOption : Party ->  [ContractPair TradeSide] -> ContractPair SettledBinaryOption -> TriggerA () ()
--- handleBinaryOption party sides (cid,option) = do
---   let tradesToSettle = filter (\(tCid,t) -> t.pair._1 == option.id) sides
---   forA_ tradesToSettle
---     $ \(tCid,_) -> emitCommands [exerciseCmd tCid TradeSide_SettleBinaryOption with settledBinOptionCid = cid]
---                                 [toAnyContractId tCid]

@@ -57,6 +57,7 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
                     setAddition={privateInvestorId => setBrokerCustomer(privateInvestorId)}/>
 
                 <Button
+                    secondary
                     content='Invite'
                     className='invite-investor'
                     disabled={!brokerCustomer}/>

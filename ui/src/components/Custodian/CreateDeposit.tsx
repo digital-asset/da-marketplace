@@ -103,7 +103,7 @@ const CreateDeposit: React.FC = () => {
 
     return (
         <FormErrorHandled onSubmit={handleCreateDeposit}>
-            <Form.Group className='inline-form-group with-error'>
+            <Form.Group className='inline-form-group create-deposit'>
                 <Form.Select
                     clearable
                     label='Select Provider'
@@ -116,6 +116,7 @@ const CreateDeposit: React.FC = () => {
                     className='asset-select'
                     contracts={allTokens}
                     label='Asset'
+                    placeholder='Select...'
                     value={token?.contractId || ""}
                     getOptionText={token => token.contractData.id.label}
                     setContract={token => setToken(token)}/>
@@ -129,6 +130,7 @@ const CreateDeposit: React.FC = () => {
                     disabled={!token}
                     onChange={validateTokenQuantity}/>
                 <Button
+                    secondary
                     disabled={!beneficiary || !token || !depositQuantity}
                     content='Create Deposit'
                     className='create-deposit-btn'/>

@@ -5,7 +5,6 @@ module OperatorTrigger where
 
 import DA.Action
 import DA.Foldable hiding (elem, null)
-import DA.Optional
 import qualified DA.Next.Set as Set
 
 import Daml.Trigger
@@ -13,7 +12,7 @@ import Daml.Trigger
 import Marketplace.Operator hiding (broker, custodian, exchange, investor)
 import Marketplace.Onboarding
 import Marketplace.Registry
-import Marketplace.Token
+import Marketplace.Token hiding (exchange)
 
 import Utils
 
@@ -37,14 +36,6 @@ handleOperatorRule : Party -> TriggerA () ()
 handleOperatorRule party = do
   debug "Running operator rule..."
 
-  -- Create 'Operator' contract for self if it does not exist
-  ops <- query @Operator
-  let public = fromSome $ partyFromText "Public"
-  let createOperators = if null ops
-                        then [Operator party public]
-                        else []
-  mapA_ dedupCreate $ filter (`notElem` (map snd ops)) createOperators
-
   -- Acknowledge all active 'UserSession's
   userSessions <- query @UserSession
   forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
@@ -64,5 +55,6 @@ handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
 handleToken party parties (cid,token) = do
   let partiesToAdd = Set.difference (Set.fromList parties) token.observers
   unless (Set.null partiesToAdd || not token.isPublic )
-    $ void $ emitExerciseCmd cid Token_AddObservers with party = party, newObservers = (Set.insert party partiesToAdd)
-    >> debug "adding parties to token..."
+    $ void $ emitExerciseCmd cid Token_AddObservers with
+        party = party, newObservers = (Set.insert party partiesToAdd)
+   >> debug "adding parties to token..."
