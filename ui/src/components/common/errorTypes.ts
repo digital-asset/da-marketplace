@@ -15,14 +15,29 @@ function isRuntimeError(err: any): err is RuntimeError {
     return err.stack !== undefined && err.message !== undefined;
 }
 
+export class AppError extends Error {
+    header: string;
+    messages: string | string[];
+
+    constructor(header: string, messages: string | string[]) {
+        super(header);
+        this.header = header;
+        this.messages = messages;
+    }
+}
+
 export type ErrorMessage = {
     header: string;
-    message: string;
+    message: string | string[];
 }
 
 export function parseError(err: any): ErrorMessage | undefined {
+    if (err instanceof AppError) {
+        return { ...err, message: err.messages };
+    }
+
     if (isDamlError(err)) {
-        return { header: "DAML API Error", message: err.errors.join('\n') };
+        return { header: "DAML API Error", message: err.errors };
     }
 
     if (isRuntimeError(err)) {

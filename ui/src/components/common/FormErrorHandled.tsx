@@ -46,6 +46,9 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
         setLoading(false);
     }
 
+    const errorMsgList = error?.message instanceof Array ? error.message : undefined;
+    const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
+
     return (
         <Form
             className={className}
@@ -55,7 +58,7 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
             onSubmit={() => loadAndCatch(onSubmit)}
         >
             { isCallable(children) ? children(callback => loadAndCatch(callback)) : children }
-            <Message error header={error?.header} content={error?.message}/>
+            <Message error header={error?.header} content={errorMsgContent} list={errorMsgList}/>
         </Form>
     )
 }
