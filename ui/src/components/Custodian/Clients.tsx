@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table } from 'semantic-ui-react'
+import { Table, Header } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -39,10 +39,16 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
         >
             <PageSection border='blue' background='white'>
                 <div className='custodian-clients'>
+                    <Header as='h4'>Quick Deposit</Header>
                     <CreateDeposit/>
-                    <StripedTable
-                        header={['Id', 'Holdings']}
-                        rows={tableRows}/>
+                    <Header as='h4'>Client Holdings</Header>
+                    {tableRows.length > 0 ?
+                        <StripedTable
+                            header={['Id', 'Holdings']}
+                            rows={tableRows}/>
+                        :
+                        <p>none</p>
+                    }
                 </div>
             </PageSection>
         </Page>

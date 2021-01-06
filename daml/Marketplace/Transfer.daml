@@ -6,7 +6,7 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
-import DA.List
+import DA.List hiding (delete)
 import DA.Next.Set
 
 
@@ -26,6 +26,7 @@ template DepositTransferRequest
     controller custodian can
       DepositTransferRequest_Approve : ContractId AssetDeposit
         do
+          deposit <- fetch depositCid
           let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
               (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
 
@@ -33,6 +34,7 @@ template DepositTransferRequest
                 with id = senderAccountId, provider = senderProvider, owner = sender
               receiverAccount = Account
                 with id = receiverAccountId, provider = receiverProvider, owner = receiver
+              depositObservers = deposit.observers
 
           senderRuleCid <- create AssetSettlementRule
             with account = senderAccount,
@@ -46,10 +48,74 @@ template DepositTransferRequest
           newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
             with receiverAccountId = receiverAccountId, ..
 
+          newDeposit <- fetch newDepositCid
+          let newObservers = depositObservers <> newDeposit.observers
+              newObservers' = if sender /= newDeposit.account.owner
+                              then delete sender newObservers
+                              else newObservers
+          newDepositCid' <- create newDeposit with observers = newObservers'
+          archive newDepositCid
+
           archive senderRuleCid
           archive receiverRuleCid
 
-          return newDepositCid
+          return newDepositCid'
 
       DepositTransferRequest_Reject : ()
+        do return ()
+
+template DepositDebitRequest
+  with
+    owner : Party
+    ownerAccount : Account
+    depositCid : ContractId AssetDeposit
+  where
+    let senderSig = head $ toList ownerAccount.id.signatories
+        custodian = senderSig
+    signatory owner
+
+    controller custodian can
+      DepositDebitRequest_Approve : Asset
+        do
+          let (owner, provider) = getAccountOwnerProvider ownerAccount.id.label
+
+          depositRuleCid <- create AssetSettlementRule
+            with account = ownerAccount
+                 observers = fromList [provider]
+                 ctrls = empty
+
+          newAsset <- exercise depositRuleCid AssetSettlement_Debit
+            with depositCid
+
+          archive depositRuleCid
+          return newAsset
+
+      DepositDebitRequest_Reject : ()
+        do return ()
+
+template DepositCreditRequest
+  with
+    owner : Party
+    account : Account
+    asset : Asset
+  where
+    let senderSig = head $ toList account.id.signatories
+        custodian = senderSig
+    signatory owner
+
+    controller custodian can
+      DepositCreditRequest_Approve : ContractId AssetDeposit
+        do
+          let (owner, provider) = getAccountOwnerProvider account.id.label
+          let tokenSignatories = asset.id.signatories
+
+          depositRuleCid <- create AssetSettlementRule
+            with account = account
+                 observers = tokenSignatories <> fromList [provider]
+                 ctrls = fromList [custodian]
+
+          newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
+          archive depositRuleCid
+          return newDepositCid
+      DepositCreditRequest_Reject : ()
         do return ()

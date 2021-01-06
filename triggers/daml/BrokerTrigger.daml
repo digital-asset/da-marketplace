@@ -4,7 +4,6 @@
 module BrokerTrigger where
 
 import DA.Foldable hiding (elem, null)
-
 import Daml.Trigger
 
 import Marketplace.Trading
@@ -18,16 +17,18 @@ handleBroker = Trigger
   { initialize = return 0
   , updateState = \_ -> pure ()
   , rule = handleBrokerRule
-  , registeredTemplates = RegisteredTemplates [registeredTemplate @BrokerOrderRequest]
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @BrokerOrderRequest ]
   , heartbeat = None
   }
 
 -- |Accept all 'BrokerOrderRequest'
 handleBrokerRule : Party -> TriggerA CurrentOrderId ()
 handleBrokerRule party = do
-  orderRequests <- query @BrokerOrderRequest
+  debug "Running broker rule..."
 
   -- Accept all 'BrokerOrderReqest'
+  orderRequests <- query @BrokerOrderRequest
+
   forA_ orderRequests \(cid,or) -> do
     currentOrderId <- get
     debug $ "Accepting order: " <> show or

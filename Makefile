@@ -164,7 +164,7 @@ publish: package
 	git tag -f "${TAG_NAME}"
 	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
 
-package: $(trigger) $(dar) $(ui) $(dabl_meta) verify-artifacts
+package: $(trigger) $(dar) $(ui) $(exberry_adapter) $(dabl_meta) verify-artifacts
 	cd $(target_dir) && zip -j ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-*) ../pkg/marketplace.svg dabl-meta.yaml
 
 $(dabl_meta): $(target_dir) dabl-meta.yaml
@@ -190,7 +190,6 @@ $(ui):
 .PHONY: clean
 clean: clean-ui
 	rm -rf $(state_dir) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
-# rm -rf $(state_dir) $(exberry_adapter_dir) $(exberry_adapter) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock

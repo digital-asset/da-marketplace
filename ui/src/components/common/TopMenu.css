@@ -1,13 +1,12 @@
 .ui.menu.top-menu {
     box-shadow: none;
     border: none;
-    min-height: 102px;
     margin: 0;
 }
 
 .top-menu .menu > .ui.button:not(.icon) > .log-out {
     display: flex;
-    align-items: center;  
+    align-items: center;
 }
 
 .top-menu .menu > .ui.button:not(.icon) > .log-out > p {
@@ -43,6 +42,7 @@
 
 .top-menu.menu .item {
     padding: 28px 16px 28px 16px;
+    margin-right: auto;
 }
 
 .top-menu.menu > .top-right-menu > .item:first-child {
@@ -51,6 +51,10 @@
 
 .top-menu.menu > .top-left-menu {
     align-items: flex-start;
+}
+
+.top-menu.menu > .top-left-menu.blue-border {
+    border-left: 2px var(--lightblue2) solid;
 }
 
 .top-menu.menu > .top-left-menu > .item {
