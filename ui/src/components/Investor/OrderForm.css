@@ -1,5 +1,5 @@
 .order-form {
-    margin-bottom: 50px;
+    margin-bottom: var(--spacing-l);
 }
 
 .order-form > .field {

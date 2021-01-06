@@ -1,5 +1,6 @@
 import { DepositInfo } from './damlTypes'
 
+
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 
 export const indefiniteArticle = (word: string): string => {
@@ -51,3 +52,4 @@ export function countDecimals(value: number) {
         return value.toString().split(".")[1].length || 0;
     return 0;
 }
+

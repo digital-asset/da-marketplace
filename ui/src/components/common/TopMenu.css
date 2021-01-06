@@ -20,7 +20,7 @@
 }
 
 .top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {
-    margin-left: 8px;
+    margin-left: var(--spacing-s);;
     height: 14px;
     width: 14px;
 }
@@ -37,16 +37,16 @@
 .ui.menu.top-menu > .menu > .item > .header .icon {
     width: 32px;
     height: 32px;
-    margin-right: 32px;
+    margin-right: var(--spacing-m);
 }
 
 .top-menu.menu .item {
-    padding: 28px 16px 28px 16px;
+    padding: var(--spacing-m) var(--spacing-s);
     margin-right: auto;
 }
 
 .top-menu.menu > .top-right-menu > .item:first-child {
-    padding-left: 32px;
+    padding-left: var(--spacing-m);
 }
 
 .top-menu.menu > .top-left-menu {
@@ -63,9 +63,9 @@
     align-items: flex-start;
     justify-content: center;
     height: 100%;
-    margin:0;
+    padding: 0 var(--spacing-m);
 }
 
 .notifications {
-    padding: 0px 32px;
+    padding: 0px var(--spacing-m);
 }

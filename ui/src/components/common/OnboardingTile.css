@@ -1,6 +1,6 @@
 .onboarding-tile .onboarding-tile-content {
     background-color: var(--mediumblue);
-    padding: 48px;
+    padding: var(--spacing-l);
     max-width: 550px;
 }
 
@@ -8,14 +8,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    margin-bottom: var(--spacing-xs);
 }
 
 .onboarding-tile .onboarding-tile-content .icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 12px;
+    width: var(--spacing-m);
+    height: var(--spacing-m);
+    margin-right: var(--spacing-s);
 }
 
 .onboarding-tile .onboarding-tile-content .ui.input {
-    height: 50px;
+    height: var(--spacing-l);
 }

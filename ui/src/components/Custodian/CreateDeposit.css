@@ -6,14 +6,14 @@
 
 
     .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
-        padding:  12px 0 12px 0.5em;
+        padding:  var(--spacing-s) 0 var(--spacing-s) 0.5em;
     }
 
 }
 
 .create-deposit {
     background-color: var(--grey3);
-    padding: 12px;
+    padding: var(--spacing-s);
 }
 
 .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
@@ -23,7 +23,7 @@
 @media screen and (max-width: 1000px) {
     .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
         margin-left: 0px;
-        margin-bottom: 12px;
+        margin-bottom: var(--spacing-s);
     }
 
     .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {

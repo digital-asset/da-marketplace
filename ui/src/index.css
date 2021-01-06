@@ -14,6 +14,12 @@
   --grey3: #F6F6F6;
   --grey4: #262626;
   --dabl-color: #3a62Ca;
+  --white: #FFFFFF;
+  --spacing-xs: 6px;
+  --spacing-s: 12px;
+  --spacing-m: 24px;
+  --spacing-l: 48px;
+  --max-page-width: 1000px;
 }
 
 * {
@@ -70,7 +76,7 @@ h3.ui.header {
   font-weight: normal;
   font-size: 20px;
   line-height: 27px;
-  color: #303132;
+  color: var(--textcolor);
 }
 
 h4.ui.header {
@@ -80,6 +86,7 @@ h4.ui.header {
   font-size: 20px;
   line-height: 27px;
   color: #303132;
+  color: var(--textcolor);
 }
 
 p {
@@ -88,7 +95,8 @@ p {
   font-weight: normal;
   font-size: 14px;
   line-height: 19px;
-  color: #303132;
+  color: var(--text-color);
+  margin: 0;
 }
 
 p.p2 {
@@ -97,7 +105,7 @@ p.p2 {
   font-weight: normal;
   font-size: 12px;
   line-height: 16px;
-  color: #505050;
+  color: var(--textcolor);
 }
 
 .ui.form .fluid input , .ui.form input {
@@ -156,10 +164,16 @@ p.p2 {
   background: none;
   align-items: center;
   border: none;
+  font-weight: 400;
+}
+
+.ui.button.ghost.smaller {
+  padding: 6px 3px;
 }
 
 .ui.button.ghost:hover {
   background-color: var(--lightblue);
+  cursor: pointer;
 }
 
 .ui.basic.button.basic-button-fill {

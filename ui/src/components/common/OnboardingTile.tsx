@@ -15,12 +15,12 @@ const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
         <Grid className='onboarding-tile' textAlign='center' verticalAlign='middle'>
             <Grid.Row>
                 <Grid.Column width={8} className='onboarding-tile-content'>
-                    <Header as='h3' textAlign='center'>
+                    <Header textAlign='center'>
                         <Header.Content>
                             <WelcomeHeader/>
                         </Header.Content>
                     </Header> 
-                    <p> { subtitle } </p>
+                    { !!subtitle && <p> {subtitle} </p>  }
                     { children }
                 </Grid.Column>
             </Grid.Row>
