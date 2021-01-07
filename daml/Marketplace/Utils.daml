@@ -1,5 +1,6 @@
 module Marketplace.Utils where
 
+import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Next.Set
@@ -40,3 +41,12 @@ getAccountOwnerProvider: Text -> (Party, Party)
 getAccountOwnerProvider label =
   let [owner, provider] = map (fromSome . partyFromText . replace "'" "") (splitOn "@" label)
   in (owner, provider)
+
+getDepositQuantities : [ContractId AssetDeposit] -> Update (Numeric 10)
+getDepositQuantities depositCids = do
+  deposit_quantities <- do
+    forA depositCids (\dcid -> do
+      d <- fetch dcid
+      return d.asset.quantity)
+
+  return $ foldl (+) 0.0 deposit_quantities

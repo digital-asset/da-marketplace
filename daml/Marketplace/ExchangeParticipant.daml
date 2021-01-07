@@ -78,19 +78,24 @@ template ExchangeParticipant
 
       nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
           pair : IdPair
           amount : Decimal
           price : Decimal
         do
-          deposit <- fetch depositCid
+          aggregate_qty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregate_qty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
-          assertMsg ("amount should be less than or equal to deposit amount") $ amount <= deposit.asset.quantity
 
           newDepositCid <- if amount < deposit.asset.quantity
-                  then head <$> exercise depositCid AssetDeposit_Split with quantities = [ amount ]
-                  else return depositCid
+                  then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                  else return mergedCid
 
           newDeposit <- fetch newDepositCid
 
@@ -101,19 +106,24 @@ template ExchangeParticipant
 
       nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
           pair : IdPair
           amount : Decimal
           price : Decimal
         do
-          deposit <- fetch depositCid
+          aggregate_qty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregate_qty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
-          assertMsg ("amount should be less than or equal to deposit amount") $ amount <= deposit.asset.quantity
 
           newDepositCid <- if amount < deposit.asset.quantity
-                           then head <$> exercise depositCid AssetDeposit_Split with quantities = [ amount ]
-                           else return depositCid
+                           then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                           else return mergedCid
 
           newDeposit <- fetch newDepositCid
 
