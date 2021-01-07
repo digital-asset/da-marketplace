@@ -111,6 +111,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: riData.location }
             })
         }
+    // eslint-disable-next-line
     }, [registeredInvestor]);
 
     const updateProfile = async () => {

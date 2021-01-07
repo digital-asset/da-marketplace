@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Header, Table, List, Button } from 'semantic-ui-react'
 
@@ -32,7 +32,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
     const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
     const { tokenId } = useParams<{tokenId: string}>()
-    
+
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
     }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
@@ -65,10 +65,10 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                         <p> Quantity Precision: {token?.contractData.quantityPrecision} </p>
                     </div>
                 </div>
-                {!isPublic && 
+                {!isPublic &&
                     <div className='participants-viewer'>
                         <Button className='ghost smaller' onClick={() => setShowParticipants(!showParticipants)}>
-                            {showParticipants? 
+                            {showParticipants?
                                 <p> Hide Participants <IconChevronUp/></p>
                                 :
                                 <p> View/Add Participants <IconChevronDown/></p>
@@ -106,7 +106,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                     </Table.Header>
                     <Table.Body>
                         {nettedTokenDeposits.length > 0 ?
-                            nettedTokenDeposits.map(deposit => 
+                            nettedTokenDeposits.map(deposit =>
                                 <Table.Row>
                                     <Table.Cell>{deposit.investor || '-'}</Table.Cell>
                                     <Table.Cell>{deposit.provider || '-'}</Table.Cell>
@@ -134,7 +134,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
         let netTokenDeposits: DepositInfo[] = []
-    
+
         tokenDeposits.forEach(deposit => {
             const { account, asset } = deposit.contractData
             const token = netTokenDeposits.find(d => d.provider === account.provider && d.investor === account.owner)

@@ -8,8 +8,7 @@ import {
     Registry,
     Custodian,
     Notification,
-    Token,
-    Utils
+    Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
 
 type DamlTuple<T> = {

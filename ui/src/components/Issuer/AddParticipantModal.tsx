@@ -57,7 +57,7 @@ const ValueEntryModal = (props: IProps) => {
             }
         })
 
-    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {  
+    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {
         setSelectedObservers(result.value)
     }
 
@@ -70,9 +70,9 @@ const ValueEntryModal = (props: IProps) => {
 
         await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))
-        
-        props.onRequestClose()   
-    }   
+
+        props.onRequestClose()
+    }
 
     return (
         <Modal
@@ -83,14 +83,14 @@ const ValueEntryModal = (props: IProps) => {
             onClose={() => props.onRequestClose()}>
             <Modal.Header>Add participants</Modal.Header>
             <Modal.Content>
-                {partyOptions.length == 0 ?
+                {partyOptions.length === 0 ?
                     <i>All registered parties have been added</i>
                     :
                     <FormErrorHandled onSubmit={submit}>
                         <Form.Select
                             multiple
                             className='issue-asset-form-field select-observer'
-                            disabled={partyOptions.length == 0}
+                            disabled={partyOptions.length === 0}
                             placeholder='Select...'
                             options={partyOptions}
                             onChange={handleSelectNewParticipants}/>
