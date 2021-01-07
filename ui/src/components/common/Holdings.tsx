@@ -107,18 +107,18 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
                 </div>
             </div>
             <div className='selected-form'>
-                {selectedForm== 'provider' &&
+                {selectedForm === 'provider' &&
                     <ProviderForm
                         onRequestClose={() => setSelectedForm(undefined)}
                         deposit={deposit}
                         providers={providers}
                         role={role}/>}
-                {selectedForm== 'merge' &&
+                {selectedForm === 'merge' &&
                     <MergeForm
                         onRequestClose={() => setSelectedForm(undefined)}
                         availableDeposits={depositsForAsset}
                         deposit={deposit}/>}
-                {selectedForm== 'split' &&
+                {selectedForm === 'split' &&
                     <SplitForm
                     onRequestClose={() => setSelectedForm(undefined)}
                     deposit={deposit}/>}
@@ -279,8 +279,8 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
     const tokenQuantityPrecision = Number(useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from Token: ", e);
     }).contracts
-            .find(t => t.payload.id.label == deposit.contractData.asset.id.label &&
-                       t.payload.id.version === t.payload.id.version)?.payload.quantityPrecision) || 0
+            .find(t => t.payload.id.label === deposit.contractData.asset.id.label &&
+                       t.payload.id.version === deposit.contractData.asset.id.version)?.payload.quantityPrecision) || 0
 
     const [ splitAssetDecimal, setSplitAssetDecimal ] = useState<number>()
 

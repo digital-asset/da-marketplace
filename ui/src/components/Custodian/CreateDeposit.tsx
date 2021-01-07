@@ -7,7 +7,7 @@ import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Ma
 import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'

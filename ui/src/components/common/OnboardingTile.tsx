@@ -1,8 +1,7 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
-import WelcomeHeader from './WelcomeHeader';
 
-import { LogoIcon } from '../../icons/Icons'
+import WelcomeHeader from './WelcomeHeader'
 
 import './OnboardingTile.css'
 
@@ -19,7 +18,7 @@ const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
                         <Header.Content>
                             <WelcomeHeader/>
                         </Header.Content>
-                    </Header> 
+                    </Header>
                     { !!subtitle && <p> {subtitle} </p>  }
                     { children }
                 </Grid.Column>

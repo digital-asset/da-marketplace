@@ -53,6 +53,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: reData.location }
             })
         }
+    // eslint-disable-next-line
     }, [registeredExchange]);
 
     const updateProfile = async () => {

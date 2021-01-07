@@ -55,6 +55,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: rcData.location }
             })
         }
+    // eslint-disable-next-line
     }, [registeredCustodian]);
 
     const updateProfile = async () => {
