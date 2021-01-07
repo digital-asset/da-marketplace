@@ -19,8 +19,6 @@
 }
 
 .onboarding-tile .onboarding-tile-content .icon {
-    /* width: var(--spacing-m);
-    height: var(--spacing-m); */
     margin-right: var(--spacing-s);
 }
 
@@ -36,7 +34,7 @@
 .onboarding-tile .onboarding-tile-content .ui.form input,
 .onboarding-tile .onboarding-tile-content .ui.form .field > .selection.dropdown {
     width: 100%;
-    background: #fff;
+    background: var(--white);
     border: none;
     box-sizing: border-box;
     border-radius: 2px;

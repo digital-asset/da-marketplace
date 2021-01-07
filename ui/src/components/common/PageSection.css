@@ -7,7 +7,7 @@
 }
 
 .ui.grid .page-section.white {
-    background-color: #fff;
+    background-color: var(--white);
 }
 
 .ui.grid .page-section.grey {
