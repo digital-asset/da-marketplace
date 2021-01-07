@@ -43,7 +43,7 @@ const OrderForm: React.FC<Props> = ({
         if (Number(amount) > totalAvailableAmount) {
             throw new AppError(`Insufficient ${labels[0]} amount. Try:`, [
                 `Allocating funds to the exchange or`,
-                `Adding funds to your account`,
+                `Depositing funds to your account`,
             ]);
         }
 
