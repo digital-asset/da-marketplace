@@ -134,8 +134,8 @@ template Custodian
           beneficiary : Party
         do
           (tokenCid, token) <- fetchByKey @Token tokenId
+          account <- exercise self Custodian_GetAccount with investor = beneficiary
           let quantity = roundBankers token.quantityPrecision depositQuantity
               asset = Asset with id = tokenId, ..
-              depositObs = fromList $ beneficiary :: signatory token
-          account <- exercise self Custodian_GetAccount with investor = beneficiary
+              depositObs = fromList $ account.provider :: beneficiary :: signatory token
           create AssetDeposit with observers = depositObs, account = account, ..
