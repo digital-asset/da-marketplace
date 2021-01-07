@@ -18,7 +18,7 @@ function isPartyDetails(partyDetails: any): partyDetails is PartyDetails {
             typeof partyDetails.party === 'string' &&
             typeof partyDetails.partyName === 'string' &&
             typeof partyDetails.token === 'string' &&
-            typeof partyDetails.rights === 'string'
+            partyDetails.rights instanceof Array
 }
 
 export type Parties = PartyDetails[];
@@ -26,7 +26,11 @@ export type Parties = PartyDetails[];
 function isParties(parties: any): parties is Parties {
     if (parties instanceof Array) {
         // True if any element of the array is not a PartyDetails
-        return parties.reduce((invalid, party) => invalid || !isPartyDetails(party), false);
+        const invalidPartyDetail = parties.reduce(
+            (invalid, party) => invalid || !isPartyDetails(party),
+            false
+        );
+        return !invalidPartyDetail;
     } else {
         return false;
     }
