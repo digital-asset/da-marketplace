@@ -41,9 +41,9 @@ const OrderForm: React.FC<Props> = ({
             (sum, d) => sum + Number(d.contractData.asset.quantity), 0);
 
         if (Number(amount) > totalAvailableAmount) {
-            throw new AppError(`Insufficient ${labels[0]} amount`, [
-                `Add a new deposit`,
-                `Allocate a deposit to the exchange`
+            throw new AppError(`Insufficient ${labels[0]} amount. Try:`, [
+                `Adding funds to your account or`,
+                `Allocating funds to the exchange`
             ]);
         }
 
