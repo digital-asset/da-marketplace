@@ -7,7 +7,7 @@ import './WelcomeHeader.css'
 
 const WelcomeHeader: React.FC = () => (
     <>
-        <LogoIcon/>
+        <LogoIcon size='48'/>
         <div className="welcome-header">
             <div>
                 <Header as='h3' className='welcome-header-row'>

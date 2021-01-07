@@ -58,7 +58,11 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
             onSubmit={() => loadAndCatch(onSubmit)}
         >
             { isCallable(children) ? children(callback => loadAndCatch(callback)) : children }
-            <Message error header={error?.header} content={errorMsgContent} list={errorMsgList}/>
+            <Message
+                error
+                header={error?.header}
+                content={errorMsgContent}
+                list={errorMsgList}/>
         </Form>
     )
 }

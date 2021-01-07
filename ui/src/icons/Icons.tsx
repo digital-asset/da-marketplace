@@ -11,6 +11,10 @@ import wallet from './wallet.svg'
 
 import './Icons.css'
 
+type IconProps = {
+    size?: '24' | '32' | '48' | '64';
+}
+
 export const ArrowRightIcon = () => (
     <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
         <path
@@ -22,8 +26,8 @@ export const ArrowRightIcon = () => (
 
 export const GlobeIcon = () => (
     <svg className="icon globe-icon" viewBox="0 0 16 16">
-      <path className="fill-primary" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999 
-        6.93345L5.15354 7.287L5.29999 7.14055V6.93345H4.79999ZM2.97908 7.24587L2.62552 7.59942H2.62552L2.97908 
+      <path className="fill-primary" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
+        6.93345L5.15354 7.287L5.29999 7.14055V6.93345H4.79999ZM2.97908 7.24587L2.62552 7.59942H2.62552L2.97908
         7.24587ZM6.93332 13.8668H7.43332V13.6597L7.28688 13.5132L6.93332 13.8668ZM5.86666 12.8001H5.36666V13.0072L5.5131
         13.1537L5.86666 12.8001ZM5.86666 11.2001H6.36666V10.993L6.22021 10.8466L5.86666 11.2001ZM4.79999 10.1334H4.29999V10.3406L4.44644
         10.487L4.79999 10.1334ZM4.79999 9.06678V8.56678C4.52385 8.56678 4.29999 8.79064 4.29999 9.06678H4.79999ZM9.63332
@@ -53,9 +57,9 @@ export const GlobeIcon = () => (
     </svg>
   );
 
-export const LogoIcon = () => (
+export const LogoIcon: React.FC<IconProps> = ({ size }) => (
     <img
-        className="icon logo-icon"
+        className={`icon logo-icon icon-size-${size}`}
         src={marketplaceLogo}
         alt="command"/>
 )
@@ -118,7 +122,7 @@ export const WalletIcon = () => (
 )
 
 export const CircleIcon = () => (
-    <div className="icon circle"></div>
+    <div className="icon circle-icon"></div>
 )
 
 export const IconClose = () => (
@@ -148,4 +152,3 @@ export const AddPlusIcon = () => (
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7 13.1764C3.59422 13.1764 0.823531 10.4058 0.823531 6.99997C0.823531 3.59419 3.59422 0.823503 7 0.823503C10.4058 0.823503 13.1765 3.59419 13.1765 6.99997C13.1765 10.4058 10.4058 13.1764 7 13.1764ZM0 7C0 10.8596 3.14042 14 7 14C10.8596 14 14 10.8596 14 7C14 3.14042 10.8596 0 7 0C3.14042 0 0 3.14042 0 7Z" fill="#303132"/>
     </svg>
 );
-
