@@ -2,6 +2,13 @@
     background-color: var(--mediumblue);
     padding: var(--spacing-l);
     max-width: 550px;
+    margin-bottom: var(--spacing-s);
+    text-align: left;
+}
+
+.onboarding-tile .onboarding-tile-content .tile-header {
+    margin-bottom: var(--spacing-m);
+    display: flex;
 }
 
 .onboarding-tile .onboarding-tile-content .ui.header > .content {
@@ -12,11 +19,29 @@
 }
 
 .onboarding-tile .onboarding-tile-content .icon {
-    width: var(--spacing-m);
-    height: var(--spacing-m);
+    /* width: var(--spacing-m);
+    height: var(--spacing-m); */
     margin-right: var(--spacing-s);
 }
 
+.onboarding-tile .onboarding-tile-content .ui.button {
+    text-align: left;
+}
+
+.onboarding-tile .onboarding-tile-content .field .ui {
+    border: none;
+    background-color: var(--grey1);
+}
+
+.onboarding-tile .onboarding-tile-content .ui.form input,
+.onboarding-tile .onboarding-tile-content .ui.form .field > .selection.dropdown {
+    width: 100%;
+    background: #fff;
+    border: none;
+    box-sizing: border-box;
+    border-radius: 2px;
+}
+
 .onboarding-tile .onboarding-tile-content .ui.input {
-    height: var(--spacing-l);
+    height: var(--input-height);
 }

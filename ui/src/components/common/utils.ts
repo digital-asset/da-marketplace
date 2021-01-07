@@ -7,27 +7,23 @@ export const indefiniteArticle = (word: string): string => {
     return vowels.includes(word[0].toLowerCase()) ? `an ${word}` : `a ${word}`;
 }
 
-type StringToDepositInfoArray = {
-    [key: string]: DepositInfo[];
+export type StringKeyedObject<T> = {
+    [key: string]: T
 }
 
-export const groupDeposits = (deposits: DepositInfo[]): StringToDepositInfoArray => {
+export const groupDeposits = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
     return deposits.reduce((group, deposit) => {
         const label = deposit.contractData.account.provider;
         const existingValue = group[label] || [];
 
         return { ...group, [label]: [...existingValue, deposit] };
-    }, {} as StringToDepositInfoArray);
+    }, {} as StringKeyedObject<DepositInfo[]>);
 }
 
 const sumDepositArray = (deposits: DepositInfo[]): number =>
     deposits.reduce((sum, val) => sum + Number(val.contractData.asset.quantity), 0);
 
-type StringToNumber = {
-    [key: string]: number;
-}
-
-export const sumDeposits = (deposits: DepositInfo[]): StringToNumber => {
+export const sumDeposits = (deposits: DepositInfo[]): StringKeyedObject<number> => {
     const depositGroup = groupDeposits(deposits);
 
     return Object
@@ -35,7 +31,7 @@ export const sumDeposits = (deposits: DepositInfo[]): StringToNumber => {
         .reduce((acc, [label, deposits]) => ({
             ...acc,
             [label]: sumDepositArray(deposits)
-        }), {} as StringToNumber)
+        }), {} as StringKeyedObject<number>)
 }
 
 export const depositSummary = (deposits: DepositInfo[]): string => {

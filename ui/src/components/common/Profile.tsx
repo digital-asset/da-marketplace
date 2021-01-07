@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import "./Profile.css"
+import { StringKeyedObject } from './utils'
+import './Profile.css'
 
 type FieldType = 'text';
 
@@ -19,9 +20,7 @@ export const createField = (
     type: FieldType
 ): ProfileField => ({ value, label, placeholder, type });
 
-export type Profile = {
-    [key: string]: ProfileField
-};
+export type Profile = StringKeyedObject<ProfileField>;
 
 type FieldProps = {
     field: ProfileField;
