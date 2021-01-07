@@ -59,6 +59,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 issuerID: { ...profile.issuerID, value: riData.issuerID }
             })
         }
+    // eslint-disable-next-line
     }, [registeredIssuer]);
 
     const updateProfile = async () => {

@@ -85,6 +85,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: rbData.location }
             })
         }
+    // eslint-disable-next-line
     }, [registeredBroker]);
 
     const updateProfile = async () => {
