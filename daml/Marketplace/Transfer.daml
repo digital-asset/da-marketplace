@@ -34,7 +34,7 @@ template DepositTransferRequest
                 with id = senderAccountId, provider = senderProvider, owner = sender
               receiverAccount = Account
                 with id = receiverAccountId, provider = receiverProvider, owner = receiver
-              depositObservers = deposit.observers
+              depositObservers = delete sender $ delete senderProvider $ deposit.observers
 
           senderRuleCid <- create AssetSettlementRule
             with account = senderAccount,
@@ -42,7 +42,7 @@ template DepositTransferRequest
                   ctrls = empty
           receiverRuleCid <- create AssetSettlementRule
             with account = receiverAccount,
-                  observers = fromList [receiverProvider],
+                  observers = fromList [receiverProvider, receiver],
                   ctrls = fromList [sender]
 
           newDepositCid <- exercise senderRuleCid AssetSettlement_Transfer
@@ -50,10 +50,7 @@ template DepositTransferRequest
 
           newDeposit <- fetch newDepositCid
           let newObservers = depositObservers <> newDeposit.observers
-              newObservers' = if sender /= newDeposit.account.owner
-                              then delete sender newObservers
-                              else newObservers
-          newDepositCid' <- create newDeposit with observers = newObservers'
+          newDepositCid' <- create newDeposit with observers = newObservers
           archive newDepositCid
 
           archive senderRuleCid
@@ -111,7 +108,7 @@ template DepositCreditRequest
 
           depositRuleCid <- create AssetSettlementRule
             with account = account
-                 observers = tokenSignatories <> fromList [provider]
+                 observers = tokenSignatories <> fromList [provider, owner]
                  ctrls = fromList [custodian]
 
           newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
