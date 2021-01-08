@@ -83,9 +83,9 @@ template ExchangeParticipant
           amount : Decimal
           price : Decimal
         do
-          aggregate_qty <- getDepositQuantities depositCids
+          aggregateQty <- getDepositQuantities depositCids
 
-          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregate_qty
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
           mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
           deposit <- fetch mergedCid
@@ -111,9 +111,9 @@ template ExchangeParticipant
           amount : Decimal
           price : Decimal
         do
-          aggregate_qty <- getDepositQuantities depositCids
+          aggregateQty <- getDepositQuantities depositCids
 
-          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregate_qty
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
           mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
           deposit <- fetch mergedCid
