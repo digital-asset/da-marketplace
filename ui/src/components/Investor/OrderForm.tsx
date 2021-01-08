@@ -16,6 +16,7 @@ type Props = {
     deposits: DepositInfo[];
     quotePrecision: number;
     labels: [string, string];
+    limits: [number, number];
     placeOrder: (depositCid: string, price: string, amount: string) => Promise<void>;
 }
 
@@ -25,19 +26,22 @@ const OrderForm: React.FC<Props> = ({
     quotePrecision,
     deposits,
     labels,
+    limits,
     placeOrder
 }) => {
-    const title = kind[0].toUpperCase() + kind.slice(1);
-
     const [ price, setPrice ] = useState('');
     const [ amount, setAmount ] = useState('');
+    const [ amountFieldError, setAmountFieldError ] = useState<string>();
+
+    const title = kind[0].toUpperCase() + kind.slice(1);
+    const [ minimumQuantity, maximumQuantity ] = limits;
 
     const total = kind === OrderKind.OFFER
-        ? Number(amount) * Number(price)
-        : Number(price) !== 0 ? Number(amount) / Number(price) : 0;
+        ? +amount * +price
+        : +price !== 0 ? +amount / +price : 0;
 
     const submit = async () => {
-        const depositCid = deposits.find(deposit => Number(amount) <= Number(deposit.contractData.asset.quantity))?.contractId;
+        const depositCid = deposits.find(deposit => +amount <= +deposit.contractData.asset.quantity)?.contractId;
 
         if (!depositCid) {
             throw new AppError(`Insufficient ${labels[0]} amount`, [
@@ -71,16 +75,29 @@ const OrderForm: React.FC<Props> = ({
     return (
         <FormErrorHandled onSubmit={submit} className='order-form'>
             <Header>{title}</Header>
-            <Form.Field required>
-                <label>Amount {labels[0]}</label>
+            <Form.Input
+                required
+                label={'Amount ' + labels[0]}
+                error={amountFieldError}
+            >
                 <input
                     className='order-input'
                     type='number'
                     step={amountInput.step}
                     placeholder={amountInput.placeholder}
                     value={amount}
-                    onChange={e => validateInput(e.target.value, assetPrecisions[0], setAmount)}/>
-            </Form.Field>
+                    onChange={e => {
+                        const inputAmount = +e.target.value;
+                        if (inputAmount < minimumQuantity) {
+                            setAmountFieldError(`Order quantity is below the minimum quantity of ${minimumQuantity}.`)
+                        }
+
+                        if (inputAmount > maximumQuantity) {
+                            setAmountFieldError(`Order quantity exceeds the maximum quantity of ${maximumQuantity}.`)
+                        }
+                        validateInput(e.target.value, assetPrecisions[0], setAmount)
+                    }}/>
+            </Form.Input>
 
             <Form.Field required>
                 <label>Price</label>

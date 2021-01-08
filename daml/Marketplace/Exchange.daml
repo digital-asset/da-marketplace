@@ -98,6 +98,16 @@ template Exchange
         with
           exchParticipant : Party
         do
+          let newObservers = fromList [ exchParticipant ]
+
+          -- update market pair observers
+          forA tokenPairs (\pair -> do
+            let (base, quote) = pair
+            let instrumentName = base.label <> quote.label
+            let id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
+
+            exerciseByKey @MarketPair id MarketPair_AddObservers with newObservers)
+
           create this with participants = dedup $ exchParticipant :: participants
 
       Exchange_RemovePair : ContractId Exchange

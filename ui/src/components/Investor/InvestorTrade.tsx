@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useLedger, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { MarketPair, Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { DepositInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { DepositInfo, wrapDamlTuple, makeContractInfo, wrapTextMap } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
@@ -55,6 +55,26 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const { exchange } = exchangeData;
     const [ base, quote ] = tokenPair.map(t => t.label);
+
+    const marketPairId: Id = {
+        signatories: wrapTextMap([exchange]),
+        label: `${base}${quote}`,
+        version: '0'
+    };
+
+    const { contracts: marketPairs2 } = useStreamQueries(MarketPair);
+    const { contracts: marketPairs } = useStreamFetchByKeys(MarketPair, () => [marketPairId], [location]);
+    const marketPair = marketPairs.find(mp => mp?.payload.id === marketPairId)?.payload;
+
+    console.log("testing testing", marketPairs, marketPairs2);
+
+    // if (!marketPair) {
+    //     throw new Error('No market pair for the exchange');
+    // }
+
+    const maxQuantity = (marketPair && marketPair.maxQuantity) || '0';
+    const minQuantity = (marketPair && marketPair.minQuantity) || '0';
+    const quantityLimits: [number, number] = [ +minQuantity, +maxQuantity ];
 
     const tokens = useStreamQueries(Token).contracts.map(makeContractInfo);
 
@@ -105,6 +125,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                         placeOrder={placeBid}
                         assetPrecisions={[quotePrecision, basePrecision]}
                         labels={[quote, base]}
+                        limits={quantityLimits}
                         deposits={bidDeposits}/>
 
                     <OrderForm
@@ -113,6 +134,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                         placeOrder={placeOffer}
                         assetPrecisions={[basePrecision, quotePrecision]}
                         labels={[base, quote]}
+                        limits={quantityLimits}
                         deposits={offerDeposits}/>
                 </div>
             </PageSection>

@@ -57,3 +57,10 @@ template MarketPair
     key id : Id
     maintainer key.signatories
     observer observers
+
+    controller exchange can
+      MarketPair_AddObservers : ContractId MarketPair
+        with
+          newObservers : Set Party
+        do
+          create this with observers = union observers newObservers
