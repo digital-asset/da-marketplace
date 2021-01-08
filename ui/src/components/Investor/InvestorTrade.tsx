@@ -67,24 +67,24 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         setOfferDeposits(filterDepositsForOrder(deposits, label, base));
     }, [ deposits, base, quote, investor, exchange ]);
 
-    const placeBid = async (depositCid: string, price: string, amount: string) => {
+    const placeBid = async (depositCids: string[], price: string, amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
             amount,
-            depositCid,
+            depositCids,
             pair: wrapDamlTuple(tokenPair)
         };
 
         await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
     }
 
-    const placeOffer = async (depositCid: string, price: string, amount: string) => {
+    const placeOffer = async (depositCids: string[], price: string, amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
             amount,
-            depositCid,
+            depositCids,
             pair: wrapDamlTuple(tokenPair)
         };
 

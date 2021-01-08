@@ -8,7 +8,19 @@
     height: var(--spacing-s);
 }
 
-.icon.circle {
+.icon.icon-size-32 {
+    height: 32px;
+}
+
+.icon.icon-size-48 {
+    height: 48px;
+}
+
+.icon.icon-size-64 {
+    height: 64px;
+}
+
+.icon.circle-icon {
     border-radius: 50px/50px;
     border: solid 1px var(--textcolor);
     width: 16px;

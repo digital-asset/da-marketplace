@@ -16,7 +16,7 @@ type Props = {
     deposits: DepositInfo[];
     quotePrecision: number;
     labels: [string, string];
-    placeOrder: (depositCid: string, price: string, amount: string) => Promise<void>;
+    placeOrder: (depositCids: string[], price: string, amount: string) => Promise<void>;
 }
 
 const OrderForm: React.FC<Props> = ({
@@ -37,17 +37,17 @@ const OrderForm: React.FC<Props> = ({
         : Number(price) !== 0 ? Number(amount) / Number(price) : 0;
 
     const submit = async () => {
-        const depositCid = deposits.find(deposit => Number(amount) <= Number(deposit.contractData.asset.quantity))?.contractId;
+        const totalAvailableAmount = deposits.reduce(
+            (sum, d) => sum + Number(d.contractData.asset.quantity), 0);
 
-        if (!depositCid) {
-            throw new AppError(`Insufficient ${labels[0]} amount`, [
-                `Add a new deposit,`,
-                `Allocate a deposit to the exchange,`,
-                `or merge existing ${labels[0]} deposits in your wallet.`
+        if (Number(amount) > totalAvailableAmount) {
+            throw new AppError(`Insufficient ${labels[0]} amount. Try:`, [
+                `Allocating funds to the exchange or`,
+                `Depositing funds to your account`,
             ]);
         }
 
-        await placeOrder(depositCid, price, amount);
+        await placeOrder(deposits.map(d => d.contractId), price, amount);
         setPrice('');
         setAmount('');
     };

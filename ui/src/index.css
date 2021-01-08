@@ -15,6 +15,7 @@
   --grey4: #262626;
   --dabl-color: #3a62Ca;
   --white: #FFFFFF;
+  --input-height: 40px;
   --spacing-xs: 6px;
   --spacing-s: 12px;
   --spacing-m: 24px;
@@ -108,10 +109,14 @@ p.p2 {
   color: var(--textcolor);
 }
 
-.ui.form .fluid input , .ui.form input {
-  width: 260px !important;
+.ui.form .fields > .field {
+  width: 100%;
+}
+
+.ui.form .fluid input, .ui.form input, .ui.form .field > .selection.dropdown {
+  width: 260px;
   background: #FFFFFF;
-  border: 1px solid var(--grey4) !important;
+  border: 1px solid var(--grey4);
   box-sizing: border-box;
   border-radius: 2px;
 }
@@ -127,17 +132,9 @@ p.p2 {
     background-color: var(--grey2);
 }
 
-.ui.form .fluid textarea , .ui.form textarea {
+.ui.form .fluid textarea, .ui.form textarea {
   background: #FFFFFF;
   border: 1px solid var(--grey4) !important;
-  box-sizing: border-box;
-  border-radius: 2px;
-}
-
-.ui.form .field > .selection.dropdown {
-  width: 260px !important;
-  background: white;
-  border: 1px solid var(--grey4);
   box-sizing: border-box;
   border-radius: 2px;
 }

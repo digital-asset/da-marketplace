@@ -2,3 +2,40 @@
     width: 40px;
     height: 40px;
 }
+
+.onboarding-tile-content form {
+    margin-top: 16px;
+}
+
+.onboarding-tile-content .form .dabl-login-button {
+    height: 70px;
+    font-size: 16px;
+}
+
+.parties-login .field.upload-file-input {
+    display: flex;
+}
+
+.parties-login .field > .ui.input {
+    display: flex;
+    align-self: flex-end;
+}
+
+.parties-login .custom-file-upload > input[type="file"] {
+    display: none;
+}
+
+.parties-login .custom-file-upload {
+    height: 44px;
+    width: 100%;
+    margin: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    align-self: flex-end;
+}
+
+.parties-login .custom-file-upload .icon {
+    margin-right: var(--spacing-s);
+}

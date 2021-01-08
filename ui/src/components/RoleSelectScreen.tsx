@@ -43,7 +43,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
-    const { contracts: userSessions, loading: userSessionsLoading } = useStreamQueries(UserSession, () => [], [], (e) => {
+    const { contracts: userSessions } = useStreamQueries(UserSession, () => [], [], (e) => {
         console.log("Unexpected close from userSession: ", e);
     });
 
