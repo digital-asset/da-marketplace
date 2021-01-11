@@ -14,6 +14,7 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import OrderForm from './OrderForm'
+import OrderLadder from '../common/OrderLadder'
 
 type Props = {
     deposits: DepositInfo[];
@@ -98,6 +99,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection border='blue' background='white'>
+                <OrderLadder/>
                 <div className='order-forms'>
                     <OrderForm
                         quotePrecision={quotePrecision}
