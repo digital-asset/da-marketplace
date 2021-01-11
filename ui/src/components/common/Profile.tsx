@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { StringKeyedObject } from './utils'
-import './Profile.css'
+import './Profile.scss'
 
 type FieldType = 'text';
 

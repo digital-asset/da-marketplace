@@ -15,7 +15,7 @@ import PageSection from '../common/PageSection'
 
 import AddParticipantModal from './AddParticipantModal'
 
-import './IssuedToken.css'
+import './IssuedToken.scss'
 
 type DepositInfo = {
     investor: string,

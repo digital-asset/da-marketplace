@@ -1,6 +1,6 @@
 import React from 'react'
 
-import "./PageSection.css"
+import "./PageSection.scss"
 
 type Props = {
     background: 'white' | 'grey';

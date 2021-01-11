@@ -2,19 +2,9 @@
 /* SPDX-License-Identifier: Apache-2.0  */
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
+@import 'colors.scss';
 
 :root {
-  --lightblue: #F4F8FE;
-  --lightblue2: #EFF3FF;
-  --lightblue-border: #ECF0FC;
-  --mediumblue: #E5EEFD;
-  --textcolor: #303132;
-  --grey1: #FAFAFA;
-  --grey2: #F0F0F0;
-  --grey3: #F6F6F6;
-  --grey4: #262626;
-  --dabl-color: #3a62Ca;
-  --white: #FFFFFF;
   --input-height: 40px;
   --spacing-xs: 6px;
   --spacing-s: 12px;

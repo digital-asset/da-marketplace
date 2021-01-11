@@ -5,7 +5,7 @@ import FormErrorHandled from './FormErrorHandled'
 import OnboardingTile, { Tile } from './OnboardingTile'
 import { indefiniteArticle as a } from './utils'
 
-import './InviteAcceptTile.css'
+import './InviteAcceptTile.scss'
 
 type Props = {
     role: string;

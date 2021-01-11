@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid } from 'semantic-ui-react'
 
-import './OnboardingTile.css'
+import './OnboardingTile.scss'
 import WelcomeHeader from './WelcomeHeader'
 
 type TileProps = {

@@ -4,7 +4,7 @@ import { unwrapDamlTuple } from '../common/damlTypes'
 import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.css'
+import './OrderCard.scss'
 
 export type TradeCardProps = {
     trade: SettledTradeSide;

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Table } from 'semantic-ui-react'
 
-import "./StripedTable.css"
+import "./StripedTable.scss"
 
 type CellItem = string | React.ReactElement;
 

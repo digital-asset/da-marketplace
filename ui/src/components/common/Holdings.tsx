@@ -17,7 +17,7 @@ import FormErrorHandled from './FormErrorHandled'
 import PageSection from './PageSection'
 import Page from './Page'
 
-import "./Holdings.css"
+import "./Holdings.scss"
 
 export type DepositProvider = {
     party: string;

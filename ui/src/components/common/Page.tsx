@@ -4,7 +4,7 @@ import { Grid } from 'semantic-ui-react'
 import SideMenu from './SideMenu'
 import TopMenu from './TopMenu'
 
-import './Page.css'
+import './Page.scss'
 
 type Props = {
     menuTitle?: React.ReactElement;
