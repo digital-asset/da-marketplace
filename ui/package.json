@@ -49,6 +49,7 @@
     "@types/react-router-dom": "^5.1.5",
     "http-proxy-middleware": "^1.0.4",
     "react-scripts": "^3.3.0",
+    "sass": "^1.32.2",
     "typescript": "~3.8.3"
   }
 }

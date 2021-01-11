@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid, Menu } from 'semantic-ui-react'
 
-import './SideMenu.css'
+import './SideMenu.scss'
 
 const SideMenu: React.FC = ({ children }) => (
     <Grid.Column className="page-sidemenu">

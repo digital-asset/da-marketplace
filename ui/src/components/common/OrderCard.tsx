@@ -4,7 +4,7 @@ import { unwrapDamlTuple } from '../common/damlTypes'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.css'
+import './OrderCard.scss'
 
 export type OrderProps = {
     order: Order;

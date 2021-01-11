@@ -17,7 +17,7 @@ import Page from '../common/Page'
 import InviteParticipant from './InviteParticipant'
 import { depositSummary } from '../common/utils'
 
-import './ExchangeParticipants.css'
+import './ExchangeParticipants.scss'
 
 type Props = {
     sideNav: React.ReactElement;

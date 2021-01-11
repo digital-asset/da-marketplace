@@ -9,7 +9,7 @@ import Credentials, { computeCredentials } from '../Credentials'
 import { Parties, retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
-import './LoginScreen.css'
+import './LoginScreen.scss'
 import WelcomeHeader from './common/WelcomeHeader'
 import OnboardingTile, { Tile } from './common/OnboardingTile'
 import { AppError, InvalidPartiesJSONError } from './common/errorTypes'

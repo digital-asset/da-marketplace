@@ -5,7 +5,7 @@ import Page from './Page'
 import PageSection from './PageSection'
 import WelcomeHeader from './WelcomeHeader'
 
-import "./LandingPage.css"
+import "./LandingPage.scss"
 
 type Props = {
     profile?: React.ReactElement;

@@ -13,7 +13,7 @@ import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
-import './CreateDeposit.css'
+import './CreateDeposit.scss'
 
 const CreateDeposit: React.FC = () => {
     const [ beneficiary, setBeneficiary ] = useState('');

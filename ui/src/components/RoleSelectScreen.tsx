@@ -9,7 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
 
-import './RoleSelectScreen.css'
+import './RoleSelectScreen.scss'
 
 type RoleSelectProps = {
     loading: boolean;
