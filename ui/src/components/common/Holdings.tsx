@@ -14,8 +14,8 @@ import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import { groupDeposits, countDecimals, preciseInputSteps } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
-import PageSection from './PageSection'
-import Page from './Page'
+
+import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
 import "./Holdings.css"
 
@@ -28,11 +28,9 @@ type Props = {
     deposits: DepositInfo[];
     providers: DepositProvider[];
     role: MarketRole;
-    sideNav: React.ReactElement;
-    onLogout: () => void;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogout }) => {
+const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     const depositsGrouped = groupDeposits(deposits);
     const assetSections = Object.entries(depositsGrouped)
         .map(([assetLabel, depositsForAsset]) => {
@@ -54,18 +52,12 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, sideNav, onLogou
         })
 
     return (
-        <Page
-            sideNav={sideNav}
-            menuTitle={<><WalletIcon/>Wallet</>}
-            onLogout={onLogout}
-        >
-            <PageSection border='blue' background='white'>
-                <Header as='h4'>Holdings</Header>
-                <div className='wallet'>
-                    { assetSections }
-                </div>
-            </PageSection>
-        </Page>
+        <div className='holdings'>
+            <Header as='h3'>Holdings</Header>
+            <div className='wallet'>
+                { assetSections }
+            </div>
+        </div>
     )
 }
 
@@ -88,23 +80,11 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
                     <h3>{deposit.contractData.asset.id.label}</h3>
                     <h3>{deposit.contractData.asset.quantity}</h3>
                 </div>
-                <div className='form-selector'>
-                    <Button
-                        secondary
-                        onClick={() => setSelectedForm('provider')}>
-                        Allocate to Different Provider
-                    </Button>
-                    <Button
-                        secondary
-                        onClick={() => setSelectedForm('merge')}>
-                        Merge
-                    </Button>
-                    <Button
-                        secondary
-                        onClick={() => setSelectedForm('split')}>
-                        Split
-                    </Button>
-                </div>
+                <OverflowMenu>
+                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
+                    <OverflowMenuEntry label='Merge' onClick={() => setSelectedForm('merge')}/>
+                    <OverflowMenuEntry label='Split' onClick={() => setSelectedForm('split')}/>
+                </OverflowMenu>
             </div>
             <div className='selected-form'>
                 {selectedForm === 'provider' &&
@@ -178,15 +158,15 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, o
     return (
         <>
             <div className='selected-form-heading'>
-               <h3>Allocate to a Different Provider</h3>
+               <p>Allocate to a Different Provider</p>
                 <Button
                     className='close-button'
                     onClick={onRequestClose}>
                     <IconClose/>
                 </Button>
             </div>
-            <FormErrorHandled className='inline-form' onSubmit={allocateToProvider}>
-                <Form.Group className='inline-form-group'>
+            <FormErrorHandled onSubmit={allocateToProvider}>
+                <Form.Group className='stacked-form-group' >
                     <Form.Select
                         clearable
                         label='Select Provider'
@@ -242,7 +222,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
     return (
         <>
             <div className='selected-form-heading'>
-               <h3>Merge</h3>
+               <p>Merge</p>
                 <Button
                     className='close-button'
                     onClick={onRequestClose}>
@@ -250,7 +230,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
                 </Button>
             </div>
             <FormErrorHandled onSubmit={assetDepositMerge}>
-                <Form.Group className='inline-form-group'>
+                <Form.Group className='stacked-form-group' >
                     <Form.Select
                         multiple
                         placeholder='Select...'
@@ -319,7 +299,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
     return (
         <>
             <div className='selected-form-heading'>
-               <h3>Split</h3>
+               <p>Split</p>
                 <Button
                     className='close-button'
                     onClick={onRequestClose}>
@@ -327,7 +307,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
                 </Button>
             </div>
             <FormErrorHandled className='inline-form' onSubmit={handleSplitAsset}>
-                <Form.Group className='inline-form-group'>
+                <Form.Group className='stacked-form-group' >
                     <Form.Input
                         type='number'
                         step={step}

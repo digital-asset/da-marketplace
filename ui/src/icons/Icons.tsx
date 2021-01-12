@@ -152,3 +152,11 @@ export const AddPlusIcon = () => (
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7 13.1764C3.59422 13.1764 0.823531 10.4058 0.823531 6.99997C0.823531 3.59419 3.59422 0.823503 7 0.823503C10.4058 0.823503 13.1765 3.59419 13.1765 6.99997C13.1765 10.4058 10.4058 13.1764 7 13.1764ZM0 7C0 10.8596 3.14042 14 7 14C10.8596 14 14 10.8596 14 7C14 3.14042 10.8596 0 7 0C3.14042 0 0 3.14042 0 7Z" fill="#303132"/>
     </svg>
 );
+
+export const OverflowIcon = () => (
+    <svg className='icon overflow-icon' width='20px' viewBox="0 0 17.8 4.6">
+        <circle className="fill-primary" cx="2" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="8.9" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="15.8" cy="2.3" r="2"/>
+    </svg>
+  );

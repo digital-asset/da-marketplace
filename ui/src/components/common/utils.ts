@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+
 import { DepositInfo } from './damlTypes'
 
 
@@ -64,4 +66,57 @@ export function preciseInputSteps(precision: number): PreciseInputSteps {
       : '0';
 
     return { step, placeholder };
+}
+
+export interface IDismissable<T extends HTMLElement, C extends HTMLElement> {
+    refDismissable: React.RefObject<T>;
+    refControl: React.RefObject<C>;
+}
+
+export function useDismissableElement<T extends HTMLElement, C extends HTMLElement = HTMLElement>(
+    onRequestClose: () => void): IDismissable<T, C>
+{
+    const refDismissable = useRef<T>(null);
+    const refControl = useRef<C>(null);
+
+    useEffect(() => {
+        function checkForDismissClick(e: any) {
+            const dismissable  = refDismissable.current;
+            const control = refControl.current;
+
+            // Clicking anywhere outside of a dismissable will dismiss
+            // element, except...
+            if (!dismissable || dismissable.contains(e.target)) {
+                return;
+            }
+
+            // ...if you click on the element used to summon the element
+            // in the first place. This special case is needed to avoid
+            // immediately re-summoning the dismissable through a click
+            // event triggered by the dimissing mousedown. (There doesn't
+            // seem to be reasonable browser support for suppressing the
+            // click event outright, which would be better and more
+            // general.)
+            if (control && control.contains(e.target)) {
+                return;
+            }
+
+            onRequestClose();
+        }
+
+        function checkForDismissKey(e: any) {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                onRequestClose();
+            }
+        }
+
+        document.addEventListener("mousedown", checkForDismissClick);
+        document.addEventListener("keydown", checkForDismissKey);
+        return () => {
+            document.removeEventListener("mousedown", checkForDismissClick);
+            document.removeEventListener("keydown", checkForDismissKey);
+        }
+    }, [ onRequestClose ]);
+
+    return { refDismissable, refControl };
 }

@@ -13,6 +13,7 @@
   --grey2: #F0F0F0;
   --grey3: #F6F6F6;
   --grey4: #262626;
+  --bluegrey1: #A0ACC5;
   --dabl-color: #3a62Ca;
   --white: #FFFFFF;
   --input-height: 40px;
@@ -113,7 +114,7 @@ p.p2 {
   width: 100%;
 }
 
-.ui.form .fluid input, .ui.form input, .ui.form .field > .selection.dropdown {
+.ui.form .fluid input, .ui.form input, .ui.form .field > .selection.dropdown, input {
   width: 260px;
   background: #FFFFFF;
   border: 1px solid var(--grey4);

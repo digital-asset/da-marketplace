@@ -1,0 +1,10 @@
+.investor-wallet {
+    display: flex;
+    flex-direction: row;
+
+}
+
+
+.investor-wallet .holdings {
+    width: 50%;
+}
