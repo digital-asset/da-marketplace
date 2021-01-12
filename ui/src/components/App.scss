@@ -1,0 +1,11 @@
+@import '../index.scss';
+@import '../colors.scss';
+
+@import './common/TabViewer.scss';
+
+.app {
+    height: 100vh;
+    width: 100vw;
+
+    @include tab-viewer;
+}
