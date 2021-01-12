@@ -1,0 +1,10 @@
+@import '../index.scss';
+
+@import './common/TabViewer.scss';
+
+.app {
+    height: 100vh;
+    width: 100vw;
+
+    @include tab-viewer;
+}
