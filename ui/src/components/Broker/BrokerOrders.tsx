@@ -17,7 +17,7 @@ import Page from '../common/Page'
 
 import BrokerCustomers from './BrokerCustomers'
 
-import './BrokerOrders.css'
+import './BrokerOrders.scss'
 
 
 type Props = {

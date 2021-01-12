@@ -3,7 +3,7 @@ import { Form, Message } from 'semantic-ui-react'
 
 import { ErrorMessage, parseError } from './errorTypes'
 
-import "./FormErrorHandled.css";
+import "./FormErrorHandled.scss";
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = ((callback: (fn: () => Promise<void>) => void) => Renderable);

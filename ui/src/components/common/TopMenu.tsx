@@ -3,7 +3,7 @@ import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
 
-import './TopMenu.css'
+import './TopMenu.scss'
 
 type Props = {
     title?: React.ReactElement;
@@ -27,7 +27,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                 <Menu.Item as={() => (
                     <Button className='ghost item' onClick={onLogout}>
                         <div className='log-out'>
-                            <p>Log out</p> 
+                            <p>Log out</p>
                             <LogoutIcon/>
                         </div>
                     </Button>

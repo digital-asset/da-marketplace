@@ -14,7 +14,7 @@ import ContractSelect from '../common/ContractSelect'
 import Page from '../common/Page'
 import { countDecimals, preciseInputSteps } from '../common/utils';
 
-import "./CreateMarket.css"
+import "./CreateMarket.scss"
 
 type Props = {
     sideNav: React.ReactElement;

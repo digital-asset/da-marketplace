@@ -3,7 +3,7 @@ import { Header } from 'semantic-ui-react'
 
 import { LogoIcon } from '../../icons/Icons'
 
-import './WelcomeHeader.css'
+import './WelcomeHeader.scss'
 
 const WelcomeHeader: React.FC = () => (
     <>

@@ -9,7 +9,7 @@ import publicIcon from './public.svg'
 import user from './user.svg'
 import wallet from './wallet.svg'
 
-import './Icons.css'
+import './Icons.scss'
 
 type IconProps = {
     size?: '24' | '32' | '48' | '64';

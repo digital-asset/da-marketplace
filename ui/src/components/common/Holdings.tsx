@@ -17,7 +17,7 @@ import FormErrorHandled from './FormErrorHandled'
 
 import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
-import "./Holdings.css"
+import "./Holdings.scss"
 
 export type DepositProvider = {
     party: string;

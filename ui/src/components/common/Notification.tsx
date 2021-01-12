@@ -1,7 +1,7 @@
 import React from 'react'
 import { Message } from 'semantic-ui-react'
 
-import "./Notification.css"
+import "./Notification.scss"
 
 const Notification: React.FC = ({ children }) => {
     return (

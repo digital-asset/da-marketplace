@@ -8,7 +8,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
 
-import './OrderForm.css'
+import './OrderForm.scss'
 
 type Props = {
     kind: OrderKind;
