@@ -2,9 +2,12 @@
 
 @import './common/TabViewer.scss';
 
+@import './Investor/InvestorWallet.scss';
+
 .app {
     height: 100vh;
     width: 100vw;
 
     @include tab-viewer;
+    @include investor-wallet;
 }

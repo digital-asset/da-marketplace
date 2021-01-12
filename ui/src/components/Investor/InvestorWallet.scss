@@ -1,0 +1,30 @@
+@import '../common/DonutChart.scss';
+
+@mixin investor-wallet {
+    .investor-wallet {
+        display: flex;
+        flex-direction: row;
+        @include donut-chart;
+
+        .holdings {
+            width: 50%;
+            margin-right: var(--spacing-l);
+        }
+
+        .allocations {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            svg {
+               height: 500px;
+
+               text {
+                   font-size: 3px;
+               }
+            }
+        }
+    }
+}
+

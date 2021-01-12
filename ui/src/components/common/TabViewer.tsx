@@ -19,16 +19,16 @@ type Props<T> = {
     Tab: (props: TabElementProps<T>) => JSX.Element;
 }
 
-
 type TabProps<T> = React.PropsWithChildren<Props<T>>
 
 const TabViewer = <T,>({ children, className, currentId, items, hideTabs, Tab }: TabProps<T>) : React.ReactElement => {
+
     return (
         <div className='tab-viewer'>
             <div className='menu-entries'>
                 { items.filter(item => !hideTabs || item.id === currentId).map(item => Tab({
-                    className: `menu-entry ${'current' && currentId === item.id}`,
-                    children: <h5>{item.label}</h5>,
+                    className: `menu-entry ${currentId === item.id && 'current'}`,
+                    children: <p>{item.label}</p>,
                     itemId: item.id,
                 }))}
             </div>

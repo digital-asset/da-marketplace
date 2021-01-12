@@ -84,19 +84,10 @@ export function useDismissableElement<T extends HTMLElement, C extends HTMLEleme
             const dismissable  = refDismissable.current;
             const control = refControl.current;
 
-            // Clicking anywhere outside of a dismissable will dismiss
-            // element, except...
             if (!dismissable || dismissable.contains(e.target)) {
                 return;
             }
 
-            // ...if you click on the element used to summon the element
-            // in the first place. This special case is needed to avoid
-            // immediately re-summoning the dismissable through a click
-            // event triggered by the dimissing mousedown. (There doesn't
-            // seem to be reasonable browser support for suppressing the
-            // click event outright, which would be better and more
-            // general.)
             if (control && control.contains(e.target)) {
                 return;
             }
