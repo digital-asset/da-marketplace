@@ -1,0 +1,58 @@
+
+@mixin tab-viewer {
+    .tab-viewer {
+        display: flex;
+        flex-direction: column;
+        vertical-align: bottom;
+        width: 100%;
+
+        .menu-entries {
+            display: flex;
+            flex-direction: row;
+            position: relative;
+
+            .menu-entry {
+                cursor: pointer;
+                padding: $spacing-xs $spacing-m;
+                background-color: transparent;
+                border-top: 1px solid var(--bluegrey1);
+                border-right: 1px solid var(--bluegrey1);
+
+                @media screen and (max-width: 768px) {
+                    padding: $spacing-xs;
+                }
+
+                &.current {
+                    background-color: var(--white);
+                    border-top: 3px solid var(--dabl-color);
+                    box-shadow: 5px 0 4px -5px var(--grey4);
+                    position: relative;
+                    z-index: 2;
+                    top: 1px;
+
+                    &:hover {
+                        cursor: default;
+                        background: var(--white);
+                    }
+                }
+
+                &:hover {
+                    background: var(--grey5);
+                }
+
+                &:first-child {
+                    border-left: 1px solid var(--bluegrey1);
+                }
+            }
+        }
+
+        .content-body {
+
+            overflow: auto;
+            padding: $spacing-m;
+            background-color: var(--white);
+            border: 1px solid var(--bluegrey1);
+            box-shadow: 0 1px 4px 0px var(--grey4);
+        }
+    }
+}
