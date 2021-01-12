@@ -14,9 +14,15 @@ import { useRegistryLookup } from '../common/RegistryLookup'
 import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import DonutChart, { IDonutInfo } from '../common/DonutChart'
+// import DonutChart, { IDonutInfo } from '../common/DonutChart'
+import TabViewer, { TabElementProps } from '../common/TabViewer';
 
 import './InvestorWallet.css';
+
+const walletTabs =  {
+    ALLOCATIONS: 'allocations',
+    PASSIVE_VS_COMMITTED: 'passive_vs_commited'
+}
 
 const InvestorWallet = (props: {
     sideNav: React.ReactElement;
@@ -25,6 +31,13 @@ const InvestorWallet = (props: {
 
     const { sideNav, onLogout } = props
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
+
+    const tabItems = [
+        { id: walletTabs.ALLOCATIONS, label: 'Allocations' },
+        { id: walletTabs.PASSIVE_VS_COMMITTED, label: 'Passive vs. Commited' }
+    ]
+
+    const [ currentTabId, setCurrentTabId ] = useState(walletTabs.ALLOCATIONS)
 
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
@@ -70,7 +83,7 @@ const InvestorWallet = (props: {
         ...brokerProviders,
     ];
 
-    const content: IDonutInfo[] = [{label: 'hello', amount: 50}, {label: 'hi', amount: 20}]
+    const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
 
     return (
         <Page
@@ -84,12 +97,33 @@ const InvestorWallet = (props: {
                     deposits={allDeposits}
                     providers={allProviders}
                     role={MarketRole.InvestorRole}/>
-                <DonutChart slices={[20,30,20]}/>
+                    <TabViewer
+                        currentId={currentTabId}
+                        items={tabItems}
+                        Tab={props => DivTab(props, handleTabChange)}>
+                        { currentTabId === walletTabs.ALLOCATIONS &&
+                            'donut'}
+
+                        { currentTabId === walletTabs.PASSIVE_VS_COMMITTED &&
+                           'other'}
+                    </TabViewer>
+                {/* <DonutChart slices={[20,30,20]}/> */}
             </div>
         </PageSection>
     </Page>
     )
 }
 
+const DivTab = (
+    props: TabElementProps<string>,
+    handleTabChange: (tabId: string) => void
+): JSX.Element => (
+    <div key={props.itemId}
+         className={props.className}
+         onClick={() => handleTabChange(props.itemId)}
+    >
+        {props.children}
+    </div>
+);
 
 export default InvestorWallet;

@@ -1,7 +1,5 @@
 import React from 'react'
 
-import "./TabViewer.css"
-
 type TabViewerItem<T> = {
     id: T;
     label: string;
@@ -21,18 +19,19 @@ type Props<T> = {
     Tab: (props: TabElementProps<T>) => JSX.Element;
 }
 
+
 type TabProps<T> = React.PropsWithChildren<Props<T>>
 
 const TabViewer = <T,>({ children, className, currentId, items, hideTabs, Tab }: TabProps<T>) : React.ReactElement => {
     return (
         <div className='tab-viewer'>
-            { <div className='menu-entries'>
+            <div className='menu-entries'>
                 { items.filter(item => !hideTabs || item.id === currentId).map(item => Tab({
                     className: `menu-entry ${'current' && currentId === item.id}`,
                     children: <h5>{item.label}</h5>,
                     itemId: item.id,
                 }))}
-            </div> }
+            </div>
 
             <div className={`content-body ${className}`}>
                 { children }
