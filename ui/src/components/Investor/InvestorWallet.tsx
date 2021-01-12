@@ -20,8 +20,7 @@ import TabViewer, { TabElementProps } from '../common/TabViewer';
 import { PieChart } from 'react-minimal-pie-chart';
 
 const walletTabs =  {
-    ALLOCATIONS: 'allocations',
-    PASSIVE_VS_COMMITTED: 'passive_vs_commited'
+    ALLOCATIONS: 'allocations'
 }
 
 const InvestorWallet = (props: {
@@ -33,8 +32,7 @@ const InvestorWallet = (props: {
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
 
     const tabItems = [
-        { id: walletTabs.ALLOCATIONS, label: 'Allocations' },
-        { id: walletTabs.PASSIVE_VS_COMMITTED, label: 'Passive vs. Commited' }
+        { id: walletTabs.ALLOCATIONS, label: 'Allocations' }
     ]
 
     const [ currentTabId, setCurrentTabId ] = useState(walletTabs.ALLOCATIONS)
@@ -104,9 +102,6 @@ const InvestorWallet = (props: {
                     Tab={props => DivTab(props, handleTabChange)}>
                     { currentTabId === walletTabs.ALLOCATIONS &&
                         <Allocations allDeposits={allDeposits}/>}
-
-                    { currentTabId === walletTabs.PASSIVE_VS_COMMITTED &&
-                        'other'}
                 </TabViewer>
             </div>
         </PageSection>
