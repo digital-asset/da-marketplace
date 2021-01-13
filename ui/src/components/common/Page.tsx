@@ -12,7 +12,12 @@ type Props = {
     notifications?: React.ReactElement[];
     onLogout: () => void;
     isLandingPage?: boolean;
-    topMenuButtons?: JSX.Element[];
+    topMenuButtons?: ITopMenuButtonInfo[];
+}
+
+export type ITopMenuButtonInfo = {
+    label: string,
+    onClick: () => void
 }
 
 const Page: React.FC<Props> = ({ children, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {

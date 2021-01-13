@@ -78,13 +78,10 @@ const Wallet = (props: {
     ];
 
     const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
+
     const topMenuButtons = [
-        <Button >
-            Withdraw
-        </Button>,
-        <Button >
-            Withdraw
-        </Button>
+        {label: 'Withdraw', onClick: ()=> void },
+        {label: 'Withdraw', onClick: ()=> void }
     ]
 
     return (
@@ -92,7 +89,7 @@ const Wallet = (props: {
         sideNav={sideNav}
         menuTitle={<><WalletIcon/>Wallet</>}
         onLogout={onLogout}
-        topMenuButtons={[]}
+        topMenuButtons={topMenuButtons}
         >
         <PageSection border='blue' background='grey'>
             <div className='wallet'>
