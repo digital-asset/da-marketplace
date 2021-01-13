@@ -1,18 +1,29 @@
-.order-form {
-    margin-bottom: var(--spacing-l);
-}
+@mixin order-form {
+    .order-form {
+        background-color: var(--cool-grey-10);
+        margin: var(--spacing-m);
+        padding: var(--spacing-s);
+        margin-bottom: var(--spacing-m);
+        color: #fff;
 
-.order-form > .field {
-    width: 450px;
-}
+        * {
+            color: #fff;
+        }
 
-.order-form > .field > .asset-label {
-    position: relative;
-    right: 0px;
-    top: 5px;
-}
+        .field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 35px;
+            width: 100%;
 
-.order-form > .field > input.uncontrolled:disabled {
-    opacity: 1.0;
-    color: grey;
+            .order-label {
+                color: var(--white);
+            }
+
+            .order-input {
+                width: 70%;
+            }
+        }
+    }
 }

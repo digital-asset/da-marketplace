@@ -32,6 +32,9 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
         console.log("Unexpected close from brokerTrade: ", e);
     }).contracts;
 
+    console.log("Ok ok", allOrderRequests);
+    console.log("Wowie, all trades: ", allOrders);
+
     return (
         <Page
             sideNav={sideNav}
