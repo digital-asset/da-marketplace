@@ -14,8 +14,6 @@ import Page from '../common/Page'
 
 import OrderForm from './OrderForm'
 
-import './InvestorTrade.scss'
-
 type Props = {
     deposits: DepositInfo[];
     sideNav: React.ReactElement;
