@@ -4,6 +4,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 @import 'colors.scss';
 
+$spacing-gap: #{var(--spacing-gap)};
+
 $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
 $spacing-m: #{var(--spacing-m)};
@@ -11,6 +13,9 @@ $spacing-l: #{var(--spacing-l)};
 
 :root {
   --input-height: 40px;
+
+  --spacing-gap: 2px;
+
   --spacing-xs: 6px;
   --spacing-s: 12px;
   --spacing-m: 24px;

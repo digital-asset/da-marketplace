@@ -1,0 +1,15 @@
+@import "./OrderForm.scss";
+
+@mixin investor-trade {
+    .investor-trade {
+        height: 100%;
+
+        .order-forms {
+            @include order-form;
+            flex: 1;
+            margin-right: var(--spacing-m);
+        }
+    }
+}
+
+@include investor-trade;
