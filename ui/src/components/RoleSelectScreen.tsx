@@ -7,7 +7,7 @@ import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon } from '../icons/Icons'
+import { ArrowRightIcon, MarketplaceLogoTitle } from '../icons/Icons'
 
 import './RoleSelectScreen.scss'
 
@@ -64,6 +64,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     return (
         <>
             <OnboardingTile>
+                <p>What would you like to do?</p>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}
