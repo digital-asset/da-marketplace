@@ -40,4 +40,16 @@ const TabViewer = <T,>({ children, className, currentId, items, hideTabs, Tab }:
     );
 }
 
+export const DivTab = (
+    props: TabElementProps<string>,
+    handleTabChange: (tabId: string) => void
+): JSX.Element => (
+    <div key={props.itemId}
+         className={props.className}
+         onClick={() => handleTabChange(props.itemId)}
+    >
+        {props.children}
+    </div>
+);
+
 export default TabViewer;

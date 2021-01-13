@@ -1,27 +1,21 @@
-import React, { useEffect, useState } from 'react'
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import React, { useState } from 'react'
+import { useStreamQueries } from '@daml/react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { damlTupleToString, makeContractInfo, ContractInfo } from '../common/damlTypes'
-import { IconChevronDown, WalletIcon } from '../../icons/Icons'
+import { WalletIcon } from '../../icons/Icons'
 
+import { damlTupleToString, makeContractInfo, ContractInfo } from '../common/damlTypes'
+import DonutChart, { IDonutChartData, donutChartColors } from '../common/DonutChart';
 import { useRegistryLookup } from '../common/RegistryLookup'
 import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import TabViewer, { TabElementProps } from '../common/TabViewer';
-import DonutChart, { IDonutChartData, donutChartColors } from '../common/DonutChart';
-
-const walletTabs =  {
-    ALLOCATIONS: 'allocations'
-}
+import TabViewer, { DivTab } from '../common/TabViewer';
 
 const InvestorWallet = (props: {
     sideNav: React.ReactElement;
@@ -32,10 +26,10 @@ const InvestorWallet = (props: {
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
 
     const tabItems = [
-        { id: walletTabs.ALLOCATIONS, label: 'Allocations' }
+        { id: 'allocations', label: 'Allocations' }
     ]
 
-    const [ currentTabId, setCurrentTabId ] = useState(walletTabs.ALLOCATIONS)
+    const [ currentTabId, setCurrentTabId ] = useState(tabItems[0].id)
 
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
@@ -89,7 +83,7 @@ const InvestorWallet = (props: {
         sideNav={sideNav}
         menuTitle={<><WalletIcon/>Wallet</>}
         onLogout={onLogout}
-    >
+        >
         <PageSection border='blue' background='grey'>
             <div className='investor-wallet'>
                 <Holdings
@@ -100,26 +94,14 @@ const InvestorWallet = (props: {
                     currentId={currentTabId}
                     items={tabItems}
                     Tab={props => DivTab(props, handleTabChange)}>
-                    { currentTabId === walletTabs.ALLOCATIONS &&
-                        <Allocations allDeposits={allDeposits}/>}
+                    { currentTabId === 'allocations' &&
+                        <Allocations allDeposits={allDeposits}/> }
                 </TabViewer>
             </div>
         </PageSection>
     </Page>
     )
 }
-
-const DivTab = (
-    props: TabElementProps<string>,
-    handleTabChange: (tabId: string) => void
-): JSX.Element => (
-    <div key={props.itemId}
-         className={props.className}
-         onClick={() => handleTabChange(props.itemId)}
-    >
-        {props.children}
-    </div>
-);
 
 const Allocations = (props: {
     allDeposits: ContractInfo<AssetDeposit>[]

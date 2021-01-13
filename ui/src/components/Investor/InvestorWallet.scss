@@ -1,13 +1,15 @@
 @import '../common/DonutChart.scss';
+@import '../common/TabViewer.scss';
 
 @mixin investor-wallet {
     .investor-wallet {
         display: flex;
         flex-direction: row;
+        @include tab-viewer;
 
         .holdings {
             width: 70%;
-            margin-right: var(--spacing-l);
+            margin-right: $spacing-l;
         }
 
         .allocations {

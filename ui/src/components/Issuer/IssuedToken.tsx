@@ -131,23 +131,23 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                 currentParticipants={participants}/>
         </Page>
     )
-}
 
-export function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
-    let netTokenDeposits: DepositInfo[] = []
+    function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
+        let netTokenDeposits: DepositInfo[] = []
 
-    tokenDeposits.forEach(deposit => {
-        const { account, asset } = deposit.contractData
-        const token = netTokenDeposits.find(d => d.provider === account.provider && d.investor === account.owner)
+        tokenDeposits.forEach(deposit => {
+            const { account, asset } = deposit.contractData
+            const token = netTokenDeposits.find(d => d.provider === account.provider && d.investor === account.owner)
 
-        if (token) {
-            return token.quantity += Number(asset.quantity)
-        }
+            if (token) {
+                return token.quantity += Number(asset.quantity)
+            }
 
-        return netTokenDeposits = [...netTokenDeposits, {investor: account.owner, provider: account.provider, quantity: Number(asset.quantity) }]
-    })
+            return netTokenDeposits = [...netTokenDeposits, {investor: account.owner, provider: account.provider, quantity: Number(asset.quantity) }]
+        })
 
-    return netTokenDeposits
+        return netTokenDeposits
+    }
 }
 
 export default IssuedToken;

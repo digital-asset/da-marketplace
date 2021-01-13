@@ -1,11 +1,6 @@
-.holdings {
-    width: 100%;
-}
 
 .asset-section {
   margin-top: var(--spacing-l);;
-  width: 100%;
-
 }
 
 .deposit-row {
@@ -69,6 +64,9 @@
     width: fit-content;
     margin-top: var(--spacing-s);
     margin-left: var(--spacing-xs);
+}
+.ui.form > .fields.stacked-form-group .field > .selection.dropdown {
+    width: 100%;
 }
 
 @media screen and (max-width: 1000px) {

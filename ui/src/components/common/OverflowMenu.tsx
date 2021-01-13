@@ -1,9 +1,9 @@
 import React, { useState, FunctionComponent } from 'react';
+import { useHistory } from 'react-router-dom';
 
 import { OverflowIcon } from '../../icons/Icons';
 
 import { useDismissableElement } from './utils';
-import { useHistory } from 'react-router-dom';
 
 import "./OverflowMenu.css"
 
