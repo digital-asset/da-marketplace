@@ -18,13 +18,13 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
+import Wallet from '../common/Wallet'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-import InvestorWallet from './InvestorWallet'
 
 type Props = {
     onLogout: () => void;
@@ -127,7 +127,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <InvestorWallet
+            <Wallet
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>

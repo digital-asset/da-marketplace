@@ -17,7 +17,7 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import TabViewer, { DivTab } from '../common/TabViewer';
 
-const InvestorWallet = (props: {
+const Wallet = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
 }) => {
@@ -85,7 +85,7 @@ const InvestorWallet = (props: {
         onLogout={onLogout}
         >
         <PageSection border='blue' background='grey'>
-            <div className='investor-wallet'>
+            <div className='wallet'>
                 <Holdings
                     deposits={allDeposits}
                     providers={allProviders}
@@ -121,7 +121,7 @@ function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]): IDonutCh
     tokenDeposits.forEach(deposit => {
         const { asset } = deposit.contractData
         const token = netTokenDeposits.find(d => d.title === asset.id.label)
-        const index = tokenDeposits.indexOf(deposit)+1
+        const index = tokenDeposits.indexOf(deposit)
 
         if (token) {
             return token.value += Number(asset.quantity)
@@ -140,4 +140,4 @@ function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]): IDonutCh
     return netTokenDeposits
 }
 
-export default InvestorWallet;
+export default Wallet;

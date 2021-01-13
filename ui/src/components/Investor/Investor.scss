@@ -1,7 +1,7 @@
 @import '../index.scss';
 
-@import './InvestorWallet.scss';
+@import '../common/Wallet.scss';
 
 @mixin investor {
-    @include investor-wallet;
+    @include wallet;
 }

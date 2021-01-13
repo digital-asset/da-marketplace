@@ -1,6 +1,15 @@
 
 .asset-section {
-  margin-top: var(--spacing-l);;
+  margin-top: var(--spacing-m);
+
+  .provider-info {
+      display: flex;
+      align-items: baseline;
+
+      .p2 {
+          margin-left: var(--spacing-s);
+      }
+    }
 }
 
 .deposit-row {

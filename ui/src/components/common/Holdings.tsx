@@ -9,7 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { IconClose } from '../../icons/Icons'
+import { WalletIcon, IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import { groupDeposits, countDecimals, preciseInputSteps } from './utils'
 import { useOperator } from './common'
@@ -32,13 +32,12 @@ type Props = {
 
 const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     const depositsGrouped = groupDeposits(deposits);
+
     const assetSections = Object.entries(depositsGrouped)
         .map(([assetLabel, depositsForAsset]) => {
             return (
                 <div className='asset-section' key={assetLabel}>
-                    <Header as='h5'>
-                        {assetLabel}
-                    </Header>
+                    { getProviderLabel(assetLabel) }
                     { depositsForAsset.map(deposit =>
                         <DepositRow
                             role={role}
@@ -54,11 +53,23 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     return (
         <div className='holdings'>
             <Header as='h3'>Holdings</Header>
-            <div className='wallet'>
-                { assetSections }
-            </div>
+            { assetSections }
         </div>
     )
+
+    function getProviderLabel(assetLabel: string) {
+        const providerInfo = providers.find(p => p.party === assetLabel)
+        return (
+            <div className='provider-info'>
+                <Header as='h5'>
+                    {providerInfo?.label}
+                </Header>
+                <p className='p2'>
+                    {providerInfo?.party}
+                </p>
+            </div>
+        )
+    }
 }
 
 type DepositRowProps = {

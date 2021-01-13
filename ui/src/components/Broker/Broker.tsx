@@ -18,7 +18,7 @@ import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
-import Holdings from '../common/Holdings'
+import Wallet from '../common/Wallet';
 
 import BrokerOrders from './BrokerOrders'
 import BrokerSideNav from './BrokerSideNav'
@@ -142,11 +142,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            {/* <Holdings
-                deposits={allDeposits}
-                providers={allProviders}
-                role={MarketRole.BrokerRole}
-                /> */}
+            <Wallet
+                sideNav={sideNav}
+                onLogout={onLogout}/>
         </Route>
 
         <Route path={`${path}/orders`}>
