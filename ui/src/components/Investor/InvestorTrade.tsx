@@ -57,7 +57,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     }).contracts.map(makeContractInfo);
 
     const marketData = allOrders.reduce((map, order) => {
-        const { price } = order.contractData;
+        const { price, qty } = order.contractData;
         const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
 
         const qtyOrders = map[+price]?.qtyOrders || 0;
@@ -67,7 +67,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             throw new Error('uh oh');
         }
 
-        return { ...map, [+price]: { kind, qtyOrders: qtyOrders + 1, price: +price } };
+        return { ...map, [+price]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
     }, {} as MarketDataMap)
 
     const exchangeData = location.state && location.state.exchange;
@@ -122,9 +122,9 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
-                <div className='investor-trade'>
-                    <div className='order-forms'>
+            <PageSection className='investor-trade' border='blue' background='white'>
+                <div className='order'>
+                    <div className='order-form'>
                         <OrderForm
                             quotePrecision={quotePrecision}
                             kind={OrderKind.BID}
@@ -132,14 +132,6 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                             assetPrecisions={[quotePrecision, basePrecision]}
                             labels={[quote, base]}
                             deposits={bidDeposits}/>
-
-                        {/* <OrderForm
-                            quotePrecision={quotePrecision}
-                            kind={OrderKind.OFFER}
-                            placeOrder={placeOffer}
-                            assetPrecisions={[basePrecision, quotePrecision]}
-                            labels={[base, quote]}
-                            deposits={offerDeposits}/> */}
                     </div>
                     <OrderLadder orders={marketData}/>
                 </div>

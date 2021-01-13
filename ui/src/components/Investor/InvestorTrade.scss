@@ -1,0 +1,38 @@
+@import "../../index.scss";
+
+@import "../common/OrderLadder.scss";
+
+@import "./OrderForm.scss";
+
+@mixin investor-trade {
+    .investor-trade {
+        height: 100%;
+        padding: 0px !important;
+
+        @include order-ladder;
+
+        .order {
+            background: var(--cool-grey-20);
+
+            display: flex;
+            height: 100%;
+
+            h3 {
+                display: flex;
+                align-items: center;
+            }
+
+            .candlestick-icon {
+                margin-right: var(--spacing-s);
+            }
+            .order-form {
+                @include order-form;
+                flex: 1;
+                margin-right: var(--spacing-m);
+
+            }
+        }
+    }
+}
+
+@include investor-trade;
