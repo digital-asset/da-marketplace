@@ -1,7 +1,12 @@
+.onboarding-tile {
+    width: 100%;
+    height: 100%;
+}
+
 .onboarding-tile .onboarding-tile-content {
     background-color: var(--mediumblue);
     padding: var(--spacing-l);
-    max-width: 550px;
+    width: 550px;
     margin-bottom: var(--spacing-s);
     text-align: left;
 }

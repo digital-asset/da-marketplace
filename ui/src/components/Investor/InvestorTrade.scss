@@ -23,16 +23,13 @@
             }
 
             .candlestick-icon {
-                margin-right: var(--spacing-s);
+                margin-right: $spacing-s;
             }
             .order-form {
                 @include order-form;
                 flex: 1;
-                margin-right: var(--spacing-m);
-
+                margin-right: $spacing-m;
             }
         }
     }
 }
-
-@include investor-trade;

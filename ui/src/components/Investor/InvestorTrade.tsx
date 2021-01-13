@@ -1,24 +1,20 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { ExchangeIcon } from '../../icons/Icons'
+import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 
-import { DepositInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import { DepositInfo, makeContractInfo } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import OrderLadder, { MarketDataMap } from '../common/OrderLadder'
 import Page from '../common/Page'
 
 import OrderForm from './OrderForm'
-
-import './InvestorTrade.scss'
 
 type Props = {
     deposits: DepositInfo[];
@@ -48,9 +44,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const location = useLocation<LocationState>();
     const history = useHistory();
-    const operator = useOperator();
     const investor = useParty();
-    const ledger = useLedger();
 
     const allOrders = useStreamQueries(Order, () => [], [], (e) => {
         console.log("Unexpected close from Order: ", e);
@@ -92,30 +86,6 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         setOfferDeposits(filterDepositsForOrder(deposits, label, base));
     }, [ deposits, base, quote, investor, exchange ]);
 
-    const placeBid = async (depositCids: string[], price: string, amount: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-    }
-
-    const placeOffer = async (depositCids: string[], price: string, amount: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
-    }
-
     return (
         <Page
             sideNav={sideNav}
@@ -124,14 +94,13 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         >
             <PageSection className='investor-trade' border='blue' background='white'>
                 <div className='order'>
+                    <h3><CandlestickIcon/>Order</h3>
                     <div className='order-form'>
                         <OrderForm
-                            quotePrecision={quotePrecision}
-                            kind={OrderKind.BID}
-                            placeOrder={placeBid}
-                            assetPrecisions={[quotePrecision, basePrecision]}
-                            labels={[quote, base]}
-                            deposits={bidDeposits}/>
+                            assetPrecisions={[basePrecision, quotePrecision]}
+                            deposits={[bidDeposits, offerDeposits]}
+                            exchange={exchange}
+                            tokenPair={tokenPair}/>
                     </div>
                     <OrderLadder orders={marketData}/>
                 </div>

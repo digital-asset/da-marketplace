@@ -1,40 +1,52 @@
-.arrow-right-icon > path {
-    fill-rule: evenodd;
-    clip-rule: evenodd;
-    fill: var(--textcolor);
+@mixin icon-size($size) {
+    &.icon-size-#{$size} {
+        height: #{$size + 'px'};
+        width: #{$size + 'px'};
+    }
 }
 
-.icon {
-    height: var(--spacing-s);
-}
+@mixin icons {
+    .icon {
+        height: var(--spacing-s);
 
-.icon.icon-size-32 {
-    height: 32px;
-}
+        @include icon-size(32);
+        @include icon-size(48);
+        @include icon-size(64);
 
-.icon.icon-size-48 {
-    height: 48px;
-}
+        &.arrow-right-icon > path {
+            fill-rule: evenodd;
+            clip-rule: evenodd;
+            fill: var(--textcolor);
+        }
 
-.icon.icon-size-64 {
-    height: 64px;
-}
+        &.candlestick-icon {
+            line, rect {
+                fill: var(--cool-grey-10);
+                stroke: var(--cool-grey-10);
+            }
+        }
 
-.icon.circle-icon {
-    border-radius: 50px/50px;
-    border: solid 1px var(--textcolor);
-    width: 16px;
-    height: 16px;
-    margin-right: var(--spacing-xs);
-}
+        &.circle-icon {
+            border-radius: 50px/50px;
+            border: solid 1px var(--textcolor);
+            width: 16px;
+            height: 16px;
+            margin-right: $spacing-xs;
+        }
 
-.icon.chevron-up {
-    transform: scaleY(-1);
-    padding-left: var(--spacing-xs);
-    margin-right: var(--spacing-xs) !important;
-}
+        &.chevron-up {
+            transform: scaleY(-1);
+            padding-left: $spacing-xs;
+            margin-right: $spacing-xs !important;
+        }
 
-.icon.chevron-down {
-    padding-left: var(--spacing-xs);
-    margin-right: var(--spacing-xs) !important;
+        &.chevron-down {
+            padding-left: $spacing-xs;
+            margin-right: $spacing-xs !important;
+        }
+
+        .fill-primary {
+            fill: var(--dabl-color);
+        }
+    }
 }

@@ -1,0 +1,10 @@
+@import '../index.scss';
+
+@import '../common/Wallet.scss';
+
+@import './InvestorTrade.scss';
+
+@mixin investor {
+    @include wallet;
+    @include investor-trade;
+}

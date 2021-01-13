@@ -64,6 +64,18 @@ export const LogoIcon: React.FC<IconProps> = ({ size }) => (
         alt="command"/>
 )
 
+export const CandlestickIcon = () => (
+    <svg className='icon icon-size-32 candlestick-icon' width="20" preserveAspectRatio="none" height="20" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line y1="9.9165" x2="18" y2="9.9165" stroke="white" strokeWidth="1.5" strokeDasharray="1 1"/>
+        <line x1="3.5" y1="0.5" x2="3.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="9.5" y1="0.5" x2="9.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="15.5" y1="0.5" x2="15.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="2.5" y="3.5" width="2" height="3" fill="white" stroke="white"/>
+        <rect x="8.5" y="7.5" width="2" height="5" fill="white" stroke="white"/>
+        <rect x="14.5" y="4.30957" width="2" height="7.38095" fill="white" stroke="white"/>
+    </svg>
+)
+
 export const ExchangeIcon = () => (
     <img
         className="icon exchange-icon"
@@ -126,7 +138,7 @@ export const CircleIcon = () => (
 )
 
 export const IconClose = () => (
-    <svg className='icon close' viewBox="0 0 15 16">
+    <svg className='icon close' viewBox="0 0 14 14">
       <path className="fill-primary" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
           L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
@@ -152,3 +164,11 @@ export const AddPlusIcon = () => (
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7 13.1764C3.59422 13.1764 0.823531 10.4058 0.823531 6.99997C0.823531 3.59419 3.59422 0.823503 7 0.823503C10.4058 0.823503 13.1765 3.59419 13.1765 6.99997C13.1765 10.4058 10.4058 13.1764 7 13.1764ZM0 7C0 10.8596 3.14042 14 7 14C10.8596 14 14 10.8596 14 7C14 3.14042 10.8596 0 7 0C3.14042 0 0 3.14042 0 7Z" fill="#303132"/>
     </svg>
 );
+
+export const OverflowIcon = () => (
+    <svg className='icon overflow-icon' width='20px' viewBox="0 0 17.8 4.6">
+        <circle className="fill-primary" cx="2" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="8.9" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="15.8" cy="2.3" r="2"/>
+    </svg>
+  );
