@@ -5,8 +5,6 @@ import { OverflowIcon } from '../../icons/Icons';
 
 import { useDismissableElement } from './utils';
 
-import "./OverflowMenu.scss"
-
 export const OverflowMenuEntry : FunctionComponent<{
     label : React.ReactElement | string,
     onClick?: () => void,
