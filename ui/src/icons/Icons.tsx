@@ -1,6 +1,7 @@
 import React from 'react'
 
 import marketplaceLogo from './marketplace.svg'
+import candlestick from './candlestick.svg'
 import exchange from './exchange.svg'
 import lock from './lock.svg'
 import logout from './logout.svg'
@@ -62,6 +63,18 @@ export const LogoIcon: React.FC<IconProps> = ({ size }) => (
         className={`icon logo-icon icon-size-${size}`}
         src={marketplaceLogo}
         alt="command"/>
+)
+
+export const CandlestickIcon = () => (
+    <svg className='icon icon-size-32 candlestick-icon' width="20" preserveAspectRatio="none" height="20" viewBox="0 0 20 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <line y1="9.9165" x2="18" y2="9.9165" stroke="white" strokeWidth="1.5" strokeDasharray="1 1"/>
+        <line x1="3.5" y1="0.5" x2="3.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="9.5" y1="0.5" x2="9.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="15.5" y1="0.5" x2="15.5" y2="15.5" stroke="white" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="2.5" y="3.5" width="2" height="3" fill="white" stroke="white"/>
+        <rect x="8.5" y="7.5" width="2" height="5" fill="white" stroke="white"/>
+        <rect x="14.5" y="4.30957" width="2" height="7.38095" fill="white" stroke="white"/>
+    </svg>
 )
 
 export const ExchangeIcon = () => (

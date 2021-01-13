@@ -3,25 +3,26 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 @import 'colors.scss';
+@import 'icons/Icons.scss';
+
+:root {
+  --spacing-gap: 2px;
+  --spacing-xs: 6px;
+  --spacing-s: 12px;
+  --spacing-m: 24px;
+  --spacing-l: 48px;
+
+  --input-height: 40px;
+  --max-page-width: 1000px;
+}
 
 $spacing-gap: #{var(--spacing-gap)};
-
 $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
 $spacing-m: #{var(--spacing-m)};
 $spacing-l: #{var(--spacing-l)};
 
-:root {
-  --input-height: 40px;
-
-  --spacing-gap: 2px;
-
-  --spacing-xs: 6px;
-  --spacing-s: 12px;
-  --spacing-m: 24px;
-  --spacing-l: 48px;
-  --max-page-width: 1000px;
-}
+$input-height: #{var(--input-height)};
 
 * {
   font-family: 'Open Sans';
@@ -210,3 +211,5 @@ p.p2 {
 .ui.button.close-button, .ui.buttons.close-button .button {
   display: contents;
 }
+
+@include icons;
