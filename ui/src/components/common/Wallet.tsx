@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useStreamQueries } from '@daml/react'
+import { Button } from 'semantic-ui-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -77,12 +78,21 @@ const Wallet = (props: {
     ];
 
     const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
+    const topMenuButtons = [
+        <Button >
+            Withdraw
+        </Button>,
+        <Button >
+            Withdraw
+        </Button>
+    ]
 
     return (
         <Page
         sideNav={sideNav}
         menuTitle={<><WalletIcon/>Wallet</>}
         onLogout={onLogout}
+        topMenuButtons={[]}
         >
         <PageSection border='blue' background='grey'>
             <div className='wallet'>

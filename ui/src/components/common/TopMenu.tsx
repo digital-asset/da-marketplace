@@ -10,9 +10,10 @@ type Props = {
     notifications?: React.ReactElement[];
     onLogout: () => void;
     isLandingPage?: boolean;
+    topMenuButtons?: JSX.Element[];
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPage }) => (
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPage, topMenuButtons }) => (
     <div className='top-section'>
         <Menu className='top-menu'>
             <Menu.Menu className='top-right-menu' position='left'>
@@ -22,7 +23,12 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                     </Header>
                 </Menu.Item>
             </Menu.Menu>
-
+            <Menu.Menu className='menu-buttons' position='right'>
+               {topMenuButtons?.map(button =>
+                    <Menu.Item>
+                        {button}
+                    </Menu.Item>)}
+            </Menu.Menu>
             <Menu.Menu className={`top-left-menu ${!isLandingPage && 'blue-border' }`} position='right'>
                 <Menu.Item as={() => (
                     <Button className='ghost item' onClick={onLogout}>

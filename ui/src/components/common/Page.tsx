@@ -12,6 +12,7 @@ type Props = {
     notifications?: React.ReactElement[];
     onLogout: () => void;
     isLandingPage?: boolean;
+    topMenuButtons?: JSX.Element[];
 }
 
 const Page: React.FC<Props> = ({ children, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
