@@ -44,5 +44,9 @@
             padding-left: $spacing-xs;
             margin-right: $spacing-xs !important;
         }
+
+        .fill-primary {
+            fill: var(--dabl-color);
+        }
     }
 }
