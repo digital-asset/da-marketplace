@@ -17,7 +17,7 @@ import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import TabViewer, { TabElementProps } from '../common/TabViewer';
-import { PieChart } from 'react-minimal-pie-chart';
+import DonutChart, { IDonutChartData, donutChartColors } from '../common/DonutChart';
 
 const walletTabs =  {
     ALLOCATIONS: 'allocations'
@@ -121,13 +121,6 @@ const DivTab = (
     </div>
 );
 
-type IPieChartData = {
-    title: string,
-    value: number,
-    color: string
-}
-
-
 const Allocations = (props: {
     allDeposits: ContractInfo<AssetDeposit>[]
 }) => {
@@ -135,28 +128,18 @@ const Allocations = (props: {
 
     return (
         <div className='allocations'>
-            <PieChart
-                radius={30}
-                animate
-                lineWidth={25}
-                data={tokenOptions}
-                labelPosition={120}
-                viewBoxSize={[100,100]}
-                label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.value.toFixed(2)}`}
-                />
+            <DonutChart data={tokenOptions}/>
         </div>
     )
 }
 
-const colors = ['#835AF7', '#5AF7AC', '#FF29D0', '#131720', ' #CBD0CB']
-
-function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]): IPieChartData[] {
-    let netTokenDeposits: IPieChartData[]  = []
+function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]): IDonutChartData[] {
+    let netTokenDeposits: IDonutChartData[]  = []
 
     tokenDeposits.forEach(deposit => {
         const { asset } = deposit.contractData
         const token = netTokenDeposits.find(d => d.title === asset.id.label)
-        const index = tokenDeposits.indexOf(deposit)
+        const index = tokenDeposits.indexOf(deposit)+1
 
         if (token) {
             return token.value += Number(asset.quantity)
@@ -167,7 +150,7 @@ function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]): IPieChar
             {
                 title: asset.id.label,
                 value: Number(asset.quantity),
-                color: colors[index % colors.length]
+                color: donutChartColors[index % donutChartColors.length]
             }
         ]
     })

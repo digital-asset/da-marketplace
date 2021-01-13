@@ -1,13 +1,10 @@
 @import '../index.scss';
 
-@import './common/TabViewer.scss';
-
-@import './Investor/InvestorWallet.scss';
+@import './Investor/Investor.scss';
 
 .app {
     height: 100vh;
     width: 100vw;
 
-    @include tab-viewer;
-    @include investor-wallet;
+    @include investor;
 }

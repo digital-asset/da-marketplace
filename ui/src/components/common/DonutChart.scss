@@ -1,39 +1,10 @@
 
 @mixin donut-chart {
-    svg.donut-chart {
-        display: inline-block;
-        vertical-align: middle;
-        transform-origin: 50% 50%;
-        animation: scale .6s;
-        margin: var(--spacing-m);
-        overflow: hidden;
-    }
-    text.label {
-        color: red;
-    }
+    svg {
+        height: 500px;
 
-    @keyframes scale {
-        from { transform: scale(.5); }
-        to { transform: scale(1); }
-    }
-
-    .fill-0 {
-        fill: #5AF7AC
-    }
-
-    .fill-1 {
-        fill: #835AF7
-    }
-
-    .fill-2 {
-        fill: #FF29D0
-    }
-
-    .fill-3 {
-        fill: #131720
-    }
-
-    .fill-4 {
-        fill: #CBD0CB
+        text {
+            font-size: 3px;
+        }
     }
 }

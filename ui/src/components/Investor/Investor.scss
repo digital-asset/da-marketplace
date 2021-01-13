@@ -1,0 +1,9 @@
+@import '../index.scss';
+
+@import './common/TabViewer.scss';
+@import './InvestorWallet.scss';
+
+@mixin investor {
+    @include tab-viewer;
+    @include investor-wallet;
+}

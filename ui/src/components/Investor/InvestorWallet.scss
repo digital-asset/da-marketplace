@@ -4,7 +4,6 @@
     .investor-wallet {
         display: flex;
         flex-direction: row;
-        @include donut-chart;
 
         .holdings {
             width: 70%;
@@ -12,19 +11,7 @@
         }
 
         .allocations {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-
-            svg {
-               height: 500px;
-
-               text {
-                   font-size: 3px;
-               }
-            }
+            @include donut-chart;
         }
     }
 }
-
