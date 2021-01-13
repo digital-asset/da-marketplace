@@ -1,3 +1,5 @@
+@import '../index.scss';
+
 @import '../common/DonutChart.scss';
 @import '../common/TabViewer.scss';
 
@@ -14,6 +16,15 @@
 
         .allocations {
             @include donut-chart;
+        }
+
+        @media screen and (max-width: 1000px) {
+            flex-direction: column;
+
+            .holdings {
+                width: 100%;
+                margin-right: opx;
+            }
         }
     }
 }

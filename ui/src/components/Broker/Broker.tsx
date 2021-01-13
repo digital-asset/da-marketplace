@@ -146,8 +146,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 deposits={allDeposits}
                 providers={allProviders}
                 role={MarketRole.BrokerRole}
-                sideNav={sideNav}
-                onLogout={onLogout} /> */}
+                /> */}
         </Route>
 
         <Route path={`${path}/orders`}>
