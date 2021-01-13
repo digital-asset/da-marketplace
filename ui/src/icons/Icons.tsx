@@ -1,7 +1,6 @@
 import React from 'react'
 
 import marketplaceLogo from './marketplace.svg'
-import candlestick from './candlestick.svg'
 import exchange from './exchange.svg'
 import lock from './lock.svg'
 import logout from './logout.svg'

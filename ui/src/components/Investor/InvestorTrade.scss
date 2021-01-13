@@ -1,13 +1,24 @@
+@import "../../index.scss";
 @import "./OrderForm.scss";
 
 @mixin investor-trade {
     .investor-trade {
         height: 100%;
 
-        .order-forms {
-            @include order-form;
-            flex: 1;
-            margin-right: var(--spacing-m);
+        .order {
+            h3 {
+                display: flex;
+                align-items: center;
+            }
+
+            .candlestick-icon {
+                margin-right: $spacing-s;
+            }
+            .order-form {
+                @include order-form;
+                flex: 1;
+                margin-right: $spacing-m;
+            }
         }
     }
 }
