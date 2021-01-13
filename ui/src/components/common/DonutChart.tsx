@@ -13,15 +13,17 @@ export const donutChartColors = ['#835AF7', '#5AF7AC', '#FF29D0', '#131720', '#C
 const DonutChart = (props: {
     data: IDonutChartData[]
 }) => (
-    <PieChart
-        radius={30}
-        animate
-        lineWidth={25}
-        data={props.data}
-        labelPosition={110}
-        viewBoxSize={[100,100]}
-        label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.value.toFixed(2)}`}
-    />
+    <div className='donut-chart'>
+        <PieChart
+            radius={30}
+            animate
+            lineWidth={25}
+            data={props.data}
+            labelPosition={110}
+            viewBoxSize={[100,100]}
+            label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.value.toFixed(2)}`}
+        />
+    </div>
 )
 
 export default DonutChart;

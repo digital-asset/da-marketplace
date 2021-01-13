@@ -1,9 +1,11 @@
 @mixin donut-chart {
-    svg {
-        height: 500px;
+    .donut-chart {
+        svg {
+            height: 500px;
 
-        text {
-            font-size: 3px;
+            text {
+                font-size: 3px;
+            }
         }
     }
 }
