@@ -126,7 +126,7 @@ export const CircleIcon = () => (
 )
 
 export const IconClose = () => (
-    <svg className='icon close' viewBox="0 0 15 16">
+    <svg className='icon close' viewBox="0 0 14 14">
       <path className="fill-primary" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
           L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
@@ -152,3 +152,11 @@ export const AddPlusIcon = () => (
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7 13.1764C3.59422 13.1764 0.823531 10.4058 0.823531 6.99997C0.823531 3.59419 3.59422 0.823503 7 0.823503C10.4058 0.823503 13.1765 3.59419 13.1765 6.99997C13.1765 10.4058 10.4058 13.1764 7 13.1764ZM0 7C0 10.8596 3.14042 14 7 14C10.8596 14 14 10.8596 14 7C14 3.14042 10.8596 0 7 0C3.14042 0 0 3.14042 0 7Z" fill="#303132"/>
     </svg>
 );
+
+export const OverflowIcon = () => (
+    <svg className='icon overflow-icon' width='20px' viewBox="0 0 17.8 4.6">
+        <circle className="fill-primary" cx="2" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="8.9" cy="2.3" r="2"/>
+        <circle className="fill-primary" cx="15.8" cy="2.3" r="2"/>
+    </svg>
+  );

@@ -8,6 +8,10 @@
     height: var(--spacing-s);
 }
 
+.icon > .fill-primary {
+    fill: var(--dabl-color);
+}
+
 .icon.icon-size-32 {
     height: 32px;
 }
