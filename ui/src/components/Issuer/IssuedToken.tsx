@@ -12,10 +12,13 @@ import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from
 import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
+import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
+import TabViewer, { DivTab } from '../common/TabViewer';
 
 import AddParticipantModal from './AddParticipantModal'
 
 import './IssuedToken.scss'
+
 
 type DepositInfo = {
     investor: string,
@@ -57,7 +60,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection border='blue' background='white'>
+            <PageSection className='issued-token' border='blue' background='white'>
                 <div className='token-subheading'>
                     <p>{token?.contractData.description}</p>
                     <div className='token-details'>
@@ -95,34 +98,37 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                     </div>
                 }
                 <Header as='h3'>Position Holdings</Header>
-                <Table className='issuer-cap-table'>
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.HeaderCell>Investor</Table.HeaderCell>
-                            <Table.HeaderCell>Provider</Table.HeaderCell>
-                            <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
-                            <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {nettedTokenDeposits.length > 0 ?
-                            nettedTokenDeposits.map(deposit =>
-                                <Table.Row>
-                                    <Table.Cell>{deposit.investor || '-'}</Table.Cell>
-                                    <Table.Cell>{deposit.provider || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
-                                    <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
-                                </Table.Row>
-                            )
-                        :
-                            <Table.Row className='empty-table' >
-                                <Table.Cell textAlign={'center'} colSpan={4}>
-                                     <i>There are no position holdings for this token</i>
-                                </Table.Cell>
+                <div className='position-holdings-data'>
+                    <Table className='issuer-cap-table'>
+                        <Table.Header>
+                            <Table.Row>
+                                <Table.HeaderCell>Investor</Table.HeaderCell>
+                                <Table.HeaderCell>Provider</Table.HeaderCell>
+                                <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
+                                <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
                             </Table.Row>
-                        }
-                    </Table.Body>
-                </Table>
+                        </Table.Header>
+                        <Table.Body>
+                            {nettedTokenDeposits.length > 0 ?
+                                nettedTokenDeposits.map(deposit =>
+                                    <Table.Row>
+                                        <Table.Cell>{deposit.investor || '-'}</Table.Cell>
+                                        <Table.Cell>{deposit.provider || '-'}</Table.Cell>
+                                        <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
+                                        <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
+                                    </Table.Row>
+                                )
+                            :
+                                <Table.Row className='empty-table' >
+                                    <Table.Cell textAlign={'center'} colSpan={4}>
+                                        <i>There are no position holdings for this token</i>
+                                    </Table.Cell>
+                                </Table.Row>
+                            }
+                        </Table.Body>
+                    </Table>
+                    <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
+                </div>
             </PageSection>
             <AddParticipantModal
                 tokenId={token?.contractData.id}
@@ -147,6 +153,31 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
         })
 
         return netTokenDeposits
+    }
+}
+
+
+const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+    const tabItems = [
+        { id: 'allocations', label: 'Allocations' }
+    ]
+    const [ currentTabId, setCurrentTabId ] = useState(tabItems[0].id)
+
+    const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
+
+    return (
+        // <TabViewer
+        // currentId={currentTabId}
+        // items={[]}
+        // Tab={props => DivTab(props, handleTabChange)}>
+        //     { currentTabId === 'allocations' &&
+                <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
+        //     }
+        // </TabViewer>
+    )
+
+    function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
+        return tokens.map(t => {return {title: `${t.investor}/${t.provider}`, value: t.quantity, color: getDonutChartColor(tokens.indexOf(t))}})
     }
 }
 

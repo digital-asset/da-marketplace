@@ -25,5 +25,7 @@ const DonutChart = (props: {
         />
     </div>
 )
-
+export function getDonutChartColor(index: number) {
+    return donutChartColors[index % donutChartColors.length]
+}
 export default DonutChart;
