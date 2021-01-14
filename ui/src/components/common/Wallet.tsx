@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useStreamQueries } from '@daml/react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -8,7 +9,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { WalletIcon } from '../../icons/Icons'
+import { AddPlusIcon, WalletIcon } from '../../icons/Icons'
 
 import { damlTupleToString, makeContractInfo, ContractInfo } from '../common/damlTypes'
 import DonutChart, { IDonutChartData, donutChartColors } from '../common/DonutChart';
@@ -17,8 +18,12 @@ import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import TabViewer, { DivTab } from '../common/TabViewer';
+
 import { ITopMenuButtonInfo } from './TopMenu'
-import { useHistory } from 'react-router-dom'
+
+import WalletTransaction from './WalletTransaction';
+import { Form } from 'semantic-ui-react'
+
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -115,17 +120,35 @@ const Wallet = (props: {
                 </Page>
             </Route>
             <Route path={`${path}/withdraw`}>
-                <Wallet
+                <WalletTransaction
                     sideNav={sideNav}
-                    onLogout={onLogout}/>
+                    onLogout={onLogout}
+                    transactionType='Withdraw'
+                    baseUrl={url}>
+                </WalletTransaction>
             </Route>
             <Route path={`${path}/deposit`}>
-                <Wallet
+                <WalletTransaction
                     sideNav={sideNav}
-                    onLogout={onLogout}/>
+                    onLogout={onLogout}
+                    transactionType='Deposit'
+                    baseUrl={url}>
+                    <div>
+                        Select Payment Method
+                        <button>
+                            <AddPlusIcon/> Add New Payment Method
+                        </button>
+                    </div>
+                    ??
+                    <div>
+                        Amount
+                    </div>
+                    <Form.Input>
+
+                    </Form.Input>
+                    </WalletTransaction>
             </Route>
         </Switch>
-
     )
 }
 
