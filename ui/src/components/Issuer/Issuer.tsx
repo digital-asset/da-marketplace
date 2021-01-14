@@ -100,41 +100,43 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                    name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
 
     const issuerScreen = (
-        <Switch>
-            <Route exact path={path}>
-                <LandingPage
-                    profile={
-                        <FormErrorHandled onSubmit={updateProfile}>
-                            <IssuerProfile
-                                content='Save'
-                                defaultProfile={profile}
-                                submitProfile={profile => setProfile(profile)}/>
-                        </FormErrorHandled>
-                    }
-                    marketRelationships={
-                        <MarketRelationships role={MarketRole.IssuerRole}
-                                             custodianRelationships={allCustodianRelationships}/>}
-                    sideNav={sideNav}
-                    notifications={notifications}
-                    onLogout={onLogout}/>
-            </Route>
+        <div className='issuer'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <IssuerProfile
+                                    content='Save'
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <MarketRelationships role={MarketRole.IssuerRole}
+                                                custodianRelationships={allCustodianRelationships}/>}
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-            <Route path={`${path}/issue-asset`}>
-                <Page
-                    menuTitle={<><PublicIcon/> Issue Asset</>}
-                    sideNav={sideNav}
-                    onLogout={onLogout}
-                >
-                    <PageSection border='blue' background='white'>
-                        <IssueAsset/>
-                    </PageSection>
-                </Page>
-            </Route>
+                <Route path={`${path}/issue-asset`}>
+                    <Page
+                        menuTitle={<><PublicIcon/> Issue Asset</>}
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                    >
+                        <PageSection border='blue' background='white'>
+                            <IssueAsset/>
+                        </PageSection>
+                    </Page>
+                </Route>
 
-            <Route path={`${path}/issued-token/:tokenId`}>
-                <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
-            </Route>
-        </Switch>
+                <Route path={`${path}/issued-token/:tokenId`}>
+                    <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
     )
 
     return registeredIssuer.loading

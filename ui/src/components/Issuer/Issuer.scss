@@ -1,0 +1,10 @@
+@import "./IssuedToken.scss";
+
+@mixin issuer {
+    .issuer {
+        width: 100%;
+        height: 100%;
+
+        @include issued-token;
+    }
+}

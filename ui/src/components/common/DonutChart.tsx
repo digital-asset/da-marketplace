@@ -21,9 +21,11 @@ const DonutChart = (props: {
             data={props.data}
             labelPosition={110}
             viewBoxSize={[100,100]}
-            label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.value.toFixed(2)}`}
+            label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.percentage.toFixed(1)}%`}
         />
     </div>
 )
-
+export function getDonutChartColor(index: number) {
+    return donutChartColors[index % donutChartColors.length]
+}
 export default DonutChart;
