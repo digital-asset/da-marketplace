@@ -164,6 +164,7 @@ const OrderForm: React.FC<Props> = ({
                     <Button
                         primary
                         type='button'
+                        className='buy'
                         disabled={disableButton}
                         onClick={() => loadAndCatch(placeBid)}>
                             Bid
@@ -172,6 +173,7 @@ const OrderForm: React.FC<Props> = ({
                     <Button
                         primary
                         type='button'
+                        className='sell'
                         disabled={disableButton}
                         onClick={() => loadAndCatch(placeOffer)}>
                             Offer

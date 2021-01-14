@@ -2,6 +2,8 @@ import React from 'react'
 
 import { OrderKind } from '../Investor/InvestorTrade'
 
+import { StringKeyedObject } from './utils'
+
 import './OrderLadder.scss'
 
 type MarketData = {
@@ -18,14 +20,11 @@ const OrderCell: React.FC<OrderCellProp> = ({ value }) => {
     return <div className='order-cell'><p>{value}</p></div>
 }
 
-export type MarketDataMap = {
-    [price: number]: MarketData;
-}
+export type MarketDataMap = StringKeyedObject<MarketData>;
 
 type OrderLadderProps = {
     bids?: number[];
     orders?: MarketDataMap;
-    // price
 }
 
 const NUM_COLS = 3;
@@ -35,44 +34,60 @@ function getTileIndex(col: number, row: number) {
     return (col % NUM_COLS) + (row * NUM_COLS);
 }
 
+function mergePriceLevels(orders: MarketData[]): MarketData[] {
+    return orders.reduce((orders, order) => {
+        const sameIndex = orders.findIndex(o => o.price === order.price);
+
+        if (sameIndex < 0) {
+            return [...orders, order];
+        } else {
+            let newOrders = [...orders];
+            newOrders[sameIndex].qtyOrders += order.qtyOrders;
+            return newOrders;
+        }
+    }, [] as MarketData[]);
+}
+
+function splitOrders(orders: MarketDataMap): [ MarketData[], MarketData[] ] {
+    return Object.entries(orders).reduce((arrays, item) => {
+        const [ bids, offers ] = arrays;
+        const marketData = item[1];
+
+        const newBids = getNewOrdersArray(bids, marketData, (a, b) => a < b);
+        const newOffers = getNewOrdersArray(offers, marketData, (a, b) => a > b);
+
+        if (marketData.kind === OrderKind.BID) {
+            return [ mergePriceLevels(newBids), offers ];
+        } else {
+            return [ bids, mergePriceLevels(newOffers) ];
+        }
+    }, [[], []] as [ MarketData[], MarketData[] ]);
+}
+
+function getNewOrdersArray(
+    orders: MarketData[],
+    item: MarketData,
+    comparator: (a: number, b: number) => boolean): MarketData[]
+{
+    return [...orders, item].sort((a: MarketData, b: MarketData) => {
+        if (comparator(a.price, b.price)) {
+            return 1;
+        }
+
+        if (a.price === b.price) {
+            return 0;
+        }
+
+        return -1;
+    });
+}
+
 function insertOrders(orders: MarketDataMap, blankCells: JSX.Element[]) {
     let cells = blankCells;
 
-    console.log("take a look: ", orders);
-    const [openBids, openOffers] = Object.entries(orders).reduce((arrays, item) => {
-        const [ bids, offers ] = arrays;
-        const [ _, marketData ] = item;
-
-        const newBids = [...bids, marketData].sort((a: MarketData, b: MarketData) => {
-            if (a.price < b.price) {
-                return 1;
-            }
-
-            if (a.price === b.price) {
-                return 0;
-            }
-
-            return -1;
-        });
-
-        const newOffers = [...bids, marketData].sort((a: MarketData, b: MarketData) => {
-            if (a.price > b.price) {
-                return 1;
-            }
-
-            if (a.price === b.price) {
-                return 0;
-            }
-
-            return -1;
-        });
-
-        if (marketData.kind === OrderKind.BID) {
-            return [ newBids, offers ];
-        } else {
-            return [ bids, newOffers ];
-        }
-    }, [[], []] as [ MarketData[], MarketData[] ]);
+    const [openBids, openOffers] = splitOrders(orders);
+    console.log("list of open bids: ", openBids);
+    console.log("list of open offers", openOffers);
 
     openBids.forEach((data, index) => {
         const bidIndex = getTileIndex(0, 5 + index);
@@ -90,44 +105,6 @@ function insertOrders(orders: MarketDataMap, blankCells: JSX.Element[]) {
         cells[priceIndex] = <OrderCell key={priceIndex} value={data.price}/>;
     })
 
-    // const sortedKeys = Object.keys(orders).sort((a: string, b: string) => {
-    //     const numA = Number(a);
-    //     const numB = Number(b);
-
-    //     if (numA < numB) {
-    //         return 1;
-    //     }
-
-    //     if (numA === numB) {
-    //         return 0;
-    //     }
-
-    //     return -1;
-    // });
-
-    // sortedKeys.forEach((key, index) => {
-    //     const bidIndex = index*3;
-    //     const priceIndex = index*3 + 1;
-    //     const offerIndex = index*3 + 2;
-
-    //     const kind = orders[+key]?.kind;
-    //     const numOrders = orders[+key]?.qtyOrders;
-
-    //     cells[priceIndex] = <OrderCell key={priceIndex} value={+key}/>
-
-    //     if (kind === OrderKind.BID) {
-    //         cells[bidIndex] = <OrderCell key={bidIndex} value={numOrders}/>
-    //     } else if (kind === OrderKind.OFFER) {
-    //         cells[offerIndex] = <OrderCell key={offerIndex} value={numOrders}/>
-    //     }
-
-    // })
-
-    // Object.entries(orders).forEach(([price, marketData]) => {
-    //     cells[30] = <OrderCell key={30} value={marketData.numOrders}/>
-    //     cells[31] = <OrderCell key={31} value={+price}/>
-    // })
-
     return cells;
 }
 
@@ -140,9 +117,6 @@ const OrderLadder: React.FC<OrderLadderProps> = ({ orders }) => {
             <div className='grid-container'>
                 {cells}
             </div>
-            {/* <div className='column bids'>{cells}</div>
-            <div className='column price'>{cells}</div>
-            <div className='column offers'>{cells}</div> */}
         </div>
     )
 }

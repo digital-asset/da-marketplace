@@ -12,9 +12,12 @@
         @include order-ladder;
 
         .order {
+            padding: $spacing-m;
             background: var(--cool-grey-20);
+            color: var(--white);
 
             display: flex;
+            flex-direction: column;
             height: 100%;
 
             h3 {
@@ -25,10 +28,18 @@
             .candlestick-icon {
                 margin-right: $spacing-s;
             }
-            .order-form {
+
+            .order-input {
+                display: flex;
+                height: 100%;
+                max-width: 1000px;
+
                 @include order-form;
-                flex: 1;
-                margin-right: $spacing-m;
+
+                .order-form {
+                    flex: 1;
+                    margin-right: $spacing-m;
+                }
             }
         }
     }

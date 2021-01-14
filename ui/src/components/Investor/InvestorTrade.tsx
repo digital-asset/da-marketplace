@@ -52,16 +52,11 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const marketData = allOrders.reduce((map, order) => {
         const { price, qty } = order.contractData;
+
         const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+        const qtyOrders = map[order.contractId]?.qtyOrders || 0;
 
-        const qtyOrders = map[+price]?.qtyOrders || 0;
-        const existingKind = map[+price]?.kind;
-
-        if (existingKind && existingKind !== kind) {
-            throw new Error('uh oh');
-        }
-
-        return { ...map, [+price]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+        return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
     }, {} as MarketDataMap)
 
     const exchangeData = location.state && location.state.exchange;
@@ -95,14 +90,14 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             <PageSection className='investor-trade' border='blue' background='white'>
                 <div className='order'>
                     <h3><CandlestickIcon/>Order</h3>
-                    <div className='order-form'>
+                    <div className='order-input'>
                         <OrderForm
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
                             exchange={exchange}
                             tokenPair={tokenPair}/>
+                        <OrderLadder orders={marketData}/>
                     </div>
-                    <OrderLadder orders={marketData}/>
                 </div>
             </PageSection>
         </Page>
