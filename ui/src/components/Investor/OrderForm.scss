@@ -1,18 +1,80 @@
-.order-form {
-    margin-bottom: var(--spacing-l);
-}
+@mixin order-form {
+    .order-form {
+        background-color: var(--cool-grey-10);
+        padding: $spacing-m;
+        color: #fff;
+        width: 100%;
 
-.order-form > .field {
-    width: 450px;
-}
+        .field {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            height: 35px;
+            width: 100%;
+            margin: 0 0 $spacing-l 0;
 
-.order-form > .field > .asset-label {
-    position: relative;
-    right: 0px;
-    top: 5px;
-}
+            &:nth-child(3) {
+                margin-bottom: $spacing-m;
+            }
 
-.order-form > .field > input.uncontrolled:disabled {
-    opacity: 1.0;
-    color: grey;
+            .order-label {
+                color: var(--white);
+                display: flex;
+                align-items: center;
+                padding: 0;
+                margin: 0 $spacing-s 0 0;
+                width: 90px;
+
+                &.badge {
+                    color: var(--cool-grey-10);
+                    justify-content: flex-end;
+                    width: 0px;
+                    margin: 0;
+                    font-size: 12px;
+                    position: relative;
+                    left: -10px;
+                }
+            }
+
+            .order-input {
+                padding-right: 50px;
+                width: 100%;
+            }
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 60px;
+
+            .button {
+                border-radius: 4px;
+                width: 49%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                color: var(--textcolor);
+                font-size: 20px;
+
+                &.buy {
+                    background-color: var(--green-60);
+
+                    &:hover {
+                        background-color: var(--green-50);
+                    }
+                }
+
+                &.sell {
+                    background-color: var(--red-60);
+
+                    &:hover {
+                        background-color: var(--red-50);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { ExchangeIcon } from '../../icons/Icons'
-import { DepositInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
+
+import { DepositInfo, makeContractInfo } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
+import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
 
 type Props = {
@@ -42,14 +43,27 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
     const location = useLocation<LocationState>();
-    const operator = useOperator();
+    const history = useHistory();
     const investor = useParty();
-    const ledger = useLedger();
+
+    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
+        console.log("Unexpected close from Order: ", e);
+    }).contracts.map(makeContractInfo);
+
+    const marketData = allOrders.reduce((map, order) => {
+        const { price, qty } = order.contractData;
+
+        const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+        const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+        return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+    }, {} as MarketDataMap)
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
 
     if (!exchangeData || !tokenPair) {
+        history.push('/role/investor');
         throw new Error('No exchange found.');
     }
 
@@ -67,53 +81,23 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         setOfferDeposits(filterDepositsForOrder(deposits, label, base));
     }, [ deposits, base, quote, investor, exchange ]);
 
-    const placeBid = async (depositCids: string[], price: string, amount: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-    }
-
-    const placeOffer = async (depositCids: string[], price: string, amount: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
-    }
-
     return (
         <Page
             sideNav={sideNav}
             menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
-                <div className='order-forms'>
-                    <OrderForm
-                        quotePrecision={quotePrecision}
-                        kind={OrderKind.BID}
-                        placeOrder={placeBid}
-                        assetPrecisions={[quotePrecision, basePrecision]}
-                        labels={[quote, base]}
-                        deposits={bidDeposits}/>
-
-                    <OrderForm
-                        quotePrecision={quotePrecision}
-                        kind={OrderKind.OFFER}
-                        placeOrder={placeOffer}
-                        assetPrecisions={[basePrecision, quotePrecision]}
-                        labels={[base, quote]}
-                        deposits={offerDeposits}/>
+            <PageSection className='investor-trade' border='blue' background='white'>
+                <div className='order'>
+                    <h3><CandlestickIcon/>Order</h3>
+                    <div className='order-input'>
+                        <OrderForm
+                            assetPrecisions={[basePrecision, quotePrecision]}
+                            deposits={[bidDeposits, offerDeposits]}
+                            exchange={exchange}
+                            tokenPair={tokenPair}/>
+                        <OrderLadder orders={marketData}/>
+                    </div>
                 </div>
             </PageSection>
         </Page>

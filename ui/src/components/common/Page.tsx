@@ -7,6 +7,7 @@ import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
 import './Page.scss'
 
 type Props = {
+    className?: string;
     menuTitle?: React.ReactElement;
     activeMenuTitle?: boolean;
     sideNav: React.ReactElement;
@@ -18,6 +19,7 @@ type Props = {
 
 const Page: React.FC<Props> = ({
     children,
+    className,
     menuTitle,
     sideNav,
     notifications,
@@ -27,7 +29,7 @@ const Page: React.FC<Props> = ({
     activeMenuTitle
 }) => {
     return (
-        <Grid className='page-content'>
+        <Grid className={'page-content ' + className}>
             <SideMenu>{ sideNav }</SideMenu>
             <Grid.Column className='page-body'>
                 <TopMenu
