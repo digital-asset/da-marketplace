@@ -69,7 +69,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
             { fields }
             <Button
                 secondary
-                className='profile-submit-button'
+                className='login-button'
                 content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}

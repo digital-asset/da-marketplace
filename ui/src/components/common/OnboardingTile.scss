@@ -11,6 +11,8 @@
             padding: var(--spacing-l);
             border-radius: 2px;
             margin-bottom: 2px;
+            width: 550px;
+            text-align: left;
 
             .tile-header {
                 margin-bottom: var(--spacing-m);
@@ -18,6 +20,11 @@
 
             .icon {
                 margin-right: var(--spacing-s);
+            }
+
+            .subtitle {
+                color: var(--white);
+                font-size: 16px;
             }
 
             .onboarding-tile-content {
@@ -32,7 +39,7 @@
                     margin: var(--spacing-m);
                 }
 
-                form button, .login-form button{
+                form button, .login-form button {
                     text-align: left;
 
                     &.login-button {
@@ -40,6 +47,10 @@
                         background-color: transparent;
                         color: var(--white);
                         font-weight: normal;
+
+                        &:hover {
+                            background-color: var(--cool-grey-20);
+                        }
                     }
 
                     &.dabl-login-button {
@@ -53,6 +64,10 @@
                             background-color: transparent;
                             color: var(--blue-50);
                             font-weight: initial;
+                        }
+
+                        &:hover {
+                            transform: scale(1.02);
                         }
                     }
                 }

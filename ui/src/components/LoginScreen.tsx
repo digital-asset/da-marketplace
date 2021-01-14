@@ -124,7 +124,6 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
             onChange={e => setJwt(e.currentTarget.value)}/>
         <Button
           fluid
-          basic
           primary
           className='login-button'
           disabled={!jwt || !partyId}
@@ -225,7 +224,6 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
             </Form.Group>
             <Button
               fluid
-              basic
               primary
               submit
               disabled={!parties?.find(p => p.party === selectedPartyId)}

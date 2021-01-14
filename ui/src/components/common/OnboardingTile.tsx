@@ -13,7 +13,7 @@ export const Tile: React.FC<TileProps> = ({ children, subtitle, header }) => {
     return (
         <div className='onboarding-tile'>
             { !!header && <div className='tile-header'>{header}</div> }
-            { !!subtitle && <p>{subtitle}</p> }
+            { !!subtitle && <p className='subtitle'>{subtitle}</p> }
             <div className='onboarding-tile-content'>
                 { children }
             </div>

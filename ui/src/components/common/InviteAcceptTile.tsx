@@ -18,7 +18,7 @@ const InviteAcceptTile: React.FC<Props> = ({ children, role, onSubmit, onLogout 
         <TopMenu onLogout={onLogout}/>
         <OnboardingTile
             tiles={[
-                <Tile subtitle={`Please fill in some information about yourself as ${a(role.replace(/Role/g, ''))}`}>
+                <Tile subtitle={`Please fill in some information about yourself as ${a(role.replace(/Role/g, ''))}:`}>
                     <FormErrorHandled
                         className='invite-accept-form'
                         size='large'
