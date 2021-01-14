@@ -161,7 +161,13 @@ const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     )
 
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
-        return tokens.map(t => {return {title: `${t.investor}/${t.provider}`, value: t.quantity, color: getDonutChartColor(tokens.indexOf(t))}})
+        return tokens.map(t => {
+            return {
+                title: `${t.investor}/${t.provider}`,
+                value: t.quantity,
+                color: getDonutChartColor(tokens.indexOf(t))
+            }
+        })
     }
 }
 
