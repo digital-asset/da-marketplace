@@ -1,5 +1,7 @@
 import React from 'react'
+
 import { useHistory } from 'react-router-dom'
+
 import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
@@ -36,12 +38,11 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                 <Menu.Menu className='menu-buttons' position='right'>
                     {topMenuButtons?.map(b =>
                         <Menu.Item>
-                            <Button className='ghost'
-                            onClick={b.onClick}
-                            >
+                            <Button className='ghost' onClick={b.onClick}>
                                 {b.label}
                             </Button>
-                        </Menu.Item>)}
+                        </Menu.Item>
+                    )}
                 </Menu.Menu>
                 <Menu.Menu className={`top-left-menu ${!isLandingPage && 'blue-border' }`}>
                     <Menu.Item as={() => (

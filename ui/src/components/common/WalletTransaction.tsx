@@ -29,9 +29,9 @@ const WalletTransaction = (props: {
 }) => {
     const { transactionType, sideNav, onLogout } = props;
 
-    const [ custodian, setCustodian ] = useState<ContractInfo<RegisteredCustodian>>();
+    const [ custodianId, setCustodianId ] = useState<string>();
     const [ depositQuantity, setDepositQuantity ] = useState<number>();
-    const [ deposit, setDeposit ] = useState<ContractInfo<AssetDeposit>>()
+    const [ depositCid, setDepositCid ] = useState<string>()
     const [ token, setToken ] = useState<ContractInfo<Token>>();
 
     const operator = useOperator();
@@ -63,9 +63,9 @@ const WalletTransaction = (props: {
                         contracts={allDeposits}
                         label='Select Deposit'
                         placeholder='Select...'
-                        value={deposit?.contractId || ""}
+                        value={depositCid || ""}
                         getOptionText={deposit => `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label} `}
-                        setContract={deposit => setDeposit(deposit)}/>
+                        setContract={deposit => setDepositCid(deposit.contractId)}/>
                 </Form.Field>
             </>
             break;
@@ -78,9 +78,9 @@ const WalletTransaction = (props: {
                         clearable
                         contracts={registeredCustodians}
                         placeholder='Custodian ID'
-                        value={custodian?.contractId || ""}
+                        value={custodianId || ""}
                         getOptionText={rc => rc.contractData.name}
-                        setContract={rc => setCustodian(rc)}/>
+                        setContract={rc => setCustodianId(rc.contractData.custodian)}/>
                 </Form.Field>
                 <Form.Field className='field-step'>
                     <Form.Group>
@@ -133,23 +133,21 @@ const WalletTransaction = (props: {
 
     async function onSubmit() {
         const key = wrapDamlTuple([operator, party]);
-
         let args = {}
-            switch(transactionType) {
-                case 'Deposit':
-                    args = {
-                        tokenId: token?.contractData.id,
-                        depositQuantity,
-                        custodian: custodian?.contractData.custodian
-                    };
-                    return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args);
-                case 'Withdraw':
-                    args = {
-                        depositCid: deposit?.contractId
-                    };
-                    return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args);
-            }
+
+        switch(transactionType) {
+            case 'Deposit':
+                args = {
+                    tokenId: token?.contractData.id,
+                    depositQuantity,
+                    custodian: custodianId
+                };
+                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args);
+            case 'Withdraw':
+                args = { depositCid };
+                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args);
         }
+    }
 }
 
 export default WalletTransaction;

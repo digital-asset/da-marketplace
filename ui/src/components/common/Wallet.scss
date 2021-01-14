@@ -3,7 +3,6 @@
 @import './DonutChart.scss';
 @import './TabViewer.scss';
 @import "./OverflowMenu.scss";
-
 @import "./WalletTransaction.scss";
 
 @mixin wallet {
@@ -13,6 +12,7 @@
         @include tab-viewer;
         @include overflow-menu;
         @include wallet-transaction;
+
         .holdings {
             width: 100%;
             margin-right: $spacing-l;
