@@ -5,6 +5,7 @@ import { useParty, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 
@@ -12,6 +13,7 @@ import { DepositInfo, makeContractInfo } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
+import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
 
 type Props = {
@@ -44,6 +46,19 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const history = useHistory();
     const investor = useParty();
 
+    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
+        console.log("Unexpected close from Order: ", e);
+    }).contracts.map(makeContractInfo);
+
+    const marketData = allOrders.reduce((map, order) => {
+        const { price, qty } = order.contractData;
+
+        const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+        const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+        return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+    }, {} as MarketDataMap)
+
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
 
@@ -72,17 +87,16 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
-                <div className='investor-trade'>
-                    <div className='order'>
-                        <h3><CandlestickIcon/>Order</h3>
-                        <div className='order-form'>
-                            <OrderForm
-                                assetPrecisions={[basePrecision, quotePrecision]}
-                                deposits={[bidDeposits, offerDeposits]}
-                                exchange={exchange}
-                                tokenPair={tokenPair}/>
-                        </div>
+            <PageSection className='investor-trade' border='blue' background='white'>
+                <div className='order'>
+                    <h3><CandlestickIcon/>Order</h3>
+                    <div className='order-input'>
+                        <OrderForm
+                            assetPrecisions={[basePrecision, quotePrecision]}
+                            deposits={[bidDeposits, offerDeposits]}
+                            exchange={exchange}
+                            tokenPair={tokenPair}/>
+                        <OrderLadder orders={marketData}/>
                     </div>
                 </div>
             </PageSection>

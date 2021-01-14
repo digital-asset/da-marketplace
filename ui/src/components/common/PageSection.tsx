@@ -8,7 +8,7 @@ type Props = {
     className?: string;
 }
 
-const PageSection: React.FC<Props> = ({ children, border, background, className }) => (
+const PageSection: React.FC<Props> = ({ children, className, border, background }) => (
     <div className={`page-section ${background} ${border}-border ${className}`}>
         { children }
     </div>

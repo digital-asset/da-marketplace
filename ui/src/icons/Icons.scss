@@ -9,6 +9,7 @@
     .icon {
         height: var(--spacing-s);
 
+        @include icon-size(24);
         @include icon-size(32);
         @include icon-size(48);
         @include icon-size(64);
@@ -21,8 +22,8 @@
 
         &.candlestick-icon {
             line, rect {
-                fill: var(--cool-grey-10);
-                stroke: var(--cool-grey-10);
+                fill: var(--white);
+                stroke: var(--white);
             }
         }
 
