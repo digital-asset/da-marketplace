@@ -156,8 +156,9 @@ p.p2 {
   color: var(--textcolor);
   background: none;
   align-items: center;
-  border: none;
+  border: 1px solid var(--green-50);
   font-weight: 400;
+  border-radius: 2px;
 }
 
 .ui.button.ghost.smaller {

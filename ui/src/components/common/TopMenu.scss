@@ -57,6 +57,11 @@
     border-left: 2px var(--lightblue2) solid;
 }
 
+.top-menu.menu .menu-buttons {
+    margin-left: auto;
+    margin-right: var(--spacing-s);
+}
+
 .top-menu.menu > .top-left-menu > .item {
     display: flex;
     flex-direction: column;

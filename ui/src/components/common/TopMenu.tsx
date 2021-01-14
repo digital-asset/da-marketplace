@@ -5,12 +5,17 @@ import { LogoutIcon } from '../../icons/Icons'
 
 import './TopMenu.scss'
 
+export type ITopMenuButtonInfo = {
+    label: string,
+    onClick: () => void
+}
+
 type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
     isLandingPage?: boolean;
-    topMenuButtons?: JSX.Element[];
+    topMenuButtons?: ITopMenuButtonInfo[];
 }
 
 const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPage, topMenuButtons }) => (
@@ -24,14 +29,18 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                 </Menu.Item>
             </Menu.Menu>
             <Menu.Menu className='menu-buttons' position='right'>
-               {topMenuButtons?.map(button =>
+                {topMenuButtons?.map(b =>
                     <Menu.Item>
-                        {button}
+                        <Button className='ghost'
+                        onClick={b.onClick}
+                        >
+                            {b.label}
+                        </Button>
                     </Menu.Item>)}
             </Menu.Menu>
-            <Menu.Menu className={`top-left-menu ${!isLandingPage && 'blue-border' }`} position='right'>
+            <Menu.Menu className={`top-left-menu ${!isLandingPage && 'blue-border' }`}>
                 <Menu.Item as={() => (
-                    <Button className='ghost item' onClick={onLogout}>
+                    <Button className='item' onClick={onLogout}>
                         <div className='log-out'>
                             <p>Log out</p>
                             <LogoutIcon/>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useStreamQueries } from '@daml/react'
-import { Button } from 'semantic-ui-react'
+import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -17,11 +17,15 @@ import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import TabViewer, { DivTab } from '../common/TabViewer';
+import { ITopMenuButtonInfo } from './TopMenu'
+import { useHistory } from 'react-router-dom'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
 }) => {
+    const { path, url } = useRouteMatch();
+    const history = useHistory()
 
     const { sideNav, onLogout } = props
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
@@ -79,34 +83,49 @@ const Wallet = (props: {
 
     const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
 
-    const topMenuButtons = [
-        {label: 'Withdraw', onClick: ()=> void },
-        {label: 'Withdraw', onClick: ()=> void }
+    const topMenuButtons: ITopMenuButtonInfo[] = [
+        {label: 'Withdraw', onClick: () => history.push(`${url}/withdraw`)},
+        {label: 'Deposit', onClick: () => history.push(`${url}/deposit`)}
     ]
 
     return (
-        <Page
-        sideNav={sideNav}
-        menuTitle={<><WalletIcon/>Wallet</>}
-        onLogout={onLogout}
-        topMenuButtons={topMenuButtons}
-        >
-        <PageSection border='blue' background='grey'>
-            <div className='wallet'>
-                <Holdings
-                    deposits={allDeposits}
-                    providers={allProviders}
-                    role={MarketRole.InvestorRole}/>
-                <TabViewer
-                    currentId={currentTabId}
-                    items={tabItems}
-                    Tab={props => DivTab(props, handleTabChange)}>
-                    { currentTabId === 'allocations' &&
-                        <Allocations allDeposits={allDeposits}/> }
-                </TabViewer>
-            </div>
-        </PageSection>
-    </Page>
+        <Switch>
+            <Route exact path={path}>
+                <Page
+                    sideNav={sideNav}
+                    menuTitle={<><WalletIcon/>Wallet</>}
+                    onLogout={onLogout}
+                    topMenuButtons={topMenuButtons}
+                    >
+                    <PageSection border='blue' background='grey'>
+                        <div className='wallet'>
+                            <Holdings
+                                deposits={allDeposits}
+                                providers={allProviders}
+                                role={MarketRole.InvestorRole}/>
+                            <TabViewer
+                                currentId={currentTabId}
+                                items={tabItems}
+                                Tab={props => DivTab(props, handleTabChange)}>
+                                { currentTabId === 'allocations' &&
+                                    <Allocations allDeposits={allDeposits}/> }
+                            </TabViewer>
+                        </div>
+                    </PageSection>
+                </Page>
+            </Route>
+            <Route path={`${path}/withdraw`}>
+                <Wallet
+                    sideNav={sideNav}
+                    onLogout={onLogout}/>
+            </Route>
+            <Route path={`${path}/deposit`}>
+                <Wallet
+                    sideNav={sideNav}
+                    onLogout={onLogout}/>
+            </Route>
+        </Switch>
+
     )
 }
 
