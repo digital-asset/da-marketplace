@@ -1,6 +1,15 @@
 
 .asset-section {
-  margin-top: var(--spacing-l);;
+  margin-top: var(--spacing-m);
+
+  .provider-info {
+      display: flex;
+      align-items: baseline;
+
+      .p2 {
+          margin-left: var(--spacing-s);
+      }
+    }
 }
 
 .deposit-row {
@@ -10,11 +19,12 @@
     justify-content: flex-end;
     padding: var(--spacing-s);
     margin: var(--spacing-s) 0px;
-    background: var(--grey1);
+    background: var(--white);
     border: 2px solid var(--grey2);
     box-sizing: border-box;
     border-radius: 2px;
     height: fit-content;
+    width: 100%;
 }
 
 .deposit-row .deposit-row-body {
@@ -22,7 +32,7 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-}   
+}
 
 .deposit-row .deposit-info {
     display: flex;
@@ -40,17 +50,6 @@
     font-weight: normal;
 }
 
-.deposit-row .form-selector {
-    display: flex;
-    flex-direction: row;
-    align-self: flex-end;
-    flex-wrap: wrap;
-}
-
-.deposit-row .form-selector .button {
-    margin-right: var(--spacing-s);
-}
-
 .deposit-row .selected-form {
     display: flex;
     flex-direction: column;
@@ -61,13 +60,22 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    border-top: 1px solid var(--grey2);
-    padding-top: var(--spacing-s);
+    padding: var(--spacing-s) 0;
     margin-top: var(--spacing-s);
 }
 
-.ui.form > .fields.inline-form-group .field {
-    padding-left: 0;
+.ui.form > .fields.stacked-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.ui.form > .fields.stacked-form-group button {
+    width: fit-content;
+    margin-top: var(--spacing-s);
+    margin-left: var(--spacing-xs);
+}
+.ui.form > .fields.stacked-form-group .field > .selection.dropdown {
+    width: 100%;
 }
 
 @media screen and (max-width: 1000px) {

@@ -1,0 +1,23 @@
+@import '../index.scss';
+
+@import './DonutChart.scss';
+@import './TabViewer.scss';
+@import "./OverflowMenu.scss";
+
+@mixin wallet {
+    .wallet {
+        display: flex;
+        flex-direction: row;
+        @include tab-viewer;
+        @include overflow-menu;
+
+        .holdings {
+            width: 100%;
+            margin-right: $spacing-l;
+        }
+
+        .allocations {
+            @include donut-chart;
+        }
+    }
+}

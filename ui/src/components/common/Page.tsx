@@ -7,6 +7,7 @@ import TopMenu from './TopMenu'
 import './Page.scss'
 
 type Props = {
+    className?: string;
     menuTitle?: React.ReactElement;
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
@@ -14,9 +15,9 @@ type Props = {
     isLandingPage?: boolean;
 }
 
-const Page: React.FC<Props> = ({ children, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
+const Page: React.FC<Props> = ({ children, className, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
     return (
-        <Grid className='page-content'>
+        <Grid className={'page-content ' + className}>
             <SideMenu>{ sideNav }</SideMenu>
             <Grid.Column className='page-body'>
                 <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications} isLandingPage={isLandingPage}/>

@@ -3,17 +3,14 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { wrapDamlTuple, damlTupleToString, makeContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -21,14 +18,13 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
-import Holdings from '../common/Holdings'
+import Wallet from '../common/Wallet'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-
 
 type Props = {
     onLogout: () => void;
@@ -58,45 +54,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
         console.log("Unexpected close from custodianRelationship: ", e);
     }).contracts.map(makeContractInfo);
-
-    const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
-
-    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts
-        .map(broker => {
-            const party = broker.payload.broker;
-            const name = brokerMap.get(damlTupleToString(broker.key))?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Broker`
-            }
-        })
-
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
-        .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
-            const name = exchangeMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
-            }
-        });
-
-    const allProviders = [
-        ...allCustodianRelationships.map(relationship => {
-            const party = relationship.contractData.custodian;
-            const name = custodianMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`
-            }
-        }),
-        ...exchangeProviders,
-        ...brokerProviders,
-    ];
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -170,10 +127,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
 
         <Route path={`${path}/wallet`}>
-            <Holdings
-                deposits={allDeposits}
-                providers={allProviders}
-                role={MarketRole.InvestorRole}
+            <Wallet
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>
