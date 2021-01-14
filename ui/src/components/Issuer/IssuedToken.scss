@@ -31,10 +31,8 @@
             }
         }
 
-        .donut-chart {
-            margin-left: $spacing-m;
-            width: 50%;
-            overflow: visible;
+        .tab-viewer {
+            margin: 0 0 $spacing-m $spacing-m;
         }
 
         .token-subheading {
@@ -86,6 +84,12 @@
         }
 
         @media screen and (max-width: 1000px) {
+            .position-holdings-data {
+                flex-direction: column;
+                .tab-viewer {
+                    margin: 0px;;
+                };
+            }
             .ui.table.issuer-cap-table tr th, .ui.table.issuer-cap-table tr td {
                 text-align: left;
             }

@@ -166,14 +166,14 @@ const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
 
     return (
-        // <TabViewer
-        // currentId={currentTabId}
-        // items={[]}
-        // Tab={props => DivTab(props, handleTabChange)}>
-        //     { currentTabId === 'allocations' &&
-                <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
-        //     }
-        // </TabViewer>
+        <TabViewer
+        currentId={currentTabId}
+        items={[]}
+        Tab={props => DivTab(props, handleTabChange)}>
+        { currentTabId === 'allocations' &&
+            <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
+        }
+        </TabViewer>
     )
 
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
