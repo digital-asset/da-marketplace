@@ -10,7 +10,7 @@
   --spacing-xs: 6px;
   --spacing-s: 12px;
   --spacing-m: 24px;
-  --spacing-ml: 32px;
+  --spacing-l: 32px;
   --spacing-l: 48px;
 
   --input-height: 40px;
@@ -21,7 +21,7 @@ $spacing-gap: #{var(--spacing-gap)};
 $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
 $spacing-m: #{var(--spacing-m)};
-$spacing-ml: #{var(--spacing-ml)};
+$spacing-l: #{var(--spacing-l)};
 $spacing-l: #{var(--spacing-l)};
 
 $input-height: #{var(--input-height)};
