@@ -62,7 +62,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
         return (
             <div className='provider-info'>
                 <Header as='h5'>
-                    {providerInfo?.label}
+                    {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
                 </Header>
                 <p className='p2'>
                     {providerInfo?.party}

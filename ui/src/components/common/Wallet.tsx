@@ -1,6 +1,8 @@
 import React from 'react'
-import { useStreamQueries } from '@daml/react'
+
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { useStreamQueries } from '@daml/react'
+
 import { useHistory } from 'react-router-dom'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -8,10 +10,9 @@ import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCu
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { WalletIcon } from '../../icons/Icons'
 
-import { AddPlusIcon, WalletIcon } from '../../icons/Icons'
-
-import { damlTupleToString, makeContractInfo } from '../common/damlTypes'
+import { damlTupleToString, makeContractInfo, wrapDamlTuple } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import Holdings from '../common/Holdings'
 import PageSection from '../common/PageSection'
@@ -20,17 +21,17 @@ import Page from '../common/Page'
 import { ITopMenuButtonInfo } from './TopMenu'
 
 import WalletTransaction from './WalletTransaction';
-import { Form } from 'semantic-ui-react'
-
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    role: MarketRole;
 }) => {
     const { path, url } = useRouteMatch();
     const history = useHistory()
 
-    const { sideNav, onLogout } = props
+
+    const { sideNav, onLogout, role } = props
     const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
 
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
@@ -78,12 +79,12 @@ const Wallet = (props: {
         ...brokerProviders,
     ];
 
-    const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
-
-    const topMenuButtons: ITopMenuButtonInfo[] = [
+    const topMenuButtons: ITopMenuButtonInfo[] = role === MarketRole.InvestorRole ?
+    [
         {label: 'Withdraw', onClick: () => history.push(`${url}/withdraw`)},
         {label: 'Deposit', onClick: () => history.push(`${url}/deposit`)}
     ]
+    : []
 
     return (
         <Switch>
@@ -100,13 +101,6 @@ const Wallet = (props: {
                                 deposits={allDeposits}
                                 providers={allProviders}
                                 role={MarketRole.InvestorRole}/>
-                            <TabViewer
-                                currentId={currentTabId}
-                                items={tabItems}
-                                Tab={props => DivTab(props, handleTabChange)}>
-                                { currentTabId === 'allocations' &&
-                                    <Allocations allDeposits={allDeposits}/> }
-                            </TabViewer>
                         </div>
                     </PageSection>
                 </Page>
@@ -115,47 +109,16 @@ const Wallet = (props: {
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    onSubmit={() => onRequestWithdraw()}
-                    transactionType='Withdraw'
-                    baseUrl={url}>
-                </WalletTransaction>
+                    transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    transactionType='Deposit'
-                    onSubmit={() => onRequestDeposit()}
-                    baseUrl={url}>
-                    <div className='transaction-step'>
-                        <div className='step-title'>
-                          Select Payment Method
-                            <a>
-                                <AddPlusIcon/> Add New Payment Method
-                            </a>
-                        </div>
-                    </div>
-                    ??
-                    <div className='transaction-step'>
-                    <div>
-                        Amount
-                    </div>
-                    <Form.Input>
-
-                    </Form.Input>
-                    </div>
-                    </WalletTransaction>
+                    transactionType='Deposit'/>
             </Route>
         </Switch>
     )
-
-    function onRequestWithdraw() {
-
-    }
-
-    function onRequestDeposit() {
-        
-    }
 }
 
 export default Wallet;

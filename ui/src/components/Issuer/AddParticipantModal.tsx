@@ -53,7 +53,7 @@ const ValueEntryModal = (props: IProps) => {
             return {
                 key: d.contractId,
                 text: `${d.contractData}`,
-                value: d.contractData
+                value: d.id
             }
         })
 

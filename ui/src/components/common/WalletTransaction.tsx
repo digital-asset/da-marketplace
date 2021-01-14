@@ -1,21 +1,114 @@
-import React, { useState, FunctionComponent } from 'react';
+import React, { useState } from 'react';
 
-import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
+import { Form, Button } from 'semantic-ui-react'
+
+import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { WalletIcon } from '../../icons/Icons'
 
-import PageSection from '../common/PageSection'
+import { preciseInputSteps } from './utils'
+
 import Page from '../common/Page'
+import PageSection from '../common/PageSection'
+import { useOperator } from './common'
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { Button } from 'semantic-ui-react'
+import { makeContractInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 
-const WalletTransaction : FunctionComponent<{
-    transactionType: string;
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+
+import ContractSelect from './ContractSelect'
+
+const WalletTransaction = (props: {
+    transactionType: 'Withdraw' | 'Deposit';
     sideNav: React.ReactElement;
     onLogout: () => void;
-    baseUrl: string;
-    onSubmit: () => void;
-}> = ({children, sideNav, onLogout, transactionType, baseUrl }) => {
+}) => {
+    const { transactionType, sideNav, onLogout } = props;
+
+    const [ custodian, setCustodian ] = useState<ContractInfo<RegisteredCustodian>>();
+    const [ depositQuantity, setDepositQuantity ] = useState<number>();
+    const [ deposit, setDeposit ] = useState<ContractInfo<AssetDeposit>>()
+    const [ token, setToken ] = useState<ContractInfo<Token>>();
+
+    const operator = useOperator();
+    const party = useParty();
+    const ledger = useLedger();
+
+    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
+        .map(makeContractInfo)
+
+    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
+            console.log("Unexpected close from Token: ", e);
+        }).contracts.map(makeContractInfo)
+
+    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
+            console.log("Unexpected close from assetDepositBroker: ", e);
+        }).contracts.map(makeContractInfo);
+
+    const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
+
+    let body
+
+    switch(transactionType) {
+        case 'Withdraw':
+            body = <>
+                <Form.Field>
+                    <ContractSelect
+                        clearable
+                        className='asset-select'
+                        contracts={allDeposits}
+                        label='Select Deposit'
+                        placeholder='Select...'
+                        value={deposit?.contractId || ""}
+                        getOptionText={deposit => `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label} `}
+                        setContract={deposit => setDeposit(deposit)}/>
+                </Form.Field>
+            </>
+            break;
+        case 'Deposit':
+            body = <>
+                <Form.Field className='field-step'>
+                    <ContractSelect
+                        selection
+                        label='Select Custodian'
+                        clearable
+                        contracts={registeredCustodians}
+                        placeholder='Custodian ID'
+                        value={custodian?.contractId || ""}
+                        getOptionText={rc => rc.contractData.name}
+                        setContract={rc => setCustodian(rc)}/>
+                </Form.Field>
+                <Form.Field className='field-step'>
+                    <Form.Group>
+                        <Form.Field>
+                        <ContractSelect
+                            clearable
+                            className='asset-select'
+                            contracts={allTokens}
+                            label='Asset'
+                            placeholder='Select...'
+                            value={token?.contractId || ""}
+                            getOptionText={token => token.contractData.id.label}
+                            setContract={token => setToken(token)}/>
+                        </Form.Field>
+                        <Form.Field >
+                            <Form.Input
+                                type='number'
+                                step={step}
+                                label='Amount'
+                                placeholder={placeholder}
+                                disabled={!token}
+                                onChange={e => setDepositQuantity(Number(e))}/>
+                        </Form.Field>
+                    </Form.Group>
+                </Form.Field>
+            </>
+            break;
+    }
 
     return (
         <Page
@@ -27,14 +120,36 @@ const WalletTransaction : FunctionComponent<{
             <PageSection border='blue' background='grey'>
                 <div className='wallet-transaction'>
                     <h2>{transactionType} Funds</h2>
-                    {children}
-                    <Button className='ghost'>
-                        Submit
-                    </Button>
+                    <Form onSubmit={() => onSubmit()}>
+                        {body}
+                        <Button className='ghost' type='submit'>
+                            Submit
+                        </Button>
+                    </Form>
                 </div>
             </PageSection>
         </Page>
     )
+
+    async function onSubmit() {
+        const key = wrapDamlTuple([operator, party]);
+
+        let args = {}
+            switch(transactionType) {
+                case 'Deposit':
+                    args = {
+                        tokenId: token?.contractData.id,
+                        depositQuantity,
+                        custodian: custodian?.contractData.custodian
+                    };
+                    return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args);
+                case 'Withdraw':
+                    args = {
+                        depositCid: deposit?.contractId
+                    };
+                    return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args);
+            }
+        }
 }
 
 export default WalletTransaction;
