@@ -3,9 +3,9 @@ import React from 'react'
 import "./PageSection.scss"
 
 type Props = {
-    className?: string;
     background: 'white' | 'grey';
     border: 'grey' | 'blue';
+    className?: string;
 }
 
 const PageSection: React.FC<Props> = ({ children, className, border, background }) => (
