@@ -4,6 +4,7 @@
         height: 100%;
         width: 100%;
         overflow: scroll;
+        padding: 0px;
         background-color: var(--cool-grey-20);
 
         .onboarding-tile {
@@ -11,7 +12,7 @@
             padding: var(--spacing-l);
             border-radius: 2px;
             margin-bottom: 2px;
-            width: 550px;
+
             .tile-header {
                 margin-bottom: var(--spacing-m);
             }
