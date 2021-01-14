@@ -1,10 +1,8 @@
 @import "../common/DonutChart.scss";
-@import "../common/TabViewer.scss";
 
 @mixin issued-token {
     .issued-token {
         @include donut-chart;
-        @include tab-viewer;
 
         .position-holdings-data {
             display: flex;
@@ -31,8 +29,10 @@
             }
         }
 
-        .tab-viewer {
+        .allocations {
             margin: 0 0 $spacing-m $spacing-m;
+            width: 100%;
+            border: 1px solid var(--cool-grey-90);;
         }
 
         .token-subheading {
@@ -86,7 +86,8 @@
         @media screen and (max-width: 1000px) {
             .position-holdings-data {
                 flex-direction: column;
-                .tab-viewer {
+
+                .allocations {
                     margin: 0px;;
                 };
             }

@@ -13,12 +13,8 @@ import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import TabViewer, { DivTab } from '../common/TabViewer';
 
 import AddParticipantModal from './AddParticipantModal'
-
-import './IssuedToken.scss'
-
 
 type DepositInfo = {
     investor: string,
@@ -158,22 +154,10 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
 
 
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
-    const tabItems = [
-        { id: 'allocations', label: 'Allocations' }
-    ]
-    const [ currentTabId, setCurrentTabId ] = useState(tabItems[0].id)
-
-    const handleTabChange = (tabId: string) => setCurrentTabId(tabId);
-
     return (
-        <TabViewer
-        currentId={currentTabId}
-        items={[]}
-        Tab={props => DivTab(props, handleTabChange)}>
-        { currentTabId === 'allocations' &&
+        <div className='allocations'>
             <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
-        }
-        </TabViewer>
+        </div>
     )
 
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
