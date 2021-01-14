@@ -21,8 +21,9 @@ const WalletTransaction : FunctionComponent<{
             sideNav={sideNav}
             menuTitle={<><WalletIcon/>Wallet</>}
             onLogout={onLogout}
+            
             >
-            <PageSection border='blue' background='grey'>
+            <PageSection className='wallet-transaction' border='blue' background='grey'>
             <h2>{transactionType}</h2>
             {children}
             </PageSection>
@@ -33,7 +34,7 @@ const WalletTransaction : FunctionComponent<{
 const WalletTransactionStep = () => {
     return (
         <div>
-            
+
         </div>
     )
 }
