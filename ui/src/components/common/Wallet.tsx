@@ -112,7 +112,13 @@ const Wallet = (props: {
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    transactionType='Withdraw'/>
+                    holdings={
+                        <Holdings
+                            deposits={allDeposits}
+                            selectableView={true}
+                            providers={allProviders}
+                            role={MarketRole.InvestorRole}/>}
+                            transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>
                 <WalletTransaction

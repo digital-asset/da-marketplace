@@ -28,9 +28,10 @@ type Props = {
     deposits: DepositInfo[];
     providers: DepositProvider[];
     role: MarketRole;
+    selectableView?: boolean;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
+const Holdings: React.FC<Props> = ({ deposits, providers, role, selectableView }) => {
     const depositsGrouped = groupDeposits(deposits);
 
     const assetSections = Object.entries(depositsGrouped)
@@ -41,6 +42,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
                     { depositsForAsset.map(deposit =>
                         <DepositRow
                             role={role}
+                            selectableView={selectableView}
                             key={deposit.contractId}
                             deposit={deposit}
                             providers={providers}
@@ -52,7 +54,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
 
     return (
         <div className='holdings'>
-            <Header as='h3'>Holdings</Header>
+            { !selectableView && <Header as='h3'>Holdings</Header> }
             { assetSections }
         </div>
     )
@@ -77,11 +79,12 @@ type DepositRowProps = {
     providers: DepositProvider[];
     role: MarketRole;
     depositsForAsset: DepositInfo[];
+    selectableView?: boolean;
 }
 
 type FormSelectorOptions = 'provider' | 'merge' | 'split'
 
-const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset }) => {
+const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset, selectableView}) => {
     const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
 
     return (
@@ -91,11 +94,13 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
                     <h3>{deposit.contractData.asset.id.label}</h3>
                     <h3>{deposit.contractData.asset.quantity}</h3>
                 </div>
-                <OverflowMenu>
-                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
-                    <OverflowMenuEntry label='Merge' onClick={() => setSelectedForm('merge')}/>
-                    <OverflowMenuEntry label='Split' onClick={() => setSelectedForm('split')}/>
-                </OverflowMenu>
+                {!selectableView &&
+                    <OverflowMenu>
+                        <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
+                        <OverflowMenuEntry label='Merge' onClick={() => setSelectedForm('merge')}/>
+                        <OverflowMenuEntry label='Split' onClick={() => setSelectedForm('split')}/>
+                    </OverflowMenu>
+                }
             </div>
             <div className='selected-form'>
                 {selectedForm === 'provider' &&

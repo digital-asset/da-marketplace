@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Form, Button } from 'semantic-ui-react'
 
@@ -21,22 +21,34 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import ContractSelect from './ContractSelect'
+import { useHistory } from 'react-router-dom';
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
     sideNav: React.ReactElement;
+    holdings?: React.ReactElement;
     onLogout: () => void;
 }) => {
-    const { transactionType, sideNav, onLogout } = props;
+    const { transactionType, sideNav, onLogout, holdings } = props;
 
     const [ custodianId, setCustodianId ] = useState<string>();
     const [ depositQuantity, setDepositQuantity ] = useState<number>();
     const [ depositCid, setDepositCid ] = useState<string>()
     const [ token, setToken ] = useState<ContractInfo<Token>>();
+    const [ showSuccessMessage, setShowSuccessMessage ] = useState<boolean>();
+
+    useEffect(()=> {
+        if (showSuccessMessage) {
+            setTimeout(() => {
+                setShowSuccessMessage(false);
+            }, 2500);
+        }
+    }, [showSuccessMessage])
 
     const operator = useOperator();
     const party = useParty();
     const ledger = useLedger();
+    const history = useHistory();
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
@@ -44,10 +56,6 @@ const WalletTransaction = (props: {
     const allTokens = useStreamQueries(Token, () => [], [], (e) => {
             console.log("Unexpected close from Token: ", e);
         }).contracts.map(makeContractInfo)
-
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-            console.log("Unexpected close from assetDepositBroker: ", e);
-        }).contracts.map(makeContractInfo);
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 
@@ -57,15 +65,7 @@ const WalletTransaction = (props: {
         case 'Withdraw':
             body = <>
                 <Form.Field>
-                    <ContractSelect
-                        clearable
-                        className='asset-select'
-                        contracts={allDeposits}
-                        label='Select Deposit'
-                        placeholder='Select...'
-                        value={depositCid || ""}
-                        getOptionText={deposit => `${deposit.contractData.asset.quantity} ${deposit.contractData.asset.id.label} `}
-                        setContract={deposit => setDepositCid(deposit.contractId)}/>
+                    {holdings}
                 </Form.Field>
             </>
             break;
@@ -133,6 +133,9 @@ const WalletTransaction = (props: {
 
     async function onSubmit() {
         const key = wrapDamlTuple([operator, party]);
+
+        setShowSuccessMessage(false)
+
         let args = {}
 
         switch(transactionType) {
@@ -142,10 +145,15 @@ const WalletTransaction = (props: {
                     depositQuantity,
                     custodian: custodianId
                 };
-                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args);
+
+                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args)
+                    .then(_ => history.goBack)
+
             case 'Withdraw':
                 args = { depositCid };
-                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args);
+
+                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args)
+                    .then(_ => history.goBack)
         }
     }
 }
