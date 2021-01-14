@@ -30,18 +30,16 @@ handleExchangeRule party = do
   forA_ tradeSides (handleTradeSide party binaryOptions)
 
   -- Accept all 'ExchangeParticipantInvitationRequest'
-  participantRequests <- query @ExchangeParticipantInvitationRequest
-  forA_ participantRequests
-    $ \(cid,rq) -> emitExerciseCmd cid ExchangeParticipantInvitationRequest_Accept
-               >> debug ("Approving participant request from " <> show rq.participant)
+  mapExercise ExchangeParticipantInvitationRequest_Accept (.participant) <$> query @ExchangeParticipantInvitationRequest
 
+  return ()
 
 handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
 handleTradeSide party  options (cid,tradeSide) = do
   debug $ "Handling trade side: " <> show tradeSide
   if not $ tradeSide.isBinaryOption
-  then emitExerciseCmd cid TradeSide_Settle >> pure ()
+  then dedupExercise cid TradeSide_Settle >> pure ()
   else do
     let settledOptions = filter (\(_,opt) -> opt.id == tradeSide.pair._1) options
     forA_ settledOptions
-      $ \(soCid,_) -> emitExerciseCmd cid TradeSide_SettleBinaryOption with settledBinOptionCid = soCid
+      $ \(soCid,_) -> dedupExercise cid TradeSide_SettleBinaryOption with settledBinOptionCid = soCid

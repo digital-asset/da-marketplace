@@ -1,6 +1,5 @@
 module CustodianTrigger where
 
-import DA.Foldable hiding (elem, null)
 import Daml.Trigger
 
 import Marketplace.Custodian
@@ -26,25 +25,15 @@ handleCustodianRule party = do
   debug "Running custodian rule..."
 
   -- Accept all 'DepositTransferRequest'
-  transferRequests <- query @DepositTransferRequest
-  forA_ transferRequests
-    $ \(cid,_) -> emitExerciseCmd cid DepositTransferRequest_Approve
-               >> debug "Accepting transfer request"
+  mapExercise DepositTransferRequest_Approve (.sender) <$> query @DepositTransferRequest
 
   -- Accept all 'CustodianRelationshipRequest'
-  relationshipRequests <- query @CustodianRelationshipRequest
-  forA_ relationshipRequests
-    $ \(cid,rq) -> emitExerciseCmd cid CustodianRelationshipRequest_Approve
-                >> debug ("Approving relationship request from " <> show rq.requester)
+  mapExercise CustodianRelationshipRequest_Approve (.requester) <$> query @CustodianRelationshipRequest
 
   -- Accept all 'DepositCreditRequest'
-  relationshipRequests <- query @DepositCreditRequest
-  forA_ relationshipRequests
-    $ \(cid,rq) -> emitExerciseCmd cid DepositCreditRequest_Approve
-                >> debug ("Approving credit request from " <> show rq.owner)
+  mapExercise DepositCreditRequest_Approve (.owner) <$> query @DepositCreditRequest
 
   -- Accept all 'DepositDebitRequest'
-  relationshipRequests <- query @DepositDebitRequest
-  forA_ relationshipRequests
-    $ \(cid,rq) -> emitExerciseCmd cid DepositDebitRequest_Approve
-                >> debug ("Approving credit request from " <> show rq.owner)
+  mapExercise DepositDebitRequest_Approve (.owner) <$> query @DepositDebitRequest
+
+  return ()

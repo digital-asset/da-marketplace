@@ -37,9 +37,7 @@ handleOperatorRule party = do
   debug "Running operator rule..."
 
   -- Acknowledge all active 'UserSession's
-  userSessions <- query @UserSession
-  forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
-                               >> debug ("Acknowledging user session: " <> show us)
+  mapExercise UserSession_Ack show <$> query @UserSession
 
   -- Add all current parties to 'Token' observers if 'isPublic'
   tokens     <- query @Token
@@ -54,7 +52,7 @@ handleOperatorRule party = do
 handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
 handleToken party parties (cid,token) = do
   let partiesToAdd = Set.difference (Set.fromList parties) token.observers
-  unless (Set.null partiesToAdd || not token.isPublic )
+  unless (Set.null partiesToAdd || not token.isPublic)
     $ void $ emitExerciseCmd cid Token_AddObservers with
         party = party, newObservers = (Set.insert party partiesToAdd)
    >> debug "adding parties to token..."

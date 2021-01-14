@@ -38,9 +38,7 @@ handleMatchingRule party = do
     modify (+ 1)
 
   -- Acknowledge all 'OrderCancelRequest'
-  orderCancelRequests <- query @OrderCancelRequest
-  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid OrderCancel_Ack
-                                     >> debug "Acknowledging order cancel"
+  mapExercise OrderCancel_Ack ((.orderId) . (.order)) <$> query @OrderCancelRequest
 
   -- Check for matches on all 'Order'
   orders <- query @Order
