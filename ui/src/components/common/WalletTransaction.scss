@@ -2,8 +2,23 @@
 
 @mixin wallet-transaction {
     .wallet-transaction {
-        padding: $spacing-l;
-        background-color: red;
-        
+        padding: $spacing-s $spacing-l;
+        display: flex;
+        flex-direction: column;
+
+        .transaction-step {
+            padding: $spacing-s 0;
+            display: flex;
+            flex-direction: column;
+
+            .step-title {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                width: 50%;
+
+            }
+        }
     }
 }

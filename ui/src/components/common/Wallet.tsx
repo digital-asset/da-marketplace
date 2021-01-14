@@ -123,6 +123,7 @@ const Wallet = (props: {
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
+                    onSubmit={() => onRequestWithdraw()}
                     transactionType='Withdraw'
                     baseUrl={url}>
                 </WalletTransaction>
@@ -132,24 +133,37 @@ const Wallet = (props: {
                     sideNav={sideNav}
                     onLogout={onLogout}
                     transactionType='Deposit'
+                    onSubmit={() => onRequestDeposit()}
                     baseUrl={url}>
-                    <div>
-                        Select Payment Method
-                        <button>
-                            <AddPlusIcon/> Add New Payment Method
-                        </button>
+                    <div className='transaction-step'>
+                        <div className='step-title'>
+                          Select Payment Method
+                            <a>
+                                <AddPlusIcon/> Add New Payment Method
+                            </a>
+                        </div>
                     </div>
                     ??
+                    <div className='transaction-step'>
                     <div>
                         Amount
                     </div>
                     <Form.Input>
 
                     </Form.Input>
+                    </div>
                     </WalletTransaction>
             </Route>
         </Switch>
     )
+
+    function onRequestWithdraw() {
+
+    }
+
+    function onRequestDeposit() {
+        
+    }
 }
 
 const Allocations = (props: {

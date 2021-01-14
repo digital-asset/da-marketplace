@@ -7,12 +7,14 @@ import { WalletIcon } from '../../icons/Icons'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
+import { Button } from 'semantic-ui-react'
 
 const WalletTransaction : FunctionComponent<{
     transactionType: string;
     sideNav: React.ReactElement;
     onLogout: () => void;
     baseUrl: string;
+    onSubmit: () => void;
 }> = ({children, sideNav, onLogout, transactionType, baseUrl }) => {
 
     return (
@@ -22,9 +24,14 @@ const WalletTransaction : FunctionComponent<{
             menuTitle={<><WalletIcon/>Wallet</>}
             onLogout={onLogout}
             >
-            <PageSection className='wallet-transaction' border='blue' background='grey'>
-                <h2>{transactionType} Funds</h2>
-                {children}
+            <PageSection border='blue' background='grey'>
+                <div className='wallet-transaction'>
+                    <h2>{transactionType} Funds</h2>
+                    {children}
+                    <Button className='ghost'>
+                        Submit
+                    </Button>
+                </div>
             </PageSection>
         </Page>
     )
