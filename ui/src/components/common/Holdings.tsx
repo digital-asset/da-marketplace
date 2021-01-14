@@ -9,7 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { WalletIcon, IconClose } from '../../icons/Icons'
+import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
 import { groupDeposits, countDecimals, preciseInputSteps } from './utils'
 import { useOperator } from './common'

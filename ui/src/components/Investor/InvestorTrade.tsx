@@ -11,9 +11,9 @@ import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 
 import { DepositInfo, makeContractInfo } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
-import OrderLadder, { MarketDataMap } from '../common/OrderLadder'
 import Page from '../common/Page'
 
+import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
 
 type Props = {
