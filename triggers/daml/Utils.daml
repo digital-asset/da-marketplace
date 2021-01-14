@@ -1,5 +1,7 @@
 module Utils where
 
+import DA.Action
+import DA.Foldable (mapA_)
 import Daml.Trigger
 
 type ContractPair a = (ContractId a, a)
@@ -7,3 +9,13 @@ type ContractPair a = (ContractId a, a)
 -- |Helper function to exercise a choice
 emitExerciseCmd : (Template t, Choice t c r) => ContractId t -> c -> TriggerA s CommandId
 emitExerciseCmd cid c = emitCommands [exerciseCmd cid c] [toAnyContractId cid]
+
+-- |Performs a trigger action if bool is satisied, otherwise defer until next run
+doOrDefer : Bool -> Text -> (TriggerA s a) -> TriggerA s ()
+doOrDefer False txt fn = void $ debug $ ("Assert failed, deffering: " <> txt)
+doOrDefer True txt fn = debug txt >> void $ fn
+
+-- |Exercises a choice on all in list
+mapExercise
+  : (Choice t c r, Eq c, Show c, Show n) => c -> (t -> n) -> [(ContractId t,t)] -> TriggerA s ()
+mapExercise c acc cps = mapA_ (\(cid,t) -> dedupExercise cid c >> debug (show c <> ": " <> show (acc t))) cps
