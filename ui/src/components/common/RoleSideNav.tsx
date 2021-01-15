@@ -16,7 +16,7 @@ type ISideNavItem = {
 
 const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
     return (
-        <div className='role-side-nav'>
+        <div>
             <Menu.Menu>
                 <Menu.Item
                     as={NavLink}

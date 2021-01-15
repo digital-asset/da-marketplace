@@ -106,26 +106,29 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                 <p className='p2'>Marketplace:</p>
                             </Menu.Item>
 
-                            { allExchanges.map(exchange => {
-                                return exchange.contractData.tokenPairs.map(tokenPair => {
-                                    const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+                            { allExchanges.length > 0 ?
+                                allExchanges.map(exchange => {
+                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
-                                    return <Menu.Item
-                                        as={NavLink}
-                                        to={{
-                                            pathname: `${url}/trade/${base}-${quote}`,
-                                            state: {
-                                                exchange: exchange.contractData,
-                                                tokenPair: unwrapDamlTuple(tokenPair)
-                                            }
-                                        }}
-                                        className='sidemenu-item-normal'
-                                        key={exchange.contractId}
-                                    >
-                                        <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
-                                    </Menu.Item>
-                                })
-                            }).flat()}
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}`,
+                                                state: {
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={exchange.contractId}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                        </Menu.Item>
+                                    })
+                                }).flat()
+                            :
+                            <p className='p2 dark'><i>None yet. Join an Exchange to be added to available markets.</i> </p>}
                         </Menu.Menu>
                 </RoleSideNav>
 
@@ -162,6 +165,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
         <Route path={`${path}/wallet`}>
             <Wallet
+                role={MarketRole.InvestorRole}
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>

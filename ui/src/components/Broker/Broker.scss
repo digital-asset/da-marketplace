@@ -1,0 +1,9 @@
+@import '../index.scss';
+
+@import '../common/Wallet.scss';
+
+@import '../common/Holdings.scss';
+
+@mixin broker {
+    @include wallet;
+}

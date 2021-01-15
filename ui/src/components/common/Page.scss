@@ -1,3 +1,5 @@
+@import "../../index.scss";
+
 .ui.grid.page-content {
     display: flex;
     height: 100%;
@@ -23,6 +25,10 @@
     top: 0;
     position: sticky;
     align-self: flex-start;
+
+    .item.home-item {
+        padding: $spacing-s;
+    }
 }
 
 .column.page-sidemenu > .ui.secondary.menu {

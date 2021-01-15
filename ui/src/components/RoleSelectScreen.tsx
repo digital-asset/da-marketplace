@@ -21,7 +21,6 @@ type RoleSelectProps = {
 const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, roleSelectClick }) => (
     <Card className='role-select centered'>
         <Button
-            className='role-select-button'
             disabled={disabled}
             loading={loading}
             onClick={roleSelectClick}

@@ -1,42 +1,67 @@
 import React from 'react'
+
+import { useHistory } from 'react-router-dom'
+
 import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
+
+import './TopMenu.scss'
+
+export type ITopMenuButtonInfo = {
+    label: string,
+    onClick: () => void,
+    disabled?: boolean;
+}
 
 type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
+    activeMenuTitle?: boolean;
+    topMenuButtons?: ITopMenuButtonInfo[];
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout }) => (
-    <div className='top-section'>
-        <Menu className='top-menu'>
-            <Menu.Menu className='top-right-menu' position='left'>
-                <Menu.Item>
-                    <Header as='h2'>
-                        <Header.Content>{ title }</Header.Content>
-                    </Header>
-                </Menu.Item>
-            </Menu.Menu>
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle }) => {
+    const history = useHistory()
 
-            <Menu.Menu className='top-left-menu' position='right'>
-                <Menu.Item as={() => (
-                    <Button className='item' onClick={onLogout}>
-                        <div className='log-out'>
-                            <p>Log out</p>
-                            <LogoutIcon/>
-                        </div>
-                    </Button>
-                )}/>
-            </Menu.Menu>
-        </Menu>
+    return (
+        <div className='top-section'>
+            <Menu className='top-menu'>
+                <Menu.Menu className='top-right-menu' position='left'>
+                    <Menu.Item disabled={!activeMenuTitle} onClick={history.goBack}>
+                        <Header as='h3'>
+                            <Header.Content>{ title }</Header.Content>
+                        </Header>
+                    </Menu.Item>
+                </Menu.Menu>
+                <Menu.Menu className='menu-buttons' position='right'>
+                    {topMenuButtons?.map(b =>
+                        <Menu.Item>
+                            <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
+                                {b.label}
+                            </Button>
+                        </Menu.Item>
+                    )}
+                </Menu.Menu>
+                <Menu.Menu className='top-left-menu' position='right'>
+                    <Menu.Item as={() => (
+                        <Button className='item' onClick={onLogout}>
+                            <div className='log-out'>
+                                <p>Log out</p>
+                                <LogoutIcon/>
+                            </div>
+                        </Button>
+                    )}/>
+                </Menu.Menu>
+            </Menu>
 
-        <div className='notifications'>
-            { notifications }
+            <div className='notifications'>
+                { notifications }
+            </div>
         </div>
-    </div>
-)
+    )
+}
 
 
 export default TopMenu
