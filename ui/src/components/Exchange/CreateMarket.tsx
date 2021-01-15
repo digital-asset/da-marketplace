@@ -99,9 +99,9 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><PublicIcon/>Create a Market</>}
+            menuTitle={<><PublicIcon size='24'/>Create a Market</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='create-market'>
                     <FormErrorHandled onSubmit={handleIdPairSubmit}>
                         <div className='create-market-options'>
@@ -149,9 +149,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 onChange={validateMaxQuantity}/>
                         </div>
                             <Button
-                                secondary
                                 content='Submit'
-                                className='create-market-save'
+                                className='create-market-save ghost'
                                 disabled={!baseToken || !quoteToken}/>
                         </FormErrorHandled>
                 </div>

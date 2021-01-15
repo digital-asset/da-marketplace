@@ -1,26 +1,11 @@
 .ui.grid .page-section {
     flex: 1;
     width: 100%;
-    padding-left: var(--spacing-m);
+    padding-left: var(--spacing-l);
     padding-right: var(--spacing-m);
     padding-top: var(--spacing-m);
-}
-
-.ui.grid .page-section.white {
-    background-color: var(--white);
-}
-
-.ui.grid .page-section.grey {
     background-color: var(--grey1);
-}
-
-.ui.grid .page-section.grey-border {
-    border-top: 2px var(--grey2) solid;
-    border-radius: 0;
-}
-
-.ui.grid .page-section.blue-border {
-    border-top: 2px var(--lightblue2) solid;
+    border-top: 2px var(--cool-grey-90) solid;
     border-radius: 0;
 }
 

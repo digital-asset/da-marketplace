@@ -2,8 +2,24 @@
 /* SPDX-License-Identifier: Apache-2.0  */
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
+
 @import 'colors.scss';
 @import 'icons/Icons.scss';
+
+@font-face {
+  font-family: "BrownStd-Regular";;
+  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Light";
+  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Bold";
+  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
+}
 
 :root {
   --spacing-gap: 2px;
@@ -11,7 +27,7 @@
   --spacing-s: 12px;
   --spacing-m: 24px;
   --spacing-l: 32px;
-  --spacing-l: 48px;
+  --spacing-xl: 48px;
 
   --input-height: 40px;
   --max-page-width: 1000px;
@@ -22,13 +38,13 @@ $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
 $spacing-m: #{var(--spacing-m)};
 $spacing-l: #{var(--spacing-l)};
-$spacing-l: #{var(--spacing-l)};
+$spacing-xl: #{var(--spacing-xl)};
 
 $input-height: #{var(--input-height)};
 $max-page-width: #{var(--max-page-width)};
 
 * {
-  font-family: 'Open Sans';
+  font-family: "Open sans";
 }
 
 body {
@@ -36,7 +52,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--textcolor);
-  background-color: var(--lightblue);
+  background-color: var(--cool-grey-10);
 }
 
 code {
@@ -65,7 +81,7 @@ code {
 }
 
 .ui.form .field > label{
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
   font-size: 16px;
@@ -75,81 +91,98 @@ code {
 
 /* Font Styling*/
 
-h3.ui.header {
-  font-family: Open Sans;
+h1.ui.header {
+  font-family: "BrownStd-Light";
   font-style: normal;
   font-weight: normal;
+  font-size: 34px;
+  line-height: 32px;
+  margin: 0;
+  color: var(--textcolor);
+
+  &.dark {
+    color: var(--white);
+  }
+
+  &.bold {
+    font-family: "BrownStd-Bold";
+  }
+}
+
+h2.ui.header {
+  font-family: "BrownStd-light";
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 19px;
+  color: var(--textcolor);
+
+  &.dark {
+    color: var(--white);
+  }
+
+  &.bold {
+    font-weight: "BrownStd-bold";
+  }
+}
+
+h3.ui.header {
+  font-family: "Open sans";
+  font-style: normal;
+  font-weight: 600;
   font-size: 20px;
   line-height: 27px;
   color: var(--textcolor);
 }
 
 h4.ui.header {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: 600;
-  font-size: 20px;
-  line-height: 27px;
-  color: #303132;
+  font-size: 14px;
+  line-height: 22px;
   color: var(--textcolor);
+  margin: 0px;
+  padding: 0px;
 }
 
 p {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
-  font-size: 14px;
-  line-height: 19px;
-  color: var(--text-color);
+  font-size: 16px;
+  line-height: 26px;
   margin: 0;
+  color: var(--grey-10);
+
+  &.bold {
+    font-weight: 600;
+  }
+
+  &.dark {
+    color: var(--white);
+  }
 }
 
 p.p2 {
-  font-family: Open Sans;
-  font-style: normal;
-  font-weight: normal;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--textcolor);
-}
-
-.ui.form .fields > .field {
-  width: 100%;
-}
-
-.ui.form .fluid input, .ui.form input, .ui.form .field > .selection.dropdown {
-  width: 260px;
-  background: #FFFFFF;
-  border: 1px solid var(--grey4);
-  box-sizing: border-box;
-  border-radius: 2px;
-}
-
-.ui.toggle.checkbox input:focus:checked ~ .box:before,
-.ui.toggle.checkbox input:focus:checked ~ label:before,
-.ui.toggle.checkbox input:checked ~ .box:before,
-.ui.toggle.checkbox input:checked ~ label:before {
-    background-color: var(--dabl-color) !important
-}
-
-.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
-    background-color: var(--grey2);
-}
-
-.ui.form .fluid textarea, .ui.form textarea {
-  background: #FFFFFF;
-  border: 1px solid var(--grey4) !important;
-  box-sizing: border-box;
-  border-radius: 2px;
-}
-
-.ui.form .field > label {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
   font-size: 14px;
   line-height: 19px;
-  color: #303132;
+  color: var(--textcolor);
+
+  &.bold {
+    font-weight: 600;
+  }
+
+  &.dark {
+    color: var(--white);
+  }
+}
+
+a {
+  color: var(--blue-50)
 }
 
 /* buttons */
@@ -165,17 +198,29 @@ p.p2 {
   background: none;
   align-items: center;
   border: 1px solid var(--green-50);
-  font-weight: 400;
   border-radius: 2px;
-}
+  font-weight: 400;
 
-.ui.button.ghost.smaller {
-  padding: 6px 3px;
-}
+  &:hover {
+    background-color: var(--lightblue);
+    cursor: pointer;
+  }
 
-.ui.button.ghost:hover {
-  background-color: var(--lightblue);
-  cursor: pointer;
+  &.smaller {
+    padding: 6px 3px;
+    border: none;
+  }
+
+  &.dark {
+    border: 1px solid var(--blue-80);
+    background-color: transparent;
+    color: var(--white);
+    font-weight: normal;
+
+    &:hover {
+        background-color: var(--cool-grey-20);
+    }
+  }
 }
 
 .ui.basic.button.basic-button-fill {
@@ -184,6 +229,10 @@ p.p2 {
 
 .ui.form > .fields.inline-form-group.with-error {
   align-items: flex-start;
+}
+
+.ui.loading.form:before {
+  background-color: transparent;
 }
 
 .ui.form > .fields.inline-form-group.with-error button {
@@ -195,7 +244,7 @@ p.p2 {
 }
 
 .ui.secondary.button, .ui.secondary.buttons .button, .ui.secondary.button:focus  {
-  border: 1px solid var(--grey4);
+  background-color: var(--cool-grey-30);
   border-radius: 2px;
   background-color: white;
   color: var(--textcolor);
@@ -214,6 +263,16 @@ p.p2 {
 
 .ui.button.close-button, .ui.buttons.close-button .button {
   display: contents;
+}
+.ui.toggle.checkbox input:focus:checked ~ .box:before,
+.ui.toggle.checkbox input:focus:checked ~ label:before,
+.ui.toggle.checkbox input:checked ~ .box:before,
+.ui.toggle.checkbox input:checked ~ label:before {
+    background-color: var(--blue-50) !important
+}
+
+.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
+  background-color: var(--grey2);
 }
 
 @include icons;

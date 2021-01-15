@@ -17,7 +17,7 @@ const ExchangeSideNav: React.FC<Props> = ({ url, name }) => {
                 to={url}
                 exact
             >
-                <Header as='h3'>@{name}</Header>
+                <Header as='h2' className='dark'>@{name}</Header>
             </Menu.Item>
 
             <Menu.Item

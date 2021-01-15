@@ -46,8 +46,8 @@
             margin-right: $spacing-xs !important;
         }
 
-        .fill-primary {
-            fill: var(--dabl-color);
+        path.fill-blue {
+            fill: var(--blue-50);
         }
     }
 }

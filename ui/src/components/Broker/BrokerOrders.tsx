@@ -46,15 +46,15 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><OrdersIcon/>Orders</>}
+            menuTitle={<><OrdersIcon size='24'/>Orders</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='customers'>
                     <BrokerCustomers brokerCustomers={allBrokerCustomers}
                                      registeredInvestors={allRegisteredInvestors}/>
                 </div>
-                <Header as='h4'>Orders</Header>
+                <Header as='h3'>Orders</Header>
                 <div className='customer-orders'>
                     <p>Requested Customer Orders</p>
                     { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
@@ -119,7 +119,7 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
                             onChange={e => setBrokerOrderId(e.currentTarget.value)}
                         />
                         <Button
-                            secondary
+                            className='ghost'
                             content='Accept Order'
                         />
                     </Form.Group>
@@ -195,7 +195,7 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                             value={depositCid}
                         />
                         <Button
-                            secondary
+                            className='ghost'
                             content='Fill Order'
                         />
                     </Form.Group>

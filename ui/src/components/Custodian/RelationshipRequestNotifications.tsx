@@ -65,7 +65,7 @@ const RelationshipRequestNotification: React.FC<RelationshipRequestNotificationP
     }
     return (
         <AcceptRejectNotification onAccept={requestAccept} onReject={requestReject}>
-            {name} is requesting a relationship.
+           <p>{name} is requesting a relationship.</p>
         </AcceptRejectNotification>
     )
 }

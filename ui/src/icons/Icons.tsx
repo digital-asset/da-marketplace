@@ -1,13 +1,7 @@
 import React from 'react'
 
 import marketplaceLogo from './marketplace.svg'
-import exchange from './exchange.svg'
 import lock from './lock.svg'
-import logout from './logout.svg'
-import orders from './orders.svg'
-import publicIcon from './public.svg'
-import user from './user.svg'
-import wallet from './wallet.svg'
 
 import './Icons.scss'
 
@@ -17,7 +11,7 @@ type IconProps = {
 
 export const ArrowRightIcon = () => (
     <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
-        <path
+        <path className="fill-blue"
             d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
             c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
             C6,1.5,6,2,6.3,2.3"/>
@@ -26,7 +20,7 @@ export const ArrowRightIcon = () => (
 
 export const GlobeIcon = () => (
     <svg className="icon globe-icon" viewBox="0 0 16 16">
-      <path className="fill-primary" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
+      <path className="fill-blue" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
         6.93345L5.15354 7.287L5.29999 7.14055V6.93345H4.79999ZM2.97908 7.24587L2.62552 7.59942H2.62552L2.97908
         7.24587ZM6.93332 13.8668H7.43332V13.6597L7.28688 13.5132L6.93332 13.8668ZM5.86666 12.8001H5.36666V13.0072L5.5131
         13.1537L5.86666 12.8001ZM5.86666 11.2001H6.36666V10.993L6.22021 10.8466L5.86666 11.2001ZM4.79999 10.1334H4.29999V10.3406L4.44644
@@ -61,7 +55,14 @@ export const LogoIcon: React.FC<IconProps> = ({ size }) => (
     <img
         className={`icon logo-icon icon-size-${size}`}
         src={marketplaceLogo}
+        color={'#4BE725'}
         alt="command"/>
+)
+
+export const OpenMarketplaceLogo: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon open-marketplace-icon icon-size-${size}`} width="24" height="24" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1 4V28H25M14.2414 4V9.7931M5.96552 19.7241V23.8621M5.96552 10.6207V13.1034M22.5172 10.6207V14.7586M22.5172 21.3793V25.5172M4.31034 13.1034H7.62069V19.7241H4.31034V13.1034ZM12.5862 9.7931H15.8966V16.4138H12.5862V9.7931ZM20.8621 14.7586H24.1724V21.3793H20.8621V14.7586Z" stroke="#4BE725"/>
+    </svg>
 )
 
 export const CandlestickIcon = () => (
@@ -76,11 +77,11 @@ export const CandlestickIcon = () => (
     </svg>
 )
 
-export const ExchangeIcon = () => (
-    <img
-        className="icon exchange-icon"
-        src={exchange}
-        alt="command"/>
+export const ExchangeIcon: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon exchange-icon icon-size-${size}`} width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15.5303 6.53033C15.8232 6.23744 15.8232 5.76256 15.5303 5.46967L10.7574 0.696699C10.4645 0.403806 9.98959 0.403806 9.6967 0.696699C9.40381 0.989593 9.40381 1.46447 9.6967 1.75736L13.9393 6L9.6967 10.2426C9.40381 10.5355 9.40381 11.0104 9.6967 11.3033C9.98959 11.5962 10.4645 11.5962 10.7574 11.3033L15.5303 6.53033ZM1 6.75H15V5.25H1V6.75Z" fill="#4E5E7E"/>
+        <path d="M0.46967 14.5303C0.176777 14.2374 0.176777 13.7626 0.46967 13.4697L5.24264 8.6967C5.53553 8.40381 6.01041 8.40381 6.3033 8.6967C6.59619 8.98959 6.59619 9.46447 6.3033 9.75736L2.06066 14L6.3033 18.2426C6.59619 18.5355 6.59619 19.0104 6.3033 19.3033C6.01041 19.5962 5.53553 19.5962 5.24264 19.3033L0.46967 14.5303ZM15 14.75H1V13.25H15V14.75Z" fill="#4E5E7E"/>
+    </svg>
 )
 
 export const LockIcon = () => (
@@ -91,10 +92,10 @@ export const LockIcon = () => (
 )
 
 export const LogoutIcon = () => (
-    <img
-        className="icon logout-icon"
-        src={logout}
-        alt="command"/>
+    <svg className="icon logout-icon" width="15" height="14" viewBox="0 0 15 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M11.941 6.50026L3.751 6.50026C3.337 6.50026 3.001 6.83626 3.001 7.25026C3.001 7.66426 3.337 8.00026 3.751 8.00026H11.941L9.221 10.7193C9.075 10.8663 9.001 11.0583 9.001 11.2503C9.001 11.4423 9.075 11.6343 9.221 11.7803C9.514 12.0733 9.989 12.0733 10.282 11.7803L14.282 7.78026C14.351 7.71126 14.406 7.62826 14.443 7.53626C14.519 7.35326 14.519 7.14626 14.443 6.96326C14.406 6.87126 14.351 6.78926 14.282 6.71926L10.282 2.71926C9.989 2.42626 9.514 2.42626 9.221 2.71926C8.928 3.01226 8.928 3.48726 9.221 3.78026L11.941 6.50026Z" fill="#174DE8"/>
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M6.75098 12.5H1.50098L1.50098 2H6.75098V0.5L0.750977 0.5C0.336977 0.5 0.000976562 0.836 0.000976562 1.25L0.000976563 13.25C0.000976563 13.664 0.336977 14 0.750977 14H6.75098V12.5Z" fill="#174DE8"/>
+    </svg>
 )
 
 export const MarketIcon = () => (
@@ -105,32 +106,43 @@ export const MarketIcon = () => (
     </svg>
 )
 
-export const OrdersIcon = () => (
-    <img
-        className="icon orders-icon"
-        src={orders}
-        alt="command"/>
+export const OrdersIcon: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon orders-icon icon-size-${size}`} width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clip-path="url(#clip0)">
+            <path d="M10.8109 1.40002L10.8887 1.78891H12.0554L11.822 0.622244C11.7443 0.311133 11.4332 0.0777996 11.122 0.155577L1.71094 1.78891H8.55538L10.8109 1.40002Z" fill="#B4F5A3"/>
+            <path d="M13.2219 4.43338L13.1442 2.41116C13.1442 2.10005 12.9108 1.78894 12.5219 1.78894H12.0553H10.8886H8.55527H1.71083H0.777496C0.466385 1.78894 0.155273 2.02227 0.155273 2.41116V10.8889C0.155273 11.2001 0.388607 11.5112 0.777496 11.5112H12.5997C12.9108 11.5112 13.2219 11.2778 13.2219 10.8889V9.48894C13.5331 9.48894 13.8442 9.25561 13.8442 8.86672V4.97783C13.8442 4.66672 13.5331 4.43338 13.2219 4.43338ZM11.9775 10.3445H1.39972V2.95561H12.0553V4.43338H8.08861C7.62194 4.43338 7.38861 4.66672 7.38861 4.97783V8.9445C7.38861 9.25561 7.62194 9.56672 8.01083 9.56672H11.9775V10.3445ZM12.5997 8.32227H11.9775H8.55527V5.60005H11.9775H12.5997V8.32227Z" fill="#B4F5A3"/>
+            <path d="M10.5783 7.62213C10.9219 7.62213 11.2005 7.34355 11.2005 6.99991C11.2005 6.65626 10.9219 6.37769 10.5783 6.37769C10.2346 6.37769 9.95605 6.65626 9.95605 6.99991C9.95605 7.34355 10.2346 7.62213 10.5783 7.62213Z" fill="#B4F5A3"/>
+        </g>
+        <defs>
+            <clipPath id="clip0">
+                <rect width="14" height="11.6667" fill="white"/>
+            </clipPath>
+        </defs>
+    </svg>
 )
 
-export const PublicIcon = () => (
-    <img
-        className="icon public-icon"
-        src={publicIcon}
-        alt="command"/>
+export const PublicIcon: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon public-icon icon-size-${size}`} width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M0 8.83636C0 4.00909 3.92727 0 8.83636 0C13.6636 0 17.5909 4.00909 17.5909 8.83636C17.5909 13.6636 13.7455 17.6727 8.83636 17.6727C3.92727 17.6727 0 13.6636 0 8.83636ZM1.55455 6.62727C1.30909 7.28182 1.22727 8.1 1.22727 8.83636C1.22727 9.57273 1.39091 10.3909 1.55455 11.1273H5.31818V6.62727H1.55455ZM6.54545 6.62727H11.0455V11.1273H6.54545V6.62727ZM16.0364 6.62727H12.2727V11.0455H16.0364C16.2818 10.3909 16.3636 9.57273 16.3636 8.83636C16.3636 8.1 16.2818 7.36364 16.0364 6.62727ZM15.5455 5.4H12.2727V2.12727C13.6636 2.86364 14.8091 4.00909 15.5455 5.4ZM11.0455 5.4V1.63636C10.3091 1.39091 9.65455 1.30909 8.83636 1.30909C8.01818 1.30909 7.28182 1.39091 6.54545 1.63636V5.4H11.0455ZM5.31818 2.12727V5.4H2.04545C2.78182 4.00909 3.92727 2.86364 5.31818 2.12727ZM5.4 12.2727H2.12727C2.78182 13.6636 3.92727 14.8091 5.4 15.5455V12.2727ZM6.54545 16.0364V12.2727H11.0455V16.0364C10.3091 16.2818 9.57273 16.3636 8.83636 16.3636C8.1 16.3636 7.28182 16.2818 6.54545 16.0364ZM12.2727 12.2727V15.5455C13.6636 14.8091 14.8091 13.6636 15.5455 12.2727H12.2727Z" fill="#B4F5A3"/>
+    </svg>
 )
 
-export const UserIcon = () => (
-    <img
-        className="icon user-icon"
-        src={user}
-        alt="command"/>
+export const UserIcon: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon user-icon icon-size-${size}`} width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <mask id="mask0" mask-type="alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="18" height="18">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M0 0H17.9999V17.9997H0V0Z" fill="white"/>
+        </mask>
+        <g mask="url(#mask0)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M14.7325 14.4805C14.5144 13.1707 13.7531 10.7609 11.1685 9.87462C12.096 9.20121 12.7059 8.11591 12.7059 6.88238C12.7059 4.83568 11.0467 3.1765 9.00002 3.1765C6.95331 3.1765 5.29413 4.83568 5.29413 6.88238C5.29413 8.11591 5.90402 9.20121 6.83155 9.87462C4.24696 10.7609 3.4846 13.1697 3.26755 14.4805C1.90272 13.0532 1.05884 11.1251 1.05884 9.00003C1.05884 4.62074 4.62072 1.05885 9.00002 1.05885C13.3793 1.05885 16.9412 4.62074 16.9412 9.00003C16.9412 11.1251 16.0973 13.0532 14.7325 14.4805ZM6.35319 6.88239C6.35319 5.42227 7.54119 4.23533 9.00025 4.23533C10.4593 4.23533 11.6473 5.42227 11.6473 6.88239C11.6473 8.34145 10.4593 9.52945 9.00025 9.52945C7.54119 9.52945 6.35319 8.34145 6.35319 6.88239ZM4.23522 15.3381C4.23733 15.0523 4.3411 10.5883 8.99992 10.5883C13.6355 10.5883 13.7615 15.047 13.7636 15.3381C12.4358 16.3387 10.7883 16.9412 8.99992 16.9412C7.21051 16.9412 5.56404 16.3387 4.23522 15.3381ZM9 0C4.02988 0 0 4.02882 0 9C0 13.9701 4.02988 18 9 18C13.9701 18 18 13.9701 18 9C18 4.02882 13.9701 0 9 0Z" fill="#B4F5A3"/>
+        </g>
+    </svg>
 )
 
-export const WalletIcon = () => (
-    <img
-        className="icon wallet-icon"
-        src={wallet}
-        alt="command"/>
+export const WalletIcon: React.FC<IconProps> = ({ size }) => (
+    <svg className={`icon wallet-icon icon-size-${size}`} width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.8109 1.40002L10.8887 1.78891H12.0554L11.822 0.622244C11.7443 0.311133 11.4332 0.0777996 11.122 0.155577L1.71094 1.78891H8.55538L10.8109 1.40002Z" fill="#B4F5A3"/>
+        <path d="M13.2219 4.43338L13.1442 2.41116C13.1442 2.10005 12.9108 1.78894 12.5219 1.78894H12.0553H10.8886H8.55527H1.71083H0.777496C0.466385 1.78894 0.155273 2.02227 0.155273 2.41116V10.8889C0.155273 11.2001 0.388607 11.5112 0.777496 11.5112H12.5997C12.9108 11.5112 13.2219 11.2778 13.2219 10.8889V9.48894C13.5331 9.48894 13.8442 9.25561 13.8442 8.86672V4.97783C13.8442 4.66672 13.5331 4.43338 13.2219 4.43338ZM11.9775 10.3445H1.39972V2.95561H12.0553V4.43338H8.08861C7.62194 4.43338 7.38861 4.66672 7.38861 4.97783V8.9445C7.38861 9.25561 7.62194 9.56672 8.01083 9.56672H11.9775V10.3445ZM12.5997 8.32227H11.9775H8.55527V5.60005H11.9775H12.5997V8.32227Z" fill="#B4F5A3"/>
+    </svg>
 )
 
 export const CircleIcon = () => (
@@ -139,7 +151,7 @@ export const CircleIcon = () => (
 
 export const IconClose = () => (
     <svg className='icon close' viewBox="0 0 14 14">
-      <path className="fill-primary" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
+      <path className="fill-blue" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
           L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
     </svg>
@@ -147,7 +159,7 @@ export const IconClose = () => (
 
 export const IconChevronDown = () => (
 <svg className='icon chevron-down' viewBox="0 -6 16 16">
-    <path className="fill-primary"
+    <path className="fill-blue"
         d="M7,7L1,1h2l4.5,4.4L12,1h2.1l-6,6C7.9,7.1,7.7,7.2,7.5,7.2C7.3,7.2,7.1,7.1,7,7z"/>
 </svg>
 );
@@ -167,8 +179,10 @@ export const AddPlusIcon = () => (
 
 export const OverflowIcon = () => (
     <svg className='icon overflow-icon' width='20px' viewBox="0 0 17.8 4.6">
-        <circle className="fill-primary" cx="2" cy="2.3" r="2"/>
-        <circle className="fill-primary" cx="8.9" cy="2.3" r="2"/>
-        <circle className="fill-primary" cx="15.8" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="2" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="8.9" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="15.8" cy="2.3" r="2"/>
     </svg>
-  );
+);
+
+

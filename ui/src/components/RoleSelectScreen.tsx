@@ -1,6 +1,6 @@
 import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Card } from 'semantic-ui-react'
+import { Button, Card, Header} from 'semantic-ui-react'
 
 import { useParty, useStreamQueries, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
@@ -25,7 +25,7 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
             loading={loading}
             onClick={roleSelectClick}
         >
-            { caption } <ArrowRightIcon/>
+           <Header as='h4'> { caption } </Header>  <ArrowRightIcon/>
         </Button>
     </Card>
 )
@@ -63,6 +63,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     return (
         <>
             <OnboardingTile>
+                <p className='dark'>What would you like to do?</p>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}

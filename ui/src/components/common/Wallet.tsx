@@ -95,11 +95,11 @@ const Wallet = (props: {
             <Route exact path={path}>
                 <Page
                     sideNav={sideNav}
-                    menuTitle={<><WalletIcon/>Wallet</>}
+                    menuTitle={<><WalletIcon size='24'/>Wallet</>}
                     onLogout={onLogout}
                     topMenuButtons={topMenuButtons}
                     >
-                    <PageSection border='blue' background='grey'>
+                    <PageSection>
                         <div className='wallet'>
                             <Holdings
                                 deposits={allDeposits}

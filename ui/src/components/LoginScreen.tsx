@@ -3,15 +3,13 @@
 
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import { Button, Form, Icon, Popup } from 'semantic-ui-react'
+import { Button, Form, Header, Icon, Popup } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { Parties, retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
-import './LoginScreen.scss'
-import WelcomeHeader from './common/WelcomeHeader'
-import OnboardingTile, { Tile } from './common/OnboardingTile'
+import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError, InvalidPartiesJSONError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
 
@@ -48,11 +46,11 @@ type Props = {
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const localTiles = [
-    <Tile key='login' header={<WelcomeHeader/>}><LocalLoginForm onLogin={onLogin}/></Tile>
+    <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
 
   const dablTiles = [
-    <Tile key='login' header={<WelcomeHeader/>}><DablLoginForm onLogin={onLogin}/></Tile>,
+    <Tile key='login' header={logoHeader}><DablLoginForm onLogin={onLogin}/></Tile>,
     <Tile key='parties'><PartiesLoginForm onLogin={onLogin}/></Tile>,
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
@@ -74,25 +72,20 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
   }
 
   return (
-    <Form size='large' className='test-select-login-screen'>
-      {/* FORM_BEGIN */}
+    <Form size='large' className='username-login'>
       <Form.Input
         required
-        icon='user'
-        iconPosition='left'
+        fluid
         placeholder='Username'
         value={username}
-        className='test-select-username-field'
         onChange={e => setUsername(e.currentTarget.value)}
       />
       <Button
-        primary
+        className='ghost dark'
         fluid
         disabled={!username}
-        className='test-select-login-button'
         content='Log in'
         onClick={handleLogin}/>
-      {/* FORM_END */}
     </Form>
   )
 }
@@ -110,37 +103,27 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
 
   return (
     <>
-      <p>or via DABL Console JWT Token:</p>
-      <Form size='large' className='test-select-login-screen'>
-        <Form.Group>
+      <p className='login-details dark'>or via DABL Console JWT Token:</p>
+      <Form size='large' className='login-form'>
           <Form.Input
             fluid
             required
-            icon='user'
-            iconPosition='left'
-            label='Party'
+            label={<p className='dark'>Party</p>}
             placeholder='Party ID'
             value={partyId}
-            className='test-select-username-field'
             onChange={e => setPartyId(e.currentTarget.value)}/>
 
           <Form.Input
             fluid
             required
-            icon='lock'
             type='password'
-            iconPosition='left'
-            label='Token'
+            label={<p className='dark'>Token</p>}
             placeholder='Party JWT'
             value={jwt}
-            className='test-select-username-field'
             onChange={e => setJwt(e.currentTarget.value)}/>
-        </Form.Group>
-
         <Button
-          basic
-          primary
           fluid
+          className='ghost dark'
           disabled={!jwt || !partyId}
           content='Submit'
           onClick={handleDablTokenLogin}/>
@@ -201,26 +184,23 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
 
   return (
     <>
-      <p>
-        <span>Alternatively, login with <code className='link'>parties.json</code> </span>
-        <Popup
-          trigger={<Icon name='info circle'></Icon>}
-          content='Located in the DABL Console Users tab'/>
+      <p className='login-details dark'>
+        <span>Alternatively, login with <code className='link'>parties.json</code> located in the DABL Console Users tab: </span>
       </p>
-      <FormErrorHandled size='large' className='parties-login' onSubmit={handleLogin}>
+      <FormErrorHandled size='large' className='login-form' onSubmit={handleLogin}>
         { loadAndCatch => (
           <>
             <Form.Group widths='equal'>
               <Form.Select
                 selection
-                label='Party Name'
+                label={<p className='dark'>Party Name</p>}
                 placeholder='Choose a party'
                 options={options}
                 value={selectedPartyId}
                 onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
 
               <Form.Input className='upload-file-input'>
-                <label className="custom-file-upload button secondary ui">
+                <label className="custom-file-upload button ui">
                   <input type='file' value='' onChange={e => {
                     const reader = new FileReader();
 
@@ -236,17 +216,15 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
                       reader.readAsText(e.target.files[0]);
                     }
                   }}/>
-                  <Icon name='file'/><span>Load Parties</span>
+                  <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
                 </label>
               </Form.Input>
             </Form.Group>
             <Button
               fluid
-              basic
-              primary
               submit
               disabled={!parties?.find(p => p.party === selectedPartyId)}
-              className='test-select-login-button'
+              className='ghost dark'
               content='Log in'/>
             {/* FORM_END */}
           </>
@@ -282,10 +260,11 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
   }, [onLogin, query, history]);
 
   return (
-    <Form size='large' className='test-select-login-screen'>
+    <Form size='large'>
       <Button
-        primary
         fluid
+        icon='right arrow'
+        labelPosition='right'
         className='dabl-login-button'
         content='Log in with DABL'
         onClick={handleDablLogin}/>

@@ -1,41 +1,18 @@
-.chat-icon {
-    width: 40px;
-    height: 40px;
-}
+@import "./common/OnboardingTile.scss";
 
-.onboarding-tile-content form {
-    margin-top: 16px;
-}
+@mixin login-screen {
+    @include onboarding-tile;
 
-.onboarding-tile-content .form .dabl-login-button {
-    height: 70px;
-    font-size: 16px;
-}
+    .login-header {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: center;
+        margin: var(--spacing-s) 0;
 
-.parties-login .field.upload-file-input {
-    display: flex;
-}
-
-.parties-login .field > .ui.input {
-    display: flex;
-    align-self: flex-end;
-}
-
-.parties-login .custom-file-upload > input[type="file"] {
-    display: none;
-}
-
-.parties-login .custom-file-upload {
-    height: 44px;
-    width: 100%;
-    margin: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    align-self: flex-end;
-}
-
-.parties-login .custom-file-upload .icon {
-    margin-right: var(--spacing-s);
+        h1.ui.header {
+            color: var(--white);
+            font-weight: normal;
+        }
+    }
 }

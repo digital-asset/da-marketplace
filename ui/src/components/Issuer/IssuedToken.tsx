@@ -56,7 +56,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection className='issued-token' border='blue' background='white'>
+            <PageSection className='issued-token'>
                 <div className='token-subheading'>
                     <p>{token?.contractData.description}</p>
                     <div className='token-details'>
@@ -154,6 +154,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
 
 
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+    if (props.nettedTokenDeposits.length === 0) {
+        return null
+    }
     return (
         <div className='allocations'>
             <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>

@@ -114,7 +114,7 @@ const WalletTransaction = (props: {
             menuTitle={<><WalletIcon/>Wallet</>}
             onLogout={onLogout}
             >
-            <PageSection border='blue' background='grey'>
+            <PageSection>
                 <div className='wallet-transaction'>
                     <h2>{transactionType} Funds</h2>
                     <FormErrorHandled onSubmit={onSubmit}>

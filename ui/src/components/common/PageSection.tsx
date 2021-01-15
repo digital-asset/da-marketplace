@@ -3,13 +3,11 @@ import React from 'react'
 import "./PageSection.scss"
 
 type Props = {
-    background: 'white' | 'grey';
-    border: 'grey' | 'blue';
     className?: string;
 }
 
-const PageSection: React.FC<Props> = ({ children, className, border, background }) => (
-    <div className={`page-section ${background} ${border}-border ${className}`}>
+const PageSection: React.FC<Props> = ({ children, className }) => (
+    <div className={`page-section ${className}`}>
         { children }
     </div>
 )

@@ -77,7 +77,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
                     setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
                     setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
 
-                <Button className='request-custodian-relationship' secondary content='Send Request' disabled={!custodianId}/>
+                <Button className='ghost' content='Send Request' disabled={!custodianId}/>
             </Form.Group>
         </FormErrorHandled>
     )
