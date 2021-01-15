@@ -132,10 +132,9 @@ const CreateDeposit: React.FC = () => {
                     disabled={!token}
                     onChange={validateTokenQuantity}/>
                 <Button
-                    secondary
                     disabled={!beneficiary || !token || !depositQuantity}
                     content='Create Deposit'
-                    className='create-deposit-btn'/>
+                    className='create-deposit-btn ghost'/>
             </Form.Group>
         </FormErrorHandled>
     )

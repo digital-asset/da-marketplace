@@ -20,9 +20,11 @@ import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet';
 
+import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+
 import BrokerOrders from './BrokerOrders'
-import BrokerSideNav from './BrokerSideNav'
 import FormErrorHandled from '../common/FormErrorHandled'
+import RoleSideNav from '../common/RoleSideNav'
 
 
 type Props = {
@@ -112,7 +114,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
-                darkMode
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -120,8 +122,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <BrokerSideNav url={url}
-                                   name={registeredBroker.contracts[0]?.payload.name || broker}/>
+    const sideNav = <RoleSideNav url={url}
+                                 name={registeredBroker.contracts[0]?.payload.name || broker}
+                                 items={[
+                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                                     {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
+                                    ]}/>
 
     const brokerScreen = <Switch>
         <Route exact path={path}>

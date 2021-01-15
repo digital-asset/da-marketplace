@@ -1,7 +1,6 @@
 import React from 'react'
-import { Grid } from 'semantic-ui-react'
+import { Grid, Menu } from 'semantic-ui-react'
 
-import SideMenu from './SideMenu'
 import TopMenu from './TopMenu'
 
 import './Page.scss'
@@ -18,7 +17,11 @@ type Props = {
 const Page: React.FC<Props> = ({ children, className, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
     return (
         <Grid className={'page-content ' + className}>
-            <SideMenu>{ sideNav }</SideMenu>
+            <Grid.Column className="page-sidemenu">
+                <Menu secondary vertical>
+                    { sideNav }
+                </Menu>
+            </Grid.Column>
             <Grid.Column className='page-body'>
                 <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications} isLandingPage={isLandingPage}/>
                 { children }

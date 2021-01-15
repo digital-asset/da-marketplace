@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
+
+import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { PublicIcon } from '../../icons/Icons'
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
@@ -18,8 +21,8 @@ import LandingPage from '../common/LandingPage'
 import MarketRelationships from '../common/MarketRelationships'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
+import RoleSideNav from '../common/RoleSideNav';
 
-import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -40,6 +43,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
         console.log("Unexpected close from custodianRelationship: ", e);
     }).contracts.map(makeContractInfo);
+    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
+        console.log("Unexpected close from Token: ", e);
+    }).contracts
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -90,15 +96,35 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
-                darkMode
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-    const sideNav = <IssuerSideNav url={url}
-                                   name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
+
+    const sideNav = <RoleSideNav url={url}
+                        name={registeredIssuer.contracts[0]?.payload.name || issuer}
+                        items={[
+                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
+                        ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Issued Tokens:</p>
+                            </Menu.Item>
+                            {allTokens.map(token => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
+                                    key={token.contractId}
+                                >
+                                    <p>{token.payload.id.label}</p>
+                                </Menu.Item>
+                            ))}
+                        </Menu.Menu>
+                </RoleSideNav>
 
     const issuerScreen = (
         <div className='issuer'>

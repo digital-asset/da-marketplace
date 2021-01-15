@@ -115,7 +115,7 @@ const IssueAsset = () => {
                 onChange={e => setQuantityPrecision(e.currentTarget.value)}
             />
             <Button
-                secondary
+                className='ghost'
                 disabled={!name || !quantityPrecision || !description}
                 content='Submit'>
             </Button>

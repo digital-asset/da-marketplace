@@ -25,14 +25,14 @@ export type Profile = StringKeyedObject<ProfileField>;
 type FieldProps = {
     field: ProfileField;
     setField: (field: ProfileField) => void;
-    darkMode?: boolean;
+    inviteAcceptTile?: boolean;
 }
 
-const ProfileField: React.FC<FieldProps> = ({ field, setField, darkMode }) => {
+const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile }) => {
     return (
         <Form.Input
             fluid
-            label={<p className={`p2 ${darkMode && 'dark'}`}>{field.label}</p>}
+            label={<p className={`p2 ${inviteAcceptTile && 'dark'}`}>{field.label}</p>}
             placeholder={field.placeholder}
             value={field.value}
             className='profile-form-field'
@@ -44,11 +44,11 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField, darkMode }) => {
 type ProfileProps = {
     content: string;
     defaultProfile: Profile;
-    darkMode?: boolean;
+    inviteAcceptTile?: boolean;
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, darkMode }) => {
+const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
 
     useEffect(() => {
@@ -60,7 +60,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
             key={key}
             field={profile[key]}
             setField={field => setProfile({ ...profile, [key]: field })}
-            darkMode={darkMode}/>
+            inviteAcceptTile={inviteAcceptTile}/>
     ));
 
     const disableButton = Object.keys(profile).reduce((accumulator, key) => {
@@ -71,7 +71,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
          <Form className='profile-form'>
             { fields }
             <Button
-                className={`ghost ${darkMode && 'dark'}`}
+                className={`ghost ${inviteAcceptTile && 'dark'}`}
                 content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}

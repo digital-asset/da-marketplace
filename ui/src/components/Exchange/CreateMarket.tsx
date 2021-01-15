@@ -149,9 +149,8 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 onChange={validateMaxQuantity}/>
                         </div>
                             <Button
-                                secondary
                                 content='Submit'
-                                className='create-market-save'
+                                className='create-market-save ghost'
                                 disabled={!baseToken || !quoteToken}/>
                         </FormErrorHandled>
                 </div>

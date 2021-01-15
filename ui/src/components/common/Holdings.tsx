@@ -186,7 +186,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({ deposit, providers, role, o
                         options={providerOptions}
                         onChange={handleProviderChange}/>
                     <Button
-                        secondary
+                        className='ghost'
                         disabled={provider === ''}
                         content='Submit'/>
                 </Form.Group>
@@ -248,7 +248,7 @@ const MergeForm: React.FC<MergeFormProps> = ({ availableDeposits, deposit, onReq
                         options={assetOptions}
                         onChange={handleMergeAssetsChange}/>
                     <Button
-                        secondary
+                        className='ghost'
                         disabled={mergeAssets.length === 0}
                         content='Submit'/>
                 </Form.Group>
@@ -326,7 +326,7 @@ const SplitForm: React.FC<SplitFormProps> = ({ deposit, onRequestClose }) => {
                         error={splitNumberError}
                         onChange={validateSplitNumber}/>
                     <Button
-                        secondary
+                        className='ghost'
                         disabled={!splitAssetDecimal}
                         content='Submit'/>
                 </Form.Group>
