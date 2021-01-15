@@ -9,7 +9,6 @@ import Credentials, { computeCredentials } from '../Credentials'
 import { Parties, retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
-import { LogoIcon, OpenMarketplaceLogo } from '../icons/Icons'
 import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError, InvalidPartiesJSONError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
@@ -124,7 +123,6 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
             onChange={e => setJwt(e.currentTarget.value)}/>
         <Button
           fluid
-          primary
           className='ghost dark'
           disabled={!jwt || !partyId}
           content='Submit'
@@ -224,7 +222,6 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
             </Form.Group>
             <Button
               fluid
-              primary
               submit
               disabled={!parties?.find(p => p.party === selectedPartyId)}
               className='ghost dark'
