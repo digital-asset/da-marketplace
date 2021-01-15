@@ -16,9 +16,11 @@ import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
+import RoleSideNav from '../common/RoleSideNav'
+
+import { UserIcon } from '../../icons/Icons'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
-import CustodianSideNav from './CustodianSideNav'
 import Clients from './Clients'
 import FormErrorHandled from '../common/FormErrorHandled'
 
@@ -82,6 +84,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
                 content='Submit'
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -89,8 +92,11 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <CustodianSideNav url={url}
-                                      name={registeredCustodian.contracts[0]?.payload.name || custodian}/>
+    const sideNav = <RoleSideNav url={url}
+                                 name={registeredCustodian.contracts[0]?.payload.name || custodian}
+                                 items={[
+                                    {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
+                                 ]}/>
 
     const custodianScreen = <Switch>
         <Route exact path={path}>

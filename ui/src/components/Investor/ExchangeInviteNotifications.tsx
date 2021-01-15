@@ -47,7 +47,7 @@ const ExchangeParticipantInvite: React.FC<ExchParticipantInviteProps> = ({
     const name = exchangeMap.get(invite.contractData.exchange)?.name || invite.contractData.exchange;
     return (
         <AcceptRejectNotification onAccept={invitationAccept} onReject={invitationReject}>
-            Exchange <b>@{name}</b> is inviting you to trade.
+           <p>Exchange <b>@{name}</b> is inviting you to trade.</p>
         </AcceptRejectNotification>
     )
 }

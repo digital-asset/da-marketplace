@@ -18,12 +18,11 @@ type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
-    isLandingPage?: boolean;
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPage, topMenuButtons, activeMenuTitle }) => {
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle }) => {
     const history = useHistory()
 
     return (
@@ -36,7 +35,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                         </Header>
                     </Menu.Item>
                 </Menu.Menu>
-                <Menu.Menu className='menu-buttons' position='right'>
+                <Menu.Menu className='top-left-menu' position='right'>
                     {topMenuButtons?.map(b =>
                         <Menu.Item>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
@@ -44,12 +43,10 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                             </Button>
                         </Menu.Item>
                     )}
-                </Menu.Menu>
-                <Menu.Menu className={`top-left-menu ${!isLandingPage && 'blue-border' }`}>
                     <Menu.Item as={() => (
-                        <Button className='item' onClick={onLogout}>
+                        <Button className='item ghost smaller' onClick={onLogout}>
                             <div className='log-out'>
-                                <p>Log out</p>
+                                <p className='p2'>Log out</p>
                                 <LogoutIcon/>
                             </div>
                         </Button>

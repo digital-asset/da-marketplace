@@ -25,19 +25,18 @@ const LandingPage: React.FC<Props> = ({
     <Page
         sideNav={sideNav}
         onLogout={onLogout}
-        isLandingPage
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
     >
-        <PageSection border='grey' background='grey'>
+        <PageSection>
             <div className='landing-page'>
-                <div className='landing-page-column'>
-                    <Header as='h4'>Profile</Header>
+                <div className='landing-page-column profile'>
+                    <Header as='h3'>Profile</Header>
                     { profile }
                 </div>
 
-                <div className='landing-page-column'>
-                    <Header as='h4'>Market Relationships</Header>
+                <div className='landing-page-column market-relationships'>
+                    <Header as='h3'>Market Relationships</Header>
                     { marketRelationships }
                 </div>
             </div>

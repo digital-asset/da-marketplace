@@ -20,9 +20,9 @@
                 }
 
                 tr th {
-                    background-color: var(--white);
                     border-bottom: 0px !important;
                 }
+
                 tr th:nth-of-type(1){
                     padding-left: 0px;
                 }
@@ -31,8 +31,7 @@
 
         .allocations {
             margin: 0 0 $spacing-m $spacing-m;
-            width: 100%;
-            border: 1px solid var(--cool-grey-90);;
+            width: 80%;
         }
 
         .token-subheading {

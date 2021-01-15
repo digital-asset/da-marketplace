@@ -95,7 +95,7 @@ const ValueEntryModal = (props: IProps) => {
                             options={partyOptions}
                             onChange={handleSelectNewParticipants}/>
                         <Button
-                            secondary
+                            className='ghost'
                             content='Add'/>
                     </FormErrorHandled>
                 }

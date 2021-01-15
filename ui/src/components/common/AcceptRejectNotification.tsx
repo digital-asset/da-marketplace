@@ -19,9 +19,9 @@ const AcceptRejectNotification: React.FC<AcceptRejectNotificationProps> = ({
             <FormErrorHandled onSubmit={onAccept}>
                 { loadAndCatch =>
                     <Form.Group className='inline-form-group'>
-                        <Button secondary content='Accept' type='submit'/>
+                        <Button className='ghost' content='Accept' type='submit'/>
                         <Button
-                            secondary
+                            className='ghost'
                             content='Reject'
                             type='button'
                             onClick={() => loadAndCatch(onReject)}/>

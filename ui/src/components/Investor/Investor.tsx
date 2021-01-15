@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
+import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -10,7 +11,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -19,10 +20,12 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
+import RoleSideNav from '../common/RoleSideNav';
+
+import { ExchangeIcon, OrdersIcon, WalletIcon, UserIcon } from '../../icons/Icons'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
-import InvestorSideNav from './InvestorSideNav'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
 
@@ -92,14 +95,53 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <InvestorSideNav url={url}
-                                     exchanges={allExchanges}
-                                     name={registeredInvestor.contracts[0]?.payload.name || investor}/>
+    const sideNav = <RoleSideNav url={url}
+                        name={registeredInvestor.contracts[0]?.payload.name || investor}
+                        items={[
+                            {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                            {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
+                        ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Marketplace:</p>
+                            </Menu.Item>
+
+                            { allExchanges.length > 0 ?
+                                allExchanges.map(exchange => {
+                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}`,
+                                                state: {
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={exchange.contractId}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                        </Menu.Item>
+                                    })
+                                }).flat()
+                            :
+                            <Menu.Item className='empty-item'>
+                                <p className='p2 dark'>
+                                    <i>None yet. Join an Exchange to be added to available markets.</i>
+                                </p>
+                            </Menu.Item>
+                        }
+                        </Menu.Menu>
+                </RoleSideNav>
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <InvestorProfile
                 content='Submit'
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

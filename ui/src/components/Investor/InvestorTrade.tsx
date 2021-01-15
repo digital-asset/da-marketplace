@@ -84,10 +84,10 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
+            menuTitle={<><ExchangeIcon size='24'/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <PageSection className='investor-trade' border='blue' background='white'>
+            <PageSection className='investor-trade'>
                 <div className='order'>
                     <h3><CandlestickIcon/>Order</h3>
                     <div className='order-input'>

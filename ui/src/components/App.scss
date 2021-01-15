@@ -1,7 +1,8 @@
 @import '../index.scss';
-
+@import './LoginScreen.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
+@import './common/TopMenu.scss';
 @import './Broker/Broker.scss';
 
 .app {
@@ -10,5 +11,7 @@
 
     @include investor;
     @include issuer;
+    @include login-screen;
+    @include top-menu;
     @include broker;
 }

@@ -15,8 +15,10 @@ import InviteAcceptTile from '../common/InviteAcceptTile'
 import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import MarketRelationships from '../common/MarketRelationships'
+import RoleSideNav from '../common/RoleSideNav';
 
-import ExchangeSideNav from './ExchangeSideNav'
+import { PublicIcon, UserIcon } from '../../icons/Icons'
+
 import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
 import ExchangeParticipants from './ExchangeParticipants'
@@ -76,13 +78,18 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    const sideNav = <ExchangeSideNav url={url}
-                                     name={registeredExchange.contracts[0]?.payload.name || exchange}/>;
-
+    const sideNav = <RoleSideNav url={url}
+                                 name={registeredExchange.contracts[0]?.payload.name || exchange}
+                                 items={[
+                                    {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
+                                    {to: `${url}/create-pair`, label: 'Create a Market', icon: <PublicIcon/>},
+                                    {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
+                                 ]}/>
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

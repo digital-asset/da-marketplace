@@ -20,9 +20,11 @@ import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet';
 
+import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+
 import BrokerOrders from './BrokerOrders'
-import BrokerSideNav from './BrokerSideNav'
 import FormErrorHandled from '../common/FormErrorHandled'
+import RoleSideNav from '../common/RoleSideNav'
 
 
 type Props = {
@@ -112,6 +114,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
@@ -119,45 +122,49 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const sideNav = <BrokerSideNav url={url}
-                                   name={registeredBroker.contracts[0]?.payload.name || broker}/>
+    const sideNav = <RoleSideNav url={url}
+                                 name={registeredBroker.contracts[0]?.payload.name || broker}
+                                 items={[
+                                    {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                                    {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
+                                 ]}/>
 
-    const brokerScreen = 
-    <div className='broker'>
-        <Switch>
-            <Route exact path={path}>
-                <LandingPage
-                    profile={
-                        <FormErrorHandled onSubmit={updateProfile}>
-                            <BrokerProfile
-                                content='Save'
-                                defaultProfile={profile}
-                                submitProfile={profile => setProfile(profile)}/>
-                        </FormErrorHandled>
-                    }
-                    marketRelationships={
-                        <MarketRelationships role={MarketRole.BrokerRole}
-                                            custodianRelationships={allCustodianRelationships}/>}
-                    sideNav={sideNav}
-                    notifications={notifications}
-                    onLogout={onLogout}/>
-            </Route>
+    const brokerScreen =
+        <div className='broker'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <BrokerProfile
+                                    content='Save'
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <MarketRelationships role={MarketRole.BrokerRole}
+                                                custodianRelationships={allCustodianRelationships}/>}
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-            <Route path={`${path}/wallet`}>
-                <Wallet
-                    role={MarketRole.BrokerRole}
-                    sideNav={sideNav}
-                    onLogout={onLogout}/>
-            </Route>
+                <Route path={`${path}/wallet`}>
+                    <Wallet
+                        role={MarketRole.BrokerRole}
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
 
-            <Route path={`${path}/orders`}>
-                <BrokerOrders
-                    sideNav={sideNav}
-                    deposits={allDeposits}
-                    onLogout={onLogout}/>
-            </Route>
-        </Switch>
-    </div>
+                <Route path={`${path}/orders`}>
+                    <BrokerOrders
+                        sideNav={sideNav}
+                        deposits={allDeposits}
+                        onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
 
 
     return registeredBroker.loading
