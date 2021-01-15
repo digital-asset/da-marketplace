@@ -1,23 +1,21 @@
 import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { ContractId } from '@daml/types'
+import { useParty, useLedger } from '@daml/react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDepositsByAsset, groupDepositsByProvider, countDecimals, preciseInputSteps, StringKeyedObject, sumDepositArray } from './utils'
+import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 
 import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
 import "./Holdings.scss"
+import { AppError } from './errorTypes'
 
 export type DepositProvider = {
     party: string;
@@ -39,7 +37,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
 
             return (
                 <div className='asset-section' key={providerLabel}>
-                    { getProviderLabel(providerLabel) }
+                    { getProviderLabel(providerLabel, providers) }
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <DepositRow
                             key={assetLabel}
@@ -55,23 +53,24 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     return (
         <div className='holdings'>
             <Header as='h3'>Holdings</Header>
-            { assetSections }
+            { assetSections.length === 0 ?
+                <i>none</i> : assetSections }
         </div>
     )
+}
 
-    function getProviderLabel(providerLabel: string) {
-        const providerInfo = providers.find(p => p.party === providerLabel)
-        return (
-            <div className='provider-info'>
-                <Header as='h5'>
-                    {providerInfo?.label}
-                </Header>
-                <p className='p2'>
-                    {providerInfo?.party}
-                </p>
-            </div>
-        )
-    }
+export function getProviderLabel(providerLabel: string, providers: DepositProvider[]) {
+    const providerInfo = providers.find(p => p.party === providerLabel)
+    return (
+        <div className='provider-info'>
+            <Header as='h5'>
+                {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
+            </Header>
+            <p className='p2'>
+                {providerInfo?.party}
+            </p>
+        </div>
+    )
 }
 
 type DepositRowProps = {
@@ -81,7 +80,7 @@ type DepositRowProps = {
     role: MarketRole;
 }
 
-type FormSelectorOptions = 'provider' | 'merge' | 'split'
+type FormSelectorOptions = 'provider'
 
 const DepositRow: React.FC<DepositRowProps> = ({
     assetLabel,
@@ -168,7 +167,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
         const args = { depositCids, amount, provider };
 
         if (+amount > totalQty) {
-            throw new Error("Amount greater than total allocated funds.");
+            throw new AppError("Invalid amount quantity", "Amount greater than total allocated funds.");
         }
 
         switch(role) {
@@ -179,7 +178,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
                 await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args);
                 break;
             default:
-                throw new Error(`The ${role} role can not allocate deposits.`)
+                throw new AppError("Invalid role selected", `The ${role} role can not allocate deposits.`)
         }
         setProvider('');
     }
