@@ -123,7 +123,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                             }
                         </Table.Body>
                     </Table>
-                    {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
+                    <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                 </div>
             </PageSection>
             <AddParticipantModal
@@ -154,6 +154,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
 
 
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+    if (props.nettedTokenDeposits.length === 0) {
+        return null
+    }
     return (
         <div className='allocations'>
             <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>

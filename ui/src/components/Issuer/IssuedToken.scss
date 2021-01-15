@@ -6,7 +6,7 @@
 
         .position-holdings-data {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
 
             .ui.table.issuer-cap-table {
                 border: 0px !important;
@@ -31,7 +31,7 @@
 
         .allocations {
             margin: 0 0 $spacing-m $spacing-m;
-            width: 100%;
+            width: 80%;
         }
 
         .token-subheading {

@@ -1,5 +1,7 @@
 import React from 'react'
 
+import { Header } from 'semantic-ui-react'
+
 import { BrokerCustomerInfo, RegisteredInvestorInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import InviteBrokerCustomer from './InviteBrokerCustomer'
@@ -18,7 +20,7 @@ const BrokerCustomers: React.FC<Props> = ({ brokerCustomers, registeredInvestors
     });
     return (
         <>
-            <p><b>Customers</b></p>
+            <Header as='h3'>Customers</Header>
             {rows}
             <InviteBrokerCustomer registeredInvestors={registeredInvestors}/>
         </>

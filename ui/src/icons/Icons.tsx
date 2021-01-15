@@ -1,13 +1,7 @@
 import React from 'react'
 
 import marketplaceLogo from './marketplace.svg'
-import exchange from './exchange.svg'
 import lock from './lock.svg'
-import logout from './logout.svg'
-import orders from './orders.svg'
-import publicIcon from './public.svg'
-import user from './user.svg'
-import wallet from './wallet.svg'
 
 import './Icons.scss'
 

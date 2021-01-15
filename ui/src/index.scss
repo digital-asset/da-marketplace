@@ -147,7 +147,7 @@ h4.ui.header {
 }
 
 p {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
   font-size: 16px;
@@ -263,6 +263,16 @@ a {
 
 .ui.button.close-button, .ui.buttons.close-button .button {
   display: contents;
+}
+.ui.toggle.checkbox input:focus:checked ~ .box:before,
+.ui.toggle.checkbox input:focus:checked ~ label:before,
+.ui.toggle.checkbox input:checked ~ .box:before,
+.ui.toggle.checkbox input:checked ~ label:before {
+    background-color: var(--blue-50) !important
+}
+
+.ui.toggle.checkbox .box:before, .ui.toggle.checkbox label:before {
+  background-color: var(--grey2);
 }
 
 @include icons;

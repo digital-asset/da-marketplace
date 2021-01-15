@@ -54,7 +54,7 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
                     <BrokerCustomers brokerCustomers={allBrokerCustomers}
                                      registeredInvestors={allRegisteredInvestors}/>
                 </div>
-                <Header as='h4'>Orders</Header>
+                <Header as='h3'>Orders</Header>
                 <div className='customer-orders'>
                     <p>Requested Customer Orders</p>
                     { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
