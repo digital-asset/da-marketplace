@@ -2,8 +2,6 @@ import React from 'react'
 
 import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
-import { Header } from 'semantic-ui-react'
-
 import { useStreamQueries } from '@daml/react'
 
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'

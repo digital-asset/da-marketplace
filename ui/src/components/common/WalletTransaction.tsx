@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 import { Form, Button, Header } from 'semantic-ui-react'
 
+import { useHistory } from 'react-router-dom';
+
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
@@ -12,15 +14,14 @@ import { preciseInputSteps, groupDeposits } from './utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import { useOperator } from './common'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
 import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../common/damlTypes'
+import { DepositProvider, getProviderLabel } from '../common/Holdings';
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import ContractSelect from './ContractSelect'
-import { useHistory } from 'react-router-dom';
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
@@ -172,11 +173,6 @@ const WalletTransaction = (props: {
     }
 }
 
-export type DepositProvider = {
-    party: string;
-    label: string;
-}
-
 type Props = {
     deposits: DepositInfo[];
     providers: DepositProvider[];
@@ -187,42 +183,27 @@ type Props = {
 const HoldingsSelector: React.FC<Props> = ({ deposits, providers, onSelect, selectedDepositCid }) => {
     const depositsGrouped = groupDeposits(deposits);
 
-    const assetSections = Object.entries(depositsGrouped)
-        .map(([assetLabel, depositsForAsset]) => {
-            return (
-                <div className='asset-section' key={assetLabel}>
-                    { getProviderLabel(assetLabel) }
-                    { depositsForAsset.map(deposit =>
-                        <DepositRow
-                            key={deposit.contractId}
-                            deposit={deposit}
-                            selected={deposit.contractId === selectedDepositCid}
-                            onClick={()=> onSelect(deposit.contractId)}
-                            />
-                    )}
-                </div>
-            )
-        })
-
     return (
         <div className='holdings-selector'>
-            { assetSections }
+            { Object.entries(depositsGrouped)
+                .map(([assetLabel, depositsForAsset]) => {
+                    return (
+                        <div className='asset-section' key={assetLabel}>
+                            { getProviderLabel(assetLabel, providers) }
+                            { depositsForAsset.map(deposit =>
+                                <DepositRow
+                                    key={deposit.contractId}
+                                    deposit={deposit}
+                                    selected={deposit.contractId === selectedDepositCid}
+                                    onClick={()=> onSelect(deposit.contractId)}
+                                    />
+                            )}
+                        </div>
+                    )
+                })
+            }
         </div>
     )
-
-    function getProviderLabel(assetLabel: string) {
-        const providerInfo = providers.find(p => p.party === assetLabel)
-        return (
-            <div className='provider-info'>
-                <Header as='h5'>
-                    {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
-                </Header>
-                <p className='p2'>
-                    {providerInfo?.party}
-                </p>
-            </div>
-        )
-    }
 }
 
 type DepositRowProps = {

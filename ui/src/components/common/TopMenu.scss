@@ -1,3 +1,5 @@
+@import "../../index.scss";
+
 .ui.menu.top-menu {
     box-shadow: none;
     border: none;
@@ -59,7 +61,7 @@
 
 .top-menu.menu .menu-buttons {
     margin-left: auto;
-    margin-right: var(--spacing-s);
+    margin-right: $spacing-s;
 }
 
 .top-menu.menu > .top-left-menu > .item {

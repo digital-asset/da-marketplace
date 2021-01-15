@@ -28,21 +28,19 @@ type Props = {
     deposits: DepositInfo[];
     providers: DepositProvider[];
     role: MarketRole;
-    selectableView?: boolean;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, providers, role, selectableView }) => {
+const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     const depositsGrouped = groupDeposits(deposits);
 
     const assetSections = Object.entries(depositsGrouped)
         .map(([assetLabel, depositsForAsset]) => {
             return (
                 <div className='asset-section' key={assetLabel}>
-                    { getProviderLabel(assetLabel) }
+                    { getProviderLabel(assetLabel, providers) }
                     { depositsForAsset.map(deposit =>
                         <DepositRow
                             role={role}
-                            selectableView={selectableView}
                             key={deposit.contractId}
                             deposit={deposit}
                             providers={providers}
@@ -54,25 +52,25 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, selectableView }
 
     return (
         <div className='holdings'>
-            { !selectableView && <Header as='h3'>Holdings</Header> }
+            <Header as='h3'>Holdings</Header>
             { assetSections.length === 0 ?
                 <i>none</i> : assetSections }
         </div>
     )
+}
 
-    function getProviderLabel(assetLabel: string) {
-        const providerInfo = providers.find(p => p.party === assetLabel)
-        return (
-            <div className='provider-info'>
-                <Header as='h5'>
-                    {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
-                </Header>
-                <p className='p2'>
-                    {providerInfo?.party}
-                </p>
-            </div>
-        )
-    }
+export function getProviderLabel(assetLabel: string, providers: DepositProvider[]) {
+    const providerInfo = providers.find(p => p.party === assetLabel)
+    return (
+        <div className='provider-info'>
+            <Header as='h5'>
+                {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
+            </Header>
+            <p className='p2'>
+                {providerInfo?.party}
+            </p>
+        </div>
+    )
 }
 
 type DepositRowProps = {
@@ -80,28 +78,25 @@ type DepositRowProps = {
     providers: DepositProvider[];
     role: MarketRole;
     depositsForAsset: DepositInfo[];
-    selectableView?: boolean;
 }
 
 type FormSelectorOptions = 'provider' | 'merge' | 'split'
 
-const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset, selectableView}) => {
+const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset}) => {
     const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
 
     return (
-        <div key={deposit.contractId} className={`deposit-row ${selectableView && ''}`}>
+        <div key={deposit.contractId} className='deposit row'>
             <div className='deposit-row-body'>
                 <div className='deposit-info'>
                     <h3>{deposit.contractData.asset.id.label}</h3>
                     <h3>{deposit.contractData.asset.quantity}</h3>
                 </div>
-                {!selectableView &&
-                    <OverflowMenu>
-                        <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
-                        <OverflowMenuEntry label='Merge' onClick={() => setSelectedForm('merge')}/>
-                        <OverflowMenuEntry label='Split' onClick={() => setSelectedForm('split')}/>
-                    </OverflowMenu>
-                }
+                <OverflowMenu>
+                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
+                    <OverflowMenuEntry label='Merge' onClick={() => setSelectedForm('merge')}/>
+                    <OverflowMenuEntry label='Split' onClick={() => setSelectedForm('split')}/>
+                </OverflowMenu>
             </div>
             <div className='selected-form'>
                 {selectedForm === 'provider' &&
