@@ -127,7 +127,7 @@ setupExchangeAccount lp tokenId depositQuantity investor = do
 
   -- move to exchange account
   transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
-      with depositCid, provider = exchange
+      with depositCids = [depositCid], amount = depositQuantity, provider = exchange
 
   -- bank accepts transfer
   custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve

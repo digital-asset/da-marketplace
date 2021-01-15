@@ -13,20 +13,28 @@ export type StringKeyedObject<T> = {
     [key: string]: T
 }
 
-export const groupDeposits = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
+export const groupDeposits = (deposits: DepositInfo[], getLabel: (deposit: DepositInfo) => string): StringKeyedObject<DepositInfo[]> => {
     return deposits.reduce((group, deposit) => {
-        const label = deposit.contractData.account.provider;
+        const label = getLabel(deposit);
         const existingValue = group[label] || [];
 
         return { ...group, [label]: [...existingValue, deposit] };
     }, {} as StringKeyedObject<DepositInfo[]>);
 }
 
-const sumDepositArray = (deposits: DepositInfo[]): number =>
+export const groupDepositsByProvider = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
+    return groupDeposits(deposits, (deposit => deposit.contractData.account.provider))
+}
+
+export const groupDepositsByAsset = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
+    return groupDeposits(deposits, (deposit => deposit.contractData.asset.id.label))
+}
+
+export const sumDepositArray = (deposits: DepositInfo[]): number =>
     deposits.reduce((sum, val) => sum + Number(val.contractData.asset.quantity), 0);
 
 export const sumDeposits = (deposits: DepositInfo[]): StringKeyedObject<number> => {
-    const depositGroup = groupDeposits(deposits);
+    const depositGroup = groupDepositsByAsset(deposits);
 
     return Object
         .entries(depositGroup)
