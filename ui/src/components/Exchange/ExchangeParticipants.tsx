@@ -51,7 +51,7 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><UserIcon/>Investors</>}
+            menuTitle={<><UserIcon size='24'/>Investors</>}
         >
             <PageSection border='blue' background='white'>
                 <div className='exchange-participants'>

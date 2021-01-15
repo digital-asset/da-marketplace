@@ -11,10 +11,9 @@ type Props = {
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
-    isLandingPage?: boolean;
 }
 
-const Page: React.FC<Props> = ({ children, className, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
+const Page: React.FC<Props> = ({ children, className, menuTitle, sideNav, notifications, onLogout }) => {
     return (
         <Grid className={'page-content ' + className}>
             <Grid.Column className="page-sidemenu">
@@ -23,7 +22,7 @@ const Page: React.FC<Props> = ({ children, className, menuTitle, sideNav, notifi
                 </Menu>
             </Grid.Column>
             <Grid.Column className='page-body'>
-                <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications} isLandingPage={isLandingPage}/>
+                <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications}/>
                 { children }
             </Grid.Column>
         </Grid>

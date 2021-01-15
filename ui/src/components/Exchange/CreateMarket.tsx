@@ -99,7 +99,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><PublicIcon/>Create a Market</>}
+            menuTitle={<><PublicIcon size='24'/>Create a Market</>}
         >
             <PageSection border='blue' background='white'>
                 <div className='create-market'>

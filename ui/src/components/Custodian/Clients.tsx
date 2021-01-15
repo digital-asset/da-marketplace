@@ -35,7 +35,7 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><UserIcon/> Clients</>}
+            menuTitle={<><UserIcon size='24'/> Clients</>}
         >
             <PageSection border='blue' background='white'>
                 <div className='custodian-clients'>

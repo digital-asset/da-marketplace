@@ -149,7 +149,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
 
                 <Route path={`${path}/issue-asset`}>
                     <Page
-                        menuTitle={<><PublicIcon/> Issue Asset</>}
+                        menuTitle={<><PublicIcon size='24'/> Issue Asset</>}
                         sideNav={sideNav}
                         onLogout={onLogout}
                     >

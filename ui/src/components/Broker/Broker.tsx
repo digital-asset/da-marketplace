@@ -125,9 +125,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                                  name={registeredBroker.contracts[0]?.payload.name || broker}
                                  items={[
-                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-                                     {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
-                                    ]}/>
+                                    {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                                    {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
+                                 ]}/>
 
     const brokerScreen = <Switch>
         <Route exact path={path}>

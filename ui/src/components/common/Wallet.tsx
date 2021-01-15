@@ -71,7 +71,7 @@ const Wallet = (props: {
     return (
         <Page
         sideNav={sideNav}
-        menuTitle={<><WalletIcon/>Wallet</>}
+        menuTitle={<><WalletIcon size='24'/>Wallet</>}
         onLogout={onLogout}
         >
         <PageSection border='blue' background='grey'>

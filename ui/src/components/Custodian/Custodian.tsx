@@ -96,7 +96,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                                  name={registeredCustodian.contracts[0]?.payload.name || custodian}
                                  items={[
                                     {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
-                                ]}/>
+                                 ]}/>
 
     const custodianScreen = <Switch>
         <Route exact path={path}>

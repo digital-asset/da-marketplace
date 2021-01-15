@@ -35,7 +35,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><OrdersIcon/>Orders</>}
+            menuTitle={<><OrdersIcon size='24'/>Orders</>}
             onLogout={onLogout}
         >
             <PageSection border='blue' background='white'>

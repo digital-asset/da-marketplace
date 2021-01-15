@@ -25,7 +25,6 @@ const LandingPage: React.FC<Props> = ({
     <Page
         sideNav={sideNav}
         onLogout={onLogout}
-        isLandingPage
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
     >

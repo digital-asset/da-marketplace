@@ -110,7 +110,7 @@ h1.ui.header {
 }
 
 h2.ui.header {
-  font-family: "BrownStd-Light";
+  font-family: "BrownStd-light";
   font-style: normal;
   font-weight: normal;
   font-size: 20px;
@@ -122,7 +122,7 @@ h2.ui.header {
   }
 
   &.bold {
-    font-weight: 600;
+    font-weight: "BrownStd-bold";
   }
 }
 
