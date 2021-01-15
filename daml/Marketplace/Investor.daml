@@ -83,8 +83,20 @@ template Investor
 
       nonconsuming Investor_RequestWithdrawl : ContractId DepositDebitRequest
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
+          withdrawalQuantity : Decimal
         do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $
+            withdrawalQuantity <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge
+            with depositCids = tail depositCids
+
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split
+            with quantities = [ withdrawalQuantity ]
+
           deposit <- fetch depositCid
           create DepositDebitRequest with
               owner = investor, ownerAccount = deposit.account, ..
