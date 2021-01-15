@@ -86,7 +86,7 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
     const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
 
     return (
-        <div key={deposit.contractId} className='deposit row'>
+        <div key={deposit.contractId} className='deposit-row'>
             <div className='deposit-row-body'>
                 <div className='deposit-info'>
                     <h3>{deposit.contractData.asset.id.label}</h3>

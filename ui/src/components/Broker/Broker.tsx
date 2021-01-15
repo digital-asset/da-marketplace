@@ -122,39 +122,43 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <BrokerSideNav url={url}
                                    name={registeredBroker.contracts[0]?.payload.name || broker}/>
 
-    const brokerScreen = <Switch>
-        <Route exact path={path}>
-            <LandingPage
-                profile={
-                    <FormErrorHandled onSubmit={updateProfile}>
-                        <BrokerProfile
-                            content='Save'
-                            defaultProfile={profile}
-                            submitProfile={profile => setProfile(profile)}/>
-                    </FormErrorHandled>
-                }
-                marketRelationships={
-                    <MarketRelationships role={MarketRole.BrokerRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
-                sideNav={sideNav}
-                notifications={notifications}
-                onLogout={onLogout}/>
-        </Route>
+    const brokerScreen = 
+    <div className='broker'>
+        <Switch>
+            <Route exact path={path}>
+                <LandingPage
+                    profile={
+                        <FormErrorHandled onSubmit={updateProfile}>
+                            <BrokerProfile
+                                content='Save'
+                                defaultProfile={profile}
+                                submitProfile={profile => setProfile(profile)}/>
+                        </FormErrorHandled>
+                    }
+                    marketRelationships={
+                        <MarketRelationships role={MarketRole.BrokerRole}
+                                            custodianRelationships={allCustodianRelationships}/>}
+                    sideNav={sideNav}
+                    notifications={notifications}
+                    onLogout={onLogout}/>
+            </Route>
 
-        <Route path={`${path}/wallet`}>
-            <Wallet
-                role={MarketRole.BrokerRole}
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
+            <Route path={`${path}/wallet`}>
+                <Wallet
+                    role={MarketRole.BrokerRole}
+                    sideNav={sideNav}
+                    onLogout={onLogout}/>
+            </Route>
 
-        <Route path={`${path}/orders`}>
-            <BrokerOrders
-                sideNav={sideNav}
-                deposits={allDeposits}
-                onLogout={onLogout}/>
-        </Route>
-    </Switch>
+            <Route path={`${path}/orders`}>
+                <BrokerOrders
+                    sideNav={sideNav}
+                    deposits={allDeposits}
+                    onLogout={onLogout}/>
+            </Route>
+        </Switch>
+    </div>
+
 
     return registeredBroker.loading
         ? loadingScreen

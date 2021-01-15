@@ -2,6 +2,7 @@
 
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
+@import './Broker/Broker.scss';
 
 .app {
     height: 100vh;
@@ -9,4 +10,5 @@
 
     @include investor;
     @include issuer;
+    @include broker;
 }
