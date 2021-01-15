@@ -99,8 +99,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                         name={registeredInvestor.contracts[0]?.payload.name || investor}
                         items={[
                             {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-                            {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>},
-                            {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
+                            {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
