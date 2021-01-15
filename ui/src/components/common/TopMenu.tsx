@@ -10,7 +10,8 @@ import './TopMenu.scss'
 
 export type ITopMenuButtonInfo = {
     label: string,
-    onClick: () => void
+    onClick: () => void,
+    disabled?: boolean;
 }
 
 type Props = {
@@ -38,7 +39,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, isLandingPag
                 <Menu.Menu className='menu-buttons' position='right'>
                     {topMenuButtons?.map(b =>
                         <Menu.Item>
-                            <Button className='ghost' onClick={b.onClick}>
+                            <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
                                 {b.label}
                             </Button>
                         </Menu.Item>

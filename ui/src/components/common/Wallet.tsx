@@ -81,7 +81,8 @@ const Wallet = (props: {
     const topMenuButtons: ITopMenuButtonInfo[] = role === MarketRole.InvestorRole ?
         [{
             label: 'Withdraw',
-            onClick: () => history.push(`${url}/withdraw`)
+            onClick: () => history.push(`${url}/withdraw`),
+            disabled: allDeposits.length === 0
         },
         {
             label: 'Deposit',
