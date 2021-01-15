@@ -38,7 +38,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             menuTitle={<><OrdersIcon size='24'/>Orders</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='investor-orders'>
                     <Header as='h4'>Requested Orders</Header>
                     {allOrderRequests.length > 0 ?

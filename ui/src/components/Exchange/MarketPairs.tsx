@@ -35,7 +35,7 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><PublicIcon size='24'/>Market Pairs</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <CardTable
                     className='market-pairs'
                     header={header}

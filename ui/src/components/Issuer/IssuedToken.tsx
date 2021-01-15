@@ -56,7 +56,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection className='issued-token' border='blue' background='white'>
+            <PageSection className='issued-token'>
                 <div className='token-subheading'>
                     <p>{token?.contractData.description}</p>
                     <div className='token-details'>

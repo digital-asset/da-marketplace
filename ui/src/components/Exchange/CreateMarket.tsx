@@ -101,7 +101,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><PublicIcon size='24'/>Create a Market</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='create-market'>
                     <FormErrorHandled onSubmit={handleIdPairSubmit}>
                         <div className='create-market-options'>

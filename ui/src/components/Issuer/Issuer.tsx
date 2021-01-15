@@ -153,7 +153,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                     >
-                        <PageSection border='blue' background='white'>
+                        <PageSection>
                             <IssueAsset/>
                         </PageSection>
                     </Page>

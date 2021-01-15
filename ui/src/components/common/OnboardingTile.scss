@@ -92,7 +92,7 @@
                         margin: 0;
                         cursor: pointer;
                         display: flex;
-                        align-content: center;
+                        align-items: center;
                         justify-content: flex-start;
                         align-self: flex-end;
                         border-radius: 2px;
@@ -100,6 +100,10 @@
 
                         > input[type="file"] {
                             display: none;
+                        }
+
+                        i.white.icon {
+                            color: var(--white)
                         }
 
                         .icon {

@@ -28,7 +28,7 @@ const LandingPage: React.FC<Props> = ({
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
     >
-        <PageSection border='grey' background='grey'>
+        <PageSection>
             <div className='landing-page'>
                 <div className='landing-page-column profile'>
                     <Header as='h3'>Profile</Header>

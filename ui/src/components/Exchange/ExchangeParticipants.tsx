@@ -53,7 +53,7 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/>Investors</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='exchange-participants'>
                     <InviteParticipant registeredInvestors={investorOptions}/>
                     <StripedTable

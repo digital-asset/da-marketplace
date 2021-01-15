@@ -37,7 +37,7 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/> Clients</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
                 <div className='custodian-clients'>
                     <Header as='h4'>Quick Deposit</Header>
                     <CreateDeposit/>

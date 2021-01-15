@@ -4,23 +4,8 @@
     padding-left: var(--spacing-l);
     padding-right: var(--spacing-m);
     padding-top: var(--spacing-m);
-}
-
-.ui.grid .page-section.white {
-    background-color: var(--white);
-}
-
-.ui.grid .page-section.grey {
-    background-color: var(--cool-grey-100);
-}
-
-.ui.grid .page-section.grey-border {
+    background-color: var(--grey-3);
     border-top: 2px var(--grey2) solid;
-    border-radius: 0;
-}
-
-.ui.grid .page-section.blue-border {
-    border-top: 2px var(--lightblue2) solid;
     border-radius: 0;
 }
 

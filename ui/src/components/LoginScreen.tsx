@@ -103,12 +103,12 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
 
   return (
     <>
-      <p className='login-details'>or via DABL Console JWT Token:</p>
+      <p className='login-details dark'>or via DABL Console JWT Token:</p>
       <Form size='large' className='login-form'>
           <Form.Input
             fluid
             required
-            label='Party'
+            label={<p className='dark'>Party</p>}
             placeholder='Party ID'
             value={partyId}
             onChange={e => setPartyId(e.currentTarget.value)}/>
@@ -117,7 +117,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
             fluid
             required
             type='password'
-            label='Token'
+            label={<p className='dark'>Token</p>}
             placeholder='Party JWT'
             value={jwt}
             onChange={e => setJwt(e.currentTarget.value)}/>
@@ -184,7 +184,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
 
   return (
     <>
-      <p className='login-details'>
+      <p className='login-details dark'>
         <span>Alternatively, login with <code className='link'>parties.json</code> located in the DABL Console Users tab: </span>
       </p>
       <FormErrorHandled size='large' className='login-form' onSubmit={handleLogin}>
@@ -193,14 +193,14 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
             <Form.Group widths='equal'>
               <Form.Select
                 selection
-                label='Party Name'
+                label={<p className='dark'>Party Name</p>}
                 placeholder='Choose a party'
                 options={options}
                 value={selectedPartyId}
                 onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
 
               <Form.Input className='upload-file-input'>
-                <label className="custom-file-upload button secondary ui">
+                <label className="custom-file-upload button ui">
                   <input type='file' value='' onChange={e => {
                     const reader = new FileReader();
 
@@ -216,7 +216,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
                       reader.readAsText(e.target.files[0]);
                     }
                   }}/>
-                  <Icon name='file'/><span>Load Parties</span>
+                  <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
                 </label>
               </Form.Input>
             </Form.Group>

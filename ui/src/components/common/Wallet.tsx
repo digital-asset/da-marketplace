@@ -74,7 +74,7 @@ const Wallet = (props: {
         menuTitle={<><WalletIcon size='24'/>Wallet</>}
         onLogout={onLogout}
         >
-        <PageSection border='blue' background='grey'>
+        <PageSection>
             <div className='wallet'>
                 <Holdings
                     deposits={allDeposits}
