@@ -123,7 +123,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                             }
                         </Table.Body>
                     </Table>
-                    <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
+                    {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
             <AddParticipantModal

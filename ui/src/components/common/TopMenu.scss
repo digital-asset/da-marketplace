@@ -1,11 +1,14 @@
 @mixin top-menu {
     .top-section {
+        background-color: var(--white);
+
         .ui.menu.top-menu {
             box-shadow: none;
             border: none;
             margin: 0;
             border-radius: 0px;;
             padding: var(--spacing-s);
+            min-height: 70px;
         }
 
         .top-menu .menu > .ui.button:not(.icon) > .log-out {

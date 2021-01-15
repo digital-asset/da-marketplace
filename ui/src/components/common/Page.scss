@@ -10,7 +10,6 @@
     flex-direction: column;
     width: 100%;
     flex: 1;
-    background-color: var(--white);
     padding: 0;
 }
 
@@ -25,10 +24,6 @@
     top: 0;
     position: sticky;
     align-self: flex-start;
-
-    .item.home-item {
-        padding: $spacing-s;
-    }
 }
 
 .column.page-sidemenu > .ui.secondary.menu {
@@ -39,6 +34,10 @@
 .column.page-sidemenu > .ui.secondary.menu .sub-menu {
     border-top: 2px solid var(--cool-grey-20);
     border-bottom: 2px solid var(--cool-grey-20);
+
+    .empty-item {
+        padding-top: 0px;
+    }
 }
 
 .column.page-sidemenu > .ui.secondary.menu .item {

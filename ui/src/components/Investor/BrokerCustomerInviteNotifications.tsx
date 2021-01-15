@@ -47,7 +47,7 @@ const BrokerCustomerInvite: React.FC<BrokerCustomerInviteProps> = ({
     const name = brokerMap.get(invite.contractData.broker)?.name || invite.contractData.broker;
     return (
         <AcceptRejectNotification onAccept={invitationAccept} onReject={invitationReject}>
-            Broker <b>@{name}</b> is inviting you to become a customer.
+            <p>Broker <b>@{name}</b> is inviting you to become a customer.</p>
         </AcceptRejectNotification>
     )
 }

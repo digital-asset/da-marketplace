@@ -128,7 +128,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                     })
                                 }).flat()
                             :
-                            <p className='p2 dark'><i>None yet. Join an Exchange to be added to available markets.</i> </p>}
+                            <Menu.Item className='empty-item'>
+                                <p className='p2 dark'>
+                                    <i>None yet. Join an Exchange to be added to available markets.</i>
+                                </p>
+                            </Menu.Item>
+                        }
                         </Menu.Menu>
                 </RoleSideNav>
 

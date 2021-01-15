@@ -232,8 +232,7 @@ a {
 }
 
 .ui.loading.form:before {
-  background-color: var(--cool-grey-10);
-  opacity: 60%;
+  background-color: transparent;
 }
 
 .ui.form > .fields.inline-form-group.with-error button {

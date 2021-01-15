@@ -26,7 +26,7 @@ export const ArrowRightIcon = () => (
 
 export const GlobeIcon = () => (
     <svg className="icon globe-icon" viewBox="0 0 16 16">
-      <path className="fill-primary" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
+      <path className="fill-blue" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
         6.93345L5.15354 7.287L5.29999 7.14055V6.93345H4.79999ZM2.97908 7.24587L2.62552 7.59942H2.62552L2.97908
         7.24587ZM6.93332 13.8668H7.43332V13.6597L7.28688 13.5132L6.93332 13.8668ZM5.86666 12.8001H5.36666V13.0072L5.5131
         13.1537L5.86666 12.8001ZM5.86666 11.2001H6.36666V10.993L6.22021 10.8466L5.86666 11.2001ZM4.79999 10.1334H4.29999V10.3406L4.44644
@@ -157,7 +157,7 @@ export const CircleIcon = () => (
 
 export const IconClose = () => (
     <svg className='icon close' viewBox="0 0 14 14">
-      <path className="fill-primary" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
+      <path className="fill-blue" d="M8.6,7.5L12.1,4c0.3-0.3,0.3-0.8,0-1.1S11.3,2.7,11,3L7.5,6.5L4,3C3.7,2.7,3.2,2.7,3,3S2.7,3.7,3,4l3.5,3.5
           L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"/>
     </svg>
@@ -165,7 +165,7 @@ export const IconClose = () => (
 
 export const IconChevronDown = () => (
 <svg className='icon chevron-down' viewBox="0 -6 16 16">
-    <path className="fill-primary"
+    <path className="fill-blue"
         d="M7,7L1,1h2l4.5,4.4L12,1h2.1l-6,6C7.9,7.1,7.7,7.2,7.5,7.2C7.3,7.2,7.1,7.1,7,7z"/>
 </svg>
 );
@@ -185,9 +185,9 @@ export const AddPlusIcon = () => (
 
 export const OverflowIcon = () => (
     <svg className='icon overflow-icon' width='20px' viewBox="0 0 17.8 4.6">
-        <circle className="fill-primary" cx="2" cy="2.3" r="2"/>
-        <circle className="fill-primary" cx="8.9" cy="2.3" r="2"/>
-        <circle className="fill-primary" cx="15.8" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="2" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="8.9" cy="2.3" r="2"/>
+        <circle className="fill-blue" cx="15.8" cy="2.3" r="2"/>
     </svg>
 );
 
