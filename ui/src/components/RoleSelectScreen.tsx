@@ -1,13 +1,13 @@
 import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Card } from 'semantic-ui-react'
+import { Button, Card, Header} from 'semantic-ui-react'
 
 import { useParty, useStreamQueries, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon, MarketplaceLogoTitle } from '../icons/Icons'
+import { ArrowRightIcon } from '../icons/Icons'
 
 import './RoleSelectScreen.scss'
 
@@ -21,12 +21,12 @@ type RoleSelectProps = {
 const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, roleSelectClick }) => (
     <Card className='role-select centered'>
         <Button
-            className='ghost role-select-button'
+            className='role-select-button'
             disabled={disabled}
             loading={loading}
             onClick={roleSelectClick}
         >
-            { caption } <ArrowRightIcon/>
+           <Header as='h4'> { caption } </Header>  <ArrowRightIcon/>
         </Button>
     </Card>
 )
@@ -64,7 +64,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     return (
         <>
             <OnboardingTile>
-                <p>What would you like to do?</p>
+                <p className='dark'>What would you like to do?</p>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}

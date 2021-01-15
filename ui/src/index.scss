@@ -6,13 +6,28 @@
 @import 'colors.scss';
 @import 'icons/Icons.scss';
 
+@font-face {
+  font-family: "BrownStd-Regular";;
+  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Light";
+  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Bold";
+  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
+}
+
 :root {
   --spacing-gap: 2px;
   --spacing-xs: 6px;
   --spacing-s: 12px;
   --spacing-m: 24px;
   --spacing-l: 32px;
-  --spacing-l: 48px;
+  --spacing-xl: 48px;
 
   --input-height: 40px;
   --max-page-width: 1000px;
@@ -23,13 +38,13 @@ $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
 $spacing-m: #{var(--spacing-m)};
 $spacing-l: #{var(--spacing-l)};
-$spacing-l: #{var(--spacing-l)};
+$spacing-xl: #{var(--spacing-xl)};
 
 $input-height: #{var(--input-height)};
 $max-page-width: #{var(--max-page-width)};
 
 * {
-  font-family: 'Open Sans';
+  font-family: "Open sans";
 }
 
 body {
@@ -66,7 +81,7 @@ code {
 }
 
 .ui.form .field > label{
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
   font-size: 16px;
@@ -77,51 +92,97 @@ code {
 /* Font Styling*/
 
 h1.ui.header {
-  font-family: Open Sans;
+  font-family: "BrownStd-Light";
   font-style: normal;
-  font-weight: 600;
-  font-size: 30px;
-  line-height: 34px;
+  font-weight: normal;
+  font-size: 34px;
+  line-height: 32px;
   margin: 0;
   color: var(--textcolor);
+
+  &.dark {
+    color: var(--white);
+  }
+
+  &.bold {
+    font-family: "BrownStd-Bold";
+  }
+}
+
+h2.ui.header {
+  font-family: "BrownStd-Light";
+  font-style: normal;
+  font-weight: normal;
+  font-size: 20px;
+  line-height: 19px;
+  color: var(--textcolor);
+
+  &.dark {
+    color: var(--white);
+  }
+
+  &.bold {
+    font-weight: 600;
+  }
 }
 
 h3.ui.header {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
-  font-weight: normal;
+  font-weight: 600;
   font-size: 20px;
   line-height: 27px;
   color: var(--textcolor);
 }
 
 h4.ui.header {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: 600;
-  font-size: 20px;
-  line-height: 27px;
-  color: #303132;
+  font-size: 14px;
+  line-height: 22px;
   color: var(--textcolor);
+  margin: 0px;
+  padding: 0px;
 }
 
 p {
   font-family: Open Sans;
   font-style: normal;
   font-weight: normal;
-  font-size: 14px;
-  line-height: 19px;
-  color: var(--text-color);
+  font-size: 16px;
+  line-height: 26px;
   margin: 0;
+  color: var(--grey-10);
+
+  &.bold {
+    font-weight: 600;
+  }
+
+  &.dark {
+    color: var(--white);
+  }
 }
 
 p.p2 {
-  font-family: Open Sans;
+  font-family: "Open sans";
   font-style: normal;
   font-weight: normal;
-  font-size: 12px;
-  line-height: 16px;
+  font-size: 14px;
+  line-height: 19px;
   color: var(--textcolor);
+
+  &.bold {
+    font-weight: 600;
+  }
+
+  &.dark {
+    color: var(--white);
+  }
+}
+
+a {
+  color: var(--blue-50)
 }
 
 
@@ -160,7 +221,7 @@ p.p2 {
 // }
 
 // .ui.form .field > label {
-//   font-family: Open Sans;
+//   font-family: "Open sans";
 //   font-style: normal;
 //   font-weight: normal;
 //   font-size: 14px;
@@ -180,17 +241,29 @@ p.p2 {
   color: var(--textcolor);
   background: none;
   align-items: center;
-  border: none;
+  border: 1px solid var(--green-50);
+  border-radius: 2px;
   font-weight: 400;
-}
 
-.ui.button.ghost.smaller {
-  padding: 6px 3px;
-}
+  &:hover {
+    background-color: var(--lightblue);
+    cursor: pointer;
+  }
 
-.ui.button.ghost:hover {
-  background-color: var(--lightblue);
-  cursor: pointer;
+  &.smaller {
+    padding: 6px 3px;
+  }
+
+  &.dark {
+    border: 1px solid var(--blue-80);
+    background-color: transparent;
+    color: var(--white);
+    font-weight: normal;
+
+    &:hover {
+        background-color: var(--cool-grey-20);
+    }
+  }
 }
 
 .ui.basic.button.basic-button-fill {
@@ -199,6 +272,11 @@ p.p2 {
 
 .ui.form > .fields.inline-form-group.with-error {
   align-items: flex-start;
+}
+
+.ui.loading.form:before {
+  background-color: var(--cool-grey-10);
+  opacity: 60%;
 }
 
 .ui.form > .fields.inline-form-group.with-error button {
@@ -210,7 +288,7 @@ p.p2 {
 }
 
 .ui.secondary.button, .ui.secondary.buttons .button, .ui.secondary.button:focus  {
-  border: 1px solid var(--grey4);
+  background-color: var(--cool-grey-30);
   border-radius: 2px;
   background-color: white;
   color: var(--textcolor);

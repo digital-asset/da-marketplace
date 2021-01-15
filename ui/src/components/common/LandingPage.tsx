@@ -31,13 +31,13 @@ const LandingPage: React.FC<Props> = ({
     >
         <PageSection border='grey' background='grey'>
             <div className='landing-page'>
-                <div className='landing-page-column'>
-                    <Header as='h4'>Profile</Header>
+                <div className='landing-page-column profile'>
+                    <Header as='h3'>Profile</Header>
                     { profile }
                 </div>
 
-                <div className='landing-page-column'>
-                    <Header as='h4'>Market Relationships</Header>
+                <div className='landing-page-column market-relationships'>
+                    <Header as='h3'>Market Relationships</Header>
                     { marketRelationships }
                 </div>
             </div>

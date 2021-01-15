@@ -83,6 +83,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                darkMode
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

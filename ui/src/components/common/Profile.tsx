@@ -25,13 +25,14 @@ export type Profile = StringKeyedObject<ProfileField>;
 type FieldProps = {
     field: ProfileField;
     setField: (field: ProfileField) => void;
+    darkMode?: boolean;
 }
 
-const ProfileField: React.FC<FieldProps> = ({ field, setField }) => {
+const ProfileField: React.FC<FieldProps> = ({ field, setField, darkMode }) => {
     return (
         <Form.Input
             fluid
-            label={field.label}
+            label={<p className={`p2 ${darkMode && 'dark'}`}>{field.label}</p>}
             placeholder={field.placeholder}
             value={field.value}
             className='profile-form-field'
@@ -43,10 +44,11 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField }) => {
 type ProfileProps = {
     content: string;
     defaultProfile: Profile;
+    darkMode?: boolean;
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile }) => {
+const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, darkMode }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
 
     useEffect(() => {
@@ -57,7 +59,8 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         <ProfileField
             key={key}
             field={profile[key]}
-            setField={field => setProfile({ ...profile, [key]: field })}/>
+            setField={field => setProfile({ ...profile, [key]: field })}
+            darkMode={darkMode}/>
     ));
 
     const disableButton = Object.keys(profile).reduce((accumulator, key) => {
@@ -65,11 +68,10 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
     }, false);
 
     return (
-         <Form>
+         <Form className='profile-form'>
             { fields }
             <Button
-                secondary
-                className='login-button'
+                className={`ghost ${darkMode && 'dark'}`}
                 content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}

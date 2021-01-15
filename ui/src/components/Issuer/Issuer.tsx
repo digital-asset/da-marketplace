@@ -90,6 +90,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                darkMode
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

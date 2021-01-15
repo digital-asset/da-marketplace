@@ -1,6 +1,6 @@
 import React from 'react'
-import { Grid } from 'semantic-ui-react'
-import { MarketplaceLogoTitle } from '../../icons/Icons'
+import { Grid, Header } from 'semantic-ui-react'
+import { OpenMarketplaceLogo } from '../../icons/Icons'
 
 import './OnboardingTile.scss'
 
@@ -25,13 +25,15 @@ type OnboardingTileProps = {
     tiles?: React.ReactElement[];
 }
 
+export const logoHeader = <Header as='h1' className='dark logo-header'><OpenMarketplaceLogo size='32'/> Daml Open Marketplace</Header>
+
 const OnboardingTile: React.FC<OnboardingTileProps> = ({ children, tiles }) => {
     return (
         <Grid className='onboarding-screen' textAlign='center' verticalAlign='middle'>
             <Grid.Row>
                 <Grid.Column width={6}>
                     { children &&
-                        <Tile header={<MarketplaceLogoTitle/>}>
+                        <Tile header={logoHeader}>
                             <Grid.Row>{children}</Grid.Row>
                         </Tile> }
                     { tiles?.map(tile => <Grid.Row key={tile.key}>{tile}</Grid.Row>) }

@@ -1,71 +1,70 @@
-.ui.menu.top-menu {
-    box-shadow: none;
-    border: none;
-    margin: 0;
-}
+@mixin top-menu {
+    .top-section {
+        .ui.menu.top-menu {
+            box-shadow: none;
+            border: none;
+            margin: 0;
+            border-radius: 0px;;
+            padding: var(--spacing-s);
+        }
 
-.top-menu .menu > .ui.button:not(.icon) > .log-out {
-    display: flex;
-    align-items: center;
-}
+        .top-menu .menu > .ui.button:not(.icon) > .log-out {
+            display: flex;
+            align-items: center;
 
-.top-menu .menu > .ui.button:not(.icon) > .log-out > p {
-    margin: 0;
-}
+            .icon.logout-icon {
+                margin-left: $spacing-s;
+            }
+        }
 
-@media screen and (max-width: 1000px) {
-    .top-menu .menu > .ui.button:not(.icon) > .log-out > p {
-        display: none;
+        @media screen and (max-width: 1000px) {
+            .top-menu .menu > .ui.button:not(.icon) > .log-out > p {
+                display: none;
+            }
+        }
+
+        .top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {
+            margin-left: var(--spacing-s);;
+            height: 14px;
+            width: 14px;
+        }
+
+        .ui.menu.top-menu > .menu > .item:before {
+            display: none;
+        }
+
+        .ui.menu.top-menu > .menu > .item > .header > .content {
+            display: flex;
+            align-items: center;
+        }
+
+        .top-menu.menu .item {
+            margin-right: auto;
+        }
+
+        .top-menu.menu > .top-right-menu > .item:first-child {
+            padding-left: var(--spacing-m);
+        }
+
+        .top-menu.menu > .top-left-menu {
+            align-items: flex-start;
+        }
+
+        .top-menu.menu > .top-left-menu.blue-border {
+            border-left: 2px var(--cool-grey-90) solid;
+        }
+
+        .top-menu.menu > .top-left-menu > .item {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100%;
+            padding: 0 var(--spacing-m);
+        }
+
+        .notifications {
+            padding: 0px var(--spacing-m);
+        }
     }
-}
-
-.top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {
-    margin-left: var(--spacing-s);;
-    height: 14px;
-    width: 14px;
-}
-
-.ui.menu.top-menu > .menu > .item:before {
-    display: none;
-}
-
-.ui.menu.top-menu > .menu > .item > .header > .content {
-    display: flex;
-    align-items: center;
-}
-
-.ui.menu.top-menu > .menu > .item > .header .icon {
-    width: 32px;
-    height: 32px;
-    margin-right: var(--spacing-m);
-}
-
-.top-menu.menu .item {
-    padding: var(--spacing-m) var(--spacing-s);
-    margin-right: auto;
-}
-
-.top-menu.menu > .top-right-menu > .item:first-child {
-    padding-left: var(--spacing-m);
-}
-
-.top-menu.menu > .top-left-menu {
-    align-items: flex-start;
-}
-
-.top-menu.menu > .top-left-menu.blue-border {
-    border-left: 2px var(--lightblue2) solid;
-}
-
-.top-menu.menu > .top-left-menu > .item {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    height: 100%;
-    padding: 0 var(--spacing-m);
-}
-
-.notifications {
-    padding: 0px var(--spacing-m);
 }

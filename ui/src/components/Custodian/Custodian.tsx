@@ -82,6 +82,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
                 content='Submit'
+                darkMode
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

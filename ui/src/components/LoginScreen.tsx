@@ -9,8 +9,8 @@ import Credentials, { computeCredentials } from '../Credentials'
 import { Parties, retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
-import { LogoIcon, MarketplaceLogoTitle } from '../icons/Icons'
-import OnboardingTile, { Tile } from './common/OnboardingTile'
+import { LogoIcon, OpenMarketplaceLogo } from '../icons/Icons'
+import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError, InvalidPartiesJSONError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
 
@@ -47,11 +47,11 @@ type Props = {
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const localTiles = [
-    <Tile key='login' header={<MarketplaceLogoTitle/>}><LocalLoginForm onLogin={onLogin}/></Tile>
+    <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
 
   const dablTiles = [
-    <Tile key='login' header={<MarketplaceLogoTitle/>}><DablLoginForm onLogin={onLogin}/></Tile>,
+    <Tile key='login' header={logoHeader}><DablLoginForm onLogin={onLogin}/></Tile>,
     <Tile key='parties'><PartiesLoginForm onLogin={onLogin}/></Tile>,
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
@@ -82,7 +82,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
         onChange={e => setUsername(e.currentTarget.value)}
       />
       <Button
-        className='login-button'
+        className='ghost dark'
         fluid
         disabled={!username}
         content='Log in'
@@ -125,7 +125,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
         <Button
           fluid
           primary
-          className='login-button'
+          className='ghost dark'
           disabled={!jwt || !partyId}
           content='Submit'
           onClick={handleDablTokenLogin}/>
@@ -227,7 +227,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
               primary
               submit
               disabled={!parties?.find(p => p.party === selectedPartyId)}
-              className='login-button'
+              className='ghost dark'
               content='Log in'/>
             {/* FORM_END */}
           </>

@@ -16,11 +16,13 @@
 
             .tile-header {
                 margin-bottom: var(--spacing-m);
+
+                .logo-header {
+                    display: flex;
+                    justify-content: center;
+                }
             }
 
-            .icon {
-                margin-right: var(--spacing-s);
-            }
 
             .subtitle {
                 color: var(--white);
@@ -41,17 +43,6 @@
 
                 form button, .login-form button {
                     text-align: left;
-
-                    &.login-button {
-                        border: 1px solid var(--blue-80);
-                        background-color: transparent;
-                        color: var(--white);
-                        font-weight: normal;
-
-                        &:hover {
-                            background-color: var(--cool-grey-20);
-                        }
-                    }
 
                     &.dabl-login-button {
                         height: 70px;
@@ -76,10 +67,10 @@
                     line-height: 26px;
                 }
 
-                p, label {
-                    color: var(--white);
-                    font-size: 16px;
-                }
+                // p, label {
+                //     color: var(--white);
+                //     font-size: 16px;
+                // }
 
                 .login-form {
                     padding: var(--spacing-m) 0;
@@ -110,6 +101,7 @@
                         align-content: center;
                         justify-content: flex-start;
                         align-self: flex-end;
+                        border-radius: 2px;
                         background-color: var(--cool-grey-30);
 
                         > input[type="file"] {

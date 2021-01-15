@@ -18,6 +18,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background-color: var(--white);
 
     &:hover {
         transform: scale(1.02);

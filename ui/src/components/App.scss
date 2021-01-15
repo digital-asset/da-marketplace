@@ -2,6 +2,7 @@
 @import './LoginScreen.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
+@import './common/TopMenu.scss';
 
 .app {
     height: 100vh;
@@ -10,4 +11,5 @@
     @include investor;
     @include issuer;
     @include login-screen;
+    @include top-menu;
 }

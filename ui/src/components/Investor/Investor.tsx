@@ -100,6 +100,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <InvestorProfile
                 content='Submit'
+                darkMode
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>

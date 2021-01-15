@@ -3,8 +3,6 @@ import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
 
-import './TopMenu.scss'
-
 type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];

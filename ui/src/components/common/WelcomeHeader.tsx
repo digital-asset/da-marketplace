@@ -1,24 +1,20 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { LogoIcon } from '../../icons/Icons'
+import { OpenMarketplaceLogo } from '../../icons/Icons'
 
 import './WelcomeHeader.scss'
 
 const WelcomeHeader: React.FC = () => (
-    <>
-        <LogoIcon size='48'/>
-        <div className="welcome-header">
-            <div>
-                <Header as='h3' className='welcome-header-row'>
-                    <Header.Content>
-                        Welcome to the DAML Open Marketplace
-                    </Header.Content>
-                </Header>
-                <p>An app written in <a href='https://daml.com'>DAML</a> and deployed using <a href='https://projectdabl.com'>project:DABL</a></p>
-            </div>
+    <div className="welcome-header">
+        <OpenMarketplaceLogo size='48'/>
+        <div className="welcome-header-row">
+            <Header as='h2'>
+                Welcome to the <b>DAML Open Marketplace</b>
+            </Header>
+            <p className='p2'>An app written in <b><a href='https://daml.com'>DAML</a></b> and deployed using <b><a href='https://projectdabl.com'>project:DABL</a></b></p>
         </div>
-    </>
+    </div>
 )
 
 
