@@ -55,7 +55,8 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role, selectableView }
     return (
         <div className='holdings'>
             { !selectableView && <Header as='h3'>Holdings</Header> }
-            { assetSections }
+            { assetSections.length === 0 ?
+                <i>none</i> : assetSections }
         </div>
     )
 
@@ -88,7 +89,7 @@ const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depos
     const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
 
     return (
-        <div key={deposit.contractId} className='deposit-row'>
+        <div key={deposit.contractId} className={`deposit-row ${selectableView && ''}`}>
             <div className='deposit-row-body'>
                 <div className='deposit-info'>
                     <h3>{deposit.contractData.asset.id.label}</h3>

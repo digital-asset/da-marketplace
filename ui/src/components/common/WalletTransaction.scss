@@ -18,6 +18,19 @@
                 align-items: center;
                 justify-content: space-between;
             }
+
+            .holdings-selector {
+                .deposit-row {
+                    &:hover {
+                        background-color: var(--cool-grey-90);
+                        cursor: pointer;
+                    }
+
+                    &.selected {
+                        border-color: 1px solid var(--cool-grey-10)
+                    }
+                }
+            }
         }
     }
 }

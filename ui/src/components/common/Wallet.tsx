@@ -2,6 +2,8 @@ import React from 'react'
 
 import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
+import { Header } from 'semantic-ui-react'
+
 import { useStreamQueries } from '@daml/react'
 
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
@@ -15,8 +17,8 @@ import { WalletIcon } from '../../icons/Icons'
 import { damlTupleToString, makeContractInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import PageSection from '../common/PageSection'
-import Holdings from '../common/Holdings'
 import Page from '../common/Page'
+import Holdings from '../common/Holdings';
 
 import { ITopMenuButtonInfo } from './TopMenu'
 
@@ -112,13 +114,9 @@ const Wallet = (props: {
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    holdings={
-                        <Holdings
-                            deposits={allDeposits}
-                            selectableView={true}
-                            providers={allProviders}
-                            role={MarketRole.InvestorRole}/>}
-                            transactionType='Withdraw'/>
+                    deposits={allDeposits}
+                    providers={allProviders}
+                    transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>
                 <WalletTransaction

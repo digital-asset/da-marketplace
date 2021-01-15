@@ -1,23 +1,22 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button } from 'semantic-ui-react'
+import { Form, Button, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { WalletIcon } from '../../icons/Icons'
 
-import { preciseInputSteps } from './utils'
+import { preciseInputSteps, groupDeposits } from './utils'
 
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import { useOperator } from './common'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { makeContractInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../common/damlTypes'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 import ContractSelect from './ContractSelect'
@@ -26,10 +25,11 @@ import { useHistory } from 'react-router-dom';
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
     sideNav: React.ReactElement;
-    holdings?: React.ReactElement;
     onLogout: () => void;
+    deposits?: DepositInfo[];
+    providers?: DepositProvider[];
 }) => {
-    const { transactionType, sideNav, onLogout, holdings } = props;
+    const { transactionType, sideNav, onLogout, deposits, providers } = props;
 
     const [ custodianId, setCustodianId ] = useState<string>();
     const [ depositQuantity, setDepositQuantity ] = useState<number>();
@@ -59,13 +59,27 @@ const WalletTransaction = (props: {
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 
+    const handleSetDepositQuntity = (event: React.SyntheticEvent, result: any) => {
+        const quantity = Number(result.value)
+
+        if (quantity > 0) {
+            setDepositQuantity(Number(result.value))
+        }
+    }
+
     let body
 
     switch(transactionType) {
         case 'Withdraw':
             body = <>
                 <Form.Field>
-                    {holdings}
+                    { deposits && providers &&
+                        <HoldingsSelector
+                            deposits={deposits}
+                            providers={providers}
+                            selectedDepositCid={depositCid}
+                            onSelect={(cid) => setDepositCid(cid)}/>
+                    }
                 </Form.Field>
             </>
             break;
@@ -102,7 +116,7 @@ const WalletTransaction = (props: {
                                 label='Amount'
                                 placeholder={placeholder}
                                 disabled={!token}
-                                onChange={e => setDepositQuantity(Number(e))}/>
+                                onChange={handleSetDepositQuntity}/>
                         </Form.Field>
                     </Form.Group>
                 </Form.Field>
@@ -147,15 +161,87 @@ const WalletTransaction = (props: {
                 };
 
                 return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args)
-                    .then(_ => history.goBack)
+                    .then(_ => history.goBack())
 
             case 'Withdraw':
                 args = { depositCid };
 
                 return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args)
-                    .then(_ => history.goBack)
+                    .then(_ => history.goBack())
         }
     }
+}
+
+export type DepositProvider = {
+    party: string;
+    label: string;
+}
+
+type Props = {
+    deposits: DepositInfo[];
+    providers: DepositProvider[];
+    onSelect: (cid: string) => void;
+    selectedDepositCid?: string;
+}
+
+const HoldingsSelector: React.FC<Props> = ({ deposits, providers, onSelect, selectedDepositCid }) => {
+    const depositsGrouped = groupDeposits(deposits);
+
+    const assetSections = Object.entries(depositsGrouped)
+        .map(([assetLabel, depositsForAsset]) => {
+            return (
+                <div className='asset-section' key={assetLabel}>
+                    { getProviderLabel(assetLabel) }
+                    { depositsForAsset.map(deposit =>
+                        <DepositRow
+                            key={deposit.contractId}
+                            deposit={deposit}
+                            selected={deposit.contractId === selectedDepositCid}
+                            onClick={()=> onSelect(deposit.contractId)}
+                            />
+                    )}
+                </div>
+            )
+        })
+
+    return (
+        <div className='holdings-selector'>
+            { assetSections }
+        </div>
+    )
+
+    function getProviderLabel(assetLabel: string) {
+        const providerInfo = providers.find(p => p.party === assetLabel)
+        return (
+            <div className='provider-info'>
+                <Header as='h5'>
+                    {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
+                </Header>
+                <p className='p2'>
+                    {providerInfo?.party}
+                </p>
+            </div>
+        )
+    }
+}
+
+type DepositRowProps = {
+    deposit: DepositInfo;
+    onClick: () => void;
+    selected: boolean;
+}
+
+const DepositRow: React.FC<DepositRowProps> = ({ deposit, onClick, selected }) => {
+    return (
+        <div key={deposit.contractId} className={`deposit-row ${selected && 'selected'}`}onClick={onClick}>
+            <div className='deposit-row-body'>
+                <div className='deposit-info'>
+                    <h3>{deposit.contractData.asset.id.label}</h3>
+                    <h3>{deposit.contractData.asset.quantity}</h3>
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default WalletTransaction;
