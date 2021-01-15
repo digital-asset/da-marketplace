@@ -60,7 +60,7 @@ const WalletTransaction = (props: {
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 
-    const handleSetDepositQuntity = (event: React.SyntheticEvent, result: any) => {
+    const handleSetDepositQuantity = (event: React.SyntheticEvent, result: any) => {
         const quantity = Number(result.value)
 
         if (quantity > 0) {
@@ -117,7 +117,7 @@ const WalletTransaction = (props: {
                                 label='Amount'
                                 placeholder={placeholder}
                                 disabled={!token}
-                                onChange={handleSetDepositQuntity}/>
+                                onChange={handleSetDepositQuantity}/>
                         </Form.Field>
                     </Form.Group>
                 </Form.Field>
