@@ -128,6 +128,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
         <Route path={`${path}/wallet`}>
             <Wallet
+                role={MarketRole.InvestorRole}
                 sideNav={sideNav}
                 onLogout={onLogout}/>
         </Route>

@@ -37,7 +37,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
         .map(([assetLabel, depositsForAsset]) => {
             return (
                 <div className='asset-section' key={assetLabel}>
-                    { getProviderLabel(assetLabel) }
+                    { getProviderLabel(assetLabel, providers) }
                     { depositsForAsset.map(deposit =>
                         <DepositRow
                             role={role}
@@ -53,23 +53,24 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     return (
         <div className='holdings'>
             <Header as='h3'>Holdings</Header>
-            { assetSections }
+            { assetSections.length === 0 ?
+                <i>none</i> : assetSections }
         </div>
     )
+}
 
-    function getProviderLabel(assetLabel: string) {
-        const providerInfo = providers.find(p => p.party === assetLabel)
-        return (
-            <div className='provider-info'>
-                <Header as='h5'>
-                    {providerInfo?.label}
-                </Header>
-                <p className='p2'>
-                    {providerInfo?.party}
-                </p>
-            </div>
-        )
-    }
+export function getProviderLabel(assetLabel: string, providers: DepositProvider[]) {
+    const providerInfo = providers.find(p => p.party === assetLabel)
+    return (
+        <div className='provider-info'>
+            <Header as='h5'>
+                {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
+            </Header>
+            <p className='p2'>
+                {providerInfo?.party}
+            </p>
+        </div>
+    )
 }
 
 type DepositRowProps = {
@@ -81,7 +82,7 @@ type DepositRowProps = {
 
 type FormSelectorOptions = 'provider' | 'merge' | 'split'
 
-const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset }) => {
+const DepositRow: React.FC<DepositRowProps> = ({ deposit, providers, role, depositsForAsset}) => {
     const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
 
     return (
