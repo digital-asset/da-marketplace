@@ -77,7 +77,6 @@ const WalletTransaction = (props: {
                 clearable
                 contracts={registeredCustodians}
                 placeholder='Custodian ID'
-                value={custodianId || ""}
                 getOptionText={rc => rc.contractData.name}
                 setContract={rc => setCustodianId(rc.contractData.custodian)}/>
         </Form.Field>
@@ -98,7 +97,7 @@ const WalletTransaction = (props: {
                     <Form.Input
                         type='number'
                         step={step}
-                        label='Amount'
+                        label={<p className='p2'>Amount</p>}
                         placeholder={placeholder}
                         disabled={!token}
                         onChange={handleSetDepositQuantity}/>

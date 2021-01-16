@@ -27,18 +27,15 @@
     width: 100%;
 }
 
-.deposit-row .deposit-row-body {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .deposit-row .deposit-info {
     display: flex;
     flex-direction: row;
     align-items: center;
     margin: 0;
+
+    .overflow-menu {
+        margin-left: auto;
+    }
 }
 
 .deposit-row .deposit-info h3 {

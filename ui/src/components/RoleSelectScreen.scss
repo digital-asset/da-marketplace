@@ -15,12 +15,14 @@
 }
 
 .role-select > .ui.button {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     background-color: var(--white);
 
     &:hover {
         transform: scale(1.01);
     }
+    // i.right.arrow.icon {
+    //     background-color: var(--white);
+    //     color: var(--blue-50);
+    //     font-weight: initial;
+    // }
 }

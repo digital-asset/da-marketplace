@@ -65,6 +65,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
         <FormErrorHandled onSubmit={requestCustodianRelationship}>
             <Form.Group className='inline-form-group'>
                 <ContractSelect
+                    label={'Request a relationship:'}
                     allowAdditions
                     className='custodian-select-container'
                     clearable

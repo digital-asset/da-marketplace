@@ -83,6 +83,8 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
       <Button
         className='ghost dark'
         fluid
+        icon='right arrow'
+        labelPosition='right'
         disabled={!username}
         content='Log in'
         onClick={handleLogin}/>
@@ -124,6 +126,8 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
         <Button
           fluid
           className='ghost dark'
+          icon='right arrow'
+          labelPosition='right'
           disabled={!jwt || !partyId}
           content='Submit'
           onClick={handleDablTokenLogin}/>
@@ -223,6 +227,8 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
             <Button
               fluid
               submit
+              icon='right arrow'
+              labelPosition='right'
               disabled={!parties?.find(p => p.party === selectedPartyId)}
               className='ghost dark'
               content='Log in'/>
@@ -263,7 +269,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
     <Form size='large'>
       <Button
         fluid
-        icon='right arrow'
+        icon='right arrow blue'
         labelPosition='right'
         className='dabl-login-button'
         content='Log in with DABL'
