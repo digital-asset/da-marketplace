@@ -31,7 +31,7 @@ const OnboardingTile: React.FC<OnboardingTileProps> = ({ children, tiles }) => {
     return (
         <Grid className='onboarding-screen' textAlign='center' verticalAlign='middle'>
             <Grid.Row>
-                <Grid.Column width={6}>
+                <Grid.Column center>
                     { children &&
                         <Tile header={logoHeader}>
                             <Grid.Row>{children}</Grid.Row>

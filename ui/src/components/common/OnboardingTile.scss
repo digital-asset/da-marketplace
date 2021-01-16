@@ -9,7 +9,7 @@
             padding: var(--spacing-l);
             border-radius: 2px;
             margin-bottom: 2px;
-            width: 550px;
+            max-width: 550px;
             text-align: left;
 
             .tile-header {
@@ -109,4 +109,11 @@
             }
         }
     }
+
+    // @media screen and (max-width: 1000px) {
+    //     background-color: red;
+    //     .onboarding-tile {
+    //         width: unset;
+    //     }
+    // }
 }

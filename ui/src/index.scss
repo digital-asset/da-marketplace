@@ -69,6 +69,10 @@ code {
 .ui.grid {
   margin: 0;
   flex: 1;
+
+.row {
+    width: unset !important;
+  }
 }
 
 .ui.form > .fields.inline-form-group {
