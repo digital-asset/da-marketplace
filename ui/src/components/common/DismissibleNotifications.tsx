@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
 import { IconClose } from '../../icons/Icons';
@@ -47,6 +47,13 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     const sender = notification.contractData.sender;
     const senderRole = notification.contractData.senderRole;
     let name;
+
+    useEffect(() => {
+        setTimeout(() => {
+            notificationDismiss();
+        }, 5000);
+    })
+
     switch(senderRole) {
         case MarketRole.InvestorRole:
             name = <>Investor <b>@{lookup.investorMap.get(sender)?.name || sender}</b></>;
