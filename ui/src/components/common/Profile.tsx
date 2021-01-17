@@ -31,7 +31,6 @@ type FieldProps = {
 const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile }) => {
     return (
         <Form.Input
-            fluid
             label={<p className={`p2 ${inviteAcceptTile && 'dark'}`}>{field.label}</p>}
             placeholder={field.placeholder}
             value={field.value}

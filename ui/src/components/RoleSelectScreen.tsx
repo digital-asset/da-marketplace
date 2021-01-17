@@ -23,10 +23,11 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
         <Button
             disabled={disabled}
             loading={loading}
+            icon='right arrow blue'
+            labelPosition='right'
+            content={<Header as='h4'> { caption } </Header> }
             onClick={roleSelectClick}
-        >
-           <Header as='h4'> { caption } </Header>  <ArrowRightIcon/>
-        </Button>
+        />
     </Card>
 )
 

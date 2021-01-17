@@ -52,7 +52,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--textcolor);
-  background-color: var(--cool-grey-10);
 }
 
 code {
@@ -64,11 +63,16 @@ code {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--cool-grey-20);
 }
 
 .ui.grid {
   margin: 0;
   flex: 1;
+
+.row {
+    width: unset !important;
+  }
 }
 
 .ui.form > .fields.inline-form-group {
@@ -191,6 +195,16 @@ a {
   display: flex;
   color: var(--textcolor);
   border-radius: 2px;
+
+  i.right.arrow.icon {
+    background-color: transparent;
+    font-weight: initial;
+    height: 100%;
+
+    &.blue {
+      color: var(--blue-50);
+    }
+  }
 }
 
 .ui.button.ghost {

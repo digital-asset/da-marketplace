@@ -30,6 +30,10 @@
         .landing-page-column {
             width: 100% !important;
             padding-bottom: var(--spacing-l);
+
+            &.market-relationships {
+                margin-left: 0px;
+            }
         }
     }
 }
