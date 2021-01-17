@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
+import _ from 'lodash'
 
 import { useParty, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
@@ -9,7 +10,7 @@ import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 
-import { DepositInfo, makeContractInfo } from '../common/damlTypes'
+import { DepositInfo, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -50,15 +51,6 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         console.log("Unexpected close from Order: ", e);
     }).contracts.map(makeContractInfo);
 
-    const marketData = allOrders.reduce((map, order) => {
-        const { price, qty } = order.contractData;
-
-        const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
-        const qtyOrders = map[order.contractId]?.qtyOrders || 0;
-
-        return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
-    }, {} as MarketDataMap)
-
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
 
@@ -74,6 +66,17 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
     const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;
+
+    const marketData = allOrders
+        .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+        .reduce((map, order) => {
+            const { price, qty } = order.contractData;
+
+            const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+            const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+            return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+    }, {} as MarketDataMap)
 
     useEffect(() => {
         const label = `'${investor}'@'${exchange}'`;

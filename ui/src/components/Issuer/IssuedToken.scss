@@ -28,6 +28,9 @@
         .allocations {
             margin: 0 0 $spacing-m $spacing-m;
             width: 80%;
+            border: 1px solid var(--cool-grey-90);
+            border-radius: 2px;
+            background-color: var(--white);
         }
 
         .token-subheading {
@@ -83,11 +86,9 @@
                 flex-direction: column;
 
                 .allocations {
-                    margin: 0px;;
+                    margin: 0px;
+                    width: 100%;
                 };
-            }
-            .ui.table.issuer-cap-table tr th, .ui.table.issuer-cap-table tr td {
-                text-align: left;
             }
 
             .ui.table.issuer-cap-table tr:nth-child(odd) {

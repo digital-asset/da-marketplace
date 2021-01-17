@@ -7,6 +7,10 @@
     &.grid {
       margin: 0;
       flex: 1;
+
+      & > .row {
+        width: unset !important;
+      }
     }
 
     &.form {

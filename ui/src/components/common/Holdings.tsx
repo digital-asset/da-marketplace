@@ -93,11 +93,9 @@ const DepositRow: React.FC<DepositRowProps> = ({
 
     return (
         <div className='deposit-row'>
-            <div className='deposit-row-body'>
-                <div className='deposit-info'>
-                    <h3>{assetLabel}</h3>
-                    <h3>{totalQty}</h3>
-                </div>
+            <div className='deposit-info'>
+                <h3>{assetLabel}</h3>
+                <h3>{totalQty}</h3>
                 <OverflowMenu>
                     <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
                 </OverflowMenu>

@@ -38,6 +38,10 @@
                 align-items: center;
                 margin: 0;
 
+                .overflow-menu {
+                    margin-left: auto;
+                }
+
                 h3 {
                     margin: 0;
                     margin-right: $spacing-s;

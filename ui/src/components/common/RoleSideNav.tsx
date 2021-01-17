@@ -33,7 +33,7 @@ const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
                         className='sidemenu-item-normal'
                         exact
                     >
-                        <p>{i.icon}{i.label}</p>
+                        <p className='p2'>{i.icon}{i.label}</p>
                     </Menu.Item>
                 )}
             </Menu.Menu>

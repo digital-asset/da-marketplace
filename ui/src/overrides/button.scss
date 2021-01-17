@@ -37,5 +37,15 @@
         }
       }
     }
+
+    i.right.arrow.icon {
+      background-color: transparent;
+      font-weight: initial;
+      height: 100%;
+
+      &.blue {
+        color: var(--blue-50);
+      }
+    }
   }
 }
