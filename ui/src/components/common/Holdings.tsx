@@ -14,7 +14,6 @@ import FormErrorHandled from './FormErrorHandled'
 
 import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
-import "./Holdings.scss"
 import { AppError } from './errorTypes'
 
 export type DepositProvider = {
@@ -36,7 +35,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             const assetDeposits = groupDepositsByAsset(depositsForProvider);
 
             return (
-                <div className='asset-section' key={providerLabel}>
+                <div className='holdings' key={providerLabel}>
                     { getProviderLabel(providerLabel, providers) }
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <DepositRow

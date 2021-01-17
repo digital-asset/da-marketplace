@@ -17,9 +17,6 @@ import Page from '../common/Page'
 
 import BrokerCustomers from './BrokerCustomers'
 
-import './BrokerOrders.scss'
-
-
 type Props = {
     sideNav: React.ReactElement;
     deposits: DepositInfo[];

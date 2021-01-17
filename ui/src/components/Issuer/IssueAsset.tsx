@@ -17,8 +17,6 @@ import {
     RegisteredBroker
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import './IssueAsset.scss'
-
 const IssueAsset = () => {
     const ledger = useLedger();
     const issuer = useParty();

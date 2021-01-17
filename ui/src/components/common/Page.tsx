@@ -3,8 +3,6 @@ import { Grid, Menu } from 'semantic-ui-react'
 
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
 
-import './Page.scss'
-
 type Props = {
     className?: string;
     menuTitle?: React.ReactElement;

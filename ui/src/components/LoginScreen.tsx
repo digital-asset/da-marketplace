@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import { Button, Form, Header, Icon, Popup } from 'semantic-ui-react'
+import { Button, Form, Icon } from 'semantic-ui-react'
 
 import Credentials, { computeCredentials } from '../Credentials'
 import { Parties, retrieveParties, storeParties } from '../Parties'
@@ -55,8 +55,12 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
+  const tiles = deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles;
+
   return (
-    <OnboardingTile tiles={deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles}/>
+    <div className='login-screen'>
+      <OnboardingTile tiles={tiles}/>
+    </div>
   );
 };
 

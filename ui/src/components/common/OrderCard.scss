@@ -1,45 +1,48 @@
-.order-card > .ui.card.order-info {
-    background: none;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-}
+@mixin order-card {
+    .order-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $spacing-s;
+        margin: $spacing-s 0px;
+        background: var(--grey1);
+        border: 2px solid var(--grey2);
+        box-sizing: border-box;
+        border-radius: 2px;
 
-.order-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center; 
-    padding: var(--spacing-s);
-    margin: var(--spacing-s) 0px;
-    background: var(--grey1);
-    border: 2px solid var(--grey2);
-    box-sizing: border-box;
-    border-radius: 2px;
-}
+        .order-info {
+            &.ui.card {
+                background: none;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                margin: 0;
+            }
 
-.order-info .exchange-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: var(--spacing-s);
-    margin-left: var(--spacing-s);
-}
+            .exchange-icon {
+                width: 16px;
+                height: 16px;
+                margin-right: $spacing-s;
+                margin-left: $spacing-s;
+            }
 
-.order-info div:first-child {
-    display: flex;
-    align-items: center;
-}
+            div:first-child {
+                display: flex;
+                align-items: center;
+            }
+        }
 
+        @media screen and (max-width: 800px) {
+            .order-card > .ui.card.order-info {
+                flex-direction: column;
+                align-content: flex-start;
+            }
 
-@media screen and (max-width: 800px) {
-    .order-card > .ui.card.order-info {
-        flex-direction: column;
-        align-content: flex-start;
-    }
-
-    .order-card > .ui.card.order-info > div:not(:last-child){
-        padding-bottom: var(--spacing-s);
+            .order-card > .ui.card.order-info > div:not(:last-child) {
+                padding-bottom: $spacing-s;
+            }
+        }
     }
 }

@@ -3,8 +3,6 @@ import { Header } from 'semantic-ui-react'
 
 import { OpenMarketplaceLogo } from '../../icons/Icons'
 
-import './WelcomeHeader.scss'
-
 const WelcomeHeader: React.FC = () => (
     <div className="welcome-header">
         <OpenMarketplaceLogo size='48'/>

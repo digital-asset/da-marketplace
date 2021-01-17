@@ -5,8 +5,6 @@ import Page from './Page'
 import PageSection from './PageSection'
 import WelcomeHeader from './WelcomeHeader'
 
-import "./LandingPage.scss"
-
 type Props = {
     profile?: React.ReactElement;
     marketRelationships?: React.ReactElement;

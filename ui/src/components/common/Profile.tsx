@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
+import classNames from 'classnames'
 
 import { StringKeyedObject } from './utils'
-import './Profile.scss'
 
 type FieldType = 'text';
 
@@ -32,7 +32,7 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile 
     return (
         <Form.Input
             fluid
-            label={<p className={`p2 ${inviteAcceptTile && 'dark'}`}>{field.label}</p>}
+            label={<p className={classNames('p2', {'dark': inviteAcceptTile})}>{field.label}</p>}
             placeholder={field.placeholder}
             value={field.value}
             className='profile-form-field'
@@ -68,10 +68,10 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
     }, false);
 
     return (
-         <Form className='profile-form'>
+        <Form className='profile'>
             { fields }
             <Button
-                className={`ghost ${inviteAcceptTile && 'dark'}`}
+                className={classNames('ghost', {'dark': inviteAcceptTile})}
                 content={content}
                 disabled={disableButton}
                 onClick={() => submitProfile && submitProfile(profile)}

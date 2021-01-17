@@ -1,10 +1,10 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.scss'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
+import { unwrapDamlTuple } from '../common/damlTypes'
+import { ExchangeIcon } from '../../icons/Icons'
 
 export type OrderProps = {
     order: Order;

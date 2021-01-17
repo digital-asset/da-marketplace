@@ -1,10 +1,10 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.scss'
+import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
+import { ExchangeIcon } from '../../icons/Icons'
+import { unwrapDamlTuple } from '../common/damlTypes'
 
 export type TradeCardProps = {
     trade: SettledTradeSide;

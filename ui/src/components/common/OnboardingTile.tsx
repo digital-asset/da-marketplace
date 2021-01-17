@@ -2,8 +2,6 @@ import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
 import { OpenMarketplaceLogo } from '../../icons/Icons'
 
-import './OnboardingTile.scss'
-
 type TileProps = {
     header?: React.ReactElement;
     subtitle?: string;

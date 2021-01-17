@@ -1,12 +1,8 @@
 import React from 'react'
-
 import { useHistory } from 'react-router-dom'
-
 import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
-
-import './TopMenu.scss'
 
 export type ITopMenuButtonInfo = {
     label: string,

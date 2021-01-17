@@ -1,9 +1,5 @@
-@import "../common/DonutChart.scss";
-
 @mixin issued-token {
     .issued-token {
-        @include donut-chart;
-
         .position-holdings-data {
             display: flex;
             flex-direction: row;
@@ -100,4 +96,3 @@
         }
     }
 }
-
