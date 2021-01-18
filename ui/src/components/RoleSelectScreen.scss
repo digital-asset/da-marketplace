@@ -22,7 +22,7 @@
             & > .ui.button {
                 width: 100%;
                 height: 100%;
-                padding: var(--spacing-m);
+                padding: $spacing-m;
 
                 &.ghost:hover {
                     background: none;

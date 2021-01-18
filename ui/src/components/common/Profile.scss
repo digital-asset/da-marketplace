@@ -2,8 +2,8 @@
     .profile {
         .profile-form-field {
             width: 260px;
-            margin-top: var(--spacing-s);
-            margin-right: var(--spacing-s);
+            margin-top: $spacing-s;
+            margin-right: $spacing-s;
         }
 
         .profile-submit-button {
