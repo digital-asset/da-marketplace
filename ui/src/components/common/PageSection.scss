@@ -1,18 +1,16 @@
 @mixin page-section {
     .page-section {
-        .ui.grid {
-            flex: 1;
-            width: 100%;
-            padding-left: $spacing-l;
-            padding-right: $spacing-m;
-            padding-top: $spacing-m;
-            background-color: var(--grey1);
-            border-top: 2px var(--cool-grey-90) solid;
-            border-radius: 0;
+        flex: 1;
+        width: 100%;
+        padding-left: $spacing-l;
+        padding-right: $spacing-m;
+        padding-top: $spacing-m;
+        background-color: var(--grey1);
+        border-top: 2px var(--cool-grey-90) solid;
+        border-radius: 0;
 
-            .order-forms > .ui.form {
-                padding-bottom: $spacing-l;
-            }
+        .order-forms > .ui.form {
+            padding-bottom: $spacing-l;
         }
     }
 }

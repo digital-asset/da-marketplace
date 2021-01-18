@@ -8,14 +8,26 @@
             align-items: center;
             justify-content: space-between;
             background-color: var(--white);
+            padding: $spacing-m;
 
             &:hover {
                 transform: scale(1.01);
             }
         }
-    }
 
-    .ui.card > .ui.button.ghost:hover {
-        background: none;
+        .ui.card {
+            box-shadow: none;
+            width: 100%;
+
+            & > .ui.button {
+                width: 100%;
+                height: 100%;
+                padding: var(--spacing-m);
+
+                &.ghost:hover {
+                    background: none;
+                }
+            }
+        }
     }
 }

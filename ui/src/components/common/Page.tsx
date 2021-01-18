@@ -1,5 +1,6 @@
 import React from 'react'
 import { Grid, Menu } from 'semantic-ui-react'
+import classNames from 'classnames'
 
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
 
@@ -24,7 +25,7 @@ const Page: React.FC<Props> = ({
     activeMenuTitle
 }) => {
     return (
-        <Grid className={'page-content ' + className}>
+        <Grid className={classNames('page-content', className)}>
             <Grid.Column className="page-sidemenu">
                 <Menu secondary vertical>
                     { sideNav }
