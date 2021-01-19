@@ -114,16 +114,14 @@ const CreateDeposit = (props: {
         <div className='create-deposit'>
             <FormErrorHandled onSubmit={handleCreateDeposit}>
                 <Header as='h3'>Quick Deposit</Header>
-                    {!!currentBeneficiary?
-                        <p className='p2'>Benefitiary: {currentBeneficiary.contractData.name}</p>
-                    :
-                    <Form.Select
-                        clearable
-                        label={<p className='p2'>Benefitiary</p>}
-                        value={beneficiary}
-                        placeholder='Select...'
-                        options={beneficiaryOptions}
-                        onChange={handleBeneficiaryChange}/>}
+                    {!currentBeneficiary &&
+                        <Form.Select
+                            clearable
+                            label={<p className='p2'>Benefitiary</p>}
+                            value={beneficiary}
+                            placeholder='Select...'
+                            options={beneficiaryOptions}
+                            onChange={handleBeneficiaryChange}/>}
                     <Form.Group className='inline-form-group'>
                         <ContractSelect
                             clearable
