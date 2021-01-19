@@ -34,12 +34,12 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             return (
                 <div className='asset-section' key={providerLabel}>
                     <div className='provider-info'>
-                    <Header as='h5'>
-                        {label}
-                    </Header>
-                    <p className='p2'>
-                        {party}
-                    </p>
+                        <Header as='h5'>
+                            {label}
+                        </Header>
+                        <p className='p2'>
+                            {party}
+                        </p>
                      </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <DepositRow

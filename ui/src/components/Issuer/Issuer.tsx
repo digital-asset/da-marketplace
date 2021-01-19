@@ -86,6 +86,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 label: `${name ? `${name} (${party})` : party} | Exchange`
             }
         });
+
     const allProviders = [
         ...allCustodianRelationships.map(relationship => {
             const party = relationship.contractData.custodian;

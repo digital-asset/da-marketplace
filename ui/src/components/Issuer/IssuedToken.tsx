@@ -15,7 +15,6 @@ import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
-import { useRegistryLookup } from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,
