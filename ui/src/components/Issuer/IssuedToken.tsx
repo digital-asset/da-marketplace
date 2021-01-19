@@ -13,7 +13,7 @@ import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-
+import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
 
 type DepositInfo = {
@@ -25,9 +25,11 @@ type DepositInfo = {
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    providers: IPartyInfo[],
+    investors: IPartyInfo[]
 }
 
-const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
+const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
     const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
     const { tokenId } = useParams<{tokenId: string}>()
@@ -123,7 +125,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
                             }
                         </Table.Body>
                     </Table>
-                    <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
+                    {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
             <AddParticipantModal
@@ -144,8 +146,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             if (token) {
                 return token.quantity += Number(asset.quantity)
             }
-
-            return netTokenDeposits = [...netTokenDeposits, {investor: account.owner, provider: account.provider, quantity: Number(asset.quantity) }]
+            const provider = getPartyLabel(account.provider, providers)
+            const investor = getPartyLabel(account.owner, investors)
+            return netTokenDeposits = [...netTokenDeposits, {investor: investor.label, provider: provider.label, quantity: Number(asset.quantity) }]
         })
 
         return netTokenDeposits

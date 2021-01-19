@@ -8,7 +8,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray } from './utils'
+import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 
@@ -16,14 +16,9 @@ import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
 import { AppError } from './errorTypes'
 
-export type DepositProvider = {
-    party: string;
-    label: string;
-}
-
 type Props = {
     deposits: DepositInfo[];
-    providers: DepositProvider[];
+    providers: IPartyInfo[];
     role: MarketRole;
 }
 
@@ -33,10 +28,18 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     const assetSections = Object.entries(depositsGrouped)
         .map(([providerLabel, depositsForProvider]) => {
             const assetDeposits = groupDepositsByAsset(depositsForProvider);
+            const { label, party }  = getPartyLabel(providerLabel, providers)
 
             return (
                 <div className='holdings' key={providerLabel}>
-                    { getProviderLabel(providerLabel, providers) }
+                    <div className='provider-info'>
+                        <Header as='h5'>
+                            {label}
+                        </Header>
+                        <p className='p2'>
+                            {party}
+                        </p>
+                     </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <DepositRow
                             key={assetLabel}
@@ -58,24 +61,10 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
     )
 }
 
-export function getProviderLabel(providerLabel: string, providers: DepositProvider[]) {
-    const providerInfo = providers.find(p => p.party === providerLabel)
-    return (
-        <div className='provider-info'>
-            <Header as='h5'>
-                {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
-            </Header>
-            <p className='p2'>
-                {providerInfo?.party}
-            </p>
-        </div>
-    )
-}
-
 type DepositRowProps = {
     assetLabel: string;
     deposits: DepositInfo[];
-    providers: DepositProvider[];
+    providers: IPartyInfo[];
     role: MarketRole;
 }
 
@@ -116,7 +105,7 @@ const DepositRow: React.FC<DepositRowProps> = ({
 
 type ProviderFormProps = {
     depositCids: string[];
-    providers: DepositProvider[];
+    providers: IPartyInfo[];
     providerLabel?: string;
     totalQty: number;
     role: MarketRole;
