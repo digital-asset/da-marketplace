@@ -41,7 +41,7 @@ This can be done by rebuilding the project using `make clean && make package`.
 Alternatively, to only build the DAR file and regenerate the TypeScript bindings:
 ```
 daml build
-daml codegen js .daml/dist/da-marketplace-0.1.8.dar -o daml.js
+daml codegen js .daml/dist/da-marketplace-0.1.9.dar -o daml.js
 cd ui
 yarn install --force --frozen-lockfile
 ```
