@@ -9,8 +9,6 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import OnboardingTile from './common/OnboardingTile'
 import { ArrowRightIcon } from '../icons/Icons'
 
-import './RoleSelectScreen.scss'
-
 type RoleSelectProps = {
     loading: boolean;
     caption: string;
@@ -62,7 +60,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     }
 
     return (
-        <>
+        <div className='role-selector'>
             <OnboardingTile>
                 <p className='dark'>What would you like to do?</p>
                 <RoleSelect
@@ -90,7 +88,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>
             </OnboardingTile>
-        </>
+        </div>
     );
 }
 

@@ -13,8 +13,6 @@ import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
 
-import './OrderForm.scss'
-
 type Props = {
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];

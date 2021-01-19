@@ -14,7 +14,6 @@ import FormErrorHandled from './FormErrorHandled'
 
 import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
 
-import "./Holdings.scss"
 import { AppError } from './errorTypes'
 
 type Props = {
@@ -32,7 +31,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             const { label, party }  = getPartyLabel(providerLabel, providers)
 
             return (
-                <div className='asset-section' key={providerLabel}>
+                <div className='holdings' key={providerLabel}>
                     <div className='provider-info'>
                         <Header as='h5'>
                             {label}

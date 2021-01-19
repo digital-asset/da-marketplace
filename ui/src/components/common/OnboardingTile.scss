@@ -2,18 +2,17 @@
     .onboarding-screen {
         height: 100%;
         width: 100%;
-        overflow: auto;
 
         .onboarding-tile {
             background-color: var(--cool-grey-10);
-            padding: var(--spacing-l);
+            padding: $spacing-l;
             border-radius: 2px;
             margin-bottom: 2px;
             max-width: 550px;
             text-align: left;
 
             .tile-header {
-                margin-bottom: var(--spacing-m);
+                margin-bottom: $spacing-m;
 
                 .logo-header {
                     display: flex;
@@ -35,7 +34,7 @@
                 }
 
                 .username-login {
-                    margin: var(--spacing-m);
+                    margin: $spacing-m;
                 }
 
                 form button, .login-form button {
@@ -62,7 +61,7 @@
                 }
 
                 .login-form {
-                    padding: var(--spacing-s) 0;
+                    padding: $spacing-s 0;
 
                     .field.upload-file-input {
                         display: flex;
@@ -102,7 +101,7 @@
                         }
 
                         .icon {
-                            margin-right: var(--spacing-s);
+                            margin-right: $spacing-s;
                         }
                     }
                 }

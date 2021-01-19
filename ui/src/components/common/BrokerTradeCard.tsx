@@ -4,8 +4,6 @@ import { unwrapDamlTuple } from '../common/damlTypes'
 import { BrokerTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.scss'
-
 export type BrokerTradeCardProps = {
     brokerTrade: BrokerTrade;
 }

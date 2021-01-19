@@ -1,5 +1,5 @@
 .ui.form .field.issue-asset-form-field {
-    padding-bottom: var(--spacing-s);
+    padding-bottom: $spacing-s;
 }
 
 .ui.form .field.issue-asset-form-field  > .ui.input {
@@ -13,9 +13,9 @@
 .ui.form .observer-select {
     display: flex;
     flex-direction: column;
-    padding-bottom: var(--spacing-s);
+    padding-bottom: $spacing-s;
 }
 
 .ui.form .observer-select > .issue-asset-form-field.select-observer {
-    padding-top: var(--spacing-s);
+    padding-top: $spacing-s;
 }

@@ -1,47 +1,46 @@
-/* Common Card Table Styling */
-.card-table > .ui.table {
-    border: none;
-}
+@mixin card-table {
+    .card-table {
+        & > .ui.table {
+            border: none;
 
-.card-table > .ui.table .card-table-cell:first-child {
-    padding-left: var(--spacing-m);;
-}
+            .card-table-cell:first-child {
+                padding-left: $spacing-m;
+            }
+        }
 
-/* Header Table Styling */
+        .ui.table.card-table-header-table {
+            margin-bottom: -($spacing-m);
 
-.card-table > .ui.table.card-table-header-table {
-    margin-bottom: -(var(--spacing-m));
-}
+            th {
+                border: none;
+                background: none;
+            }
+        }
 
-.card-table > .ui.table.card-table-header-table th {
-    border: none;
-    background: none;
-}
+        .ui.table.card-table-body-table {
+            border-spacing: 0px $spacing-m;
+            border-collapse: separate;
+            margin-top: 0px;
 
-/* Body Table Styling */
+            .card-table-row {
+                border-radius: 5px;
+            }
 
-.card-table > .ui.table.card-table-body-table {
-    border-spacing: 0px var(--spacing-m);;
-    border-collapse: separate;
-    margin-top: 0px;
-}
+            .card-table-cell {
+                background-color: var(--grey-1);
+                border-top: 1px var(--grey2) solid;
+                border-bottom: 1px var(--grey2) solid;
 
-.card-table > .ui.table.card-table-body-table .card-table-row {
-    border-radius: 5px;
-}
+                &:first-child {
+                    border-left: 1px var(--grey2) solid;
+                    border-radius: 4px 0px 0px 4px;
+                }
 
-.card-table > .ui.table.card-table-body-table .card-table-cell {
-    background-color: var(--grey1);
-    border-top: 1px var(--grey2) solid;
-    border-bottom: 1px var(--grey2) solid;
-}
-
-.card-table > .ui.table.card-table-body-table .card-table-cell:first-child {
-    border-left: 1px var(--grey2) solid;
-    border-radius: 4px 0px 0px 4px;
-}
-
-.card-table > .ui.table.card-table-body-table .card-table-cell:last-child {
-    border-right: 1px var(--grey2) solid;
-    border-radius: 0px 4px 4px 0px;
+                &:last-child {
+                    border-right: 1px var(--grey2) solid;
+                    border-radius: 0px 4px 4px 0px;
+                }
+            }
+        }
+    }
 }
