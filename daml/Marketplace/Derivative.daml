@@ -31,6 +31,7 @@ template Derivative
     description : Text
     prodSym : Text  -- BTCF21
     prodCode : Text  -- BTC
+    uuid : Text
     secType : SecType
     mmy : Text  -- YYYYMM or YYYYMMDD or YYYMMwN
     mult : Int  -- Contract Multiplier
@@ -44,3 +45,15 @@ template Derivative
 
     key id : Id
     maintainer key.signatories
+
+template DerivativeSettlementPrice
+  with
+    derivativeId : Id
+    currencyToken : Id
+    price : Decimal
+    createdAt : Time
+  where
+    signatory derivativeId.signatories
+    key derivativeId : Id
+    maintainer key.signatories
+
