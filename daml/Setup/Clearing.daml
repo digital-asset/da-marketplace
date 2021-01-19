@@ -172,6 +172,7 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
         description
         prodSym
         prodCode
+        uuid = ""
         secType = FRA
         mmy = "YYYYMM"
         mult

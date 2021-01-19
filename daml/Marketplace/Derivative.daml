@@ -46,14 +46,33 @@ template Derivative
     key id : Id
     maintainer key.signatories
 
-template DerivativeSettlementPrice
+template FairValue
   with
-    derivativeId : Id
-    currencyToken : Id
+    exchange : Party
+    assetId : Id
     price : Decimal
-    createdAt : Time
+    currency : Id
+    timestamp : Time
+    upTo : Time
   where
-    signatory derivativeId.signatories
-    key derivativeId : Id
-    maintainer key.signatories
+    signatory exchange
 
+-- How to require Exchange to do these?
+
+-- data SettlementInterval =  Int | EndOfDay deriving (Show,Eq)
+
+template FairValueInterval
+  with
+    exchange : Party
+    lastCalculated : Time
+    hoursBetweenCalculations : Int
+  where
+    signatory exchange
+    key exchange : Party
+    maintainer key
+
+    controller exchange can
+      FairValueInterval_Calculate : ContractId FairValueInterval
+        do
+          time <- getTime
+          create this with lastSettled = time

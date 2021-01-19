@@ -61,24 +61,24 @@ handleCCPRule party = do
 
 
 handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
-handleMarginCalculation ccp (mcCid, mc@MarginCalculation { netDiff, accountId, customer }) = do
+handleMarginCalculation ccp (mcCid, mc@MarginCalculation { accountId, customer }) = do
   CCPState { operatorParty } <- get
   (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
-  let accountId = ccpCustomer.accountId
+  -- let accountId = ccpCustomer.accountId
 
   -- ^ Find deposits for the account
-  (ccpDepositCid,_) <- head  . filter (depositIsAccount ccpCustomer.accountId)  <$> query @AssetDeposit
-  (custodianDepositCid,_) <- head  . filter (\(_,deposit) -> deposit.account.id == ccpCustomer.custodianAccountId) <$> query @AssetDeposit
+  -- (ccpDepositCid,_) <- head  . filter (depositIsAccount ccpCustomer.accountId)  <$> query @AssetDeposit
+  -- (custodianDepositCid,_) <- head  . filter (\(_,deposit) -> deposit.account.id == ccpCustomer.custodianAccountId) <$> query @AssetDeposit
 
   return ()
 
   where
-    depositIsAccount : Id -> ContractPair AssetDeposit -> Id -> Bool
+    depositIsAccount : Id -> ContractPair AssetDeposit -> Bool
     depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
 
 handleMarkToMarketCalculation
   : Party
   -> ContractPair MarkToMarketCalculation
   -> TriggerA CCPState ()
-handleMarkToMarketCalculation party (mtmCid, mtm@MarkToMarketCalculation { accountId, netDiff }) = do
+handleMarkToMarketCalculation party (mtmCid, mtm@MarkToMarketCalculation { accountId }) = do
   return ()

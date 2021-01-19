@@ -1,8 +1,11 @@
 module ExchangeTrigger where
 
+import DA.Action
+import DA.Time
 import DA.Foldable
 import Daml.Trigger
 
+import Marketplace.Derivative
 import Marketplace.Trading
 import Marketplace.BinaryOption
 
@@ -14,19 +17,32 @@ handleExchange = Trigger
   , updateState = \_ -> pure ()
   , rule = handleExchangeRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
+                                               , registeredTemplate @SettlementRule
                                                , registeredTemplate @SettledBinaryOption ]
-  , heartbeat = None
+  , heartbeat = Some $ seconds 1
   }
 
 
 handleExchangeRule : Party -> TriggerA () ()
 handleExchangeRule party = do
   debug "Running exchange rule..."
+  time <- getTime
+
+  settlementRules <- query @SettlementRule
+  forA_ settlementRules handleSettlement
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
   binaryOptions <- query @SettledBinaryOption
   forA_ tradeSides (handleTradeSide party binaryOptions)
+
+handleSettlement : ContractPair SettlementRule -> TriggerA () ()
+handleSettlement (srCid,sr@SettlementRule {..}) = do
+  currentTime <- getTime
+  let timeBetween = subTime currentTime sr.lastSettled
+  debug $ "time since last settlement: " <> show timeBetween
+  debug $ "needed time between: " <> show sr.hoursBetweenSettlements
+  when (timeBetween > seconds sr.hoursBetweenSettlements) (void $ dedupExercise srCid SettmentRule_PerformSettlement)
 
 
 handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
