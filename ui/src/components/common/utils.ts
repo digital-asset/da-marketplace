@@ -119,3 +119,13 @@ export function useDismissableElement<T extends HTMLElement, C extends HTMLEleme
 
     return { refDismissable, refControl };
 }
+
+export type IPartyInfo = {
+    party: string;
+    label: string;
+}
+
+export function getPartyLabel(partyId: string, parties: IPartyInfo[]) {
+    const partyInfo = parties.find(p => p.party === partyId)
+    return { party: partyInfo?.party || partyId , label: partyInfo?.label.substring(partyInfo.label.lastIndexOf('|')+1) || partyId}
+}
