@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Header, Table } from 'semantic-ui-react'
+import React from 'react'
+import { Header } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -7,15 +7,14 @@ import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Regi
 
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
-import { UserIcon, AddPlusIcon } from '../../icons/Icons'
-import { DepositInfo, makeContractInfo } from '../common/damlTypes'
+import { UserIcon } from '../../icons/Icons'
+import { makeContractInfo } from '../common/damlTypes'
 import { depositSummary } from '../common/utils'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import CapTable from '../common/CapTable';
 
 import CreateDeposit from './CreateDeposit'
-import StripedTable from '../common/StripedTable'
 
 type Props = {
     clients: string[];
@@ -33,10 +32,9 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
     const tableHeadings = ['Name', 'Holdings']
 
     const tableRows = clients.map(client => {
-            const clientName = investors.find(i => i.payload.investor === client)?.payload.name
+            const clientName = investors.find(i => i.payload.investor === client)?.payload.name || client
             const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client)
-            const depositSummaryList = depositSummary(deposits).join(',')
-            return [clientName || client, depositSummaryList]
+            return [clientName, depositSummary(deposits).join(',')]
         }
     );
 

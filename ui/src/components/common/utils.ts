@@ -50,7 +50,6 @@ export const depositSummary = (deposits: DepositInfo[]): string[] => {
     return Object
         .entries(depositSums)
         .map(([label, total]) => `${label}: ${total}`)
-        // .join(", ");
 }
 
 export function countDecimals(value: number) {

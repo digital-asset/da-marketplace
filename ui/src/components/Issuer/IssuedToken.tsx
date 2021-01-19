@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, Table, List, Button } from 'semantic-ui-react'
+import { Header, List, Button } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 
@@ -12,7 +12,6 @@ import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from
 import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import StripedTable from '../common/StripedTable';
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
@@ -104,8 +103,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                 <div className='position-holdings-data'>
                     <CapTable
                         headings={capTableHeaders}
-                        rows={capTableRows}
-                        emptyLabel='There are no position holdings for this token'/>
+                        rows={capTableRows}/>
                     {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>

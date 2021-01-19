@@ -1,13 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useParams } from 'react-router-dom'
-import { Header, Table, List, Button, Icon } from 'semantic-ui-react'
+import { Header } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
 
 import { makeContractInfo } from '../common/damlTypes'
 import Page from '../common/Page'
@@ -32,11 +31,11 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
 
-    const capTableRows = depositSummary(deposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
+    const tableRows = depositSummary(deposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
 
-    const investor = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo).find(i => i.contractData.investor == investorId)
-
-    const capTableHeaders = ['Asset', 'Amount']
+    const investor = useStreamQueryAsPublic(RegisteredInvestor)
+        .contracts.map(makeContractInfo)
+        .find(i => i.contractData.investor == investorId)
 
     return (
         <Page
@@ -47,9 +46,8 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
                 <div className='client-list'>
                     <Header as='h3'>Client Holdings</Header>
                     <CapTable
-                        headings={capTableHeaders}
-                        rows={capTableRows}
-                        emptyLabel='There are no position holdings for this token'/>
+                        headings={['Asset', 'Amount']}
+                        rows={tableRows}/>
                 </div>
                 <CreateDeposit currentBeneficiary={investor}/>
             </PageSection>

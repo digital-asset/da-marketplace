@@ -1,3 +1,4 @@
+@import './common/CapTable.scss';
 @import './common/CardTable.scss';
 @import './common/DonutChart.scss';
 @import './common/FormErrorHandled.scss';
@@ -17,14 +18,13 @@
 @import './common/Wallet.scss';
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
-@import './common/CapTable.scss';
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
 
 @import './Broker/Broker.scss';
+@import './Custodian/Custodian.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
-@import './Custodian/Custodian.scss';
 
 @mixin app {
     .app {
@@ -32,6 +32,7 @@
         width: 100vw;
 
         /* common css */
+        @include cap-table;
         @include card-table;
         @include donut-chart;
         @include form-error-handled;
@@ -51,7 +52,6 @@
         @include wallet;
         @include wallet-transaction;
         @include welcome-header;
-        @include cap-table;
 
         /* onboarding css */
         @include login-screen;

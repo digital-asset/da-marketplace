@@ -13,7 +13,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple, damlTupleToString } from '../common/damlTypes'
+import { makeContractInfo, wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useOperator } from '../common/common'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
@@ -28,6 +28,7 @@ import { useRelationshipRequestNotifications } from './RelationshipRequestNotifi
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
 import FormErrorHandled from '../common/FormErrorHandled'
+import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 type Props = {
     onLogout: () => void;
@@ -97,7 +98,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
+    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
 
     const sideNav = <RoleSideNav url={url}
                         name={registeredCustodian.contracts[0]?.payload.name || custodian}
@@ -108,16 +109,16 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <Menu.Item>
                                 <p className='p2'>Client Holdings:</p>
                             </Menu.Item>
-                            {investors.map(investor => (
+                            {investors.map(investor =>
                                 <Menu.Item
                                     className='sidemenu-item-normal'
                                     as={NavLink}
                                     to={`${url}/client/${investor}`}
                                     key={investor}
                                 >
-                                    <p>{registeredInvestors.find(i => i.payload.investor == investor)?.payload.name}</p>
+                                    <p>{registeredInvestors.find(i => i.contractData.investor == investor)?.contractData.name || investor}</p>
                                 </Menu.Item>
-                            ))}
+                            )}
                         </Menu.Menu>
                     </RoleSideNav>
 
