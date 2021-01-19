@@ -4,14 +4,17 @@ import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo, damlTupleToString} from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
@@ -22,6 +25,7 @@ import MarketRelationships from '../common/MarketRelationships'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import RoleSideNav from '../common/RoleSideNav';
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
@@ -37,6 +41,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const issuer = useParty();
     const ledger = useLedger();
 
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
+
     const registeredIssuer = useStreamQueries(RegisteredIssuer, () => [], [], (e) => {
         console.log("Unexpected close from registeredIssuer: ", e);
     });
@@ -46,6 +52,53 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const allTokens = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from Token: ", e);
     }).contracts
+
+    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
+        .map(investor => {
+            const party = investor.payload.investor;
+            const name = brokerMap.get(damlTupleToString(investor.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Investor`
+            }
+        })
+
+    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from brokerCustomer: ", e);
+    }).contracts
+        .map(broker => {
+            const party = broker.payload.broker;
+            const name = brokerMap.get(damlTupleToString(broker.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Broker`
+            }
+        })
+
+    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts
+        .map(exchParticipant => {
+            const party = exchParticipant.payload.exchange;
+            const name = exchangeMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Exchange`
+            }
+        });
+    const allProviders = [
+        ...allCustodianRelationships.map(relationship => {
+            const party = relationship.contractData.custodian;
+            const name = custodianMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Custodian`
+            }
+        }),
+        ...exchangeProviders,
+        ...brokerProviders,
+    ];
+
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -160,7 +213,11 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 </Route>
 
                 <Route path={`${path}/issued-token/:tokenId`}>
-                    <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
+                    <IssuedToken
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        providers={allProviders}
+                        investors={allRegisteredInvestors}/>
                 </Route>
             </Switch>
         </div>

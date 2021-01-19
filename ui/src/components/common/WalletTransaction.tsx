@@ -9,13 +9,12 @@ import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { WalletIcon } from '../../icons/Icons'
 
-import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
+import { preciseInputSteps, groupDepositsByAsset, sumDepositArray, IPartyInfo } from './utils'
 
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import { useOperator } from './common'
 import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../common/damlTypes'
-import { DepositProvider } from '../common/Holdings';
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -30,7 +29,7 @@ const WalletTransaction = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
     deposits?: DepositInfo[];
-    providers?: DepositProvider[];
+    providers?: IPartyInfo[];
 }) => {
     const { transactionType, sideNav, onLogout, deposits, providers } = props;
 
