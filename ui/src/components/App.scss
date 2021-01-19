@@ -17,13 +17,14 @@
 @import './common/Wallet.scss';
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
-
+@import './common/CapTable.scss';
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
 
 @import './Broker/Broker.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
+@import './Custodian/Custodian.scss';
 
 @mixin app {
     .app {
@@ -50,6 +51,7 @@
         @include wallet;
         @include wallet-transaction;
         @include welcome-header;
+        @include cap-table;
 
         /* onboarding css */
         @include login-screen;
@@ -59,5 +61,6 @@
         @include investor;
         @include issuer;
         @include broker;
+        @include custodian;
     }
 }

@@ -1,0 +1,18 @@
+
+@mixin clients {
+    .clients {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+
+        .client-holdings {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+
+            .heading {
+                background-color:red;
+            }
+        }
+    }
+}

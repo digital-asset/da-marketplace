@@ -3,34 +3,39 @@ import { Table } from 'semantic-ui-react'
 
 const CapTable = (props: {
     headings: string[],
-    rows: string[]
+    rows: string[][],
+    emptyLabel: string
 }) => {
-    const {headings, rows} = props
+    const { headings, rows, emptyLabel } = props
+
     return (
-        <Table className='issuer-cap-table'>
+        <Table className='cap-table'>
             <Table.Header>
                 <Table.Row>
-
-                    <Table.HeaderCell>Investor</Table.HeaderCell>
-                    <Table.HeaderCell>Provider</Table.HeaderCell>
-                    <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
-                    <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
+                    {headings.map((heading, index) =>
+                        <Table.HeaderCell
+                            textAlign={index+1 > headings.length/2 ? 'right': 'left'}>
+                            {heading}
+                        </Table.HeaderCell>
+                    )}
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {nettedTokenDeposits.length > 0 ?
-                    nettedTokenDeposits.map(deposit =>
+                {rows.length > 0 ?
+                    rows.map(row =>
                         <Table.Row>
-                            <Table.Cell>{deposit.investor || '-'}</Table.Cell>
-                            <Table.Cell>{deposit.provider || '-'}</Table.Cell>
-                            <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
-                            <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
+                            {row.map((item, index) =>
+                                <Table.Cell
+                                    textAlign={index+1 > row.length/2 ? 'right': 'left'}>
+                                    {item}
+                                </Table.Cell>
+                            )}
                         </Table.Row>
                     )
                 :
                     <Table.Row className='empty-table' >
                         <Table.Cell textAlign={'center'} colSpan={4}>
-                            <i>There are no position holdings for this token</i>
+                            <i>{emptyLabel}</i>
                         </Table.Cell>
                     </Table.Row>
                 }
@@ -38,3 +43,5 @@ const CapTable = (props: {
         </Table>
     )
 }
+
+export default CapTable;

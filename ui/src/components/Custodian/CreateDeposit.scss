@@ -1,32 +1,17 @@
-@media screen and (max-width: 1000px) {
-    .custodian-clients .ui.form > .fields.inline-form-group {
+
+@mixin create-deposit {
+    .create-deposit {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-    }
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        padding: $spacing-m;
+        margin-left: $spacing-m;
+        border-radius: 2px;
 
-
-    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
-        padding:  $spacing-s 0 $spacing-s 0.5em;
-    }
-
-}
-
-.create-deposit {
-    background-color: var(--grey3);
-    padding: $spacing-s;
-}
-
-.custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
-    margin-left: 0.5em;
-}
-
-@media screen and (max-width: 1000px) {
-    .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
-        margin-left: 0px;
-        margin-bottom: $spacing-s;
-    }
-
-    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
-        padding-left: 0;
+        .inline-form-group {
+            margin-bottom: $spacing-m;
+        }
     }
 }
+

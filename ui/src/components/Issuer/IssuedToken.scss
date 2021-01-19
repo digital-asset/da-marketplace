@@ -3,26 +3,6 @@
         .position-holdings-data {
             display: flex;
             flex-direction: row;
-
-            .ui.table.issuer-cap-table {
-                border: 0px !important;
-
-                tr td {
-                    border-top: 0px !important;
-                }
-
-                tr:nth-child(odd) {
-                    background-color: var(--grey3);
-                }
-
-                tr th {
-                    border-bottom: 0px !important;
-                }
-
-                tr th:nth-of-type(1){
-                    padding-left: 0px;
-                }
-            }
         }
 
         .allocations {
@@ -89,10 +69,6 @@
                     margin: 0px;
                     width: 100%;
                 };
-            }
-
-            .ui.table.issuer-cap-table tr:nth-child(odd) {
-                background-color: unset;
             }
         }
     }

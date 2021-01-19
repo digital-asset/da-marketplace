@@ -44,13 +44,13 @@ export const sumDeposits = (deposits: DepositInfo[]): StringKeyedObject<number> 
         }), {} as StringKeyedObject<number>)
 }
 
-export const depositSummary = (deposits: DepositInfo[]): string => {
+export const depositSummary = (deposits: DepositInfo[]): string[] => {
     const depositSums = sumDeposits(deposits);
 
     return Object
         .entries(depositSums)
         .map(([label, total]) => `${label}: ${total}`)
-        .join(", ");
+        // .join(", ");
 }
 
 export function countDecimals(value: number) {

@@ -12,6 +12,7 @@ import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from
 import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
+import CapTable from '../common/CapTable';
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
@@ -50,8 +51,11 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const participants = Object.keys(token?.contractData.observers.textMap || [])
 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
-
     const totalAllocatedQuantity = nettedTokenDeposits.length > 0 ? nettedTokenDeposits.reduce((a, b) => +a + +b.quantity, 0) : 0
+
+    const capTableRows = nettedTokenDeposits.map(deposit =>
+        [deposit.investor, deposit.provider, deposit.quantity.toString(), `${((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%`])
+    const capTableHeaders = ['Investor', 'Provider', 'Amount', 'Percentage Owned']
 
     return (
         <Page
@@ -97,34 +101,10 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                 }
                 <Header as='h3'>Position Holdings</Header>
                 <div className='position-holdings-data'>
-                    <Table className='issuer-cap-table'>
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.HeaderCell>Investor</Table.HeaderCell>
-                                <Table.HeaderCell>Provider</Table.HeaderCell>
-                                <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
-                                <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {nettedTokenDeposits.length > 0 ?
-                                nettedTokenDeposits.map(deposit =>
-                                    <Table.Row>
-                                        <Table.Cell>{deposit.investor || '-'}</Table.Cell>
-                                        <Table.Cell>{deposit.provider || '-'}</Table.Cell>
-                                        <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
-                                        <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
-                                    </Table.Row>
-                                )
-                            :
-                                <Table.Row className='empty-table' >
-                                    <Table.Cell textAlign={'center'} colSpan={4}>
-                                        <i>There are no position holdings for this token</i>
-                                    </Table.Cell>
-                                </Table.Row>
-                            }
-                        </Table.Body>
-                    </Table>
+                    <CapTable
+                        headings={capTableHeaders}
+                        rows={capTableRows}
+                        emptyLabel='There are no position holdings for this token'/>
                     {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
@@ -154,7 +134,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
         return netTokenDeposits
     }
 }
-
 
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     if (props.nettedTokenDeposits.length === 0) {

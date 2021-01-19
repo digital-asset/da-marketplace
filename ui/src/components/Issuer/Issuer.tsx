@@ -56,7 +56,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
         .map(investor => {
             const party = investor.payload.investor;
-            const name = brokerMap.get(damlTupleToString(investor.key))?.name;
+            const name = investorMap.get(damlTupleToString(investor.key))?.name;
             return {
                 party,
                 label: `${name ? `${name} (${party})` : party} | Investor`

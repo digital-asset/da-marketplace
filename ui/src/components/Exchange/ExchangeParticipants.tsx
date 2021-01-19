@@ -84,7 +84,7 @@ const ExchangeParticipantRow: React.FC<RowProps> = ({ deposits, participant }) =
             <Table.Cell>{exchParticipant}</Table.Cell>
             <Table.Cell>{activeOrders}</Table.Cell>
             <Table.Cell>-</Table.Cell>
-            <Table.Cell>{depositSummary(investorDeposits) || '-'}</Table.Cell>
+            <Table.Cell>{depositSummary(investorDeposits).join(',') || '-'}</Table.Cell>
         </Table.Row>
     )
 }
