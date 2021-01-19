@@ -181,26 +181,24 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
                 </Button>
             </div>
             <FormErrorHandled onSubmit={allocateToProvider}>
-                <Form.Group className='stacked-form-group' >
-                    <Form.Select
-                        clearable
-                        label='Select Provider'
-                        value={provider}
-                        placeholder='Select...'
-                        options={providerOptions}
-                        onChange={handleProviderChange}/>
+                <Form.Select
+                    clearable
+                    label={<p className='p2'>Select Provider</p>}
+                    value={provider}
+                    placeholder='Select...'
+                    options={providerOptions}
+                    onChange={handleProviderChange}/>
 
-                    <Form.Input
-                        clearable
-                        label='Allocation Amount'
-                        value={amount}
-                        onChange={handleAmountChange}/>
+                <Form.Input
+                    clearable
+                    label={<p className='p2'>Allocation Amount</p>}
+                    value={amount}
+                    onChange={handleAmountChange}/>
 
-                    <Button
-                        secondary
-                        disabled={provider === ''}
-                        content='Submit'/>
-                </Form.Group>
+                <Button
+                    secondary
+                    disabled={provider === ''}
+                    content='Submit'/>
             </FormErrorHandled>
         </>
     )

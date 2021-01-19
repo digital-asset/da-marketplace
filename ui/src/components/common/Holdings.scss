@@ -61,20 +61,6 @@
     margin-top: var(--spacing-s);
 }
 
-.ui.form > .fields.stacked-form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.ui.form > .fields.stacked-form-group button {
-    width: fit-content;
-    margin-top: var(--spacing-s);
-    margin-left: var(--spacing-xs);
-}
-.ui.form > .fields.stacked-form-group .field > .selection.dropdown {
-    width: 100%;
-}
-
 @media screen and (max-width: 1000px) {
     .deposit-row .deposit-row-body {
         flex-direction: column;
