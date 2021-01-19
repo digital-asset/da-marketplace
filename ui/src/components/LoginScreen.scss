@@ -1,18 +1,18 @@
-@import "./common/OnboardingTile.scss";
-
 @mixin login-screen {
-    @include onboarding-tile;
+    .login-screen {
+        height: 100%;
 
-    .login-header {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        justify-content: center;
-        margin: var(--spacing-s) 0;
+        .login-header {
+            display: flex;
+            flex-direction: row;
+            align-items: baseline;
+            justify-content: center;
+            margin: $spacing-s 0;
 
-        h1.ui.header {
-            color: var(--white);
-            font-weight: normal;
+            h1.ui.header {
+                color: var(--white);
+                font-weight: normal;
+            }
         }
     }
 }

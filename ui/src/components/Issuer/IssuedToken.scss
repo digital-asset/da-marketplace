@@ -1,9 +1,5 @@
-@import "../common/DonutChart.scss";
-
 @mixin issued-token {
     .issued-token {
-        @include donut-chart;
-
         .position-holdings-data {
             display: flex;
             flex-direction: row;
@@ -47,23 +43,23 @@
                 display: flex;
                 flex-direction: row;
                 p {
-                    margin-left: var(--spacing-m);
+                    margin-left: $spacing-m;
                 }
             }
         }
 
         .participants-viewer {
-            padding: var(--spacing-m) 0 var(--spacing-m) 0;
+            padding: $spacing-m 0 $spacing-m 0;
             border-bottom: 2px solid var(--grey3);
 
             .list-heading {
                 display: flex;
                 flex-direction: row;
-                padding: var(--spacing-m) 0 var(--spacing-s) 0;
+                padding: $spacing-m 0 $spacing-s 0;
                 align-items: center;
 
                 button.ghost {
-                    margin-left: var(--spacing-m);
+                    margin-left: $spacing-m;
                 }
             }
 
@@ -78,7 +74,7 @@
                 margin: 0px;
 
                 li {
-                    padding: var(--spacing-s) var(--spacing-l) 0 0;
+                    padding: $spacing-s $spacing-l 0 0;
                     width: fit-content;
                 }
 
@@ -101,4 +97,3 @@
         }
     }
 }
-

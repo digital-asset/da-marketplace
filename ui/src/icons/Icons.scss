@@ -7,7 +7,7 @@
 
 @mixin icons {
     .icon {
-        height: var(--spacing-s);
+        height: $spacing-s;
 
         @include icon-size(24);
         @include icon-size(32);

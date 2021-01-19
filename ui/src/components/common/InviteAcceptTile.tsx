@@ -5,8 +5,6 @@ import FormErrorHandled from './FormErrorHandled'
 import OnboardingTile, { Tile } from './OnboardingTile'
 import { indefiniteArticle as a } from './utils'
 
-import './InviteAcceptTile.scss'
-
 type Props = {
     role: string;
     onSubmit: () => Promise<void>;
@@ -14,7 +12,7 @@ type Props = {
 }
 
 const InviteAcceptTile: React.FC<Props> = ({ children, role, onSubmit, onLogout }) => (
-    <>
+    <div className='invite-accept-tile'>
         <TopMenu onLogout={onLogout}/>
         <OnboardingTile
             tiles={[
@@ -29,7 +27,7 @@ const InviteAcceptTile: React.FC<Props> = ({ children, role, onSubmit, onLogout 
                 </Tile>
             ]}
         />
-    </>
+    </div>
 )
 
 export default InviteAcceptTile;

@@ -3,8 +3,6 @@ import React from 'react'
 import marketplaceLogo from './marketplace.svg'
 import lock from './lock.svg'
 
-import './Icons.scss'
-
 type IconProps = {
     size?: '24' | '32' | '48' | '64';
 }
@@ -184,5 +182,3 @@ export const OverflowIcon = () => (
         <circle className="fill-blue" cx="15.8" cy="2.3" r="2"/>
     </svg>
 );
-
-

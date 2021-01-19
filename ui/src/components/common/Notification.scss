@@ -1,18 +1,20 @@
-.notification {
-    margin-bottom: var(--spacing-s);
-}
+@mixin notification {
+    .notification {
+        margin-bottom: $spacing-s;
 
-.notification > .message {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    background-color: var(--cool-grey-100);
-    border: 1px var(--cool-grey-90) solid;
-    border-radius: 0;
-    box-shadow: none;
-}
+        & > .message {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--cool-grey-100);
+            border: 1px var(--cool-grey-90) solid;
+            border-radius: 0;
+            box-shadow: none;
 
-.notification > .message p {
-    margin: 0;
+            p {
+                margin: 0;
+            }
+        }
+    }
 }

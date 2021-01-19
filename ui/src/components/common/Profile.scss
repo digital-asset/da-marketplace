@@ -1,10 +1,13 @@
+@mixin profile {
+    .profile {
+        .profile-form-field {
+            width: 260px;
+            margin-top: $spacing-s;
+            margin-right: $spacing-s;
+        }
 
-.profile-form-field {
-    width: 260px;
-    margin-top: var(--spacing-s);
-    margin-right: var(--spacing-s);
-}
-
-.profile-submit-button {
-    width: fit-content;
+        .profile-submit-button {
+            width: fit-content;
+        }
+    }
 }
