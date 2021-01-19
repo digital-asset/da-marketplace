@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
@@ -7,13 +7,16 @@ import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Ma
 import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, makeContractInfo, ContractInfo } from '../common/damlTypes'
 import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
-const CreateDeposit: React.FC = () => {
+const CreateDeposit = (props: {
+    currentBeneficiary?: ContractInfo<RegisteredInvestor>
+}) => {
+    const { currentBeneficiary } = props;
     const [ beneficiary, setBeneficiary ] = useState('');
     const [ token, setToken ] = useState<TokenInfo>();
     const [ depositQuantity, setDepositQuantity ] = useState('');
@@ -22,6 +25,12 @@ const CreateDeposit: React.FC = () => {
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
+
+    useEffect(()=> {
+        if (!!currentBeneficiary) {
+            setBeneficiary(currentBeneficiary?.contractData.investor)
+        }
+    }, [currentBeneficiary])
 
     const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from Token: ", e);
@@ -105,13 +114,16 @@ const CreateDeposit: React.FC = () => {
         <div className='create-deposit'>
             <FormErrorHandled onSubmit={handleCreateDeposit}>
                 <Header as='h3'>Quick Deposit</Header>
+                    {!!currentBeneficiary?
+                        <p className='p2'>Benefitiary: {currentBeneficiary.contractData.name}</p>
+                    :
                     <Form.Select
                         clearable
                         label={<p className='p2'>Benefitiary</p>}
                         value={beneficiary}
                         placeholder='Select...'
                         options={beneficiaryOptions}
-                        onChange={handleBeneficiaryChange}/>
+                        onChange={handleBeneficiaryChange}/>}
                     <Form.Group className='inline-form-group'>
                         <ContractSelect
                             clearable

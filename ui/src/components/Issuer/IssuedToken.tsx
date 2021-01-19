@@ -12,10 +12,11 @@ import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from
 import { makeContractInfo, ContractInfo} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import CapTable from '../common/CapTable';
+import StripedTable from '../common/StripedTable';
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
+import CapTable from '../common/CapTable'
 
 type DepositInfo = {
     investor: string,

@@ -1,10 +1,12 @@
 @import '../Custodian/Clients.scss';
 @import '../Custodian/CreateDeposit.scss';
+@import '../Custodian/ClientHoldings.scss';
 
 @mixin custodian {
     .custodian {
         height: 100%;
         @include clients;
         @include create-deposit;
+        @include client-holdings;
     }
 }

@@ -106,7 +106,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
-                                <p className='p2'>Clients:</p>
+                                <p className='p2'>Client Holdings:</p>
                             </Menu.Item>
                             {investors.map(investor => (
                                 <Menu.Item

@@ -4,7 +4,7 @@ import { Table } from 'semantic-ui-react'
 const CapTable = (props: {
     headings: string[],
     rows: string[][],
-    emptyLabel: string
+    emptyLabel?: string
 }) => {
     const { headings, rows, emptyLabel } = props
 
@@ -35,7 +35,7 @@ const CapTable = (props: {
                 :
                     <Table.Row className='empty-table' >
                         <Table.Cell textAlign={'center'} colSpan={4}>
-                            <i>{emptyLabel}</i>
+                            <i>{emptyLabel || 'none'}</i>
                         </Table.Cell>
                     </Table.Row>
                 }
