@@ -111,10 +111,10 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
   let fairValuePairs = [ (h2oQ121DerId, 1000.0)
                        , (h2oQ221DerId, 1500.0)
                        , (h2oQ321DerId, 1200.0)
-                       , (h2oQ421DerId, 1240.0)]
+                       , (h2oQ421DerId, 1240.0) ]
 
   upTo <- getTime
-  forA_ fairValuePairs $ \(derId,price) -> void $ makeFairValue exchange derId price usdTokenId upTo observers
+  forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue exchange derId price usdTokenId upTo observers
 
 makeFairValue : Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
 makeFairValue exchange assetId price currency upTo observers = do
