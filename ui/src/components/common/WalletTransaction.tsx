@@ -142,7 +142,7 @@ const WalletTransaction = (props: {
                     custodian: custodianId
                 };
 
-                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args)
+                return await ledger.exerciseByKey(Investor.RequestDeposit, key, args)
                     .then(_ => history.goBack())
 
             case 'Withdraw':
@@ -158,7 +158,7 @@ const WalletTransaction = (props: {
                     withdrawalQuantity: quantity,
                 };
 
-                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args)
+                return await ledger.exerciseByKey(Investor.RequestWithdrawl, key, args)
                     .then(_ => history.goBack())
         }
     }

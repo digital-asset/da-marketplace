@@ -5,7 +5,7 @@ import Daml.Script
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
-import Marketplace.Investor
+import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 import Marketplace.Operator
 
@@ -102,10 +102,10 @@ onboardInvestor lp investor name = do
 
   -- register investor
   inviteCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = investor, ..
-  investorCid <- investor `submit` exerciseCmd inviteCid InvestorInvitation_Accept with isPublic = True, ..
+  investorCid <- investor `submit` exerciseCmd inviteCid Investor.Accept with isPublic = True, ..
 
   -- establish relationship with custodian
-  relationshipRequestCid <- investor `submit` exerciseCmd investorCid Investor_RequestCustodianRelationship with ..
+  relationshipRequestCid <- investor `submit` exerciseCmd investorCid Investor.RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipRequestCid CustodianRelationshipRequest_Approve
 
   -- become exchange participant
@@ -126,7 +126,7 @@ setupExchangeAccount lp tokenId depositQuantity investor = do
       with tokenId, depositQuantity, beneficiary = investor
 
   -- move to exchange account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
+  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor.T (operator, investor) Investor.AllocateToProvider
       with depositCids = [depositCid], amount = depositQuantity, provider = exchange
 
   -- bank accepts transfer

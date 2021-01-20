@@ -170,7 +170,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
 
         switch(role) {
             case MarketRole.InvestorRole:
-                await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
+                await ledger.exerciseByKey(Investor.AllocateToProvider, key, args);
                 break;
             case MarketRole.BrokerRole:
                 await ledger.exerciseByKey(Broker.AllocateToProvider, key, args);

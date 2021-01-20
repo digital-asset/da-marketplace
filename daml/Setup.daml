@@ -7,7 +7,7 @@ import qualified Marketplace.BrokerCustomer as BrokerCustomer
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
-import Marketplace.Investor
+import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 import Marketplace.Operator
 
@@ -78,10 +78,10 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
 
   -- onboard investors
   aliceInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = alice, ..
-  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True, name = "Alice the Investor", ..
+  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid Investor.Accept with isPublic = True, name = "Alice the Investor", ..
 
   bobInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = bob, ..
-  bobInvestorCid <- bob `submit` exerciseCmd bobInvCid InvestorInvitation_Accept with isPublic = True, name = "Bob the Investor", ..
+  bobInvestorCid <- bob `submit` exerciseCmd bobInvCid Investor.Accept with isPublic = True, name = "Bob the Investor", ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
@@ -91,10 +91,10 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- investors establish a relationship with the custodian
-  relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor_RequestCustodianRelationship with ..
+  relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor.RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
-  relationshipReqCid <- bob `submit` exerciseCmd bobInvestorCid Investor_RequestCustodianRelationship with ..
+  relationshipReqCid <- bob `submit` exerciseCmd bobInvestorCid Investor.RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- issuers issue tokens
@@ -112,7 +112,7 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.01, beneficiary = alice
 
   let bobAccountId = Id with signatories = fromList [ custodian ], label = (show bob <> "@" <> show custodian), version = 0
-  depositTransferRequest <- alice `submit` exerciseByKeyCmd @Investor (operator, alice) Investor_RequestDepositTransfer with depositCid = depositCid, receiverAccountId = bobAccountId
+  depositTransferRequest <- alice `submit` exerciseByKeyCmd @Investor.T (operator, alice) Investor.RequestDepositTransfer with depositCid = depositCid, receiverAccountId = bobAccountId
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
@@ -173,7 +173,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- onboard alice
   aliceInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = alice, ..
-  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid InvestorInvitation_Accept with isPublic = True, name = "Alice the Investor", ..
+  aliceInvestorCid <- alice `submit` exerciseCmd aliceInvCid Investor.Accept with isPublic = True, name = "Alice the Investor", ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- btcIssuer `submit` exerciseCmd btcIssuerCid Issuer_RequestCustodianRelationship with ..
@@ -183,7 +183,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- alice establishes a relationship with the custodian
-  relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor_RequestCustodianRelationship with ..
+  relationshipReqCid <- alice `submit` exerciseCmd aliceInvestorCid Investor.RequestCustodianRelationship with ..
   custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- issuers issue tokens
@@ -223,7 +223,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- alice transfers her bitcoin deposit to her brokerage account
   let receiverAccountId = Id with signatories = fromList [ custodian ], label = getAccountLabel alice broker, version = 0
-  depositTransferRequestCid <- alice `submit` exerciseByKeyCmd @Investor (operator, alice) Investor_RequestDepositTransfer with ..
+  depositTransferRequestCid <- alice `submit` exerciseByKeyCmd @Investor.T (operator, alice) Investor.RequestDepositTransfer with ..
   depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
 
   -- alice wants to sell 0.01 BTC for a price of 10000 USDT/BTC (ie she is looking to buy 100 USDT)
