@@ -1,6 +1,6 @@
 module Marketplace.Trading where
 
-import Marketplace.BinaryOption
+import qualified Marketplace.BinaryOption as BinaryOption
 import Marketplace.Token
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -89,7 +89,7 @@ template Order
                 with signatories = account.id.signatories,
                       label = getAccountLabel counterParty exchange, version = 0
               isBinaryOption = True
-          (_, binOption) <- fetchByKey @BinaryOption pair._1
+          (_, binOption) <- fetchByKey @BinaryOption.T pair._1
           (_, quoteToken) <- fetchByKey @Token pair._2
           if fillQty < qty then do
             let depositFillQty = roundBankers quoteToken.quantityPrecision $
@@ -281,7 +281,7 @@ template TradeSide
 
       TradeSide_SettleBinaryOption : (ContractId SettledTradeSide, Optional (ContractId DepositCreditRequest))
         with
-          settledBinOptionCid : ContractId SettledBinaryOption
+          settledBinOptionCid : ContractId BinaryOption.Settled
         do
           assert isBinaryOption
           settledBinOption <- fetch settledBinOptionCid

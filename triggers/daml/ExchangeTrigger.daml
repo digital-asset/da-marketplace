@@ -5,7 +5,7 @@ import Daml.Trigger
 
 import Marketplace.Exchange
 import Marketplace.Trading
-import Marketplace.BinaryOption
+import qualified Marketplace.BinaryOption as BinaryOption
 
 import Utils
 
@@ -15,7 +15,7 @@ handleExchange = Trigger
   , updateState = \_ -> pure ()
   , rule = handleExchangeRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
-                                               , registeredTemplate @SettledBinaryOption ]
+                                               , registeredTemplate @BinaryOption.Settled ]
   , heartbeat = None
   }
 
@@ -26,7 +26,7 @@ handleExchangeRule party = do
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
-  binaryOptions <- query @SettledBinaryOption
+  binaryOptions <- query @BinaryOption.Settled
   forA_ tradeSides (handleTradeSide party binaryOptions)
 
   -- Accept all 'ExchangeParticipantInvitationRequest'
@@ -36,7 +36,7 @@ handleExchangeRule party = do
                >> debug ("Approving participant request from " <> show rq.participant)
 
 
-handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
+handleTradeSide : Party ->  [ContractPair BinaryOption.Settled] -> ContractPair TradeSide -> TriggerA () ()
 handleTradeSide party  options (cid,tradeSide) = do
   debug $ "Handling trade side: " <> show tradeSide
   if not $ tradeSide.isBinaryOption
