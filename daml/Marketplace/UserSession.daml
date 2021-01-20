@@ -1,4 +1,4 @@
-module Marketplace.Onboarding where
+module Marketplace.UserSession where
 
 import qualified Marketplace.Broker as Broker
 import Marketplace.Custodian
@@ -10,6 +10,7 @@ import Marketplace.Utils
 
 import DA.Action
 
+type T = UserSession
 
 template UserSession
   with
@@ -20,7 +21,7 @@ template UserSession
     signatory user
 
     controller operator can
-      UserSession_Ack : ()
+      Ack : ()
         do
           let userKey = (operator, user)
           case role of
