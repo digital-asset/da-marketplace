@@ -3,7 +3,7 @@ module Setup where
 import Daml.Script
 
 import qualified Marketplace.Broker as Broker
-import Marketplace.BrokerCustomer
+import qualified Marketplace.BrokerCustomer as BrokerCustomer
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
@@ -219,7 +219,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- broker invites Alice as a customer
   aliceBrokerInvCid <- broker `submit` exerciseByKeyCmd @Broker.T (operator, broker) Broker.InviteCustomer with Broker.customer = alice
-  alice `submit` exerciseCmd aliceBrokerInvCid BrokerCustomerInvitation_Accept
+  alice `submit` exerciseCmd aliceBrokerInvCid BrokerCustomer.Accept
 
   -- alice transfers her bitcoin deposit to her brokerage account
   let receiverAccountId = Id with signatories = fromList [ custodian ], label = getAccountLabel alice broker, version = 0
@@ -227,8 +227,8 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
 
   -- alice wants to sell 0.01 BTC for a price of 10000 USDT/BTC (ie she is looking to buy 100 USDT)
-  brokerOrderReqCid <- alice `submit` exerciseByKeyCmd @BrokerCustomer (broker, operator, alice)
-    BrokerCustomer_RequestOffer with pair = (btcTokenId, usdtTokenId), price = 10000.0, ..
+  brokerOrderReqCid <- alice `submit` exerciseByKeyCmd @BrokerCustomer.T (broker, operator, alice)
+    BrokerCustomer.RequestOffer with pair = (btcTokenId, usdtTokenId), price = 10000.0, ..
 
   -- broker accepts her request and takes her btc deposit
   (brokerOrderCid, depositTransferRequestCid) <- broker `submit` exerciseCmd brokerOrderReqCid BrokerOrderRequest_Accept with brokerOrderId = 1, ..

@@ -71,7 +71,7 @@ export type ContractInfo<T> = {
 
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
-export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
+export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.Invitation>;
 export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;

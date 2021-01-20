@@ -1,6 +1,6 @@
 module Marketplace.Broker where
 
-import Marketplace.BrokerCustomer
+import qualified Marketplace.BrokerCustomer as BrokerCustomer
 import Marketplace.Custodian
 import Marketplace.Registry
 import Marketplace.Transfer
@@ -51,10 +51,10 @@ template Broker
           custodian : Party
         do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
 
-      nonconsuming InviteCustomer : (ContractId BrokerCustomerInvitation)
+      nonconsuming InviteCustomer : (ContractId BrokerCustomer.Invitation)
         with
           customer : Party
-        do create BrokerCustomerInvitation with ..
+        do create BrokerCustomer.Invitation with ..
 
       nonconsuming RequestDepositTransfer : ContractId DepositTransferRequest
         with

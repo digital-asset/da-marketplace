@@ -5,10 +5,11 @@ import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Utils
 
-import DA.Finance.Asset
+import DA.Finance.Asset (AssetDeposit)
 
+type T = BrokerCustomer
 
-template BrokerCustomerInvitation
+template Invitation
   with
     operator : Party
     broker : Party
@@ -17,13 +18,13 @@ template BrokerCustomerInvitation
     signatory broker
 
     controller customer can
-      BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
+      Accept : ContractId BrokerCustomer
         do
           create DismissibleNotification with
             sender = customer, senderRole = Some InvestorRole
             receiver = broker, text = "Broker customer invitation accepted."
           create BrokerCustomer with ..
-      BrokerCustomerInvitation_Reject : ()
+      Reject : ()
         do
           create DismissibleNotification with
             sender = customer, senderRole = Some InvestorRole
@@ -43,7 +44,7 @@ template BrokerCustomer
     maintainer key._1
 
     controller customer can
-      nonconsuming BrokerCustomer_RequestBid : ContractId BrokerOrderRequest
+      nonconsuming RequestBid : ContractId BrokerOrderRequest
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
@@ -61,7 +62,7 @@ template BrokerCustomer
           let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
           create BrokerOrderRequest with isBid = True, ..
 
-      nonconsuming BrokerCustomer_RequestOffer : ContractId BrokerOrderRequest
+      nonconsuming RequestOffer : ContractId BrokerOrderRequest
         with
           depositCid : ContractId AssetDeposit
           pair : IdPair
