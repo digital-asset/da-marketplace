@@ -46,6 +46,7 @@ template Derivative
     key id : Id
     maintainer key.signatories
 
+
 template FairValue
   with
     exchange : Party
@@ -75,4 +76,4 @@ template FairValueInterval
       FairValueInterval_Calculate : ContractId FairValueInterval
         do
           time <- getTime
-          create this with lastSettled = time
+          create this with lastCalculated = time
