@@ -9,7 +9,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
 
 import { useOperator } from './common'
 import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'

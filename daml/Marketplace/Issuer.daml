@@ -2,7 +2,7 @@ module Marketplace.Issuer where
 
 import Marketplace.BinaryOption
 import Marketplace.Custodian
-import Marketplace.Registry
+import qualified Marketplace.Registry.Issuer as Registry (Issuer(..))
 import Marketplace.Token
 import Marketplace.Utils
 
@@ -30,7 +30,7 @@ template IssuerInvitation
           title : Text
           issuerID : Text
         do
-          create RegisteredIssuer with ..
+          create Registry.Issuer with ..
           create Issuer with ..
 
 

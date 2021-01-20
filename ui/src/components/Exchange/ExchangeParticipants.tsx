@@ -4,7 +4,7 @@ import { Table } from 'semantic-ui-react'
 import { useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 

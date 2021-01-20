@@ -2,7 +2,7 @@ module Marketplace.Investor where
 
 import Marketplace.Exchange
 import Marketplace.Custodian
-import Marketplace.Registry
+import qualified Marketplace.Registry.Investor as Registry (Investor(..))
 import Marketplace.Token
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -35,7 +35,7 @@ template Invitation
           name : Text
           location : Text
         do
-          create RegisteredInvestor with ..
+          create Registry.Investor with ..
           create Investor with ..
 
 

@@ -5,7 +5,7 @@ import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'

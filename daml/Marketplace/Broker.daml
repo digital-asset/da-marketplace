@@ -2,7 +2,7 @@ module Marketplace.Broker where
 
 import qualified Marketplace.BrokerCustomer as BrokerCustomer
 import Marketplace.Custodian
-import Marketplace.Registry
+import qualified Marketplace.Registry.Broker as Registry (Broker(..))
 import Marketplace.Transfer
 import Marketplace.Utils
 
@@ -25,12 +25,12 @@ template Invitation
     maintainer key._1
 
     controller broker can
-      Accept : (ContractId RegisteredBroker, ContractId Broker)
+      Accept : (ContractId Registry.Broker, ContractId Broker)
         with
           name : Text
           location : Text
         do
-          brokerRegistryCid <- create RegisteredBroker with ..
+          brokerRegistryCid <- create Registry.Broker with ..
           brokerCid <- create Broker with ..
           return (brokerRegistryCid, brokerCid)
 

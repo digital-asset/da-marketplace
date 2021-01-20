@@ -1,0 +1,32 @@
+module Marketplace.Registry.Investor where
+
+type T = Investor
+
+template Investor
+  with
+    operator : Party
+    public : Party
+    investor : Party
+    isPublic : Bool
+    name : Text
+    location : Text
+  where
+    signatory operator, investor
+    observer if isPublic then [public] else []
+
+    key (operator, investor) : (Party, Party)
+    maintainer key._2
+
+    controller investor can
+      UpdateProfile : ContractId Investor
+        with
+          newName : Text
+          newLocation : Text
+        do
+          create this with name = newName, location = newLocation
+
+    controller operator can
+      Offboard : ()
+        do return ()
+
+

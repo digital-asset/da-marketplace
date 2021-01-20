@@ -19,7 +19,7 @@ import { DepositProvider } from '../common/Holdings';
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
 
 import ContractSelect from './ContractSelect'
 import FormErrorHandled from './FormErrorHandled';

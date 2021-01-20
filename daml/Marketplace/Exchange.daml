@@ -3,7 +3,7 @@ module Marketplace.Exchange where
 import qualified Marketplace.BinaryOption as BinaryOption
 import Marketplace.Custodian
 import Marketplace.ExchangeParticipant
-import Marketplace.Registry
+import qualified Marketplace.Registry.Exchange as Registry (Exchange(..))
 import qualified Marketplace.Notification as Notification
 import Marketplace.Token
 import Marketplace.Trading
@@ -32,7 +32,7 @@ template ExchangeInvitation
           name : Text
           location : Text
         do
-          create RegisteredExchange with ..
+          create Registry.Exchange with ..
           create Exchange with tokenPairs = [], binOptions = [], participants = [], ..
 
 

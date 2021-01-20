@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, Link } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
 import {
     Custodian as CustodianModel,
     CustodianInvitation
@@ -66,7 +66,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value,
         };
-        await ledger.exerciseByKey(RegisteredCustodian.RegisteredCustodian_UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredCustodian.UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 

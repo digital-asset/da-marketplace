@@ -1,7 +1,7 @@
 module Marketplace.Custodian where
 
 import qualified Marketplace.Notification as Notification
-import Marketplace.Registry
+import qualified Marketplace.Registry.Custodian as Registry (Custodian(..))
 import Marketplace.Token
 import Marketplace.Utils
 
@@ -73,7 +73,7 @@ template CustodianInvitation
           name : Text
           location : Text
         do
-          create RegisteredCustodian with ..
+          create Registry.Custodian with ..
           create Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
 
 
