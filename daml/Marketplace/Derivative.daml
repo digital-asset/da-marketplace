@@ -55,12 +55,11 @@ template FairValue
     currency : Id
     timestamp : Time
     upTo : Time
+    observers : Set Party
   where
     signatory exchange
+    observer observers
 
--- How to require Exchange to do these?
-
--- data SettlementInterval =  Int | EndOfDay deriving (Show,Eq)
 
 template FairValueInterval
   with

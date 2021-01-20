@@ -1,10 +1,5 @@
 module Marketplace.CentralCounterparty where
 
-import DA.Next.Set
-
-import DA.Finance.Asset.Settlement
-import DA.Finance.Types
-
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Custodian
 import Marketplace.Registry

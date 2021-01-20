@@ -3,7 +3,6 @@ module Marketplace.CentralCounterpartyCustomer where
 import qualified DA.Next.Set as Set
 
 import Marketplace.Notification
-import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset

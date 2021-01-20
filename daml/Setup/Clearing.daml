@@ -75,9 +75,6 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
 
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
-  btcTokenId <- createToken operator issuer "BTC" "Bitcoin" 2 observers
-  ethTokenId <- createToken operator issuer "ETH" "ETH Coin" 2 observers
-
   h2oQ121DerId <- createSimpleDerivative operator issuer "H2OQ121" "H2O" "H2O Q1 21" 6 1 "h2o" h2oTokenId observers
   h2oQ221DerId <- createSimpleDerivative operator issuer "H2OQ221" "H2O" "H2O Q2 21" 6 1 "h2o" h2oTokenId observers
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
@@ -117,12 +114,12 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
                        , (h2oQ421DerId, 1240.0)]
 
   upTo <- getTime
-  forA_ fairValuePairs $ \(derId,price) -> void $ makeFairValue exchange derId price usdTokenId upTo
+  forA_ fairValuePairs $ \(derId,price) -> void $ makeFairValue exchange derId price usdTokenId upTo observers
 
-makeFairValue : Party -> Id -> Decimal -> Id -> Time -> Script (ContractId FairValue)
-makeFairValue exchange assetId price currency upTo = do
+makeFairValue : Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
+makeFairValue exchange assetId price currency upTo observers = do
   timestamp <- getTime
-  exchange `submit` createCmd FairValue with ..
+  exchange `submit` createCmd FairValue with observers = fromList observers, ..
 
 onboardInvestor : LedgerParties -> Party -> Text-> Script ()
 onboardInvestor lp investor name = do
