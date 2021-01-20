@@ -6,6 +6,7 @@ import Marketplace.Exchange
 import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 
+type T = Operator
 
 template Operator
   with
@@ -18,31 +19,31 @@ template Operator
     maintainer key
 
     controller operator can
-      nonconsuming Operator_OnboardCustodian : ContractId CustodianInvitation
+      nonconsuming OnboardCustodian : ContractId CustodianInvitation
         with
           custodian : Party
         do
           create CustodianInvitation with ..
 
-      nonconsuming Operator_OnboardIssuer : ContractId IssuerInvitation
+      nonconsuming OnboardIssuer : ContractId IssuerInvitation
         with
           issuer : Party
         do
           create IssuerInvitation with ..
 
-      nonconsuming Operator_OnboardInvestor : ContractId Investor.Invitation
+      nonconsuming OnboardInvestor : ContractId Investor.Invitation
         with
           investor : Party
         do
           create Investor.Invitation with ..
 
-      nonconsuming Operator_OnboardExchange : ContractId ExchangeInvitation
+      nonconsuming OnboardExchange : ContractId ExchangeInvitation
         with
           exchange : Party
         do
           create ExchangeInvitation with ..
 
-      nonconsuming Operator_OnboardBroker : ContractId Broker.Invitation
+      nonconsuming OnboardBroker : ContractId Broker.Invitation
         with
           broker : Party
         do

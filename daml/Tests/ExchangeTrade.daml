@@ -7,7 +7,7 @@ import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
 import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
-import Marketplace.Operator
+import qualified Marketplace.Operator as Operator
 
 import Marketplace.Trading
 import Marketplace.Transfer
@@ -101,7 +101,7 @@ onboardInvestor lp investor name = do
       exchange  = lp.exchange
 
   -- register investor
-  inviteCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardInvestor with investor = investor, ..
+  inviteCid <- operator `submit` exerciseByKeyCmd @Operator.T operator Operator.OnboardInvestor with investor = investor, ..
   investorCid <- investor `submit` exerciseCmd inviteCid Investor.Accept with isPublic = True, ..
 
   -- establish relationship with custodian
@@ -147,21 +147,21 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange btcIssuer 
       location = "default location"
 
   -- create operator
-  operator `submit` createCmd Operator with ..
+  operator `submit` createCmd Operator.Operator with ..
 
   -- onboard custodian
-  custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCustodian with ..
+  custodianInvCid <- operator `submit` exerciseByKeyCmd @Operator.T operator Operator.OnboardCustodian with ..
   custodian `submit` exerciseCmd custodianInvCid CustodianInvitation_Accept with name = "Bank of Example", ..
 
   -- onboard issuers
-  btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
+  btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator.T operator Operator.OnboardIssuer with issuer = btcIssuer, ..
   btcIssuerCid <- btcIssuer `submit` exerciseCmd btcIssuerInvCid IssuerInvitation_Accept with name = "BTC Issuer", ..
 
-  usdtIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = usdtIssuer, ..
+  usdtIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator.T operator Operator.OnboardIssuer with issuer = usdtIssuer, ..
   usdtIssuerCid <- usdtIssuer `submit` exerciseCmd usdtIssuerInvCid IssuerInvitation_Accept with name = "USDT Issuer", ..
 
   -- oboard exchange
-  exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
+  exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator.T operator Operator.OnboardExchange with ..
   exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
 
