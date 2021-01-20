@@ -1,85 +1,87 @@
 module Marketplace.Broker where
 
-import Marketplace.BrokerCustomer
-import Marketplace.Custodian
-import Marketplace.Registry
-import Marketplace.Transfer
-import Marketplace.Utils
+-- TODO: Revisit/reimplement
 
-import DA.Finance.Asset
-import DA.Finance.Types
+-- import Marketplace.BrokerCustomer
+-- import Marketplace.Custodian
+-- import Marketplace.Registry
+-- import Marketplace.Transfer
+-- import Marketplace.Utils
 
-import DA.List
+-- import DA.Finance.Asset
+-- import DA.Finance.Types
 
-template BrokerInvitation
-  with
-    operator : Party
-    broker : Party
-    public : Party
-  where
-    signatory operator
+-- import DA.List
 
-    key (operator, broker) : (Party, Party)
-    maintainer key._1
+-- template BrokerInvitation
+--   with
+--     operator : Party
+--     broker : Party
+--     public : Party
+--   where
+--     signatory operator
 
-    controller broker can
-      BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
-        with
-          name : Text
-          location : Text
-        do
-          brokerRegistryCid <- create RegisteredBroker with ..
-          brokerCid <- create Broker with ..
-          return (brokerRegistryCid, brokerCid)
+--     key (operator, broker) : (Party, Party)
+--     maintainer key._1
+
+--     controller broker can
+--       BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
+--         with
+--           name : Text
+--           location : Text
+--         do
+--           brokerRegistryCid <- create RegisteredBroker with ..
+--           brokerCid <- create Broker with ..
+--           return (brokerRegistryCid, brokerCid)
 
 
-template Broker
-  with
-    operator : Party
-    broker : Party
-  where
-    signatory operator, broker
+-- template Broker
+--   with
+--     operator : Party
+--     broker : Party
+--   where
+--     signatory operator, broker
 
-    key (operator, broker) : (Party, Party)
-    maintainer key._2
+--     key (operator, broker) : (Party, Party)
+--     maintainer key._2
 
-    controller broker can
-      nonconsuming Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
-        with
-          custodian : Party
-        do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
+--     controller broker can
+--       nonconsuming Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+--         with
+--           custodian : Party
+--         do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
 
-      nonconsuming Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
-        with
-          brokerCustomer : Party
-        do create BrokerCustomerInvitation with ..
+--       nonconsuming Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
+--         with
+--           brokerCustomer : Party
+--         do create BrokerCustomerInvitation with ..
 
-      nonconsuming Broker_RequestDepositTransfer : ContractId DepositTransferRequest
-        with
-          depositCid : ContractId AssetDeposit
-          receiverAccountId : Id
-        do
-           deposit <- fetch depositCid
-           assert $ deposit.account.owner == broker
-           create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
+--       nonconsuming Broker_RequestDepositTransfer : ContractId DepositTransferRequest
+--         with
+--           depositCid : ContractId AssetDeposit
+--           receiverAccountId : Id
+--         do
+--            deposit <- fetch depositCid
+--            assert $ deposit.account.owner == broker
+--            create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
 
-      nonconsuming Broker_AllocateToProvider : ContractId DepositTransferRequest
-        with
-          depositCids : [ContractId AssetDeposit]
-          amount : Decimal
-          provider : Party
-        do
-          aggregateQty <- getDepositQuantities depositCids
+--       nonconsuming Broker_AllocateToProvider : ContractId DepositTransferRequest
+--         with
+--           depositCids : [ContractId AssetDeposit]
+--           amount : Decimal
+--           provider : Party
+--         do
+--           aggregateQty <- getDepositQuantities depositCids
 
-          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+--           assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
-          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
-          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+--           mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+--           depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
 
-          deposit <- fetch depositCid
-          let receiverAccountId = Id
-                with
-                  signatories = deposit.account.id.signatories,
-                    label = getAccountLabel broker provider,
-                    version = 0
-          exercise self Broker_RequestDepositTransfer with ..
+--           deposit <- fetch depositCid
+--           let receiverAccountId = Id
+--                 with
+--                   signatories = deposit.account.id.signatories,
+--                     label = getAccountLabel broker provider,
+--                     version = 0
+--           exercise self Broker_RequestDepositTransfer with ..

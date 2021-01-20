@@ -1,0 +1,41 @@
+module Marketplace.Custody.Role where
+
+import qualified Marketplace.Custody.Relationship as R
+
+template Custodian
+  with
+    operator : Party
+    custodian : Party
+  where
+    signatory operator, custodian
+
+    key (operator, custodian) :  (Party, Party)
+    maintainer key._1
+
+    controller custodian can
+      OnboardClient : ContractId R.CustodialRelationshipInvitation
+        with
+          client : Party
+        do
+          create R.CustodialRelationshipInvitation with ..
+
+      OffboardClient : ()
+        with
+          custodialRelationshipCid : ContractId R.CustodialRelationship
+        do
+          archive custodialRelationshipCid
+
+template CustodianInvitation
+  with
+    operator : Party
+    custodian : Party
+  where
+    signatory operator
+
+    key (operator, custodian) : (Party, Party)
+    maintainer key._1
+
+    controller custodian can
+      Accept : ContractId Custodian
+        do
+          create Custodian with ..

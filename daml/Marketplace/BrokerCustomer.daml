@@ -1,80 +1,82 @@
 module Marketplace.BrokerCustomer where
 
-import Marketplace.Notification
-import Marketplace.Token
-import Marketplace.Trading
-import Marketplace.Utils
+-- TODO: Revisit/reimplement
 
-import DA.Finance.Asset
+-- import Marketplace.Notification
+-- import Marketplace.Token
+-- import Marketplace.Trading
+-- import Marketplace.Utils
 
-
-template BrokerCustomerInvitation
-  with
-    operator : Party
-    broker : Party
-    brokerCustomer : Party
-  where
-    signatory broker
-
-    controller brokerCustomer can
-      BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
-        do
-          create DismissibleNotification with
-            sender = brokerCustomer, senderRole = Some InvestorRole
-            receiver = broker, text = "Broker customer invitation accepted."
-          create BrokerCustomer with ..
-      BrokerCustomerInvitation_Reject : ()
-        do
-          create DismissibleNotification with
-            sender = brokerCustomer, senderRole = Some InvestorRole
-            receiver = broker, text = "Broker customer invitation rejected."
-          return ()
+-- import DA.Finance.Asset
 
 
-template BrokerCustomer
-  with
-    operator : Party
-    broker : Party
-    brokerCustomer : Party
-  where
-    signatory broker, brokerCustomer
+-- template BrokerCustomerInvitation
+--   with
+--     operator : Party
+--     broker : Party
+--     brokerCustomer : Party
+--   where
+--     signatory broker
 
-    key (broker, operator, brokerCustomer) : (Party, Party, Party)
-    maintainer key._1
+--     controller brokerCustomer can
+--       BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
+--         do
+--           create DismissibleNotification with
+--             sender = brokerCustomer, senderRole = Some InvestorRole
+--             receiver = broker, text = "Broker customer invitation accepted."
+--           create BrokerCustomer with ..
+--       BrokerCustomerInvitation_Reject : ()
+--         do
+--           create DismissibleNotification with
+--             sender = brokerCustomer, senderRole = Some InvestorRole
+--             receiver = broker, text = "Broker customer invitation rejected."
+--           return ()
 
-    controller brokerCustomer can
-      nonconsuming BrokerCustomer_RequestBid : ContractId BrokerOrderRequest
-        with
-          depositCid : ContractId AssetDeposit
-          pair : IdPair
-          price : Decimal
-        do
-          deposit <- fetch depositCid
-          assertMsg ("deposit is not allocated to broker " <> show broker)
-            $ deposit.account.id.label == getAccountLabel brokerCustomer broker
-          assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
-            $ pair._2 == deposit.asset.id
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision price == price
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
-          create BrokerOrderRequest with isBid = True, ..
 
-      nonconsuming BrokerCustomer_RequestOffer : ContractId BrokerOrderRequest
-        with
-          depositCid : ContractId AssetDeposit
-          pair : IdPair
-          price : Decimal
-        do
-          deposit <- fetch depositCid
-          assertMsg ("deposit is not allocated to broker " <> show broker)
-            $ deposit.account.id.label == getAccountLabel brokerCustomer broker
-          assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
-            $ pair._1 == deposit.asset.id
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision price == price
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
-          create BrokerOrderRequest with isBid = False, ..
+-- template BrokerCustomer
+--   with
+--     operator : Party
+--     broker : Party
+--     brokerCustomer : Party
+--   where
+--     signatory broker, brokerCustomer
+
+--     key (broker, operator, brokerCustomer) : (Party, Party, Party)
+--     maintainer key._1
+
+--     controller brokerCustomer can
+--       nonconsuming BrokerCustomer_RequestBid : ContractId BrokerOrderRequest
+--         with
+--           depositCid : ContractId AssetDeposit
+--           pair : IdPair
+--           price : Decimal
+--         do
+--           deposit <- fetch depositCid
+--           assertMsg ("deposit is not allocated to broker " <> show broker)
+--             $ deposit.account.id.label == getAccountLabel brokerCustomer broker
+--           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
+--             $ pair._2 == deposit.asset.id
+--           (_, quoteToken) <- fetchByKey @Token pair._2
+--           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+--             $ roundBankers quoteToken.quantityPrecision price == price
+--           (_, baseToken) <- fetchByKey @Token pair._1
+--           let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
+--           create BrokerOrderRequest with isBid = True, ..
+
+--       nonconsuming BrokerCustomer_RequestOffer : ContractId BrokerOrderRequest
+--         with
+--           depositCid : ContractId AssetDeposit
+--           pair : IdPair
+--           price : Decimal
+--         do
+--           deposit <- fetch depositCid
+--           assertMsg ("deposit is not allocated to broker " <> show broker)
+--             $ deposit.account.id.label == getAccountLabel brokerCustomer broker
+--           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
+--             $ pair._1 == deposit.asset.id
+--           (_, quoteToken) <- fetchByKey @Token pair._2
+--           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+--             $ roundBankers quoteToken.quantityPrecision price == price
+--           (_, baseToken) <- fetchByKey @Token pair._1
+--           let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
+--           create BrokerOrderRequest with isBid = False, ..

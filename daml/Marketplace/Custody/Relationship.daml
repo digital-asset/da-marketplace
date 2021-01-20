@@ -1,0 +1,160 @@
+module Marketplace.Custody.Relationship where
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+import DA.Next.Set
+
+template CustodialRelationship
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+  where
+    signatory operator, custodian, client
+
+    key (operator, custodian, client) : (Party, Party, Party)
+    maintainer key._1
+
+    controller client can
+      nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
+        with
+          accountId : Id
+          observers : Set Party
+          nominee : Party
+        do
+          -- TODO: Check signatories in id - do we want to allow flexible trust models?
+          create OpenAccountRequest with ..
+
+      nonconsuming RequestCloseAccount : ContractId CloseAccountRequest
+        with
+          accountId : Id
+        do
+          create CloseAccountRequest with ..
+
+      nonconsuming RequestCreditAccount : ContractId CreditAccountRequest
+        with
+          accountId : Id
+          asset : Asset
+        do
+          create CreditAccountRequest with ..
+
+      nonconsuming RequestDebitAccount : ContractId DebitAccountRequest
+        with
+          accountId : Id
+          depositCid : ContractId AssetDeposit
+        do
+          create DebitAccountRequest with ..
+
+    controller custodian can
+      nonconsuming OpenAccount : ContractId AssetSettlementRule
+        with
+          openAccountRequestCid : ContractId OpenAccountRequest
+        do
+          openAccountRequest <- fetch openAccountRequestCid
+          archive openAccountRequestCid
+          let
+            account = Account with provider = custodian; owner = client; id = openAccountRequest.accountId
+            observers = openAccountRequest.observers
+            nominee = openAccountRequest.nominee
+          create AssetSettlementRule with ..
+
+      nonconsuming CloseAccount : ()
+        with
+          closeAccountRequestCid : ContractId CloseAccountRequest
+        do
+          closeAccountRequest <- fetch closeAccountRequestCid
+          archive closeAccountRequestCid
+          (assetSettlementRuleCid, _) <- fetchByKey @AssetSettlementRule closeAccountRequest.accountId
+          archive assetSettlementRuleCid
+
+      nonconsuming CreditAccount : ContractId AssetDeposit
+        with
+          creditAccountRequestCid : ContractId CreditAccountRequest
+        do
+          CreditAccountRequest{..} <- fetch creditAccountRequestCid
+          archive creditAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ..
+
+      nonconsuming DebitAccount : Asset
+        with
+          debitAccountRequestCid : ContractId DebitAccountRequest
+        do
+          DebitAccountRequest{..} <- fetch debitAccountRequestCid
+          archive debitAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
+          
+
+template CustodialRelationshipInvitation
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+  where
+    signatory operator, custodian
+
+    controller client can
+      Accept : ContractId CustodialRelationship
+        do
+          create CustodialRelationship with ..
+
+      Decline : ()
+        do
+          return ()
+
+template CustodialRelationshipRequest
+  with
+    operator : Party
+    client : Party
+    custodian : Party
+  where
+    signatory operator, client
+
+    controller custodian can
+      Approve : ContractId CustodialRelationship
+        do
+          create CustodialRelationship with ..
+
+      Reject : ()
+        do
+          return ()
+
+template OpenAccountRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    accountId : Id
+    observers : Set Party
+    nominee : Party
+  where
+    signatory operator, custodian, client
+
+template CloseAccountRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    accountId : Id
+  where
+    signatory operator, custodian, client
+
+template CreditAccountRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    accountId : Id
+    asset : Asset
+  where
+    signatory operator, custodian, client
+
+template DebitAccountRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    accountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, custodian, client
