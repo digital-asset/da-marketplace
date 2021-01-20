@@ -11,7 +11,6 @@
     @if $lightness == 100 {
         @return 98;
     }
-
     @return $lightness;
 }
 
