@@ -1,3 +1,4 @@
+@import './common/CapTable.scss';
 @import './common/CardTable.scss';
 @import './common/DonutChart.scss';
 @import './common/FormErrorHandled.scss';
@@ -17,11 +18,11 @@
 @import './common/Wallet.scss';
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
-
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
 
 @import './Broker/Broker.scss';
+@import './Custodian/Custodian.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
 
@@ -31,6 +32,7 @@
         width: 100vw;
 
         /* common css */
+        @include cap-table;
         @include card-table;
         @include donut-chart;
         @include form-error-handled;
@@ -59,5 +61,6 @@
         @include investor;
         @include issuer;
         @include broker;
+        @include custodian;
     }
 }

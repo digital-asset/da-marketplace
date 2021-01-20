@@ -1,0 +1,28 @@
+
+@mixin cap-table {
+    table.cap-table {
+        border-collapse: collapse;
+        border: none;
+        margin: 0px;
+
+        tr td {
+            border-top: 0px !important;
+        }
+
+        tbody {
+            background-color: var(--white);
+            border: 1px solid var(--cool-grey-90);
+        }
+
+        tr:nth-child(odd) {
+            background-color: var(--blue-100);
+        }
+    }
+
+
+    @media screen and (max-width: 1000px) {
+        .ui.table.issuer-cap-table tr:nth-child(odd) {
+            background-color: unset;
+        }
+    }
+}

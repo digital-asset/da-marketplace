@@ -1,0 +1,10 @@
+@mixin clients {
+    .clients {
+        display: flex;
+        flex-direction: row;
+
+        .client-list {
+            width: 60%;
+        }
+    }
+}

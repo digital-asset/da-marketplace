@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, Link } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, Link, NavLink } from 'react-router-dom'
+
+import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+
+import { RegisteredCustodian, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Custodian as CustodianModel,
     CustodianInvitation
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple } from '../common/damlTypes'
+import { makeContractInfo, wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useOperator } from '../common/common'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
@@ -22,7 +26,9 @@ import { UserIcon } from '../../icons/Icons'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
+import ClientHoldings from './ClientHoldings'
 import FormErrorHandled from '../common/FormErrorHandled'
+import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 type Props = {
     onLogout: () => void;
@@ -92,38 +98,65 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
+    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
+
     const sideNav = <RoleSideNav url={url}
-                                 name={registeredCustodian.contracts[0]?.payload.name || custodian}
-                                 items={[
-                                    {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
-                                 ]}/>
+                        name={registeredCustodian.contracts[0]?.payload.name || custodian}
+                        items={[
+                            {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
+                        ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Client Holdings:</p>
+                            </Menu.Item>
+                            {investors.map(investor =>
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/client/${investor}`}
+                                    key={investor}
+                                >
+                                    <p>{registeredInvestors.find(i => i.contractData.investor == investor)?.contractData.name || investor}</p>
+                                </Menu.Item>
+                            )}
+                        </Menu.Menu>
+                    </RoleSideNav>
 
-    const custodianScreen = <Switch>
-        <Route exact path={path}>
-            <LandingPage
-                notifications={notifications}
-                profile={
-                    <FormErrorHandled onSubmit={updateProfile}>
-                        <CustodianProfile
-                            content='Save'
-                            defaultProfile={profile}
-                            submitProfile={profile => setProfile(profile)}/>
-                    </FormErrorHandled>
-                }
-                marketRelationships={(
-                    <Link to={`${url}/clients`}>View list of clients</Link>
-                )}
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
+    const custodianScreen =
+        <div className='custodian'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        notifications={notifications}
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <CustodianProfile
+                                    content='Save'
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={(
+                            <Link to={`${url}/clients`}>View list of clients</Link>
+                        )}
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/clients`}>
-            <Clients
-                clients={investors}
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
-    </Switch>
+                <Route path={`${path}/clients`}>
+                    <Clients
+                        clients={investors}
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/client/:investorId`}>
+                    <ClientHoldings
+                        sideNav={sideNav}
+                        clients={investors}
+                        onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
 
     return registeredCustodian.loading
         ? loadingScreen

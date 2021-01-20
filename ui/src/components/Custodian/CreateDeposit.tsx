@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import React, { useEffect, useState } from 'react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
@@ -7,13 +7,16 @@ import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Ma
 import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple, makeContractInfo, ContractInfo } from '../common/damlTypes'
 import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
-const CreateDeposit: React.FC = () => {
+const CreateDeposit = (props: {
+    currentBeneficiary?: ContractInfo<RegisteredInvestor>
+}) => {
+    const { currentBeneficiary } = props;
     const [ beneficiary, setBeneficiary ] = useState('');
     const [ token, setToken ] = useState<TokenInfo>();
     const [ depositQuantity, setDepositQuantity ] = useState('');
@@ -22,6 +25,12 @@ const CreateDeposit: React.FC = () => {
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
+
+    useEffect(()=> {
+        if (!!currentBeneficiary) {
+            setBeneficiary(currentBeneficiary?.contractData.investor)
+        }
+    }, [currentBeneficiary])
 
     const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from Token: ", e);
@@ -102,39 +111,43 @@ const CreateDeposit: React.FC = () => {
     const { step, placeholder } = preciseInputSteps(quantityPrecision);
 
     return (
-        <FormErrorHandled onSubmit={handleCreateDeposit}>
-            <Form.Group className='inline-form-group create-deposit'>
-                <Form.Select
-                    clearable
-                    label='Select Provider'
-                    value={beneficiary}
-                    placeholder='Select...'
-                    options={beneficiaryOptions}
-                    onChange={handleBeneficiaryChange}/>
-                <ContractSelect
-                    clearable
-                    className='asset-select'
-                    contracts={allTokens}
-                    label='Asset'
-                    placeholder='Select...'
-                    value={token?.contractId || ""}
-                    getOptionText={token => token.contractData.id.label}
-                    setContract={token => setToken(token)}/>
-                <Form.Input
-                    className='create-deposit-quantity'
-                    label='Quantity'
-                    type='number'
-                    step={step}
-                    placeholder={placeholder}
-                    error={depositQuantityError}
-                    disabled={!token}
-                    onChange={validateTokenQuantity}/>
-                <Button
-                    disabled={!beneficiary || !token || !depositQuantity}
-                    content='Create Deposit'
-                    className='create-deposit-btn ghost'/>
-            </Form.Group>
-        </FormErrorHandled>
+        <div className='create-deposit'>
+            <FormErrorHandled onSubmit={handleCreateDeposit}>
+                <Header as='h3'>Quick Deposit</Header>
+                    {!currentBeneficiary &&
+                        <Form.Select
+                            clearable
+                            label={<p className='p2'>Beneficiary</p>}
+                            value={beneficiary}
+                            placeholder='Select...'
+                            options={beneficiaryOptions}
+                            onChange={handleBeneficiaryChange}/>}
+                    <Form.Group className='inline-form-group'>
+                        <ContractSelect
+                            clearable
+                            className='asset-select'
+                            contracts={allTokens}
+                            label='Asset'
+                            placeholder='Select...'
+                            value={token?.contractId || ""}
+                            getOptionText={token => token.contractData.id.label}
+                            setContract={token => setToken(token)}/>
+                        <Form.Input
+                            className='create-deposit-quantity'
+                            label={<p className='p2'>Quantity</p>}
+                            type='number'
+                            step={step}
+                            placeholder={placeholder}
+                            error={depositQuantityError}
+                            disabled={!token}
+                            onChange={validateTokenQuantity}/>
+                    </Form.Group>
+                    <Button
+                        disabled={!beneficiary || !token || !depositQuantity}
+                        content='Create Deposit'
+                        className='ghost'/>
+            </FormErrorHandled>
+        </div>
     )
 }
 
