@@ -117,7 +117,7 @@ const CreateDeposit = (props: {
                     {!currentBeneficiary &&
                         <Form.Select
                             clearable
-                            label={<p className='p2'>Benefitiary</p>}
+                            label={<p className='p2'>Beneficiary</p>}
                             value={beneficiary}
                             placeholder='Select...'
                             options={beneficiaryOptions}
