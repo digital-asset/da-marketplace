@@ -1,0 +1,132 @@
+module Marketplace.Issuance where
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+
+type T = Issuance
+
+template Issuance
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    issuanceId : Text
+    assetId : Id
+    accountId : Id
+    quantity : Decimal
+  where
+    signatory operator, custodian, client
+
+    key (operator, custodian, issuanceId) : (Party, Party, Text)
+    maintainer key._1
+
+template Service
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+  where
+    signatory operator, custodian, client
+
+    key (operator, custodian, client) : (Party, Party, Party)
+    maintainer key._1
+
+    controller client can
+      nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
+        with
+          issuanceId : Text
+          accountId : Id
+          assetId : Id
+          quantity : Decimal
+        do
+          create CreateIssuanceRequest with ..
+
+      nonconsuming RequestReduceIssuance : ContractId ReduceIssuanceRequest
+        with
+          issuanceId : Text
+          accountId : Id
+          depositCid : ContractId AssetDeposit
+        do
+          create ReduceIssuanceRequest with ..
+
+    controller custodian can
+      nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
+        with
+          createIssuanceRequestCid : ContractId CreateIssuanceRequest
+        do
+          CreateIssuanceRequest{..} <- fetch createIssuanceRequestCid
+          archive createIssuanceRequestCid
+          issuanceCid <- create Issuance with ..
+          let asset = Asset with id = assetId; quantity
+          depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ..
+          pure (issuanceCid, depositCid)
+
+      nonconsuming ReduceIssuance : ContractId Issuance
+        with
+          reduceIssuanceRequestCid : ContractId ReduceIssuanceRequest
+        do
+          ReduceIssuanceRequest{..} <- fetch reduceIssuanceRequestCid
+          archive reduceIssuanceRequestCid
+          deposit <- fetch depositCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
+          (issuanceCid, issuance) <- fetchByKey @Issuance (operator, custodian, issuanceId)
+          archive issuanceCid
+          create issuance with quantity = issuance.quantity - deposit.asset.quantity
+
+template Offer
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+  where
+    signatory operator, custodian
+
+    controller client can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    client : Party
+    custodian : Party
+  where
+    signatory operator, client
+
+    controller custodian can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+template CreateIssuanceRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    issuanceId : Text
+    assetId : Id
+    accountId : Id
+    quantity : Decimal
+  where
+    signatory operator, custodian, client
+
+template ReduceIssuanceRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    issuanceId : Text
+    accountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, custodian, client

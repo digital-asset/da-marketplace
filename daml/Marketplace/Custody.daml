@@ -1,11 +1,11 @@
-module Marketplace.Custody.Relationship where
+module Marketplace.Custody where
 
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Next.Set
 
-template CustodialRelationship
+template Service
   with
     operator : Party
     custodian : Party
@@ -51,12 +51,10 @@ template CustodialRelationship
         with
           openAccountRequestCid : ContractId OpenAccountRequest
         do
-          openAccountRequest <- fetch openAccountRequestCid
+          OpenAccountRequest{..} <- fetch openAccountRequestCid
           archive openAccountRequestCid
           let
-            account = Account with provider = custodian; owner = client; id = openAccountRequest.accountId
-            observers = openAccountRequest.observers
-            nominee = openAccountRequest.nominee
+            account = Account with provider = custodian; owner = client; id = accountId
           create AssetSettlementRule with ..
 
       nonconsuming CloseAccount : ()
@@ -84,8 +82,7 @@ template CustodialRelationship
           archive debitAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
           
-
-template CustodialRelationshipInvitation
+template Offer
   with
     operator : Party
     custodian : Party
@@ -94,15 +91,15 @@ template CustodialRelationshipInvitation
     signatory operator, custodian
 
     controller client can
-      Accept : ContractId CustodialRelationship
+      Accept : ContractId Service
         do
-          create CustodialRelationship with ..
+          create Service with ..
 
       Decline : ()
         do
           return ()
 
-template CustodialRelationshipRequest
+template Request
   with
     operator : Party
     client : Party
@@ -111,9 +108,9 @@ template CustodialRelationshipRequest
     signatory operator, client
 
     controller custodian can
-      Approve : ContractId CustodialRelationship
+      Approve : ContractId Service
         do
-          create CustodialRelationship with ..
+          create Service with ..
 
       Reject : ()
         do

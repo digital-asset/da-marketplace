@@ -1,0 +1,71 @@
+module Marketplace.Exchange where
+
+import qualified Marketplace.Listing as Listing
+import qualified Marketplace.Trading as Trading
+
+template Role
+  with
+    operator : Party
+    exchange : Party
+  where
+    signatory operator, exchange
+
+    key (operator, exchange) : (Party, Party)
+    maintainer key._1
+
+    controller exchange can
+      nonconsuming OfferTradingService : ContractId Trading.Offer
+        with
+          client : Party
+        do
+          create Trading.Offer with ..
+
+      nonconsuming TerminateTradingService : ()
+        with
+          tradingServiceCid : ContractId Trading.Service
+        do
+          archive tradingServiceCid
+
+      nonconsuming OfferListingService : ContractId Listing.Offer
+        with
+          client : Party
+        do
+          create Listing.Offer with ..
+
+      nonconsuming TerminateListingService : ()
+        with
+          listingServiceCid : ContractId Listing.Service
+        do
+          archive listingServiceCid
+
+template Offer
+  with
+    operator : Party
+    exchange : Party
+  where
+    signatory operator
+
+    controller exchange can
+      Accept : ContractId Role
+        do
+          create Role with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    exchange : Party
+    operator : Party
+  where
+    signatory exchange
+
+    controller operator can
+      Approve : ContractId Role
+        do
+          create Role with ..
+
+      Reject : ()
+        do
+          return ()

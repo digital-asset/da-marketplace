@@ -1,0 +1,70 @@
+module Marketplace.Distribution where
+
+template Service
+  with
+    operator : Party
+    agent : Party
+    client : Party
+  where
+    signatory operator, agent, client
+
+    key (operator, agent, client) : (Party, Party, Party)
+    maintainer key._1
+
+    controller client can
+      nonconsuming RequestCreateSubscription : ContractId CreateSubscriptionRequest
+        -- with
+        --   ..
+        do
+          create CreateSubscriptionRequest with ..
+
+    controller agent can
+      nonconsuming CreateSubscription : ()
+        with
+          createSubscriptionRequestCid : ContractId CreateSubscriptionRequest
+        do
+          CreateSubscriptionRequest{..} <- fetch createSubscriptionRequestCid
+          archive createSubscriptionRequestCid
+          pure ()
+
+template Offer
+  with
+    operator : Party
+    agent : Party
+    client : Party
+  where
+    signatory operator, agent
+
+    controller client can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    client : Party
+    agent : Party
+  where
+    signatory operator, client
+
+    controller agent can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+template CreateSubscriptionRequest
+  with
+    operator : Party
+    agent : Party
+    client : Party
+  where
+    signatory operator, agent, client

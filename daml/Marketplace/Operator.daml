@@ -1,0 +1,28 @@
+module Marketplace.Operator where
+
+import qualified Marketplace.Custodian as Custodian
+import qualified Marketplace.Exchange as Exchange
+
+type T = Operator
+
+template Operator
+  with
+    operator : Party
+  where
+    signatory operator
+
+    key operator : Party
+    maintainer key
+
+    controller operator can
+      nonconsuming OfferCustodianRole : ContractId Custodian.Offer
+        with
+          custodian : Party
+        do
+          create Custodian.Offer with ..
+
+      nonconsuming OfferExchangeRole : ContractId Exchange.Offer
+        with
+          exchange : Party
+        do
+          create Exchange.Offer with ..

@@ -1,0 +1,71 @@
+module Marketplace.Custodian where
+
+import qualified Marketplace.Custody as Custody
+import qualified Marketplace.Issuance as Issuance
+
+template Role
+  with
+    operator : Party
+    custodian : Party
+  where
+    signatory operator, custodian
+
+    key (operator, custodian) :  (Party, Party)
+    maintainer key._1
+
+    controller custodian can
+      OfferCustodyService : ContractId Custody.Offer
+        with
+          client : Party
+        do
+          create Custody.Offer with ..
+
+      TerminateCustodyService : ()
+        with
+          custodyServiceCid : ContractId Custody.Service
+        do
+          archive custodyServiceCid
+
+      OfferIssuanceService : ContractId Issuance.Offer
+        with
+          client : Party
+        do
+          create Issuance.Offer with ..
+
+      TerminateIssuanceService : ()
+        with
+          issuanceServiceCid : ContractId Issuance.Service
+        do
+          archive issuanceServiceCid
+
+template Offer
+  with
+    operator : Party
+    custodian : Party
+  where
+    signatory operator
+
+    controller custodian can
+      Accept : ContractId Role
+        do
+          create Role with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    custodian : Party
+    operator : Party
+  where
+    signatory custodian
+
+    controller operator can
+      Approve : ContractId Role
+        do
+          create Role with ..
+
+      Reject : ()
+        do
+          return ()

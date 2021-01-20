@@ -1,0 +1,128 @@
+module Marketplace.Listing where
+
+import DA.Finance.Types
+
+template Listing
+  with
+    operator : Party
+    exchange : Party
+    client : Party
+    listingId : Text
+    tradedAssetId : Id
+    quotedAssetId : Id
+    tradedAssetPrecision : Int
+    quotedAssetPrecision : Int
+    minimumTradableQuantity : Decimal
+    maximumTradableQuantity : Decimal
+  where
+    signatory operator, exchange, client
+
+    -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
+    key (operator, exchange, listingId) : (Party, Party, Text)
+    maintainer key._1
+
+template Service
+  with
+    operator : Party
+    exchange : Party
+    client : Party
+  where
+    signatory operator, exchange, client
+
+    key (operator, exchange, client) : (Party, Party, Party)
+    maintainer key._1
+
+    controller client can
+      nonconsuming RequestCreateListing : ContractId CreateListingRequest
+        with
+          listingId : Text
+          tradedAssetId : Id
+          quotedAssetId : Id
+          tradedAssetPrecision : Int
+          quotedAssetPrecision : Int
+          minimumTradableQuantity : Decimal
+          maximumTradableQuantity : Decimal
+        do
+          create CreateListingRequest with ..
+
+      nonconsuming RequestDeleteListing : ContractId DeleteListingRequest
+        with
+          listingId : Text
+        do
+          create DeleteListingRequest with ..
+
+    controller exchange can
+      nonconsuming CreateListing : ContractId Listing
+        with
+          createListingRequestCid : ContractId CreateListingRequest
+        do
+          CreateListingRequest{..} <- fetch createListingRequestCid
+          archive createListingRequestCid
+          create Listing with ..
+
+      nonconsuming DeleteListing : ()
+        with
+          deleteListingRequestCid : ContractId DeleteListingRequest
+        do
+          DeleteListingRequest{..} <- fetch deleteListingRequestCid
+          archive deleteListingRequestCid
+          (listingCid, _) <- fetchByKey @Listing (operator, exchange, listingId)
+          archive listingCid
+
+template Offer
+  with
+    operator : Party
+    exchange : Party
+    client : Party
+  where
+    signatory operator, exchange
+
+    controller client can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    client : Party
+    exchange : Party
+  where
+    signatory operator, client
+
+    controller exchange can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+template CreateListingRequest
+  with
+    operator : Party
+    exchange : Party
+    client : Party
+    listingId : Text
+    tradedAssetId : Id
+    quotedAssetId : Id
+    tradedAssetPrecision : Int
+    quotedAssetPrecision : Int
+    minimumTradableQuantity : Decimal
+    maximumTradableQuantity : Decimal
+  where
+    signatory operator, exchange, client
+
+template DeleteListingRequest
+  with
+    operator : Party
+    exchange : Party
+    client : Party
+    listingId : Text
+  where
+    signatory operator, exchange, client
