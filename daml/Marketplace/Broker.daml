@@ -6,12 +6,14 @@ import Marketplace.Registry
 import Marketplace.Transfer
 import Marketplace.Utils
 
-import DA.Finance.Asset
-import DA.Finance.Types
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Merge(..), AssetDeposit_Split(..))
+import DA.Finance.Types (Id(..))
 
 import DA.List
 
-template BrokerInvitation
+type T = Broker
+
+template Invitation
   with
     operator : Party
     broker : Party
@@ -23,7 +25,7 @@ template BrokerInvitation
     maintainer key._1
 
     controller broker can
-      BrokerInvitation_Accept : (ContractId RegisteredBroker, ContractId Broker)
+      Accept : (ContractId RegisteredBroker, ContractId Broker)
         with
           name : Text
           location : Text
@@ -44,17 +46,17 @@ template Broker
     maintainer key._2
 
     controller broker can
-      nonconsuming Broker_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+      nonconsuming RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
         do create CustodianRelationshipRequest with requester = broker, role = BrokerRole, ..
 
-      nonconsuming Broker_InviteCustomer : (ContractId BrokerCustomerInvitation)
+      nonconsuming InviteCustomer : (ContractId BrokerCustomerInvitation)
         with
-          brokerCustomer : Party
+          customer : Party
         do create BrokerCustomerInvitation with ..
 
-      nonconsuming Broker_RequestDepositTransfer : ContractId DepositTransferRequest
+      nonconsuming RequestDepositTransfer : ContractId DepositTransferRequest
         with
           depositCid : ContractId AssetDeposit
           receiverAccountId : Id
@@ -63,7 +65,7 @@ template Broker
            assert $ deposit.account.owner == broker
            create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
 
-      nonconsuming Broker_AllocateToProvider : ContractId DepositTransferRequest
+      nonconsuming AllocateToProvider : ContractId DepositTransferRequest
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
@@ -82,4 +84,4 @@ template Broker
                   signatories = deposit.account.id.signatories,
                     label = getAccountLabel broker provider,
                     version = 0
-          exercise self Broker_RequestDepositTransfer with ..
+          exercise self RequestDepositTransfer with ..

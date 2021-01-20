@@ -1,6 +1,6 @@
 module Marketplace.Operator where
 
-import Marketplace.Broker
+import qualified Marketplace.Broker as Broker
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.Investor
@@ -42,8 +42,8 @@ template Operator
         do
           create ExchangeInvitation with ..
 
-      nonconsuming Operator_OnboardBroker : ContractId BrokerInvitation
+      nonconsuming Operator_OnboardBroker : ContractId Broker.Invitation
         with
           broker : Party
         do
-          create BrokerInvitation with ..
+          create Broker.Invitation with ..

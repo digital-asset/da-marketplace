@@ -50,7 +50,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
                 await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.BrokerRole:
-                await ledger.exerciseByKey(Broker.Broker_RequestCustodianRelationship, key, args);
+                await ledger.exerciseByKey(Broker.RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.ExchangeRole:
                 await ledger.exerciseByKey(Exchange.Exchange_RequestCustodianRelationship, key, args);

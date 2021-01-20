@@ -12,21 +12,21 @@ template BrokerCustomerInvitation
   with
     operator : Party
     broker : Party
-    brokerCustomer : Party
+    customer : Party
   where
     signatory broker
 
-    controller brokerCustomer can
+    controller customer can
       BrokerCustomerInvitation_Accept : ContractId BrokerCustomer
         do
           create DismissibleNotification with
-            sender = brokerCustomer, senderRole = Some InvestorRole
+            sender = customer, senderRole = Some InvestorRole
             receiver = broker, text = "Broker customer invitation accepted."
           create BrokerCustomer with ..
       BrokerCustomerInvitation_Reject : ()
         do
           create DismissibleNotification with
-            sender = brokerCustomer, senderRole = Some InvestorRole
+            sender = customer, senderRole = Some InvestorRole
             receiver = broker, text = "Broker customer invitation rejected."
           return ()
 
@@ -35,14 +35,14 @@ template BrokerCustomer
   with
     operator : Party
     broker : Party
-    brokerCustomer : Party
+    customer : Party
   where
-    signatory broker, brokerCustomer
+    signatory broker, customer
 
-    key (broker, operator, brokerCustomer) : (Party, Party, Party)
+    key (broker, operator, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller brokerCustomer can
+    controller customer can
       nonconsuming BrokerCustomer_RequestBid : ContractId BrokerOrderRequest
         with
           depositCid : ContractId AssetDeposit
@@ -51,7 +51,7 @@ template BrokerCustomer
         do
           deposit <- fetch depositCid
           assertMsg ("deposit is not allocated to broker " <> show broker)
-            $ deposit.account.id.label == getAccountLabel brokerCustomer broker
+            $ deposit.account.id.label == getAccountLabel customer broker
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
           (_, quoteToken) <- fetchByKey @Token pair._2
@@ -69,7 +69,7 @@ template BrokerCustomer
         do
           deposit <- fetch depositCid
           assertMsg ("deposit is not allocated to broker " <> show broker)
-            $ deposit.account.id.label == getAccountLabel brokerCustomer broker
+            $ deposit.account.id.label == getAccountLabel customer broker
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
           (_, quoteToken) <- fetchByKey @Token pair._2

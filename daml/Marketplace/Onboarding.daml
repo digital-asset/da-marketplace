@@ -1,6 +1,6 @@
 module Marketplace.Onboarding where
 
-import Marketplace.Broker
+import qualified Marketplace.Broker as Broker
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.Investor
@@ -53,8 +53,8 @@ template UserSession
                 (Some investorInvitationCid, Some investorCid) -> archive investorInvitationCid
                 _ -> return ()
             BrokerRole -> do
-              optBrokerInvitation <- lookupByKey @BrokerInvitation userKey
-              optBroker <- lookupByKey @Broker userKey
+              optBrokerInvitation <- lookupByKey @Broker.Invitation userKey
+              optBroker <- lookupByKey @Broker.T userKey
               case (optBrokerInvitation, optBroker) of
                 (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
                 (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid

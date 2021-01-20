@@ -85,7 +85,7 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
     const [ base, quote ] = unwrapDamlTuple(props.cdata.pair).map(t => t.label);
     const label = props.cdata.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
-    const customer = props.cdata.brokerCustomer;
+    const customer = props.cdata.customer;
     const depositCid = props.cdata.depositCid;
     const price = `${props.cdata.price} ${quote}`;
 
@@ -147,7 +147,7 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
     const amount = props.cdata.isBid ? `+ ${props.cdata.qty} ${base}` : `- ${props.cdata.qty} ${base}`;
     const price = `${props.cdata.price} ${quote}`;
 
-    const customer = props.cdata.brokerCustomer;
+    const customer = props.cdata.customer;
 
     const options = props.deposits
     .filter(deposit => deposit.contractData.account.owner === broker)

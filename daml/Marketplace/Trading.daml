@@ -183,7 +183,7 @@ assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
 
 template BrokerOrderRequest
   with
-    brokerCustomer : Party
+    customer : Party
     broker : Party
     depositCid : ContractId AssetDeposit
     pair : IdPair
@@ -191,7 +191,7 @@ template BrokerOrderRequest
     price : Decimal
     qty : Decimal
   where
-    signatory broker, brokerCustomer
+    signatory broker, customer
 
     controller broker can
       BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
@@ -199,16 +199,16 @@ template BrokerOrderRequest
           brokerOrderId : Int
         do
           deposit <- fetch depositCid
-          assert $ deposit.account.owner == brokerCustomer
+          assert $ deposit.account.owner == customer
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
-          depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
+          depositTransferReqCid <- create DepositTransferRequest with sender = customer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
 
 template BrokerOrder
   with
-    brokerCustomer : Party
+    customer : Party
     broker : Party
     pair : IdPair
     isBid : Bool
@@ -216,7 +216,7 @@ template BrokerOrder
     qty : Decimal
     brokerOrderId : Int
   where
-    signatory broker, brokerCustomer
+    signatory broker, customer
 
     key (broker, brokerOrderId) : (Party, Int)
     maintainer key._1
@@ -240,7 +240,7 @@ template BrokerOrder
           assertMsg ("the deposit quantity of " <> show depositQty
             <> " does not match the requested of " <> show qty) $ depositQty == qty
           let senderAccountId = deposit.account.id
-              receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
+              receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel customer broker, version = 0
           create BrokerTrade with isBuy = isBid, ..
           create DepositTransferRequest with sender = broker, ..
 
@@ -317,7 +317,7 @@ template SettledTradeSide
 
 template BrokerTrade
   with
-    brokerCustomer : Party
+    customer : Party
     broker : Party
     pair : IdPair
     price : Decimal
@@ -325,4 +325,4 @@ template BrokerTrade
     isBuy : Bool
     brokerOrderId : Int
   where
-    signatory broker, brokerCustomer
+    signatory broker, customer

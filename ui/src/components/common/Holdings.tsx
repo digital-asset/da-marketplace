@@ -173,7 +173,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
                 await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
                 break;
             case MarketRole.BrokerRole:
-                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args);
+                await ledger.exerciseByKey(Broker.AllocateToProvider, key, args);
                 break;
             default:
                 throw new AppError("Invalid role selected", `The ${role} role can not allocate deposits.`)

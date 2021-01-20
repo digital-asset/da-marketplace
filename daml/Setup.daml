@@ -2,7 +2,7 @@ module Setup where
 
 import Daml.Script
 
-import Marketplace.Broker
+import qualified Marketplace.Broker as Broker
 import Marketplace.BrokerCustomer
 import Marketplace.Custodian
 import Marketplace.Exchange
@@ -67,7 +67,7 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker", ..
+  broker `submit` exerciseCmd brokerInvCid Broker.Accept with name = "Example Broker", ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
@@ -162,7 +162,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- onboard broker
   brokerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardBroker with ..
-  broker `submit` exerciseCmd brokerInvCid BrokerInvitation_Accept with name = "Example Broker", ..
+  broker `submit` exerciseCmd brokerInvCid Broker.Accept with name = "Example Broker", ..
 
   -- onboard issuers
   btcIssuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with issuer = btcIssuer, ..
@@ -218,7 +218,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   broker `submit` exerciseCmd brokerInvCid ExchangeParticipantInvitation_Accept
 
   -- broker invites Alice as a customer
-  aliceBrokerInvCid <- broker `submit` exerciseByKeyCmd @Broker (operator, broker) Broker_InviteCustomer with brokerCustomer = alice
+  aliceBrokerInvCid <- broker `submit` exerciseByKeyCmd @Broker.T (operator, broker) Broker.InviteCustomer with Broker.customer = alice
   alice `submit` exerciseCmd aliceBrokerInvCid BrokerCustomerInvitation_Accept
 
   -- alice transfers her bitcoin deposit to her brokerage account
