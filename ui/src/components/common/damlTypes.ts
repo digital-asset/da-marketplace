@@ -82,4 +82,4 @@ export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianR
 export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
-export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
+export type DismissibleNotificationInfo = ContractInfo<Notification.Dismissible>;

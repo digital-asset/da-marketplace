@@ -1,6 +1,6 @@
 module Marketplace.Custodian where
 
-import Marketplace.Notification
+import qualified Marketplace.Notification as Notification
 import Marketplace.Registry
 import Marketplace.Token
 import Marketplace.Utils
@@ -43,14 +43,14 @@ template CustodianRelationshipRequest
             InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
             BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
             _ -> return ()
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = custodian, senderRole = Some CustodianRole
             receiver = requester, text = "Relationship request accepted."
           create CustodianRelationship with party = requester, ..
 
       CustodianRelationshipRequest_Reject : ()
         do
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = custodian, senderRole = Some CustodianRole
             receiver = requester, text = "Relationship request rejected."
           return ()

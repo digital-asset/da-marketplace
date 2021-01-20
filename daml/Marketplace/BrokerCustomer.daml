@@ -1,6 +1,6 @@
 module Marketplace.BrokerCustomer where
 
-import Marketplace.Notification
+import qualified Marketplace.Notification as Notification
 import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.Utils
@@ -20,13 +20,13 @@ template Invitation
     controller customer can
       Accept : ContractId BrokerCustomer
         do
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = customer, senderRole = Some InvestorRole
             receiver = broker, text = "Broker customer invitation accepted."
           create BrokerCustomer with ..
       Reject : ()
         do
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = customer, senderRole = Some InvestorRole
             receiver = broker, text = "Broker customer invitation rejected."
           return ()

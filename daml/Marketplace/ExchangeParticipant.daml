@@ -1,7 +1,7 @@
 module Marketplace.ExchangeParticipant where
 
 import Marketplace.BinaryOption
-import Marketplace.Notification
+import qualified Marketplace.Notification as Notification
 import Marketplace.Trading
 import Marketplace.Transfer
 import Marketplace.Token
@@ -21,14 +21,14 @@ template ExchangeParticipantInvitation
     controller exchParticipant can
       ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
         do
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation accepted."
           create ExchangeParticipant with ..
 
       ExchangeParticipantInvitation_Reject : ()
         do
-          create DismissibleNotification with
+          create Notification.Dismissible with
             sender = exchParticipant, senderRole = None
             receiver = exchange, text = "Exchange invitation rejected."
           return ()
