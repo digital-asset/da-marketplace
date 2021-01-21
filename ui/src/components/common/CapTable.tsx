@@ -40,6 +40,7 @@ const CapTable = (props: {
                             <Table.Row key={i}>
                                 {row.map((item, j) =>
                                     <Table.Cell
+                                        key={j}
                                         textAlign={j+1 > row.length/2 ? 'right': 'left'}>
                                         {item}
                                     </Table.Cell>
