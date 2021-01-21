@@ -1,3 +1,5 @@
+-- TODO DRY: refactor opportunity: embed Order/Trading in these files. 
+-- Use proper namespace
 module Marketplace.Trading where
 
 import DA.Finance.Asset

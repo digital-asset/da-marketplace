@@ -10,10 +10,10 @@ import Marketplace.ExchangeParticipant
 import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 import qualified Marketplace.Operator as Operator
+import qualified Marketplace.Deposit.TransferRequest as Deposit.TransferRequest
 
 import qualified Marketplace.Token as Token
 import Marketplace.Trading
-import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -224,7 +224,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   -- alice transfers her bitcoin deposit to her brokerage account
   let receiverAccountId = Id with signatories = fromList [ custodian ], label = getAccountLabel alice broker, version = 0
   depositTransferRequestCid <- alice `submit` exerciseByKeyCmd @Investor.T (operator, alice) Investor.RequestDepositTransfer with ..
-  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid Deposit.TransferRequest.Approve
 
   -- alice wants to sell 0.01 BTC for a price of 10000 USDT/BTC (ie she is looking to buy 100 USDT)
   brokerOrderReqCid <- alice `submit` exerciseByKeyCmd @BrokerCustomer.T (broker, operator, alice)
@@ -232,7 +232,7 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
 
   -- broker accepts her request and takes her btc deposit
   (brokerOrderCid, depositTransferRequestCid) <- broker `submit` exerciseCmd brokerOrderReqCid BrokerOrderRequest_Accept with brokerOrderId = 1, ..
-  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid Deposit.TransferRequest.Approve
 
   -- (at this point the broker can go and place the offer on the exchange)
 
@@ -243,6 +243,6 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   depositTransferRequestCid <- broker `submit` exerciseCmd brokerOrderCid BrokerOrder_Fill with ..
 
   -- alice gets her USDT deposit at her brokerage account
-  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid DepositTransferRequest_Approve
+  depositCid <- custodian `submit` exerciseCmd depositTransferRequestCid Deposit.TransferRequest.Approve
 
   return ()

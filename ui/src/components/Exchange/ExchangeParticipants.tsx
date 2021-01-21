@@ -6,7 +6,7 @@ import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
 
 import { UserIcon } from '../../icons/Icons'
 import { ExchangeParticipantInfo, DepositInfo, makeContractInfo } from '../common/damlTypes'

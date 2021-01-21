@@ -1,7 +1,7 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
 import { unwrapDamlTuple } from '../common/damlTypes'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
 import { ExchangeIcon } from '../../icons/Icons'
 
 import './OrderCard.scss'

@@ -2,7 +2,7 @@ import React from 'react'
 import { Button } from 'semantic-ui-react'
 
 import { useLedger } from '@daml/react'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
 
 import { wrapDamlTuple } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
@@ -14,7 +14,7 @@ const ExchangeOrderCard: React.FC<OrderProps> = ({ order }) => {
 
     const handleCancelOrder = async () => {
         const key = wrapDamlTuple([order.exchange, order.orderId])
-        await ledger.exerciseByKey(Order.Order_RequestCancel, key, {});
+        await ledger.exerciseByKey(Order.RequestCancel, key, {});
     }
 
     return (
