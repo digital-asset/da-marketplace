@@ -1,9 +1,9 @@
 import React from 'react'
-import { Pagination, PaginationProps } from 'semantic-ui-react'
+import { Pagination } from 'semantic-ui-react'
 
 const PaginationControls = (props: {
-    totalPages: number,
-    onPageChange: (activePage: number) => void
+  totalPages: number,
+  onPageChange: (activePage: number) => void
 }) => (
   <Pagination
     className='paginataion-controls'
@@ -13,8 +13,7 @@ const PaginationControls = (props: {
     firstItem={null}
     lastItem={null}
     onPageChange={(_, data) => data.activePage && props.onPageChange(Number(data.activePage))}
-    totalPages={props.totalPages}
-  />
+    totalPages={props.totalPages}/>
 )
 
 export default PaginationControls;

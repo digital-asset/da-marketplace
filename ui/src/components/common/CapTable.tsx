@@ -13,9 +13,9 @@ const CapTable = (props: {
     const rowsPerPage = 10
     const totalPages = Math.ceil(rows.length / rowsPerPage)
 
-    const [ activePage, setActivePage ] = useState(1);
+    const [ activePage, setActivePage ] = useState<number>(1);
     const [ activePageRows, setActivePageRows ] = useState<string[][]>([])
-    
+
     useEffect(()=> {
         setActivePageRows(rows.slice((activePage-1)*rowsPerPage, activePage*rowsPerPage))
     },[activePage, rows])
