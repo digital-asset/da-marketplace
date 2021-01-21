@@ -51,7 +51,11 @@ export function getAccountProvider(accountLabel: string): string | undefined {
 }
 
 export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T> {
-    return ({contractId: event.contractId, contractData: event.payload});
+    return ({
+        templateId: event.templateId,
+        contractId: event.contractId,
+        contractData: event.payload
+    });
 }
 
 export function wrapTextMap(items: string[]) {
@@ -65,6 +69,7 @@ export function wrapTextMap(items: string[]) {
 }
 
 export type ContractInfo<T> = {
+    templateId: string;
     contractId: string;
     contractData: T;
 }
