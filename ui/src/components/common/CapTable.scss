@@ -1,28 +1,40 @@
 
 @mixin cap-table {
-    table.cap-table {
-        border-collapse: collapse;
-        border: none;
-        margin: 0px;
+    .cap-table {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: flex-start;
 
-        tr td {
-            border-top: 0px !important;
+        table {
+            border-collapse: collapse;
+            border: none;
+            margin: 0px;
+
+            th {
+                border: none;
+                background-color: var(--cool-grey-100);
+            }
+
+            tr td {
+                border-top: 0px !important;
+            }
+
+            tbody {
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-90);
+            }
+
+            tr:nth-child(odd) {
+                background-color: var(--blue-100);
+            }
         }
 
-        tbody {
-            background-color: var(--white);
-            border: 1px solid var(--cool-grey-90);
-        }
 
-        tr:nth-child(odd) {
-            background-color: var(--blue-100);
-        }
-    }
-
-
-    @media screen and (max-width: 1000px) {
-        .ui.table.issuer-cap-table tr:nth-child(odd) {
-            background-color: unset;
+        @media screen and (max-width: 1000px) {
+            .ui.table.issuer-cap-table tr:nth-child(odd) {
+                background-color: unset;
+            }
         }
     }
 }
