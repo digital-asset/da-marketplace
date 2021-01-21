@@ -1,90 +1,12 @@
 module Marketplace.Custodian where
 
-import qualified Marketplace.Notification as Notification
-import qualified Marketplace.Registry.Custodian as Registry (Custodian(..))
-import Marketplace.Token
-import Marketplace.Utils
+import qualified Marketplace.Custody as Custody
+import qualified Marketplace.Issuance as Issuance
 
-import DA.Finance.Asset
-import DA.Finance.Types
-
-import DA.Action
-import DA.Next.Set
-
-
-template CustodianRelationship
+template Role
   with
     operator : Party
     custodian : Party
-    party : Party
-  where
-    signatory custodian, party
-    key (custodian, operator, party) : (Party, Party, Party)
-    maintainer key._1
-
-
-template CustodianRelationshipRequest
-  with
-    operator : Party
-    requester : Party
-    custodian : Party
-    role : MarketRole
-  where
-    signatory operator, requester
-    key (operator, requester, custodian, role) : (Party, Party, Party, MarketRole)
-    maintainer key._1
-
-    controller custodian can
-      CustodianRelationshipRequest_Approve : ContractId CustodianRelationship
-        do
-          case role of
-            IssuerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddIssuer with issuer = requester
-            ExchangeRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddExchange with exchange = requester
-            InvestorRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddInvestor with investor = requester
-            BrokerRole -> void $ exerciseByKey @Custodian (operator, custodian) Custodian_AddBroker with broker = requester
-            _ -> return ()
-          create Notification.Dismissible with
-            sender = custodian, senderRole = Some CustodianRole
-            receiver = requester, text = "Relationship request accepted."
-          create CustodianRelationship with party = requester, ..
-
-      CustodianRelationshipRequest_Reject : ()
-        do
-          create Notification.Dismissible with
-            sender = custodian, senderRole = Some CustodianRole
-            receiver = requester, text = "Relationship request rejected."
-          return ()
-
-
-template CustodianInvitation
-  with
-    operator : Party
-    custodian : Party
-    public : Party
-  where
-    signatory operator
-
-    key (operator, custodian) : (Party, Party)
-    maintainer key._1
-
-    controller custodian can
-      CustodianInvitation_Accept : ContractId Custodian
-        with
-          name : Text
-          location : Text
-        do
-          create Registry.Custodian with ..
-          create Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
-
-
-template Custodian
-  with
-    operator : Party
-    custodian : Party
-    issuers  : [Party]
-    investors : [Party]
-    brokers : [Party]
-    exchanges : [Party]
   where
     signatory operator, custodian
 
@@ -92,50 +14,58 @@ template Custodian
     maintainer key._1
 
     controller custodian can
-      Custodian_AddIssuer : ContractId Custodian
+      OfferCustodyService : ContractId Custody.Offer
         with
-          issuer : Party
+          client : Party
         do
-          assertMsg ("Issuer " <> show issuer <> " already exists") $ issuer `notElem` issuers
-          create this with issuers = issuer :: issuers
+          create Custody.Offer with ..
 
-      Custodian_AddExchange : ContractId Custodian
+      TerminateCustodyService : ()
         with
-          exchange : Party
+          custodyServiceCid : ContractId Custody.Service
         do
-          assertMsg ("Exchange " <> show exchange <> " already exists") $ exchange `notElem` exchanges
-          create this with exchanges = exchange :: exchanges
+          archive custodyServiceCid
 
-      Custodian_AddInvestor : ContractId Custodian
+      OfferIssuanceService : ContractId Issuance.Offer
         with
-          investor : Party
+          client : Party
         do
-          assertMsg ("Investor " <> show investor <> " already exists") $ investor `notElem` investors
-          create this with investors = investor :: investors
+          create Issuance.Offer with ..
 
-      Custodian_AddBroker : ContractId Custodian
+      TerminateIssuanceService : ()
         with
-          broker : Party
+          issuanceServiceCid : ContractId Issuance.Service
         do
-          assertMsg ("Broker " <> show broker <> " already exists") $ broker `notElem` brokers
-          create this with brokers = broker :: brokers
+          archive issuanceServiceCid
 
-      nonconsuming Custodian_GetAccount : Account
-        with
-          investor : Party
-        do
-          let accountId = getAccountId investor custodian [custodian]
-          return Account with id = accountId, provider = custodian, owner = investor
+template Offer
+  with
+    operator : Party
+    custodian : Party
+  where
+    signatory operator
 
-      nonconsuming Custodian_CreateDeposit : ContractId AssetDeposit
-        with
-          tokenId : Id
-          depositQuantity : Decimal
-          beneficiary : Party
+    controller custodian can
+      Accept : ContractId Role
         do
-          (tokenCid, token) <- fetchByKey @Token tokenId
-          account <- exercise self Custodian_GetAccount with investor = beneficiary
-          let quantity = roundBankers token.quantityPrecision depositQuantity
-              asset = Asset with id = tokenId, ..
-              depositObs = fromList $ account.provider :: beneficiary :: signatory token
-          create AssetDeposit with observers = depositObs, account = account, ..
+          create Role with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    custodian : Party
+    operator : Party
+  where
+    signatory custodian
+
+    controller operator can
+      Approve : ContractId Role
+        do
+          create Role with ..
+
+      Reject : ()
+        do
+          return ()

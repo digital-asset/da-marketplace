@@ -3,7 +3,7 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -64,7 +64,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value,
         };
-        await ledger.exerciseByKey(RegisteredExchange.RegisteredExchange_UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredExchange.UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 

@@ -5,8 +5,8 @@ import { Menu } from 'semantic-ui-react'
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Invitation as InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -80,7 +80,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value
         };
-        await ledger.exerciseByKey(RegisteredInvestor.RegisteredInvestor_UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredInvestor.UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 
@@ -91,7 +91,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             location: profile.location.value,
             isPublic: true
         };
-        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
+        await ledger.exerciseByKey(InvestorInvitation.Accept, key, args)
                     .catch(err => console.error(err));
     }
 

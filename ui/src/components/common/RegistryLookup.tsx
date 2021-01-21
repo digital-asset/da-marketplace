@@ -1,12 +1,10 @@
 import React, {PropsWithChildren, createContext, useEffect, useState } from "react";
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import {
-    RegisteredExchange,
-    RegisteredCustodian,
-    RegisteredBroker,
-    RegisteredIssuer,
-    RegisteredInvestor
-} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
+import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 
 export type RegistryLookup = {
     exchangeMap: Map<string, RegisteredExchange>;

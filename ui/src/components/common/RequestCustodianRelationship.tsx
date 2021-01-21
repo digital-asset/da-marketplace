@@ -9,7 +9,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
 
 import { useOperator } from './common'
 import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
@@ -44,13 +44,13 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
 
         switch(role) {
             case MarketRole.InvestorRole:
-                await ledger.exerciseByKey(Investor.Investor_RequestCustodianRelationship, key, args);
+                await ledger.exerciseByKey(Investor.RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.IssuerRole:
                 await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.BrokerRole:
-                await ledger.exerciseByKey(Broker.Broker_RequestCustodianRelationship, key, args);
+                await ledger.exerciseByKey(Broker.RequestCustodianRelationship, key, args);
                 break;
             case MarketRole.ExchangeRole:
                 await ledger.exerciseByKey(Exchange.Exchange_RequestCustodianRelationship, key, args);

@@ -4,6 +4,7 @@ import DA.Finance.Types
 
 import DA.Next.Set
 
+type T = Token
 
 -- | Reference data describing a token.
 template Token
@@ -20,7 +21,7 @@ template Token
     key id : Id
     maintainer key.signatories
 
-    choice Token_AddObservers : ContractId Token
+    choice AddObservers : ContractId Token
       with
         party : Party
         newObservers : Set Party
@@ -30,7 +31,7 @@ template Token
         create this with observers = union observers newObservers
 
     controller id.signatories can
-      Token_SetObservers : ContractId Token
+      SetObservers : ContractId Token
         with newObservers : Set Party
         do create this with observers = newObservers
 

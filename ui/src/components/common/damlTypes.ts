@@ -5,11 +5,13 @@ import {
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
-    Registry,
     Custodian,
     Notification,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -71,7 +73,7 @@ export type ContractInfo<T> = {
 
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
 export type TokenInfo = ContractInfo<Token.Token>;
-export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
+export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.Invitation>;
 export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
 export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
 export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
@@ -79,7 +81,7 @@ export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.Exchang
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
 export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
 export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianRelationshipRequest>;
-export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
-export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
-export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
-export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
+export type RegisteredCustodianInfo = ContractInfo<RegisteredCustodian>;
+export type RegisteredExchangeInfo = ContractInfo<RegisteredExchange>;
+export type RegisteredInvestorInfo = ContractInfo<RegisteredInvestor>;
+export type DismissibleNotificationInfo = ContractInfo<Notification.Dismissible>;

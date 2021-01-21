@@ -4,8 +4,8 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
+import { Invitation as BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -96,7 +96,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value,
         };
-        await ledger.exerciseByKey(RegisteredBroker.RegisteredBroker_UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredBroker.UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 
@@ -106,7 +106,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
             name: profile.name.value,
             location: profile.location.value
         };
-        await ledger.exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
+        await ledger.exerciseByKey(BrokerInvitation.Accept, key, args)
                     .catch(err => console.error(err));
     }
 

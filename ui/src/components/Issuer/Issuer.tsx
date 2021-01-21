@@ -5,7 +5,7 @@ import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
@@ -76,7 +76,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             newTitle: profile.title.value,
             newIssuerID: profile.issuerID.value
         };
-        await ledger.exerciseByKey(RegisteredIssuer.RegisteredIssuer_UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredIssuer.UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 

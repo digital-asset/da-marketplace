@@ -1,9 +1,11 @@
 module Marketplace.BinaryOption where
 
-import DA.Finance.Types
+import DA.Finance.Types (Id)
 
 import DA.Next.Set
 
+
+type T = BinaryOption
 
 -- | Reference data describing a binary option.
 template BinaryOption
@@ -21,7 +23,7 @@ template BinaryOption
     key id : Id
     maintainer key.signatories
 
-    choice BinaryOption_AddObservers : ContractId BinaryOption
+    choice AddObservers : ContractId BinaryOption
       with
         party : Party
         newObservers : Set Party
@@ -35,13 +37,13 @@ template BinaryOption
         with newObservers : Set Party
         do create this with observers = newObservers
 
-      nonconsuming BinaryOption_Settle : ContractId SettledBinaryOption
+      nonconsuming Settle : ContractId Settled
         with
           outcome : Bool
-        do create SettledBinaryOption with ..
+        do create Settled with ..
 
 
-template SettledBinaryOption
+template Settled
   with
     id : Id
     description : Text
