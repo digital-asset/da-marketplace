@@ -1,0 +1,102 @@
+module Marketplace.Loan.Proposals where
+
+import DA.Finance.Types qualified as T
+import DA.Next.Set qualified as S
+import Marketplace.Loan.Model qualified as Loan
+
+-- | Proposal for Offering Loans
+template OfferProposal
+  with
+    id : T.Id
+      -- ^ Identifier for this Offer
+    conditions : Loan.Conditions
+      -- ^ Proposed loan details
+    approver : Party
+      -- ^ Party approving/disapproving this loan
+  where
+    signatory conditions.fundingParty
+    observer approver
+
+    controller approver can
+      OfferProposal_Approve : ContractId Loan.Offer
+        with
+          creationDateTime : Time
+        do
+          create Loan.Offer with
+            id = id with signatories = S.fromList [approver, conditions.fundingParty]
+            ..
+
+      OfferProposal_Disapprove : ()
+        do return ()
+
+    controller conditions.fundingParty can
+      OfferProposal_Cancel : ()
+        do return ()
+
+-- | Proposal for Auto Funding Parties (Market Makers)
+template AutoFundingProposal
+  with
+    id : T.Id
+      -- ^ Identifier for the Auto Funding contract
+    autoFundParty : Party
+      -- ^ The Party to be automically funded
+    approver : Party
+      -- ^ Party approving this proposal
+    observers : S.Set Party
+  where
+    signatory autoFundParty
+    observer approver
+
+    controller approver can
+      AutoFundingProposal_Approve : ContractId Loan.AutoFunding
+        with
+          creationDateTime : Time
+        do
+          create Loan.AutoFunding with
+            id = id with signatories = S.fromList [approver, autoFundParty]
+            ..
+
+      AutoFundingProposal_Disapprove : ()
+        do return ()
+
+    controller autoFundParty can
+      AutoFundingProposal_Cancel : ()
+        do return ()
+
+-- | Proposal for Auto Renewing Loans
+template AutoRenewalProposal
+  with
+    id : T.Id
+      -- ^ Identifier for this Auto Renewal contract
+    account : T.Account
+      -- ^ The funding account of the funding party
+    assetId : T.Id
+      -- ^ Underlying Asset offered for funding
+    fundingParty : Party
+      -- ^ The party offering the funding
+    interest : Loan.RateAmount
+      -- ^ The interest for borrowing the asset
+    collateral : Loan.RateAmount
+      -- ^ The collateral required from the borrower to borrow the asset
+    approver : Party
+      -- ^ Party approving/disapproving this loan
+    observers : S.Set Party
+  where
+    signatory fundingParty
+    observer approver
+
+    controller approver can
+      AutoRenewalProposal_Approve : ContractId Loan.AutoRenewal
+        with
+          creationDateTime : Time
+        do
+          create Loan.AutoRenewal with
+            id = id with signatories = S.fromList [approver, fundingParty]
+            ..
+
+      AutoRenewalProposal_Disapprove : ()
+        do return ()
+
+    controller fundingParty can
+      AutoRenewalProposal_Cancel : ()
+        do return ()

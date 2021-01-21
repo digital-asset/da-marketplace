@@ -1,0 +1,274 @@
+module Marketplace.Repo.Settlement where
+
+import DA.Finance.Asset qualified as A
+import DA.Finance.Asset.Settlement qualified as S
+import DA.Finance.Types qualified as T
+import DA.Finance.Utils qualified as U
+import DA.Next.Set qualified as S
+import DA.Optional qualified as O
+import Marketplace.Repo.Model qualified as R
+
+-- Imports for testing
+import Daml.Script
+import DA.Date qualified as D
+import DA.Assert ((===))
+import DA.List (head, last)
+
+-- | Descriptor for the leg to lifecycle
+data Leg
+    = NearLeg
+    | MiddleLeg
+    | FarLeg
+  deriving (Eq, Show)
+
+-- | Data describing settlement details.
+data SettlementDetails = SettlementDetails
+  with
+    senderAccount : T.Account
+      -- ^ The sender account.
+    receiverAccount : T.Account
+      -- ^ The receiver account.
+    depositCid : ContractId A.AssetDeposit
+      -- ^ The allocated asset deposit.
+  deriving (Eq, Show)
+
+-- TODO : see DvpSettlementRule as an example of SettlementInstruction usage
+template RepoSettlementInstruction
+  with
+    id : T.Id
+    -- ^ Identifier for this Settlement Instruction
+    repoCid : ContractId R.Repo
+    -- ^ Repo to apply a lifecycle effect to
+    observers : S.Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : T.Id
+    maintainer key.signatories
+
+    controller id.signatories can
+      RepoSettlementInstruction_Transfer : (ContractId RepoSettlementInstruction, ContractId R.Repo, [ContractId A.AssetDeposit])
+        with
+          leg : Leg
+          -- ^ Leg of the Repo to lifecycle
+          transferAssets : [SettlementDetails]
+          -- ^ The assets to transfer between parties
+        do
+          repo <- U.fetchAndArchive repoCid
+          validateLegStatus repo leg
+
+          let newRepo = incrementRepoVersion . (setRepoStatus R.Completed leg)
+              assetHolders = getAssetHoldersForLeg repo leg
+
+          matches <- matchAndValidateTransfers transferAssets assetHolders
+          newRepoCid <- create $ newRepo repo
+          newAssetDeposits <- forA matches (\(settlementDetail, assetDeposit) -> exerciseByKey @S.AssetSettlementRule assetDeposit.account.id S.AssetSettlement_Transfer with
+              receiverAccountId = settlementDetail.receiverAccount.id, depositCid = settlementDetail.depositCid)
+
+          newRepoSiCid <- create this with
+            id = id with version = id.version + 1
+            repoCid = newRepoCid
+
+          return (newRepoSiCid, newRepoCid, newAssetDeposits)
+
+      RepoSettlementInstruction_Archive : () do return ()
+
+-- | Matches the asset deposit with the expected asset and holder from the Repo
+matchAndValidateTransfers : [SettlementDetails] -> [R.AssetHolder] -> Update [(SettlementDetails, A.AssetDeposit)]
+matchAndValidateTransfers settlementDetails assetHolders = forA settlementDetails (\settlementDetail -> do
+        assetDeposit <- fetch settlementDetail.depositCid
+
+        let assetHolder = O.fromSomeNote ("RepoSettlement :: Transfer does not match Repo")
+              $ find (\y -> y.account.owner == assetDeposit.account.owner && y.asset == assetDeposit.asset) assetHolders
+        pure $ (settlementDetail, assetDeposit)
+    )
+
+-- | Validates the status of a leg
+validateLegStatus : R.Repo -> Leg -> Update ()
+validateLegStatus repo leg = do
+    let legStatus = case leg of
+          NearLeg   -> repo.legs.nearLeg.status
+          MiddleLeg -> repo.legs.middleLeg.status
+          FarLeg    -> repo.legs.farLeg.status
+    assertMsg ("RepoSettlement :: Leg '" <> show leg <> "' is in the incorrect status=" <> show legStatus) $ legStatus == R.Waiting
+    pure ()
+
+-- | Gets the expected holders and assets for a specific leg from the repo contract
+getAssetHoldersForLeg : R.Repo -> Leg -> [R.AssetHolder]
+getAssetHoldersForLeg repo = \case
+    NearLeg -> [repo.legs.nearLeg.lender, repo.legs.nearLeg.margin]
+    MiddleLeg -> [repo.legs.middleLeg.settle, repo.legs.middleLeg.collateral]
+    FarLeg -> [repo.legs.farLeg.collateral, repo.legs.farLeg.lentAsset]
+
+-- | Update the status of a repo depending on the leg being processed
+setRepoStatus : R.Status -> Leg -> R.Repo -> R.Repo
+setRepoStatus status leg repo =
+    repo with
+      legs = case leg of
+        NearLeg   -> repo.legs with nearLeg = repo.legs.nearLeg with status
+        MiddleLeg -> repo.legs with middleLeg = repo.legs.middleLeg with status
+        FarLeg    -> repo.legs with farLeg = repo.legs.farLeg with status
+
+-- | Update the version of the repo
+incrementRepoVersion : R.Repo -> R.Repo
+incrementRepoVersion repo =
+    repo with
+      id = repo.id with
+        version = repo.id.version + 1
+
+test : Script ()
+test = do
+  now <- getTime
+  let currentDate = D.toDateUTC now
+
+  -- Create our parties
+  alice    <- allocatePartyWithHint "Alice"    (PartyIdHint "Alice")
+  bob      <- allocatePartyWithHint "Bob"      (PartyIdHint "Bob")
+  charlie  <- allocatePartyWithHint "charlie"  (PartyIdHint "charlie")
+  exchange <- allocatePartyWithHint "Exchange" (PartyIdHint "Exchange")
+
+  -- Create Ids
+  let repoId              = T.Id with signatories = S.fromList [exchange], label = "Repo@3%"              , version = 1
+      repoSiId            = T.Id with signatories = S.fromList [exchange], label = "RepoSI for Repo@3%"   , version = 1
+      alicesAccountId     = T.Id with signatories = S.fromList [exchange], label = "Alices account"       , version = 1
+      bobsAccountId       = T.Id with signatories = S.fromList [exchange], label = "Bobs account"         , version = 1
+      charliesAccountId   = T.Id with signatories = S.fromList [exchange], label = "Charlies account"     , version = 1
+      usdAssetId          = T.Id with signatories = S.fromList [exchange], label = "1USD"                 , version = 1
+      ethAssetId          = T.Id with signatories = S.fromList [exchange], label = "1ETH"                 , version = 1
+
+  -- Create Accounts
+  let alicesAccount   = T.Account with id = alicesAccountId  , provider = exchange, owner = exchange
+      bobsAccount     = T.Account with id = bobsAccountId    , provider = exchange, owner = exchange
+      charliesAccount = T.Account with id = charliesAccountId, provider = exchange, owner = exchange
+
+  -- Create Assets
+  let alicesAsset     = T.Asset with id = ethAssetId, quantity = 1.0
+      aliceCollateral = T.Asset with id = usdAssetId, quantity = 110.0
+      bobsCollateral  = T.Asset with id = usdAssetId, quantity = 10.0
+      bobsAsset       = T.Asset with id = ethAssetId, quantity = 1.3
+      charliesAsset   = T.Asset with id = usdAssetId, quantity = 100.0
+
+  -- Create the Repo contract
+  repoCid <- exchange `submit` createCmd R.Repo with
+    id = repoId
+    rate = R.Fixed with percentage = 0.03, dayCount = R.Thirty_360
+    duration = R.Intraday
+    legs = R.Legs with
+      nearLeg = R.NearLeg with
+        lender = R.AssetHolder with account = alicesAccount, asset = alicesAsset
+        margin = R.AssetHolder with account = bobsAccount  , asset = bobsCollateral
+        nominalValue = 100.0
+        collateralRequirement = Some $ R.Haircut 0.10
+        purchaseDate = currentDate
+        purchasePrice = 110.0
+        status = R.Waiting
+      middleLeg = R.MiddleLeg with
+        settle = R.AssetHolder with account = bobsAccount, asset = alicesAsset
+        collateral = R.AssetHolder with account = charliesAccount, asset = charliesAsset
+        status = R.Waiting
+      farLeg = R.FarLeg with
+        collateral = R.AssetHolder with account = alicesAccount, asset = aliceCollateral
+        lentAsset = R.AssetHolder with account = bobsAccount, asset = bobsAsset
+        repurchaseDate = Some currentDate
+        status = R.Waiting
+    creationDate = currentDate
+    observers = S.fromList [alice, bob]
+
+  -- Create the Repo SettlementInstruction contract
+  repoSiCid <- exchange `submit` createCmd RepoSettlementInstruction with
+    id = repoSiId
+    repoCid = repoCid
+    observers = S.fromList [alice, bob]
+
+  -- Create asset deposits for near leg
+  alicesAssetDepositCid <- exchange `submit` createCmd A.AssetDeposit with
+    account = alicesAccount
+    asset = alicesAsset
+    observers = S.fromList [alice]
+  bobsAssetDepositCid <- exchange `submit` createCmd A.AssetDeposit with
+    account = bobsAccount
+    asset = bobsCollateral
+    observers = S.fromList [bob]
+  charliesAssetDepositCid <- exchange `submit` createCmd A.AssetDeposit with
+    account = charliesAccount
+    asset = charliesAsset
+    observers = S.fromList [charlie]
+
+  -- Create the settlement details
+  let alicesSi   = SettlementDetails with senderAccount = alicesAccount  , receiverAccount = bobsAccount  , depositCid = alicesAssetDepositCid
+      bobSi      = SettlementDetails with senderAccount = bobsAccount    , receiverAccount = alicesAccount, depositCid = bobsAssetDepositCid
+      charliesSi = SettlementDetails with senderAccount = charliesAccount, receiverAccount = alicesAccount, depositCid = charliesAssetDepositCid
+
+  -- Create the AssetSettlementRules for AssetDeposits
+  exchange `submit` createCmd S.AssetSettlementRule with
+    account = alicesAccount
+    observers = S.fromList [alice]
+    ctrls = S.fromList [exchange]
+  exchange `submit` createCmd S.AssetSettlementRule with
+    account = bobsAccount
+    observers = S.fromList [bob]
+    ctrls = S.fromList [exchange]
+  exchange `submit` createCmd S.AssetSettlementRule with
+    account = charliesAccount
+    observers = S.fromList [charlie]
+    ctrls = S.fromList [exchange]
+
+  -- Process the nearleg
+  (repoSiCid, repoCid, assetDepositCids) <- exchange `submit` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = NearLeg, transferAssets = [alicesSi, bobSi]
+  length assetDepositCids === 2
+
+  -- Ensure that calling a leg with a transfer which doesnt match the original repo fails
+  exchange `submitMustFail` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = NearLeg, transferAssets = [alicesSi, charliesSi]
+
+  -- Ensure that calling a leg with a tranfer where the asset doesnt match whats on the repo for that leg fails
+  let unknownAssetId = T.Id with signatories = S.fromList [exchange], label = "I dont exist", version = 1
+      alicesAssetFail = T.Asset with id = unknownAssetId, quantity = 1.0
+  alicesAssetDepositCidFail <- exchange `submit` createCmd A.AssetDeposit with
+    account = alicesAccount
+    asset = alicesAssetFail
+    observers = S.fromList [alice]
+  let alicesSiFail = SettlementDetails with senderAccount = alicesAccount, receiverAccount = bobsAccount, depositCid = alicesAssetDepositCidFail
+  exchange `submitMustFail` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = NearLeg, transferAssets = [alicesSiFail, bobSi]
+  exchange `submit` archiveCmd alicesAssetDepositCidFail
+
+-- Ensure that calling a leg with a tranfer where the asset quantity doesnt match whats on the repo fails
+  let alicesAssetFail2 = T.Asset with id = ethAssetId, quantity = 1.123
+  alicesAssetDepositCidFail2 <- exchange `submit` createCmd A.AssetDeposit with
+    account = alicesAccount
+    asset = alicesAssetFail2
+    observers = S.fromList [alice]
+  let alicesSiFail2 = SettlementDetails with senderAccount = alicesAccount, receiverAccount = bobsAccount, depositCid = alicesAssetDepositCidFail2
+  exchange `submitMustFail` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = NearLeg, transferAssets = [alicesSiFail2, bobSi]
+  exchange `submit` archiveCmd alicesAssetDepositCidFail2
+
+  -- Get the asset deposit lent to Bob which will be transferred to Charlie
+  bobsLentAssetDeposit <- filter (\ad -> ad.account.id.label == bobsAccountId.label && ad.asset.id.label == ethAssetId.label) . O.catOptionals <$> forA [head assetDepositCids] (queryContractId exchange)
+  length bobsLentAssetDeposit === 1
+
+  -- Lets cheat and get the CID which we know is the head of the list :)
+  let bobSi_2 = SettlementDetails with senderAccount = bobsAccount, receiverAccount = charliesAccount, depositCid = head assetDepositCids
+
+  -- Process the middle leg
+  (repoSiCid, repoCid, assetDepositCids2) <- exchange `submit` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = MiddleLeg, transferAssets = [bobSi_2, charliesSi]
+
+  -- Merge Alices Asset Deposits of 100USD and 10USD into one asset deposit
+  alicesAssetDeposits <- filter (\(cid, c) -> c.account.id.label == alicesAccountId.label) <$> query @A.AssetDeposit exchange
+  length alicesAssetDeposits === 2
+
+  alicesMergedDepositCid <- exchange `submit` exerciseCmd (head alicesAssetDeposits)._1 A.AssetDeposit_Merge with depositCids = [(last alicesAssetDeposits)._1]
+  alicesMergedDeposit <- O.fromSome <$> queryContractId exchange alicesMergedDepositCid
+  alicesMergedDeposit.asset.quantity === 110.0
+
+  -- Bob buys the lent asset plus interest back from the market
+  bobsAssetDepositCid2 <- exchange `submit` createCmd A.AssetDeposit with
+    account = bobsAccount
+    asset = bobsAsset
+    observers = S.fromList [bob]
+
+  let alicesSi2 = SettlementDetails with senderAccount = alicesAccount, receiverAccount = bobsAccount  , depositCid = alicesMergedDepositCid
+      bobSi2    = SettlementDetails with senderAccount = bobsAccount  , receiverAccount = alicesAccount, depositCid = bobsAssetDepositCid2
+
+  (repoSiCid, repoCid, assetDepositCids) <- exchange `submit` exerciseCmd repoSiCid RepoSettlementInstruction_Transfer with leg = FarLeg, transferAssets = [alicesSi2, bobSi2]
+
+  pure ()

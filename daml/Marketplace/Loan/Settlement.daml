@@ -1,0 +1,240 @@
+module Marketplace.Loan.Settlement where
+
+import DA.Assert ((===))
+import DA.List qualified as L
+import DA.Finance.Asset qualified as A
+import DA.Finance.Trade.SettlementInstruction qualified as SI
+import DA.Finance.Types qualified as T
+import DA.Finance.Utils qualified as U
+import DA.Next.Set qualified as S
+
+import Marketplace.Loan.Model qualified as Loan
+
+-- Imports for testing
+import Daml.Script
+import DA.Finance.Asset.Settlement (AssetSettlementRule(..))
+import DA.Foldable qualified as F
+import DA.Optional qualified as O
+
+-- | Specifies which leg to process
+data Leg
+    = Near
+    | Far
+  deriving (Eq, Show)
+
+-- | Output from the choice DvpLoanSettlement_ProcessLeg
+data DvpLoanSettlement_ProcessLeg_Response = DvpLoanSettlement_ProcessLeg_Response
+  with
+    loanAgreementCid : ContractId Loan.Agreement
+      -- ^ Updated Loan Agreement Contract Id
+    depositCids : [ContractId A.AssetDeposit]
+      -- ^ Contract Ids of transferred assets
+  deriving (Eq, Show)
+
+-- | Settles the specific leg of a LoanAgreement
+template DvpLoanSettlementRule
+  with
+    id : T.Id
+      -- ^ The identifier for the Loan Agreement to be settled
+    observers : S.Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : T.Id
+    maintainer key.signatories
+
+    controller id.signatories can
+      nonconsuming DvpLoanSettlement_ProcessLeg : DvpLoanSettlement_ProcessLeg_Response
+        with
+          loanAgreementCid : ContractId Loan.Agreement
+            -- ^ The Loan agreement to have a legs settlement instructions processed
+          leg : Leg
+            -- ^ The leg to be settled
+        do
+          loanAgreement <- U.fetchAndArchive loanAgreementCid
+          loanAgreement.id === id
+          assertMsg ("Loan agreement not in the expected status. status=" <> show loanAgreement.status)
+            $ loanAgreement.status `L.elem` [Loan.PendingNearLegSettlement, Loan.PendingFarLegSettlement]
+          assertLoanStatusMatchesLeg loanAgreement.status leg
+
+          depositCids <- concat <$> forA (getLoanSettlementDetails loanAgreement leg) (\fsd -> do
+            (siCid, si) <- Loan.fetchSettlementInstruction fsd
+            si.asset === fsd.asset
+            exercise siCid SI.SettlementInstruction_Process)
+          newFaCid <- create loanAgreement with status = Loan.getNextStatus loanAgreement.status
+
+          return DvpLoanSettlement_ProcessLeg_Response with loanAgreementCid = newFaCid, ..
+
+-- | Returns the list of Settlement details for a specific leg
+getLoanSettlementDetails : Loan.Agreement -> Leg -> [Loan.SettlementDetails]
+getLoanSettlementDetails fundingAgreement = \case
+  Near -> fundingAgreement.nearLegs
+  Far -> fundingAgreement.farLegs
+
+-- | Ensure the leg specified on the request matches the relating status on the Funding Agreement
+assertLoanStatusMatchesLeg : Loan.Status -> Leg -> Update ()
+assertLoanStatusMatchesLeg = \status leg -> case (status, leg) of
+  (Loan.PendingNearLegSettlement, Near) -> return ()
+  (Loan.PendingFarLegSettlement, Far) -> return ()
+  _ -> abort ("Funding agreement status and leg mismatch. status=" <> show status <> " , leg=" <> show leg)
+
+-- | Borrowing from the Loan Book
+-- Note : Ignoring signatures for testing purposes - setting all to broker :)
+test : Script ()
+test = do
+  now <- getTime
+
+  -- Create our parties
+  alice    <- allocatePartyWithHint "Alice"    (PartyIdHint "Alice")
+  bob      <- allocatePartyWithHint "Bob"      (PartyIdHint "Bob")
+  charlie  <- allocatePartyWithHint "charlie"  (PartyIdHint "charlie")
+  exchange <- allocatePartyWithHint "Exchange" (PartyIdHint "Exchange")
+  broker   <- allocatePartyWithHint "Broker"   (PartyIdHint "Broker")
+
+  -- Common
+  let usdAssetId = T.Id with signatories = S.fromList [broker], label = "1@USD", version = 1
+      aliceAccountId = T.Id with signatories = S.fromList [broker], label = "account@alice", version = 1
+      aliceAccount = T.Account with id = aliceAccountId, provider = broker, owner = broker
+      bobAccountId = T.Id with signatories = S.fromList [broker], label = "account@bob", version = 1
+      bobAccount = T.Account with id = bobAccountId, provider = broker, owner = broker
+
+  -- 1/ Lender(Alice) creates an Asset Deposit and an Asset Settlement Rule
+  aliceUsdDepositCid <- broker `submit` createCmd A.AssetDeposit with
+    account = aliceAccount
+    asset = T.Asset with id = usdAssetId, quantity = 1000.0
+    observers = S.fromList [broker]
+
+  aliceAssetSettlementRuleCid <- broker `submit` createCmd AssetSettlementRule with
+    account = aliceAccount
+    observers = S.fromList [broker]
+    ctrls = S.fromList [broker]
+
+  -- 2/ Borrower(Bob) creates an Asset Deposit and an Asset Settlement Rule
+  bobUsdDepositCid <- broker `submit` createCmd A.AssetDeposit with
+    account = bobAccount
+    asset = T.Asset with id = usdAssetId, quantity = 200.0
+    observers = S.fromList [broker]
+
+  bobAssetSettlementRuleCid <- broker `submit` createCmd AssetSettlementRule with
+    account = bobAccount
+    observers = S.fromList [broker]
+    ctrls = S.fromList [broker]
+
+  -- 3/ Alice moves her Asset Deposit into her Funding account, creates a Funding Offer which gets submitted to the exchange
+
+  -- 4/ Bob looks at the funding book and takes the top loan
+
+  -- 5/ Create Loan Agreement and required contracts
+  let borrowSI     = SI.SettlementDetails with senderAccount = aliceAccount, receiverAccount = bobAccount, depositCid = None
+      collateralSI = SI.SettlementDetails with senderAccount = bobAccount, receiverAccount = aliceAccount, depositCid = None
+      loanAgreementId = T.Id with signatories = S.fromList [broker], label = "Loan USD@5%", version = 1
+      masterAgreement = T.MasterAgreement with
+        id = T.Id with signatories = S.fromList [broker], label = "masterAgreement@[alice,bob]", version = 1
+        party1 = alice
+        party2 = bob
+      nearLegCollateralTradeId = T.Id with signatories = S.fromList [broker], label = "nearLeg@collateral", version = 1
+      nearLegCollateralAsset = T.Asset with id = usdAssetId, quantity = 200.0
+      nearLegBorrowedAssetTradeId = T.Id with signatories = S.fromList [broker], label = "nearLeg@borrowedAsset", version = 1
+      nearLegBorrowedAsset = T.Asset with id = usdAssetId, quantity = 1000.0
+      farLegBorrowedAssetTradeId = T.Id with signatories = S.fromList [broker], label = "farLeg@borrowedAsset", version = 1
+      farLegBorrowedAsset = T.Asset with id = usdAssetId, quantity = 850.0
+
+  loanAgreementCid <- broker `submit` createCmd Loan.Agreement with
+    id = loanAgreementId
+    conditions = Loan.Conditions with
+      asset = T.Asset with id = usdAssetId, quantity = 1000.0
+      fundingParty = alice
+      interest = Loan.RateAmount with rate = 5.0, amount = 50.0
+      collateral = Loan.RateAmount with rate = 20.0, amount = 200.0
+      observers = S.fromList [alice, bob]
+    borrower = bob
+    nearLegs = [
+      Loan.SettlementDetails with tradeId = nearLegCollateralTradeId , asset = nearLegCollateralAsset, ..,
+      Loan.SettlementDetails with tradeId = nearLegBorrowedAssetTradeId, asset = nearLegBorrowedAsset, ..
+      ]
+    farLegs = [
+      Loan.SettlementDetails with tradeId = farLegBorrowedAssetTradeId, asset = farLegBorrowedAsset, ..
+      ]
+    status = Loan.PendingNearLegSettlement
+    creationDateTime = now
+
+  nearlegCollateralSiCid <- broker `submit` createCmd SI.SettlementInstruction with
+    tradeId = nearLegCollateralTradeId
+    asset = nearLegCollateralAsset
+    steps = [SI.SettlementDetails with
+      senderAccount = bobAccount
+      receiverAccount = aliceAccount
+      depositCid = None]
+    observers = S.fromList [alice, bob]
+    ..
+
+  nearlegBorrowedAssetSiCid <- broker `submit` createCmd SI.SettlementInstruction with
+    tradeId = nearLegBorrowedAssetTradeId
+    asset = nearLegBorrowedAsset
+    steps = [SI.SettlementDetails with
+      senderAccount = aliceAccount
+      receiverAccount = bobAccount
+      depositCid = None]
+    observers = S.fromList [alice, bob]
+    ..
+
+  farLegBorrowedAssetSiCid <- broker `submit` createCmd SI.SettlementInstruction with
+    tradeId = farLegBorrowedAssetTradeId
+    asset = farLegBorrowedAsset
+    steps = [SI.SettlementDetails with
+      senderAccount = bobAccount
+      receiverAccount = aliceAccount
+      depositCid = None]
+    observers = S.fromList [alice, bob]
+    ..
+
+  -- 6/ Create our Settlement DvP
+  dvpLoanSettlementRuleCid <- broker `submit` createCmd DvpLoanSettlementRule with
+    id = loanAgreementId
+    observers = S.fromList [alice, bob]
+
+  -- 7/ Allocate Near leg assets
+  nearlegCollateralSiCid    <- broker `submit` exerciseCmd nearlegCollateralSiCid SI.SettlementInstruction_AllocateNext with depositCid = bobUsdDepositCid, ctrl = broker
+  nearlegBorrowedAssetSiCid <- broker `submit` exerciseCmd nearlegBorrowedAssetSiCid SI.SettlementInstruction_AllocateNext with depositCid = aliceUsdDepositCid, ctrl = broker
+
+  -- 8/ Process Near leg
+  dvpLoanSettlementProcessResponse <- broker `submit` exerciseCmd dvpLoanSettlementRuleCid DvpLoanSettlement_ProcessLeg with leg = Near, ..
+
+  -- 9/ Assert AssetDeposits and status of the LoanAgreement
+  loanAgreement <- O.fromSome <$> queryContractId broker dvpLoanSettlementProcessResponse.loanAgreementCid
+  loanAgreement.status === Loan.PendingFarLegSettlement
+
+  nearLegAssetDeposits <- O.catOptionals <$> forA dvpLoanSettlementProcessResponse.depositCids (queryContractId broker)
+  nearLegAssetDeposits <- forA dvpLoanSettlementProcessResponse.depositCids (\depositCid -> do
+    result <- O.fromSome <$> queryContractId broker depositCid
+    pure (depositCid, result))
+  F.forA_ nearLegAssetDeposits (\deposit -> do
+    deposit._2.asset.id === usdAssetId
+    assert (deposit._2.account == aliceAccount && deposit._2.asset.quantity == 200.0 || deposit._2.account == bobAccount && deposit._2.asset.quantity == 1000.0))
+
+  -- 10/ Split bobs deposit in order to return asset to lender
+  let bobUsdDeposit = O.fromSome $ find (\deposit -> deposit._2.account == bobAccount) nearLegAssetDeposits
+  bobUsdDepositCids <- broker `submit` exerciseCmd bobUsdDeposit._1 A.AssetDeposit_Split with quantities = [850.0]
+  bobUsdDeposits <- forA bobUsdDepositCids (\depositCid -> do
+    result <- O.fromSome <$> queryContractId broker depositCid
+    pure (depositCid, result))
+  let bobFarLegDeposit = O.fromSome $ find (\deposit -> deposit._2.asset.quantity == 850.0) bobUsdDeposits
+
+  -- 11/ Allocate to far leg
+  farlegSiCid <- broker `submit` exerciseCmd farLegBorrowedAssetSiCid SI.SettlementInstruction_AllocateNext with depositCid = bobFarLegDeposit._1, ctrl = broker
+
+  -- 12/ Process Far leg
+  dvpLoanSettlementProcessResponse <- broker `submit` exerciseCmd dvpLoanSettlementRuleCid DvpLoanSettlement_ProcessLeg with leg = Far, loanAgreementCid = dvpLoanSettlementProcessResponse.loanAgreementCid
+
+  -- 13/ Assert AssetDeposits and status of the LoanAgreement
+  loanAgreement <- O.fromSome <$> queryContractId broker dvpLoanSettlementProcessResponse.loanAgreementCid
+  loanAgreement.status === Loan.Completed
+
+  farLegAssetDeposits <- O.catOptionals <$> forA dvpLoanSettlementProcessResponse.depositCids (queryContractId broker)
+  farLegAssetDeposits <- forA dvpLoanSettlementProcessResponse.depositCids (\depositCid -> do
+    result <- O.fromSome <$> queryContractId broker depositCid
+    pure (depositCid, result))
+  F.forA_ farLegAssetDeposits (\deposit -> do
+    deposit._2.asset.id === usdAssetId
+    assert (deposit._2.account == aliceAccount && deposit._2.asset.quantity == 850.0))

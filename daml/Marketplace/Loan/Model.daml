@@ -1,0 +1,163 @@
+module Marketplace.Loan.Model where
+
+import DA.Finance.Trade.SettlementInstruction qualified as SI
+import DA.Finance.Types qualified as T
+import DA.Next.Set qualified as S
+
+-- | State of a Loan Agreement
+-- TODO: Should we have new status and thusly allocate near legs then move the status from New -> PendingNearLegSettlement ???
+data Status
+    = PendingNearLegSettlement
+    | PendingFarLegSettlement
+    | Failed Text
+    | Cancelled
+    | Defaulted
+    | Completed
+  deriving (Eq, Show)
+
+-- | Gets the next status of a Funding Agreement based on the current status
+-- If there is no next status, simply return the current status << Should we throw an error in this scenario
+getNextStatus : Status -> Status
+getNextStatus = \case
+  PendingNearLegSettlement -> PendingFarLegSettlement
+  PendingFarLegSettlement -> Completed
+  status -> status
+
+-- | Rate coupled to the calculated Amount
+data RateAmount = RateAmount
+  with
+    rate : Decimal
+    amount : Decimal
+  deriving (Eq, Show)
+
+-- | Specifies the underlying loan conditions
+data Conditions = Conditions
+  with
+    asset : T.Asset
+      -- ^ Underlying Asset offered for funding
+    fundingParty : Party
+      -- ^ The party offering the funding
+    interest : RateAmount
+      -- ^ The interest for borrowing the asset
+    collateral : RateAmount
+      -- ^ The collateral required from the borrower to borrow the asset
+    observers : S.Set Party
+  deriving (Eq, Show)
+
+-- | A Settlement instruction with the expected asset to be exchanged
+data SettlementDetails = SettlementDetails
+  with
+    masterAgreement : T.MasterAgreement
+      -- ^ The master agreement to which the settlement applies.
+    tradeId : T.Id
+      -- ^ The trade under the master agreement to which the settlement applies.
+    asset : T.Asset
+      -- ^ The asset to be exchanged
+  deriving (Eq, Show)
+
+-- | Fetches by key, the SettlementInstruction contract based off the LoanSettlementDetails
+fetchSettlementInstruction : SettlementDetails -> Update (ContractId SI.SettlementInstruction, SI.SettlementInstruction)
+fetchSettlementInstruction = \lsd -> fetchByKey @SI.SettlementInstruction (lsd.masterAgreement.id, lsd.tradeId, lsd.asset.id)
+
+-- | A request to borrow assets made to the exchange
+-- This request may be manual from the Market Maker OR automatically created on trade execution matching
+-- TODO: This is simplified for now - no rate of interest nor collateral set, etc.
+template Request
+  with
+    id : T.Id
+      -- ^ Identifier for this Auto Renewal contract
+    account : T.Account
+      -- ^ The exchange account of the borrowing party
+    asset : T.Asset
+      -- ^ The asset the borrower wants to acquire
+    borrower : Party
+      -- ^ The party borrowing the funding
+    creationDateTime : Time
+      -- ^ When this agreement was created
+    observers : S.Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+-- | An open Offer waiting for a match on the exchange
+template Offer
+  with
+    id : T.Id
+      -- ^ Identifier for this Offer
+    conditions : Conditions
+      -- ^ Underlying specifics of this loan
+    creationDateTime : Time
+      -- ^ When this agreement was created
+  where
+    signatory id.signatories
+    observer conditions.observers
+
+    key id : T.Id
+    maintainer key.signatories
+
+-- | An agreement between the lender and the borrower for an asset with specific conditions
+template Agreement
+  with
+    id : T.Id
+      -- ^ Identifier of this Agreement
+    conditions : Conditions
+      -- ^ Underlying specifics of this loan
+    borrower : Party
+      -- ^ The party taking the funding
+    nearLegs : [SettlementDetails]
+      -- ^ Initial transfers executed upon inception of a loan agreement
+    farLegs : [SettlementDetails]
+      -- ^ The transfers which occur at the end of the Loan
+    status : Status
+      -- ^ Current state of the loan Agreememnt
+    creationDateTime : Time
+      -- ^ When this agreement was created
+  where
+    signatory id.signatories
+    observer conditions.observers
+
+    key (id, conditions.asset) : (T.Id, T.Asset)
+    maintainer key._1.signatories
+
+-- | Agreement between the party (ie, the Market Maker) and the counterparty (ie, the broker) which allows the counterparty
+-- to automatically acquire funding on behalf of the party.
+template AutoFunding
+  with
+    id : T.Id
+      -- ^ Identifier for this Auto Funding contract
+    autoFundParty : Party
+      -- ^ The Party to be automatically funded
+    creationDateTime : Time
+      -- ^ When this agreement was created
+    observers : S.Set Party
+  where
+    signatory autoFundParty `S.insert` id.signatories
+    observer observers
+
+    key id : T.Id
+    maintainer key.signatories
+
+-- | Auto-Renewal configuration for a party wanting automatically loan out their assets that are held their Funding Account
+template AutoRenewal
+  with
+    id : T.Id
+      -- ^ Identifier for this Auto Renewal contract
+    account : T.Account
+      -- ^ The funding account of the funding party
+    assetId : T.Id
+      -- ^ Underlying Asset offered for funding
+    fundingParty : Party
+      -- ^ The party offering the funding
+    interest : RateAmount
+      -- ^ The interest for borrowing the asset
+    collateral : RateAmount
+      -- ^ The collateral required from the borrower to borrow the asset
+    creationDateTime : Time
+      -- ^ When this agreement was created
+    observers : S.Set Party
+  where
+    signatory fundingParty `S.insert` id.signatories
+    observer observers
+
+    key id : T.Id
+    maintainer key.signatories

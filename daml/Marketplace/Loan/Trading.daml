@@ -1,0 +1,37 @@
+module Marketplace.Loan.Trading where
+
+import DA.Finance.Types qualified as T
+import DA.Next.Set qualified as S
+import Marketplace.Loan.Model qualified as Loan
+
+-- Imports for testing
+import Daml.Script
+
+template OfferRule
+  with
+    masterAgreement : T.MasterAgreement
+  where
+    signatory masterAgreement.id.signatories
+    observer masterAgreement.party1, masterAgreement.party2
+
+    nonconsuming choice OfferRule_PlaceOffer : ()
+      with
+        offerCid : ContractId Loan.Offer
+          -- ^ The offer to submit to the exchange
+        ctrl : Party
+          -- ^ masterAgreement.party1 or masterAgreement.party2
+      controller ctrl
+      do
+        -- 1/ Create Exberry contract
+        -- 2/
+        return ()
+
+
+
+
+
+
+test : Script ()
+test = do
+
+  pure ()

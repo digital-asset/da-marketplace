@@ -1,0 +1,157 @@
+module Marketplace.Repo.Model where
+
+import DA.Finance.Types qualified as T
+import DA.Next.Set qualified as S
+
+-- Repo overview
+--
+-- Investor/lender provides cash to a borrower with a loan securired by the collateral of the borrower (typically bonds)
+--  If the borrower defaults, the investor/lender gets the collateral
+
+-- Repo rate is the interest rate charged by the investor/lender
+-- Investor/lender may demand collateral of greater value than the amount they lend - the difference is call the haircut
+-- Ie, when investors perceive greater risks, they may charge higher repo rates and demand greater haircuts
+
+--              Borrower / Seller (A)   Lender / Buyer (B)
+-- Side         Repo                    Reverse Repo
+-- Near leg     Sells security to B     Buys security from A
+-- Far leg      Buys security from A    Sells security to B
+
+-- Repo maturities
+-- Term - repo with a specified end date
+-- Open - no end date fixed
+
+-- Currently ignoring :
+--  Clean and dirty price for bonds
+--  Variance margin
+
+-- | Annualised rate of return included in the final settlement amount (ie, the repurchase price)
+data RepoRate
+    = Fixed with
+        percentage : Decimal
+        dayCount : DayCount
+    -- ^ Rate does not vary during the contracts duration
+    | Floating with      -- <<< ignore for now
+        offsetBps : Int
+    -- ^ Rate varies in accordance to the index in which they are pegged
+    | FixedRelative with -- <<< ignore for now
+        offsetBps : Int
+    -- ^ Rate varies in accordance to the index in which they are pegged
+  deriving (Eq, Show)
+
+-- | Determines how interest is accrued
+data DayCount
+    = Thirty_360
+    | Actual_360
+  deriving (Eq, Show)
+
+-- | The duration of the contract
+data RepoDuration
+    = Intraday
+    -- ^ Purchase and repurchase are completed on the same day
+    | Term TermDuration
+    -- ^ A repo with a standard term (or tenor) of more than one day
+    | Open
+    -- ^ Agreements without a specified repurchase date. Either party can cancel the trade unilaterally at any time
+  deriving (Eq, Show)
+
+-- | The duration of a contract for a set Term
+data TermDuration
+    = Days Int
+    | Weeks Int
+    | Months Int
+  deriving (Eq, Show)
+
+-- | Additional collateral used to offset the value of the provided collateral due to potential market value decline
+data CollateralRequirement
+    = Haircut Decimal
+    -- ^ Applied to cash and expressed as a percentage discount on the nominal value of the collateral
+    --  => (Collateral = (nominal value / (100 - haircut)) x 100)
+    | InitialMargin Decimal
+    -- ^ Applied as a percentage permium and added to the nominal value of the collateral
+    --  => (Collateral = (nominal value x (100 + initial margin)) / 100)
+  deriving (Eq, Show)
+
+-- | State of a given leg
+data Status
+    = Waiting
+    | Failed Text
+    | Cancelled
+    | Completed
+  deriving (Eq, Show)
+
+-- | The initial transaction of the repo - Specifies the financial terms of the DvP between the borrower and the lender
+-- | The lender buys the collateral at the specified purchase price in exchange for an asset they hold
+data NearLeg = NearLeg with
+    lender : AssetHolder
+    -- ^ The deposit to be lent to the borrower (Market Maker)
+    margin : AssetHolder
+    -- ^ The margin put up by the borrower in order to borrow the lenders asset
+    nominalValue : Decimal
+    -- ^ The nominal value held of the collateral
+    collateralRequirement : Optional CollateralRequirement
+    -- | ^ A requirement applied to the nominal value of the collateral if supplied
+    purchaseDate : Date
+    -- ^ Date as which the collateral vs payment is exchanged between the lender and the borrower (or value date)
+    purchasePrice : Decimal
+    -- ^ Market price of the collateral paid to the lender plus collateral requirement
+    status : Status
+  deriving (Eq, Show)
+
+-- | The investor receives the asset from the borrower and the investor transfers the proceeds to the lender
+-- | The outcome of this transaction results in the lender being fully collateralised.
+data MiddleLeg = MiddleLeg with
+    settle : AssetHolder
+    -- ^ Investor to be credited with the asset originally lent from the lender
+    collateral : AssetHolder
+    -- ^ Lender to be credited with the proceeds from the execution of the investors order
+    status : Status
+  deriving (Eq, Show)
+
+-- | The final transaction where the borrower buys their collateral back from the lender
+data FarLeg = FarLeg with
+    collateral : AssetHolder
+    -- ^ The collateral plus margin to return to the borrower
+    lentAsset : AssetHolder
+    -- ^ The asset to be returned to the lender plus repo interest
+    repurchaseDate : Optional Date
+    -- ^ Date as which the collateral is repurchased with interest by the borrower
+    --  (or maturity date - for intraday = T+0, term = T+n, open = none until cancelled by either party)
+    -- repurchasePrice : Decimal -- < Do we need this ? This should be contained in the asset...
+    -- ^ The purchase price plus the interest from the repo rate
+    --  => repurchase price = purchase price x (1 + repo rate factor x (Term / 360))
+    status : Status
+  deriving (Eq, Show)
+
+-- | A container for the various legs of the repo
+data Legs = Legs with
+    nearLeg : NearLeg
+    -- ^ The initial DvP transaction where the exchange of assets occurs
+    middleLeg : MiddleLeg
+    -- ^ The middle transaction where the investor receives their asset and the lender becomes fully collateralised
+    farLeg : FarLeg
+    -- ^ The final transaction where the initial assets are repurchased by the seller with interest (the repo rate)
+  deriving (Eq, Show)
+
+-- | The asset by Party which is expected to be held during the various legs
+data AssetHolder = AssetHolder with
+    account : T.Account
+    -- ^ Party holding the asset
+    asset : T.Asset
+    -- ^ Asset held by the holder
+  deriving (Eq, Show)
+
+template Repo
+  with
+    id : T.Id
+    rate : RepoRate
+    duration : RepoDuration
+    legs : Legs
+    creationDate : Date
+    observers : S.Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : T.Id
+    maintainer key.signatories
