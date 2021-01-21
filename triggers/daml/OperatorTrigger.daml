@@ -15,7 +15,7 @@ import qualified Marketplace.Registry.Broker as Registry (Broker, broker)
 import qualified Marketplace.Registry.Custodian as Registry (Custodian, custodian)
 import qualified Marketplace.Registry.Exchange as Registry (Exchange, exchange)
 import qualified Marketplace.Registry.Investor as Registry (Investor, investor)
-import Marketplace.Token hiding (exchange)
+import qualified Marketplace.Token as Token
 
 import Utils
 
@@ -26,7 +26,7 @@ handleOperator = Trigger
   , rule = handleOperatorRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator.T
                                               , registeredTemplate @UserSession.T
-                                              , registeredTemplate @Token
+                                              , registeredTemplate @Token.T
                                               , registeredTemplate @Registry.Broker
                                               , registeredTemplate @Registry.Custodian
                                               , registeredTemplate @Registry.Exchange
@@ -45,7 +45,7 @@ handleOperatorRule party = do
                                >> debug ("Acknowledging user session: " <> show us)
 
   -- Add all current parties to 'Token' observers if 'isPublic'
-  tokens     <- query @Token
+  tokens     <- query @Token.T
   brokers    <- map (Registry.broker . snd)    <$> query @Registry.Broker
   custodians <- map (Registry.custodian . snd) <$> query @Registry.Custodian
   exchanges  <- map (Registry.exchange . snd)  <$> query @Registry.Exchange
@@ -54,10 +54,10 @@ handleOperatorRule party = do
   forA_ tokens (handleToken party parties)
 
 -- |Add all parties as observers to a 'Token'
-handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
+handleToken : Party -> [Party] -> ContractPair Token.T -> TriggerA () ()
 handleToken party parties (cid,token) = do
   let partiesToAdd = Set.difference (Set.fromList parties) token.observers
   unless (Set.null partiesToAdd || not token.isPublic )
-    $ void $ emitExerciseCmd cid Token_AddObservers with
+    $ void $ emitExerciseCmd cid Token.AddObservers with
         party = party, newObservers = (Set.insert party partiesToAdd)
    >> debug "adding parties to token..."

@@ -11,7 +11,7 @@ import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 import qualified Marketplace.Operator as Operator
 
-import Marketplace.Token
+import qualified Marketplace.Token as Token
 import Marketplace.Trading
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -105,8 +105,8 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0
 
   -- the issuers disclose the tokens to everyone
-  btcIssuer `submit` exerciseByKeyCmd @Token btcTokenId Token_AddObservers with party = btcIssuer, newObservers = fromList [custodian, exchange, alice, bob, broker]
-  usdtIssuer `submit` exerciseByKeyCmd @Token usdtTokenId Token_AddObservers with party = usdtIssuer, newObservers = fromList [custodian, exchange, alice, bob, broker]
+  btcIssuer `submit` exerciseByKeyCmd @Token.T btcTokenId Token.AddObservers with party = btcIssuer, newObservers = fromList [custodian, exchange, alice, bob, broker]
+  usdtIssuer `submit` exerciseByKeyCmd @Token.T usdtTokenId Token.AddObservers with party = usdtIssuer, newObservers = fromList [custodian, exchange, alice, bob, broker]
 
   -- Alice deposits some BTC under her account and gets them in a form of a deposit
   depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.01, beneficiary = alice
@@ -194,8 +194,8 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   let usdtTokenId = Id with signatories = fromList [ usdtIssuer ], label = "USDT", version = 0
 
   -- the issuers disclose the tokens to everyone
-  btcIssuer `submit` exerciseByKeyCmd @Token btcTokenId Token_AddObservers with party = btcIssuer, newObservers = fromList [custodian, exchange, alice, broker]
-  usdtIssuer `submit` exerciseByKeyCmd @Token usdtTokenId Token_AddObservers with party = usdtIssuer, newObservers = fromList [custodian, exchange, alice, broker]
+  btcIssuer `submit` exerciseByKeyCmd @Token.T btcTokenId Token.AddObservers with party = btcIssuer, newObservers = fromList [custodian, exchange, alice, broker]
+  usdtIssuer `submit` exerciseByKeyCmd @Token.T usdtTokenId Token.AddObservers with party = usdtIssuer, newObservers = fromList [custodian, exchange, alice, broker]
 
   -- alice deposits some BTC under her account and gets them in a form of a deposit
   depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit with tokenId = btcTokenId, depositQuantity = 0.01, beneficiary = alice

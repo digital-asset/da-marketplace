@@ -66,7 +66,7 @@ const ValueEntryModal = (props: IProps) => {
 
         const newObservers = wrapTextMap([...props.currentParticipants, ...selectedObservers])
 
-        await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, { party, newObservers })
+        await ledger.exerciseByKey(Token.AddObservers, props.tokenId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))
 
         props.onRequestClose()
