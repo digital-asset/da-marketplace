@@ -8,7 +8,7 @@ import DA.Foldable hiding (elem, null)
 import DA.List
 import Daml.Trigger
 
-import Marketplace.Trading
+import qualified Marketplace.Trading.Order as Order
 
 import Utils
 
@@ -19,9 +19,9 @@ handleMatching = Trigger
   { initialize = return 0
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @OrderRequest
-                                              , registeredTemplate @OrderCancelRequest
-                                              , registeredTemplate @Order ]
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Order.Request
+                                              , registeredTemplate @Order.CancelRequest
+                                              , registeredTemplate @Order.T ]
   , heartbeat = None
   }
 
@@ -29,25 +29,25 @@ handleMatchingRule : Party -> TriggerA CurrentOrderId ()
 handleMatchingRule party = do
   debug "Running matching rule..."
 
-  -- Acknowledge all 'OrderRequest' and update current ID
-  orderRequests <- query @OrderRequest
+  -- Acknowledge all 'Order.Request' and update current ID
+  orderRequests <- query @Order.Request
   forA_ orderRequests \(cid,_) -> do
     currentOrderId <- get
-    emitExerciseCmd cid OrderRequest_Ack with orderId = currentOrderId
+    emitExerciseCmd cid Order.AckRequest with orderId = currentOrderId
     debug "Acknowledging order"
     modify (+ 1)
 
-  -- Acknowledge all 'OrderCancelRequest'
-  orderCancelRequests <- query @OrderCancelRequest
-  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid OrderCancel_Ack
+  -- Acknowledge all 'Order.CancelRequest'
+  orderCancelRequests <- query @Order.CancelRequest
+  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid Order.AckCancel
                                      >> debug "Acknowledging order cancel"
 
   -- Check for matches on all 'Order'
-  orders <- query @Order
+  orders <- query @Order.T
   forA_ orders (handleOrder party orders)
 
 -- |Check for crossing orders. If found, fill both orders. Matches by price.
-handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA CurrentOrderId ()
+handleOrder : Party -> [ContractPair Order.T] -> ContractPair Order.T -> TriggerA CurrentOrderId ()
 handleOrder party orders (orderCid, order) = do
   debug $ "Handling order: " <> show order
   let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeOrder orders
@@ -59,18 +59,18 @@ handleOrder party orders (orderCid, order) = do
   unless (null crossing) $ fill (orderCid, order) (head crossing)
 
   where
-    isOppositeOrder : ContractPair Order -> Bool
+    isOppositeOrder : ContractPair Order.T -> Bool
     isOppositeOrder (opoCid, opo) = opoCid /= orderCid
                                  && opo.isBid == (not order.isBid)
                                  && opo.pair == order.pair
 
-    isCrossing : ContractPair Order -> ContractPair Order -> Bool
+    isCrossing : ContractPair Order.T -> ContractPair Order.T -> Bool
     isCrossing (_, aggressive) (_, passive)
       | passive.exchParticipant == aggressive.exchParticipant = False
       | aggressive.isBid = passive.price <= aggressive.price
       | otherwise        = passive.price >= aggressive.price
 
-    fill : ContractPair Order -> ContractPair Order -> TriggerA CurrentOrderId ()
+    fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA CurrentOrderId ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
 
       let fillQty   = min passive.qty aggressive.qty
@@ -78,13 +78,13 @@ handleOrder party orders (orderCid, order) = do
 
       time <- getTime
 
-      emitExerciseCmd aggressiveCid Order_Fill with
+      emitExerciseCmd aggressiveCid Order.Fill with
           fillQty, fillPrice
           counterOrderId = passive.orderId
           counterParty = passive.exchParticipant
           timestamp = show time
 
-      emitExerciseCmd passiveCid Order_Fill with
+      emitExerciseCmd passiveCid Order.Fill with
           fillQty, fillPrice
           counterOrderId = aggressive.orderId
           counterParty = aggressive.exchParticipant

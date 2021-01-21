@@ -9,7 +9,8 @@ import qualified Marketplace.Investor as Investor
 import Marketplace.Issuer
 import qualified Marketplace.Operator as Operator
 
-import Marketplace.Trading
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Trade as Trade
 import Marketplace.Transfer
 
 import DA.Finance.Asset
@@ -57,7 +58,7 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
   custodian `submit` exerciseCmd debitRequestCid DepositDebitRequest_Approve
 
   -- > exchange rejects bid
-  creditRequestCid <- exchange `submit` exerciseCmd bidOrderRequestCid OrderRequest_Reject
+  creditRequestCid <- exchange `submit` exerciseCmd bidOrderRequestCid Order.RejectRequest
   aliceUsdId <- custodian `submit` exerciseCmd creditRequestCid DepositCreditRequest_Approve
 
   -- > alice places a new bid for BTC
@@ -75,13 +76,13 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
       with orderRequestCid = offerOrderRequestCid, orderId = 2
 
   -- exchange matches the two orders
-  (buyTradeCid, _) <- exchange `submit` exerciseCmd bidOrderCid Order_Fill
+  (buyTradeCid, _) <- exchange `submit` exerciseCmd bidOrderCid Order.Fill
       with fillQty = 0.01, fillPrice = 10000.0, counterParty = bob, counterOrderId = 1, timestamp = "1601394768171637000"
-  (sellTradeCid, _) <- exchange `submit` exerciseCmd offerOrderCid Order_Fill
+  (sellTradeCid, _) <- exchange `submit` exerciseCmd offerOrderCid Order.Fill
       with fillQty = 0.01, fillPrice = 10000.00, counterParty = alice, counterOrderId = 2, timestamp = "1601394768171637000"
   --
-  (_, Some txReqCid1) <- exchange `submit` exerciseCmd buyTradeCid TradeSide_Settle
-  (_, Some txReqCid2) <- exchange `submit` exerciseCmd sellTradeCid TradeSide_Settle
+  (_, Some txReqCid1) <- exchange `submit` exerciseCmd buyTradeCid Trade.Settle
+  (_, Some txReqCid2) <- exchange `submit` exerciseCmd sellTradeCid Trade.Settle
   --
   bobDepositCid <- custodian `submit` exerciseCmd txReqCid1 DepositCreditRequest_Approve
   aliceDepositCid <- custodian `submit` exerciseCmd txReqCid2 DepositCreditRequest_Approve

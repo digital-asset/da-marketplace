@@ -6,7 +6,8 @@ import Marketplace.ExchangeParticipant
 import qualified Marketplace.Registry.Exchange as Registry (Exchange(..))
 import qualified Marketplace.Notification as Notification
 import Marketplace.Token
-import Marketplace.Trading
+import qualified Marketplace.Trading.Order as Order
+-- import Marketplace.Trading.Order (Order(..))
 import Marketplace.Utils
 
 import DA.Finance.Types
@@ -151,13 +152,13 @@ template Exchange
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
           create this with binOptions = dedup $ (binOptionId, quoteTokenId) :: binOptions
 
-      nonconsuming Exchange_ApproveOrderRequest : ContractId Order
+      nonconsuming Exchange_ApproveOrderRequest : ContractId Order.T
         with
-          orderRequestCid : ContractId OrderRequest
+          orderRequestCid : ContractId Order.Request
           orderId : Int
         do
           orderRequest <- fetch orderRequestCid
           let pair = orderRequest.order.pair
           assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
             $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
-          exercise orderRequestCid OrderRequest_Ack with ..
+          exercise orderRequestCid Order.AckRequest with ..

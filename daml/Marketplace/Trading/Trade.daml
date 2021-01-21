@@ -1,0 +1,76 @@
+module Marketplace.Trading.Trade where
+
+import qualified Marketplace.BinaryOption as BinaryOption
+import Marketplace.Utils (IdPair, getAccountOwnerProvider)
+import DA.Finance.Types (Asset, Id, Account(..))
+import Marketplace.Transfer (DepositCreditRequest, DepositCreditRequest(..))
+
+type T = Trade
+
+template Trade
+  with
+    exchParticipant : Party
+    exchange : Party
+    pair : IdPair
+    price : Decimal
+    qty : Decimal
+    isBuy : Bool
+    orderId : Int
+    counterOrderId : Int
+    timestamp : Text
+    optAsset : Optional Asset
+    receiverAccountId : Id
+    isBinaryOption : Bool
+  where
+    signatory exchange, exchParticipant
+
+    controller exchange can
+      Settle : (ContractId Settled, Optional (ContractId DepositCreditRequest))
+        do
+          assert $ not isBinaryOption
+          optDepositTxReqCid <- case optAsset of
+            Some asset -> do
+              let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
+                  receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
+              creditRequestCid <- create DepositCreditRequest
+                  with owner = exchange
+                       account = receiverAccount
+                       asset = asset
+              return $ Some creditRequestCid
+            None -> return None
+          settledTradeCid <- create Settled with ..
+          return (settledTradeCid, optDepositTxReqCid)
+
+      SettleBinaryOption : (ContractId Settled, Optional (ContractId DepositCreditRequest))
+        with
+          settledBinOptionCid : ContractId BinaryOption.Settled
+        do
+          assert isBinaryOption
+          settledBinOption <- fetch settledBinOptionCid
+          let needsTransfer = settledBinOption.outcome /= isBuy
+          optCreditRequestCid <- case (optAsset, needsTransfer) of
+            (Some asset, True) -> do
+              let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
+                  receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
+              creditRequestCid <- create DepositCreditRequest
+                  with owner = exchange
+                       account = receiverAccount
+                       asset = asset
+              return $ Some creditRequestCid
+            _ -> return None
+          settledTradeCid <- create Settled with ..
+          return (settledTradeCid, optCreditRequestCid)
+
+template Settled
+  with
+    exchParticipant : Party
+    exchange : Party
+    pair : IdPair
+    price : Decimal
+    qty : Decimal
+    isBuy : Bool
+    orderId : Int
+    counterOrderId : Int
+    timestamp : Text
+  where
+    signatory exchange, exchParticipant

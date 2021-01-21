@@ -1,7 +1,9 @@
 import React from 'react'
 
 import { useStreamQueries } from '@daml/react'
-import { BrokerTrade, Order, OrderRequest, SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { BrokerTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { Settled as SettledTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Trade'
+import { Order, Request as OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order' 
 import { Header } from 'semantic-ui-react'
 
 import { OrdersIcon } from '../../icons/Icons'
@@ -25,7 +27,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allOrderRequests = useStreamQueries(OrderRequest, () => [], [], (e) => {
         console.log("Unexpected close from OrderRequest: ", e);
     }).contracts;
-    const allExchangeTrades = useStreamQueries(SettledTradeSide, () => [], [], (e) => {
+    const allExchangeTrades = useStreamQueries(SettledTrade, () => [], [], (e) => {
         console.log("Unexpected close from settledTradeSide: ", e);
     }).contracts;
     const allBrokerTrades = useStreamQueries(BrokerTrade, () => [], [], (e) => {
