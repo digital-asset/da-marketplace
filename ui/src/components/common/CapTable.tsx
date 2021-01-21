@@ -15,10 +15,10 @@ const CapTable = (props: {
 
     const [ activePage, setActivePage ] = useState(1);
     const [ activePageRows, setActivePageRows ] = useState<string[][]>([])
-
+    
     useEffect(()=> {
         setActivePageRows(rows.slice((activePage-1)*rowsPerPage, activePage*rowsPerPage))
-    },[activePage, rows, totalPages])
+    },[activePage, rows])
 
     return (
         <div className='cap-table'>
@@ -27,6 +27,7 @@ const CapTable = (props: {
                     <Table.Row>
                         {headings.map((heading, index) =>
                             <Table.HeaderCell
+                                key={index}
                                 textAlign={index+1 > headings.length/2 ? 'right': 'left'}>
                                 {heading}
                             </Table.HeaderCell>
@@ -35,11 +36,11 @@ const CapTable = (props: {
                 </Table.Header>
                 <Table.Body>
                     {rows.length > 0 ?
-                        activePageRows.map(row =>
-                            <Table.Row>
-                                {row.map((item, index) =>
+                        activePageRows.map((row, i) =>
+                            <Table.Row key={i}>
+                                {row.map((item, j) =>
                                     <Table.Cell
-                                        textAlign={index+1 > row.length/2 ? 'right': 'left'}>
+                                        textAlign={j+1 > row.length/2 ? 'right': 'left'}>
                                         {item}
                                     </Table.Cell>
                                 )}

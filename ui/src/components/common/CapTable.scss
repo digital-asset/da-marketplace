@@ -4,7 +4,7 @@
         display: flex;
         flex-direction: column;
         width: 100%;
-        align-items: flex-end;
+        align-items: flex-start;
 
         table {
             border-collapse: collapse;
@@ -12,7 +12,8 @@
             margin: 0px;
 
             th {
-                border-bottom: none;
+                border: none;
+                background-color: var(--cool-grey-100);
             }
 
             tr td {
