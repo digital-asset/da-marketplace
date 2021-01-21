@@ -34,18 +34,17 @@ data OrderDetails = OrderDetails with
     asset : Asset
     side : Side
     orderType : OrderType
+    timeInForce : TimeInForce
     -- quantity : Decimal -- This means we get the quantity from the Asset...
-    depositCid : ContractId AssetDeposit
   deriving (Eq, Show)
 
 template Order
   with
     exchange : Party
     client : Party
-    id : Int
-    exchangeOrderId : Optional Int
+    exchangeOrderId : Int
     orderDetails : OrderDetails
-    createdAt : Time
+    depositCid : ContractId AssetDeposit
   where
     signatory exchange, client
 
@@ -66,9 +65,11 @@ template Service
       nonconsuming RequestCreateOrder : (ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
           orderDetails : OrderDetails
+          depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId, depositCid = orderDetails.depositCid
+          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos
+          depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId; ..
           createOrderRequestCid <- create CreateOrderRequest with ..
           pure (createOrderRequestCid, depositCid)
 
@@ -78,24 +79,25 @@ template Service
         do
           create CancelOrderRequest with ..
 
-    -- controller exchange can
-    --   nonconsuming CreateOrder : ContractId Order
-    --     with
-    --       createOrderRequestCid : ContractId CreateOrderRequest
-    --     do
-    --       CreateOrderRequest{..} <- fetch createOrderRequestCid
-    --       archive createOrderRequestCid
-    --       create Order with ..
+    controller exchange can
+      nonconsuming CreateOrder : ContractId Order
+        with
+          createOrderRequestCid : ContractId CreateOrderRequest
+          exchangeOrderId : Int
+        do
+          CreateOrderRequest{..} <- fetch createOrderRequestCid
+          archive createOrderRequestCid
+          create Order with ..
 
-      -- nonconsuming CancelOrder : ContractId AssetDeposit
-      --   with
-      --     cancelOrderRequestCid : ContractId CancelOrderRequest
-      --   do
-      --     CancelOrderRequest{..} <- fetch cancelOrderRequestCid
-      --     archive cancelOrderRequestCid
-      --     order <- fetch orderCid
-      --     archive orderCid
-      --     exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
+      nonconsuming CancelOrder : ContractId AssetDeposit
+        with
+          cancelOrderRequestCid : ContractId CancelOrderRequest
+        do
+          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          archive cancelOrderRequestCid
+          order <- fetch orderCid
+          archive orderCid
+          exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
 
 template Offer
   with
@@ -143,6 +145,7 @@ template CreateOrderRequest
     exchange : Party
     client : Party
     orderDetails : OrderDetails
+    depositCid : ContractId AssetDeposit
   where
     signatory exchange, client
 

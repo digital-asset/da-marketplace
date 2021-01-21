@@ -32,7 +32,7 @@ class EXBERRY:
 
 
 class MARKETPLACE:
-    OrderRequest = 'Marketplace.Trading:OrderRequest'
+    OrderRequest = 'Marketplace.Trading:CreateOrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
     Token = 'Marketplace.Token:Token'
@@ -71,20 +71,20 @@ def main():
         return exercise(event.cid, 'ExberrySID_Ack', {})
 
     # Marketplace --> Exberry
-    @client.ledger_created(MARKETPLACE.OrderRequest)
+    @client.ledger_created(MARKETPLACE.CreateOrderRequest)
     def handle_order_request(event):
         sid = get_sid()
-        order = event.cdata['order']
-        sid_to_order[sid] = order
+        order = event.cdata['orderDetails']
+        sid_to_order[sid] = event.cid
 
         return create(EXBERRY.NewOrderRequest, {
             'order': {
-                'orderType': 'Limit',
+                'orderType': order['orderType'],
                 'instrument': make_instrument(order['pair']),
-                'quantity': float(order['qty']),
-                'price': float(order['price']),
-                'side': 'Buy' if order['isBid'] else 'Sell',
-                'timeInForce': 'GTC',
+                'quantity': float(order['asset']['quantity']),
+                'price': float(-1) if order['orderType'] == 'Market' else float(order['orderType']['price']),
+                'side': order['side'],
+                'timeInForce': makeTimeInForce(order['timeInForce']),
                 'mpOrderId': sid,  # we use sid for order ids
                 'userId': make_user_user_id(order['exchParticipant']),
             },
@@ -212,6 +212,17 @@ def make_instrument(pair) -> str:
 def make_user_user_id(ledger_party) -> str:
     user_id = ''.join(ch for ch in ledger_party if ch.isalnum())
     return user_id[-20:]
+
+
+def makeTimeInForce(timeInForce) -> str:
+    switch = {
+        'GoodTillCancelled': 'GTC'
+        'GoodTillDate': 'GTD'
+        'GoodAtAuction': 'GAA'
+        'ImmediateOrCancel':'IOC'
+        'FillOrKill': 'FOK'
+    }
+    return switch.get(timeInForce)
 
 
 if __name__ == "__main__":
