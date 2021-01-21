@@ -150,6 +150,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                role={MarketRole.IssuerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -189,6 +190,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <IssuerProfile
                                     content='Save'
+                                    role={MarketRole.IssuerRole}
+
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>

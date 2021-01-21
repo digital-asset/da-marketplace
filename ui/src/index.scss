@@ -134,11 +134,24 @@ html {
       font-size: 14px;
       line-height: 19px;
       color: var(--textcolor);
+
+      &.dark {
+        color: var(--white);
+      }
+
+      &.bold {
+        font-weight: 600;
+      }
     }
   }
 
   a {
-    color: var(--blue-50)
+    color: var(--blue-50);
+    font-weight: 600;
+
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   body {

@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
+
+import { EditIcon } from '../../icons/Icons';
+
 import classNames from 'classnames'
 
 import { StringKeyedObject } from './utils'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 type FieldType = 'text';
 
@@ -42,13 +46,15 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile 
 
 type ProfileProps = {
     content: string;
+    role: MarketRole;
     defaultProfile: Profile;
     inviteAcceptTile?: boolean;
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile }) => {
+const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile, role }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
+    const [ editing, setEditing ] = useState<boolean>(false)
 
     useEffect(() => {
         setProfile(defaultProfile);
@@ -66,17 +72,47 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         return accumulator || !profile[key].value;
     }, false);
 
-    return (
-        <Form className='profile'>
+    const profileForm =
+        <Form>
             { fields }
             <Button
                 className={classNames('ghost', {'dark': inviteAcceptTile})}
                 content={content}
                 disabled={disableButton}
-                onClick={() => submitProfile && submitProfile(profile)}
+                onClick={() => handleSubmitProfile(profile)}
                 type='submit'/>
         </Form>
+
+    const profileValues =
+        <div className='profile-values'>
+            {Object.keys(profile).map(key => {
+                if (profile[key].label === 'Name') {
+                return <>
+                        <Header className='profile-name'>
+                            @{profile[key].value}
+                        </Header>
+                        <p className='p2 bold'>{role.replace('Role', '')}</p>
+                    </>
+                }
+                return <p className='field-value p2'>{profile[key].label}: {profile[key].value}</p>
+            })}
+        </div>
+
+    return (
+        <div className={classNames('profile', {'landing-page': !inviteAcceptTile})}>
+            { inviteAcceptTile ? profileForm : editing? profileForm : profileValues }
+            { !inviteAcceptTile && !editing &&
+                <a className='p2 edit-profile' onClick={() => setEditing(true)}><EditIcon/> Edit Profile </a>
+            }
+        </div>
     )
+
+    function handleSubmitProfile(profile: Profile) {
+        if (submitProfile) {
+            setEditing(false)
+            submitProfile(profile)
+        }
+    }
 }
 
 export default Profile;

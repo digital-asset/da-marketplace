@@ -46,7 +46,7 @@
             margin-right: $spacing-xs !important;
         }
 
-        path.fill-blue {
+        &.fill-blue {
             fill: var(--blue-50);
         }
     }

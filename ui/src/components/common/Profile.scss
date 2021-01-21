@@ -1,5 +1,41 @@
 @mixin profile {
     .profile {
+        &.landing-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--white);
+            border: 1px solid var(--cool-grey-90);
+            padding: $spacing-l;
+            border-radius: 2px;
+
+            .profile-values {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                .profile-name {
+                    display: flex;
+                    background: var(--blue-100);
+                    border-radius: 40px;
+                    font-weight: 600;
+                    font-size: 24px;
+                    padding: $spacing-xs $spacing-m $spacing-s $spacing-m;
+                    line-height: 33px;
+                    text-align: center;
+                    vertical-align: middle;
+                }
+
+                .field-value {
+                    margin: $spacing-s;
+                }
+            }
+
+            a.edit-profile {
+                
+            }
+        }
+
         .profile-form-field {
             width: 260px;
             margin-top: $spacing-s;

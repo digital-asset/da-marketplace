@@ -89,6 +89,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -103,6 +104,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     <FormErrorHandled onSubmit={updateProfile}>
                         <ExchangeProfile
                             content='Save'
+                            role={MarketRole.ExchangeRole}
                             defaultProfile={profile}
                             submitProfile={profile => setProfile(profile)}/>
                     </FormErrorHandled>

@@ -90,6 +90,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
                 content='Submit'
+                role={MarketRole.CustodianRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -132,6 +133,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <CustodianProfile
                                     content='Save'
+                                    role={MarketRole.CustodianRole}
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
