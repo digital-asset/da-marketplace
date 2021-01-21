@@ -1,125 +1,128 @@
 module Marketplace.Investor where
 
--- TODO: Revisit/reimplement
+import Marketplace.Exchange
+import Marketplace.Custodian
+import qualified Marketplace.Registry.Investor as Registry (Investor(..))
+import Marketplace.Token
+import Marketplace.Transfer
+import Marketplace.Utils
 
--- import Marketplace.Exchange
--- import Marketplace.Custodian
--- import Marketplace.Registry
--- import Marketplace.Token
--- import Marketplace.Transfer
--- import Marketplace.Utils
+import DA.Finance.Asset ( 
+    AssetDeposit(..)
+  , AssetDeposit_Split(..)
+  , AssetDeposit_Merge(..))
+import DA.Finance.Types (Id(..), Account(..), Asset(..))
 
--- import DA.Finance.Asset
--- import DA.Finance.Types
+import DA.List
 
--- import DA.List
+type T = Investor
 
--- template InvestorInvitation
---   with
---     operator : Party
---     investor : Party
---     public : Party
---   where
---     signatory operator
+template Invitation
+  with
+    operator : Party
+    investor : Party
+    public : Party
+  where
+    signatory operator
 
---     key (operator, investor) : (Party, Party)
---     maintainer key._1
+    key (operator, investor) : (Party, Party)
+    maintainer key._1
 
---     controller investor can
---       InvestorInvitation_Accept : ContractId Investor
---         with
---           isPublic : Bool
---           name : Text
---           location : Text
---         do
---           create RegisteredInvestor with ..
---           create Investor with ..
+    controller investor can
+      Accept : ContractId Investor
+        with
+          isPublic : Bool
+          name : Text
+          location : Text
+        do
+          create Registry.Investor with ..
+          create Investor with ..
 
 
--- template Investor
---   with
---    operator : Party
---    investor : Party
---    isPublic : Bool
---    public : Party
---   where
---     signatory operator, investor
+template Investor
+  with
+   operator : Party
+   investor : Party
+   isPublic : Bool
+   public : Party
+  where
+    signatory operator, investor
 
---     key (operator, investor) : (Party, Party)
---     maintainer key._1
+    key (operator, investor) : (Party, Party)
+    maintainer key._1
 
---     controller investor can
---       nonconsuming Investor_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
---         with
---           custodian : Party
---         do create CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
+    controller investor can
+      nonconsuming RequestCustodianRelationship : ContractId CustodianRelationshipRequest
+        with
+          custodian : Party
+        do create CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
 
---       nonconsuming Investor_RequestExchangeParticipantInvitation : ContractId ExchangeParticipantInvitationRequest
---         with
---           exchange : Party
---         do
---           create ExchangeParticipantInvitationRequest with operator, exchange, participant = investor
+      nonconsuming RequestExchangeParticipantInvitation : ContractId ExchangeParticipantInvitationRequest
+        with
+          exchange : Party
+        do
+          create ExchangeParticipantInvitationRequest with operator, exchange, participant = investor
 
---       nonconsuming Investor_RequestDepositTransfer : ContractId DepositTransferRequest
---         with
---           depositCid : ContractId AssetDeposit
---           receiverAccountId : Id
---         do
---            deposit <- fetch depositCid
---            assert $ deposit.account.owner == investor
---            create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
+      nonconsuming RequestDepositTransfer : ContractId DepositTransferRequest
+        with
+          depositCid : ContractId AssetDeposit
+          receiverAccountId : Id
+        do
+           deposit <- fetch depositCid
+           assert $ deposit.account.owner == investor
+           create DepositTransferRequest with sender = investor, senderAccountId = deposit.account.id, ..
 
---       nonconsuming Investor_RequestDeposit : ContractId DepositCreditRequest
---         with
---           tokenId : Id
---           depositQuantity : Decimal
---           custodian : Party
---         do
---           (tokenCid, token) <- fetchByKey @Token tokenId
---           let accountId = getAccountId investor custodian [custodian]
---               quantity = roundBankers token.quantityPrecision depositQuantity
---               account = Account with id = accountId, provider = custodian, owner = investor
---               asset = Asset with id = tokenId, ..
+      nonconsuming RequestDeposit : ContractId DepositCreditRequest
+        with
+          tokenId : Id
+          depositQuantity : Decimal
+          custodian : Party
+        do
+          (tokenCid, token) <- fetchByKey @Token tokenId
+          let accountId = getAccountId investor custodian [custodian]
+              quantity = roundBankers token.quantityPrecision depositQuantity
+              account = Account with id = accountId, provider = custodian, owner = investor
+              asset = Asset with id = tokenId, ..
 
---           create DepositCreditRequest with owner = investor, ..
+          create DepositCreditRequest with owner = investor, ..
 
---       nonconsuming Investor_RequestWithdrawl : ContractId DepositDebitRequest
---         with
---           depositCids : [ContractId AssetDeposit]
---           withdrawalQuantity : Decimal
---         do
---           aggregateQty <- getDepositQuantities depositCids
+      nonconsuming RequestWithdrawl : ContractId DepositDebitRequest
+        with
+          depositCids : [ContractId AssetDeposit]
+          withdrawalQuantity : Decimal
+        do
+          aggregateQty <- getDepositQuantities depositCids
 
---           assertMsg ("amount should be less than or equal to total deposit amount") $
---             withdrawalQuantity <= aggregateQty
+          assertMsg ("amount should be less than or equal to total deposit amount") $
+            withdrawalQuantity <= aggregateQty
 
---           mergedCid <- exercise (head depositCids) AssetDeposit_Merge
---             with depositCids = tail depositCids
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge
+            with depositCids = tail depositCids
 
---           depositCid <- head <$> exercise mergedCid AssetDeposit_Split
---             with quantities = [ withdrawalQuantity ]
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split
+            with quantities = [ withdrawalQuantity ]
 
---           deposit <- fetch depositCid
---           create DepositDebitRequest with
---               owner = investor, ownerAccount = deposit.account, ..
+          deposit <- fetch depositCid
+          create DepositDebitRequest with
+              owner = investor, ownerAccount = deposit.account, ..
 
---       nonconsuming Investor_AllocateToProvider : ContractId DepositTransferRequest
---         with
---           depositCids : [ContractId AssetDeposit]
---           amount : Decimal
---           provider : Party
---         do
---           aggregateQty <- getDepositQuantities depositCids
+      nonconsuming AllocateToProvider : ContractId DepositTransferRequest
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+          provider : Party
+        do
+          aggregateQty <- getDepositQuantities depositCids
 
---           assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
---           mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
---           depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
 
---           deposit <- fetch depositCid
---           let receiverAccountId = Id
---                 with
---                   signatories = deposit.account.id.signatories,
---                     label = getAccountLabel investor provider,
---                     version = 0
---           exercise self Investor_RequestDepositTransfer with ..
+          deposit <- fetch depositCid
+          let receiverAccountId = Id
+                with
+                  signatories = deposit.account.id.signatories,
+                    label = getAccountLabel investor provider,
+                    version = 0
+          exercise self RequestDepositTransfer with ..
