@@ -11,6 +11,7 @@
 @import './common/OverflowMenu.scss';
 @import './common/Page.scss';
 @import './common/PageSection.scss';
+@import './common/PaginationControls.scss';
 @import './common/Profile.scss';
 @import './common/StripedTable.scss';
 @import './common/TabViewer.scss';
@@ -45,6 +46,7 @@
         @include overflow-menu;
         @include page;
         @include page-section;
+        @include pagination-controls;
         @include profile;
         @include striped-table;
         @include tab-viewer;
