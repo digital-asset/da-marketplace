@@ -11,7 +11,8 @@ module Marketplace.Trading.Order (
 ) where
 
 import qualified Marketplace.BinaryOption as BinaryOption
-import Marketplace.Transfer (DepositCreditRequest, DepositCreditRequest(..))
+import qualified Marketplace.Deposit.CreditRequest as Deposit.CreditRequest
+import Marketplace.Deposit.CreditRequest (CreditRequest(..))
 import DA.Finance.Types (Asset, Account, Id(..))
 import Marketplace.Utils (IdPair, getAccountLabel)
 import Marketplace.Token (Token)
@@ -33,9 +34,9 @@ template Request
           orderId : Int
         do create order with orderId = orderId
 
-      RejectRequest : ContractId DepositCreditRequest
+      RejectRequest : ContractId Deposit.CreditRequest.T
         do
-          create DepositCreditRequest with
+          create CreditRequest with
             owner = order.exchParticipant
             account = order.account
             asset = order.asset
@@ -51,7 +52,7 @@ template CancelRequest
     maintainer key._1
 
     controller order.exchange can
-      AckCancel : ContractId DepositCreditRequest
+      AckCancel : ContractId Deposit.CreditRequest.T
         do exerciseByKey @Order (order.exchange, order.orderId) Cancel
 
       RejectCancel : ()
@@ -169,9 +170,9 @@ template Order
 
             return $ (tradeCid, None)
 
-      Cancel : ContractId DepositCreditRequest
+      Cancel : ContractId Deposit.CreditRequest.T
         do
-          create DepositCreditRequest with
+          create CreditRequest with
             owner = exchParticipant
             account = account
             asset = asset

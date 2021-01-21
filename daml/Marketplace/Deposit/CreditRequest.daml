@@ -1,0 +1,39 @@
+module Marketplace.Deposit.CreditRequest where
+
+import Marketplace.Utils (getAccountOwnerProvider)
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (
+    AssetSettlementRule(..)
+  , AssetSettlement_Credit(..))
+import DA.Finance.Types (Asset, Account)
+import DA.List hiding (delete)
+import DA.Next.Set
+
+type T = CreditRequest
+
+template CreditRequest
+  with
+    owner : Party
+    account : Account
+    asset : Asset
+  where
+    let senderSig = head $ toList account.id.signatories
+        custodian = senderSig
+    signatory owner
+
+    controller custodian can
+      Approve : ContractId AssetDeposit
+        do
+          let (owner, provider) = getAccountOwnerProvider account.id.label
+          let tokenSignatories = asset.id.signatories
+
+          depositRuleCid <- create AssetSettlementRule
+            with account = account
+                 observers = tokenSignatories <> fromList [provider, owner]
+                 ctrls = fromList [custodian]
+
+          newDepositCid <- exercise depositRuleCid AssetSettlement_Credit with asset, ctrl = custodian
+          archive depositRuleCid
+          return newDepositCid
+      Reject : ()
+        do return ()

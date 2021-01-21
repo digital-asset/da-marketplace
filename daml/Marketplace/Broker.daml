@@ -3,9 +3,10 @@ module Marketplace.Broker where
 import qualified Marketplace.BrokerCustomer as BrokerCustomer
 import Marketplace.Custodian
 import qualified Marketplace.Registry.Broker as Registry (Broker(..))
-import Marketplace.Transfer
 import Marketplace.Utils
 
+import qualified Marketplace.Deposit.TransferRequest as Deposit.TransferRequest
+import Marketplace.Deposit.TransferRequest (TransferRequest(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Merge(..), AssetDeposit_Split(..))
 import DA.Finance.Types (Id(..))
 
@@ -56,16 +57,16 @@ template Broker
           customer : Party
         do create BrokerCustomer.Invitation with ..
 
-      nonconsuming RequestDepositTransfer : ContractId DepositTransferRequest
+      nonconsuming RequestDepositTransfer : ContractId Deposit.TransferRequest.T
         with
           depositCid : ContractId AssetDeposit
           receiverAccountId : Id
         do
            deposit <- fetch depositCid
            assert $ deposit.account.owner == broker
-           create DepositTransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
+           create TransferRequest with sender = broker, senderAccountId = deposit.account.id, ..
 
-      nonconsuming AllocateToProvider : ContractId DepositTransferRequest
+      nonconsuming AllocateToProvider : ContractId Deposit.TransferRequest.T
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal

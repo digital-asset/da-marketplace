@@ -3,7 +3,8 @@ module Marketplace.Trading.Trade where
 import qualified Marketplace.BinaryOption as BinaryOption
 import Marketplace.Utils (IdPair, getAccountOwnerProvider)
 import DA.Finance.Types (Asset, Id, Account(..))
-import Marketplace.Transfer (DepositCreditRequest, DepositCreditRequest(..))
+import qualified Marketplace.Deposit.CreditRequest  as Deposit.CreditRequest
+import Marketplace.Deposit.CreditRequest (CreditRequest(..))
 
 type T = Trade
 
@@ -25,14 +26,14 @@ template Trade
     signatory exchange, exchParticipant
 
     controller exchange can
-      Settle : (ContractId Settled, Optional (ContractId DepositCreditRequest))
+      Settle : (ContractId Settled, Optional (ContractId Deposit.CreditRequest.T))
         do
           assert $ not isBinaryOption
           optDepositTxReqCid <- case optAsset of
             Some asset -> do
               let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
                   receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
-              creditRequestCid <- create DepositCreditRequest
+              creditRequestCid <- create CreditRequest
                   with owner = exchange
                        account = receiverAccount
                        asset = asset
@@ -41,7 +42,7 @@ template Trade
           settledTradeCid <- create Settled with ..
           return (settledTradeCid, optDepositTxReqCid)
 
-      SettleBinaryOption : (ContractId Settled, Optional (ContractId DepositCreditRequest))
+      SettleBinaryOption : (ContractId Settled, Optional (ContractId Deposit.CreditRequest.T))
         with
           settledBinOptionCid : ContractId BinaryOption.Settled
         do
@@ -52,7 +53,7 @@ template Trade
             (Some asset, True) -> do
               let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
                   receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
-              creditRequestCid <- create DepositCreditRequest
+              creditRequestCid <- create CreditRequest
                   with owner = exchange
                        account = receiverAccount
                        asset = asset

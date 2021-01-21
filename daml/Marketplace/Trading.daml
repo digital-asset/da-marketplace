@@ -3,7 +3,8 @@
 module Marketplace.Trading where
 
 import Marketplace.Token
-import Marketplace.Transfer
+import qualified Marketplace.Deposit.TransferRequest as Deposit.TransferRequest
+import Marketplace.Deposit.TransferRequest (TransferRequest(..))
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -22,7 +23,7 @@ template BrokerOrderRequest
     signatory broker, customer
 
     controller broker can
-      BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId DepositTransferRequest)
+      BrokerOrderRequest_Accept : (ContractId BrokerOrder, ContractId Deposit.TransferRequest.T)
         with
           brokerOrderId : Int
         do
@@ -30,7 +31,7 @@ template BrokerOrderRequest
           assert $ deposit.account.owner == customer
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
-          depositTransferReqCid <- create DepositTransferRequest with sender = customer, senderAccountId = deposit.account.id, ..
+          depositTransferReqCid <- create TransferRequest with sender = customer, senderAccountId = deposit.account.id, ..
           return (brokerOrderCid, depositTransferReqCid)
 
 
@@ -50,7 +51,7 @@ template BrokerOrder
     maintainer key._1
 
     controller broker can
-      BrokerOrder_Fill : ContractId DepositTransferRequest
+      BrokerOrder_Fill : ContractId Deposit.TransferRequest.T
         with
           depositCid : ContractId AssetDeposit
         do
@@ -70,7 +71,7 @@ template BrokerOrder
           let senderAccountId = deposit.account.id
               receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel customer broker, version = 0
           create BrokerTrade with isBuy = isBid, ..
-          create DepositTransferRequest with sender = broker, ..
+          create TransferRequest with sender = broker, ..
 
 template BrokerTrade
   with

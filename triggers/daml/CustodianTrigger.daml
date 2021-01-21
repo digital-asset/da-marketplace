@@ -4,7 +4,9 @@ import DA.Foldable hiding (elem, null)
 import Daml.Trigger
 
 import Marketplace.Custodian
-import Marketplace.Transfer
+import qualified Marketplace.Deposit.TransferRequest as Deposit.TransferRequest
+import qualified Marketplace.Deposit.CreditRequest as Deposit.CreditRequest
+import qualified Marketplace.Deposit.DebitRequest as Deposit.DebitRequest
 
 import Utils
 
@@ -13,9 +15,9 @@ handleCustodian = Trigger
   { initialize = return ()
   , updateState = \_ -> pure ()
   , rule = handleCustodianRule
-  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @DepositTransferRequest
-                                               , registeredTemplate @DepositCreditRequest
-                                               , registeredTemplate @DepositDebitRequest
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @Deposit.TransferRequest.T
+                                               , registeredTemplate @Deposit.CreditRequest.T
+                                               , registeredTemplate @Deposit.DebitRequest.T
                                                , registeredTemplate @CustodianRelationshipRequest ]
   , heartbeat = None
   }
@@ -26,9 +28,9 @@ handleCustodianRule party = do
   debug "Running custodian rule..."
 
   -- Accept all 'DepositTransferRequest'
-  transferRequests <- query @DepositTransferRequest
+  transferRequests <- query @Deposit.TransferRequest.T
   forA_ transferRequests
-    $ \(cid,_) -> emitExerciseCmd cid DepositTransferRequest_Approve
+    $ \(cid,_) -> emitExerciseCmd cid Deposit.TransferRequest.Approve
                >> debug "Accepting transfer request"
 
   -- Accept all 'CustodianRelationshipRequest'
@@ -38,13 +40,13 @@ handleCustodianRule party = do
                 >> debug ("Approving relationship request from " <> show rq.requester)
 
   -- Accept all 'DepositCreditRequest'
-  relationshipRequests <- query @DepositCreditRequest
+  relationshipRequests <- query @Deposit.CreditRequest.T
   forA_ relationshipRequests
-    $ \(cid,rq) -> emitExerciseCmd cid DepositCreditRequest_Approve
+    $ \(cid,rq) -> emitExerciseCmd cid Deposit.CreditRequest.Approve
                 >> debug ("Approving credit request from " <> show rq.owner)
 
   -- Accept all 'DepositDebitRequest'
-  relationshipRequests <- query @DepositDebitRequest
+  relationshipRequests <- query @Deposit.DebitRequest.T
   forA_ relationshipRequests
-    $ \(cid,rq) -> emitExerciseCmd cid DepositDebitRequest_Approve
+    $ \(cid,rq) -> emitExerciseCmd cid Deposit.DebitRequest.Approve
                 >> debug ("Approving credit request from " <> show rq.owner)
