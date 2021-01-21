@@ -2,8 +2,7 @@ module Marketplace.Notification where
 
 import Marketplace.Utils
 
-
-template DismissibleNotification
+template Dismissible
   with
     sender : Party
     senderRole : Optional MarketRole
@@ -14,5 +13,5 @@ template DismissibleNotification
     observer receiver
 
     controller receiver can
-      DismissibleNotification_Dismiss : ()
+      Dismiss : ()
         do return ()

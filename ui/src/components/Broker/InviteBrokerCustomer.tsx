@@ -3,7 +3,7 @@ import { Button, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
-import { BrokerCustomerInvitation, BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { Invitation as BrokerCustomerInvitation, BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { wrapDamlTuple, RegisteredInvestorInfo, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
@@ -15,7 +15,7 @@ type Props = {
 }
 
 const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
-    const [ brokerCustomer, setBrokerCustomer ] = useState('');
+    const [ customer, setBrokerCustomer ] = useState('');
 
     const ledger = useLedger();
     const exchange = useParty();
@@ -24,18 +24,18 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     const currentInvitations = useStreamQueries(BrokerCustomerInvitation, () => [], [], (e) => {
         console.log("Unexpected close from brokerCustomerInvitation: ", e);
     }).contracts.map(makeContractInfo);
-    const brokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
+    const customers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
+        console.log("Unexpected close from customer: ", e);
     }).contracts.map(makeContractInfo);
 
     const customerOptions = registeredInvestors.filter(ri =>
-        !brokerCustomers.find(bc => bc.contractData.brokerCustomer === ri.contractData.investor) &&
-        !currentInvitations.find(bci => bci.contractData.brokerCustomer === ri.contractData.investor));
+        !customers.find(bc => bc.contractData.customer === ri.contractData.investor) &&
+        !currentInvitations.find(bci => bci.contractData.customer === ri.contractData.investor));
 
     const handleBrokerCustomerInviteSubmit = async () => {
-        const choice = Broker.Broker_InviteCustomer;
+        const choice = Broker.InviteCustomer;
         const key = wrapDamlTuple([operator, exchange]);
-        const args = { brokerCustomer };
+        const args = { customer };
 
         await ledger.exerciseByKey(choice, key, args);
         setBrokerCustomer('');
@@ -51,7 +51,7 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
                     selection
                     contracts={customerOptions}
                     placeholder='Investor party ID'
-                    value={brokerCustomer}
+                    value={customer}
                     getOptionText={ri => ri.contractData.name}
                     setContract={ri => setBrokerCustomer(ri.contractData.investor)}
                     setAddition={privateInvestorId => setBrokerCustomer(privateInvestorId)}/>
@@ -59,7 +59,7 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
                 <Button
                     content='Invite'
                     className='invite-investor ghost'
-                    disabled={!brokerCustomer}/>
+                    disabled={!customer}/>
             </Form.Group>
         </FormErrorHandled>
     )

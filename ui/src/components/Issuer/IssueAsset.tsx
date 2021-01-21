@@ -9,13 +9,11 @@ import { wrapDamlTuple } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import FormToggle from '../common/FormToggle'
-import {
-    RegisteredCustodian,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredExchange,
-    RegisteredBroker
-} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
+import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
+import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
 
 import './IssueAsset.scss'
 

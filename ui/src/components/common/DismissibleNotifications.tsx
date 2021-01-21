@@ -7,7 +7,7 @@ import { useLedger,  useParty, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
-    DismissibleNotification as DismissibleNotificationTemplate
+    Dismissible as DismissibleNotificationTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Notification'
 import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
@@ -32,7 +32,7 @@ export const useDismissibleNotifications = () => {
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
     const dismissNotification = async (cid: ContractId<DismissibleNotificationTemplate>) => {
-        const choice = DismissibleNotificationTemplate.DismissibleNotification_Dismiss;
+        const choice = DismissibleNotificationTemplate.Dismiss;
         await ledger.exercise(choice, cid, {});
     }
 

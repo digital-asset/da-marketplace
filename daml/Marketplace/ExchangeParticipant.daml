@@ -1,0 +1,162 @@
+module Marketplace.ExchangeParticipant where
+
+import Marketplace.BinaryOption
+import qualified Marketplace.Notification as Notification
+import Marketplace.Trading
+import Marketplace.Transfer
+import Marketplace.Token
+import Marketplace.Utils
+
+import DA.Finance.Asset
+import DA.List
+
+template ExchangeParticipantInvitation
+  with
+    operator : Party
+    exchange : Party
+    exchParticipant : Party
+  where
+    signatory exchange
+
+    controller exchParticipant can
+      ExchangeParticipantInvitation_Accept : ContractId ExchangeParticipant
+        do
+          create Notification.Dismissible with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation accepted."
+          create ExchangeParticipant with ..
+
+      ExchangeParticipantInvitation_Reject : ()
+        do
+          create Notification.Dismissible with
+            sender = exchParticipant, senderRole = None
+            receiver = exchange, text = "Exchange invitation rejected."
+          return ()
+
+template ExchangeParticipant
+  with
+    operator : Party
+    exchange : Party
+    exchParticipant : Party
+  where
+    signatory exchange, exchParticipant
+
+    key (exchange, operator, exchParticipant) : (Party, Party, Party)
+    maintainer key._1
+
+    controller exchParticipant can
+
+      nonconsuming ExchangeParticipant_PlaceBinaryOptionOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
+        with
+          depositCid : ContractId AssetDeposit
+          binOption : IdPair
+          price : Decimal
+          qty : Decimal
+          isBid : Bool
+        do
+          deposit <- fetch depositCid
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+          assertMsg ("deposit should be for " <> binOption._2.label <> " but it is for " <> deposit.asset.id.label)
+            $ binOption._2 == deposit.asset.id
+          (_, quoteToken) <- fetchByKey @Token binOption._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+          (_, binaryOption) <- fetchByKey @BinaryOption binOption._1
+          assertMsg ("price should be between " <> show binaryOption.minPrice <> " and " <> show binaryOption.maxPrice)
+            $ (price >= binaryOption.minPrice && price <= binaryOption.maxPrice)
+          let requiredDepositAmount = if isBid then qty * price else qty * (binaryOption.maxPrice - price)
+          assertMsg ("deposit should be for at least " <> show requiredDepositAmount <> " " <> deposit.asset.id.label)
+            $ (deposit.asset.quantity >= requiredDepositAmount)
+
+          orderDepositCid <- if requiredDepositAmount < deposit.asset.quantity
+                             then head <$> exercise depositCid AssetDeposit_Split with quantities = [requiredDepositAmount]
+                             else return depositCid
+
+          exercise self ExchangeParticipant_MakeOrder
+              with depositCid = orderDepositCid, pair = binOption, ..
+
+      nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
+        with
+          depositCids : [ContractId AssetDeposit]
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
+          assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
+            $ pair._2 == deposit.asset.id
+
+          newDepositCid <- if amount < deposit.asset.quantity
+                  then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                  else return mergedCid
+
+          newDeposit <- fetch newDepositCid
+
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision $ newDeposit.asset.quantity / price
+
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True
+
+      nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
+        with
+          depositCids : [ContractId AssetDeposit]
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
+          assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
+            $ pair._1 == deposit.asset.id
+
+          newDepositCid <- if amount < deposit.asset.quantity
+                           then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                           else return mergedCid
+
+          newDeposit <- fetch newDepositCid
+
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision newDeposit.asset.quantity
+
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False
+
+      nonconsuming ExchangeParticipant_MakeOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
+        with
+          depositCid : ContractId AssetDeposit
+          pair: IdPair
+          price : Decimal
+          qty : Decimal
+          isBid : Bool
+        do
+          deposit <- fetch depositCid
+
+          assertMsg "deposit is not allocated to the exchange"
+            $ deposit.account.id.label == getAccountLabel exchParticipant exchange
+
+          (_, quoteToken) <- fetchByKey @Token pair._2
+          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+            $ roundBankers quoteToken.quantityPrecision price == price
+
+          debitRequestCid <- create DepositDebitRequest with
+              owner = exchParticipant
+              ownerAccount = deposit.account
+              depositCid = depositCid
+
+          let order = Order with
+                  isBid, qty, status = "New", orderId = -1
+                  asset = deposit.asset, account = deposit.account, ..
+          orderRequestCid <- create OrderRequest with ..
+
+          return (orderRequestCid, debitRequestCid)

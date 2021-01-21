@@ -9,13 +9,11 @@ import { useParty, useLedger } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import {
-    RegisteredCustodian,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredExchange,
-    RegisteredBroker
-} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
+import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
+import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
+import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
 
 import FormErrorHandled from '../common/FormErrorHandled'
 import { wrapTextMap } from '../common/damlTypes';
@@ -68,7 +66,7 @@ const ValueEntryModal = (props: IProps) => {
 
         const newObservers = wrapTextMap([...props.currentParticipants, ...selectedObservers])
 
-        await ledger.exerciseByKey(Token.Token_AddObservers, props.tokenId, { party, newObservers })
+        await ledger.exerciseByKey(Token.AddObservers, props.tokenId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))
 
         props.onRequestClose()

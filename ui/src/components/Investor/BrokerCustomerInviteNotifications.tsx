@@ -2,7 +2,7 @@ import React from 'react'
 
 import { useLedger, useStreamQueries } from '@daml/react'
 import { ContractId } from '@daml/types'
-import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { Invitation as BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 import { BrokerCustomerInviteInfo, makeContractInfo } from '../common/damlTypes'
@@ -26,12 +26,12 @@ export const useBrokerCustomerInviteNotifications = () => {
             invitationReject={async () => await rejectBrokerCustomerInvite(invite.contractId)}/>);
 
     const acceptBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
-        const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Accept;
+        const choice = BrokerCustomerInvitation.Accept;
         await ledger.exercise(choice, cid, {});
     }
 
     const rejectBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
-        const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Reject;
+        const choice = BrokerCustomerInvitation.Reject;
         await ledger.exercise(choice, cid, {});
     }
 
