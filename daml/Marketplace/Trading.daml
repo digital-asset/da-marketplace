@@ -99,6 +99,16 @@ template Service
           archive orderCid
           exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
 
+      -- nonconsuming FillOrder : ContractId AssetDeposit
+      --   with
+      --     orderCid : ContractId CancelOrderRequest
+      --   do
+      --     CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+      --     archive cancelOrderRequestCid
+      --     order <- fetch orderCid
+      --     archive orderCid
+      --     exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
+
 template Offer
   with
     operator : Party

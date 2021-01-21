@@ -46,6 +46,14 @@ template Service
         do
           create DebitAccountRequest with ..
 
+      nonconsuming RequestTransferDeposit : ContractId TransferDepositRequest
+        with
+          accountId : Id
+          receiverAccountId : Id
+          depositCid : ContractId AssetDeposit
+        do
+          create TransferDepositRequest with ..
+
     controller custodian can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
         with
@@ -81,7 +89,15 @@ template Service
           DebitAccountRequest{..} <- fetch debitAccountRequestCid
           archive debitAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
-          
+
+      nonconsuming TransferDeposit : ContractId AssetDeposit
+        with
+          transferDepositRequestCid : ContractId TransferDepositRequest
+        do
+          TransferDepositRequest{..} <- fetch transferDepositRequestCid
+          archive transferDepositRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
+
 template Offer
   with
     operator : Party
@@ -152,6 +168,17 @@ template DebitAccountRequest
     custodian : Party
     client : Party
     accountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, custodian, client
+
+template TransferDepositRequest
+  with
+    operator : Party
+    custodian : Party
+    client : Party
+    accountId : Id
+    receiverAccountId : Id
     depositCid : ContractId AssetDeposit
   where
     signatory operator, custodian, client
