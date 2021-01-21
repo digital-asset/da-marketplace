@@ -4,15 +4,48 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
+data Side
+    = Buy
+    | Sell
+  deriving (Eq, Show)
+
+data OrderType
+    = Market
+    | Limit with
+        price : Decimal
+  deriving (Eq, Show)
+
+data TimeInForce
+    = GoodTillCancelled
+      -- ^ Rests on book until cancellation
+    | GoodTillDate with
+        expiryDate : Date
+      -- ^ At expiryDate, order will be automatically cancelled
+    | GoodAtAuction
+      -- ^ expires after auction if not filled
+    | ImmediateOrCancel
+      -- ^ Allows for partial fills
+    | FillOrKill
+      -- ^ All or nothing
+  deriving (Eq, Show)
+
+data OrderDetails = OrderDetails with
+    market : Text
+    asset : Asset
+    side : Side
+    orderType : OrderType
+    -- quantity : Decimal -- This means we get the quantity from the Asset...
+    depositCid : ContractId AssetDeposit
+  deriving (Eq, Show)
+
 template Order
   with
     exchange : Party
     client : Party
-    market : Text
-    asset : Asset
-    price : Asset
-    isBid : Bool
-    depositCid : ContractId AssetDeposit
+    id : Int
+    exchangeOrderId : Optional Int
+    orderDetails : OrderDetails
+    createdAt : Time
   where
     signatory exchange, client
 
@@ -32,14 +65,10 @@ template Service
     controller client can
       nonconsuming RequestCreateOrder : (ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
-          market : Text
-          asset : Asset
-          price : Asset
-          isBid : Bool
-          depositCid : ContractId AssetDeposit
+          orderDetails : OrderDetails
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId; ..
+          depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId, depositCid = orderDetails.depositCid
           createOrderRequestCid <- create CreateOrderRequest with ..
           pure (createOrderRequestCid, depositCid)
 
@@ -49,24 +78,24 @@ template Service
         do
           create CancelOrderRequest with ..
 
-    controller exchange can
-      nonconsuming CreateOrder : ContractId Order
-        with
-          createOrderRequestCid : ContractId CreateOrderRequest
-        do
-          CreateOrderRequest{..} <- fetch createOrderRequestCid
-          archive createOrderRequestCid
-          create Order with ..
+    -- controller exchange can
+    --   nonconsuming CreateOrder : ContractId Order
+    --     with
+    --       createOrderRequestCid : ContractId CreateOrderRequest
+    --     do
+    --       CreateOrderRequest{..} <- fetch createOrderRequestCid
+    --       archive createOrderRequestCid
+    --       create Order with ..
 
-      nonconsuming CancelOrder : ContractId AssetDeposit
-        with
-          cancelOrderRequestCid : ContractId CancelOrderRequest
-        do
-          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
-          archive cancelOrderRequestCid
-          order <- fetch orderCid
-          archive orderCid
-          exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
+      -- nonconsuming CancelOrder : ContractId AssetDeposit
+      --   with
+      --     cancelOrderRequestCid : ContractId CancelOrderRequest
+      --   do
+      --     CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+      --     archive cancelOrderRequestCid
+      --     order <- fetch orderCid
+      --     archive orderCid
+      --     exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
 
 template Offer
   with
@@ -113,11 +142,7 @@ template CreateOrderRequest
   with
     exchange : Party
     client : Party
-    market : Text
-    asset : Asset
-    price : Asset
-    isBid : Bool
-    depositCid : ContractId AssetDeposit
+    orderDetails : OrderDetails
   where
     signatory exchange, client
 
@@ -128,7 +153,7 @@ template CancelOrderRequest
     orderCid : ContractId Order
   where
     signatory exchange, client
-      
+
 -- import DA.Math
 
 -- TODO: Revisit/reimplement

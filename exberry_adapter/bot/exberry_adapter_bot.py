@@ -4,9 +4,13 @@ import os
 import dazl
 from dazl import create, exercise, exercise_by_key
 
+import time
+from datetime import datetime
+
 dazl.setup_default_logger(logging.INFO)
 
-SID = 1 # default SID, use ExberrySID contract to change while running
+# SID = 1 # default SID, use ExberrySID contract to change while running
+SID = int (time.mktime(datetime.now().timetuple))
 def get_sid() -> int:
     global SID
     SID = SID + 1
