@@ -1,0 +1,35 @@
+module Marketplace.Registry.Issuer where
+
+type T = Issuer
+
+template Issuer
+  with
+    operator : Party
+    public : Party
+    issuer : Party
+    name : Text
+    location : Text
+    title : Text
+    issuerID : Text
+  where
+    signatory operator, issuer
+    observer public
+
+    key (operator, issuer) : (Party, Party)
+    maintainer key._2
+
+    controller issuer can
+      UpdateProfile : ContractId Issuer
+        with
+          newName : Text
+          newLocation : Text
+          newTitle : Text
+          newIssuerID : Text
+        do
+          create this with name = newName, location = newLocation, title = newTitle, issuerID = newIssuerID
+
+    controller operator can
+      Offboard : ()
+        do return ()
+
+
