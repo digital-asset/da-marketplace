@@ -9,7 +9,6 @@ type PartyDetails = {
     party: string,
     partyName: string,
     token: string,
-    rights: string[]
 }
 
 function isPartyDetails(partyDetails: any): partyDetails is PartyDetails {
@@ -17,8 +16,7 @@ function isPartyDetails(partyDetails: any): partyDetails is PartyDetails {
             typeof partyDetails.owner === 'string' &&
             typeof partyDetails.party === 'string' &&
             typeof partyDetails.partyName === 'string' &&
-            typeof partyDetails.token === 'string' &&
-            partyDetails.rights instanceof Array
+            typeof partyDetails.token === 'string'
 }
 
 export type Parties = PartyDetails[];
@@ -38,12 +36,6 @@ function isParties(parties: any): parties is Parties {
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
-function filterParties(parties: Parties): Parties {
-    return parties.filter(party =>
-        party.rights.includes("write:create") &&
-        party.rights.includes("write:exercise"));
-}
-
 function validateParties(parties: Parties): void {
     // True if any ledgerIds do not match the app's deployed ledger Id
     const invalidLedger = parties.reduce((valid, party) => valid || (party.ledgerId !== ledgerId), false);
@@ -62,10 +54,8 @@ function validateParties(parties: Parties): void {
 
 export function storeParties(parties: Parties): void {
     if (isParties(parties)) {
-        const usableParties = filterParties(parties);
-
-        validateParties(usableParties);
-        localStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(usableParties));
+        validateParties(parties);
+        localStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
     } else {
         console.error("Did not find valid parties file; aborting store:", parties);
         throw new InvalidPartiesJSONError("Did you select the correct parties.json file?");
