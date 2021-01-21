@@ -12,7 +12,7 @@ const PaginationControls = (props: {
     ellipsisItem={null}
     firstItem={null}
     lastItem={null}
-    onPageChange={(_, data) => data.activePage && props.onPageChange(Number(data.activePage))}
+    onPageChange={(_, data) => data.activePage && props.onPageChange(+data.activePage)}
     totalPages={props.totalPages}/>
 )
 
