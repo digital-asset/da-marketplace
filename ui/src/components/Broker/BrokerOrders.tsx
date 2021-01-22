@@ -16,7 +16,7 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import BrokerCustomers from './BrokerCustomers'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -31,7 +31,7 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     const allBrokerOrders = useContractQuery(BrokerOrder);
 
     const allBrokerCustomers = useContractQuery(BrokerCustomer);
-    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     return (
         <Page

@@ -12,7 +12,7 @@ import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
-import { useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 const CreateDeposit = (props: {
     currentBeneficiary?: ContractInfo<RegisteredInvestor>
@@ -39,22 +39,22 @@ const CreateDeposit = (props: {
     const relationshipParties = useContractQuery(CustodianRelationship)
         .map(relationship => relationship.contractData.party )
 
-    const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
-        .filter(broker => relationshipParties.find(p => broker.payload.broker === p))
+    const brokerBeneficiaries = useContractQuery(RegisteredBroker, AS_PUBLIC)
+        .filter(broker => relationshipParties.find(p => broker.contractData.broker === p))
         .map(broker => {
-            const party = broker.payload.broker;
-            const name = broker.payload.name;
+            const party = broker.contractData.broker;
+            const name = broker.contractData.name;
             return {
                 party,
                 label: `${name ? `${name} (${party})` : party} | Broker`
             }
         })
 
-    const investorBeneficiaries = useStreamQueryAsPublic(RegisteredInvestor).contracts
-        .filter(investor => relationshipParties.find(p => investor.payload.investor === p))
+    const investorBeneficiaries = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(investor => relationshipParties.find(p => investor.contractData.investor === p))
         .map(investor => {
-            const party = investor.payload.investor;
-            const name = investor.payload.name;
+            const party = investor.contractData.investor;
+            const name = investor.contractData.name;
             return {
                 party,
                 label: `${name ? `${name} (${party})` : party} | Investor`

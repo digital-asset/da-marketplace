@@ -16,6 +16,7 @@ import {
     RegisteredExchange,
     RegisteredBroker
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 const IssueAsset = () => {
     const ledger = useLedger();
@@ -29,16 +30,16 @@ const IssueAsset = () => {
     const [ observers, setObservers ] = useState<string[]>([]);
 
     const allRegisteredParties = [
-            useStreamQueryAsPublic(RegisteredCustodian).contracts
-                .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
-            useStreamQueryAsPublic(RegisteredIssuer).contracts
-                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
-            useStreamQueryAsPublic(RegisteredInvestor).contracts
-                .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
-            useStreamQueryAsPublic(RegisteredExchange).contracts
-                .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
-            useStreamQueryAsPublic(RegisteredBroker).contracts
-                .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
+            useContractQuery(RegisteredCustodian, AS_PUBLIC)
+                .map(rc => ({ contractId: rc.contractId, contractData: rc.contractData.custodian })),
+            useContractQuery(RegisteredIssuer, AS_PUBLIC)
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.issuer })),
+            useContractQuery(RegisteredInvestor, AS_PUBLIC)
+                .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.investor })),
+            useContractQuery(RegisteredExchange, AS_PUBLIC)
+                .map(re => ({ contractId: re.contractId, contractData: re.contractData.exchange })),
+            useContractQuery(RegisteredBroker, AS_PUBLIC)
+                .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
             ].flat()
 
     async function submit() {

@@ -23,7 +23,7 @@ import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Reg
 import ContractSelect from './ContractSelect'
 import FormErrorHandled from './FormErrorHandled';
 import { AppError } from './errorTypes';
-import { useContractQuery } from '../../websocket/queryStream';
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream';
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
@@ -52,9 +52,7 @@ const WalletTransaction = (props: {
     const ledger = useLedger();
     const history = useHistory();
 
-    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
-
+    const registeredCustodians = useContractQuery(RegisteredCustodian, AS_PUBLIC);
     const allTokens = useContractQuery(Token);
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));

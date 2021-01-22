@@ -17,6 +17,8 @@ import {
     RegisteredBroker
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
 import FormErrorHandled from '../common/FormErrorHandled'
 import { wrapTextMap } from '../common/damlTypes';
 
@@ -36,16 +38,16 @@ const ValueEntryModal = (props: IProps) => {
     const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
     const allRegisteredParties = [
-        useStreamQueryAsPublic(RegisteredCustodian).contracts
-            .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
-        useStreamQueryAsPublic(RegisteredIssuer).contracts
-            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
-        useStreamQueryAsPublic(RegisteredInvestor).contracts
-            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
-        useStreamQueryAsPublic(RegisteredExchange).contracts
-            .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
-        useStreamQueryAsPublic(RegisteredBroker).contracts
-            .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
+        useContractQuery(RegisteredCustodian, AS_PUBLIC)
+            .map(rc => ({ contractId: rc.contractId, contractData: rc.contractData.custodian })),
+        useContractQuery(RegisteredIssuer, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.issuer })),
+        useContractQuery(RegisteredInvestor, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.investor })),
+        useContractQuery(RegisteredExchange, AS_PUBLIC)
+            .map(re => ({ contractId: re.contractId, contractData: re.contractData.exchange })),
+        useContractQuery(RegisteredBroker, AS_PUBLIC)
+            .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
         ].flat()
 
     const partyOptions = allRegisteredParties.filter(d => !Array.from(props.currentParticipants).includes(d.contractData))

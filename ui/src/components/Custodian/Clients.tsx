@@ -15,7 +15,7 @@ import Page from '../common/Page'
 import CapTable from '../common/CapTable';
 
 import CreateDeposit from './CreateDeposit'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     clients: string[];
@@ -24,14 +24,17 @@ type Props = {
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const investors = useStreamQueryAsPublic(RegisteredInvestor).contracts.filter(c => clients.includes(c.payload.investor))
+    const investors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(c => clients.includes(c.contractData.investor))
 
     const allDeposits = useContractQuery(AssetDeposit);
 
     const tableHeadings = ['Name', 'Holdings']
 
     const tableRows = clients.map(client => {
-            const clientName = investors.find(i => i.payload.investor === client)?.payload.name || client
+            const clientName = investors
+                .find(i => i.contractData.investor === client)?.contractData.name || client
+
             const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client)
             return [clientName, depositSummary(deposits).join(',')]
         }

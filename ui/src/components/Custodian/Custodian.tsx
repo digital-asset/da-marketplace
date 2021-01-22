@@ -29,7 +29,7 @@ import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -97,7 +97,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     const sideNav = <RoleSideNav url={url}
                         name={registeredCustodian[0]?.contractData.name || custodian}

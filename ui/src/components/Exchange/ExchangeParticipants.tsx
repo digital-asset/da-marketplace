@@ -16,7 +16,7 @@ import Page from '../common/Page'
 
 import InviteParticipant from './InviteParticipant'
 import { depositSummary } from '../common/utils'
-import { useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -25,7 +25,7 @@ type Props = {
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
     const exchangeParticipants = useContractQuery(ExchangeParticipant);
     const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
 

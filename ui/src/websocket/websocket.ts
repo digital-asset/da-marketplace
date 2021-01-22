@@ -27,13 +27,10 @@ function isCreateEvent<T extends object, K = unknown, I extends string = string>
   return 'created' in event;
 }
 
-function useDamlStreamQuery(templateIds: string[]) {
+function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
     const [ contracts, setContracts ] = useState<ContractInfo<any>[]>([]);
-
     const [ streamOffset, setStreamOffset ] = useState("");
-
-    const token = useMemo(() => retrieveCredentials()?.token, []);
 
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
