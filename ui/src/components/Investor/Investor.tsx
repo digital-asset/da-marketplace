@@ -158,6 +158,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     <FormErrorHandled onSubmit={updateProfile}>
                         <InvestorProfile
                             content='Save'
+                            profileLinks={[
+                                {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                            ]}
                             role={MarketRole.InvestorRole}
                             defaultProfile={profile}
                             submitProfile={profile => setProfile(profile)}/>

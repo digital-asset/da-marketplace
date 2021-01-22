@@ -1,6 +1,9 @@
 import React from 'react'
 
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { Header } from 'semantic-ui-react'
+
+import { getAbbreviation } from '../common/utils';
 
 import { CustodianRelationshipInfo } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
@@ -15,15 +18,31 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
     const custodianMap = useRegistryLookup().custodianMap;
 
     const rows = custodianRelationships.map(relationship => {
-        const name = custodianMap.get(relationship.contractData.custodian)?.name;
-        return <p key={relationship.contractId}>{name}</p>
+        const custodian = custodianMap.get(relationship.contractData.custodian);
+
+        if (!custodian) {
+            return null
+        }
+
+        return (
+            <div className='relationship-row' key={relationship.contractId}>
+                <div className='default-profile-icon'>
+                    {getAbbreviation(custodian.name)}
+                </div>
+                <div className='relationship-info'>
+                    <Header className='name' as='h4'>{custodian?.name || 'Custodian'}</Header>
+                    <p className='p2'>{custodian?.custodian}</p>
+                </div>
+            </div>
+        )
     });
 
     return (
-        <>
-            <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
+        <div className='market-relationships'>
+            <Header as='h3'>Market Relationships</Header>
             {rows}
-        </>
+            <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
+        </div>
     )
 }
 

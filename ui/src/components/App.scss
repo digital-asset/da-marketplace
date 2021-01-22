@@ -1,3 +1,4 @@
+@import './common/AddRegisteredPartyModal.scss';
 @import './common/CapTable.scss';
 @import './common/CardTable.scss';
 @import './common/DonutChart.scss';
@@ -19,6 +20,8 @@
 @import './common/Wallet.scss';
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
+@import './common/MarketRelationships.scss';
+
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
 
@@ -33,6 +36,7 @@
         width: 100vw;
 
         /* common css */
+        @include add-registered-party-modal;
         @include cap-table;
         @include card-table;
         @include donut-chart;
@@ -40,6 +44,7 @@
         @include holdings;
         @include invite-accept-tile;
         @include landing-page;
+        @include market-relationships;
         @include notification;
         @include onboarding-tile;
         @include order-card;

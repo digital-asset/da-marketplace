@@ -191,7 +191,14 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 <IssuerProfile
                                     content='Save'
                                     role={MarketRole.IssuerRole}
-
+                                    profileLinks= {
+                                        allTokens.map(token => {
+                                            return {
+                                                to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
+                                                title: token.payload.id.label,
+                                                subtitle: token.payload.description}
+                                        })
+                                    }
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>

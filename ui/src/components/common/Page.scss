@@ -18,12 +18,13 @@
 
     .ui.grid > .column.page-sidemenu {
         padding: 0;
-        width: 230px;
-        height: 100%;
+        width: 250px;
         display: flex;
-        top: 0;
-        position: sticky;
+        flex-direction: column;
+        height: 100%;
         align-self: flex-start;
+        word-break: break-word;
+        padding-top: $spacing-xs;
         background-color: var(--cool-grey-10);
     }
 

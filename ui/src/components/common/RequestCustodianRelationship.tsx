@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
@@ -13,8 +13,10 @@ import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Reg
 
 import { useOperator } from './common'
 import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
-import FormErrorHandled from './FormErrorHandled'
-import ContractSelect from './ContractSelect'
+
+import { AddPlusIcon } from '../../icons/Icons'
+
+import AddRegisteredPartyModal from './AddRegisteredPartyModal'
 
 type Props = {
     role: MarketRole;
@@ -22,7 +24,8 @@ type Props = {
 }
 
 const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelationships }) => {
-    const [ custodianId, setCustodianId ] = useState('');
+    const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
+
     const ledger = useLedger();
     const party = useParty();
     const operator = useOperator();
@@ -38,8 +41,9 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
             !requestCustodians.includes(custodian.contractData.custodian) &&
             !relationshipCustodians.includes(custodian.contractData.custodian));
 
-    const requestCustodianRelationship = async () => {
+    const requestCustodianRelationship = async (custodianId: string) => {
         const key = wrapDamlTuple([operator, party]);
+        console.log(custodianId)
         const args = { custodian: custodianId };
 
         switch(role) {
@@ -58,29 +62,52 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
             default:
                 throw new Error(`The role '${role}' can not request a custodian relationship.`);
         }
-        setCustodianId('');
     }
 
-    return (
-        <FormErrorHandled onSubmit={requestCustodianRelationship}>
-            <Form.Group className='inline-form-group'>
-                <ContractSelect
-                    label='Request a relationship:'
-                    allowAdditions
-                    className='custodian-select-container'
-                    clearable
-                    search
-                    selection
-                    contracts={registeredCustodians}
-                    placeholder='Custodian ID'
-                    value={custodianId}
-                    getOptionText={rc => rc.contractData.name}
-                    setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
-                    setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
+    const partyOptions = registeredCustodians.map(d => {
+            return {
+                text: `${d.contractData.name}`,
+                value: d.contractData.custodian
+            }
+        })
 
-                <Button className='ghost' content='Send Request' disabled={!custodianId}/>
-            </Form.Group>
-        </FormErrorHandled>
+    return (
+        <>
+            <Button
+                disabled={partyOptions.length === 0}
+                className='profile-link add-relationship'
+                onClick={()=> setShowAddRelationshipModal(true)}>
+                    <AddPlusIcon/> <a>Add Custodian</a>
+                    {partyOptions.length === 0 && <i className='disabled'>All registered custodians have been added</i>}
+            </Button>
+            {showAddRelationshipModal &&
+                <AddRegisteredPartyModal
+                    title='Add Custodian'
+                    partyOptions={partyOptions}
+                    onRequestClose={() => setShowAddRelationshipModal(false)}
+                    multiple={false}
+                    onSubmit={requestCustodianRelationship}/>
+            }
+        </>
+        // <FormErrorHandled onSubmit={requestCustodianRelationship}>
+        //     <Form.Group className='inline-form-group'>
+        //         <ContractSelect
+        //             label='Request a relationship:'
+        //             allowAdditions
+        //             className='custodian-select-container'
+        //             clearable
+        //             search
+        //             selection
+        //             contracts={registeredCustodians}
+        //             placeholder='Custodian ID'
+        //             value={custodianId}
+        //             getOptionText={rc => rc.contractData.name}
+        //             setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
+        //             setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
+
+        //         <Button className='ghost' content='Send Request' disabled={!custodianId}/>
+        //     </Form.Group>
+        // </FormErrorHandled>
     )
 }
 

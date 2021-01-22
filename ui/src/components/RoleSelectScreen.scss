@@ -2,6 +2,7 @@
 @mixin role-selector {
     .role-selector {
         height: 100%;
+        animation: fadeIn .5s;
 
         .role-select > .ui.button {
             display: flex;

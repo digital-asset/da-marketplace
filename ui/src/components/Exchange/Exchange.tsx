@@ -104,6 +104,11 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     <FormErrorHandled onSubmit={updateProfile}>
                         <ExchangeProfile
                             content='Save'
+                            profileLinks={[
+                                {to: `${url}/market-pairs`, title: 'Market Pairs'},
+                                {to: `${url}/create-pair`, title: 'Create a Market'},
+                                {to: `${url}/participants`, title: 'Investors'}
+                            ]}
                             role={MarketRole.ExchangeRole}
                             defaultProfile={profile}
                             submitProfile={profile => setProfile(profile)}/>

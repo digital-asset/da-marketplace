@@ -133,6 +133,9 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <CustodianProfile
                                     content='Save'
+                                    // profileLinks={[
+                                    //     {to: `${url}/clients`, label: 'Clients'}
+                                    // ]}
                                     role={MarketRole.CustodianRole}
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>

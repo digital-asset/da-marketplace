@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
-import { EditIcon } from '../../icons/Icons';
+import { NavLink } from 'react-router-dom'
+
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+
+import { ArrowRightIcon, EditIcon } from '../../icons/Icons';
 
 import classNames from 'classnames'
 
 import { StringKeyedObject } from './utils'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 type FieldType = 'text';
 
@@ -49,10 +52,11 @@ type ProfileProps = {
     role: MarketRole;
     defaultProfile: Profile;
     inviteAcceptTile?: boolean;
+    profileLinks?: IProfileLinkItem[];
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile, role }) => {
+const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile, role, profileLinks }) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
     const [ editing, setEditing ] = useState<boolean>(false)
 
@@ -99,11 +103,14 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         </div>
 
     return (
-        <div className={classNames('profile', {'landing-page': !inviteAcceptTile})}>
-            { inviteAcceptTile ? profileForm : editing? profileForm : profileValues }
-            { !inviteAcceptTile && !editing &&
-                <a className='p2 edit-profile' onClick={() => setEditing(true)}><EditIcon/> Edit Profile </a>
-            }
+        <div className='profile'>
+            <div className={classNames('profile-form', {'landing-page': !inviteAcceptTile})}>
+                { inviteAcceptTile ? profileForm : editing? profileForm : profileValues }
+                { !inviteAcceptTile && !editing &&
+                    <a className='p2 edit-profile' onClick={() => setEditing(true)}><EditIcon/> Edit Profile </a>
+                }
+            </div>
+            { !inviteAcceptTile && profileLinks?.map(item => <ProfileLink item={item}/>) }
         </div>
     )
 
@@ -114,5 +121,21 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         }
     }
 }
+
+export type IProfileLinkItem = {
+    to: string,
+    title: string,
+    subtitle?: string
+}
+
+const ProfileLink = (props: { item: IProfileLinkItem }) => (
+    <NavLink className='profile-link' to={props.item.to}>
+        <div className='title'>
+            <a>{props.item.title}</a>
+            <ArrowRightIcon/>
+        </div>
+        <p className='p2'>{props.item.subtitle}</p>
+    </NavLink>
+)
 
 export default Profile;

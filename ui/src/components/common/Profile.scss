@@ -1,49 +1,116 @@
 @mixin profile {
     .profile {
-        &.landing-page {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: var(--white);
-            border: 1px solid var(--cool-grey-90);
-            padding: $spacing-l;
-            border-radius: 2px;
-
-            .profile-values {
+        .profile-form {
+            &.landing-page {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-90);
+                padding: $spacing-l;
+                border-radius: 2px;
 
-                .profile-name {
+                form {
+                    background-color: var(--blue-100);
+                }
+
+                .profile-values {
                     display: flex;
-                    background: var(--blue-100);
-                    border-radius: 40px;
-                    font-weight: 600;
-                    font-size: 24px;
-                    padding: $spacing-xs $spacing-m $spacing-s $spacing-m;
-                    line-height: 33px;
-                    text-align: center;
-                    vertical-align: middle;
-                }
+                    flex-direction: column;
+                    align-items: center;
 
-                .field-value {
-                    margin: $spacing-s;
+                    .profile-name {
+                        display: flex;
+                        background: var(--blue-100);
+                        border-radius: 40px;
+                        font-weight: 600;
+                        font-size: 24px;
+                        padding: $spacing-xs $spacing-m $spacing-s $spacing-m;
+                        line-height: 33px;
+                        text-align: center;
+                        vertical-align: middle;
+                    }
+
+                    .field-value {
+                        margin-top: $spacing-s;
+                    }
                 }
             }
 
-            a.edit-profile {
-                
+            a.edit-profile  {
+                margin-top: $spacing-m;
+            }
+
+            .profile-form-field {
+                width: 260px;
+                margin-top: $spacing-s;
+                margin-right: $spacing-s;
+            }
+
+            .profile-submit-button {
+                width: fit-content;
+            }
+        }
+    }
+
+    .profile-link {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        padding: $spacing-l;
+        margin: $spacing-m 0;
+        border-radius: 2px;
+        width: 100%;
+        color: var(--text-color);
+
+        &.add-relationship {
+            flex-direction: row;
+            align-items: center;
+            margin: 0 0 $spacing-s 0;
+            padding: $spacing-m  $spacing-l;
+
+            .icon.add-plus {
+                margin-right: $spacing-s;
+                height: 20px;
+            }
+
+            i.disabled {
+                margin-left: auto;
+                font-weight: normal;
             }
         }
 
-        .profile-form-field {
-            width: 260px;
-            margin-top: $spacing-s;
-            margin-right: $spacing-s;
+        .title {
+            margin-bottom: $spacing-s;
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .profile-submit-button {
-            width: fit-content;
+        &:hover {
+            background-color: var(--lightblue);
+            cursor: pointer;
         }
+    }
+
+    .default-profile-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        background: var(--green-40);
+
+        font-family: Open Sans;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        color: var(--white);
     }
 }
