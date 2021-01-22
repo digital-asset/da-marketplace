@@ -21,9 +21,10 @@ import MarketRelationships from '../common/MarketRelationships'
 import RoleSideNav from '../common/RoleSideNav';
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
+import { Header } from 'semantic-ui-react'
 
 import MarketPairs from './MarketPairs'
-import InviteParticipant from '../common/RequestInvestorRelationship'
+import RequestInvestorRelationship from '../common/RequestInvestorRelationship'
 import ExchangeParticipants from './ExchangeParticipants'
 import FormErrorHandled from '../common/FormErrorHandled'
 
@@ -136,7 +137,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             <>
                                 <MarketRelationships role={MarketRole.ExchangeRole}
                                     custodianRelationships={allCustodianRelationships}/>
-                                <InviteParticipant registeredInvestors={investorOptions}/>
+                                <RequestInvestorRelationship registeredInvestors={investorOptions}/>
                             </>
                         }
                         sideNav={sideNav}
