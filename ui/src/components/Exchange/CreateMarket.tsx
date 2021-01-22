@@ -112,7 +112,6 @@ const CreateMarket: React.FC<{}> = () => {
                         value={quoteToken?.contractId || ''}
                         getOptionText={token => token.contractData.id.label}
                         setContract={token => setQuoteToken(token)}/>
-
                 </div>
 
                 <div className='create-market-options'>
