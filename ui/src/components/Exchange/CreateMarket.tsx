@@ -1,25 +1,18 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
+import { ExchangeIcon } from '../../icons/Icons'
 import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
-import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
-import Page from '../common/Page'
 import { countDecimals, preciseInputSteps } from '../common/utils';
 
-type Props = {
-    sideNav: React.ReactElement;
-    onLogout: () => void;
-}
-
-const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
+const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
     const [ quoteToken, setQuoteToken ] = useState<TokenInfo>();
 
@@ -94,66 +87,61 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const { step, placeholder } = preciseInputSteps(quantityPrecision);
 
     return (
-        <Page
-            sideNav={sideNav}
-            onLogout={onLogout}
-            menuTitle={<><PublicIcon size='24'/>Create a Market</>}
-        >
-            <PageSection>
-                <div className='create-market'>
-                    <FormErrorHandled onSubmit={handleIdPairSubmit}>
-                        <div className='create-market-options'>
-                            <ContractSelect
-                                clearable
-                                className='create-market-select'
-                                contracts={allTokens}
-                                label='Base Asset'
-                                placeholder='Select...'
-                                value={baseToken?.contractId || ''}
-                                getOptionText={token => token.contractData.id.label}
-                                setContract={token => setBaseToken(token)}/>
+        <div className='create-market'>
+            <Header as='h3'>Create a Market</Header>
+            <FormErrorHandled onSubmit={handleIdPairSubmit}>
+                <div className='create-market-options'>
+                    <ContractSelect
+                        clearable
+                        className='create-market-select'
+                        contracts={allTokens}
+                        label='Base Asset'
+                        placeholder='Select...'
+                        value={baseToken?.contractId || ''}
+                        getOptionText={token => token.contractData.id.label}
+                        setContract={token => setBaseToken(token)}/>
 
-                            <div className='token-select-exchange-icon'><ExchangeIcon/></div>
+                    <ExchangeIcon/>
 
-                            <ContractSelect
-                                clearable
-                                className='create-market-select'
-                                contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
-                                label='Quote Asset'
-                                placeholder='Select...'
-                                value={quoteToken?.contractId || ''}
-                                getOptionText={token => token.contractData.id.label}
-                                setContract={token => setQuoteToken(token)}/>
+                    <ContractSelect
+                        clearable
+                        className='create-market-select'
+                        contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
+                        label='Quote Asset'
+                        placeholder='Select...'
+                        value={quoteToken?.contractId || ''}
+                        getOptionText={token => token.contractData.id.label}
+                        setContract={token => setQuoteToken(token)}/>
 
-                        </div>
-
-                        <div className='create-market-quantities'>
-                            <Form.Input
-                                label='Minimum Quantity'
-                                type='number'
-                                step={step}
-                                placeholder={placeholder}
-                                error={minQuantityError}
-                                disabled={!quoteToken || !baseToken}
-                                onChange={validateMinQuantity}/>
-
-                            <Form.Input
-                                label='Maximum Quantity'
-                                type='number'
-                                step={step}
-                                placeholder={placeholder}
-                                error={maxQuantityError}
-                                disabled={!quoteToken || !baseToken}
-                                onChange={validateMaxQuantity}/>
-                        </div>
-                            <Button
-                                content='Submit'
-                                className='create-market-save ghost'
-                                disabled={!baseToken || !quoteToken}/>
-                        </FormErrorHandled>
                 </div>
-            </PageSection>
-        </Page>
+
+                <div className='create-market-options'>
+                    <Form.Input
+                        className='quantity-select'
+                        label={<p className='p2'>Minimum Quantity</p>}
+                        type='number'
+                        step={step}
+                        placeholder={placeholder}
+                        error={minQuantityError}
+                        disabled={!quoteToken || !baseToken}
+                        onChange={validateMinQuantity}/>
+
+                    <Form.Input
+                        className='quantity-select'
+                        label={<p className='p2'>Minimum Quantity</p>}
+                        type='number'
+                        step={step}
+                        placeholder={placeholder}
+                        error={maxQuantityError}
+                        disabled={!quoteToken || !baseToken}
+                        onChange={validateMaxQuantity}/>
+                </div>
+                    <Button
+                        content='Submit'
+                        className='create-market-save ghost'
+                        disabled={!baseToken || !quoteToken}/>
+                </FormErrorHandled>
+        </div>
     )
 }
 

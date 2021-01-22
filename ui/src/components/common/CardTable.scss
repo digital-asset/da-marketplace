@@ -21,23 +21,24 @@
             border-spacing: 0px $spacing-m;
             border-collapse: separate;
             margin-top: 0px;
+            background-color: transparent;
 
             .card-table-row {
                 border-radius: 5px;
             }
 
             .card-table-cell {
-                background-color: var(--grey-1);
-                border-top: 1px var(--grey2) solid;
-                border-bottom: 1px var(--grey2) solid;
+                background-color: var(--white);
+                border-top: 1px var(--cool-grey-90) solid;
+                border-bottom: 1px var(--cool-grey-90) solid;
 
                 &:first-child {
-                    border-left: 1px var(--grey2) solid;
+                    border-left: 1px var(--cool-grey-90) solid;
                     border-radius: 4px 0px 0px 4px;
                 }
 
                 &:last-child {
-                    border-right: 1px var(--grey2) solid;
+                    border-right:1px var(--cool-grey-90) solid;
                     border-radius: 0px 4px 4px 0px;
                 }
             }

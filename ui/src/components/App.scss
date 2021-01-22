@@ -24,6 +24,7 @@
 
 @import './Broker/Broker.scss';
 @import './Custodian/Custodian.scss';
+@import './Exchange/Exchange.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
 
@@ -36,6 +37,7 @@
         @include cap-table;
         @include card-table;
         @include donut-chart;
+        @include exchange;
         @include form-error-handled;
         @include holdings;
         @include invite-accept-tile;

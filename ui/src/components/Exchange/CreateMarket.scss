@@ -1,37 +1,36 @@
-.create-market .create-market-save {
-    margin-top: $spacing-s;
-}
 
-.create-market-options {
-    width: 450px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-}
+@mixin create-market {
+    .create-market {
+        margin-bottom: $spacing-xl;
 
-.create-market-quantities {
-    margin-top: $spacing-s;
-    width: 250px;
-}
+        .create-market-options {
+            display: flex;
+            flex-direction: row;
+            align-content: center;
+            margin: $spacing-s 0;
 
-.create-market-options .exchange-icon {
-    height: 16px;
-    width: 16px;
-    margin: $spacing-s;
-}
+            .exchange-icon {
+                width: 18px;
+                height: 18px;
+                margin: $spacing-s;
+                align-self: flex-end;
+            }
 
-.token-select-container {
-    width: 200px;
-}
+            .quantity-select {
+                width: 196px;
+                margin-right: 45px;;
+            }
+        }
 
-@media screen and (max-width: 1000px) {
-    .create-market-options  {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+            @media screen and (max-width: 1000px) {
+                .create-market-options  {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
 
-    .create-market-options .exchange-icon {
-        margin: $spacing-s;
-    }
+                .create-market-options .exchange-icon {
+                    margin: $spacing-s;
+                }
+            }
+        }
 }

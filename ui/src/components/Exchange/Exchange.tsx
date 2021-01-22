@@ -81,8 +81,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                                  name={registeredExchange.contracts[0]?.payload.name || exchange}
                                  items={[
-                                    {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
-                                    {to: `${url}/create-pair`, label: 'Create a Market', icon: <PublicIcon/>},
+                                    {to: `${url}/market-pairs`, label: 'Markets', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
     const inviteScreen = (
@@ -96,43 +95,40 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     );
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-    const exchangeScreen = <Switch>
-        <Route exact path={path}>
-            <LandingPage
-                profile={
-                    <FormErrorHandled onSubmit={updateProfile}>
-                        <ExchangeProfile
-                            content='Save'
-                            defaultProfile={profile}
-                            submitProfile={profile => setProfile(profile)}/>
-                    </FormErrorHandled>
-                }
-                marketRelationships={
-                    <MarketRelationships role={MarketRole.ExchangeRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
-                sideNav={sideNav}
-                notifications={notifications}
-                onLogout={onLogout}/>
-        </Route>
+    const exchangeScreen =
+        <div className='exchange'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <ExchangeProfile
+                                    content='Save'
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <MarketRelationships role={MarketRole.ExchangeRole}
+                                                custodianRelationships={allCustodianRelationships}/>}
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/market-pairs`}>
-            <MarketPairs
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
+                <Route path={`${path}/market-pairs`}>
+                    <MarketPairs
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/create-pair`}>
-            <CreateMarket
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
-
-        <Route path={`${path}/participants`}>
-            <ExchangeParticipants
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
-    </Switch>
+                <Route path={`${path}/participants`}>
+                    <ExchangeParticipants
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
 
     return registeredExchange.loading
          ? loadingScreen

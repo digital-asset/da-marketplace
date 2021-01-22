@@ -10,6 +10,8 @@ import CardTable from '../common/CardTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
+import CreateMarket from './CreateMarket';
+
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
@@ -33,9 +35,10 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><PublicIcon size='24'/>Market Pairs</>}
+            menuTitle={<><PublicIcon size='24'/>Markets</>}
         >
             <PageSection>
+                <CreateMarket/>
                 <CardTable
                     className='market-pairs'
                     header={header}

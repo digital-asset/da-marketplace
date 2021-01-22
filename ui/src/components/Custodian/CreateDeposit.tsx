@@ -108,6 +108,7 @@ const CreateDeposit = (props: {
         setDepositQuantity(number.toString())
     }
 
+    
     const { step, placeholder } = preciseInputSteps(quantityPrecision);
 
     return (
