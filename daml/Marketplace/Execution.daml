@@ -1,0 +1,100 @@
+module Marketplace.Execution where
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+import qualified Marketplace.Trading as Trading
+
+-- TODO: Implement
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming RequestCreateOrder : (ContractId Trading.CreateOrderRequest, ContractId AssetDeposit)
+        with
+          market : Text
+          asset : Asset
+          price : Asset
+          isBid : Bool
+          depositCid : ContractId AssetDeposit
+        do
+          -- TODO: Check that price and quantity conform to the precision requirements of the Listing
+          depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
+          createOrderRequestCid <- create Trading.CreateOrderRequest with ..
+          pure (createOrderRequestCid, depositCid)
+
+      nonconsuming RequestCancelOrder : ContractId Trading.CancelOrderRequest
+        with
+          orderCid : ContractId Trading.Order
+        do
+          create Trading.CancelOrderRequest with ..
+
+    controller provider can
+      nonconsuming CreateOrder : ContractId Trading.Order
+        with
+          createOrderRequestCid : ContractId Trading.CreateOrderRequest
+          id : Int
+        do
+          Trading.CreateOrderRequest{..} <- fetch createOrderRequestCid
+          archive createOrderRequestCid
+          create Trading.Order with ..
+
+      nonconsuming CancelOrder : ContractId AssetDeposit
+        with
+          cancelOrderRequestCid : ContractId Trading.CancelOrderRequest
+        do
+          Trading.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          archive cancelOrderRequestCid
+          order <- fetch orderCid
+          archive orderCid
+          exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccount.id
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+          tradingAccount : Account
+          allocationAccount : Account
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    customer : Party
+    provider : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, customer
+
+    controller provider can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()

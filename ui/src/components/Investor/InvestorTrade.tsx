@@ -6,7 +6,7 @@ import { useParty, useStreamQueries } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 

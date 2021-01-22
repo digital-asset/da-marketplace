@@ -6,33 +6,33 @@ import qualified Marketplace.Issuance as Issuance
 template Role
   with
     operator : Party
-    custodian : Party
+    provider : Party
   where
-    signatory operator, custodian
+    signatory operator, provider
 
-    key (operator, custodian) :  (Party, Party)
+    key (operator, provider) :  (Party, Party)
     maintainer key._1
 
-    controller custodian can
-      OfferCustodyService : ContractId Custody.Offer
+    controller provider can
+      nonconsuming OfferCustodyService : ContractId Custody.Offer
         with
-          client : Party
+          customer : Party
         do
           create Custody.Offer with ..
 
-      TerminateCustodyService : ()
+      nonconsuming TerminateCustodyService : ()
         with
           custodyServiceCid : ContractId Custody.Service
         do
           archive custodyServiceCid
 
-      OfferIssuanceService : ContractId Issuance.Offer
+      nonconsuming OfferIssuanceService : ContractId Issuance.Offer
         with
           client : Party
         do
           create Issuance.Offer with ..
 
-      TerminateIssuanceService : ()
+      nonconsuming TerminateIssuanceService : ()
         with
           issuanceServiceCid : ContractId Issuance.Service
         do
@@ -41,11 +41,11 @@ template Role
 template Offer
   with
     operator : Party
-    custodian : Party
+    provider : Party
   where
     signatory operator
 
-    controller custodian can
+    controller provider can
       Accept : ContractId Role
         do
           create Role with ..
@@ -56,10 +56,10 @@ template Offer
 
 template Request
   with
-    custodian : Party
+    provider : Party
     operator : Party
   where
-    signatory custodian
+    signatory provider
 
     controller operator can
       Approve : ContractId Role

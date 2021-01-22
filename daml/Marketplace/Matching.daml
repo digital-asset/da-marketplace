@@ -1,0 +1,89 @@
+module Marketplace.Matching where
+
+import DA.Action (when, void)
+import DA.Finance.Trade.Dvp (Dvp(..))
+import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..))
+import DA.Finance.Trade.Types (SettlementStatus(..))
+import DA.Finance.Types (Id(..), MasterAgreement(..))
+import DA.Next.Set (fromList, empty)
+import qualified Marketplace.Trading as Trading
+
+template Service
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator, provider
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+      nonconsuming MatchOrders : (ContractId Dvp, ContractId SettlementInstruction, ContractId SettlementInstruction)
+        with
+          matchId : Text
+          makerOrderCid : ContractId Trading.Order
+          takerOrderCid : ContractId Trading.Order
+          filledQuantity : Decimal
+          filledPrice : Decimal
+        do
+          -- TODO: Check that price matches limit order price, quantity is less than order qty
+          makerOrder <- fetch makerOrderCid
+          takerOrder <- fetch takerOrderCid
+          (_, makerTradingService) <- fetchByKey @Trading.Service (operator, provider, makerOrder.customer)
+          (_, takerTradingService) <- fetchByKey @Trading.Service (operator, provider, takerOrder.customer)
+          let
+            (buy, buyCid, sell, sellCid) = if makerOrder.isBid then (makerOrder, makerOrderCid, takerOrder, takerOrderCid) else (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
+            (buyTradingService, sellTradingService) = if makerOrder.isBid then (makerTradingService, takerTradingService) else (takerTradingService, makerTradingService)
+            buyer = buy.customer
+            seller = sell.customer
+            delivery = buy.asset with quantity = filledQuantity
+            payment = buy.price with quantity = filledPrice * filledQuantity
+            tradeId = Id with signatories = fromList [ provider ]; label = matchId; version = 0
+            masterAgreement = MasterAgreement with party1 = buyer, party2 = seller; id = tradeId
+            status = SettlementStatus_Instructed
+            settlementDate = None
+            deliveries = [ delivery ]
+            payments = [ payment ]
+            observers = empty
+            dvp = Dvp with ..
+          when (filledQuantity < buy.asset.quantity) do
+            void $ create buy with asset = (buy.asset with quantity = buy.asset.quantity - filledQuantity)
+          when (filledQuantity < sell.asset.quantity) do
+            void $ create sell with asset = (sell.asset with quantity = sell.asset.quantity - filledQuantity)
+          deliverySettlementInstruction <- exercise sellCid Trading.AllocateSettlementStep with senderAccount = sellTradingService.allocationAccount, receiverAccount = buyTradingService.tradingAccount; allocatedAsset = delivery; ..
+          paymentSettlementInstruction <- exercise buyCid Trading.AllocateSettlementStep with senderAccount = buyTradingService.allocationAccount, receiverAccount = sellTradingService.tradingAccount; allocatedAsset = payment; ..
+          dvpCid <- create dvp
+          pure (dvpCid, deliverySettlementInstruction, paymentSettlementInstruction)
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()

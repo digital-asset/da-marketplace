@@ -1,8 +1,12 @@
+-- TODO DRY: refactor opportunity: embed Order/Trading in these files.
+-- Use proper namespace
 module Marketplace.Trading where
 
-import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
-import DA.Finance.Types
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
+import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..), SettlementDetails(..))
+import DA.Finance.Types (Id, Asset, Account, MasterAgreement)
+import DA.Next.Set (empty)
 
 data Side
     = Buy
@@ -12,29 +16,25 @@ data Side
 data OrderType
     = Market
     | Limit with
-        price : Decimal
+        price : Asset
   deriving (Eq, Show)
 
 data TimeInForce
     = GTC
-      -- ^ Good Till Cancelled
-      --  Rests on book until cancellation
+      -- ^ Good Till Cancelled (Rests on book until cancellation)
     | GTD with
         expiryDate : Date
-      -- ^ Good Till Date
-      --  At expiryDate, order will be automatically cancelled
+      -- ^ Good Till Date (At expiryDate, order will be automatically cancelled)
     | GAA
-      -- ^ Good At Auction
-      --  Expires after auction if not filled
+      -- ^ Good At Auction (Expires after auction if not filled)
     | IOC
-      -- ^ Immediate Or Cancel
-      --  Allows for partial fills
+      -- ^ Immediate Or Cancel (Allows for partial fills)
     | FOK
-      -- ^ Fill Or Kill
-      --  All or nothing
+      -- ^ Fill Or Kill (All or nothing)
   deriving (Eq, Show)
 
 data OrderDetails = OrderDetails with
+    id : Id
     market : Text
     asset : Asset
     side : Side
@@ -59,36 +59,50 @@ data Status
 
 template Order
   with
-    id : Id
-    exchange : Party
-    client : Party
-    exchangeOrderId : Optional Int
+    provider : Party
+    customer : Party
     orderDetails : OrderDetails
     status : Status
+    providerOrderId : Optional Int
     depositCid : ContractId AssetDeposit
   where
-    signatory exchange, client
+    signatory provider, customer
 
-    key id : Id
+    key orderDetails.id : Id
     maintainer key.signatories
+
+    controller provider can
+
+      -- TODO: Makeshift implementation to gather customer's signature via this contract
+      -- (needed to create the SettlementInstruction)
+      -- should probably be done elsewhere / differently
+      AllocateSettlementStep : ContractId SettlementInstruction
+        with
+          masterAgreement : MasterAgreement
+          tradeId : Id
+          senderAccount : Account
+          receiverAccount : Account
+          allocatedAsset : Asset
+        do
+          let steps = [ SettlementDetails with depositCid = Some depositCid; .. ]
+          create SettlementInstruction with asset = allocatedAsset; observers = empty; ..
 
 template Service
   with
     operator : Party
-    exchange : Party
-    client : Party
-    tradingAccountId : Id
-    allocationAccountId : Id
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
   where
-    signatory operator, exchange, client
+    signatory operator, provider, customer
 
-    key (operator, exchange, client) : (Party, Party, Party)
+    key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller client can
+    controller customer can
       nonconsuming RequestCreateOrder : (ContractId Order, ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
-          orderId : Id
           orderDetails : OrderDetails
           depositCid : ContractId AssetDeposit
         do
@@ -96,9 +110,9 @@ template Service
           -- TODO: Check order valid for exberry with the market/limit and timeInForce combos
           let
             status = New
-            exchangeOrderId = None
+            providerOrderId = None
             id = orderId
-          depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId; ..
+          depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
           createOrderRequestCid <- create CreateOrderRequest with ..
           orderCid <- create Order with ..
 
@@ -112,24 +126,24 @@ template Service
           archive orderCid
 
           orderCid <- create order with status = PendingCancellation
-          cancelOrderRequestCid <- create CancelOrderRequest with orderId = id; ..
+          cancelOrderRequestCid <- create CancelOrderRequest with orderId = orderDetails.id; ..
 
           return (orderCid, cancelOrderRequestCid)
 
-    controller exchange can
+    controller provider can
       nonconsuming AcknowledgeOrderRequest : ContractId Order
         with
           createOrderRequestCid : ContractId CreateOrderRequest
-          exchangeOrderId : Int
+          providerOrderId : Int
         do
-          CreateOrderRequest{orderId} <- fetch createOrderRequestCid
+          CreateOrderRequest{orderDetails} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey orderId
+          (orderCid, order) <- fetchByKey orderDetails.id
 
           case order.status of
             New -> do
               archive orderCid
-              create order with status = PendingExecution; exchangeOrderId = Some exchangeOrderId
+              create order with status = PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
 
       nonconsuming CancelOrder : (ContractId Order, ContractId AssetDeposit)
@@ -138,11 +152,11 @@ template Service
         do
           CancelOrderRequest{orderId} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order) <- fetchByKey orderId
+          (orderCid, order@Order{..}) <- fetchByKey orderId
           archive orderCid
 
           orderCid <- create order with status = Cancelled
-          depositCid <- exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with receiverAccountId = tradingAccountId; depositCid = order.depositCid
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
 
           return (orderCid, depositCid)
 
@@ -154,11 +168,11 @@ template Service
         do
           CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey orderId
+          (orderCid, order) <- fetchByKey orderDetails.id
           archive orderCid
 
           orderCid <- create order with status = Rejected with ..
-          depositCid <- exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with receiverAccountId = tradingAccountId, ..
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id, ..
 
           return (orderCid, depositCid)
 
@@ -188,18 +202,18 @@ template Service
 template Offer
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
   where
-    signatory operator, exchange
+    signatory operator, provider
 
-    controller client can
+    controller customer can
       Accept : ContractId Service
         with
-          tradingAccountId : Id
-          allocationAccountId : Id
+          tradingAccount : Account
+          allocationAccount : Account
         do
-          -- TODO: Check necessary conditions, ie. both are visibe to the exchange and exchange is nominee on allocationAccount
+          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
           create Service with ..
 
       Decline : ()
@@ -209,17 +223,17 @@ template Offer
 template Request
   with
     operator : Party
-    client : Party
-    exchange : Party
-    tradingAccountId : Id
-    allocationAccountId : Id
+    customer : Party
+    provider : Party
+    tradingAccount : Account
+    allocationAccount : Account
   where
-    signatory operator, client
+    signatory operator, customer
 
-    controller exchange can
+    controller provider can
       Approve : ContractId Service
         do
-          -- TODO: Check necessary conditions, ie. both are visibe to the exchange and exchange is nominee on allocationAccount
+          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
           create Service with ..
 
       Reject : ()
@@ -228,22 +242,23 @@ template Request
 
 template CreateOrderRequest
   with
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
     operator : Party
     orderDetails : OrderDetails
-    orderId : Id
     depositCid : ContractId AssetDeposit
   where
-    signatory exchange, client
+    signatory provider, customer
 
-    controller exchange can
+    let serviceKey = (operator, provider, customer)
+
+    controller provider can
       nonconsuming AcknowledgeRequest : ContractId Order
         with
           createOrderRequestCid : ContractId CreateOrderRequest
-          exchangeOrderId : Int
+          providerOrderId : Int
         do
-          exerciseByKey @Service (operator, exchange, client) AcknowledgeOrderRequest with ..
+          exerciseByKey @Service serviceKey AcknowledgeOrderRequest with ..
 
       nonconsuming RejectRequest : (ContractId Order, ContractId AssetDeposit)
         with
@@ -251,32 +266,34 @@ template CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          exerciseByKey @Service (operator, exchange, client) RejectOrder with ..
+          exerciseByKey @Service serviceKey RejectOrder with ..
 
 template CancelOrderRequest
   with
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
     operator : Party
-    exchangeOrderId : Optional Int
+    providerOrderId : Optional Int
     orderId : Id
   where
-    signatory exchange, client
+    signatory provider, customer
 
-    key (exchange, client, orderId) : (Party, Party, Id)
+    key (provider, customer, orderId) : (Party, Party, Id)
     maintainer key._1
 
-    controller exchange can
+    let serviceKey = (operator, provider, customer)
+
+    controller provider can
       nonconsuming AcknowledgeCancel : (ContractId Order, ContractId AssetDeposit)
         do
-          exerciseByKey @Service (operator, exchange, client) CancelOrder with cancelOrderRequestCid = self
+          exerciseByKey @Service serviceKey CancelOrder with cancelOrderRequestCid = self
 
       nonconsuming FailureCancel : ContractId Order
         with
           errorCode : Int
           errorMessage : Text
         do
-          exerciseByKey @Service (operator, exchange, client) RejectCancellation with cancelOrderRequestCid = self, ..
+          exerciseByKey @Service serviceKey RejectCancellation with cancelOrderRequestCid = self, ..
 
 
 -- TODO: Revisit/reimplement
@@ -285,7 +302,7 @@ template CancelOrderRequest
 -- template TradeSide
 --   with
 --     exchParticipant : Party
---     exchange : Party
+--     provider : Party
 --     pair : IdPair
 --     price : Decimal
 --     qty : Decimal
@@ -297,9 +314,9 @@ template CancelOrderRequest
 --     receiverAccountId : Id
 --     isBinaryOption : Bool
 --   where
---     signatory exchange, exchParticipant
+--     signatory provider, exchParticipant
 
-    -- controller exchange can
+    -- controller provider can
     --   TradeSide_Settle : (ContractId SettledTradeSide, Optional (ContractId DepositCreditRequest))
     --     do
     --       assert $ not isBinaryOption
@@ -308,7 +325,7 @@ template CancelOrderRequest
     --           let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
     --               receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
     --           creditRequestCid <- create DepositCreditRequest
-    --               with owner = exchange
+    --               with owner = provider
     --                    account = receiverAccount
     --                    asset = asset
     --           return $ Some creditRequestCid
@@ -328,7 +345,7 @@ template CancelOrderRequest
     --           let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
     --               receiverAccount = Account with id = receiverAccountId, provider = receiverProvider, owner = receiver
     --           creditRequestCid <- create DepositCreditRequest
-    --               with owner = exchange
+    --               with owner = provider
     --                    account = receiverAccount
     --                    asset = asset
     --           return $ Some creditRequestCid
@@ -340,7 +357,7 @@ template CancelOrderRequest
 -- template SettledTradeSide
 --   with
 --     exchParticipant : Party
---     exchange : Party
+--     provider : Party
 --     pair : IdPair
 --     price : Decimal
 --     qty : Decimal
@@ -349,7 +366,7 @@ template CancelOrderRequest
 --     counterOrderId : Int
 --     timestamp : Text
 --   where
---     signatory exchange, exchParticipant
+--     signatory provider, exchParticipant
 
 
 -- template BrokerTrade

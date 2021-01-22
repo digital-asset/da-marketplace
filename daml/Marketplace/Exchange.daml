@@ -6,17 +6,17 @@ import qualified Marketplace.Trading as Trading
 template Role
   with
     operator : Party
-    exchange : Party
+    provider : Party
   where
-    signatory operator, exchange
+    signatory operator, provider
 
-    key (operator, exchange) : (Party, Party)
+    key (operator, provider) : (Party, Party)
     maintainer key._1
 
-    controller exchange can
+    controller provider can
       nonconsuming OfferTradingService : ContractId Trading.Offer
         with
-          client : Party
+          customer : Party
         do
           create Trading.Offer with ..
 
@@ -28,7 +28,7 @@ template Role
 
       nonconsuming OfferListingService : ContractId Listing.Offer
         with
-          client : Party
+          customer : Party
         do
           create Listing.Offer with ..
 
@@ -41,11 +41,11 @@ template Role
 template Offer
   with
     operator : Party
-    exchange : Party
+    provider : Party
   where
     signatory operator
 
-    controller exchange can
+    controller provider can
       Accept : ContractId Role
         do
           create Role with ..
@@ -56,10 +56,10 @@ template Offer
 
 template Request
   with
-    exchange : Party
+    provider : Party
     operator : Party
   where
-    signatory exchange
+    signatory provider
 
     controller operator can
       Approve : ContractId Role

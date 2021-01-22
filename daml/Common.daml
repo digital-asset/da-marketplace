@@ -1,0 +1,84 @@
+module Common where
+
+import Daml.Script
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule)
+import DA.Finance.Types (Id(..), Asset(..), Account(..))
+import DA.Next.Set
+import qualified Marketplace.Operator as Operator
+import qualified Marketplace.Custodian as Custodian
+import qualified Marketplace.Custody as Custody
+import qualified Marketplace.Exchange as Exchange
+import qualified Marketplace.Matching as Matching
+import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Trading as Trading
+
+data CommonContracts = CommonContracts
+  with
+    operator : Party
+    custodian : Party
+    exchange : Party
+    operatorServiceCid : ContractId Operator.Service
+    custodianRoleCid : ContractId Custodian.Role
+    exchangeRoleCid : ContractId Exchange.Role
+    matchingServiceCid : ContractId Matching.Service
+    settlementServiceCid : ContractId Settlement.Service
+
+data CustomerContracts = CustomerContracts
+  with
+    customer : Party
+    tradingServiceCid : ContractId Trading.Service
+    allocationAssetSettlementRuleCid : ContractId AssetSettlementRule
+    tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
+    allocationAccountId : Id
+    tradingAccountId : Id
+    awayAccountId : Id
+    assetDepositCid : ContractId AssetDeposit
+
+onboardCommon : Script CommonContracts
+onboardCommon = do
+  -- Parties
+  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  custodian <- allocatePartyWithHint "Custodian" $ PartyIdHint "Custodian"
+  exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+
+  -- Roles
+  operatorServiceCid <- submit operator do createCmd Operator.Service with ..
+  custodianRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferCustodianRole with provider = custodian
+  custodianRoleCid <- submit custodian do exerciseCmd custodianRoleOfferCid Custodian.Accept
+  exchangeRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferExchangeRole with provider = exchange
+  exchangeRoleCid <- submit exchange do exerciseCmd exchangeRoleOfferCid Exchange.Accept
+  matchingServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferMatchingService with provider = exchange
+  matchingServiceCid <- submit exchange do exerciseCmd matchingServiceOfferCid Matching.Accept
+  settlementServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferSettlementService with provider = exchange
+  settlementServiceCid <- submit exchange do exerciseCmd settlementServiceOfferCid Settlement.Accept
+  pure CommonContracts with ..
+
+onboardCustomer : CommonContracts -> Text -> Asset -> Script CustomerContracts
+onboardCustomer CommonContracts{..} party asset = do
+  customer <- allocatePartyWithHint party $ PartyIdHint party
+  let
+    tradingAccountId    = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
+    tradingAccount      = Account with provider = custodian; owner = customer; id = tradingAccountId
+    allocationAccountId = Id with signatories = fromList [ custodian, customer ]; label = "AllocationAccount-" <> party; version = 0
+    allocationAccount   = Account with provider = custodian; owner = customer; id = allocationAccountId
+    awayAccountId       = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
+    awayAccount         = Account with provider = custodian; owner = customer; id = awayAccountId
+  custodyServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
+  custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
+  tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
+  tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
+
+  -- Accounts
+  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [ exchange ]; nominee = customer
+  tradingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = tradingOpenAccountRequestCid
+  allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = allocationAccountId; observers = fromList [ exchange ]; nominee = exchange
+  allocationAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = allocationOpenAccountRequestCid
+  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; nominee = customer
+  awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
+
+  -- Assets
+  creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..
+  assetDepositCid <- submit custodian do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
+  
+  pure $ CustomerContracts with ..

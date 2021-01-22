@@ -2,10 +2,10 @@ module Marketplace.Operator where
 
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Exchange as Exchange
+import qualified Marketplace.Matching as Matching
+import qualified Marketplace.Settlement as Settlement
 
-type T = Operator
-
-template Operator
+template Service
   with
     operator : Party
   where
@@ -17,12 +17,24 @@ template Operator
     controller operator can
       nonconsuming OfferCustodianRole : ContractId Custodian.Offer
         with
-          custodian : Party
+          provider : Party
         do
           create Custodian.Offer with ..
 
       nonconsuming OfferExchangeRole : ContractId Exchange.Offer
         with
-          exchange : Party
+          provider : Party
         do
           create Exchange.Offer with ..
+
+      nonconsuming OfferMatchingService : ContractId Matching.Offer
+        with
+          provider : Party
+        do
+          create Matching.Offer with ..
+
+      nonconsuming OfferSettlementService : ContractId Settlement.Offer
+        with
+          provider : Party
+        do
+          create Settlement.Offer with ..

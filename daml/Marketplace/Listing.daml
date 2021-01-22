@@ -5,37 +5,42 @@ import DA.Finance.Types
 template Listing
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
     listingId : Text
+    calendarId : Text
+    description : Text
     tradedAssetId : Id
     quotedAssetId : Id
     tradedAssetPrecision : Int
     quotedAssetPrecision : Int
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
+    status : Text
   where
-    signatory operator, exchange, client
+    signatory operator, provider, customer
 
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
-    key (operator, exchange, listingId) : (Party, Party, Text)
+    key (operator, provider, listingId) : (Party, Party, Text)
     maintainer key._1
 
 template Service
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
   where
-    signatory operator, exchange, client
+    signatory operator, provider, customer
 
-    key (operator, exchange, client) : (Party, Party, Party)
+    key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller client can
+    controller customer can
       nonconsuming RequestCreateListing : ContractId CreateListingRequest
         with
           listingId : Text
+          calendarId : Text
+          description : Text
           tradedAssetId : Id
           quotedAssetId : Id
           tradedAssetPrecision : Int
@@ -43,7 +48,7 @@ template Service
           minimumTradableQuantity : Decimal
           maximumTradableQuantity : Decimal
         do
-          create CreateListingRequest with ..
+          create CreateListingRequest with status = "Active"; ..
 
       nonconsuming RequestDeleteListing : ContractId DeleteListingRequest
         with
@@ -51,7 +56,7 @@ template Service
         do
           create DeleteListingRequest with ..
 
-    controller exchange can
+    controller provider can
       nonconsuming CreateListing : ContractId Listing
         with
           createListingRequestCid : ContractId CreateListingRequest
@@ -66,18 +71,18 @@ template Service
         do
           DeleteListingRequest{..} <- fetch deleteListingRequestCid
           archive deleteListingRequestCid
-          (listingCid, _) <- fetchByKey @Listing (operator, exchange, listingId)
+          (listingCid, _) <- fetchByKey @Listing (operator, provider, listingId)
           archive listingCid
 
 template Offer
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
   where
-    signatory operator, exchange
+    signatory operator, provider
 
-    controller client can
+    controller customer can
       Accept : ContractId Service
         do
           create Service with ..
@@ -89,12 +94,12 @@ template Offer
 template Request
   with
     operator : Party
-    client : Party
-    exchange : Party
+    customer : Party
+    provider : Party
   where
-    signatory operator, client
+    signatory operator, customer
 
-    controller exchange can
+    controller provider can
       Approve : ContractId Service
         do
           create Service with ..
@@ -106,23 +111,26 @@ template Request
 template CreateListingRequest
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
     listingId : Text
+    calendarId : Text
+    description : Text
     tradedAssetId : Id
     quotedAssetId : Id
     tradedAssetPrecision : Int
     quotedAssetPrecision : Int
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
+    status : Text
   where
-    signatory operator, exchange, client
+    signatory operator, provider, customer
 
 template DeleteListingRequest
   with
     operator : Party
-    exchange : Party
-    client : Party
+    provider : Party
+    customer : Party
     listingId : Text
   where
-    signatory operator, exchange, client
+    signatory operator, provider, customer

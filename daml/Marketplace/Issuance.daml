@@ -9,27 +9,27 @@ type T = Issuance
 template Issuance
   with
     operator : Party
-    custodian : Party
+    provider : Party
     client : Party
     issuanceId : Text
     assetId : Id
     accountId : Id
     quantity : Decimal
   where
-    signatory operator, custodian, client
+    signatory operator, provider, client
 
-    key (operator, custodian, issuanceId) : (Party, Party, Text)
+    key (operator, provider, issuanceId) : (Party, Party, Text)
     maintainer key._1
 
 template Service
   with
     operator : Party
-    custodian : Party
+    provider : Party
     client : Party
   where
-    signatory operator, custodian, client
+    signatory operator, provider, client
 
-    key (operator, custodian, client) : (Party, Party, Party)
+    key (operator, provider, client) : (Party, Party, Party)
     maintainer key._1
 
     controller client can
@@ -50,7 +50,7 @@ template Service
         do
           create ReduceIssuanceRequest with ..
 
-    controller custodian can
+    controller provider can
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with
           createIssuanceRequestCid : ContractId CreateIssuanceRequest
@@ -70,17 +70,17 @@ template Service
           archive reduceIssuanceRequestCid
           deposit <- fetch depositCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
-          (issuanceCid, issuance) <- fetchByKey @Issuance (operator, custodian, issuanceId)
+          (issuanceCid, issuance) <- fetchByKey @Issuance (operator, provider, issuanceId)
           archive issuanceCid
           create issuance with quantity = issuance.quantity - deposit.asset.quantity
 
 template Offer
   with
     operator : Party
-    custodian : Party
+    provider : Party
     client : Party
   where
-    signatory operator, custodian
+    signatory operator, provider
 
     controller client can
       Accept : ContractId Service
@@ -95,11 +95,11 @@ template Request
   with
     operator : Party
     client : Party
-    custodian : Party
+    provider : Party
   where
     signatory operator, client
 
-    controller custodian can
+    controller provider can
       Approve : ContractId Service
         do
           create Service with ..
@@ -111,22 +111,22 @@ template Request
 template CreateIssuanceRequest
   with
     operator : Party
-    custodian : Party
+    provider : Party
     client : Party
     issuanceId : Text
     assetId : Id
     accountId : Id
     quantity : Decimal
   where
-    signatory operator, custodian, client
+    signatory operator, provider, client
 
 template ReduceIssuanceRequest
   with
     operator : Party
-    custodian : Party
+    provider : Party
     client : Party
     issuanceId : Text
     accountId : Id
     depositCid : ContractId AssetDeposit
   where
-    signatory operator, custodian, client
+    signatory operator, provider, client

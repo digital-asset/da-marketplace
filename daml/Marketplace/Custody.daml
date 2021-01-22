@@ -8,15 +8,15 @@ import DA.Next.Set
 template Service
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
 
-    key (operator, custodian, client) : (Party, Party, Party)
+    key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller client can
+    controller customer can
       nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
         with
           accountId : Id
@@ -54,7 +54,7 @@ template Service
         do
           create TransferDepositRequest with ..
 
-    controller custodian can
+    controller provider can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
         with
           openAccountRequestCid : ContractId OpenAccountRequest
@@ -62,7 +62,7 @@ template Service
           OpenAccountRequest{..} <- fetch openAccountRequestCid
           archive openAccountRequestCid
           let
-            account = Account with provider = custodian; owner = client; id = accountId
+            account = Account with provider = provider; owner = customer; id = accountId
           create AssetSettlementRule with ..
 
       nonconsuming CloseAccount : ()
@@ -101,12 +101,12 @@ template Service
 template Offer
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
   where
-    signatory operator, custodian
+    signatory operator, provider
 
-    controller client can
+    controller customer can
       Accept : ContractId Service
         do
           create Service with ..
@@ -118,12 +118,12 @@ template Offer
 template Request
   with
     operator : Party
-    client : Party
-    custodian : Party
+    customer : Party
+    provider : Party
   where
-    signatory operator, client
+    signatory operator, customer
 
-    controller custodian can
+    controller provider can
       Approve : ContractId Service
         do
           create Service with ..
@@ -135,50 +135,50 @@ template Request
 template OpenAccountRequest
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
     accountId : Id
     observers : Set Party
     nominee : Party
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
 
 template CloseAccountRequest
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
     accountId : Id
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
 
 template CreditAccountRequest
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
     accountId : Id
     asset : Asset
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
 
 template DebitAccountRequest
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
     accountId : Id
     depositCid : ContractId AssetDeposit
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
 
 template TransferDepositRequest
   with
     operator : Party
-    custodian : Party
-    client : Party
+    provider : Party
+    customer : Party
     accountId : Id
     receiverAccountId : Id
     depositCid : ContractId AssetDeposit
   where
-    signatory operator, custodian, client
+    signatory operator, provider, customer
