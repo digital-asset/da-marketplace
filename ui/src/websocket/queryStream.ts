@@ -12,12 +12,12 @@ import useDamlStreamQuery from './websocket'
 
 export const AS_PUBLIC = true;
 
-type QueryStream<T extends object = any> = {
+type QueryStream<T extends object = any, K = unknown> = {
   publicTemplateIds: string[];
-  publicContracts: ContractInfo<T>[];
+  publicContracts: ContractInfo<T,K>[];
 
   partyTemplateIds: string[];
-  partyContracts: ContractInfo<T>[];
+  partyContracts: ContractInfo<T,K>[];
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
 }
 

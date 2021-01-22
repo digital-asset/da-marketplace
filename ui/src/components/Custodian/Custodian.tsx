@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, Link, NavLink } from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
+import _ from 'lodash'
 
-import { useLedger, useParty, useStreamFetchByKeys } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
 
 import { RegisteredCustodian, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -15,7 +16,7 @@ import { UserIcon } from '../../icons/Icons'
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple } from '../common/damlTypes'
+import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -37,11 +38,17 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const keys = () => [wrapDamlTuple([operator, custodian])];
     const registeredCustodian = useContractQuery(RegisteredCustodian);
 
-    const custodianContract = useStreamFetchByKeys(CustodianModel, keys, [operator, custodian]).contracts;
-    const investors = custodianContract[0]?.payload.investors || [];
+    const custodianContract = useContractQuery(CustodianModel)
+        // Find contract by key
+        .find(contract => _.isEqual(
+            // Convert keys to the same data type for comparison
+            unwrapDamlTuple(contract.key),
+            [operator, custodian]
+        ));
+
+    const investors = custodianContract?.contractData.investors || [];
 
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
 

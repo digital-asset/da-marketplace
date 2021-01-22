@@ -2,7 +2,6 @@ import React from 'react'
 import { Table } from 'semantic-ui-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { useStreamQueries } from '@daml/react'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import {
@@ -70,10 +69,11 @@ type RowProps = {
 const ExchangeParticipantRow: React.FC<RowProps> = ({ deposits, participant }) => {
     const { exchange, exchParticipant } = participant.contractData;
 
-    const query = () => [({ exchange, exchParticipant })];
-    const activeOrders = useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.length;
+    const activeOrders = useContractQuery(Order)
+        .filter(order =>
+            order.contractData.exchange === exchange &&
+            order.contractData.exchParticipant === exchParticipant
+        ).length;
 
     const investorDeposits = deposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
 
