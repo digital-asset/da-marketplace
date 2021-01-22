@@ -121,7 +121,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const loadingScreen = <OnboardingTile><p>Loading...</p></OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
                                  name={registeredBroker.contracts[0]?.payload.name || broker}

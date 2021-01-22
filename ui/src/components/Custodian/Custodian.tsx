@@ -97,7 +97,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const loadingScreen = <OnboardingTile><p>Loading...</p></OnboardingTile>
 
     const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
 

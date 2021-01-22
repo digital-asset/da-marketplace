@@ -12,7 +12,7 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import { depositSummary } from '../common/utils'
-import CapTable from '../common/CapTable'
+import StripedTable from '../common/StripedTable'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -48,7 +48,7 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection>
                 <div className='exchange-participants'>
-                    <CapTable
+                    <StripedTable
                         headings={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
                         rows={rows}/>
                 </div>
