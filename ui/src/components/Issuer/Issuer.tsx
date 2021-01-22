@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
@@ -14,7 +13,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -48,9 +47,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allTokens = useContractQuery(Token);
 
-    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
-            const party = investor.payload.investor;
+            const party = investor.contractData.investor;
             const name = investorMap.get(damlTupleToString(investor.key))?.name;
             return {
                 party,
@@ -58,11 +57,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts
+    const brokerProviders = useContractQuery(BrokerCustomer)
         .map(broker => {
-            const party = broker.payload.broker;
+            const party = broker.contractData.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,

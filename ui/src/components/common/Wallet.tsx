@@ -2,8 +2,6 @@ import React from 'react'
 
 import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
-import { useStreamQueries } from '@daml/react'
-
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -36,10 +34,9 @@ const Wallet = (props: {
 
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
-    const brokerProviders = useStreamQueries(BrokerCustomer)
-        .contracts
+    const brokerProviders = useContractQuery(BrokerCustomer)
         .map(broker => {
-            const party = broker.payload.broker;
+            const party = broker.contractData.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,

@@ -51,8 +51,9 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
-export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T> {
+export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T, K> {
     return ({
+        key: event.key,
         templateId: event.templateId,
         contractId: event.contractId,
         contractData: event.payload
@@ -69,23 +70,57 @@ export function wrapTextMap(items: string[]) {
     return { textMap: textMapValue }
 }
 
-export type ContractInfo<T> = {
+export type ContractInfo<T, K = unknown> = {
     templateId: string;
+    key: K;
     contractId: ContractId<T>;
     contractData: T;
 }
 
-export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
+export type BrokerCustomerInfo = ContractInfo<
+    BrokerCustomer.BrokerCustomer,
+    BrokerCustomer.BrokerCustomer.Key>;
+
 export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
-export type CustodianInfo = ContractInfo<Custodian.Custodian>;
-export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
-export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianRelationshipRequest>;
+
+export type CustodianInfo = ContractInfo<
+    Custodian.Custodian,
+    Custodian.Custodian.Key>;
+
+export type CustodianRelationshipInfo = ContractInfo<
+    Custodian.CustodianRelationship,
+    Custodian.CustodianRelationship.Key>;
+
+export type CustodianRelationshipRequestInfo = ContractInfo<
+    Custodian.CustodianRelationshipRequest,
+    Custodian.CustodianRelationshipRequest.Key>;
+
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
+
 export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
-export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
+
+export type ExchangeInfo = ContractInfo<
+    Exchange.Exchange,
+    Exchange.Exchange.Key>;
+
+export type ExchangeParticipantInfo = ContractInfo<
+    ExchangeParticipant.ExchangeParticipant,
+    ExchangeParticipant.ExchangeParticipant.Key>;
+
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
-export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
-export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
-export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
-export type TokenInfo = ContractInfo<Token.Token>;
+
+export type RegisteredCustodianInfo = ContractInfo<
+    Registry.RegisteredCustodian,
+    Registry.RegisteredCustodian.Key>;
+
+export type RegisteredExchangeInfo = ContractInfo<
+    Registry.RegisteredExchange,
+    Registry.RegisteredExchange.Key>;
+
+export type RegisteredInvestorInfo = ContractInfo<
+    Registry.RegisteredInvestor,
+    Registry.RegisteredInvestor.Key>;
+
+export type TokenInfo = ContractInfo<
+    Token.Token,
+    Token.Token.Key>;

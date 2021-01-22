@@ -135,9 +135,9 @@ export function useContractQuery<T extends object, K = unknown, I extends string
 
   const filtered = useMemo(() => {
     if (!!asPublic) {
-      return publicContracts.filter(c => c.templateId === templateId)
+      return publicContracts.filter(c => c.templateId === templateId) as ContractInfo<T,K>[]
     } else {
-      return partyContracts.filter(c => c.templateId === templateId)
+      return partyContracts.filter(c => c.templateId === templateId) as ContractInfo<T,K>[]
     }
   }, [asPublic, templateId, publicContracts, partyContracts]);
 
