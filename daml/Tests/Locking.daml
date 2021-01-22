@@ -1,65 +1,44 @@
 module Tests.Locking where
 
 import Daml.Script
-import DA.Finance.Asset.Settlement
-import DA.Finance.Types
+import DA.Finance.Asset.Settlement (AssetSettlement_Transfer(..))
+import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
-import qualified Marketplace.Operator as Operator
-import qualified Marketplace.Custodian as Custodian
-import qualified Marketplace.Custody as Custody
-import qualified Marketplace.Exchange as Exchange
 import qualified Marketplace.Trading as Trading
+import Common
 
-allocatedAssetsCannotBeMoved : Script ()
-allocatedAssetsCannotBeMoved = do
-  -- Parties
-  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
-  client <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice"
-  custodian <- allocatePartyWithHint "Custodian" $ PartyIdHint "Custodian"
-  exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
-
-  -- Roles
-  operatorRoleCid <- submit operator do createCmd Operator.Operator with ..
-  custodianRoleOfferCid <- submit operator do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with ..
-  custodianRoleCid <- submit custodian do exerciseCmd custodianRoleOfferCid Custodian.Accept
-  exchangeRoleOfferCid <- submit operator do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with ..
-  exchangeRoleCid <- submit exchange do exerciseCmd exchangeRoleOfferCid Exchange.Accept
-
-  -- Relationship
-  let
-    tradingAccountId    = Id with signatories = fromList [ custodian, client ]; label = "TradingAccount"; version = 0
-    allocationAccountId = Id with signatories = fromList [ custodian, client ]; label = "AllocationAccount"; version = 0
-  custodyServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
-  custodyServiceCid <- submit client do exerciseCmd custodyServiceOfferCid Custody.Accept
-  tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
-  tradingServiceCid <- submit client do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
-
-  -- Accounts
-  openAccountRequestCid1 <- submit client do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [ exchange ]; nominee = client
-  assetSettlementRuleCid1 <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid1
-  openAccountRequestCid2 <- submit client do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = allocationAccountId; observers = fromList [ exchange ]; nominee = exchange
-  assetSettlementRuleCid2 <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid2
+traderCannotMoveAllocatedAsset : Script ()
+traderCannotMoveAllocatedAsset = do
+  cr@CommonContracts{..} <- onboardCommon
 
   -- Assets
   let
     shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
     cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
     shareAsset = Asset with id = shareId; quantity = 200.0
+    cashAsset = Asset with id = cashId; quantity = 20000.0
     priceAsset = Asset with id = cashId; quantity = 100.0
-  creditAccountRequestCid <- submit client do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; asset = shareAsset
-  assetDepositCid1 <- submit custodian do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
 
-  -- Create order
-  (createOrderRequestCid, assetDepositCid2) <- submit client do exerciseCmd tradingServiceCid Trading.RequestCreateOrder with market = "JPM.N/USD"; asset = shareAsset; price = priceAsset; isBid = False; depositCid = assetDepositCid1
-  orderCid <- submit exchange do exerciseCmd tradingServiceCid Trading.CreateOrder with ..
+  alice <- onboardCustomer cr "Alice" shareAsset
+  bob <- onboardCustomer cr "Bob" cashAsset
+
+  -- Create orders
+  (aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with market = "JPM.N/USD"; asset = shareAsset; price = priceAsset; isBid = False; depositCid = alice.assetDepositCid
+  aliceOrderCid <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CreateOrder with id = 123; createOrderRequestCid = aliceCreateOrderRequestCid
+  (bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with market = "JPM.N/USD"; asset = shareAsset; price = priceAsset; isBid = True; depositCid = bob.assetDepositCid
+  bobOrderCid <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CreateOrder with id = 123; createOrderRequestCid = bobCreateOrderRequestCid
 
   -- Can't move asset pledged as order collateral
-  submitMustFail client do exerciseCmd assetSettlementRuleCid2 AssetSettlement_Transfer with depositCid = assetDepositCid2; receiverAccountId = tradingAccountId
+  submitMustFail alice.customer do exerciseCmd alice.allocationAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid; receiverAccountId = alice.tradingAccountId
+  submitMustFail bob.customer do exerciseCmd bob.allocationAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = bobAssetDepositCid; receiverAccountId = bob.tradingAccountId
 
   -- Cancel order
-  cancelOrderRequestCid <- submit client do exerciseCmd tradingServiceCid Trading.RequestCancelOrder with ..
-  assetDepositCid3 <- submit exchange do exerciseCmd tradingServiceCid Trading.CancelOrder with ..
+  aliceCancelOrderRequestCid <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
+  aliceAssetDepositCid2 <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
+  bobCancelOrderRequestCid <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCancelOrder with orderCid = bobOrderCid
+  bobAssetDepositCid2 <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
 
-  -- submit client do exerciseCmd assetSettlementRuleCid1 AssetSettlement_Transfer with depositCid = assetDepositCid3; receiverAccountId = allocationAccountId
+  submit alice.customer do exerciseCmd alice.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
+  submit bob.customer do exerciseCmd bob.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
 
   pure ()
