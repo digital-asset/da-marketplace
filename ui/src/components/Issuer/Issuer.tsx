@@ -157,7 +157,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile><p>Loading...</p></OnboardingTile>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
                         name={registeredIssuer.contracts[0]?.payload.name || issuer}

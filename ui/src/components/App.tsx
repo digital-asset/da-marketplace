@@ -72,7 +72,7 @@ const PublicProvider: React.FC = ({ children }) => {
   const { parties, loading } = useDablParties();
   const { party, ledgerId, token } = computeCredentials(parties.publicParty);
 
-  return loading ? <OnboardingTile><p>Loading...</p></OnboardingTile> : (
+  return loading ? <OnboardingTile>Loading...</OnboardingTile> : (
     <PublicLedger
       ledgerId={ledgerId}
       publicParty={party}

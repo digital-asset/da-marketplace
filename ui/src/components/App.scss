@@ -1,4 +1,3 @@
-@import './common/StripedTable.scss';
 @import './common/CardTable.scss';
 @import './common/DonutChart.scss';
 @import './common/FormErrorHandled.scss';
@@ -13,6 +12,7 @@
 @import './common/PageSection.scss';
 @import './common/PaginationControls.scss';
 @import './common/Profile.scss';
+@import './common/StripedTable.scss';
 @import './common/TabViewer.scss';
 @import './common/TopMenu.scss';
 @import './common/Wallet.scss';
@@ -35,7 +35,6 @@
         width: 100vw;
 
         /* common css */
-        @include striped-table;
         @include card-table;
         @include donut-chart;
         @include exchange;
@@ -52,6 +51,7 @@
         @include page-section;
         @include pagination-controls;
         @include profile;
+        @include striped-table;
         @include tab-viewer;
         @include top-menu;
         @include wallet;

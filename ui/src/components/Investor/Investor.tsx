@@ -148,7 +148,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile><p>Loading...</p></OnboardingTile>
+    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const investorScreen = <Switch>
         <Route exact path={path}>
