@@ -1,34 +1,42 @@
-
-
-
 @mixin issue-asset {
     .issue-asset {
+        width: 100%;
+        padding: $spacing-s $spacing-l;
+
+        .issue-asset-fields {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+
+            .asset-row {
+                padding-bottom: $spacing-m;
+
+                textarea {
+                    max-width: 50%;
+                }
+            }
+
+            button {
+                width: fit-content;
+            }
+        }
+
         .form-label {
-            background-color: red;
             h3 {
                 margin-bottom: $spacing-s;
             }
+            margin-bottom: $spacing-s;
         }
-        // .ui.form .field.issue-asset-form-field {
-        //     padding-bottom: $spacing-s;
-        // }
-        
-        // .ui.form .field.issue-asset-form-field  > .ui.input {
-        //     max-width: 260px;
-        // }
-        
-        // .ui.form textarea {
-        //     max-width: 500px;
-        // }
-        
-        // .ui.form .observer-select {
-        //     display: flex;
-        //     flex-direction: column;
-        //     padding-bottom: $spacing-s;
-        // }
-        
-        // .ui.form .observer-select > .issue-asset-form-field.select-observer {
-        //     padding-top: $spacing-s;
-        // }
+
+        .observer-select {
+            display: flex;
+            flex-direction: row;
+            align-items: baseline;
+            margin-top : $spacing-s;
+
+            .public-select {
+                margin-right : $spacing-l;
+            }
+        }
     }
 }

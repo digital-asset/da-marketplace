@@ -99,28 +99,28 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
             onLogout={onLogout}>
             <PageSection className='issued-token'>
                 <div className='token-subheading'>
-                    <p>{token?.contractData.description}</p>
+                    <Header as='h3'>{token?.contractData.description}</Header>
                     <div className='token-details'>
-                        {isPublic ? <p> <GlobeIcon/> Public </p> : <p> <LockIcon/> Private </p>}
-                        <p> Quantity Precision: {token?.contractData.quantityPrecision} </p>
+                        {isPublic ? <Header as='h3'> <GlobeIcon/> Public </Header> : <Header as='h3'> <LockIcon/> Private </Header>}
+                        <Header as='h3'> Quantity Precision: {token?.contractData.quantityPrecision} </Header>
                     </div>
                 </div>
                 {!isPublic &&
                     <div className='participants-viewer'>
-                        <Button className='ghost smaller' onClick={() => setShowParticipants(!showParticipants)}>
+                        <a className='a2' onClick={() => setShowParticipants(!showParticipants)}>
                             {showParticipants?
-                                <p> Hide Participants <IconChevronUp/></p>
+                                <> Hide Participants <IconChevronUp/></>
                                 :
-                                <p> View/Add Participants <IconChevronDown/></p>
+                                <> View/Add Participants <IconChevronDown/></>
                             }
-                        </Button>
+                        </a>
                         {showParticipants &&
                             <>
                             <div className='list-heading'>
                                 <p><b>Participants</b></p>
-                                <Button className='ghost smaller' onClick={() => setShowAddRegisteredPartyModal(true)}>
-                                    <AddPlusIcon/> <p>Add Participant</p>
-                                </Button>
+                                <a className='a2' onClick={() => setShowAddRegisteredPartyModal(true)}>
+                                    <AddPlusIcon/> Add Participant
+                                </a>
                             </div>
                                 <ul className='participants-list'>
                                     {Array.from(participants).map(o =>

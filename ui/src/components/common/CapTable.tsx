@@ -29,7 +29,7 @@ const CapTable = (props: {
                             <Table.HeaderCell
                                 key={index}
                                 textAlign={index+1 > headings.length/2 ? 'right': 'left'}>
-                                {heading}
+                                <p className='bold'>{heading}</p>
                             </Table.HeaderCell>
                         )}
                     </Table.Row>
@@ -42,7 +42,7 @@ const CapTable = (props: {
                                     <Table.Cell
                                         key={j}
                                         textAlign={j+1 > row.length/2 ? 'right': 'left'}>
-                                        {item}
+                                        <p>{item}</p>
                                     </Table.Cell>
                                 )}
                             </Table.Row>

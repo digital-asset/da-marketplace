@@ -205,6 +205,13 @@ html {
 
 .ui.form .field>.selection.dropdown, .ui.form .field> .ui.input {
   width: 230px;
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
+}
+
+.ui.form textarea {
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
 }
 
 @include icons;

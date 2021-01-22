@@ -84,10 +84,11 @@ export const ExchangeIcon: React.FC<IconProps> = ({ size, color }) => (
 )
 
 export const LockIcon = () => (
-    <img
-        className="icon lock-icon"
-        src={lock}
-        alt="command"/>
+    <svg className="icon lock-icon" width="14" height="20" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="6" width="12" height="10.6667" stroke="#131720" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3.66602 6.33333C3.82475 4.55556 3.66602 1 6.99935 1C10.3327 1 10.174 4.55556 10.3327 6.33333" stroke="#131720"/>
+        <line x1="7" y1="10" x2="7" y2="12.6667" stroke="#131720" stroke-width="2" stroke-linejoin="round"/>
+    </svg>
 )
 
 export const LogoutIcon = () => (

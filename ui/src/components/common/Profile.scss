@@ -10,12 +10,6 @@
                 padding: $spacing-l;
                 border-radius: 2px;
 
-                form {
-                    background-color: var(--blue-100);
-                    padding: $spacing-m 0 $spacing-m $spacing-m;
-                    border-radius: 40px;
-                }
-
                 .profile-values {
                     display: flex;
                     flex-direction: column;
@@ -44,9 +38,12 @@
             }
 
             .profile-form-field {
-                width: 260px;
                 margin-top: $spacing-s;
                 margin-right: $spacing-s;
+
+                .ui.input {
+                    width: 100%;
+                }
             }
 
             .profile-submit-button {
