@@ -12,7 +12,7 @@ import { makeContractInfo } from '../common/damlTypes'
 import { depositSummary } from '../common/utils'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import CapTable from '../common/CapTable';
+import StripedTable from '../common/StripedTable';
 
 import CreateDeposit from './CreateDeposit'
 
@@ -48,7 +48,7 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
                 <div className='clients'>
                     <div className='client-list'>
                         <Header as='h3'>Clients</Header>
-                        <CapTable
+                        <StripedTable
                             headings={tableHeadings}
                             rows={tableRows}
                             emptyLabel='There are no client relationships.'/>

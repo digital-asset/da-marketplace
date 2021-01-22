@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table } from 'semantic-ui-react'
+import { Table, Header } from 'semantic-ui-react'
 
 type CellItem = string | React.ReactElement;
 
@@ -13,6 +13,7 @@ const CardTable: React.FC<Props> = ({ className, header, rows }) => {
     return (
         <div className={`${className} card-table`}>
             {/* Split the header into its own table because `border-spacing` would affect the header if included in the body table */}
+            <Header as='h3'>Market Pairs</Header>
 
             { header && (
                 <Table fixed className='card-table-header-table'>

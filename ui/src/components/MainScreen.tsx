@@ -28,7 +28,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
   const { parties, loading, error } = useDablParties();
 
-  const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>;
+  const loadingScreen = <OnboardingTile><p className='dark'>Loading...</p></OnboardingTile>;
   const errorScreen = error &&
     <OnboardingTile>
       <Message error>
