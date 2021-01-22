@@ -134,4 +134,5 @@ export function getAbbreviation(phrase: string) {
     return phrase.split(' ')
                  .filter(item => !wordsToExclude.includes(item))
                  .map(item => item.charAt(0)).join('')
+                 .substring(0,3)
 }
