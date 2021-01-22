@@ -16,17 +16,22 @@ data OrderType
   deriving (Eq, Show)
 
 data TimeInForce
-    = GoodTillCancelled
-      -- ^ Rests on book until cancellation
-    | GoodTillDate with
+    = GTC
+      -- ^ Good Till Cancelled
+      --  Rests on book until cancellation
+    | GTD with
         expiryDate : Date
-      -- ^ At expiryDate, order will be automatically cancelled
-    | GoodAtAuction
-      -- ^ expires after auction if not filled
-    | ImmediateOrCancel
-      -- ^ Allows for partial fills
-    | FillOrKill
-      -- ^ All or nothing
+      -- ^ Good Till Date
+      --  At expiryDate, order will be automatically cancelled
+    | GAA
+      -- ^ Good At Auction
+      --  Expires after auction if not filled
+    | IOC
+      -- ^ Immediate Or Cancel
+      --  Allows for partial fills
+    | FOK
+      -- ^ Fill Or Kill
+      --  All or nothing
   deriving (Eq, Show)
 
 data OrderDetails = OrderDetails with
@@ -35,18 +40,37 @@ data OrderDetails = OrderDetails with
     side : Side
     orderType : OrderType
     timeInForce : TimeInForce
-    -- quantity : Decimal -- This means we get the quantity from the Asset...
+  deriving (Eq, Show)
+
+data Status
+    = New
+    | PendingExecution
+    | PartiallyExecuted
+    | FullyExecuted
+    | Rejected with
+        errorCode : Int
+        errorMessage : Text
+    | PendingCancellation
+    | CancellationRejected with
+        errorCode : Int
+        errorMessage : Text
+    | Cancelled
   deriving (Eq, Show)
 
 template Order
   with
+    id : Id
     exchange : Party
     client : Party
-    exchangeOrderId : Int
+    exchangeOrderId : Optional Int
     orderDetails : OrderDetails
+    status : Status
     depositCid : ContractId AssetDeposit
   where
     signatory exchange, client
+
+    key id : Id
+    maintainer key.signatories
 
 template Service
   with
@@ -62,42 +86,94 @@ template Service
     maintainer key._1
 
     controller client can
-      nonconsuming RequestCreateOrder : (ContractId CreateOrderRequest, ContractId AssetDeposit)
+      nonconsuming RequestCreateOrder : (ContractId Order, ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
+          orderId : Id
           orderDetails : OrderDetails
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
           -- TODO: Check order valid for exberry with the market/limit and timeInForce combos
+          let
+            status = New
+            exchangeOrderId = None
+            id = orderId
           depositCid <- exerciseByKey @AssetSettlementRule tradingAccountId AssetSettlement_Transfer with receiverAccountId = allocationAccountId; ..
           createOrderRequestCid <- create CreateOrderRequest with ..
-          pure (createOrderRequestCid, depositCid)
+          orderCid <- create Order with ..
 
-      nonconsuming RequestCancelOrder : ContractId CancelOrderRequest
+          return (orderCid, createOrderRequestCid, depositCid)
+
+      nonconsuming RequestCancelOrder : (ContractId Order, ContractId CancelOrderRequest)
         with
           orderCid : ContractId Order
         do
-          create CancelOrderRequest with ..
+          order@Order{..} <- fetch orderCid
+          archive orderCid
+
+          orderCid <- create order with status = PendingCancellation
+          cancelOrderRequestCid <- create CancelOrderRequest with orderId = id; ..
+
+          return (orderCid, cancelOrderRequestCid)
 
     controller exchange can
-      nonconsuming CreateOrder : ContractId Order
+      nonconsuming AcknowledgeOrderRequest : ContractId Order
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           exchangeOrderId : Int
         do
-          CreateOrderRequest{..} <- fetch createOrderRequestCid
+          CreateOrderRequest{orderId} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          create Order with ..
+          (orderCid, order) <- fetchByKey orderId
 
-      nonconsuming CancelOrder : ContractId AssetDeposit
+          case order.status of
+            New -> do
+              archive orderCid
+              create order with status = PendingExecution; exchangeOrderId = Some exchangeOrderId
+            _ -> return orderCid
+
+      nonconsuming CancelOrder : (ContractId Order, ContractId AssetDeposit)
         with
           cancelOrderRequestCid : ContractId CancelOrderRequest
         do
-          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          CancelOrderRequest{orderId} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          order <- fetch orderCid
+          (orderCid, order) <- fetchByKey orderId
           archive orderCid
-          exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
+
+          orderCid <- create order with status = Cancelled
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with receiverAccountId = tradingAccountId; depositCid = order.depositCid
+
+          return (orderCid, depositCid)
+
+      nonconsuming RejectOrder : (ContractId Order, ContractId AssetDeposit)
+        with
+          createOrderRequestCid : ContractId CreateOrderRequest
+          errorCode : Int
+          errorMessage : Text
+        do
+          CreateOrderRequest{..} <- fetch createOrderRequestCid
+          archive createOrderRequestCid
+          (orderCid, order) <- fetchByKey orderId
+          archive orderCid
+
+          orderCid <- create order with status = Rejected with ..
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with receiverAccountId = tradingAccountId, ..
+
+          return (orderCid, depositCid)
+
+      nonconsuming RejectCancellation : (ContractId Order)
+        with
+          cancelOrderRequestCid : ContractId CancelOrderRequest
+          errorCode : Int
+          errorMessage : Text
+        do
+          CancelOrderRequest{orderId} <- fetch cancelOrderRequestCid
+          archive cancelOrderRequestCid
+          (orderCid, order) <- fetchByKey orderId
+          archive orderCid
+
+          create order with status = CancellationRejected with ..
 
       -- nonconsuming FillOrder : ContractId AssetDeposit
       --   with
@@ -154,18 +230,53 @@ template CreateOrderRequest
   with
     exchange : Party
     client : Party
+    operator : Party
     orderDetails : OrderDetails
+    orderId : Id
     depositCid : ContractId AssetDeposit
   where
     signatory exchange, client
+
+    controller exchange can
+      nonconsuming AcknowledgeRequest : ContractId Order
+        with
+          createOrderRequestCid : ContractId CreateOrderRequest
+          exchangeOrderId : Int
+        do
+          exerciseByKey @Service (operator, exchange, client) AcknowledgeOrderRequest with ..
+
+      nonconsuming RejectRequest : (ContractId Order, ContractId AssetDeposit)
+        with
+          createOrderRequestCid : ContractId CreateOrderRequest
+          errorCode : Int
+          errorMessage : Text
+        do
+          exerciseByKey @Service (operator, exchange, client) RejectOrder with ..
 
 template CancelOrderRequest
   with
     exchange : Party
     client : Party
-    orderCid : ContractId Order
+    operator : Party
+    exchangeOrderId : Optional Int
+    orderId : Id
   where
     signatory exchange, client
+
+    key (exchange, client, orderId) : (Party, Party, Id)
+    maintainer key._1
+
+    controller exchange can
+      nonconsuming AcknowledgeCancel : (ContractId Order, ContractId AssetDeposit)
+        do
+          exerciseByKey @Service (operator, exchange, client) CancelOrder with cancelOrderRequestCid = self
+
+      nonconsuming FailureCancel : ContractId Order
+        with
+          errorCode : Int
+          errorMessage : Text
+        do
+          exerciseByKey @Service (operator, exchange, client) RejectCancellation with cancelOrderRequestCid = self, ..
 
 
 -- TODO: Revisit/reimplement
