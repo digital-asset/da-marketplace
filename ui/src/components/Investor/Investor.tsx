@@ -104,8 +104,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                             { allExchanges.length > 0 ?
                                 allExchanges.map(exchange => {
-                                    return exchange.contractData.tokenPairs.map((tokenPair: any) => {
-                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map((t: any) => t.label.toLowerCase());
+                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
                                         return <Menu.Item
                                             as={NavLink}

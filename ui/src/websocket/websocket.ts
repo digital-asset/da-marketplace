@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { CreateEvent } from '@daml/ledger'
+import { ArchiveEvent, CreateEvent } from '@daml/ledger'
 
-import { deploymentMode, DeploymentMode, httpBaseUrl } from '../config'
+import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config'
 
 import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
 
@@ -15,15 +15,21 @@ const newDamlWebsocket = (token: string): WebSocket => {
   const url = new URL(httpBaseUrl || 'http://localhost:3000');
 
   const subprotocols = [`jwt.token.${token}`, "daml.ws.auth"];
-  const protocol = deploymentMode === DeploymentMode.DEV ? 'ws://' : 'wss://';
+  const apiUrl = deploymentMode === DeploymentMode.DEV
+    ? `ws://${url.host}/v1/stream/query`
+    : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
 
   console.log("Creating new websocket");
-  return new WebSocket(`${protocol}${url.host}/v1/stream/query`, subprotocols);
+  return new WebSocket(apiUrl, subprotocols);
 }
 
 function isCreateEvent<T extends object, K = unknown, I extends string = string>(event: object): event is { created: CreateEvent<T,K,I>} {
   return 'created' in event;
 }
+
+function isArchiveEvent<T extends object, I extends string = string>(event: object): event is { archived: ArchiveEvent<T,I>} {
+    return 'archived' in event;
+  }
 
 function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
@@ -47,6 +53,13 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                   if (!contracts.find(c => c.contractId === contract.contractId)) {
                       setContracts(contracts => [...contracts, contract]);
                   }
+                }
+
+                if (isArchiveEvent(e)) {
+                    const contractId = e.archived.contractId;
+                    if (contracts.find(c => c.contractId === contractId)) {
+                        setContracts(contracts => [...contracts.filter(c => c.contractId !== contractId)])
+                    }
                 }
               })
             }

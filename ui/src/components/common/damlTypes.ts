@@ -89,20 +89,3 @@ export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
 export type TokenInfo = ContractInfo<Token.Token>;
-
-export type ContractInfoUnion =
-    BrokerCustomerInfo |
-    BrokerCustomerInviteInfo |
-    CustodianInfo |
-    CustodianRelationshipInfo |
-    CustodianRelationshipRequestInfo |
-    DepositInfo |
-    DismissibleNotificationInfo |
-    ExchangeInfo |
-    ExchangeParticipantInfo |
-    ExchParticipantInviteInfo |
-    RegisteredCustodianInfo |
-    RegisteredExchangeInfo |
-    RegisteredInvestorInfo |
-    TokenInfo |
-    object

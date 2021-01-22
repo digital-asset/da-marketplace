@@ -23,6 +23,10 @@ type QueryStream<T extends object = any> = {
 
 const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
 
+type PublicTokenAPIResult = {
+  access_token: string
+} | undefined;
+
 const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
   let publicToken = undefined;
 
@@ -30,8 +34,13 @@ const getPublicToken = async (publicParty: string): Promise<string | undefined> 
     publicToken = computeCredentials(publicParty).token;
   } else {
     const url = new URL(httpBaseUrl || 'http://localhost:3000');
-    const result = await fetch(`${url.hostname}/api/ledger/${ledgerId}/public/token`, { method: 'POST' })
+
+    console.log("What's the URL? ", httpBaseUrl, url);
+
+    const result: PublicTokenAPIResult = await fetch(`https://${url.hostname}/api/ledger/${ledgerId}/public/token`, { method: 'POST' })
       .then(response => response.json())
+
+    publicToken = result?.access_token;
 
       // TO-DO: test on dabl
     console.log("The result is: ", result);
