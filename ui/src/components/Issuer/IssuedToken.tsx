@@ -1,20 +1,29 @@
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useHistory } from 'react-router-dom'
 import { Header, List, Button } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
+import { useStreamQueries,  useParty, useLedger  } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {
+    RegisteredCustodian,
+    RegisteredIssuer,
+    RegisteredInvestor,
+    RegisteredExchange,
+    RegisteredBroker
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
 
-import { makeContractInfo, ContractInfo} from '../common/damlTypes'
+import { makeContractInfo, ContractInfo, wrapTextMap} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
-import AddParticipantModal from './AddParticipantModal'
+import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import CapTable from '../common/CapTable'
 
 type DepositInfo = {
@@ -32,23 +41,47 @@ type Props = {
 
 const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
-    const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
+    const [ showAddRegisteredPartyModal, setShowAddRegisteredPartyModal ] = useState(false)
+
     const { tokenId } = useParams<{tokenId: string}>()
+
+    const history = useHistory()
+    const ledger = useLedger()
+    const party = useParty()
 
     const token = useStreamQueries(Token, () => [], [], (e) => {
         console.log("Unexpected close from token: ", e);
     }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
-
-    const isPublic = !!token?.contractData.isPublic
-
     const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo).filter(deposit =>
         deposit.contractData.asset.id.label === token?.contractData.id.label &&
         deposit.contractData.asset.id.version === token?.contractData.id.version
     );
+    const allRegisteredParties = [
+        useStreamQueryAsPublic(RegisteredCustodian).contracts
+            .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
+        useStreamQueryAsPublic(RegisteredIssuer).contracts
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
+        useStreamQueryAsPublic(RegisteredInvestor).contracts
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
+        useStreamQueryAsPublic(RegisteredExchange).contracts
+            .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
+        useStreamQueryAsPublic(RegisteredBroker).contracts
+            .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
+        ].flat()
 
     const participants = Object.keys(token?.contractData.observers.textMap || [])
+
+    const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
+        .map(d => {
+            return {
+                text: `${d.contractData}`,
+                value: d.contractData
+            }
+        })
+
+    const isPublic = !!token?.contractData.isPublic
 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
     const totalAllocatedQuantity = nettedTokenDeposits.length > 0 ? nettedTokenDeposits.reduce((a, b) => +a + +b.quantity, 0) : 0
@@ -56,6 +89,8 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const capTableRows = nettedTokenDeposits.map(deposit =>
         [deposit.investor, deposit.provider, deposit.quantity.toString(), `${((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%`])
     const capTableHeaders = ['Investor', 'Provider', 'Amount', 'Percentage Owned']
+
+    const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
     return (
         <Page
@@ -83,7 +118,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                             <>
                             <div className='list-heading'>
                                 <p><b>Participants</b></p>
-                                <Button className='ghost smaller' onClick={() => setShowAddParticipantModal(true)}>
+                                <Button className='ghost smaller' onClick={() => setShowAddRegisteredPartyModal(true)}>
                                     <AddPlusIcon/> <p>Add Participant</p>
                                 </Button>
                             </div>
@@ -107,13 +142,30 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                     {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
-            <AddParticipantModal
-                tokenId={token?.contractData.id}
-                onRequestClose={() => setShowAddParticipantModal(false)}
-                show={showAddParticipantModal}
-                currentParticipants={participants}/>
+            {showAddRegisteredPartyModal &&
+                <AddRegisteredPartyModal
+                    multiple
+                    onRequestClose={() => setShowAddRegisteredPartyModal(false)}
+                    onSubmit={(parties) => submitAddParticipant(parties)}
+                    title='Add Participants'
+                    partyOptions={partyOptions}/>}
         </Page>
     )
+
+    async function submitAddParticipant(selectedParties: string[]) {
+        const tokenId = token?.contractData.id
+
+        if (!token?.contractData.id) {
+            return
+        }
+
+        const newObservers = wrapTextMap([...participants, ...selectedParties])
+
+        await ledger.exerciseByKey(Token.Token_AddObservers, tokenId, { party, newObservers })
+            .then(resp => history.push(`${baseUrl}/${resp[0]}`))
+
+        setShowAddRegisteredPartyModal(false)
+    }
 
     function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
         let netTokenDeposits: DepositInfo[] = []

@@ -6,6 +6,7 @@ import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/C
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
@@ -40,6 +41,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
         console.log("Unexpected close from custodianRelationship: ", e);
     }).contracts.map(makeContractInfo);
+    const investorCount = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts.length;
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -89,6 +93,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -103,6 +108,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     <FormErrorHandled onSubmit={updateProfile}>
                         <ExchangeProfile
                             content='Save'
+                            profileLinks={[
+                                {to: `${url}/market-pairs`, title: 'Market Pairs', subtitle: 'View and track active markets'},
+                                {to: `${url}/create-pair`, title: 'Create a Market', subtitle: 'Configure assets and quantities'},
+                                {to: `${url}/participants`, title: 'Investors', subtitle: `${investorCount} Active Investors${investorCount > 1 ? 's':''}`}
+                            ]}
+                            role={MarketRole.ExchangeRole}
                             defaultProfile={profile}
                             submitProfile={profile => setProfile(profile)}/>
                     </FormErrorHandled>

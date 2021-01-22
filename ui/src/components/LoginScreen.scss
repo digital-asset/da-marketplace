@@ -1,6 +1,8 @@
 @mixin login-screen {
     .login-screen {
         height: 100%;
+        background-color: var(--cool-grey-20);
+        animation: fadeIn .5s;
 
         .login-header {
             display: flex;
