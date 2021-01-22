@@ -92,6 +92,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
                 content='Submit'
+                role={MarketRole.CustodianRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -132,13 +133,14 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <CustodianProfile
                                     content='Save'
+                                    profileLinks={[
+                                        {to: `${url}/clients`, title: 'Go to Clients list', subtitle: `${investors.length} Active Clients`}
+                                    ]}
+                                    role={MarketRole.CustodianRole}
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }
-                        marketRelationships={(
-                            <Link to={`${url}/clients`}>View list of clients</Link>
-                        )}
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>

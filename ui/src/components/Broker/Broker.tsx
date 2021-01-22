@@ -81,6 +81,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
+                role={MarketRole.BrokerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -103,7 +104,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <BrokerProfile
                                     content='Save'
+                                    role={MarketRole.BrokerRole}
                                     defaultProfile={profile}
+                                    profileLinks={[
+                                        {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                        {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                                    ]}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }

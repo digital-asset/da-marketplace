@@ -10,7 +10,7 @@ import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 import { depositSummary } from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import CapTable from '../common/CapTable'
+import StripedTable from '../common/StripedTable'
 
 import CreateDeposit from './CreateDeposit'
 
@@ -40,7 +40,7 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection className='clients'>
                 <div className='client-list'>
                     <Header as='h3'>Client Holdings</Header>
-                    <CapTable
+                    <StripedTable
                         headings={['Asset', 'Amount']}
                         rows={tableRows}/>
                 </div>

@@ -4,19 +4,15 @@
         flex-direction: row;
         flex-wrap: wrap;
         width: 100%;
+        justify-content: space-between;
 
         .ui.header {
             padding-bottom: $spacing-s;
         }
 
         .landing-page-column {
-            width: 50%;
             height: fit-content;
-
-            &.market-relationships {
-                margin-left: $spacing-l;
-                width: 40%;
-            }
+            width: 49%;
 
             .ui.form > .fields.inline-form-group > .field {
                 padding-left: 0;
@@ -31,10 +27,6 @@
             .landing-page-column {
                 width: 100% !important;
                 padding-bottom: $spacing-l;
-
-                &.market-relationships {
-                    margin-left: 0px;
-                }
             }
         }
     }

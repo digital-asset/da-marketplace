@@ -4,12 +4,13 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { ExchangeParticipant, ExchangeParticipantInvitation} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -23,7 +24,7 @@ import RoleSideNav from '../common/RoleSideNav'
 
 
 import MarketPairs from './MarketPairs'
-import CreateMarket from './CreateMarket'
+import InviteParticipant from '../common/RequestInvestorRelationship'
 import ExchangeParticipants from './ExchangeParticipants'
 
 type Props = {
@@ -38,7 +39,17 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const registeredExchange = useContractQuery(RegisteredExchange);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const exchangeParticipants = useContractQuery(ExchangeParticipant);
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
+    const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
+
+    const investorOptions = registeredInvestors.filter(ri =>
+        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
+        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
+
     const notifications = useDismissibleNotifications();
+
+    const investorCount = exchangeParticipants.length
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -79,57 +90,63 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                                  name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[
-                                    {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
-                                    {to: `${url}/create-pair`, label: 'Create a Market', icon: <PublicIcon/>},
+                                    {to: `${url}/market-pairs`, label: 'Markets', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
-    const exchangeScreen = <Switch>
-        <Route exact path={path}>
-            <LandingPage
-                profile={
-                    <FormErrorHandled onSubmit={updateProfile}>
-                        <ExchangeProfile
-                            content='Save'
-                            defaultProfile={profile}
-                            submitProfile={profile => setProfile(profile)}/>
-                    </FormErrorHandled>
-                }
-                marketRelationships={
-                    <MarketRelationships role={MarketRole.ExchangeRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
-                sideNav={sideNav}
-                notifications={notifications}
-                onLogout={onLogout}/>
-        </Route>
+    const exchangeScreen =
+        <div className='exchange'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <ExchangeProfile
+                                    content='Save'
+                                    profileLinks={[
+                                        {to: `${url}/market-pairs`, title: 'Markets', subtitle: 'View and track active markets'},
+                                        {to: `${url}/participants`, title: 'Investors', subtitle: `${investorCount} Active Investor${investorCount > 1 ? 's':''}`}
+                                    ]}
+                                    role={MarketRole.ExchangeRole}
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <>
+                                <MarketRelationships role={MarketRole.ExchangeRole}
+                                    custodianRelationships={allCustodianRelationships}/>
+                                <InviteParticipant registeredInvestors={investorOptions}/>
+                            </>
+                        }
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/market-pairs`}>
-            <MarketPairs
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
+                <Route path={`${path}/market-pairs`}>
+                    <MarketPairs
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/create-pair`}>
-            <CreateMarket
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
-
-        <Route path={`${path}/participants`}>
-            <ExchangeParticipants
-                sideNav={sideNav}
-                onLogout={onLogout}/>
-        </Route>
-    </Switch>
+                <Route path={`${path}/participants`}>
+                    <ExchangeParticipants
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
 
     return registeredExchange.length === 0 ? inviteScreen : exchangeScreen
 }
