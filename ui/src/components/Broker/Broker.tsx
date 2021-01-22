@@ -141,6 +141,10 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                     content='Save'
                                     role={MarketRole.BrokerRole}
                                     defaultProfile={profile}
+                                    profileLinks={[
+                                        {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                        {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                                    ]}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }

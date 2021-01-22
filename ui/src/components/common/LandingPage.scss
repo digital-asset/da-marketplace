@@ -4,6 +4,7 @@
         flex-direction: row;
         flex-wrap: wrap;
         width: 100%;
+        justify-content: space-between;
 
         .ui.header {
             padding-bottom: $spacing-s;
@@ -11,12 +12,7 @@
 
         .landing-page-column {
             height: fit-content;
-            width: 50%;
-
-            &.market-relationships {
-                margin-left: $spacing-l;
-                width: 47%;
-            }
+            width: 49%;
 
             .ui.form > .fields.inline-form-group > .field {
                 padding-left: 0;
