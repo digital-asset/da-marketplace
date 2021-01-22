@@ -38,6 +38,15 @@
   --max-page-width: 1000px;
 }
 
+@keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
 $spacing-gap: #{var(--spacing-gap)};
 $spacing-xs: #{var(--spacing-xs)};
 $spacing-s: #{var(--spacing-s)};
@@ -134,11 +143,24 @@ html {
       font-size: 14px;
       line-height: 19px;
       color: var(--textcolor);
+
+      &.dark {
+        color: var(--white);
+      }
+
+      &.bold {
+        font-weight: 600;
+      }
     }
   }
 
   a {
-    color: var(--blue-50)
+    color: var(--blue-50);
+    font-weight: 600;
+
+    &:hover {
+      cursor: pointer;
+    }
   }
 
   body {

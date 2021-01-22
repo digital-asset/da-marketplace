@@ -150,6 +150,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                role={MarketRole.IssuerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -189,6 +190,15 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <IssuerProfile
                                     content='Save'
+                                    role={MarketRole.IssuerRole}
+                                    profileLinks= {
+                                        allTokens.map(token => {
+                                            return {
+                                                to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
+                                                title: token.payload.id.label,
+                                                subtitle: token.payload.description}
+                                        })
+                                    }
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>

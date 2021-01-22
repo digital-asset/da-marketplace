@@ -19,6 +19,8 @@
 @import './common/Wallet.scss';
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
+@import './common/MarketRelationships.scss';
+
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
 
@@ -42,6 +44,7 @@
         @include holdings;
         @include invite-accept-tile;
         @include landing-page;
+        @include market-relationships;
         @include notification;
         @include onboarding-tile;
         @include order-card;

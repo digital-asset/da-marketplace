@@ -2,20 +2,17 @@ import React from 'react'
 import { Table } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
 import { ExchangeParticipantInfo, DepositInfo, makeContractInfo } from '../common/damlTypes'
-import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-import InviteParticipant from './InviteParticipant'
 import { depositSummary } from '../common/utils'
+import CapTable from '../common/CapTable'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -26,24 +23,22 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo);
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
     const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
         console.log("Unexpected close from exchangeParticipant: ", e);
     }).contracts.map(makeContractInfo);
-    const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
+    const activeOrders = useStreamQueries(Order, () => [], [], (e) => {
+        console.log("Unexpected close from Order: ", e);
     }).contracts.map(makeContractInfo);
 
-    const investorOptions = registeredInvestors.filter(ri =>
-        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
-        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
+    const rows = exchangeParticipants.map(participant => {
+        const { exchange, exchParticipant } = participant.contractData;
 
-    const rows = exchangeParticipants.map(participant =>
-        <ExchangeParticipantRow
-            key={participant.contractId}
-            deposits={allDeposits}
-            participant={participant}/>
-    );
+        const activeOrderCount = activeOrders.filter(o => o.contractData.exchange === exchange && o.contractData.exchParticipant === exchParticipant).length
+
+        const investorDeposits = allDeposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
+
+        return [exchParticipant, activeOrderCount.toString(), '-', depositSummary(investorDeposits).join(',') || '-']
+    });
 
     return (
         <Page
@@ -53,10 +48,8 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection>
                 <div className='exchange-participants'>
-                    <InviteParticipant registeredInvestors={investorOptions}/>
-                    <StripedTable
-                        className='active-participants'
-                        header={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
+                    <CapTable
+                        headings={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
                         rows={rows}/>
                 </div>
             </PageSection>
@@ -64,29 +57,10 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
     )
 }
 
-type RowProps = {
-    deposits: DepositInfo[];
-    participant: ExchangeParticipantInfo;
-}
-
-const ExchangeParticipantRow: React.FC<RowProps> = ({ deposits, participant }) => {
-    const { exchange, exchParticipant } = participant.contractData;
-
-    const query = () => [({ exchange, exchParticipant })];
-    const activeOrders = useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.length;
-
-    const investorDeposits = deposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
-
-    return (
-        <Table.Row className='active-participants-row'>
-            <Table.Cell>{exchParticipant}</Table.Cell>
-            <Table.Cell>{activeOrders}</Table.Cell>
-            <Table.Cell>-</Table.Cell>
-            <Table.Cell>{depositSummary(investorDeposits).join(',') || '-'}</Table.Cell>
-        </Table.Row>
-    )
-}
+// const useStreamQueriesactveOrders: React.FC<{}> = () => {
+//     return useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
+//         console.log("Unexpected close from Order: ", e);
+//     }).contracts.length;
+// }
 
 export default ExchangeParticipants;

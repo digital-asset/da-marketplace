@@ -7,22 +7,22 @@ type CellItem = string | React.ReactElement;
 type Props = {
     className?: string;
     header: CellItem[];
-    rows: React.ReactElement[];
+    rows: string[][];
 }
 
 const StripedTable: React.FC<Props> = ({ className, header, rows }) => {
     return (
         <Table fixed className={classNames('striped-table', className)}>
-            <Table.Header className='striped-table-header'>
-                    <Table.Row className='striped-table-row'>
+            <Table.Header>
+                    <Table.Row>
                         { header.map((headerCell, index) => (
-                            <Table.HeaderCell key={index} className='striped-table-cell'>
+                            <Table.HeaderCell key={index}>
                                 { headerCell }
                             </Table.HeaderCell>))}
                     </Table.Row>
                 </Table.Header>
 
-            <Table.Body className='striped-table-body'>
+            <Table.Body>
                 { rows }
             </Table.Body>
         </Table>

@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useStreamQueryAsPublic } from '@daml/dabl-react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { ExchangeParticipant, ExchangeParticipantInvitation} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
@@ -20,7 +23,7 @@ import RoleSideNav from '../common/RoleSideNav';
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 import MarketPairs from './MarketPairs'
-import CreateMarket from './CreateMarket'
+import InviteParticipant from '../common/RequestInvestorRelationship'
 import ExchangeParticipants from './ExchangeParticipants'
 import FormErrorHandled from '../common/FormErrorHandled'
 
@@ -40,7 +43,22 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
         console.log("Unexpected close from custodianRelationship: ", e);
     }).contracts.map(makeContractInfo);
+    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipant: ", e);
+    }).contracts.map(makeContractInfo);
+
+    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+
+    const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
+        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
+    }).contracts.map(makeContractInfo);
+    const investorOptions = registeredInvestors.filter(ri =>
+        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
+        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
+
     const notifications = useDismissibleNotifications();
+
+    const investorCount = exchangeParticipants.length
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -88,6 +106,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
@@ -104,13 +123,22 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <ExchangeProfile
                                     content='Save'
+                                    profileLinks={[
+                                        {to: `${url}/market-pairs`, title: 'Markets', subtitle: 'View and track active markets'},
+                                        {to: `${url}/participants`, title: 'Investors', subtitle: `${investorCount} Active Investor${investorCount > 1 ? 's':''}`}
+                                    ]}
+                                    role={MarketRole.ExchangeRole}
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.ExchangeRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <>
+                                <MarketRelationships role={MarketRole.ExchangeRole}
+                                    custodianRelationships={allCustodianRelationships}/>
+                                <InviteParticipant registeredInvestors={investorOptions}/>
+                            </>
+                        }
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
