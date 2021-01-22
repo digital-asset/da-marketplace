@@ -13,6 +13,7 @@ import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
 import NotificationComponent from './Notification'
 import FormErrorHandled from './FormErrorHandled'
+import { useContractQuery } from '../../websocket/queryStream';
 
 type DismissibleNotificationProps = {
     notification: DismissibleNotificationInfo;
@@ -22,13 +23,10 @@ type DismissibleNotificationProps = {
 export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
-    const relationshipRequestNotifications = useStreamQueries(DismissibleNotificationTemplate, () => [], [], (e) => {
-        console.log("Unexpected close from dismissibleNotification: ", e);
-    })
-        .contracts
-        .filter(notification => notification.payload.receiver === party)
+    const relationshipRequestNotifications = useContractQuery(DismissibleNotificationTemplate)
+        .filter(notification => notification.contractData.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}
-            notification={makeContractInfo(notification)}
+            notification={notification}
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
     const dismissNotification = async (cid: ContractId<DismissibleNotificationTemplate>) => {

@@ -29,6 +29,7 @@ import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
 import FormErrorHandled from '../common/FormErrorHandled'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -41,9 +42,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const keys = () => [wrapDamlTuple([operator, custodian])];
-    const registeredCustodian = useStreamQueries(RegisteredCustodian, () => [], [], (e) => {
-        console.log("Unexpected close from registeredCustodian: ", e);
-    });
+    const registeredCustodian = useContractQuery(RegisteredCustodian);
 
     const custodianContract = useStreamFetchByKeys(CustodianModel, keys, [operator, custodian]).contracts;
     const investors = custodianContract[0]?.payload.investors || [];
@@ -56,8 +55,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredCustodian.contracts[0]) {
-            const rcData = registeredCustodian.contracts[0].payload;
+        if (registeredCustodian[0]) {
+            const rcData = registeredCustodian[0].contractData;
             setProfile({
                 name: { ...profile.name, value: rcData.name },
                 location: { ...profile.location, value: rcData.location }
@@ -101,7 +100,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredCustodian.contracts[0]?.payload.name || custodian}
+                        name={registeredCustodian[0]?.contractData.name || custodian}
                         items={[
                             {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
                         ]}>
@@ -158,9 +157,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredCustodian.loading
-        ? loadingScreen
-        : registeredCustodian.contracts.length === 0 ? inviteScreen : custodianScreen
+    return registeredCustodian.length === 0 ? inviteScreen : custodianScreen
 }
 
 export default Custodian;

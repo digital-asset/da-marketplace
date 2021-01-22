@@ -10,6 +10,7 @@ import {
     Notification,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
+import { ContractId } from '@daml/types';
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -70,21 +71,38 @@ export function wrapTextMap(items: string[]) {
 
 export type ContractInfo<T> = {
     templateId: string;
-    contractId: string;
+    contractId: ContractId<T>;
     contractData: T;
 }
 
-export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
-export type TokenInfo = ContractInfo<Token.Token>;
-export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
 export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
-export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
-export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
+export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
 export type CustodianInfo = ContractInfo<Custodian.Custodian>;
 export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
 export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianRelationshipRequest>;
+export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
+export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
+export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
+export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
+export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
 export type RegisteredCustodianInfo = ContractInfo<Registry.RegisteredCustodian>;
 export type RegisteredExchangeInfo = ContractInfo<Registry.RegisteredExchange>;
 export type RegisteredInvestorInfo = ContractInfo<Registry.RegisteredInvestor>;
-export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
+export type TokenInfo = ContractInfo<Token.Token>;
+
+export type ContractInfoUnion =
+    BrokerCustomerInfo |
+    BrokerCustomerInviteInfo |
+    CustodianInfo |
+    CustodianRelationshipInfo |
+    CustodianRelationshipRequestInfo |
+    DepositInfo |
+    DismissibleNotificationInfo |
+    ExchangeInfo |
+    ExchangeParticipantInfo |
+    ExchParticipantInviteInfo |
+    RegisteredCustodianInfo |
+    RegisteredExchangeInfo |
+    RegisteredInvestorInfo |
+    TokenInfo |
+    object

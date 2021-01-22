@@ -23,6 +23,7 @@ import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
 import ExchangeParticipants from './ExchangeParticipants'
 import FormErrorHandled from '../common/FormErrorHandled'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -34,12 +35,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const exchange = useParty();
     const ledger = useLedger();
 
-    const registeredExchange = useStreamQueries(RegisteredExchange, () => [], [], (e) => {
-        console.log("Unexpected close from registeredExchange: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredExchange = useContractQuery(RegisteredExchange);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -48,8 +45,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredExchange.contracts[0]) {
-            const reData = registeredExchange.contracts[0].payload;
+        if (registeredExchange[0]) {
+            const reData = registeredExchange[0].contractData;
             setProfile({
                 name: { ...profile.name, value: reData.name },
                 location: { ...profile.location, value: reData.location }
@@ -79,7 +76,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     }
 
     const sideNav = <RoleSideNav url={url}
-                                 name={registeredExchange.contracts[0]?.payload.name || exchange}
+                                 name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/create-pair`, label: 'Create a Market', icon: <PublicIcon/>},
@@ -134,9 +131,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredExchange.loading
-         ? loadingScreen
-         : registeredExchange.contracts.length === 0 ? inviteScreen : exchangeScreen
+    return registeredExchange.length === 0 ? inviteScreen : exchangeScreen
 }
 
 export default Exchange;

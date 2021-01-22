@@ -15,6 +15,7 @@ import { useOperator } from './common'
 import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     role: MarketRole;
@@ -27,9 +28,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
     const party = useParty();
     const operator = useOperator();
 
-    const requestCustodians = useStreamQueries(CustodianRelationshipRequest, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationshipRequest: ", e);
-    }).contracts.map(cr => cr.payload.custodian);
+    const requestCustodians = useContractQuery(CustodianRelationshipRequest).map(cr => cr.contractData.custodian);
     const relationshipCustodians = custodianRelationships.map(cr => cr.contractData.custodian);
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts

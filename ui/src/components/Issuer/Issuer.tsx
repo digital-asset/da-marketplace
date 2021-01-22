@@ -30,6 +30,7 @@ import { useRegistryLookup } from '../common/RegistryLookup'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
 import FormErrorHandled from '../common/FormErrorHandled'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -43,15 +44,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
 
     const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
-    const registeredIssuer = useStreamQueries(RegisteredIssuer, () => [], [], (e) => {
-        console.log("Unexpected close from registeredIssuer: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts
+    const registeredIssuer = useContractQuery(RegisteredIssuer);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allTokens = useContractQuery(Token);
 
     const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
         .map(investor => {
@@ -75,11 +70,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
         .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
+            const party = exchParticipant.contractData.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
@@ -110,8 +103,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredIssuer.contracts[0]) {
-            const riData = registeredIssuer.contracts[0].payload;
+        if (registeredIssuer[0]) {
+            const riData = registeredIssuer[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location },
@@ -159,7 +152,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredIssuer.contracts[0]?.payload.name || issuer}
+                        name={registeredIssuer[0]?.contractData.name || issuer}
                         items={[
                             {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
                         ]}>
@@ -174,7 +167,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                                     key={token.contractId}
                                 >
-                                    <p>{token.payload.id.label}</p>
+                                    <p>{token.contractData.id.label}</p>
                                 </Menu.Item>
                             ))}
                         </Menu.Menu>
@@ -224,9 +217,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </div>
     )
 
-    return registeredIssuer.loading
-        ? loadingScreen
-        : registeredIssuer.contracts.length === 0 ? inviteScreen : issuerScreen
+    return registeredIssuer.length === 0 ? inviteScreen : issuerScreen
 };
 
 export default Issuer;

@@ -12,6 +12,7 @@ import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
+import { useContractQuery } from '../../websocket/queryStream'
 
 const CreateDeposit = (props: {
     currentBeneficiary?: ContractInfo<RegisteredInvestor>
@@ -32,14 +33,11 @@ const CreateDeposit = (props: {
         }
     }, [currentBeneficiary])
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
 
-    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationships: ", e);
-    }).contracts.map(relationship => { return relationship.payload.party })
+    const relationshipParties = useContractQuery(CustodianRelationship)
+        .map(relationship => relationship.contractData.party )
 
     const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
         .filter(broker => relationshipParties.find(p => broker.payload.broker === p))

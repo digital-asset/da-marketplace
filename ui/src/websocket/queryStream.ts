@@ -22,7 +22,6 @@ type QueryStream<T extends object = any, K = any, I extends string = any> = {
   templateIds: string[];
   contracts: ContractInfo<T>[];
   subscribeTemplate: (templateId: string) => void;
-  getContractsByTemplate: (template: Template<T,K,I>) => ContractInfo<T>[];
 }
 
 const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
@@ -38,20 +37,10 @@ const QueryStreamProvider = <T extends object, K = unknown, I extends string = s
     setTemplateIds(templateIds => [...templateIds, templateId]);
   }
 
-  const getContractsByTemplate = useCallback(
-    <A extends object, B = unknown, C extends string = string>(template: Template<A,B,C>): ContractInfo<A>[] => {
-      const { templateId } = template;
-
-      const contractForTemplate = contracts.filter(c => c.templateId === templateId) as ContractInfo<A>[]
-      console.log("Let's examine: ", contractForTemplate, contracts);
-      return contractForTemplate;
-  }, [ contracts, templateIds, setTemplateIds ]);
-
   const [ queryStream, setQueryStream ] = useState<QueryStream<T,K,I>>({
     templateIds: [],
     contracts: [],
     subscribeTemplate,
-    getContractsByTemplate
   });
 
   useEffect(() => {
@@ -60,10 +49,9 @@ const QueryStreamProvider = <T extends object, K = unknown, I extends string = s
         templateIds,
         contracts,
         subscribeTemplate,
-        getContractsByTemplate
       })
     }
-  }, [contracts, templateIds, queryStream.contracts, getContractsByTemplate, subscribeTemplate]);
+  }, [contracts, templateIds, queryStream.contracts, subscribeTemplate]);
 
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
@@ -75,16 +63,21 @@ export function useContractQuery<T extends object, K = unknown, I extends string
     throw new Error("useContractQuery must be called within a QueryStreamProvider");
   }
 
-  useEffect(() => {
-    const { templateId } = template;
-    const { templateIds, subscribeTemplate } = queryStream;
+  console.log("Using query: ", template.templateId.slice(65));
 
+  const { templateId } = template;
+  const { contracts, templateIds, subscribeTemplate } = queryStream;
+
+  // Sometimes things still don't update... maybe try adding templateIds to deps arr?
+  const filtered = useMemo(() => contracts.filter(c => c.templateId === templateId), [contracts, templateIds]);
+
+  useEffect(() => {
     if (!templateIds.find(id => id === templateId)) {
       subscribeTemplate(templateId);
     }
-  }, [template, queryStream]);
+  }, [templateId, templateIds, subscribeTemplate]);
 
-  return queryStream.getContractsByTemplate(template);
+  return filtered;
 }
 
 export default QueryStreamProvider;

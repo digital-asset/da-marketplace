@@ -25,6 +25,7 @@ import { WalletIcon, OrdersIcon } from '../../icons/Icons'
 import BrokerOrders from './BrokerOrders'
 import FormErrorHandled from '../common/FormErrorHandled'
 import RoleSideNav from '../common/RoleSideNav'
+import { useContractQuery } from '../../websocket/queryStream'
 
 
 type Props = {
@@ -37,24 +38,16 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const broker = useParty();
     const ledger = useLedger();
 
-    const registeredBroker = useStreamQueries(RegisteredBroker, () => [], [], (e) => {
-        console.log("Unexpected close from registeredBroker: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDepositBroker: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredBroker = useContractQuery(RegisteredBroker);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
 
     const { custodianMap, exchangeMap } = useRegistryLookup();
 
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
         .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
+            const party = exchParticipant.contractData.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
@@ -80,8 +73,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredBroker.contracts[0]) {
-            const rbData = registeredBroker.contracts[0].payload;
+        if (registeredBroker[0]) {
+            const rbData = registeredBroker[0].contractData;
             setProfile({
                 name: { ...profile.name, value: rbData.name },
                 location: { ...profile.location, value: rbData.location }
@@ -123,7 +116,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
-                                 name={registeredBroker.contracts[0]?.payload.name || broker}
+                                 name={registeredBroker[0]?.contractData.name || broker}
                                  items={[
                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
                                     {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
@@ -167,9 +160,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </div>
 
 
-    return registeredBroker.loading
-        ? loadingScreen
-        : registeredBroker.contracts.length === 0 ? inviteScreen : brokerScreen
+    return registeredBroker.length === 0 ? inviteScreen : brokerScreen
 }
 
 export default Broker;

@@ -11,7 +11,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple, TokenInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -29,6 +29,8 @@ import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNoti
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
 
+import { useContractQuery } from '../../websocket/queryStream'
+
 type Props = {
     onLogout: () => void;
 }
@@ -44,19 +46,13 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         ...useBrokerCustomerInviteNotifications(),
         ...useDismissibleNotifications(),
     ];
-    const registeredInvestor = useStreamQueries(RegisteredInvestor, () => [], [], (e) => {
-        console.log("Unexpected close from registeredInvestor: ", e);
-    });
 
-    const allExchanges = useStreamQueries(Exchange, () => [], [], (e) => {
-        console.log("Unexpected close from exchange: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredInvestor = useContractQuery(RegisteredInvestor);
+    const allExchanges = useContractQuery(Exchange);
+    const allDeposits = useContractQuery(AssetDeposit);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+
+    console.log("all exchanges be: ", allExchanges);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -64,8 +60,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredInvestor.contracts[0]) {
-            const riData = registeredInvestor.contracts[0].payload;
+        if (registeredInvestor[0]) {
+            const riData = registeredInvestor[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location }
@@ -96,7 +92,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     }
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredInvestor.contracts[0]?.payload.name || investor}
+                        name={registeredInvestor[0]?.contractData.name || investor}
                         items={[
                             {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
                             {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
@@ -108,8 +104,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                             { allExchanges.length > 0 ?
                                 allExchanges.map(exchange => {
-                                    return exchange.contractData.tokenPairs.map(tokenPair => {
-                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+                                    return exchange.contractData.tokenPairs.map((tokenPair: any) => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map((t: any) => t.label.toLowerCase());
 
                                         return <Menu.Item
                                             as={NavLink}
@@ -189,9 +185,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredInvestor.loading
-         ? loadingScreen
-         : registeredInvestor.contracts.length === 0 ? inviteScreen : investorScreen
+    return registeredInvestor.length === 0 ? inviteScreen : investorScreen
+
+    // return registeredInvestor.loading
+    //      ? loadingScreen
+    //      : registeredInvestor.length === 0 ? inviteScreen : investorScreen
 }
 
 export default Investor;

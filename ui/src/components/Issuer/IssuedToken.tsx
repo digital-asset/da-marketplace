@@ -16,6 +16,7 @@ import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/Donut
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddParticipantModal from './AddParticipantModal'
 import CapTable from '../common/CapTable'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type DepositInfo = {
     investor: string,
@@ -35,17 +36,14 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
     const { tokenId } = useParams<{tokenId: string}>()
 
-    const token = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from token: ", e);
-    }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
+    const token = useContractQuery(Token).find(c => c.contractId === decodeURIComponent(tokenId))
 
     const isPublic = !!token?.contractData.isPublic
 
-    const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo).filter(deposit =>
-        deposit.contractData.asset.id.label === token?.contractData.id.label &&
-        deposit.contractData.asset.id.version === token?.contractData.id.version
+    const tokenDeposits = useContractQuery(AssetDeposit)
+        .filter(deposit =>
+            deposit.contractData.asset.id.label === token?.contractData.id.label &&
+            deposit.contractData.asset.id.version === token?.contractData.id.version
     );
 
     const participants = Object.keys(token?.contractData.observers.textMap || [])

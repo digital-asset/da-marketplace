@@ -16,6 +16,7 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import BrokerCustomers from './BrokerCustomers'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -25,19 +26,11 @@ type Props = {
 
 
 const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
-    const allExchangeOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from order: ", e);
-    }).contracts;
-    const allBrokerOrderRequests = useStreamQueries(BrokerOrderRequest, () => [], [], (e) => {
-        console.log("Unexpected close from brokerOrderRequest: ", e);
-    }).contracts;
-    const allBrokerOrders = useStreamQueries(BrokerOrder, () => [], [], (e) => {
-        console.log("Unexpected close from brokerOrder: ", e);
-    }).contracts;
+    const allExchangeOrders = useContractQuery(Order);
+    const allBrokerOrderRequests = useContractQuery(BrokerOrderRequest);
+    const allBrokerOrders = useContractQuery(BrokerOrder);
 
-    const allBrokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts.map(makeContractInfo);
+    const allBrokerCustomers = useContractQuery(BrokerCustomer);
     const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
 
     return (
@@ -54,13 +47,13 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
                 <Header as='h3'>Orders</Header>
                 <div className='customer-orders'>
                     <p>Requested Customer Orders</p>
-                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
+                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.contractData}/>)}
 
                     <p>Open Customer Orders</p>
-                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
+                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.contractData} deposits={deposits}/>)}
 
                     <p>Exchange Orders</p>
-                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)}
                 </div>
             </PageSection>
         </Page>

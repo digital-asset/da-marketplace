@@ -23,6 +23,7 @@ import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Reg
 import ContractSelect from './ContractSelect'
 import FormErrorHandled from './FormErrorHandled';
 import { AppError } from './errorTypes';
+import { useContractQuery } from '../../websocket/queryStream';
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
@@ -54,9 +55,7 @@ const WalletTransaction = (props: {
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
 
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-            console.log("Unexpected close from Token: ", e);
-        }).contracts.map(makeContractInfo)
+    const allTokens = useContractQuery(Token);
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 

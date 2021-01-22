@@ -9,6 +9,7 @@ import { wrapDamlTuple, RegisteredInvestorInfo, makeContractInfo } from '../comm
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     registeredInvestors: RegisteredInvestorInfo[];
@@ -21,12 +22,8 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const currentInvitations = useStreamQueries(BrokerCustomerInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomerInvitation: ", e);
-    }).contracts.map(makeContractInfo);
-    const brokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts.map(makeContractInfo);
+    const currentInvitations = useContractQuery(BrokerCustomerInvitation);
+    const brokerCustomers = useContractQuery(BrokerCustomer);
 
     const customerOptions = registeredInvestors.filter(ri =>
         !brokerCustomers.find(bc => bc.contractData.brokerCustomer === ri.contractData.investor) &&

@@ -16,6 +16,7 @@ import Page from '../common/Page'
 
 import InviteParticipant from './InviteParticipant'
 import { depositSummary } from '../common/utils'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -23,16 +24,10 @@ type Props = {
 }
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
     const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
-    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.map(makeContractInfo);
-    const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
-    }).contracts.map(makeContractInfo);
+    const exchangeParticipants = useContractQuery(ExchangeParticipant);
+    const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
 
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&

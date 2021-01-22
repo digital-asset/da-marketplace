@@ -16,6 +16,7 @@ import Page from '../common/Page'
 
 import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     deposits: DepositInfo[];
@@ -47,9 +48,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const history = useHistory();
     const investor = useParty();
 
-    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.map(makeContractInfo);
+    const allOrders = useContractQuery(Order);
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
@@ -62,7 +61,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const { exchange } = exchangeData;
     const [ base, quote ] = tokenPair.map(t => t.label);
 
-    const tokens = useStreamQueries(Token).contracts.map(makeContractInfo);
+    const tokens = useContractQuery(Token);
 
     const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
     const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;

@@ -15,6 +15,7 @@ import CapTable from '../common/CapTable';
 import { depositSummary } from '../common/utils';
 
 import CreateDeposit from './CreateDeposit';
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -25,9 +26,7 @@ type Props = {
 const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
     const { investorId } = useParams<{investorId: string}>()
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
 

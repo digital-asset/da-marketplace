@@ -21,6 +21,7 @@ import Holdings from '../common/Holdings';
 import { ITopMenuButtonInfo } from './TopMenu'
 
 import WalletTransaction from './WalletTransaction';
+import { useContractQuery } from '../../websocket/queryStream'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -33,17 +34,12 @@ const Wallet = (props: {
 
     const { sideNav, onLogout, role } = props
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
-    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts
+    const brokerProviders = useStreamQueries(BrokerCustomer)
+        .contracts
         .map(broker => {
             const party = broker.payload.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
@@ -53,11 +49,9 @@ const Wallet = (props: {
             }
         })
 
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
         .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
+            const party = exchParticipant.contractData.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,

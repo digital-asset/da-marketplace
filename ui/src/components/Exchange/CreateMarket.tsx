@@ -13,6 +13,7 @@ import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
 import Page from '../common/Page'
 import { countDecimals, preciseInputSteps } from '../common/utils';
+import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -33,9 +34,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
     const handleIdPairSubmit = async () => {

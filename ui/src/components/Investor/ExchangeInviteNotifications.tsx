@@ -7,6 +7,7 @@ import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marke
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 import { ExchParticipantInviteInfo, makeContractInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
+import { useContractQuery } from '../../websocket/queryStream'
 
 type ExchParticipantInviteProps = {
     invite: ExchParticipantInviteInfo;
@@ -16,23 +17,20 @@ type ExchParticipantInviteProps = {
 
 export const useExchangeInviteNotifications = () => {
     const ledger = useLedger();
-    const exchangeInviteNotifications = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
-    })
-        .contracts
+    const exchangeInviteNotifications = useContractQuery(ExchangeParticipantInvitation)
         .map(invite => <ExchangeParticipantInvite key={invite.contractId}
-            invite={makeContractInfo(invite)}
+            invite={invite}
             invitationAccept={async () => await acceptExchParticipantInvite(invite.contractId)}
             invitationReject={async () => await rejectExchParticipantInvite(invite.contractId)}/>);
 
-    const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
+    const acceptExchParticipantInvite = async (cid: string) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
-        await ledger.exercise(choice, cid, {});
+        await ledger.exercise(choice, cid as ContractId<ExchangeParticipantInvitation>, {});
     }
 
-    const rejectExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
+    const rejectExchParticipantInvite = async (cid: string) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Reject;
-        await ledger.exercise(choice, cid, {});
+        await ledger.exercise(choice, cid as ContractId<ExchangeParticipantInvitation>, {});
     }
 
     return exchangeInviteNotifications;

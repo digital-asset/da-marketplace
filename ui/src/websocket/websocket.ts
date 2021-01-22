@@ -6,7 +6,7 @@ import { deploymentMode, DeploymentMode, httpBaseUrl } from '../config'
 import { retrieveCredentials } from '../Credentials'
 import { Template } from '@daml/types'
 
-import { ContractInfo, ContractInfoUnion, makeContractInfo } from '../components/common/damlTypes'
+import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official
@@ -48,9 +48,10 @@ function useDamlStreamQuery(templateIds: string[]) {
               events.forEach(e => {
                 console.log("event is: ", isCreateEvent(e), e)
                 if (isCreateEvent(e)) {
-                    const x = e;
                   const contract = makeContractInfo(e.created);
-                  setContracts(contracts => [...contracts, contract]);
+                  if (!contracts.find(c => c.contractId === contract.contractId)) {
+                      setContracts(contracts => [...contracts, contract]);
+                  }
                 }
               })
             }
@@ -61,7 +62,7 @@ function useDamlStreamQuery(templateIds: string[]) {
         const ws = newDamlWebsocket(token);
 
         ws.onopen = () => {
-            if (offset !== "") {
+            if (offset !== "" && false) {
                 ws.send(JSON.stringify({offset}))
             }
             ws.send(JSON.stringify({templateIds}));
@@ -93,13 +94,13 @@ function useDamlStreamQuery(templateIds: string[]) {
                 setWebsocket(null);
             }
         }
-    }, [templateIds, websocket, openWebsocket])
+    }, [templateIds, websocket, token, openWebsocket])
 
     useEffect(() => {
         if (websocket && token) {
             websocket.onmessage = messageHandlerScoped();
         }
-    }, [websocket, messageHandlerScoped])
+    }, [token, websocket, messageHandlerScoped])
 
     return contracts;
 }
