@@ -1,14 +1,16 @@
 import React from 'react'
 
-import { useLedger, useStreamQueries } from '@daml/react'
-import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
 
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { CustodianRelationshipRequestInfo, makeContractInfo } from '../common/damlTypes'
+import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+
 import { useContractQuery } from '../../websocket/queryStream'
+
+import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
+import { useRegistryLookup } from '../common/RegistryLookup'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type RelationshipRequestNotificationProps = {
     request: CustodianRelationshipRequestInfo;

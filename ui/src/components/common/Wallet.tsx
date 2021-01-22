@@ -11,17 +11,15 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
-
-import { damlTupleToString, makeContractInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import PageSection from '../common/PageSection'
-import Page from '../common/Page'
-import Holdings from '../common/Holdings';
-
-import { ITopMenuButtonInfo } from './TopMenu'
-
-import WalletTransaction from './WalletTransaction';
 import { useContractQuery } from '../../websocket/queryStream'
+
+import { damlTupleToString } from './damlTypes'
+import { useRegistryLookup } from './RegistryLookup'
+import { ITopMenuButtonInfo } from './TopMenu'
+import WalletTransaction from './WalletTransaction'
+import PageSection from './PageSection'
+import Holdings from './Holdings'
+import Page from './Page'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -108,7 +106,6 @@ const Wallet = (props: {
                     sideNav={sideNav}
                     onLogout={onLogout}
                     deposits={allDeposits}
-                    providers={allProviders}
                     transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>

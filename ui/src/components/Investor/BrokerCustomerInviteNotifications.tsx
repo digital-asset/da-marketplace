@@ -1,13 +1,14 @@
 import React from 'react'
 
-import { useLedger, useStreamQueries } from '@daml/react'
+import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
+
 import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
-import { BrokerCustomerInviteInfo, makeContractInfo } from '../common/damlTypes'
+import { BrokerCustomerInviteInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import { useContractQuery } from '../../websocket/queryStream'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type BrokerCustomerInviteProps = {
     invite: BrokerCustomerInviteInfo;
@@ -23,14 +24,14 @@ export const useBrokerCustomerInviteNotifications = () => {
             invitationAccept={async () => await acceptBrokerCustomerInvite(invite.contractId)}
             invitationReject={async () => await rejectBrokerCustomerInvite(invite.contractId)}/>);
 
-    const acceptBrokerCustomerInvite = async (cid: string) => {
+    const acceptBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
         const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Accept;
-        await ledger.exercise(choice, cid as ContractId<BrokerCustomerInvitation>, {});
+        await ledger.exercise(choice, cid, {});
     }
 
-    const rejectBrokerCustomerInvite = async (cid: string) => {
+    const rejectBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
         const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Reject;
-        await ledger.exercise(choice, cid as ContractId<BrokerCustomerInvitation>, {});
+        await ledger.exercise(choice, cid, {});
     }
 
     return brokerCustomerInviteNotifications;

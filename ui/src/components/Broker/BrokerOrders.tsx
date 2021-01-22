@@ -1,22 +1,23 @@
 import React, { useState } from 'react'
 import { Button, Card, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { DepositInfo, unwrapDamlTuple, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import BrokerCustomers from './BrokerCustomers'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;

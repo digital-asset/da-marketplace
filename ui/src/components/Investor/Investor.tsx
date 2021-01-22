@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -10,26 +11,25 @@ import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Regi
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple, TokenInfo } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
-import RoleSideNav from '../common/RoleSideNav';
-
-import { ExchangeIcon, OrdersIcon, WalletIcon, UserIcon } from '../../icons/Icons'
+import RoleSideNav from '../common/RoleSideNav'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
 
-import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -142,8 +142,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const investorScreen = <Switch>
         <Route exact path={path}>

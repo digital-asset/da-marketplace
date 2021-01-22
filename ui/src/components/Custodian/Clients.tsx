@@ -1,21 +1,18 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-
 import { UserIcon } from '../../icons/Icons'
-import { makeContractInfo } from '../common/damlTypes'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
 import { depositSummary } from '../common/utils'
-import PageSection from '../common/PageSection'
+import CapTable from '../common/CapTable'
 import Page from '../common/Page'
-import CapTable from '../common/CapTable';
+import PageSection from '../common/PageSection'
 
 import CreateDeposit from './CreateDeposit'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     clients: string[];

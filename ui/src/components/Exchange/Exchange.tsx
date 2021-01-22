@@ -1,29 +1,30 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import { useOperator } from '../common/common'
-import ExchangeProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import MarketRelationships from '../common/MarketRelationships'
-import RoleSideNav from '../common/RoleSideNav';
-
 import { PublicIcon, UserIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import ExchangeProfile, { Profile, createField } from '../common/Profile'
+import MarketRelationships from '../common/MarketRelationships'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import FormErrorHandled from '../common/FormErrorHandled'
+import LandingPage from '../common/LandingPage'
+import RoleSideNav from '../common/RoleSideNav'
+
 
 import MarketPairs from './MarketPairs'
 import CreateMarket from './CreateMarket'
 import ExchangeParticipants from './ExchangeParticipants'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -92,7 +93,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const exchangeScreen = <Switch>
         <Route exact path={path}>
             <LandingPage

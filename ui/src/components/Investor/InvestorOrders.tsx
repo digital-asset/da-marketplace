@@ -1,17 +1,22 @@
 import React from 'react'
-
-import { useStreamQueries } from '@daml/react'
-import { BrokerTrade, Order, OrderRequest, SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { Header } from 'semantic-ui-react'
 
+import {
+    BrokerTrade,
+    Order,
+    OrderRequest,
+    SettledTradeSide
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
 import { OrdersIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { BrokerTradeCard } from '../common/BrokerTradeCard'
-import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import { OrderCard } from '../common/OrderCard'
+import { TradeCard } from '../common/TradeCard'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import { TradeCard } from '../common/TradeCard'
-import { useContractQuery } from '../../websocket/queryStream'
+import ExchangeOrderCard from '../common/ExchangeOrderCard'
 
 
 type Props = {

@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import _ from 'lodash'
 
-import { useParty, useStreamQueries } from '@daml/react'
+import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
 
-import { DepositInfo, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, unwrapDamlTuple } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
-import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     deposits: DepositInfo[];

@@ -1,13 +1,13 @@
 import React from 'react'
 
-import { useLedger, useStreamQueries } from '@daml/react'
+import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
-import { ExchParticipantInviteInfo, makeContractInfo } from '../common/damlTypes'
+import { ExchParticipantInviteInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import { useContractQuery } from '../../websocket/queryStream'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type ExchParticipantInviteProps = {
     invite: ExchParticipantInviteInfo;
@@ -23,14 +23,14 @@ export const useExchangeInviteNotifications = () => {
             invitationAccept={async () => await acceptExchParticipantInvite(invite.contractId)}
             invitationReject={async () => await rejectExchParticipantInvite(invite.contractId)}/>);
 
-    const acceptExchParticipantInvite = async (cid: string) => {
+    const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
-        await ledger.exercise(choice, cid as ContractId<ExchangeParticipantInvitation>, {});
+        await ledger.exercise(choice, cid, {});
     }
 
-    const rejectExchParticipantInvite = async (cid: string) => {
+    const rejectExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Reject;
-        await ledger.exercise(choice, cid as ContractId<ExchangeParticipantInvitation>, {});
+        await ledger.exercise(choice, cid, {});
     }
 
     return exchangeInviteNotifications;

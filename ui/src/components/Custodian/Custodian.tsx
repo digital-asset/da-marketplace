@@ -1,35 +1,31 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, Link, NavLink } from 'react-router-dom'
-
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useLedger, useParty, useStreamFetchByKeys } from '@daml/react'
 
 import { RegisteredCustodian, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
     Custodian as CustodianModel,
     CustodianInvitation
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-
-import { makeContractInfo, wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import { useOperator } from '../common/common'
-import CustodianProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import RoleSideNav from '../common/RoleSideNav'
 
 import { UserIcon } from '../../icons/Icons'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import CustodianProfile, { Profile, createField } from '../common/Profile'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import FormErrorHandled from '../common/FormErrorHandled'
+import LandingPage from '../common/LandingPage'
+import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -95,8 +91,6 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     const sideNav = <RoleSideNav url={url}
@@ -115,7 +109,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                                     to={`${url}/client/${investor}`}
                                     key={investor}
                                 >
-                                    <p>{registeredInvestors.find(i => i.contractData.investor == investor)?.contractData.name || investor}</p>
+                                    <p>{registeredInvestors.find(i => i.contractData.investor === investor)?.contractData.name || investor}</p>
                                 </Menu.Item>
                             )}
                         </Menu.Menu>

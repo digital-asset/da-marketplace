@@ -2,13 +2,13 @@ import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Card, Header} from 'semantic-ui-react'
 
-import { useParty, useStreamQueries, useLedger } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon } from '../icons/Icons'
 import { useContractQuery } from '../websocket/queryStream'
+
+import OnboardingTile from './common/OnboardingTile'
 
 type RoleSelectProps = {
     loading: boolean;

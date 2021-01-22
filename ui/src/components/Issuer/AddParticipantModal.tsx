@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
-
+import React, { useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { Button, Modal, Form } from 'semantic-ui-react'
 
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { useParty, useLedger } from '@daml/react'
 
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-
 import {
     RegisteredCustodian,
     RegisteredIssuer,
@@ -20,7 +17,7 @@ import {
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import FormErrorHandled from '../common/FormErrorHandled'
-import { wrapTextMap } from '../common/damlTypes';
+import { wrapTextMap } from '../common/damlTypes'
 
 interface IProps {
     onRequestClose: () => void;

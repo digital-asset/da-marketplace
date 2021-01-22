@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -11,11 +11,12 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
 import { useOperator } from './common'
-import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
     role: MarketRole;

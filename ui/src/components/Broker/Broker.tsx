@@ -1,32 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import BrokerProfile, { Profile, createField } from '../common/Profile'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useOperator } from '../common/common'
-import MarketRelationships from '../common/MarketRelationships'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import Wallet from '../common/Wallet';
-
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-
-import BrokerOrders from './BrokerOrders'
-import FormErrorHandled from '../common/FormErrorHandled'
-import RoleSideNav from '../common/RoleSideNav'
 import { useContractQuery } from '../../websocket/queryStream'
 
+import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import BrokerProfile, { Profile, createField } from '../common/Profile'
+
+import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import RoleSideNav from '../common/RoleSideNav'
+import LandingPage from '../common/LandingPage'
+import Wallet from '../common/Wallet'
+
+import BrokerOrders from './BrokerOrders'
 
 type Props = {
     onLogout: () => void;
@@ -42,30 +40,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
-
-    const { custodianMap, exchangeMap } = useRegistryLookup();
-
-    const exchangeProviders = useContractQuery(ExchangeParticipant)
-        .map(exchParticipant => {
-            const party = exchParticipant.contractData.exchange;
-            const name = exchangeMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
-            }
-        });
-
-    const allProviders = [
-        ...exchangeProviders,
-        ...allCustodianRelationships.map(relationship => {
-            const party = relationship.contractData.custodian;
-            const name = custodianMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`,
-            }
-        }),
-    ]
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -112,8 +86,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
                                  name={registeredBroker[0]?.contractData.name || broker}

@@ -1,22 +1,25 @@
 import React from 'react'
 import { Table } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { useStreamQueries } from '@daml/react'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import {
+    ExchangeParticipant,
+    ExchangeParticipantInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { UserIcon } from '../../icons/Icons'
-import { ExchangeParticipantInfo, DepositInfo, makeContractInfo } from '../common/damlTypes'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
+import { ExchangeParticipantInfo, DepositInfo } from '../common/damlTypes'
+import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import InviteParticipant from './InviteParticipant'
-import { depositSummary } from '../common/utils'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     sideNav: React.ReactElement;

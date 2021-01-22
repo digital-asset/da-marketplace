@@ -1,19 +1,20 @@
 import React, { useState } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
-import FormErrorHandled from '../common/FormErrorHandled'
-import PageSection from '../common/PageSection'
-import ContractSelect from '../common/ContractSelect'
-import Page from '../common/Page'
-import { countDecimals, preciseInputSteps } from '../common/utils';
 import { useContractQuery } from '../../websocket/queryStream'
+
+import { useOperator } from '../common/common'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { countDecimals, preciseInputSteps } from '../common/utils'
+import FormErrorHandled from '../common/FormErrorHandled'
+import ContractSelect from '../common/ContractSelect'
+import PageSection from '../common/PageSection'
+import Page from '../common/Page'
 
 type Props = {
     sideNav: React.ReactElement;

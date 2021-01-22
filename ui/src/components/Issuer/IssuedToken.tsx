@@ -2,21 +2,20 @@ import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { Header, List, Button } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
-
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
-
-import { makeContractInfo, ContractInfo} from '../common/damlTypes'
-import Page from '../common/Page'
-import PageSection from '../common/PageSection'
-import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import { getPartyLabel, IPartyInfo } from '../common/utils';
-import AddParticipantModal from './AddParticipantModal'
-import CapTable from '../common/CapTable'
 import { useContractQuery } from '../../websocket/queryStream'
+
+import { ContractInfo} from '../common/damlTypes'
+import { getPartyLabel, IPartyInfo } from '../common/utils'
+// import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
+import CapTable from '../common/CapTable'
+import PageSection from '../common/PageSection'
+import Page from '../common/Page'
+
+import AddParticipantModal from './AddParticipantModal'
 
 type DepositInfo = {
     investor: string,
@@ -132,25 +131,25 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     }
 }
 
-const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
-    if (props.nettedTokenDeposits.length === 0) {
-        return null
-    }
-    return (
-        <div className='allocations'>
-            <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
-        </div>
-    )
+// const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+//     if (props.nettedTokenDeposits.length === 0) {
+//         return null
+//     }
+//     return (
+//         <div className='allocations'>
+//             <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
+//         </div>
+//     )
 
-    function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
-        return tokens.map(t => {
-            return {
-                title: `${t.investor}@${t.provider}`,
-                value: t.quantity,
-                color: getDonutChartColor(tokens.indexOf(t))
-            }
-        })
-    }
-}
+//     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
+//         return tokens.map(t => {
+//             return {
+//                 title: `${t.investor}@${t.provider}`,
+//                 value: t.quantity,
+//                 color: getDonutChartColor(tokens.indexOf(t))
+//             }
+//         })
+//     }
+// }
 
 export default IssuedToken;

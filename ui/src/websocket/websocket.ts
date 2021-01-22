@@ -1,10 +1,8 @@
-import { useState, useEffect, useReducer, useMemo, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-import { CreateEvent, Event } from '@daml/ledger'
+import { CreateEvent } from '@daml/ledger'
 
 import { deploymentMode, DeploymentMode, httpBaseUrl } from '../config'
-import { retrieveCredentials } from '../Credentials'
-import { Template } from '@daml/types'
 
 import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
 
@@ -17,7 +15,7 @@ const newDamlWebsocket = (token: string): WebSocket => {
   const url = new URL(httpBaseUrl || 'http://localhost:3000');
 
   const subprotocols = [`jwt.token.${token}`, "daml.ws.auth"];
-  const protocol = deploymentMode == DeploymentMode.DEV ? 'ws://' : 'wss://';
+  const protocol = deploymentMode === DeploymentMode.DEV ? 'ws://' : 'wss://';
 
   console.log("Creating new websocket");
   return new WebSocket(`${protocol}${url.host}/v1/stream/query`, subprotocols);
@@ -30,16 +28,16 @@ function isCreateEvent<T extends object, K = unknown, I extends string = string>
 function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
     const [ contracts, setContracts ] = useState<ContractInfo<any>[]>([]);
-    const [ streamOffset, setStreamOffset ] = useState("");
+    // const [ streamOffset, setStreamOffset ] = useState("");
 
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
             const data: { events: any[]; offset: string } = JSON.parse(message.data);
             const { events, offset } = data;
 
-            if (offset) {
-                setStreamOffset(offset);
-            }
+            // if (offset) {
+            //     setStreamOffset(offset);
+            // }
 
             if (events && events.length > 0) {
               events.forEach(e => {
@@ -53,15 +51,15 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
               })
             }
         }
-    }, [contracts, streamOffset]);
+    }, [contracts]);
 
-    const openWebsocket = useCallback(async (token: string, offset: string, templateIds: string[]) => {
+    const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
         const ws = newDamlWebsocket(token);
 
         ws.onopen = () => {
-            if (offset !== "" && false) {
-                ws.send(JSON.stringify({offset}))
-            }
+            // if (offset !== "" && false) {
+            //     ws.send(JSON.stringify({offset}))
+            // }
             ws.send(JSON.stringify({templateIds}));
         }
 
@@ -69,7 +67,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
             // if this connection was closed unintentionally, reopen it
             console.log("Event was closed", event);
             if (event.code !== KEEP_CLOSED) {
-                openWebsocket(token, offset, templateIds);
+                openWebsocket(token, templateIds);
             }
         };
 
@@ -79,7 +77,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
     useEffect(() => {
         // initialize websocket
         if (!websocket && token && templateIds.length > 0) {
-            openWebsocket(token, streamOffset, templateIds).then(ws => {
+            openWebsocket(token, templateIds).then(ws => {
                 setWebsocket(ws);
             });
         }
@@ -91,7 +89,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                 setWebsocket(null);
             }
         }
-    }, [templateIds, websocket, token, openWebsocket])
+    }, [templateIds, token, websocket, openWebsocket])
 
     useEffect(() => {
         if (websocket && token) {

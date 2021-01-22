@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-
 import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
@@ -14,23 +14,23 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo, damlTupleToString} from '../common/damlTypes'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import IssuerProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import MarketRelationships from '../common/MarketRelationships'
-import PageSection from '../common/PageSection'
-import Page from '../common/Page'
-import RoleSideNav from '../common/RoleSideNav';
 import { useRegistryLookup } from '../common/RegistryLookup'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import { wrapDamlTuple, damlTupleToString} from '../common/damlTypes'
+import IssuerProfile, { Profile, createField } from '../common/Profile'
+import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import LandingPage from '../common/LandingPage'
+import PageSection from '../common/PageSection'
+import RoleSideNav from '../common/RoleSideNav'
+import Page from '../common/Page'
 
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { useContractQuery } from '../../websocket/queryStream'
 
 type Props = {
     onLogout: () => void;
@@ -148,8 +148,6 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const sideNav = <RoleSideNav url={url}
                         name={registeredIssuer[0]?.contractData.name || issuer}

@@ -1,28 +1,18 @@
-import React, {PropsWithChildren, createContext, useEffect, useState, useMemo, useCallback } from "react";
-import { CreateEvent, Event } from '@daml/ledger'
-import { Template } from '@daml/types';
-import _ from 'lodash';
+import React, {PropsWithChildren, createContext, useEffect, useState, useMemo } from "react"
+import _ from 'lodash'
 
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import {
-    RegisteredExchange,
-    RegisteredCustodian,
-    RegisteredBroker,
-    RegisteredIssuer,
-    RegisteredInvestor
-} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import useDamlStreamQuery from "./websocket";
+import { Template } from '@daml/types'
 
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { ContractInfo } from "../components/common/damlTypes";
-import { computeCredentials, retrieveCredentials } from "../Credentials";
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from "../config";
-import { useDablParties } from "../components/common/common";
+import { ContractInfo } from '../components/common/damlTypes'
+import { useDablParties } from '../components/common/common'
+import { computeCredentials, retrieveCredentials } from '../Credentials'
+import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config'
+
+import useDamlStreamQuery from './websocket'
 
 export const AS_PUBLIC = true;
 
-type QueryStream<T extends object = any, K = any, I extends string = any> = {
+type QueryStream<T extends object = any> = {
   publicTemplateIds: string[];
   publicContracts: ContractInfo<T>[];
 
@@ -50,7 +40,7 @@ const getPublicToken = async (publicParty: string): Promise<string | undefined> 
   return publicToken;
 }
 
-const QueryStreamProvider = <T extends object, K = unknown, I extends string = string>(props: PropsWithChildren<any>) => {
+const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) => {
   const { children } = props;
   const [ publicTemplateIds, setPublicTemplateIds ] = useState<string[]>([]);
   const [ partyTemplateIds, setPartyTemplateIds ] = useState<string[]>([]);
@@ -83,7 +73,7 @@ const QueryStreamProvider = <T extends object, K = unknown, I extends string = s
     }
   }
 
-  const [ queryStream, setQueryStream ] = useState<QueryStream<T,K,I>>({
+  const [ queryStream, setQueryStream ] = useState<QueryStream<T>>({
     publicTemplateIds: [],
     publicContracts: [],
 
@@ -94,21 +84,21 @@ const QueryStreamProvider = <T extends object, K = unknown, I extends string = s
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
-      setQueryStream({
+      setQueryStream(queryStream => ({
         ...queryStream,
         partyTemplateIds,
         partyContracts
-      })
+      }))
     }
   }, [partyContracts, partyTemplateIds, queryStream.partyContracts]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.publicContracts, publicContracts)) {
-      setQueryStream({
+      setQueryStream(queryStream => ({
         ...queryStream,
         publicTemplateIds,
         publicContracts
-      })
+      }))
     }
   }, [publicContracts, publicTemplateIds, queryStream.publicContracts]);
 
@@ -117,7 +107,7 @@ const QueryStreamProvider = <T extends object, K = unknown, I extends string = s
 
 // export function useContractQuery
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
-  const queryStream: QueryStream<T,K,I> | undefined = React.useContext(QueryStreamContext);
+  const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);
 
   if (queryStream === undefined) {
     throw new Error("useContractQuery must be called within a QueryStreamProvider");
@@ -140,7 +130,7 @@ export function useContractQuery<T extends object, K = unknown, I extends string
     } else {
       return partyContracts.filter(c => c.templateId === templateId)
     }
-  }, [publicTemplateIds, publicContracts, partyTemplateIds, partyContracts]);
+  }, [asPublic, templateId, publicContracts, partyContracts]);
 
   useEffect(() => {
     if (asPublic === AS_PUBLIC) {
@@ -148,7 +138,7 @@ export function useContractQuery<T extends object, K = unknown, I extends string
         subscribeTemplate(templateId, AS_PUBLIC);
       }
     }
-  }, [templateId, publicTemplateIds, subscribeTemplate]);
+  }, [asPublic, templateId, publicTemplateIds, subscribeTemplate]);
 
   useEffect(() => {
     if (asPublic !== AS_PUBLIC) {
@@ -156,7 +146,7 @@ export function useContractQuery<T extends object, K = unknown, I extends string
         subscribeTemplate(templateId);
       }
     }
-  }, [templateId, partyTemplateIds, subscribeTemplate]);
+  }, [asPublic, templateId, partyTemplateIds, subscribeTemplate]);
 
   return filtered;
 }

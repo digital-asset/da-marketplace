@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
 import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, makeContractInfo, ContractInfo } from '../common/damlTypes'
-import { countDecimals, preciseInputSteps } from '../common/utils';
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { countDecimals, preciseInputSteps } from '../common/utils'
+import { TokenInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 const CreateDeposit = (props: {
     currentBeneficiary?: ContractInfo<RegisteredInvestor>
