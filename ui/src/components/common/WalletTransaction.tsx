@@ -18,7 +18,6 @@ import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../c
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import ContractSelect from './ContractSelect'
@@ -51,9 +50,6 @@ const WalletTransaction = (props: {
     const party = useParty();
     const ledger = useLedger();
     const history = useHistory();
-
-    const custodianRelationships = useStreamQueryAsPublic(CustodianRelationship).contracts
-        .map(makeContractInfo)
 
     const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
         .map(makeContractInfo)
@@ -164,10 +160,6 @@ const WalletTransaction = (props: {
                 return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args)
                     .then(_ => history.goBack())
         }
-    }
-
-    function getCustodianName(custodian: string) {
-        return registeredCustodians.find(c => c.contractData.custodian === custodian)?.contractData.name
     }
 }
 

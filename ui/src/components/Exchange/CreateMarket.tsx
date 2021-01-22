@@ -135,11 +135,11 @@ const CreateMarket: React.FC<{}> = () => {
                         disabled={!quoteToken || !baseToken}
                         onChange={validateMaxQuantity}/>
                 </div>
-                    <Button
-                        content='Submit'
-                        className='create-market-save ghost'
-                        disabled={!baseToken || !quoteToken}/>
-                </FormErrorHandled>
+                <Button
+                    content='Submit'
+                    className='create-market-save ghost'
+                    disabled={!baseToken || !quoteToken}/>
+            </FormErrorHandled>
         </div>
     )
 }

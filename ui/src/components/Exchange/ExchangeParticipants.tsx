@@ -1,5 +1,4 @@
 import React from 'react'
-import { Table } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -7,7 +6,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
-import { ExchangeParticipantInfo, DepositInfo, makeContractInfo } from '../common/damlTypes'
+import { makeContractInfo } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -56,11 +55,5 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         </Page>
     )
 }
-
-// const useStreamQueriesactveOrders: React.FC<{}> = () => {
-//     return useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
-//         console.log("Unexpected close from Order: ", e);
-//     }).contracts.length;
-// }
 
 export default ExchangeParticipants;
