@@ -91,12 +91,14 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
         <div className='profile-values'>
             {Object.keys(profile).map(key => {
                 if (profile[key].label === 'Name') {
-                return <>
-                        <Header className='profile-name'>
-                            @{profile[key].value}
-                        </Header>
-                        <p className='p2 bold'>{role.replace('Role', '')}</p>
-                    </>
+                return (
+                        <>
+                            <Header className='profile-name'>
+                                @{profile[key].value}
+                            </Header>
+                            <p className='p2 bold'>{role.replace('Role', '')}</p>
+                        </>
+                    )
                 }
                 return <p className='field-value p2'>{profile[key].label}: {profile[key].value}</p>
             })}
