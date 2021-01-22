@@ -23,7 +23,7 @@ type OnboardingTileProps = {
     tiles?: React.ReactElement[];
 }
 
-export const logoHeader = <Header as='h1' className='dark logo-header'><OpenMarketplaceLogo size='32'/> Daml Open Marketplace</Header>
+export const logoHeader = <Header className='dark logo-header'><OpenMarketplaceLogo size='32'/> Daml Open Marketplace</Header>
 
 const OnboardingTile: React.FC<OnboardingTileProps> = ({ children, tiles }) => {
     return (

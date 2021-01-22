@@ -90,7 +90,7 @@ function ContractSelect <T>({
                 allowAdditions={allowAdditions}
                 className={className}
                 clearable={clearable}
-                label={<p className='p2'>{label}</p>}
+                label={<p>{label}</p>}
                 options={options}
                 placeholder={placeholder}
                 search={search}

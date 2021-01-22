@@ -12,8 +12,18 @@
             margin-left: $spacing-s;
             margin-top: $spacing-xs;
 
-            h2.ui.header {
-                margin-bottom: $spacing-xs;
+            .title {
+                display: flex;
+                flex-direction: row;
+                align-items: baseline;
+
+                h1.ui.header {
+                    margin-bottom: $spacing-xs;
+                }
+
+                h1.ui.header.bold {
+                    margin-left: $spacing-xs;
+                }
             }
         }
     }

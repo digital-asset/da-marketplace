@@ -1,7 +1,5 @@
 @mixin holdings {
     .holdings {
-        margin-top: $spacing-m;
-
         .provider-info {
             display: flex;
             align-items: baseline;
@@ -9,6 +7,10 @@
             .p2 {
                 margin-left: $spacing-s;
             }
+        }
+
+        .asset-sections {
+            margin-top: $spacing-m;
         }
 
         .deposit-row {
@@ -35,20 +37,15 @@
             .deposit-info {
                 display: flex;
                 flex-direction: row;
-                align-items: center;
+                align-items: baseline;
                 margin: 0;
 
                 .overflow-menu {
                     margin-left: auto;
                 }
 
-                h3 {
-                    margin: 0;
+                h3.bold {
                     margin-right: $spacing-s;
-
-                    &:nth-of-type(2) {
-                        font-weight: normal;
-                    }
                 }
             }
 

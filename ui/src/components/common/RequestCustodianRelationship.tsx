@@ -77,7 +77,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
                 disabled={partyOptions.length === 0}
                 className='profile-link add-relationship'
                 onClick={()=> setShowAddRelationshipModal(true)}>
-                    <AddPlusIcon/> <a>Add Custodian</a>
+                    <AddPlusIcon/> <a className='bold'>Add Custodian</a>
                     {partyOptions.length === 0 && <i className='disabled'>All registered custodians have been added</i>}
             </Button>
             {showAddRelationshipModal &&

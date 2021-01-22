@@ -95,7 +95,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
+            menuTitle={<Header as='h2'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
             <PageSection className='issued-token'>
                 <div className='token-subheading'>
@@ -134,7 +134,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                             </>}
                     </div>
                 }
-                <Header as='h3'>Position Holdings</Header>
+                <Header as='h2'>Position Holdings</Header>
                 <div className='position-holdings-data'>
                     <CapTable
                         headings={capTableHeaders}

@@ -40,34 +40,41 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection>
                 <div className='investor-orders'>
-                    <Header as='h3'>Requested Orders</Header>
-                    {allOrderRequests.length > 0 ?
-                        allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Requested Orders</Header>
+                        {allOrderRequests.length > 0 ?
+                            allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
 
-                    <Header as='h3'>Open Orders</Header>
-                    {allOrders.length > 0 ?
-                        allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Open Orders</Header>
+                        {allOrders.length > 0 ?
+                            allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
 
-                    <Header as='h3'>Exchange Trades</Header>
-                    {allExchangeTrades.length > 0 ?
-                        allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Exchange Trades</Header>
+                        {allExchangeTrades.length > 0 ?
+                            allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
 
-                    <Header as='h3'>Broker Trades</Header>
-                    {allBrokerTrades.length > 0 ?
-                        allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)
-                        :
-                        <i>none</i>
-                    }
-
+                    <div className='order-section'>
+                        <Header as='h2'>Broker Trades</Header>
+                        {allBrokerTrades.length > 0 ?
+                            allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
                 </div>
             </PageSection>
         </Page>

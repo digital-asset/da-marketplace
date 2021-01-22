@@ -1,21 +1,34 @@
-.ui.form .field.issue-asset-form-field {
-    padding-bottom: $spacing-s;
-}
 
-.ui.form .field.issue-asset-form-field  > .ui.input {
-    max-width: 260px;
-}
 
-.ui.form textarea {
-    max-width: 500px;
-}
 
-.ui.form .observer-select {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: $spacing-s;
-}
-
-.ui.form .observer-select > .issue-asset-form-field.select-observer {
-    padding-top: $spacing-s;
+@mixin issue-asset {
+    .issue-asset {
+        .form-label {
+            background-color: red;
+            h3 {
+                margin-bottom: $spacing-s;
+            }
+        }
+        // .ui.form .field.issue-asset-form-field {
+        //     padding-bottom: $spacing-s;
+        // }
+        
+        // .ui.form .field.issue-asset-form-field  > .ui.input {
+        //     max-width: 260px;
+        // }
+        
+        // .ui.form textarea {
+        //     max-width: 500px;
+        // }
+        
+        // .ui.form .observer-select {
+        //     display: flex;
+        //     flex-direction: column;
+        //     padding-bottom: $spacing-s;
+        // }
+        
+        // .ui.form .observer-select > .issue-asset-form-field.select-observer {
+        //     padding-top: $spacing-s;
+        // }
+    }
 }

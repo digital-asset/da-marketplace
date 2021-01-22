@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button } from 'semantic-ui-react'
+import { Form, Button, Header } from 'semantic-ui-react'
 
 import { useHistory } from 'react-router-dom';
 
 import { useParty, useLedger, useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
-import { WalletIcon } from '../../icons/Icons'
+import { WalletIcon, IconClose} from '../../icons/Icons'
 
 import { preciseInputSteps, groupDepositsByAsset, sumDepositArray, IPartyInfo } from './utils'
 
@@ -96,7 +96,7 @@ const WalletTransaction = (props: {
                     <Form.Input
                         type='number'
                         step={step}
-                        label={<p className='p2'>Amount</p>}
+                        label={<p>Amount</p>}
                         placeholder={placeholder}
                         disabled={!token}
                         onChange={handleSetDepositQuantity}/>
@@ -114,12 +114,15 @@ const WalletTransaction = (props: {
             >
             <PageSection>
                 <div className='wallet-transaction'>
-                    <h2>{transactionType} Funds</h2>
+                    <Header as='h2'>{transactionType} Funds</Header>
                     <FormErrorHandled onSubmit={onSubmit}>
                         {body}
-                        <Button className='ghost' type='submit'>
-                            Submit
-                        </Button>
+                        <div className='actions'>
+                            <Button className='ghost' type='submit'>
+                                Submit
+                            </Button>
+                            <a className='a2' onClick={() => history.goBack()}><IconClose/> Cancel</a>
+                        </div>
                     </FormErrorHandled>
                 </div>
             </PageSection>

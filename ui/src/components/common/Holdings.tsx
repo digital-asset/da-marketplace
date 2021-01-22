@@ -31,11 +31,11 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             const { label, party }  = getPartyLabel(providerLabel, providers)
 
             return (
-                <div className='holdings' key={providerLabel}>
+                <div className='asset-sections' key={providerLabel}>
                     <div className='provider-info'>
-                        <Header as='h5'>
+                        <p className='bold'>
                             {label}
-                        </Header>
+                        </p>
                         <p className='p2'>
                             {party}
                         </p>
@@ -54,7 +54,7 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
 
     return (
         <div className='holdings'>
-            <Header as='h3'>Holdings</Header>
+            <Header as='h2'>Holdings</Header>
             { assetSections.length === 0 ?
                 <i>none</i> : assetSections }
         </div>
@@ -83,8 +83,8 @@ const DepositRow: React.FC<DepositRowProps> = ({
     return (
         <div className='deposit-row'>
             <div className='deposit-info'>
-                <h3>{assetLabel}</h3>
-                <h3>{totalQty}</h3>
+                <Header as='h3' className='bold'>{assetLabel}</Header>
+                <Header as='h3' >{totalQty}</Header>
                 <OverflowMenu>
                     <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
                 </OverflowMenu>
@@ -172,7 +172,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
     return (
         <>
             <div className='selected-form-heading'>
-               <p>Allocate to a Different Provider</p>
+               <Header as='h3'>Allocate to a Different Provider</Header>
                 <Button
                     className='close-button'
                     onClick={onRequestClose}>
@@ -182,7 +182,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
             <FormErrorHandled onSubmit={allocateToProvider}>
                 <Form.Select
                     clearable
-                    label={<p className='p2'>Select Provider</p>}
+                    label={<p>Select Provider</p>}
                     value={provider}
                     placeholder='Select...'
                     options={providerOptions}
@@ -190,12 +190,12 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
 
                 <Form.Input
                     clearable
-                    label={<p className='p2'>Allocation Amount</p>}
+                    label={<p>Allocation Amount</p>}
                     value={amount}
                     onChange={handleAmountChange}/>
 
                 <Button
-                    secondary
+                    className='ghost'
                     disabled={provider === ''}
                     content='Submit'/>
             </FormErrorHandled>

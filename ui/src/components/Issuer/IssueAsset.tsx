@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Checkbox, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
@@ -69,44 +69,52 @@ const IssueAsset = () => {
         }
     })
 
+    const FormLabel = (props: {label: string, subLabel: string}) => (
+        <div className='form-label'>
+            <Header as='h3'>{props.label}</Header>
+            <p><i>{props.subLabel}</i></p>
+        </div>
+    )
+
     return (
         <FormErrorHandled onSubmit={submit}>
             <Form.Input
                 fluid
-                label='Asset ID'
-                placeholder='Give this asset a name'
+                label={<FormLabel label='Asset ID' subLabel='Give this asset a name'/>}
                 value={name}
                 className='issue-asset-form-field'
                 onChange={e => setName(e.currentTarget.value)}
             />
             <Form.TextArea
-                label='Description'
-                placeholder='Describe the asset to potential investors'
+                label={<FormLabel label='Description' subLabel='Describe the asset to potential investors'/>}
                 className='issue-asset-form-field'
                 value={description}
                 onChange={e => setDescription(e.currentTarget.value)}
             />
             <div className='observer-select'>
-                <FormToggle
+                {/* <FormToggle
                     defaultChecked
                     className='issue-asset-form-field'
                     onLabel='Public'
                     onInfo='All parties will be aware of this token.'
                     offLabel='Private'
                     offInfo='Only a set of parties will be aware of this token.'
-                    onClick={val => setIsPublic(val)}/>
+                    onClick={val => setIsPublic(val)}/> */}
                 <Form.Select
                     multiple
+                    label={<FormLabel label='Observers' subLabel='Who should be aware that this has been issued?'/>}
                     className='issue-asset-form-field select-observer'
-                    disabled={isPublic}
+                    // disabled={isPublic}
                     placeholder='Select...'
                     options={partyOptions}
                     onChange={handleObserversChange}
                 />
+                or
+                <Checkbox/>
             </div>
             <Form.Input
                 fluid
-                label='Quantity Precision'
+                label={<FormLabel label='Quantity Precision' subLabel='Describe the asset to potential investors'/>}
                 placeholder='quantityPrecision'
                 value={quantityPrecision}
                 className='issue-asset-form-field'

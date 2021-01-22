@@ -18,6 +18,13 @@
                 .logo-header {
                     display: flex;
                     justify-content: center;
+                    font-family: "BrownStd-Light";
+                    font-style: normal;
+                    font-weight: normal;
+                    font-size: 34px;
+                    line-height: 32px;
+                    margin: 0;
+                    color: var(--white);
                 }
             }
 
@@ -36,6 +43,9 @@
 
                 .username-login {
                     margin: $spacing-m;
+                    .ui.input {
+                        width: 100%;
+                    }
                 }
 
                 form button, .login-form button {
@@ -71,6 +81,7 @@
                     .field > .ui.input {
                         display: flex;
                         align-self: flex-end;
+                        width: 100%;
                     }
 
                     .dropdown, .dropdown .menu {

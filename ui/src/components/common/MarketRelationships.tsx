@@ -32,8 +32,8 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
                     {getAbbreviation(custodian.name)}
                 </div>
                 <div className='relationship-info'>
-                    <Header className='name' as='h4'>{custodian.name}</Header>
-                    <p className='p2'>{custodian?.custodian}</p>
+                    <Header className='bold name' as='h3'>{custodian.name}</Header>
+                    <p>{custodian?.custodian}</p>
                 </div>
             </div>
         )
@@ -41,7 +41,7 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
 
     return (
         <div className='market-relationships'>
-            <Header as='h3'>Market Relationships</Header>
+            <Header className='bold' as='h2'>Market Relationships</Header>
             {rows}
             <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
         </div>

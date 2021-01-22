@@ -113,7 +113,7 @@ const CreateDeposit = (props: {
     return (
         <div className='create-deposit'>
             <FormErrorHandled onSubmit={handleCreateDeposit}>
-                <Header as='h3'>Quick Deposit</Header>
+                <Header as='h2'>Quick Deposit</Header>
                     {!currentBeneficiary &&
                         <Form.Select
                             clearable

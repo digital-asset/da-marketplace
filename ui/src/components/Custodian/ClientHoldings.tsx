@@ -40,11 +40,11 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h3'>{investor?.contractData.name}</Header>}
+            menuTitle={<Header as='h1'>{investor?.contractData.name}</Header>}
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
-                    <Header as='h3'>Client Holdings</Header>
+                    <Header as='h2'>Client Holdings</Header>
                     <CapTable
                         headings={['Asset', 'Amount']}
                         rows={tableRows}/>
