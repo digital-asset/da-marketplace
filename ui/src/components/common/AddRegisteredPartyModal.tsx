@@ -35,7 +35,6 @@ const AddRegisteredPartyModal = (props: IProps) => {
     return (
         <Modal
             closeIcon={<IconClose/>}
-            className='add-registered-party-modal'
             open={true}
             dimmer={'inverted'}
             size={'small'}

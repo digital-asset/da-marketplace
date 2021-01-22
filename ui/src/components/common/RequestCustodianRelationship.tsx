@@ -43,7 +43,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
 
     const requestCustodianRelationship = async (custodianId: string) => {
         const key = wrapDamlTuple([operator, party]);
-        console.log(custodianId)
+
         const args = { custodian: custodianId };
 
         switch(role) {
@@ -89,25 +89,6 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
                     onSubmit={requestCustodianRelationship}/>
             }
         </>
-        // <FormErrorHandled onSubmit={requestCustodianRelationship}>
-        //     <Form.Group className='inline-form-group'>
-        //         <ContractSelect
-        //             label='Request a relationship:'
-        //             allowAdditions
-        //             className='custodian-select-container'
-        //             clearable
-        //             search
-        //             selection
-        //             contracts={registeredCustodians}
-        //             placeholder='Custodian ID'
-        //             value={custodianId}
-        //             getOptionText={rc => rc.contractData.name}
-        //             setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
-        //             setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
-
-        //         <Button className='ghost' content='Send Request' disabled={!custodianId}/>
-        //     </Form.Group>
-        // </FormErrorHandled>
     )
 }
 

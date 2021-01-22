@@ -1,11 +1,13 @@
 import React from 'react'
 
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Header } from 'semantic-ui-react'
+
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { getAbbreviation } from '../common/utils';
 
 import { CustodianRelationshipInfo } from './damlTypes'
+
 import { useRegistryLookup } from './RegistryLookup'
 import RequestCustodianRelationship from './RequestCustodianRelationship'
 
@@ -30,7 +32,7 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
                     {getAbbreviation(custodian.name)}
                 </div>
                 <div className='relationship-info'>
-                    <Header className='name' as='h4'>{custodian?.name || 'Custodian'}</Header>
+                    <Header className='name' as='h4'>{custodian.name}</Header>
                     <p className='p2'>{custodian?.custodian}</p>
                 </div>
             </div>

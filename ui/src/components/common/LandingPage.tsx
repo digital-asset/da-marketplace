@@ -31,7 +31,8 @@ const LandingPage: React.FC<Props> = ({
                 <div className='landing-page-column'>
                     { profile }
                 </div>
-                <div className='landing-page-column market-relationships'>
+
+                <div className='landing-page-column'>
                     { marketRelationships }
                 </div>
             </div>

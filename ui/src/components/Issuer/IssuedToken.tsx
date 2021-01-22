@@ -81,7 +81,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
             }
         })
 
-
     const isPublic = !!token?.contractData.isPublic
 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
