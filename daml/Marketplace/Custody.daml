@@ -21,7 +21,7 @@ template Service
         with
           accountId : Id
           observers : Set Party
-          nominee : Party
+          ctrls : Set Party
         do
           -- TODO: Check signatories in id - do we want to allow flexible trust models?
           create OpenAccountRequest with ..
@@ -80,7 +80,7 @@ template Service
         do
           CreditAccountRequest{..} <- fetch creditAccountRequestCid
           archive creditAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ..
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
 
       nonconsuming DebitAccount : Asset
         with
@@ -139,7 +139,7 @@ template OpenAccountRequest
     customer : Party
     accountId : Id
     observers : Set Party
-    nominee : Party
+    ctrls : Set Party
   where
     signatory operator, provider, customer
 

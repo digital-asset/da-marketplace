@@ -59,7 +59,7 @@ template AssetLifecycleRule
               mapA
                 (\(accountId, effect) -> do
                   let asset = effect with quantity = effect.quantity * deposit.asset.quantity
-                  exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with asset
+                  exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with asset; ctrl = account.owner
                 )
                 (zipChecked ids lifecycleEffects.effects)
 

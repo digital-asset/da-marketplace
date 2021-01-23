@@ -2,14 +2,21 @@
 -- Use proper namespace
 module Marketplace.Trading where
 
-import DA.Finance.Asset (AssetDeposit)
+import DA.Action (when, void)
+import DA.Assert ((===))
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
-import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..), SettlementDetails(..))
-import DA.Finance.Types (Id, Asset, Account, MasterAgreement)
-import DA.Next.Set (empty)
+import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..), SettlementInstruction_Process(..), SettlementDetails(..))
+import DA.Finance.Trade.Dvp (Dvp(..), SettlementStatus(..))
+import DA.Finance.Types (Id(..), Asset, Account, MasterAgreement(..))
+import DA.Finance.Utils (assertOnOrAfterDateMsg, zipChecked, fetchAndArchive)
+import DA.List (head, last)
+import DA.Next.Set (Set, empty, insert, fromList)
+import DA.Optional (whenSome)
 
 template Order
   with
+    operator : Party
     provider : Party
     customer : Party
     id : Int
@@ -19,24 +26,119 @@ template Order
     isBid : Bool
     depositCid : ContractId AssetDeposit
   where
-    signatory provider, customer
+    signatory operator, provider, customer
+
+    controller operator, provider can
+      InstructTrade : ContractId TradeInstruction
+        with
+          tradeInstructionCid : ContractId TradeInstruction
+        do
+          exercise tradeInstructionCid Sign with ctrl = customer
+
+template TradeInstruction
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    signed : Set Party
+  where
+    signatory signed
+
+    choice Sign : ContractId TradeInstruction
+      with
+        ctrl : Party
+      controller ctrl
+      do
+        assert (ctrl == buyer || ctrl == seller)
+        create this with signed = insert ctrl signed
 
     controller provider can
-
-      -- TODO: Makeshift implementation to gather customer's signature via this contract
-      -- (needed to create the SettlementInstruction)
-      -- should probably be done elsewhere / differently
-      AllocateSettlementStep : ContractId SettlementInstruction
+      Process : ContractId Trade
         with
-          masterAgreement : MasterAgreement
-          tradeId : Id
-          senderAccount : Account
-          receiverAccount : Account
-          allocatedAsset : Asset
+          matchId : Text
+          buy : Order
+          sell : Order
+          filledQuantity : Decimal
+          filledPrice : Decimal
         do
-          let steps = [ SettlementDetails with depositCid = Some depositCid; .. ]
-          create SettlementInstruction with asset = allocatedAsset; observers = empty; ..
+          -- TODO: Check that price matches limit order price, quantity is less than order qty
+          (_, buyTradingService) <- fetchByKey @Service (operator, provider, buy.customer)
+          (_, sellTradingService) <- fetchByKey @Service (operator, provider, sell.customer)
+          let
+            delivery = buy.asset with quantity = filledQuantity
+            payment = buy.price with quantity = filledPrice * filledQuantity
+            tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = matchId; version = 0
+            masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
+            status = SettlementStatus_Instructed
+            settlementDate = None
+            deliveries = [ delivery ]
+            payments = [ payment ]
+            observers = empty
+            dvp = Dvp with ..
+          
+          sellDepositCid <-
+            if filledQuantity < buy.asset.quantity then
+              head <$> exercise sell.depositCid AssetDeposit_Split with quantities = [ filledQuantity ]
+            else
+              pure sell.depositCid
+          buyDepositCid <-
+            if filledQuantity < buy.asset.quantity then
+              head <$> exercise buy.depositCid AssetDeposit_Split with quantities = [ filledQuantity * filledPrice ]
+            else
+              pure buy.depositCid
 
+          let
+            deliveryAsset = buy.asset with quantity = filledQuantity
+            paymentAsset = buy.price with quantity = filledQuantity * filledPrice
+            deliverySteps = [ SettlementDetails with senderAccount = sellTradingService.allocationAccount; receiverAccount = buyTradingService.tradingAccount; depositCid = Some sellDepositCid ]
+            paymentSteps = [ SettlementDetails with senderAccount = buyTradingService.allocationAccount; receiverAccount = sellTradingService.tradingAccount; depositCid = Some buyDepositCid ]
+
+          when (filledQuantity < buy.asset.quantity) do
+            void $ create buy with asset = (buy.asset with quantity = buy.asset.quantity - filledQuantity)
+          when (filledQuantity < sell.asset.quantity) do
+            void $ create sell with asset = (sell.asset with quantity = sell.asset.quantity - filledQuantity)
+
+          dvpCid <- create dvp
+          deliveryInstructionCid <- create SettlementInstruction with steps = deliverySteps; asset = deliveryAsset; ..
+          paymentInstructionCid <- create SettlementInstruction with steps = paymentSteps; asset = paymentAsset; ..
+          create Trade with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = [paymentInstructionCid]; ..
+
+template Trade
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    dvpCid : ContractId Dvp
+    deliveryInstructionCids : [ContractId SettlementInstruction]
+    paymentInstructionCids : [ContractId SettlementInstruction]
+  where
+    signatory operator, provider, buyer, seller
+
+    controller operator, provider can
+      Settle : (ContractId Dvp, [[ContractId AssetDeposit]], [[ContractId AssetDeposit]])
+        do
+          dvp <- fetchAndArchive dvpCid
+          dvp.status === SettlementStatus_Instructed
+          whenSome dvp.settlementDate (assertOnOrAfterDateMsg "expects settlementDate <= now")
+
+          let seller = if dvp.buyer == dvp.masterAgreement.party1 then dvp.masterAgreement.party2 else dvp.masterAgreement.party1
+
+          let work sender receiver (asset, instructionCid) = do
+                instruction <- fetch instructionCid
+                instruction.masterAgreement === dvp.masterAgreement
+                instruction.tradeId === dvp.tradeId
+                instruction.asset === asset
+                (head instruction.steps).senderAccount.owner === sender
+                (last instruction.steps).receiverAccount.owner === receiver
+                exercise instructionCid SettlementInstruction_Process
+
+          dvpNewCid <- create dvp with status = SettlementStatus_Settled
+          paymentDepositCids <- mapA (work dvp.buyer seller) $ zipChecked dvp.payments paymentInstructionCids
+          deliveryDepositCids <- mapA (work seller dvp.buyer) $ zipChecked dvp.deliveries deliveryInstructionCids
+          pure (dvpNewCid, paymentDepositCids, deliveryDepositCids)
+         
 template Service
   with
     operator : Party
