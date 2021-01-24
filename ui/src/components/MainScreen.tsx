@@ -38,10 +38,10 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
     if (queryStream) {
       setStreamErrors(queryStream.streamErrors);
     }
-  })
+  }, [queryStream]);
 
   const loadingScreen = <OnboardingTile><p className='dark'>Loading...</p></OnboardingTile>;
-  const errorScreen = error || streamErrors &&
+  const errorScreen = (error || streamErrors) &&
     <OnboardingTile>
       <Message error>
         { error && parseError(error)?.message }

@@ -80,16 +80,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
               })
             }
         }
-    }, [contracts, websocket]);
-
-    const closeWebsocket = useCallback((token: string, templateIds: string[]) => {
-        return (event: CloseEvent) => {
-            // if this connection was closed unintentionally, reopen it
-            if (event.code !== KEEP_CLOSED) {
-                openWebsocket(token, templateIds);
-            }
-        }
-    }, [])
+    }, [contracts]);
 
     const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
         const ws = newDamlWebsocket(token);
@@ -100,6 +91,15 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
 
         return ws;
     }, []);
+
+    const closeWebsocket = useCallback((token: string, templateIds: string[]) => {
+        return (event: CloseEvent) => {
+            // if this connection was closed unintentionally, reopen it
+            if (event.code !== KEEP_CLOSED) {
+                openWebsocket(token, templateIds);
+            }
+        }
+    }, [openWebsocket])
 
     useEffect(() => {
         // initialize websocket
@@ -115,13 +115,13 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                 setWebsocket(null);
             }
         }
-    }, [errors, websocket, token, templateIds, setWebsocket])
+    }, [errors, token, templateIds, websocket, setWebsocket, openWebsocket])
 
     useEffect(() => {
         if (websocket && token) {
             websocket.onclose = closeWebsocket(token, templateIds);
         }
-    }, [websocket, token])
+    }, [templateIds, token, websocket, closeWebsocket])
 
     useEffect(() => {
         if (websocket && token) {
