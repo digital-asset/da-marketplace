@@ -183,8 +183,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                         allTokens.map(token => {
                                             return {
                                                 to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
-                                                title: token.payload.id.label,
-                                                subtitle: token.payload.description}
+                                                title: token.contractData.id.label,
+                                                subtitle: token.contractData.description}
                                         })
                                     }
                                     defaultProfile={profile}

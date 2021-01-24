@@ -52,8 +52,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
-    console.log("all exchanges be: ", allExchanges);
-
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')

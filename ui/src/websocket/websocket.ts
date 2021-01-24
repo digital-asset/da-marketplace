@@ -19,7 +19,6 @@ const newDamlWebsocket = (token: string): WebSocket => {
     ? `ws://${url.host}/v1/stream/query`
     : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
 
-  console.log("Creating new websocket");
   return new WebSocket(apiUrl, subprotocols);
 }
 
@@ -29,25 +28,42 @@ function isCreateEvent<T extends object, K = unknown, I extends string = string>
 
 function isArchiveEvent<T extends object, I extends string = string>(event: object): event is { archived: ArchiveEvent<T,I>} {
     return 'archived' in event;
-  }
+}
+
+function isWarningMessage(event: object): event is { warnings: object } {
+    return 'warnings' in event;
+}
+
+export type StreamErrors = {
+    errors: string[];
+}
+
+function isErrorMessage(event: object): event is StreamErrors {
+    return 'errors' in event;
+}
 
 function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
     const [ contracts, setContracts ] = useState<ContractInfo<any>[]>([]);
-    // const [ streamOffset, setStreamOffset ] = useState("");
+    const [ errors, setErrors ] = useState<StreamErrors>();
 
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
             const data: { events: any[]; offset: string } = JSON.parse(message.data);
-            const { events, offset } = data;
 
-            // if (offset) {
-            //     setStreamOffset(offset);
-            // }
+            if (isWarningMessage(data)) {
+                console.warn("Warning emitted from DAML websocket: ", data.warnings);
+            }
+
+            if (isErrorMessage(data)) {
+                console.error(`Errors emitted from DAML websocket: ${data.errors}. Shutting down stream.`);
+                setErrors(data);
+            }
+
+            const { events } = data;
 
             if (events && events.length > 0) {
               events.forEach(e => {
-                console.log("event is: ", isCreateEvent(e), e)
                 if (isCreateEvent(e)) {
                   const contract = makeContractInfo(e.created);
                   if (!contracts.find(c => c.contractId === contract.contractId)) {
@@ -64,45 +80,48 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
               })
             }
         }
-    }, [contracts]);
+    }, [contracts, websocket]);
+
+    const closeWebsocket = useCallback((token: string, templateIds: string[]) => {
+        return (event: CloseEvent) => {
+            // if this connection was closed unintentionally, reopen it
+            if (event.code !== KEEP_CLOSED) {
+                openWebsocket(token, templateIds);
+            }
+        }
+    }, [])
 
     const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
         const ws = newDamlWebsocket(token);
 
         ws.onopen = () => {
-            // if (offset !== "" && false) {
-            //     ws.send(JSON.stringify({offset}))
-            // }
             ws.send(JSON.stringify({templateIds}));
         }
-
-        ws.onclose = (event: CloseEvent) => {
-            // if this connection was closed unintentionally, reopen it
-            console.log("Event was closed", event);
-            if (event.code !== KEEP_CLOSED) {
-                openWebsocket(token, templateIds);
-            }
-        };
 
         return ws;
     }, []);
 
     useEffect(() => {
         // initialize websocket
-        if (!websocket && token && templateIds.length > 0) {
+        if (!websocket && !errors && token && templateIds.length > 0) {
             openWebsocket(token, templateIds).then(ws => {
                 setWebsocket(ws);
             });
         }
 
         return () => {
-            console.log("We are closing a websocket: ", websocket);
             if (websocket) {
                 websocket.close(KEEP_CLOSED);
                 setWebsocket(null);
             }
         }
-    }, [templateIds, token, websocket, openWebsocket])
+    }, [errors, websocket, token, templateIds, setWebsocket])
+
+    useEffect(() => {
+        if (websocket && token) {
+            websocket.onclose = closeWebsocket(token, templateIds);
+        }
+    }, [websocket, token])
 
     useEffect(() => {
         if (websocket && token) {
@@ -110,7 +129,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
         }
     }, [token, websocket, messageHandlerScoped])
 
-    return contracts;
+    return { contracts, errors };
 }
 
 export default useDamlStreamQuery;
