@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
@@ -11,6 +11,8 @@ import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-
 import { getAbbreviation } from '../common/utils';
 
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
+import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -22,7 +24,6 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
-import { PublicIcon, UserIcon } from '../../icons/Icons'
 import { useRegistryLookup } from '../common/RegistryLookup'
 import { Header } from 'semantic-ui-react'
 

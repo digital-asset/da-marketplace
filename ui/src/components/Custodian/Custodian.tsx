@@ -41,7 +41,6 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const keys = () => [wrapDamlTuple([operator, custodian])];
-    const registeredCustodian = useContractQuery(RegisteredCustodian);
 
     const relationshipParties = useContractQuery(CustodianRelationship)
         .map(relationship => { return relationship.contractData.party })
@@ -69,6 +68,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         })
 
     const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
+
+    const registeredCustodian = useContractQuery(RegisteredCustodian);
 
     const custodianContract = useContractQuery(CustodianModel)
         // Find contract by key

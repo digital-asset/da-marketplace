@@ -4,7 +4,7 @@ import { Header } from 'semantic-ui-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { UserIcon } from '../../icons/Icons'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'

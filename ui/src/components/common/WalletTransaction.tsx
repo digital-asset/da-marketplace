@@ -14,9 +14,9 @@ import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
-
 import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
+
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from './common'
 import { AppError } from './errorTypes'
