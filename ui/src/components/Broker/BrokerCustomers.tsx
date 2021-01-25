@@ -22,8 +22,6 @@ import StripedTable from '../common/StripedTable'
 import { useOperator } from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 
-import InviteBrokerCustomer from './InviteBrokerCustomer'
-
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 type Props = {
