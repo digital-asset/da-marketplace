@@ -78,8 +78,7 @@ const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav }) => {
                     <div className='title'>
                         <Header as='h2'>Customers</Header>
                         <a className='a2' onClick={() => setShowAddCustomerModal(true)}>
-                        <AddPlusIcon/> <a>Add Investor</a>
-
+                            <AddPlusIcon/> <a>Add Investor</a>
                         </a>
                     </div>
                         <StripedTable rows={rows} headings={['Name', '']}/>
