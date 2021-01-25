@@ -1,35 +1,34 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, Link, NavLink } from 'react-router-dom'
-
+import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
+import _ from 'lodash'
 
-import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useLedger, useParty } from '@daml/react'
 
 import { RegisteredCustodian, RegisteredInvestor, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
     Custodian as CustodianModel,
     CustodianInvitation,
     CustodianRelationship
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-
-import { wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import { useOperator } from '../common/common'
-import CustodianProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import RoleSideNav from '../common/RoleSideNav'
 
 import { UserIcon } from '../../icons/Icons'
+
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { useOperator } from '../common/common'
+import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import CustodianProfile, { Profile, createField } from '../common/Profile'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import FormErrorHandled from '../common/FormErrorHandled'
+import LandingPage from '../common/LandingPage'
+import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
-import FormErrorHandled from '../common/FormErrorHandled'
-import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 
 type Props = {
     onLogout: () => void;
@@ -42,29 +41,27 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const keys = () => [wrapDamlTuple([operator, custodian])];
-    const registeredCustodian = useStreamQueries(RegisteredCustodian, () => [], [], (e) => {
-        console.log("Unexpected close from registeredCustodian: ", e);
-    });
-    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationships: ", e);
-    }).contracts.map(relationship => { return relationship.payload.party })
+    const registeredCustodian = useContractQuery(RegisteredCustodian);
 
-    const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
-        .filter(broker => relationshipParties.find(p => broker.payload.broker === p))
+    const relationshipParties = useContractQuery(CustodianRelationship)
+        .map(relationship => { return relationship.contractData.party })
+
+    const brokerBeneficiaries = useContractQuery(RegisteredBroker, AS_PUBLIC)
+        .filter(broker => relationshipParties.find(p => broker.contractData.broker === p))
         .map(broker => {
-            const party = broker.payload.broker;
-            const name = broker.payload.name;
+            const party = broker.contractData.broker;
+            const name = broker.contractData.name;
             return {
                 party,
                 label: `${name} | ${party}`
             }
         })
 
-    const investorBeneficiaries = useStreamQueryAsPublic(RegisteredInvestor).contracts
-        .filter(investor => relationshipParties.find(p => investor.payload.investor === p))
+    const investorBeneficiaries = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(investor => relationshipParties.find(p => investor.contractData.investor === p))
         .map(investor => {
-            const party = investor.payload.investor;
-            const name = investor.payload.name;
+            const party = investor.contractData.investor;
+            const name = investor.contractData.name;
             return {
                 party,
                 label: `${name} | ${party}`
@@ -73,8 +70,15 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
 
-    const custodianContract = useStreamFetchByKeys(CustodianModel, keys, [operator, custodian]).contracts;
-    const investors = custodianContract[0]?.payload.investors || [];
+    const custodianContract = useContractQuery(CustodianModel)
+        // Find contract by key
+        .find(contract => _.isEqual(
+            // Convert keys to the same data type for comparison
+            unwrapDamlTuple(contract.key),
+            [operator, custodian]
+        ));
+
+    const investors = custodianContract?.contractData.investors || [];
 
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
 
@@ -84,8 +88,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredCustodian.contracts[0]) {
-            const rcData = registeredCustodian.contracts[0].payload;
+        if (registeredCustodian[0]) {
+            const rcData = registeredCustodian[0].contractData;
             setProfile({
                 name: { ...profile.name, value: rcData.name },
                 location: { ...profile.location, value: rcData.location }
@@ -125,10 +129,10 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredCustodian.contracts[0]?.payload.name || custodian}
+                        name={registeredCustodian[0]?.contractData.name || custodian}
                         items={[
                             {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
                         ]}>
@@ -186,9 +190,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredCustodian.loading
-        ? loadingScreen
-        : registeredCustodian.contracts.length === 0 ? inviteScreen : custodianScreen
+    return registeredCustodian.length === 0 ? inviteScreen : custodianScreen
 }
 
 export default Custodian;

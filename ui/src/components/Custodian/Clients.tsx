@@ -1,15 +1,15 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { UserIcon } from '../../icons/Icons'
-import { makeContractInfo } from '../common/damlTypes'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
 import { depositSummary } from '../common/utils'
+import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import StripedTable from '../common/StripedTable';
 
 import CreateDeposit from './CreateDeposit'
 
@@ -23,9 +23,7 @@ type Props = {
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const tableHeadings = ['Name', 'Holdings']
 

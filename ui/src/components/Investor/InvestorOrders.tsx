@@ -1,16 +1,22 @@
 import React from 'react'
-
-import { useStreamQueries } from '@daml/react'
-import { BrokerTrade, Order, OrderRequest, SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { Header } from 'semantic-ui-react'
 
+import {
+    BrokerTrade,
+    Order,
+    OrderRequest,
+    SettledTradeSide
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
 import { OrdersIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { BrokerTradeCard } from '../common/BrokerTradeCard'
-import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import { OrderCard } from '../common/OrderCard'
+import { TradeCard } from '../common/TradeCard'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import { TradeCard } from '../common/TradeCard'
+import ExchangeOrderCard from '../common/ExchangeOrderCard'
 
 
 type Props = {
@@ -19,18 +25,10 @@ type Props = {
 }
 
 const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts;
-    const allOrderRequests = useStreamQueries(OrderRequest, () => [], [], (e) => {
-        console.log("Unexpected close from OrderRequest: ", e);
-    }).contracts;
-    const allExchangeTrades = useStreamQueries(SettledTradeSide, () => [], [], (e) => {
-        console.log("Unexpected close from settledTradeSide: ", e);
-    }).contracts;
-    const allBrokerTrades = useStreamQueries(BrokerTrade, () => [], [], (e) => {
-        console.log("Unexpected close from brokerTrade: ", e);
-    }).contracts;
+    const allOrders = useContractQuery(Order);
+    const allOrderRequests = useContractQuery(OrderRequest);
+    const allExchangeTrades = useContractQuery(SettledTradeSide);
+    const allBrokerTrades = useContractQuery(BrokerTrade);
 
     return (
         <Page
@@ -43,8 +41,8 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                     <div className='order-section'>
                         <Header as='h2'>Requested Orders</Header>
                         {allOrderRequests.length > 0 ?
-                            allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)
-                            :
+                            allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+                        :
                             <i>none</i>
                         }
                     </div>
@@ -52,7 +50,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                     <div className='order-section'>
                         <Header as='h2'>Open Orders</Header>
                         {allOrders.length > 0 ?
-                            allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)
+                            allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)
                             :
                             <i>none</i>
                         }
@@ -61,7 +59,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                     <div className='order-section'>
                         <Header as='h2'>Exchange Trades</Header>
                         {allExchangeTrades.length > 0 ?
-                            allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)
+                            allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>)
                             :
                             <i>none</i>
                         }
@@ -70,7 +68,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                     <div className='order-section'>
                         <Header as='h2'>Broker Trades</Header>
                         {allBrokerTrades.length > 0 ?
-                            allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)
+                            allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>)
                             :
                             <i>none</i>
                         }

@@ -1,15 +1,11 @@
 import React, { useState } from 'react'
 import { useParams, useHistory } from 'react-router-dom'
-import { Header, List, Button } from 'semantic-ui-react'
+import { Header, List } from 'semantic-ui-react'
 
-import { useStreamQueries,  useParty, useLedger  } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-
-import classNames from 'classnames'
-
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { useLedger, useParty } from '@daml/react'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import {
     RegisteredCustodian,
     RegisteredIssuer,
@@ -19,12 +15,13 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { makeContractInfo, ContractInfo, wrapTextMap} from '../common/damlTypes'
+import { ContractInfo, wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import { getPartyLabel, IPartyInfo } from '../common/utils';
+import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
 
@@ -51,26 +48,24 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const ledger = useLedger()
     const party = useParty()
 
-    const token = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from token: ", e);
-    }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
-    const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo).filter(deposit =>
+    const token = useContractQuery(Token).find(c => c.contractId === decodeURIComponent(tokenId))
+    const tokenDeposits = useContractQuery(AssetDeposit)
+    .filter(deposit =>
         deposit.contractData.asset.id.label === token?.contractData.id.label &&
         deposit.contractData.asset.id.version === token?.contractData.id.version
     );
+
     const allRegisteredParties = [
-        useStreamQueryAsPublic(RegisteredCustodian).contracts
-            .map(rc => ({ contractId: rc.contractId, contractData: rc.payload.custodian })),
-        useStreamQueryAsPublic(RegisteredIssuer).contracts
-            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.issuer })),
-        useStreamQueryAsPublic(RegisteredInvestor).contracts
-            .map(ri => ({ contractId: ri.contractId, contractData: ri.payload.investor })),
-        useStreamQueryAsPublic(RegisteredExchange).contracts
-            .map(re => ({ contractId: re.contractId, contractData: re.payload.exchange })),
-        useStreamQueryAsPublic(RegisteredBroker).contracts
-            .map(rb => ({ contractId: rb.contractId, contractData: rb.payload.broker }))
+        useContractQuery(RegisteredCustodian, AS_PUBLIC)
+            .map(rc => ({ contractId: rc.contractId, contractData: rc.contractData.custodian })),
+        useContractQuery(RegisteredIssuer, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.issuer })),
+        useContractQuery(RegisteredInvestor, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.investor })),
+        useContractQuery(RegisteredExchange, AS_PUBLIC)
+            .map(re => ({ contractId: re.contractId, contractData: re.contractData.exchange })),
+        useContractQuery(RegisteredBroker, AS_PUBLIC)
+            .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
         ].flat()
 
     const participants = Object.keys(token?.contractData.observers.textMap || [])
@@ -189,6 +184,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     }
 }
 
+// eslint-disable-next-line
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null

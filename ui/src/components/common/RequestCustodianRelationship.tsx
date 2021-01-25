@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import { Button } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -11,8 +11,10 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
 import { useOperator } from './common'
-import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
 
 import { AddPlusIcon } from '../../icons/Icons'
 
@@ -30,13 +32,10 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
     const party = useParty();
     const operator = useOperator();
 
-    const requestCustodians = useStreamQueries(CustodianRelationshipRequest, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationshipRequest: ", e);
-    }).contracts.map(cr => cr.payload.custodian);
+    const requestCustodians = useContractQuery(CustodianRelationshipRequest).map(cr => cr.contractData.custodian);
     const relationshipCustodians = custodianRelationships.map(cr => cr.contractData.custodian);
 
-    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
+    const registeredCustodians = useContractQuery(RegisteredCustodian, AS_PUBLIC)
         .filter(custodian =>
             !requestCustodians.includes(custodian.contractData.custodian) &&
             !relationshipCustodians.includes(custodian.contractData.custodian));

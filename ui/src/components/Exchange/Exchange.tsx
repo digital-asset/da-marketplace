@@ -2,22 +2,25 @@ import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
 import { useLedger, useParty, useStreamQueries } from '@daml/react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { getAbbreviation } from '../common/utils';
 
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
 import MarketRelationships from '../common/MarketRelationships'
-import RoleSideNav from '../common/RoleSideNav';
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import FormErrorHandled from '../common/FormErrorHandled'
+import LandingPage from '../common/LandingPage'
+import RoleSideNav from '../common/RoleSideNav'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -26,7 +29,6 @@ import { Header } from 'semantic-ui-react'
 import MarketPairs from './MarketPairs'
 
 import ExchangeParticipants from './ExchangeParticipants'
-import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -39,15 +41,17 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const investorMap = useRegistryLookup().investorMap;
 
-    const registeredExchange = useStreamQueries(RegisteredExchange, () => [], [], (e) => {
-        console.log("Unexpected close from registeredExchange: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const investorCount = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.length;
+    const registeredExchange = useContractQuery(RegisteredExchange);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const exchangeParticipants = useContractQuery(ExchangeParticipant);
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
+    const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
+    const investorCount = exchangeParticipants.length;
+
+    const investorOptions = registeredInvestors.filter(ri =>
+        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
+        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
+
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -56,8 +60,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredExchange.contracts[0]) {
-            const reData = registeredExchange.contracts[0].payload;
+        if (registeredExchange[0]) {
+            const reData = registeredExchange[0].contractData;
             setProfile({
                 name: { ...profile.name, value: reData.name },
                 location: { ...profile.location, value: reData.location }
@@ -87,7 +91,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     }
 
     const sideNav = <RoleSideNav url={url}
-                                 name={registeredExchange.contracts[0]?.payload.name || exchange}
+                                 name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
@@ -102,9 +106,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.map(makeContractInfo);
+
     const rows = exchangeParticipants.map(relationship => {
         const custodian = investorMap.get(relationship.contractData.exchParticipant);
 
@@ -125,7 +127,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         )
     });
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
     const exchangeScreen =
         <div className='exchange'>
             <Switch>
@@ -169,9 +170,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredExchange.loading
-         ? loadingScreen
-         : registeredExchange.contracts.length === 0 ? inviteScreen : exchangeScreen
+    return registeredExchange.length === 0 ? inviteScreen : exchangeScreen
 }
 
 export default Exchange;

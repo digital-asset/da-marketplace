@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useLedger, useParty } from '@daml/react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
@@ -14,22 +13,23 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo, damlTupleToString} from '../common/damlTypes'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import IssuerProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import MarketRelationships from '../common/MarketRelationships'
-import PageSection from '../common/PageSection'
-import Page from '../common/Page'
-import RoleSideNav from '../common/RoleSideNav';
 import { useRegistryLookup } from '../common/RegistryLookup'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import { wrapDamlTuple, damlTupleToString} from '../common/damlTypes'
+import IssuerProfile, { Profile, createField } from '../common/Profile'
+import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import LandingPage from '../common/LandingPage'
+import PageSection from '../common/PageSection'
+import RoleSideNav from '../common/RoleSideNav'
+import Page from '../common/Page'
 
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
-import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -43,19 +43,13 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
 
     const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
-    const registeredIssuer = useStreamQueries(RegisteredIssuer, () => [], [], (e) => {
-        console.log("Unexpected close from registeredIssuer: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts
+    const registeredIssuer = useContractQuery(RegisteredIssuer);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allTokens = useContractQuery(Token);
 
-    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
-            const party = investor.payload.investor;
+            const party = investor.contractData.investor;
             const name = investorMap.get(damlTupleToString(investor.key))?.name;
             return {
                 party,
@@ -63,11 +57,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts
+    const brokerProviders = useContractQuery(BrokerCustomer)
         .map(broker => {
-            const party = broker.payload.broker;
+            const party = broker.contractData.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,
@@ -75,11 +67,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
         .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
+            const party = exchParticipant.contractData.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
@@ -110,8 +100,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredIssuer.contracts[0]) {
-            const riData = registeredIssuer.contracts[0].payload;
+        if (registeredIssuer[0]) {
+            const riData = registeredIssuer[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location },
@@ -157,10 +147,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
     const sideNav = <RoleSideNav url={url}
-                        name={registeredIssuer.contracts[0]?.payload.name || issuer}
+                        name={registeredIssuer[0]?.contractData.name || issuer}
                         items={[
                             {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
                         ]}>
@@ -175,7 +163,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                                     key={token.contractId}
                                 >
-                                    <p>{token.payload.id.label}</p>
+                                    <p>{token.contractData.id.label}</p>
                                 </Menu.Item>
                             ))}
                         </Menu.Menu>
@@ -195,8 +183,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                         allTokens.map(token => {
                                             return {
                                                 to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
-                                                title: token.payload.id.label,
-                                                subtitle: token.payload.description}
+                                                title: token.contractData.id.label,
+                                                subtitle: token.contractData.description}
                                         })
                                     }
                                     defaultProfile={profile}
@@ -234,9 +222,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </div>
     )
 
-    return registeredIssuer.loading
-        ? loadingScreen
-        : registeredIssuer.contracts.length === 0 ? inviteScreen : issuerScreen
+    return registeredIssuer.length === 0 ? inviteScreen : issuerScreen
 };
 
 export default Issuer;

@@ -2,17 +2,16 @@ import React from 'react'
 import { Header } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
-import { useStreamQueries } from '@daml/react'
-
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { makeContractInfo } from '../common/damlTypes'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { depositSummary } from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import StripedTable from '../common/StripedTable';
-import { depositSummary } from '../common/utils';
+import StripedTable from '../common/StripedTable'
 
-import CreateDeposit from './CreateDeposit';
+import CreateDeposit from './CreateDeposit'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -26,9 +25,7 @@ type Props = {
 const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
     const { investorId } = useParams<{investorId: string}>()
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
 

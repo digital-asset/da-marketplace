@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
 import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { TokenInfo, wrapDamlTuple, makeContractInfo, ContractInfo } from '../common/damlTypes'
-import { countDecimals, preciseInputSteps } from '../common/utils';
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { countDecimals, preciseInputSteps } from '../common/utils'
+import { TokenInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
@@ -32,31 +33,28 @@ const CreateDeposit = () => {
         }
     }, [investorId])
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
 
-    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationships: ", e);
-    }).contracts.map(relationship => { return relationship.payload.party })
+    const relationshipParties = useContractQuery(CustodianRelationship)
+        .map(relationship => relationship.contractData.party )
 
-    const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
-        .filter(broker => relationshipParties.find(p => broker.payload.broker === p))
+    const brokerBeneficiaries = useContractQuery(RegisteredBroker, AS_PUBLIC)
+        .filter(broker => relationshipParties.find(p => broker.contractData.broker === p))
         .map(broker => {
-            const party = broker.payload.broker;
-            const name = broker.payload.name;
+            const party = broker.contractData.broker;
+            const name = broker.contractData.name;
             return {
                 party,
                 label: `${name ? `${name} (${party})` : party} | Broker`
             }
         })
 
-    const investorBeneficiaries = useStreamQueryAsPublic(RegisteredInvestor).contracts
-        .filter(investor => relationshipParties.find(p => investor.payload.investor === p))
+    const investorBeneficiaries = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(investor => relationshipParties.find(p => investor.contractData.investor === p))
         .map(investor => {
-            const party = investor.payload.investor;
-            const name = investor.payload.name;
+            const party = investor.contractData.investor;
+            const name = investor.contractData.name;
             return {
                 party,
                 label: `${name ? `${name} (${party})` : party} | Investor`

@@ -2,12 +2,13 @@ import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Card, Header} from 'semantic-ui-react'
 
-import { useParty, useStreamQueries, useLedger } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useContractQuery } from '../websocket/queryStream'
+
 import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon } from '../icons/Icons'
 
 type RoleSelectProps = {
     loading: boolean;
@@ -41,9 +42,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
-    const { contracts: userSessions } = useStreamQueries(UserSession, () => [], [], (e) => {
-        console.log("Unexpected close from userSession: ", e);
-    });
+    const userSessions = useContractQuery(UserSession);
 
     const handleRoleClick = async (role: MarketRole) => {
         setRole(role);
