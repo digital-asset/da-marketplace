@@ -100,8 +100,9 @@ const IssueAsset = () => {
                 <div className='asset-row'>
                     <Form.Input
                         fluid
+                        step={1}
+                        type='number'
                         label={<FormLabel label='Quantity Precision'/>}
-                        placeholder='quantityPrecision'
                         value={quantityPrecision}
                         className='issue-asset-form-field'
                         onChange={e => setQuantityPrecision(e.currentTarget.value)}/>

@@ -5,6 +5,8 @@ import { Header, List, Button } from 'semantic-ui-react'
 import { useStreamQueries,  useParty, useLedger  } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
+import classNames from 'classnames'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
@@ -130,6 +132,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                                             </List.Content>
                                         </li>
                                     )}
+
                                 </ul>
                             </>}
                     </div>

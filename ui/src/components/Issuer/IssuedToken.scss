@@ -40,11 +40,17 @@
 
         .participants-viewer {
             padding-bottom: $spacing-m;
-            border-bottom: 2px solid var(--grey3);
+            margin-bottom: $spacing-m;
+            border-bottom: 2px solid var(--cool-grey-90);
+
             a.a2 {
                 display: flex;
                 flex-direction: row;
+                align-items: center;
+                width: fit-content;
             }
+
+
             .list-heading {
                 display: flex;
                 flex-direction: row;
@@ -53,13 +59,17 @@
 
                 a.a2 {
                     margin-left: $spacing-m;
+
+                    .icon {
+                        margin-right: $spacing-xs;
+                    }
                 }
             }
 
             ul.participants-list  {
                 display: inline-flex;
                 flex-direction: column;
-                max-height: 128px;
+                max-height: 80px;
                 flex-wrap: wrap;
                 list-style-type: none;
                 padding-left: 0px;
@@ -67,7 +77,7 @@
                 margin: 0px;
 
                 li {
-                    padding: $spacing-s $spacing-l 0 0;
+                    padding: $spacing-xs $spacing-l 0 0;
                     width: fit-content;
                 }
 

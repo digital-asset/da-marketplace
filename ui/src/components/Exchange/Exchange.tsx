@@ -91,7 +91,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                  name={registeredExchange.contracts[0]?.payload.name || exchange}
                                  items={[
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
-                                    {to: `${url}/create-pair`, label: 'Create a Market', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
     const inviteScreen = (
