@@ -96,11 +96,11 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
                             <Header className='profile-name'>
                                 @{profile[key].value}
                             </Header>
-                            <p className='p2 bold'>{role.replace('Role', '')}</p>
+                            <p className='bold'>{role.replace('Role', '')}</p>
                         </>
                     )
                 }
-                return <p className='field-value p2'>{profile[key].label}: {profile[key].value}</p>
+                return <p className='field-value'>{profile[key].label}: {profile[key].value}</p>
             })}
         </div>
 
@@ -109,7 +109,7 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
             <div className={classNames('profile-form', {'landing-page': !inviteAcceptTile})}>
                 { inviteAcceptTile ? profileForm : editing? profileForm : profileValues }
                 { !inviteAcceptTile && !editing &&
-                    <a className='p2 edit-profile' onClick={() => setEditing(true)}><EditIcon/> Edit Profile </a>
+                    <a className='a2 bold edit-profile' onClick={() => setEditing(true)}> Edit Profile </a>
                 }
             </div>
             { !inviteAcceptTile && profileLinks?.map(item => <ProfileLink item={item}/>) }
@@ -133,10 +133,10 @@ export type IProfileLinkItem = {
 const ProfileLink = (props: { item: IProfileLinkItem }) => (
     <NavLink className='profile-link' to={props.item.to}>
         <div className='title'>
-            <a>{props.item.title}</a>
+            <a className='bold'>{props.item.title}</a>
             <ArrowRightIcon/>
         </div>
-        <p className='p2'>{props.item.subtitle}</p>
+        <p>{props.item.subtitle}</p>
     </NavLink>
 )
 

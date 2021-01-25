@@ -15,20 +15,18 @@ type Props = {
 }
 
 const RequestInvestorRelationship: React.FC<Props> = ({ registeredInvestors }) => {
-    const [ exchParticipant, setExchParticipant ] = useState('');
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
     const ledger = useLedger();
     const exchange = useParty();
     const operator = useOperator();
 
-    const handleExchParticipantInviteSubmit = async () => {
+    const handleExchParticipantInviteSubmit = async (party: string) => {
         const choice = Exchange.Exchange_InviteParticipant;
         const key = wrapDamlTuple([operator, exchange]);
-        const args = { exchParticipant };
+        const args = { exchParticipant: party };
 
         await ledger.exerciseByKey(choice, key, args);
-        setExchParticipant('');
     }
 
     const partyOptions = registeredInvestors.map(d => {

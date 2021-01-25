@@ -88,7 +88,7 @@ const CreateMarket: React.FC<{}> = () => {
 
     return (
         <div className='create-market'>
-            <Header as='h3'>Create a Market</Header>
+            <Header as='h2'>Create a Market</Header>
             <FormErrorHandled onSubmit={handleIdPairSubmit}>
                 <div className='create-market-options'>
                     <ContractSelect

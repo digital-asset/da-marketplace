@@ -1,11 +1,10 @@
 
-@mixin striped-table {
-    .striped-table {
+@mixin cap-table {
+    .cap-table {
         display: flex;
         flex-direction: column;
         width: 100%;
         align-items: flex-start;
-        animation: fadeIn .5s;
 
         table {
             border-collapse: collapse;
@@ -15,6 +14,10 @@
             th {
                 border: none;
                 background-color: var(--cool-grey-100);
+
+                &:first-child {
+                    padding-left: 0px;
+                }
             }
 
             tr td {
@@ -33,7 +36,7 @@
 
 
         @media screen and (max-width: 1000px) {
-            .ui.table.issuer-striped-table tr:nth-child(odd) {
+            .ui.table.issuer-cap-table tr:nth-child(odd) {
                 background-color: unset;
             }
         }

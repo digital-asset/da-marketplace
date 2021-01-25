@@ -4,6 +4,7 @@
         width: 100%;
         background-color: var(--cool-grey-30);
         color: var(--white);
+        animation: fadeIn .5s;
 
         .grid-container {
             display: grid;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useParams, useHistory } from 'react-router-dom'
-import { Header, List, Button } from 'semantic-ui-react'
+import { Header, List } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -92,51 +92,54 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
+            menuTitle={<Header as='h2'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection className='issued-token'>
-                <div className='token-subheading'>
-                    <p>{token?.contractData.description}</p>
-                    <div className='token-details'>
-                        {isPublic ? <p> <GlobeIcon/> Public </p> : <p> <LockIcon/> Private </p>}
-                        <p> Quantity Precision: {token?.contractData.quantityPrecision} </p>
+            <PageSection>
+                <div className='issued-token'>
+                    <div className='token-subheading'>
+                        <Header as='h3'>{token?.contractData.description}</Header>
+                        <div className='token-details'>
+                            {isPublic ? <Header as='h3'> <GlobeIcon/> Public </Header> : <Header as='h3'> <LockIcon/> Private </Header>}
+                            <Header as='h3'> Quantity Precision: {token?.contractData.quantityPrecision} </Header>
+                        </div>
                     </div>
-                </div>
-                {!isPublic &&
-                    <div className='participants-viewer'>
-                        <Button className='ghost smaller' onClick={() => setShowParticipants(!showParticipants)}>
-                            {showParticipants?
-                                <p> Hide Participants <IconChevronUp/></p>
-                                :
-                                <p> View/Add Participants <IconChevronDown/></p>
-                            }
-                        </Button>
-                        {showParticipants &&
-                            <>
-                            <div className='list-heading'>
-                                <p><b>Participants</b></p>
-                                <Button className='ghost smaller' onClick={() => setShowAddRegisteredPartyModal(true)}>
-                                    <AddPlusIcon/> <p>Add Participant</p>
-                                </Button>
-                            </div>
-                                <ul className='participants-list'>
-                                    {Array.from(participants).map(o =>
-                                        <li key={o}>
-                                            <List.Content>
-                                                <p>{o}</p>
-                                            </List.Content>
-                                        </li>
-                                    )}
-                                </ul>
-                            </>}
+                    {!isPublic &&
+                        <div className='participants-viewer'>
+                            <a className='a2' onClick={() => setShowParticipants(!showParticipants)}>
+                                {showParticipants?
+                                    <> Hide Participants <IconChevronUp/></>
+                                    :
+                                    <> View/Add Participants <IconChevronDown/></>
+                                }
+                            </a>
+                            {showParticipants &&
+                                <>
+                                <div className='list-heading'>
+                                    <p><b>Participants</b></p>
+                                    <a className='a2' onClick={() => setShowAddRegisteredPartyModal(true)}>
+                                        <AddPlusIcon/> Add Participant
+                                    </a>
+                                </div>
+                                    <ul className='participants-list'>
+                                        {Array.from(participants).map(o =>
+                                            <li key={o}>
+                                                <List.Content>
+                                                    <p>{o}</p>
+                                                </List.Content>
+                                            </li>
+                                        )}
+
+                                    </ul>
+                                </>}
+                        </div>
+                    }
+                    <Header as='h2'>Position Holdings</Header>
+                    <div className='position-holdings-data'>
+                        <StripedTable
+                            headings={StripedTableHeaders}
+                            rows={StripedTableRows}/>
+                        {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                     </div>
-                }
-                <Header as='h3'>Position Holdings</Header>
-                <div className='position-holdings-data'>
-                    <StripedTable
-                        headings={StripedTableHeaders}
-                        rows={StripedTableRows}/>
-                    {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
             {showAddRegisteredPartyModal &&

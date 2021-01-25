@@ -130,7 +130,7 @@ export function getPartyLabel(partyId: string, parties: IPartyInfo[]) {
 }
 
 export function getAbbreviation(phrase: string) {
-    const wordsToExclude =  ["and", "or", "of", "to"]
+    const wordsToExclude =  ["and", "or", "of", "to", "the"]
     return phrase.split(' ')
                  .filter(item => !wordsToExclude.includes(item))
                  .map(item => item.charAt(0)).join('')

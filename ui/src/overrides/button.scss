@@ -10,7 +10,7 @@
 
     &.ghost {
       color: var(--textcolor);
-      background: none;
+      background: var(--white);
       align-items: center;
       border: 1px solid var(--green-50);
       border-radius: 2px;
@@ -24,6 +24,7 @@
       &.smaller {
         padding: 6px 3px;
         color: var(--blue-50);
+        background: none;
         border: none;
       }
 

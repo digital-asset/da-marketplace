@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Checkbox, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
@@ -70,55 +70,69 @@ const IssueAsset = () => {
         }
     })
 
+    const FormLabel = (props: {label: string, subLabel?: string}) => (
+        <div className='form-label'>
+            <Header as='h3'>{props.label}</Header>
+            <p><i>{props.subLabel}</i></p>
+        </div>
+    )
+
     return (
+        <div className='issue-asset'>
         <FormErrorHandled onSubmit={submit}>
-            <Form.Input
-                fluid
-                label='Asset ID'
-                placeholder='Give this asset a name'
-                value={name}
-                className='issue-asset-form-field'
-                onChange={e => setName(e.currentTarget.value)}
-            />
-            <Form.TextArea
-                label='Description'
-                placeholder='Describe the asset to potential investors'
-                className='issue-asset-form-field'
-                value={description}
-                onChange={e => setDescription(e.currentTarget.value)}
-            />
-            <div className='observer-select'>
-                <FormToggle
-                    defaultChecked
-                    className='issue-asset-form-field'
-                    onLabel='Public'
-                    onInfo='All parties will be aware of this token.'
-                    offLabel='Private'
-                    offInfo='Only a set of parties will be aware of this token.'
-                    onClick={val => setIsPublic(val)}/>
-                <Form.Select
-                    multiple
-                    className='issue-asset-form-field select-observer'
-                    disabled={isPublic}
-                    placeholder='Select...'
-                    options={partyOptions}
-                    onChange={handleObserversChange}
-                />
+            <div className='issue-asset-fields'>
+                <div className='asset-row'>
+                    <Form.Input
+                        fluid
+                        label={<FormLabel label='Asset ID' subLabel='Give this asset a name'/>}
+                        value={name}
+                        className='issue-asset-form-field'
+                        onChange={e => setName(e.currentTarget.value)}/>
+                    </div>
+
+                <div className='asset-row'>
+                    <Form.TextArea
+                        label={<FormLabel label='Description' subLabel='Describe the asset to potential investors'/>}
+                        className='issue-asset-form-field'
+                        value={description}
+                        onChange={e => setDescription(e.currentTarget.value)}/>
+                </div>
+
+                <div className='asset-row'>
+                    <Form.Input
+                        fluid
+                        step={1}
+                        type='number'
+                        label={<FormLabel label='Quantity Precision'/>}
+                        value={quantityPrecision}
+                        className='issue-asset-form-field'
+                        onChange={e => setQuantityPrecision(e.currentTarget.value)}/>
+                </div>
+
+                <div className='asset-row'>
+                    <FormLabel label='Observers' subLabel='Who should be aware that this has been issued?'/>
+                    <div className='observer-select'>
+                        <div className='public-select'>
+                            <FormLabel label='Public' subLabel='All parties will be aware of this token.'/>
+                            <Checkbox checked={isPublic} onClick={() => setIsPublic(!isPublic)}/>
+                        </div>
+                        <Form.Select
+                            multiple
+                            label={<FormLabel label='Private' subLabel='Only a set of parties will be aware of this token.'/>}
+                            className='issue-asset-form-field select-observer'
+                            disabled={isPublic}
+                            placeholder='Select...'
+                            options={partyOptions}
+                            onChange={handleObserversChange}/>
+                    </div>
+                </div>
+                <Button
+                    className='ghost'
+                    disabled={!name || !quantityPrecision || !description}
+                    content='Submit'/>
             </div>
-            <Form.Input
-                fluid
-                label='Quantity Precision'
-                placeholder='quantityPrecision'
-                value={quantityPrecision}
-                className='issue-asset-form-field'
-                onChange={e => setQuantityPrecision(e.currentTarget.value)}
-            />
-            <Button
-                className='ghost'
-                disabled={!name || !quantityPrecision || !description}
-                content='Submit'>
-            </Button>
         </FormErrorHandled>
+        </div>
     )
 }
 

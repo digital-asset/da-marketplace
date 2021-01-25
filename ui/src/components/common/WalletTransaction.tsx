@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
-import { Form, Button } from 'semantic-ui-react'
+import React, { useEffect, useState } from 'react';
+
+import { Form, Button, Header } from 'semantic-ui-react'
+
+import { useHistory } from 'react-router-dom';
 
 import { useParty, useLedger } from '@daml/react'
+
+import { WalletIcon, IconClose} from '../../icons/Icons'
+
+import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
+
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { WalletIcon } from '../../icons/Icons'
+import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
+
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
-import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
 import { useOperator } from './common'
 import { AppError } from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
@@ -86,7 +92,7 @@ const WalletTransaction = (props: {
                     <Form.Input
                         type='number'
                         step={step}
-                        label={<p className='p2'>Amount</p>}
+                        label={<p>Amount</p>}
                         placeholder={placeholder}
                         disabled={!token}
                         onChange={handleSetDepositQuantity}/>
@@ -104,12 +110,15 @@ const WalletTransaction = (props: {
             >
             <PageSection>
                 <div className='wallet-transaction'>
-                    <h2>{transactionType} Funds</h2>
+                    <Header as='h2'>{transactionType} Funds</Header>
                     <FormErrorHandled onSubmit={onSubmit}>
                         {body}
-                        <Button className='ghost' type='submit'>
-                            Submit
-                        </Button>
+                        <div className='actions'>
+                            <Button className='ghost' type='submit'>
+                                Submit
+                            </Button>
+                            <a className='a2' onClick={() => history.goBack()}><IconClose/> Cancel</a>
+                        </div>
                     </FormErrorHandled>
                 </div>
             </PageSection>

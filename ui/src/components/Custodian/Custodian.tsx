@@ -5,14 +5,16 @@ import _ from 'lodash'
 
 import { useLedger, useParty } from '@daml/react'
 
-import { RegisteredCustodian, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredCustodian, RegisteredInvestor, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
     Custodian as CustodianModel,
-    CustodianInvitation
+    CustodianInvitation,
+    CustodianRelationship
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 
 import { UserIcon } from '../../icons/Icons'
+
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
@@ -37,6 +39,35 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
+
+    const keys = () => [wrapDamlTuple([operator, custodian])];
+
+    const relationshipParties = useContractQuery(CustodianRelationship)
+        .map(relationship => relationship.contractData.party)
+
+    const brokerBeneficiaries = useContractQuery(RegisteredBroker, AS_PUBLIC)
+        .filter(broker => relationshipParties.find(p => broker.contractData.broker === p))
+        .map(broker => {
+            const party = broker.contractData.broker;
+            const name = broker.contractData.name;
+            return {
+                party,
+                label: `${name} | ${party}`
+            }
+        })
+
+    const investorBeneficiaries = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(investor => relationshipParties.find(p => investor.contractData.investor === p))
+        .map(investor => {
+            const party = investor.contractData.investor;
+            const name = investor.contractData.name;
+            return {
+                party,
+                label: `${name} | ${party}`
+            }
+        })
+
+    const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
 
     const registeredCustodian = useContractQuery(RegisteredCustodian);
 
@@ -110,14 +141,14 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <Menu.Item>
                                 <p className='p2'>Client Holdings:</p>
                             </Menu.Item>
-                            {investors.map(investor =>
+                            {allBeneficiaries.map(client =>
                                 <Menu.Item
                                     className='sidemenu-item-normal'
                                     as={NavLink}
-                                    to={`${url}/client/${investor}`}
-                                    key={investor}
+                                    to={`${url}/client/${client.party}`}
+                                    key={client.party}
                                 >
-                                    <p>{registeredInvestors.find(i => i.contractData.investor === investor)?.contractData.name || investor}</p>
+                                    <p>{client.label.substring(0, client.label.indexOf('|'))}</p>
                                 </Menu.Item>
                             )}
                         </Menu.Menu>
@@ -147,14 +178,14 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
                 <Route path={`${path}/clients`}>
                     <Clients
-                        clients={investors}
+                        clients={allBeneficiaries}
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
                 <Route path={`${path}/client/:investorId`}>
                     <ClientHoldings
                         sideNav={sideNav}
-                        clients={investors}
+                        clients={allBeneficiaries}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>

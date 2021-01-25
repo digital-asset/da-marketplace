@@ -23,18 +23,20 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
 
     return (
         <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
+            <Card fluid className='order-card'>
+                <div className='order-info'>
                     <div><ExchangeIcon/> {label}</div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                     <div>{`Order ID: ${trade.orderId}`}</div>
                     <div>{`Counter Order ID: ${trade.counterOrderId}`}</div>
                     <div>{timeLabel}</div>
-                </Card>
-
-                { children }
-            </div>
+                </div>
+                <div className='actions'>
+                    { timeLabel }
+                    { children }
+                </div>
+            </Card>
         </div>
     )
 }

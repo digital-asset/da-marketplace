@@ -7,68 +7,40 @@
             border: none;
             margin: 0;
             border-radius: 0px;;
-            padding: $spacing-s;
             min-height: 70px;
-        }
 
-        .top-menu .menu > .ui.button:not(.icon) > .log-out {
-            display: flex;
-            align-items: center;
-
-            .icon.logout-icon {
-                margin-left: $spacing-s;
+            .menu.left.menu {
+                animation: fadeIn .5s;
+                padding: $spacing-s;
             }
-        }
 
-        @media screen and (max-width: 1000px) {
-            .top-menu .menu > .ui.button:not(.icon) > .log-out > p {
+            .menu > .item:before {
                 display: none;
             }
-        }
 
-        .top-menu .menu > .ui.button:not(.icon) .icon.logout-icon {
-            margin-left: $spacing-s;;
-            height: 14px;
-            width: 14px;
-        }
+            .menu > .item > .header > .content {
+                display: flex;
+                align-items: center;
+            }
 
-        .ui.menu.top-menu > .menu > .item:before {
-            display: none;
-        }
+            .menu > .ui.button:not(.icon) > .log-out {
+                display: flex;
+                align-items: center;
 
-        .ui.menu.top-menu > .menu > .item > .header > .content {
-            display: flex;
-            align-items: center;
-        }
+                .icon.logout-icon {
+                    margin-left: $spacing-s;
+                }
+            }
 
-        .top-menu.menu .item {
-            margin-right: auto;
-        }
+            .menu > .item.menu-button {
+                animation: fadeIn .5s;
+            }
 
-        .top-menu.menu > .top-right-menu > .item:first-child {
-            padding-left: $spacing-m;
-        }
-
-        .top-menu.menu > .top-left-menu {
-            align-items: flex-start;
-        }
-
-        .top-menu.menu > .top-left-menu.blue-border {
-            border-left: 2px var(--cool-grey-90) solid;
-        }
-
-        .top-menu.menu .menu-buttons {
-            margin-left: auto;
-            margin-right: $spacing-s;
-        }
-
-        .top-menu.menu > .top-left-menu > .item {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            height: 100%;
-            padding: 0 $spacing-m;
+            .log-out-button {
+                padding: $spacing-m;
+                margin-left: $spacing-s;
+                border-left: var(--cool-grey-90) solid 1px;
+            }
         }
 
         .notifications {

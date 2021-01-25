@@ -24,7 +24,7 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
             loading={loading}
             icon='right arrow blue'
             labelPosition='right'
-            content={<Header as='h4'> { caption } </Header> }
+            content={<p className='bold'> { caption } </p> }
             onClick={roleSelectClick}
         />
     </Card>
@@ -61,7 +61,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     return (
         <div className='role-selector'>
             <OnboardingTile>
-                <p className='dark'>What would you like to do?</p>
+                <p className='dark bold'>What would you like to do?</p>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}

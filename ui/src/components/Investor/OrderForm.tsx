@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header} from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
@@ -126,7 +126,7 @@ const OrderForm: React.FC<Props> = ({
         <FormErrorHandled onSubmit={async () => {}} className='order-form'>
             { loadAndCatch => <>
                 <Form.Field>
-                    <label className='order-label'>Price</label>
+                    <p className='order-label'>Price</p>
                     <input
                         className='order-input'
                         value={price}
@@ -137,7 +137,7 @@ const OrderForm: React.FC<Props> = ({
                 </Form.Field>
 
                 <Form.Field>
-                    <label className='order-label'>Amount</label>
+                    <p className='order-label'>Amount</p>
                     <input
                         className='order-input'
                         placeholder={amountBaseInput.placeholder}
@@ -148,7 +148,7 @@ const OrderForm: React.FC<Props> = ({
                 </Form.Field>
 
                 <Form.Field>
-                    <label className='order-label'>Total</label>
+                    <p className='order-label'>Total</p>
                     <input
                         className='order-input'
                         placeholder={amountQuoteInput.placeholder}
@@ -165,7 +165,7 @@ const OrderForm: React.FC<Props> = ({
                         className='buy'
                         disabled={disableButton}
                         onClick={() => loadAndCatch(placeBid)}>
-                            Bid
+                           <Header as='h2'>Bid</Header>
                     </Button>
 
                     <Button
@@ -174,7 +174,7 @@ const OrderForm: React.FC<Props> = ({
                         className='sell'
                         disabled={disableButton}
                         onClick={() => loadAndCatch(placeOffer)}>
-                            Offer
+                           <Header as='h2'>Offer</Header>
                     </Button>
                 </div></>
             }

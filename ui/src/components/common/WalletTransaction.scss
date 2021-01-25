@@ -6,10 +6,10 @@
         flex-direction: column;
 
         form {
-            width: 50%;
+            margin-top: $spacing-l;
 
-            .field .field-step {
-                padding: $spacing-s 0;
+            .field.field-step {
+                padding-bottom: $spacing-m;
             }
 
             .field .step-title {
@@ -19,16 +19,17 @@
                 justify-content: space-between;
             }
 
-            .holdings-selector {
-                .deposit-row {
-                    &:hover {
-                        background-color: var(--cool-grey-90);
-                        cursor: pointer;
-                    }
+            .actions, a.a2 {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
 
-                    &.selected {
-                        border-color: 1px solid var(--cool-grey-10)
-                    }
+            .actions a.a2 {
+                margin-left: $spacing-xl;
+
+                .icon {
+                    margin-right: $spacing-xs;
                 }
             }
         }
