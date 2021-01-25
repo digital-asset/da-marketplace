@@ -7,11 +7,11 @@
             border: none;
             margin: 0;
             border-radius: 0px;;
-            padding: $spacing-s;
             min-height: 70px;
 
             .menu.left.menu {
                 animation: fadeIn .5s;
+                padding: $spacing-s;
             }
 
             .menu > .item:before {
@@ -33,9 +33,13 @@
             }
 
             .menu > .item.menu-button {
-                margin-left: auto;
-                margin-right: $spacing-s;
                 animation: fadeIn .5s;
+            }
+
+            .log-out-button {
+                padding: $spacing-m;
+                margin-left: $spacing-s;
+                border-left: var(--cool-grey-90) solid 1px;
             }
         }
 

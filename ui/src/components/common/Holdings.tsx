@@ -12,8 +12,6 @@ import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPart
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 
-import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
-
 import { AppError } from './errorTypes'
 
 type Props = {
@@ -68,15 +66,13 @@ type DepositRowProps = {
     role: MarketRole;
 }
 
-type FormSelectorOptions = 'provider'
-
 const DepositRow: React.FC<DepositRowProps> = ({
     assetLabel,
     deposits,
     providers,
     role
 }) => {
-    const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
+    const [ showForm, setShowForm ] = useState<boolean>(false)
     const totalQty = sumDepositArray(deposits);
     const providerLabel = deposits.find(_ => true)?.contractData.account.id.label;
 
@@ -85,14 +81,14 @@ const DepositRow: React.FC<DepositRowProps> = ({
             <div className='deposit-info'>
                 <Header as='h3' className='bold'>{assetLabel}</Header>
                 <Header as='h3' >{totalQty}</Header>
-                <OverflowMenu>
-                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
-                </OverflowMenu>
+                <Button className='ghost' onClick={() => setShowForm(!showForm)}>
+                    Allocate to Different Provider
+                </Button>
             </div>
             <div className='selected-form'>
-                {selectedForm === 'provider' &&
+                {showForm &&
                     <ProviderForm
-                        onRequestClose={() => setSelectedForm(undefined)}
+                        onRequestClose={() => setShowForm(false)}
                         depositCids={deposits.map(d => d.contractId)}
                         totalQty={totalQty}
                         providers={providers}
