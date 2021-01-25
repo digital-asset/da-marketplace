@@ -1,15 +1,17 @@
 import React, { useState } from 'react'
 import { Button, Card, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { DepositInfo, unwrapDamlTuple, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import PageSection from '../common/PageSection'
@@ -25,20 +27,12 @@ type Props = {
 
 
 const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
-    const allExchangeOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from order: ", e);
-    }).contracts;
-    const allBrokerOrderRequests = useStreamQueries(BrokerOrderRequest, () => [], [], (e) => {
-        console.log("Unexpected close from brokerOrderRequest: ", e);
-    }).contracts;
-    const allBrokerOrders = useStreamQueries(BrokerOrder, () => [], [], (e) => {
-        console.log("Unexpected close from brokerOrder: ", e);
-    }).contracts;
+    const allExchangeOrders = useContractQuery(Order);
+    const allBrokerOrderRequests = useContractQuery(BrokerOrderRequest);
+    const allBrokerOrders = useContractQuery(BrokerOrder);
 
-    const allBrokerCustomers = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts.map(makeContractInfo);
-    const allRegisteredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
+    const allBrokerCustomers = useContractQuery(BrokerCustomer);
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     return (
         <Page
@@ -47,20 +41,16 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection>
-                <div className='customers'>
-                    <BrokerCustomers brokerCustomers={allBrokerCustomers}
-                                     registeredInvestors={allRegisteredInvestors}/>
-                </div>
                 <Header as='h3'>Orders</Header>
                 <div className='customer-orders'>
                     <p>Requested Customer Orders</p>
-                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.payload}/>)}
+                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.contractData}/>)}
 
                     <p>Open Customer Orders</p>
-                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.payload} deposits={deposits}/>)}
+                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.contractData} deposits={deposits}/>)}
 
                     <p>Exchange Orders</p>
-                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)}
+                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)}
                 </div>
             </PageSection>
         </Page>

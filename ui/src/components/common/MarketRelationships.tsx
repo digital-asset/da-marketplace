@@ -38,36 +38,11 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships, in
                 party={custodian?.custodian}/>
     });
 
-    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.map(makeContractInfo);
-
-    const investorRows = exchangeParticipants.map(relationship => {
-        const investor = investorMap.get(relationship.contractData.exchParticipant);
-
-        if (!investor) {
-            return null
-        }
-
-        return <RelationshipRow
-                contractId={relationship.contractId}
-                name={investor.name}
-                party={investor?.investor}/>
-    });
-
     return (
         <div className='market-relationships'>
             <Header as='h3'>Market Relationships</Header>
-
-            {custodianRows}
             <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
-
-            { role == MarketRole.ExchangeRole && investorOptions &&
-                <>
-                    {investorRows}
-                    <RequestInvestorRelationship registeredInvestors={investorOptions || []}/>
-                </>
-            }
+            {custodianRows}
         </div>
     )
 }

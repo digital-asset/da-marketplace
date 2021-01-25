@@ -1,13 +1,16 @@
 import React from 'react'
 
-import { useLedger, useStreamQueries } from '@daml/react'
-import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
 
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
+import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
-import { CustodianRelationshipRequestInfo, makeContractInfo } from '../common/damlTypes'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type RelationshipRequestNotificationProps = {
     request: CustodianRelationshipRequestInfo;
@@ -17,12 +20,9 @@ type RelationshipRequestNotificationProps = {
 
 export const useRelationshipRequestNotifications = () => {
     const ledger = useLedger();
-    const relationshipRequestNotifications = useStreamQueries(CustodianRelationshipRequest, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationshipRequest: ", e);
-    })
-        .contracts
+    const relationshipRequestNotifications = useContractQuery(CustodianRelationshipRequest)
         .map(request => <RelationshipRequestNotification key={request.contractId}
-            request={makeContractInfo(request)}
+            request={request}
             requestAccept={async () => await acceptRelationshipRequest(request.contractId)}
             requestReject={async () => await rejectRelationshipRequest(request.contractId)}/>);
 

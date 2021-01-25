@@ -23,10 +23,10 @@ const RequestInvestorRelationship: React.FC<Props> = ({ registeredInvestors }) =
     const exchange = useParty();
     const operator = useOperator();
 
-    const handleExchParticipantInviteSubmit = async (party: string[]) => {
+    const handleExchParticipantInviteSubmit = async (party: string) => {
         const choice = Exchange.Exchange_InviteParticipant;
         const key = wrapDamlTuple([operator, exchange]);
-        const args = { exchParticipant: party[0] };
+        const args = { exchParticipant: party };
 
         await ledger.exerciseByKey(choice, key, args);
     }

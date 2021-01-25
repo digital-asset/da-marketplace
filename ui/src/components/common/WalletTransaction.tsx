@@ -1,37 +1,31 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState } from 'react'
+import { useHistory } from 'react-router-dom'
 import { Form, Button } from 'semantic-ui-react'
 
-import { useHistory } from 'react-router-dom';
-
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-
-import { WalletIcon } from '../../icons/Icons'
-
-import { preciseInputSteps, groupDepositsByAsset, sumDepositArray, IPartyInfo } from './utils'
-
-import Page from '../common/Page'
-import PageSection from '../common/PageSection'
-import { useOperator } from './common'
-import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../common/damlTypes'
-
+import { useParty, useLedger } from '@daml/react'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import { WalletIcon } from '../../icons/Icons'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
+import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
+import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
+import { useOperator } from './common'
+import { AppError } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
-import FormErrorHandled from './FormErrorHandled';
-import { AppError } from './errorTypes';
+import PageSection from './PageSection'
+import Page from './Page'
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
     sideNav: React.ReactElement;
     onLogout: () => void;
     deposits?: DepositInfo[];
-    providers?: IPartyInfo[];
 }) => {
-    const { transactionType, sideNav, onLogout, deposits, providers } = props;
+    const { transactionType, sideNav, onLogout, deposits } = props;
 
     const [ custodianId, setCustodianId ] = useState<string>();
     const [ quantity, setQuantity ] = useState<string>('');
@@ -51,12 +45,8 @@ const WalletTransaction = (props: {
     const ledger = useLedger();
     const history = useHistory();
 
-    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
-
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-            console.log("Unexpected close from Token: ", e);
-        }).contracts.map(makeContractInfo)
+    const registeredCustodians = useContractQuery(RegisteredCustodian, AS_PUBLIC);
+    const allTokens = useContractQuery(Token);
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 

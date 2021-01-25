@@ -1,17 +1,16 @@
 import React from 'react'
 
-import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
 import { UserIcon } from '../../icons/Icons'
-import { makeContractInfo } from '../common/damlTypes'
-import PageSection from '../common/PageSection'
-import Page from '../common/Page'
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
+import PageSection from '../common/PageSection'
+import Page from '../common/Page'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -19,15 +18,9 @@ type Props = {
 }
 
 const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
-    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.map(makeContractInfo);
-    const activeOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
+    const exchangeParticipants = useContractQuery(ExchangeParticipant);
+    const activeOrders = useContractQuery(Order);
 
     const rows = exchangeParticipants.map(participant => {
         const { exchange, exchParticipant } = participant.contractData;

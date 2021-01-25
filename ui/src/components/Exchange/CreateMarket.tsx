@@ -1,16 +1,18 @@
 import React, { useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
-import { countDecimals, preciseInputSteps } from '../common/utils';
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
@@ -26,9 +28,7 @@ const CreateMarket: React.FC<{}> = () => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
     const handleIdPairSubmit = async () => {

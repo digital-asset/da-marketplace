@@ -11,6 +11,7 @@ import {
 import DamlLedger from '@daml/react'
 import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
 
+import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { computeCredentials, storeCredentials, retrieveCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
@@ -51,9 +52,11 @@ const App: React.FC = () => {
                 >
                   <WellKnownPartiesProvider>
                     <PublicProvider>
-                      <RegistryLookupProvider>
-                        <MainScreen onLogout={() => handleCredentials(undefined)}/>
-                      </RegistryLookupProvider>
+                      <QueryStreamProvider>
+                        <RegistryLookupProvider>
+                          <MainScreen onLogout={() => handleCredentials(undefined)}/>
+                        </RegistryLookupProvider>
+                      </QueryStreamProvider>
                     </PublicProvider>
                   </WellKnownPartiesProvider>
               </DamlLedger>

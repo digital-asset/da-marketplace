@@ -1,18 +1,16 @@
 import React from 'react'
 import { Header } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-
 import { UserIcon } from '../../icons/Icons'
-import { makeContractInfo } from '../common/damlTypes'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
 import { depositSummary } from '../common/utils'
+import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import StripedTable from '../common/StripedTable';
 
 import CreateDeposit from './CreateDeposit'
 
@@ -23,16 +21,17 @@ type Props = {
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const investors = useStreamQueryAsPublic(RegisteredInvestor).contracts.filter(c => clients.includes(c.payload.investor))
+    const investors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .filter(c => clients.includes(c.contractData.investor))
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
     const tableHeadings = ['Name', 'Holdings']
 
     const tableRows = clients.map(client => {
-            const clientName = investors.find(i => i.payload.investor === client)?.payload.name || client
+            const clientName = investors
+                .find(i => i.contractData.investor === client)?.contractData.name || client
+
             const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client)
             return [clientName, depositSummary(deposits).join(',')]
         }

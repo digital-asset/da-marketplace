@@ -1,15 +1,18 @@
 import React, { useEffect } from 'react'
 import { Button, Form } from 'semantic-ui-react'
 
-import { IconClose } from '../../icons/Icons';
-
-import { useLedger,  useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
 import { ContractId } from '@daml/types'
+
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
     DismissibleNotification as DismissibleNotificationTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Notification'
-import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
+
+import { IconClose } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
 import NotificationComponent from './Notification'
 import FormErrorHandled from './FormErrorHandled'
@@ -22,13 +25,10 @@ type DismissibleNotificationProps = {
 export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
-    const relationshipRequestNotifications = useStreamQueries(DismissibleNotificationTemplate, () => [], [], (e) => {
-        console.log("Unexpected close from dismissibleNotification: ", e);
-    })
-        .contracts
-        .filter(notification => notification.payload.receiver === party)
+    const relationshipRequestNotifications = useContractQuery(DismissibleNotificationTemplate)
+        .filter(notification => notification.contractData.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}
-            notification={makeContractInfo(notification)}
+            notification={notification}
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
     const dismissNotification = async (cid: ContractId<DismissibleNotificationTemplate>) => {
