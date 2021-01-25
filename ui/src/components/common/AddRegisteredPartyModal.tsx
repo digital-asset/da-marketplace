@@ -29,6 +29,7 @@ const AddRegisteredPartyModal = (props: IProps) => {
 
     const handleSubmit = async () => {
         onSubmit(selectedParties)
+        onRequestClose()
     }
 
     return (

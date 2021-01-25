@@ -1,14 +1,15 @@
 @import '../common/Wallet.scss';
 
 @import './BrokerOrders.scss';
-@import './BrokerCustomers.scss';
+@import './BrokerCustomerHoldings.scss';
+@import './AddBrokerCustomer.scss';
 
 @mixin broker {
     .broker {
         height: 100%;
         @include wallet;
         @include broker-orders;
-        @include broker-customers;
-
+        @include broker-customer-holdings;
+        @include add-broker-customer;
     }
 }
