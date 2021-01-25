@@ -3,10 +3,8 @@ import { Header } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
 import { useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { makeContractInfo } from '../common/damlTypes'
 import Page from '../common/Page'

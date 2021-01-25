@@ -47,10 +47,10 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection>
-                {/* <div className='customers'>
+                <div className='customers'>
                     <BrokerCustomers brokerCustomers={allBrokerCustomers}
                                      registeredInvestors={allRegisteredInvestors}/>
-                </div> */}
+                </div>
                 <div className='broker-orders'>
                     <div className='order-section'>
                         <Header as='h2'>Requested Orders</Header>
@@ -82,13 +82,10 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     )
 };
 
-
-// Broker Order Request
 type BrokerOrderRequestCardProps = {
     cid: ContractId<BrokerOrderRequest>;
     cdata: BrokerOrderRequest;
 };
-
 
 const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children, ...props}) => {
     const [ brokerOrderId, setBrokerOrderId ] = useState<string>('');
@@ -142,13 +139,10 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
     )
 };
 
-
-// Broker Order
 type BrokerOrderCardProps = {
     cdata: BrokerOrder;
     deposits: DepositInfo[];
 };
-
 
 const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
     const [ depositCid, setDepositCid ] = useState<string>('');

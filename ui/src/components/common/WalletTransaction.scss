@@ -18,6 +18,7 @@
                 align-items: center;
                 justify-content: space-between;
             }
+
             .actions, a.a2 {
                 display: flex;
                 flex-direction: row;
@@ -26,6 +27,7 @@
 
             .actions a.a2 {
                 margin-left: $spacing-xl;
+
                 .icon {
                     margin-right: $spacing-xs;
                 }

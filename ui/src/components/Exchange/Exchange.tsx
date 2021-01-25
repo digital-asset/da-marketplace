@@ -6,7 +6,7 @@ import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/C
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { ExchangeParticipant, ExchangeParticipantInvitation} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { getAbbreviation } from '../common/utils';
 
 import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
@@ -24,8 +24,7 @@ import { useRegistryLookup } from '../common/RegistryLookup'
 import { Header } from 'semantic-ui-react'
 
 import MarketPairs from './MarketPairs'
-import CreateMarket from './CreateMarket'
-import RequestInvestorRelationship from '../common/RequestInvestorRelationship'
+
 import ExchangeParticipants from './ExchangeParticipants'
 import FormErrorHandled from '../common/FormErrorHandled'
 
@@ -149,8 +148,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             <>
                                 <MarketRelationships role={MarketRole.ExchangeRole}
                                     custodianRelationships={allCustodianRelationships}/>
-                                    {rows}
-                                {/* <RequestInvestorRelationship registeredInvestors={investorOptions}/> */}
                             </>
                         }
                         sideNav={sideNav}

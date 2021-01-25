@@ -3,7 +3,6 @@
 @mixin exchange {
     .exchange {
         @include create-market;
-
         height: 100%;
 
         .relationship-row {
