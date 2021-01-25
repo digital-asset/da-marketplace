@@ -1,8 +1,9 @@
 @mixin issued-token {
     .issued-token {
+        animation: fadeIn .5s;
+
         .position-holdings-data {
-            display: flex;
-            flex-direction: row;
+            margin-top: $spacing-m;
         }
 
         .allocations {
@@ -17,20 +18,39 @@
             display: flex;
             flex-direction: row;
             justify-content: space-between;
-            align-items: center;
+            align-items: baseline;
+            margin-bottom: $spacing-m;
 
             .token-details {
                 display: flex;
                 flex-direction: row;
-                p {
-                    margin-left: $spacing-m;
+                align-items: flex-end;
+
+                h3 {
+                    margin-left: $spacing-l;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    .globe-icon, .lock-icon {
+                        margin-right: $spacing-xs;
+                    }
                 }
             }
         }
 
         .participants-viewer {
-            padding: $spacing-m 0 $spacing-m 0;
-            border-bottom: 2px solid var(--grey3);
+            padding-bottom: $spacing-m;
+            margin-bottom: $spacing-m;
+            border-bottom: 2px solid var(--cool-grey-90);
+
+            a.a2 {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                width: fit-content;
+            }
+
 
             .list-heading {
                 display: flex;
@@ -38,15 +58,19 @@
                 padding: $spacing-m 0 $spacing-s 0;
                 align-items: center;
 
-                button.ghost {
+                a.a2 {
                     margin-left: $spacing-m;
+
+                    .icon {
+                        margin-right: $spacing-xs;
+                    }
                 }
             }
 
             ul.participants-list  {
                 display: inline-flex;
                 flex-direction: column;
-                max-height: 128px;
+                max-height: 80px;
                 flex-wrap: wrap;
                 list-style-type: none;
                 padding-left: 0px;
@@ -54,7 +78,7 @@
                 margin: 0px;
 
                 li {
-                    padding: $spacing-s $spacing-l 0 0;
+                    padding: $spacing-xs $spacing-l 0 0;
                     width: fit-content;
                 }
 

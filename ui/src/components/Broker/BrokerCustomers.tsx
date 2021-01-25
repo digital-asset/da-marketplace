@@ -20,7 +20,7 @@ const BrokerCustomers: React.FC<Props> = ({ brokerCustomers, registeredInvestors
     });
     return (
         <>
-            <Header as='h3'>Customers</Header>
+            <Header as='h2'>Customers</Header>
             {rows}
             <InviteBrokerCustomer registeredInvestors={registeredInvestors}/>
         </>

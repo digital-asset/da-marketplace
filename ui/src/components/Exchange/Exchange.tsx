@@ -7,10 +7,12 @@ import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/C
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { ExchangeParticipant, ExchangeParticipantInvitation} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { getAbbreviation } from '../common/utils';
+
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -22,7 +24,11 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
+import { useRegistryLookup } from '../common/RegistryLookup'
+import { Header } from 'semantic-ui-react'
+
 import MarketPairs from './MarketPairs'
+
 import ExchangeParticipants from './ExchangeParticipants'
 
 type Props = {
@@ -34,20 +40,20 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const exchange = useParty();
     const ledger = useLedger();
+    const investorMap = useRegistryLookup().investorMap;
 
     const registeredExchange = useContractQuery(RegisteredExchange);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const exchangeParticipants = useContractQuery(ExchangeParticipant);
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
     const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
+    const investorCount = exchangeParticipants.length;
 
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
 
     const notifications = useDismissibleNotifications();
-
-    const investorCount = exchangeParticipants.length
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -88,7 +94,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                                  name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[
-                                    {to: `${url}/market-pairs`, label: 'Markets', icon: <PublicIcon/>},
+                                    {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
     const inviteScreen = (
@@ -101,6 +107,26 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
+
+    const rows = exchangeParticipants.map(relationship => {
+        const custodian = investorMap.get(relationship.contractData.exchParticipant);
+
+        if (!custodian) {
+            return null
+        }
+
+        return (
+            <div className='relationship-row' key={relationship.contractId}>
+                <div className='default-profile-icon'>
+                    {getAbbreviation(custodian.name)}
+                </div>
+                <div className='relationship-info'>
+                    <Header className='name' as='h4'>{custodian.name}</Header>
+                    <p className='p2'>{custodian?.investor}</p>
+                </div>
+            </div>
+        )
+    });
 
     const exchangeScreen =
         <div className='exchange'>

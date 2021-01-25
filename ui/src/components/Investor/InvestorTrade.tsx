@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import _ from 'lodash'
+import { Header } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
@@ -86,12 +87,12 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><ExchangeIcon size='24'/>{base}/{quote}</>}
+            menuTitle={<><ExchangeIcon color='green' size='24'/>{base}/{quote}</>}
             onLogout={onLogout}
         >
             <PageSection className='investor-trade'>
                 <div className='order'>
-                    <h3><CandlestickIcon/>Order</h3>
+                    <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
                             assetPrecisions={[basePrecision, quotePrecision]}

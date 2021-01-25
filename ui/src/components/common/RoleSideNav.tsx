@@ -24,7 +24,7 @@ const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
                     exact
                     className='home-item'
                 >
-                    <Header as='h2' className='dark'>@{name}</Header>
+                    <Header as='h1' className='dark'>@{name}</Header>
                 </Menu.Item>
                 {items.map(i =>
                     <Menu.Item
@@ -33,7 +33,7 @@ const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
                         className='sidemenu-item-normal'
                         exact
                     >
-                        <p className='p2'>{i.icon}{i.label}</p>
+                        <p>{i.icon}{i.label}</p>
                     </Menu.Item>
                 )}
             </Menu.Menu>

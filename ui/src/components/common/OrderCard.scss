@@ -1,25 +1,28 @@
 @mixin order-card {
     .order-card {
         display: flex;
+        flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: $spacing-s;
         margin: $spacing-s 0px;
-        background: var(--grey1);
-        border: 2px solid var(--grey2);
+        background: var(--white);
+        border: 1px solid var(--cool-grey-90);
         box-sizing: border-box;
-        border-radius: 2px;
+        border-radius: 4px;
+        flex-wrap: wrap;
+        width: 100%;
+        height: 46px;
+
+        &.ui.card {
+            border: none;
+        }
 
         .order-info {
-            &.ui.card {
-                background: none;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: space-between;
-                align-items: center;
-                margin: 0;
-            }
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 70%;
 
             .exchange-icon {
                 width: 16px;
@@ -28,20 +31,33 @@
                 margin-left: $spacing-s;
             }
 
-            div:first-child {
+            p:first-child {
                 display: flex;
                 align-items: center;
+            }
+
+        }
+
+        .actions {
+            margin-left: auto;
+            justify-content: flex-end;
+            margin-right: $spacing-s;
+
+            .fields {
+                margin: 0;
             }
         }
 
         @media screen and (max-width: 800px) {
-            .order-card > .ui.card.order-info {
+            height: unset;
+            .order-info {
                 flex-direction: column;
-                align-content: flex-start;
-            }
+                align-items: flex-start;
+                padding: $spacing-s;
 
-            .order-card > .ui.card.order-info > div:not(:last-child) {
-                padding-bottom: $spacing-s;
+                .exchange-icon {
+                    margin-left:0px;
+                }
             }
         }
     }

@@ -49,5 +49,9 @@
         &.fill-blue , path.fill-blue{
             fill: var(--blue-50);
         }
+
+        &.fill-green , path.fill-green{
+            fill: var(--green-50);
+        }
     }
 }

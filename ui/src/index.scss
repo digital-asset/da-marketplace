@@ -71,10 +71,10 @@ html {
     font-family: "BrownStd-Light";
     font-style: normal;
     font-weight: normal;
-    font-size: 34px;
-    line-height: 32px;
-    margin: 0;
+    font-size: 20px;
+    line-height: 19px;
     color: var(--textcolor);
+    margin: 0px;
 
     &.dark {
       color: var(--white);
@@ -86,11 +86,12 @@ html {
   }
 
   h2.ui.header {
-    font-family: "BrownStd-Light";
+    font-family: "Open sans";
     font-style: normal;
     font-weight: normal;
     font-size: 20px;
-    line-height: 19px;
+    line-height: 27px;
+    margin: 0px;
     color: var(--textcolor);
 
     &.dark {
@@ -98,17 +99,26 @@ html {
     }
 
     &.bold {
-      font-weight: "BrownStd-bold";
+      font-weight: 600;
     }
   }
 
   h3.ui.header {
     font-family: "Open sans";
     font-style: normal;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 27px;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 0px;
     color: var(--textcolor);
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-weight: 600;
+    }
   }
 
   h4.ui.header {
@@ -116,19 +126,17 @@ html {
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
-    line-height: 22px;
+    line-height: 19px;
     color: var(--textcolor);
-    margin: 0px;
-    padding: 0px;
   }
 
   p {
     font-family: "Open sans";
     font-style: normal;
     font-weight: normal;
-    font-size: 16px;
-    line-height: 26px;
-    margin: 0;
+    font-size: 14px;
+    line-height: 19px;
+    margin: 0px;
     color: var(--grey-10);
 
     &.bold {
@@ -140,8 +148,8 @@ html {
     }
 
     &.p2 {
-      font-size: 14px;
-      line-height: 19px;
+      font-size: 12px;
+      line-height: 16px;
       color: var(--textcolor);
 
       &.dark {
@@ -156,7 +164,22 @@ html {
 
   a {
     color: var(--blue-50);
-    font-weight: 600;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+
+    &.bold {
+      font-weight: 600;
+    }
+
+    &.a2 {
+      font-size: 14px;
+      line-height: 19px;
+
+      &.bold {
+        font-weight: 600;
+      }
+    }
 
     &:hover {
       cursor: pointer;
@@ -178,6 +201,17 @@ html {
       @include app;
     }
   }
+}
+
+.ui.form .field>.selection.dropdown, .ui.form .field> .ui.input {
+  width: 230px;
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
+}
+
+.ui.form textarea {
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
 }
 
 @include icons;

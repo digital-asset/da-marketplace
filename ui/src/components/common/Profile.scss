@@ -1,5 +1,7 @@
 @mixin profile {
     .profile {
+        animation: fadeIn .5s;
+
         .profile-form {
             &.landing-page {
                 display: flex;
@@ -9,10 +11,6 @@
                 border: 1px solid var(--cool-grey-90);
                 padding: $spacing-l;
                 border-radius: 2px;
-
-                form {
-                    background-color: var(--blue-100);
-                }
 
                 .profile-values {
                     display: flex;
@@ -42,9 +40,12 @@
             }
 
             .profile-form-field {
-                width: 260px;
                 margin-top: $spacing-s;
                 margin-right: $spacing-s;
+
+                .ui.input {
+                    width: 100%;
+                }
             }
 
             .profile-submit-button {
@@ -88,6 +89,8 @@
             width: 100%;
             justify-content: space-between;
             align-items: center;
+            font-size: 16px;
+            line-height: 22px;
         }
 
         &:hover {

@@ -2,10 +2,9 @@ import React from 'react'
 import { Header } from 'semantic-ui-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { UserIcon } from '../../icons/Icons'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
@@ -15,24 +14,22 @@ import Page from '../common/Page'
 import CreateDeposit from './CreateDeposit'
 
 type Props = {
-    clients: string[];
+    clients: {
+        party: any;
+        label: string;
+    }[];
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const investors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
-        .filter(c => clients.includes(c.contractData.investor))
-
     const allDeposits = useContractQuery(AssetDeposit);
 
     const tableHeadings = ['Name', 'Holdings']
 
     const tableRows = clients.map(client => {
-            const clientName = investors
-                .find(i => i.contractData.investor === client)?.contractData.name || client
-
-            const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client)
+            const clientName = client.label
+            const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client.party)
             return [clientName, depositSummary(deposits).join(',')]
         }
     );

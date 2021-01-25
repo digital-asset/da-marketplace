@@ -9,6 +9,15 @@
         margin-left: $spacing-m;
         border-radius: 2px;
         height: fit-content;
+        animation: fadeIn .5s;
+
+        h2 {
+            margin-bottom: $spacing-m;
+        }
+
+        .beneficiary-select .selection.dropdown {
+            width: 100%;
+        }
 
         .inline-form-group {
             margin-bottom: $spacing-m;

@@ -20,38 +20,33 @@ type Props = {
 const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) => {
     const custodianMap = useRegistryLookup().custodianMap;
 
-    const custodianRows = custodianRelationships.map(relationship => {
+    const rows = custodianRelationships.map(relationship => {
         const custodian = custodianMap.get(relationship.contractData.custodian);
 
         if (!custodian) {
             return null
         }
 
-        return <RelationshipRow
-                contractId={relationship.contractId}
-                name={custodian.name}
-                party={custodian?.custodian}/>
+        return (
+            <div className='relationship-row' key={relationship.contractId}>
+                <div className='default-profile-icon'>
+                    {getAbbreviation(custodian.name)}
+                </div>
+                <div className='relationship-info'>
+                    <Header className='bold name' as='h3'>{custodian.name}</Header>
+                    <p>{custodian?.custodian}</p>
+                </div>
+            </div>
+        )
     });
 
     return (
         <div className='market-relationships'>
-            <Header as='h3'>Market Relationships</Header>
+            <Header className='bold' as='h2'>Market Relationships</Header>
             <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
-            {custodianRows}
+            {rows}
         </div>
     )
 }
-
-const RelationshipRow = (props: {contractId: string, name: string, party: string }) => (
-    <div className='relationship-row' key={props.contractId}>
-        <div className='default-profile-icon'>
-            {getAbbreviation(props.name)}
-        </div>
-        <div className='relationship-info'>
-            <Header className='name' as='h4'>{props.name}</Header>
-            <p className='p2'>{props.party}</p>
-        </div>
-    </div>
-)
 
 export default MarketRelationships;

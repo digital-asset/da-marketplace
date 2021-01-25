@@ -1,5 +1,7 @@
 @mixin market-relationships {
     .market-relationships {
+        animation: fadeIn .5s;
+
         margin-top: $spacing-gap;
 
         .relationship-row {

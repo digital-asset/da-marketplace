@@ -2,9 +2,11 @@
 @import "../common/WalletTransaction.scss";
 
 @import './InvestorTrade.scss';
+@import './InvestorOrders.scss';
 
 @mixin investor {
     @include wallet;
     @include wallet-transaction;
     @include investor-trade;
+    @include investor-orders;
 }

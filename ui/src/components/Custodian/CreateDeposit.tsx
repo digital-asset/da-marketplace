@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
+import { useParams } from 'react-router-dom'
 
 import { useParty, useLedger } from '@daml/react'
 import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
@@ -14,24 +15,23 @@ import { TokenInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
-const CreateDeposit = (props: {
-    currentBeneficiary?: ContractInfo<RegisteredInvestor>
-}) => {
-    const { currentBeneficiary } = props;
+const CreateDeposit = () => {
     const [ beneficiary, setBeneficiary ] = useState('');
     const [ token, setToken ] = useState<TokenInfo>();
     const [ depositQuantity, setDepositQuantity ] = useState('');
     const [ depositQuantityError, setDepositQuantityError ] = useState<string>()
+
+    const { investorId } = useParams<{investorId: string}>()
 
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
 
     useEffect(()=> {
-        if (!!currentBeneficiary) {
-            setBeneficiary(currentBeneficiary?.contractData.investor)
+        if (!!investorId) {
+            setBeneficiary(investorId)
         }
-    }, [currentBeneficiary])
+    }, [investorId])
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
@@ -86,7 +86,7 @@ const CreateDeposit = (props: {
         const key = wrapDamlTuple([operator, custodian]);
         await ledger.exerciseByKey(Custodian.Custodian_CreateDeposit, key, args);
 
-        setBeneficiary('')
+        setBeneficiary(investorId? investorId : '')
         setToken(undefined)
         setDepositQuantity('')
     }
@@ -111,11 +111,12 @@ const CreateDeposit = (props: {
     return (
         <div className='create-deposit'>
             <FormErrorHandled onSubmit={handleCreateDeposit}>
-                <Header as='h3'>Quick Deposit</Header>
-                    {!currentBeneficiary &&
+                <Header as='h2'>Quick Deposit</Header>
+                    {!investorId &&
                         <Form.Select
                             clearable
-                            label={<p className='p2'>Beneficiary</p>}
+                            className='beneficiary-select'
+                            label={<p>Beneficiary</p>}
                             value={beneficiary}
                             placeholder='Select...'
                             options={beneficiaryOptions}
@@ -132,9 +133,10 @@ const CreateDeposit = (props: {
                             setContract={token => setToken(token)}/>
                         <Form.Input
                             className='create-deposit-quantity'
-                            label={<p className='p2'>Quantity</p>}
+                            label={<p>Quantity</p>}
                             type='number'
                             step={step}
+                            value={depositQuantity}
                             placeholder={placeholder}
                             error={depositQuantityError}
                             disabled={!token}

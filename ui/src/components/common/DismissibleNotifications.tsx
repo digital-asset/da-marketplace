@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 import { ContractId } from '@daml/types'
@@ -75,7 +75,7 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     }
     return (
         <NotificationComponent>
-            <p>Notification from {name}: {notification.contractData.text}</p>
+            <Header as='h3'>Notification from {name}: {notification.contractData.text}</Header>
             <FormErrorHandled onSubmit={notificationDismiss}>
                 <Form.Group className='inline-form-group'>
                     <Button

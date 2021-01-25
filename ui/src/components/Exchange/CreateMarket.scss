@@ -1,6 +1,7 @@
 @mixin create-market {
     .create-market {
         margin-bottom: $spacing-xl;
+        animation: fadeIn .5s;
 
         .create-market-options {
             display: flex;

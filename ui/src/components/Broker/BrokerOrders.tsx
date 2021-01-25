@@ -41,29 +41,41 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection>
-                <Header as='h3'>Orders</Header>
-                <div className='customer-orders'>
-                    <p>Requested Customer Orders</p>
-                    { allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.contractData}/>)}
-
-                    <p>Open Customer Orders</p>
-                    { allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.contractData} deposits={deposits}/>)}
-
-                    <p>Exchange Orders</p>
-                    { allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)}
+                <div className='broker-orders'>
+                    <div className='order-section'>
+                        <Header as='h2'>Requested Orders</Header>
+                        { allBrokerOrderRequests.length > 0 ?
+                            allBrokerOrderRequests.map(or => <BrokerOrderRequestCard key={or.contractId} cid={or.contractId} cdata={or.contractData}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
+                    <div className='order-section'>
+                        <Header as='h2'>Open Orders</Header>
+                        { allBrokerOrders.length > 0 ?
+                            allBrokerOrders.map(o => <BrokerOrderCard key={o.contractId} cdata={o.contractData} deposits={deposits}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
+                    <div className='order-section'>
+                        <Header as='h2'>Exchange Orders</Header>
+                        { allExchangeOrders.length > 0 ?
+                            allExchangeOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)
+                            :
+                            <i>none</i>
+                        }
+                    </div>
                 </div>
             </PageSection>
         </Page>
     )
 };
 
-
-// Broker Order Request
 type BrokerOrderRequestCardProps = {
     cid: ContractId<BrokerOrderRequest>;
     cdata: BrokerOrderRequest;
 };
-
 
 const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children, ...props}) => {
     const [ brokerOrderId, setBrokerOrderId ] = useState<string>('');
@@ -89,40 +101,38 @@ const BrokerOrderRequestCard: React.FC<BrokerOrderRequestCardProps> = ({children
             onSubmit={handleAcceptBrokerOrderRequest}
         >
             <div className='order-card-container'>
-                <div className='order-card'>
-                    <Card fluid className='order-info'>
+                <Card fluid className='order-card'>
+                    <div className='order-info'>
                         <div><ExchangeIcon/> {label}</div>
                         <div>{ amount }</div>
                         <div>{`@ ${price}`}</div>
                         <div>{`customer: ${customer}`}</div>
                         <div>{`deposit: ${depositCid.substr(depositCid.length - 8)}`}</div>
-                    </Card>
-
-                    <Form.Group>
-                        <Form.Input
-                            className='orderid-input'
-                            placeholder='id'
-                            value={brokerOrderId}
-                            onChange={e => setBrokerOrderId(e.currentTarget.value)}
-                        />
-                        <Button
-                            className='ghost'
-                            content='Accept Order'
-                        />
-                    </Form.Group>
-                </div>
+                    </div>
+                    <div className='actions'>
+                        <Form.Group>
+                            <Form.Input
+                                className='orderid-input'
+                                placeholder='id'
+                                value={brokerOrderId}
+                                onChange={e => setBrokerOrderId(e.currentTarget.value)}
+                            />
+                            <Button
+                                className='ghost'
+                                content='Accept Order'
+                            />
+                        </Form.Group>
+                    </div>
+                </Card>
             </div>
         </FormErrorHandled>
     )
 };
 
-
-// Broker Order
 type BrokerOrderCardProps = {
     cdata: BrokerOrder;
     deposits: DepositInfo[];
 };
-
 
 const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
     const [ depositCid, setDepositCid ] = useState<string>('');
@@ -163,30 +173,31 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
             onSubmit={handleAcceptBrokerOrderFill}
         >
             <div className='order-card-container'>
-                <div className='order-card'>
-                    <Card fluid className='order-info'>
+                <Card fluid className='order-card'>
+                    <div className='order-info'>
                         <div><ExchangeIcon/> {label}</div>
                         <div>{ amount }</div>
                         <div>{`@ ${price}`}</div>
                         <div>{`customer: ${customer}`}</div>
                         <div>{`id: ${props.cdata.brokerOrderId}`}</div>
                         <div>{`deposit: ${depositCid.substr(depositCid.length - 8) || ''}`}</div>
-                    </Card>
-
-                    <Form.Group>
-                        <Form.Select
-                            required
-                            label='Deposit'
-                            options={options}
-                            onChange={handleDepositChange}
-                            value={depositCid}
-                        />
-                        <Button
-                            className='ghost'
-                            content='Fill Order'
-                        />
-                    </Form.Group>
-                </div>
+                    </div>
+                    <div className='actions'>
+                        <Form.Group>
+                            <Form.Select
+                                required
+                                label='Deposit'
+                                options={options}
+                                onChange={handleDepositChange}
+                                value={depositCid}
+                            />
+                            <Button
+                                className='ghost'
+                                content='Fill Order'
+                            />
+                        </Form.Group>
+                    </div>
+                </Card>
             </div>
         </FormErrorHandled>
     )

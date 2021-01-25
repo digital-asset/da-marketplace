@@ -92,7 +92,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                  name={registeredBroker[0]?.contractData.name || broker}
                                  items={[
                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-                                    {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
+                                    {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
                                  ]}/>
 
     const brokerScreen =

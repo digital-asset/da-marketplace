@@ -90,7 +90,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
         icon='right arrow'
         labelPosition='right'
         disabled={!username}
-        content='Log in'
+        content={<p className='dark bold'>Log in</p>}
         onClick={handleLogin}/>
     </Form>
   )
@@ -133,7 +133,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
           icon='right arrow'
           labelPosition='right'
           disabled={!jwt || !partyId}
-          content='Submit'
+          content={<p className='dark bold'>Submit</p>}
           onClick={handleDablTokenLogin}/>
     </Form>
   </>
@@ -199,13 +199,6 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
         { loadAndCatch => (
           <>
             <Form.Group widths='equal'>
-              <Form.Select
-                selection
-                label={<p className='dark'>Party Name</p>}
-                placeholder='Choose a party'
-                options={options}
-                value={selectedPartyId}
-                onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
 
               <Form.Input className='upload-file-input'>
                 <label className="custom-file-upload button ui">
@@ -227,6 +220,13 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
                   <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
                 </label>
               </Form.Input>
+              <Form.Select
+                selection
+                disabled={!parties}
+                placeholder='Choose a party'
+                options={options}
+                value={selectedPartyId}
+                onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
             </Form.Group>
             <Button
               fluid
@@ -235,8 +235,8 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
               labelPosition='right'
               disabled={!parties?.find(p => p.party === selectedPartyId)}
               className='ghost dark'
-              content='Log in'/>
-            {/* FORM_END */}
+              content={<p className='dark bold'>Log in</p>}/>
+              {/* FORM_END */}
           </>
         )}
       </FormErrorHandled>
@@ -276,7 +276,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
         icon='right arrow blue'
         labelPosition='right'
         className='dabl-login-button'
-        content='Log in with DABL'
+        content={<p className='bold'>Log in with DABL</p>}
         onClick={handleDablLogin}/>
     </Form>
   )
