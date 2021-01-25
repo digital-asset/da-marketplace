@@ -25,7 +25,7 @@ export const useExchangeInviteNotifications = () => {
             invitationAccept={async () => await acceptExchParticipantInvite(invite.contractId)}
             invitationReject={async () => await rejectExchParticipantInvite(invite.contractId)}/>);
 
-    const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
+        const acceptExchParticipantInvite = async (cid: ContractId<ExchangeParticipantInvitation>) => {
         const choice = ExchangeParticipantInvitation.ExchangeParticipantInvitation_Accept;
         await ledger.exercise(choice, cid, {});
     }

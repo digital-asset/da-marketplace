@@ -53,6 +53,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
         console.log("Unexpected close from exchangeParticipantInvitation: ", e);
     }).contracts.map(makeContractInfo);
+
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
@@ -134,11 +135,11 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <>
-                                <MarketRelationships role={MarketRole.ExchangeRole}
-                                    custodianRelationships={allCustodianRelationships}/>
-                                <RequestInvestorRelationship registeredInvestors={investorOptions}/>
-                            </>
+                            <MarketRelationships
+                                role={MarketRole.ExchangeRole}
+                                custodianRelationships={allCustodianRelationships}
+                                investorOptions={investorOptions}
+                                />
                         }
                         sideNav={sideNav}
                         notifications={notifications}

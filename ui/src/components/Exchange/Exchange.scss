@@ -5,27 +5,5 @@
         @include create-market;
 
         height: 100%;
-
-        .relationship-row {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            background-color: var(--white);
-            border: 1px solid var(--cool-grey-90);
-            padding: $spacing-l;
-            margin: $spacing-s 0;
-            border-radius: 2px;
-            width: 100%;
-
-            .relationship-info {
-                flex-direction: column;
-                margin-left: $spacing-m;
-
-                .name {
-                    padding: 0px;
-                    margin-bottom: $spacing-xs;
-                }
-            }
-        }
     }
 }
