@@ -5,12 +5,16 @@ import { useLedger, useParty } from '@daml/react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { WalletIcon, OrdersIcon, UserIcon } from '../../icons/Icons'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -25,6 +29,7 @@ import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
+import BrokerCustomers from './BrokerCustomers'
 
 type Props = {
     onLogout: () => void;
@@ -92,7 +97,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                  name={registeredBroker[0]?.contractData.name || broker}
                                  items={[
                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-                                    {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
+                                    {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>},
+                                    {to: `${url}/customers`, label: 'Customers', icon: <UserIcon/>}
                                  ]}/>
 
     const brokerScreen =
@@ -133,6 +139,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         deposits={allDeposits}
                         onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/customers`}>
+                    <BrokerCustomers
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        />
                 </Route>
             </Switch>
         </div>

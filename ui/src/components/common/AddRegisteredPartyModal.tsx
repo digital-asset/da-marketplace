@@ -22,14 +22,14 @@ const AddRegisteredPartyModal = (props: IProps) => {
     const { onSubmit, partyOptions, title, onRequestClose, emptyMessage, multiple } = props
 
     const [ selectedParties, setSelectedParties ] = useState<string[]>([]);
-
+    const [ showSuccessMessage, setShowSuccessMessage ] = useState<boolean>(false);
     const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {
         setSelectedParties(result.value)
     }
 
     const handleSubmit = async () => {
         onSubmit(selectedParties)
-        onRequestClose()
+        setShowSuccessMessage(true)
     }
 
     return (

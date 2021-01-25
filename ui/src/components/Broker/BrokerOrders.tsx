@@ -33,7 +33,7 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
 
     const allBrokerCustomers = useContractQuery(BrokerCustomer);
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
-
+    console.log(allBrokerCustomers)
     return (
         <Page
             sideNav={sideNav}

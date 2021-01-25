@@ -15,6 +15,9 @@
             th {
                 border: none;
                 background-color: var(--cool-grey-100);
+                &:first-child {
+                    padding-left: 0px;
+                }
             }
 
             tr td {

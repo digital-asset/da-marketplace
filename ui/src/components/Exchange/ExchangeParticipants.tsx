@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 
 import { useParty, useLedger } from '@daml/react'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+
+import { Header } from 'semantic-ui-react'
 
 import { AddPlusIcon } from '../../icons/Icons'
 
@@ -9,6 +10,7 @@ import { AddPlusIcon } from '../../icons/Icons'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { UserIcon } from '../../icons/Icons'
@@ -72,18 +74,22 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredIn
         >
             <PageSection>
                 <div className='exchange-participants'>
-                    <a onClick={()=> setShowAddRelationshipModal(true)}>
-                        <AddPlusIcon/> <a>Add Investor</a>
-                    </a>
+                    <div className='title'>
+                        <Header as='h2'>Exchange Participants</Header>
+                        <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
+                            <AddPlusIcon/> <a>Add Investor</a>
+                        </a>
+                    </div>
                     <StripedTable
                         headings={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
                         rows={rows}/>
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
-                            title='Add Custodian'
+                            title='Add Investor'
                             partyOptions={partyOptions}
                             onRequestClose={() => setShowAddRelationshipModal(false)}
                             multiple={false}
+                            emptyMessage='All registered investors have been added'
                             onSubmit={handleExchParticipantInviteSubmit}/>
                     }
                 </div>

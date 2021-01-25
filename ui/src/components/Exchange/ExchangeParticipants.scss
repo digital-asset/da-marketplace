@@ -4,13 +4,20 @@
     .exchange-participants {
         height: 100%;
 
-        a {
+        .title {
             display: flex;
             flex-direction: row;
             align-items: center;
 
-            .icon {
-                margin-right: $spacing-xs;
+            h2 {
+                margin-right: $spacing-l;
+            }
+
+            a {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                margin-left: $spacing-xs;
             }
         }
     }

@@ -43,6 +43,7 @@ const InviteBrokerCustomer: React.FC<Props> = ({ registeredInvestors }) => {
     }
 
     return (
+        
         <FormErrorHandled onSubmit={handleBrokerCustomerInviteSubmit}>
             <Form.Group>
                 <ContractSelect

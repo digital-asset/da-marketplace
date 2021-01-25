@@ -187,13 +187,15 @@ export const OverflowIcon = () => (
 
 export const EditIcon = () => (
     <svg className='icon edit-icon fill-blue' viewBox="0 0 15 15">
-      <polygon className="fill-blue" points="11.1,7.1 8.9,4.9 3.4,10.4 5.6,12.6 "/>
-      <polygon className="fill-blue" points="3,10.8 3,13 5.2,13 "/>
-      <path className="fill-blue"
-        d="M12.8,5.4c0.2-0.2,0.2-0.6,0-0.8l-1.4-1.4c-0.2-0.2-0.6-0.2-0.8,0L9.5,4.3l2.2,2.2L12.8,5.4z"/>
-      <g>
-      <path className="fill-blue"
-        d="M13.5,15.1h-10c-0.3,0-0.5-0.2-0.5-0.5s0.2-0.5,0.5-0.5h10c0.3,0,0.5,0.2,0.5,0.5S13.8,15.1,13.5,15.1z"/>
-      </g>
+        <g clip-path="url(#clip0)">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M10.4276 2.41421C11.2086 1.63316 12.475 1.63316 13.256 2.41421L13.5855 2.74368C14.3665 3.52473 14.3665 4.79106 13.5855 5.57211L5.32232 13.8353C4.94725 14.2103 4.43854 14.4211 3.90811 14.4211L1.57864 14.4211L1.57864 12.0916C1.57864 11.5612 1.78935 11.0524 2.16442 10.6774L10.4276 2.41421Z" stroke="#174DE8"/>
+            <path d="M9 4L12 7" stroke="#174DE8"/>
+        </g>
+        <defs>
+            <clipPath id="clip0">
+            <rect width="16" height="16" fill="white"/>
+            </clipPath>
+        </defs>
     </svg>
+
   );

@@ -1,0 +1,9 @@
+@mixin broker-customers {
+    .broker-customers {
+        height: 100%;
+        @include wallet;
+        @include broker-orders;
+        @include broker-customers;
+
+    }
+}

@@ -38,6 +38,11 @@
           background-color: var(--cool-grey-20);
         }
       }
+
+      &.secondary {
+        background-color: transparent;
+        border-color: var(--cool-grey-70);
+      }
     }
 
     i.right.arrow.icon {
