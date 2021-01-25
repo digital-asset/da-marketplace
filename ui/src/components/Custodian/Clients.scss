@@ -2,13 +2,10 @@
     .clients {
         display: flex;
         flex-direction: row;
+        justify-content: space-between;
 
         .client-list {
-            width: 60%;
-        }
-
-        .create-deposit {
-            width: 40%;
+            width: 100%;
         }
     }
 }

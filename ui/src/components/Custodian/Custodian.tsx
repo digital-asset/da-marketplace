@@ -6,14 +6,15 @@ import { Menu } from 'semantic-ui-react'
 import { useLedger, useParty, useStreamQueries, useStreamFetchByKeys } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
-import { RegisteredCustodian, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredCustodian, RegisteredInvestor, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import {
     Custodian as CustodianModel,
-    CustodianInvitation
+    CustodianInvitation,
+    CustodianRelationship
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { makeContractInfo, wrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useOperator } from '../common/common'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
@@ -44,6 +45,33 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const registeredCustodian = useStreamQueries(RegisteredCustodian, () => [], [], (e) => {
         console.log("Unexpected close from registeredCustodian: ", e);
     });
+    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationships: ", e);
+    }).contracts.map(relationship => { return relationship.payload.party })
+
+    const brokerBeneficiaries = useStreamQueryAsPublic(RegisteredBroker).contracts
+        .filter(broker => relationshipParties.find(p => broker.payload.broker === p))
+        .map(broker => {
+            const party = broker.payload.broker;
+            const name = broker.payload.name;
+            return {
+                party,
+                label: `${name} | ${party}`
+            }
+        })
+
+    const investorBeneficiaries = useStreamQueryAsPublic(RegisteredInvestor).contracts
+        .filter(investor => relationshipParties.find(p => investor.payload.investor === p))
+        .map(investor => {
+            const party = investor.payload.investor;
+            const name = investor.payload.name;
+            return {
+                party,
+                label: `${name} | ${party}`
+            }
+        })
+
+    const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
 
     const custodianContract = useStreamFetchByKeys(CustodianModel, keys, [operator, custodian]).contracts;
     const investors = custodianContract[0]?.payload.investors || [];
@@ -99,8 +127,6 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo)
-
     const sideNav = <RoleSideNav url={url}
                         name={registeredCustodian.contracts[0]?.payload.name || custodian}
                         items={[
@@ -110,14 +136,14 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                             <Menu.Item>
                                 <p className='p2'>Client Holdings:</p>
                             </Menu.Item>
-                            {investors.map(investor =>
+                            {allBeneficiaries.map(client =>
                                 <Menu.Item
                                     className='sidemenu-item-normal'
                                     as={NavLink}
-                                    to={`${url}/client/${investor}`}
-                                    key={investor}
+                                    to={`${url}/client/${client.party}`}
+                                    key={client.party}
                                 >
-                                    <p>{registeredInvestors.find(i => i.contractData.investor == investor)?.contractData.name || investor}</p>
+                                    <p>{client.label.substring(0, client.label.indexOf('|'))}</p>
                                 </Menu.Item>
                             )}
                         </Menu.Menu>
@@ -147,7 +173,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
                 <Route path={`${path}/clients`}>
                     <Clients
-                        clients={investors}
+                        clients={allBeneficiaries}
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>

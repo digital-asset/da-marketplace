@@ -3,7 +3,8 @@ import { Header } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
@@ -17,23 +18,28 @@ import CapTable from '../common/CapTable';
 import CreateDeposit from './CreateDeposit'
 
 type Props = {
-    clients: string[];
+    clients: {
+        party: any;
+        label: string;
+    }[];
     sideNav: React.ReactElement;
     onLogout: () => void;
 }
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
-    const investors = useStreamQueryAsPublic(RegisteredInvestor).contracts.filter(c => clients.includes(c.payload.investor))
-
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
         console.log("Unexpected close from assetDeposit: ", e);
     }).contracts.map(makeContractInfo);
 
     const tableHeadings = ['Name', 'Holdings']
 
+    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
+        console.log("Unexpected close from custodianRelationships: ", e);
+    }).contracts.map(relationship => { return relationship.payload.party })
+
     const tableRows = clients.map(client => {
-            const clientName = investors.find(i => i.payload.investor === client)?.payload.name || client
-            const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client)
+            const clientName = client.label
+            const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === client.party)
             return [clientName, depositSummary(deposits).join(',')]
         }
     );

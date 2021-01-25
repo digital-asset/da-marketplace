@@ -60,7 +60,8 @@
         background-color: var(--cool-grey-20);
     }
     .column.page-sidemenu > .ui.secondary.menu .item.home-item {
-        padding: $spacing-m;
+        padding: $spacing-l $spacing-m;
+        height: 75px;
     }
 
     .column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p {
