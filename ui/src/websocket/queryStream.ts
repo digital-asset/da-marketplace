@@ -130,7 +130,6 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
 
-// export function useContractQuery
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);
 

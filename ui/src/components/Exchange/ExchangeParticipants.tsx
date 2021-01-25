@@ -12,8 +12,6 @@ import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-// import InviteParticipant from './InviteParticipant'
-
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;

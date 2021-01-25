@@ -188,10 +188,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     </Switch>
 
     return registeredInvestor.length === 0 ? inviteScreen : investorScreen
-
-    // return registeredInvestor.loading
-    //      ? loadingScreen
-    //      : registeredInvestor.length === 0 ? inviteScreen : investorScreen
 }
 
 export default Investor;
