@@ -1,5 +1,7 @@
 @mixin card-table {
     .card-table {
+        animation: fadeIn .5s;
+
         & > .ui.table {
             border: none;
 

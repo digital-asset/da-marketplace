@@ -1,5 +1,7 @@
 @mixin profile {
     .profile {
+        animation: fadeIn .5s;
+
         .profile-form {
             &.landing-page {
                 display: flex;

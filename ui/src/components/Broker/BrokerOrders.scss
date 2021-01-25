@@ -1,5 +1,7 @@
 @mixin broker-orders {
     .broker-orders {
+        animation: fadeIn .5s;
+
         .order-section {
             margin-bottom: $spacing-m;
         }

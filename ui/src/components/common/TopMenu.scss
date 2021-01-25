@@ -10,6 +10,10 @@
             padding: $spacing-s;
             min-height: 70px;
 
+            .menu.left.menu {
+                animation: fadeIn .5s;
+            }
+
             .menu > .item:before {
                 display: none;
             }
@@ -28,9 +32,10 @@
                 }
             }
 
-            .top-menu.menu .menu-buttons {
+            .menu > .item.menu-button {
                 margin-left: auto;
                 margin-right: $spacing-s;
+                animation: fadeIn .5s;
             }
         }
 

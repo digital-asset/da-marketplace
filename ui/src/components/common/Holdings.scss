@@ -1,5 +1,7 @@
 @mixin holdings {
     .holdings {
+        animation: fadeIn .5s;
+
         .provider-info {
             display: flex;
             align-items: baseline;

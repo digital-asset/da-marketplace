@@ -94,50 +94,52 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
             sideNav={sideNav}
             menuTitle={<Header as='h2'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection className='issued-token'>
-                <div className='token-subheading'>
-                    <Header as='h3'>{token?.contractData.description}</Header>
-                    <div className='token-details'>
-                        {isPublic ? <Header as='h3'> <GlobeIcon/> Public </Header> : <Header as='h3'> <LockIcon/> Private </Header>}
-                        <Header as='h3'> Quantity Precision: {token?.contractData.quantityPrecision} </Header>
+            <PageSection>
+                <div className='issued-token'>
+                    <div className='token-subheading'>
+                        <Header as='h3'>{token?.contractData.description}</Header>
+                        <div className='token-details'>
+                            {isPublic ? <Header as='h3'> <GlobeIcon/> Public </Header> : <Header as='h3'> <LockIcon/> Private </Header>}
+                            <Header as='h3'> Quantity Precision: {token?.contractData.quantityPrecision} </Header>
+                        </div>
                     </div>
-                </div>
-                {!isPublic &&
-                    <div className='participants-viewer'>
-                        <a className='a2' onClick={() => setShowParticipants(!showParticipants)}>
-                            {showParticipants?
-                                <> Hide Participants <IconChevronUp/></>
-                                :
-                                <> View/Add Participants <IconChevronDown/></>
-                            }
-                        </a>
-                        {showParticipants &&
-                            <>
-                            <div className='list-heading'>
-                                <p><b>Participants</b></p>
-                                <a className='a2' onClick={() => setShowAddRegisteredPartyModal(true)}>
-                                    <AddPlusIcon/> Add Participant
-                                </a>
-                            </div>
-                                <ul className='participants-list'>
-                                    {Array.from(participants).map(o =>
-                                        <li key={o}>
-                                            <List.Content>
-                                                <p>{o}</p>
-                                            </List.Content>
-                                        </li>
-                                    )}
+                    {!isPublic &&
+                        <div className='participants-viewer'>
+                            <a className='a2' onClick={() => setShowParticipants(!showParticipants)}>
+                                {showParticipants?
+                                    <> Hide Participants <IconChevronUp/></>
+                                    :
+                                    <> View/Add Participants <IconChevronDown/></>
+                                }
+                            </a>
+                            {showParticipants &&
+                                <>
+                                <div className='list-heading'>
+                                    <p><b>Participants</b></p>
+                                    <a className='a2' onClick={() => setShowAddRegisteredPartyModal(true)}>
+                                        <AddPlusIcon/> Add Participant
+                                    </a>
+                                </div>
+                                    <ul className='participants-list'>
+                                        {Array.from(participants).map(o =>
+                                            <li key={o}>
+                                                <List.Content>
+                                                    <p>{o}</p>
+                                                </List.Content>
+                                            </li>
+                                        )}
 
-                                </ul>
-                            </>}
+                                    </ul>
+                                </>}
+                        </div>
+                    }
+                    <Header as='h2'>Position Holdings</Header>
+                    <div className='position-holdings-data'>
+                        <StripedTable
+                            headings={StripedTableHeaders}
+                            rows={StripedTableRows}/>
+                        {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                     </div>
-                }
-                <Header as='h2'>Position Holdings</Header>
-                <div className='position-holdings-data'>
-                    <StripedTable
-                        headings={StripedTableHeaders}
-                        rows={StripedTableRows}/>
-                    {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
             {showAddRegisteredPartyModal &&

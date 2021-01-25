@@ -31,9 +31,9 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                         </Header>
                     </Menu.Item>
                 </Menu.Menu>
-                <Menu.Menu className='menu-buttons' position='right'>
+                <Menu.Menu position='right'>
                     {topMenuButtons?.map(b =>
-                        <Menu.Item>
+                        <Menu.Item className='menu-button'>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
                                 <Header as='h3'>{b.label}</Header>
                             </Button>

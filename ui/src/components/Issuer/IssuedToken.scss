@@ -1,5 +1,6 @@
 @mixin issued-token {
     .issued-token {
+        animation: fadeIn .5s;
 
         .position-holdings-data {
             margin-top: $spacing-m;

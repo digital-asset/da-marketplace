@@ -39,7 +39,7 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             <PageSection>
                 <div className='investor-orders'>
                     <div className='order-section'>
-                        <Header as='h3'>Requested Orders</Header>
+                        <Header as='h2'>Requested Orders</Header>
                         {allOrderRequests.length > 0 ?
                             allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
                             :
