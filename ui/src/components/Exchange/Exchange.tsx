@@ -123,9 +123,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                         marketRelationships={
                             <MarketRelationships
                                 role={MarketRole.ExchangeRole}
-                                custodianRelationships={allCustodianRelationships}
-                                investorOptions={investorOptions}
-                                />
+                                custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
                         notifications={notifications}
@@ -141,7 +139,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 <Route path={`${path}/participants`}>
                     <ExchangeParticipants
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        registeredInvestors={investorOptions}/>
                 </Route>
             </Switch>
         </div>

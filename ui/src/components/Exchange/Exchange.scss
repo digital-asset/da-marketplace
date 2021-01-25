@@ -1,8 +1,10 @@
 @import './CreateMarket.scss';
+@import './ExchangeParticipants.scss';
 
 @mixin exchange {
     .exchange {
         @include create-market;
+        @include exchange-participants;
 
         height: 100%;
     }

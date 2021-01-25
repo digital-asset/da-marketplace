@@ -1,29 +1,24 @@
 import React from 'react'
 
 import { Header } from 'semantic-ui-react'
-import { useStreamQueries } from '@daml/react'
 
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+
 
 import { getAbbreviation } from '../common/utils';
 
-import { CustodianRelationshipInfo, ContractInfo, makeContractInfo } from './damlTypes'
+import { CustodianRelationshipInfo } from './damlTypes'
 
 import { useRegistryLookup } from './RegistryLookup'
 import RequestCustodianRelationship from './RequestCustodianRelationship'
-import RequestInvestorRelationship from './RequestInvestorRelationship'
 
 type Props = {
     role: MarketRole;
     custodianRelationships: CustodianRelationshipInfo[];
-    investorOptions?: ContractInfo<RegisteredInvestor>[]
 }
 
-const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships, investorOptions }) => {
+const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) => {
     const custodianMap = useRegistryLookup().custodianMap;
-    const investorMap = useRegistryLookup().investorMap;
 
     const custodianRows = custodianRelationships.map(relationship => {
         const custodian = custodianMap.get(relationship.contractData.custodian);
