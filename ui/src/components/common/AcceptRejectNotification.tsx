@@ -1,5 +1,5 @@
 import React from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import FormErrorHandled from './FormErrorHandled';
 import Notification from './Notification'
@@ -15,7 +15,7 @@ const AcceptRejectNotification: React.FC<AcceptRejectNotificationProps> = ({
     onReject
 }) => (
         <Notification>
-            <p>{children}</p>
+            <Header as='h3'>{children}</Header>
             <FormErrorHandled onSubmit={onAccept}>
                 { loadAndCatch =>
                     <Form.Group className='inline-form-group'>
