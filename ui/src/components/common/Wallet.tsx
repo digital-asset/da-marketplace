@@ -2,8 +2,6 @@ import React from 'react'
 
 import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
-import { useStreamQueries } from '@daml/react'
-
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -11,16 +9,15 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
 
-import { damlTupleToString, makeContractInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import PageSection from '../common/PageSection'
-import Page from '../common/Page'
-import Holdings from '../common/Holdings';
-
+import { damlTupleToString } from './damlTypes'
+import { useRegistryLookup } from './RegistryLookup'
 import { ITopMenuButtonInfo } from './TopMenu'
-
-import WalletTransaction from './WalletTransaction';
+import WalletTransaction from './WalletTransaction'
+import PageSection from './PageSection'
+import Holdings from './Holdings'
+import Page from './Page'
 
 const Wallet = (props: {
     sideNav: React.ReactElement;
@@ -33,19 +30,13 @@ const Wallet = (props: {
 
     const { sideNav, onLogout, role } = props
 
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
+    const allDeposits = useContractQuery(AssetDeposit);
 
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
-    const brokerProviders = useStreamQueries(BrokerCustomer, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomer: ", e);
-    }).contracts
+    const brokerProviders = useContractQuery(BrokerCustomer)
         .map(broker => {
-            const party = broker.payload.broker;
+            const party = broker.contractData.broker;
             const name = brokerMap.get(damlTupleToString(broker.key))?.name;
             return {
                 party,
@@ -53,11 +44,9 @@ const Wallet = (props: {
             }
         })
 
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
         .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
+            const party = exchParticipant.contractData.exchange;
             const name = exchangeMap.get(party)?.name;
             return {
                 party,
@@ -114,7 +103,6 @@ const Wallet = (props: {
                     sideNav={sideNav}
                     onLogout={onLogout}
                     deposits={allDeposits}
-                    providers={allProviders}
                     transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>

@@ -1,5 +1,4 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
 
 import Page from './Page'
 import PageSection from './PageSection'

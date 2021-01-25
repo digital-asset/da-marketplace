@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -10,24 +11,25 @@ import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Regi
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
-import RoleSideNav from '../common/RoleSideNav';
-
-import { ExchangeIcon, OrdersIcon, WalletIcon, UserIcon } from '../../icons/Icons'
+import RoleSideNav from '../common/RoleSideNav'
 
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+
 
 type Props = {
     onLogout: () => void;
@@ -44,19 +46,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         ...useBrokerCustomerInviteNotifications(),
         ...useDismissibleNotifications(),
     ];
-    const registeredInvestor = useStreamQueries(RegisteredInvestor, () => [], [], (e) => {
-        console.log("Unexpected close from registeredInvestor: ", e);
-    });
 
-    const allExchanges = useStreamQueries(Exchange, () => [], [], (e) => {
-        console.log("Unexpected close from exchange: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredInvestor = useContractQuery(RegisteredInvestor);
+    const allExchanges = useContractQuery(Exchange);
+    const allDeposits = useContractQuery(AssetDeposit);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -64,8 +58,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredInvestor.contracts[0]) {
-            const riData = registeredInvestor.contracts[0].payload;
+        if (registeredInvestor[0]) {
+            const riData = registeredInvestor[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location }
@@ -96,7 +90,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     }
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredInvestor.contracts[0]?.payload.name || investor}
+                        name={registeredInvestor[0]?.contractData.name || investor}
                         items={[
                             {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
                             {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
@@ -148,8 +142,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
     const investorScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
@@ -195,9 +187,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredInvestor.loading
-         ? loadingScreen
-         : registeredInvestor.contracts.length === 0 ? inviteScreen : investorScreen
+    return registeredInvestor.length === 0 ? inviteScreen : investorScreen
 }
 
 export default Investor;
