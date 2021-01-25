@@ -9,7 +9,7 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { makeContractInfo } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import CapTable from '../common/CapTable';
+import StripedTable from '../common/StripedTable';
 import { depositSummary } from '../common/utils';
 
 import CreateDeposit from './CreateDeposit';
@@ -43,8 +43,8 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
-                    <Header as='h2'>Client Holdings</Header>
-                    <CapTable
+                    <Header as='h3'>Client Holdings</Header>
+                    <StripedTable
                         headings={['Asset', 'Amount']}
                         rows={tableRows}/>
                 </div>

@@ -1,20 +1,40 @@
+
 @mixin striped-table {
     .striped-table {
-        border: none;
-        background: none;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: flex-start;
 
-        .striped-table-header > tr > th {
+        table {
+            border-collapse: collapse;
             border: none;
-            background: none;
+            margin: 0px;
+
+            th {
+                border: none;
+                background-color: var(--cool-grey-100);
+            }
+
+            tr td {
+                border-top: 0px !important;
+            }
+
+            tbody {
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-90);
+            }
+
+            tr:nth-child(odd) {
+                background-color: var(--blue-100);
+            }
         }
 
-        .striped-table-body > tr > td {
-            border: none;
-            background: none;
-        }
 
-        .striped-table-body > tr:nth-child(odd) {
-            background-color: var(--grey-3);
+        @media screen and (max-width: 1000px) {
+            .ui.table.issuer-striped-table tr:nth-child(odd) {
+                background-color: unset;
+            }
         }
     }
 }

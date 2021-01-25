@@ -26,7 +26,7 @@ import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils';
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-import CapTable from '../common/CapTable'
+import StripedTable from '../common/StripedTable'
 
 type DepositInfo = {
     investor: string,
@@ -88,9 +88,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
     const totalAllocatedQuantity = nettedTokenDeposits.length > 0 ? nettedTokenDeposits.reduce((a, b) => +a + +b.quantity, 0) : 0
 
-    const capTableRows = nettedTokenDeposits.map(deposit =>
+    const StripedTableRows = nettedTokenDeposits.map(deposit =>
         [deposit.investor, deposit.provider, deposit.quantity.toString(), `${((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%`])
-    const capTableHeaders = ['Investor', 'Provider', 'Amount', 'Percentage Owned']
+    const StripedTableHeaders = ['Investor', 'Provider', 'Amount', 'Percentage Owned']
 
     const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
@@ -139,9 +139,9 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                 }
                 <Header as='h2'>Position Holdings</Header>
                 <div className='position-holdings-data'>
-                    <CapTable
-                        headings={capTableHeaders}
-                        rows={capTableRows}/>
+                    <StripedTable
+                        headings={StripedTableHeaders}
+                        rows={StripedTableRows}/>
                     {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
                 </div>
             </PageSection>
