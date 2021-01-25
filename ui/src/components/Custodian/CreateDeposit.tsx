@@ -86,7 +86,7 @@ const CreateDeposit = (props: {
         const tokenId = token.contractData.id;
         const args = { beneficiary, tokenId, depositQuantity };
         const key = wrapDamlTuple([operator, custodian]);
-        await .Custodian_CreateDeposit, key, args);
+        await ledger.exerciseByKey(Custodian.Custodian_CreateDeposit, key, args);
 
         setBeneficiary('')
         setToken(undefined)

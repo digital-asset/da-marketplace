@@ -5,6 +5,23 @@
 
         .client-list {
             width: 60%;
+
+            .title {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+
+                a {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    .icon {
+                        margin-right: $spacing-xs;
+                    }
+                }
+            }
         }
 
         .create-deposit {
