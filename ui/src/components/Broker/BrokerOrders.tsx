@@ -4,8 +4,7 @@ import { Button, Card, Form, Header } from 'semantic-ui-react'
 import { useParty, useLedger } from '@daml/react'
 
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
-import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
@@ -16,8 +15,6 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-
-import BrokerCustomers from './BrokerCustomers'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -31,9 +28,6 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
     const allBrokerOrderRequests = useContractQuery(BrokerOrderRequest);
     const allBrokerOrders = useContractQuery(BrokerOrder);
 
-    const allBrokerCustomers = useContractQuery(BrokerCustomer);
-    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
-    console.log(allBrokerCustomers)
     return (
         <Page
             sideNav={sideNav}

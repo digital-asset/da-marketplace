@@ -6,7 +6,6 @@ import { Header } from 'semantic-ui-react'
 
 import { AddPlusIcon } from '../../icons/Icons'
 
-
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'

@@ -2,7 +2,9 @@
     .broker-customers {
         height: 100%;
         .title {
-            
+            display: flex;
+            flex-direction: row;
+            align-items: center;
         }
     }
 }

@@ -7,12 +7,8 @@ import { useParty, useLedger } from '@daml/react'
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
-import {
-    BrokerCustomerInvitation,
-    BrokerCustomer
-} from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import { BrokerCustomerInvitation, BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
 
 import { wrapDamlTuple } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
