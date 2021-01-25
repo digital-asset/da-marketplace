@@ -24,14 +24,14 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
     return (
         <div className='top-section'>
             <Menu className='top-menu'>
-                <Menu.Menu className='top-right-menu' position='left'>
+                <Menu.Menu position='left'>
                     <Menu.Item disabled={!activeMenuTitle} onClick={history.goBack}>
                         <Header as='h1'>
                             <Header.Content>{ title }</Header.Content>
                         </Header>
                     </Menu.Item>
                 </Menu.Menu>
-                <Menu.Menu className='top-left-menu' position='right'>
+                <Menu.Menu className='menu-buttons' position='right'>
                     {topMenuButtons?.map(b =>
                         <Menu.Item>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>

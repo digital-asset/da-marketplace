@@ -3,10 +3,6 @@ import { Header } from 'semantic-ui-react'
 
 import { useStreamQueries } from '@daml/react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
 
 import { UserIcon } from '../../icons/Icons'
 import { makeContractInfo } from '../common/damlTypes'
@@ -32,10 +28,6 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
     }).contracts.map(makeContractInfo);
 
     const tableHeadings = ['Name', 'Holdings']
-
-    const relationshipParties = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationships: ", e);
-    }).contracts.map(relationship => { return relationship.payload.party })
 
     const tableRows = clients.map(client => {
             const clientName = client.label

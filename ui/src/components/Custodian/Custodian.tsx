@@ -180,7 +180,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                 <Route path={`${path}/client/:investorId`}>
                     <ClientHoldings
                         sideNav={sideNav}
-                        clients={investors}
+                        clients={allBeneficiaries}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>

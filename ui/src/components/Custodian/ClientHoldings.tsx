@@ -1,6 +1,6 @@
 import React from 'react'
-import { useParams } from 'react-router-dom'
 import { Header } from 'semantic-ui-react'
+import { useParams } from 'react-router-dom'
 
 import { useStreamQueries } from '@daml/react'
 import { useStreamQueryAsPublic } from '@daml/dabl-react'
@@ -19,10 +19,13 @@ import CreateDeposit from './CreateDeposit';
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
-    clients: string[];
+    clients: {
+        party: string;
+        label: string;
+    }[];
 }
 
-const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
+const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
     const { investorId } = useParams<{investorId: string}>()
 
     const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
@@ -33,14 +36,12 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const tableRows = depositSummary(deposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
 
-    const investor = useStreamQueryAsPublic(RegisteredInvestor)
-        .contracts.map(makeContractInfo)
-        .find(i => i.contractData.investor == investorId)
+    const client = clients.find(i => i.party == investorId)
 
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h1'>{investor?.contractData.name}</Header>}
+            menuTitle={<Header as='h1'>{client?.label.substring(0, client.label.lastIndexOf('|'))}</Header>}
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
@@ -49,7 +50,7 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout }) => {
                         headings={['Asset', 'Amount']}
                         rows={tableRows}/>
                 </div>
-                <CreateDeposit currentBeneficiary={investor}/>
+                <CreateDeposit/>
             </PageSection>
         </Page>
     )
