@@ -1,0 +1,50 @@
+module Tests.Trading where
+
+import Daml.Script
+import DA.Optional
+import DA.Finance.Types (Id(..), Asset(..))
+import DA.Next.Set (fromList)
+import Marketplace.Trading qualified as T
+import DA.Finance.Asset (AssetDeposit)
+import DA.List
+
+newOrders : Script ()
+newOrders = do
+  -- Note : This script assumes the setup script in Setup.daml has already been ran against a ledger
+
+  -- Get our parties
+  [alice, bob, exchange, custodian, operator] <- pure . fromSome $ forA ["Alice", "Bob", "Exchange", "Custodian", "Operator"] partyFromText
+
+  let tradingServicekey p = (operator, exchange, p)
+
+  (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
+  (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
+
+  -- Create Order Request
+  let
+    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
+    priceAsset = Asset with id = cashId; quantity = 100.0
+    aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
+    aliceOrderDetails = T.OrderDetails with
+      id = aliceOrderId
+      market = "JPM.N/USD"
+      asset = aliceAssetDeposit.asset
+      side = T.Sell
+      orderType = T.Limit with price = priceAsset
+      timeInForce = T.GTC
+    bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
+    bobOrderDetails = T.OrderDetails with
+      id = bobOrderId
+      market = "JPM.N/USD"
+      asset = bobAssetDeposit.asset
+      side = T.Buy
+      orderType = T.Limit with price = priceAsset
+      timeInForce = T.GTC
+
+  (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
+    exerciseByKeyCmd @T.Service (tradingServicekey alice) T.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
+
+  (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
+    exerciseByKeyCmd @T.Service (tradingServicekey bob) T.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
+
+  pure ()
