@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { Header, Table } from 'semantic-ui-react'
@@ -9,6 +9,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { UserIcon } from '../../icons/Icons'
+import { useHistory, useLocation } from 'react-router-dom'
 
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { BrokerTradeCard } from '../common/BrokerTradeCard'
@@ -18,36 +19,54 @@ import Page from '../common/Page'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { depositSummary } from '../common/utils'
 import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import TabViewer from '../common/TabViewer';
+import { Console } from 'console'
 
 type Props = {
     onLogout: () => void;
     sideNav: React.ReactElement;
-    deposits: DepositInfo[];
 }
 
-const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav, deposits }) => {
+const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav }) => {
     const { customerId } = useParams<{customerId: string}>()
-    const customer = useContractQuery(BrokerCustomer).find(c => c.contractId === customerId);
+    const urls = useLocation()
+
+    const brokerCustomers = useContractQuery(BrokerCustomer)
+    const deposits = useContractQuery(AssetDeposit);
+
+    const [ customer, setCustomer ] = useState<string>(
+        brokerCustomers.find(c => c.contractId === customerId)?.contractData.brokerCustomer || '')
+
+    const [ customerDeposits, setCustomerDeposits ] = useState(
+        deposits.filter(d => d.contractData.account.owner === customer))
+
+    useEffect(() => {
+        const newCustomer = brokerCustomers.find(c => c.contractId === customerId)?.contractData.brokerCustomer
+
+        if (newCustomer) {
+            console.log(customer === 'Bob' && 'THIS IS BOBO')
+            setCustomer(newCustomer)
+            setCustomerDeposits(deposits.filter(d => d.contractData.account.owner === newCustomer))
+        }
+    }, [customerId, deposits])
 
     if (!customer) {
         return null
     }
 
-    const customerDeposits = deposits.filter(d => d.contractData.account.owner === customer.contractData.brokerCustomer)
-
-    const tabItems = [
-        { name: 'Order History', content: <OrderHistory customer={customer.contractData.brokerCustomer}/> },
-        { name: 'Allocations', content: <AllocationsChart deposits={customerDeposits}/>  }
+    let tabItems = [
+        { name: 'Order History', content: <OrderHistory customer={customer}/> },
+        { name: 'Allocations', content: <AllocationsChart deposits={customerDeposits}/> }
     ]
 
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><UserIcon size='24'/> {customer?.contractData.brokerCustomer}</>}
+            menuTitle={<><UserIcon size='24'/> {customer}</>}
             onLogout={onLogout}
         >
             <PageSection className='broker-customer-holdings'>
@@ -84,6 +103,10 @@ const OrderHistory = (props: { customer: string }) => {
 }
 
 const AllocationsChart = (props: { deposits: DepositInfo[] }) => {
+    useEffect(() => {
+        console.log('HERE')
+    }, [props.deposits])
+
     const tokenDepositSummary = depositSummary(props.deposits)
 
     return (

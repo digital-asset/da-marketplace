@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Menu, Segment, Header } from 'semantic-ui-react'
 
 type ITabInfo = {
@@ -10,9 +10,13 @@ const TabViewer = (props: { tabs: ITabInfo[] }) =>  {
     const { tabs } = props
     const [ activeTab, setActiveTab ] = useState<ITabInfo>(tabs[0])
 
+    useEffect(()=> {
+        console.log('non')
+    }, [tabs])
     if (tabs.length == 0) {
         return null
     }
+
 
     const handleItemClick = (tab: ITabInfo) => setActiveTab(tab)
 
