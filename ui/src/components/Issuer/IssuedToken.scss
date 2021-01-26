@@ -7,8 +7,7 @@
         }
 
         .allocations {
-            margin: 0 0 $spacing-m $spacing-m;
-            width: 80%;
+            margin: $spacing-m 0;
             border: 1px solid var(--cool-grey-90);
             border-radius: 2px;
             background-color: var(--white);
@@ -82,17 +81,6 @@
                     width: fit-content;
                 }
 
-            }
-        }
-
-        @media screen and (max-width: 1000px) {
-            .position-holdings-data {
-                flex-direction: column;
-
-                .allocations {
-                    margin: 0px;
-                    width: 100%;
-                };
             }
         }
     }
