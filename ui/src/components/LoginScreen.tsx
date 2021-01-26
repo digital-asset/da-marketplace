@@ -175,7 +175,6 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   }
 
   const handleLoad = async (parties: PartyDetails[]) => {
-    console.log("handle Load");
     setParties(parties);
     setSelectedPartyId(parties[0]?.party || '');
     storeParties(parties);
@@ -200,7 +199,6 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
                 <label className="custom-file-upload button ui">
                   <DablPartiesInput
                     ledgerId={ledgerId}
-                    validateFile={true}
                     onError={error => loadAndCatch(handleError(error))}
                     onLoad={handleLoad}/>
                   <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
