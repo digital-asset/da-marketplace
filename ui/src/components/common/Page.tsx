@@ -12,6 +12,7 @@ type Props = {
     notifications?: React.ReactElement[];
     onLogout: () => void;
     topMenuButtons?: ITopMenuButtonInfo[];
+    landingPage?: boolean;
 }
 
 const Page: React.FC<Props> = ({
@@ -22,7 +23,8 @@ const Page: React.FC<Props> = ({
     notifications,
     onLogout,
     topMenuButtons,
-    activeMenuTitle
+    activeMenuTitle,
+    landingPage
 }) => {
     return (
         <Grid className={classNames('page-content', className)}>
@@ -37,7 +39,8 @@ const Page: React.FC<Props> = ({
                     title={menuTitle}
                     notifications={notifications}
                     topMenuButtons={topMenuButtons}
-                    activeMenuTitle={activeMenuTitle}/>
+                    activeMenuTitle={activeMenuTitle}
+                    landingPage={landingPage}/>
                 { children }
             </Grid.Column>
         </Grid>

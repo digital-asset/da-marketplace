@@ -16,5 +16,13 @@
                 margin: 0;
             }
         }
+
+        button {
+            margin-left: $spacing-s;
+        }
+
+        .ui.message .header {
+            font-weight: normal;
+        }
     }
 }

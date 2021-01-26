@@ -76,7 +76,7 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredIn
                     <div className='title'>
                         <Header as='h2'>Exchange Participants</Header>
                         <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
-                            <AddPlusIcon/> <a>Add Investor</a>
+                            <AddPlusIcon/> Add Investor
                         </a>
                     </div>
                     <StripedTable

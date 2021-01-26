@@ -3,11 +3,17 @@ import { useParams } from 'react-router-dom'
 
 import { Header } from 'semantic-ui-react'
 
-
+import {
+    BrokerTrade,
+    Order,
+    OrderRequest,
+    SettledTradeSide
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { UserIcon } from '../../icons/Icons'
 
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
-
+import { BrokerTradeCard } from '../common/BrokerTradeCard'
+import { TradeCard } from '../common/TradeCard'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -22,7 +28,8 @@ const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav }) => {
     const { customerId } = useParams<{customerId: string}>()
 
     const customer = useContractQuery(BrokerCustomer).find(c => c.contractId === customerId);
-
+    const allExchangeTrades = useContractQuery(SettledTradeSide);
+    const allBrokerTrades = useContractQuery(BrokerTrade);
     return (
         <Page
             sideNav={sideNav}
@@ -33,20 +40,26 @@ const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav }) => {
                 <div className='broker-customer-holdings'>
                     <div className='title'>
                         <Header as='h2'>{customer?.contractData.brokerCustomer}</Header>
-                        {/* <a className='a2' onClick={() => setShowAddCustomerModal(true)}>
-                            <AddPlusIcon/> <a>Add Customer</a>
-                        </a> */}
                     </div>
-                        {/* <StripedTable rows={rows} headings={['Name', 'Holdings']}/> */}
-                        {/* {showAddCustomerModal &&
-                            <AddRegisteredPartyModal
-                                    title='Add Investor'
-                                    partyOptions={customerOptions}
-                                    onRequestClose={() => setShowAddCustomerModal(false)}
-                                    multiple={false}
-                                    emptyMessage='All registered investors have been added'
-                                    onSubmit={handleBrokerCustomerInviteSubmit}/>} */}
                 </div>
+
+                <div className='order-section'>
+                    <Header as='h2'>Exchange Trades</Header>
+                    {allExchangeTrades.length > 0 ?
+                        allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>)
+                        :
+                        <i>none</i>
+                    }
+                </div>
+                <div className='order-section'>
+                    <Header as='h2'>Broker Trades</Header>
+                    {allBrokerTrades.length > 0 ?
+                        allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>)
+                        :
+                        <i>none</i>
+                    }
+                </div>
+
             </PageSection>
         </Page>
     )
