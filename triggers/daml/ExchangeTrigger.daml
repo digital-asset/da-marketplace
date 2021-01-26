@@ -17,7 +17,7 @@ handleExchange = Trigger
   , updateState = \_ -> pure ()
   , rule = handleExchangeRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
-                                               , registeredTemplate @SettlementRule
+                                               , registeredTemplate @FairValueInterval
                                                , registeredTemplate @SettledBinaryOption ]
   , heartbeat = Some $ seconds 1
   }
@@ -28,21 +28,21 @@ handleExchangeRule party = do
   debug "Running exchange rule..."
   time <- getTime
 
-  settlementRules <- query @SettlementRule
-  forA_ settlementRules handleSettlement
+  fairValueIntervals <- query @FairValueInterval
+  forA_ fairValueIntervals handleFairValue
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
   binaryOptions <- query @SettledBinaryOption
   forA_ tradeSides (handleTradeSide party binaryOptions)
 
-handleSettlement : ContractPair SettlementRule -> TriggerA () ()
-handleSettlement (srCid,sr@SettlementRule {..}) = do
+handleFairValue : ContractPair FairValueInterval -> TriggerA () ()
+handleFairValue (srCid,fvi@FairValueInterval {..}) = do
   currentTime <- getTime
-  let timeBetween = subTime currentTime sr.lastSettled
+  let timeBetween = subTime currentTime lastCalculated
   debug $ "time since last settlement: " <> show timeBetween
-  debug $ "needed time between: " <> show sr.hoursBetweenSettlements
-  when (timeBetween > seconds sr.hoursBetweenSettlements) (void $ dedupExercise srCid SettmentRule_PerformSettlement)
+  debug $ "needed time between: " <> show hoursBetweenCalculations
+  when (timeBetween > seconds hoursBetweenCalculations) (void $ dedupExercise srCid FairValueInterval_Calculate)
 
 
 handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()

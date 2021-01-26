@@ -176,6 +176,14 @@ assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
                     then quantities
                     else quantities ++ [asset.quantity - quantitySum]
 
+quantitySplit : Decimal -> [Decimal] -> [Decimal]
+quantitySplit quantity quantities = quantitiesAll -- map (\q -> asset with quantity = q) quantitiesAll
+  where
+    quantitySum = foldl (+) 0.0 quantities
+    quantitiesAll = if quantitySum == quantity
+                    then quantities
+                    else quantities ++ [quantity - quantitySum]
+
 
 template BrokerOrderRequest
   with

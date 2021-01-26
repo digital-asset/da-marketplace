@@ -61,9 +61,11 @@ handleCCPRule party = do
 
 
 handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
-handleMarginCalculation ccp (mcCid, mc@MarginCalculation { accountId, customer }) = do
+handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}) = do
   CCPState { operatorParty } <- get
   (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
+  dedupExercise CCPCustomer_PerformMarginFill with targetAmount
+
   -- let accountId = ccpCustomer.accountId
 
   -- ^ Find deposits for the account
