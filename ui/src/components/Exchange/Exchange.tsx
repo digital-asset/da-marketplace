@@ -147,8 +147,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships
-                                role={MarketRole.ExchangeRole}
+                            <MarketRelationships role={MarketRole.ExchangeRole}
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}

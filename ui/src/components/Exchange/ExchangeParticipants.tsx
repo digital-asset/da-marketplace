@@ -4,24 +4,23 @@ import { useParty, useLedger } from '@daml/react'
 
 import { Header } from 'semantic-ui-react'
 
-import { AddPlusIcon } from '../../icons/Icons'
-
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { UserIcon } from '../../icons/Icons'
+import { UserIcon, AddPlusIcon} from '../../icons/Icons'
+
 import { useContractQuery } from '../../websocket/queryStream'
 
+import { wrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { useOperator } from '../common/common'
+import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import { wrapDamlTuple, ContractInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
-import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 
 type Props = {
     sideNav: React.ReactElement;

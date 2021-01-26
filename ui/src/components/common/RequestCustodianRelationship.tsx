@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Button } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 
@@ -71,7 +70,7 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
 
     return (
         <>
-            <AddRelationshipTile
+           <AddRelationshipTile
                 disabled={partyOptions.length === 0}
                 disabledMessage='All registered custodians have been added'
                 onClick={()=> setShowAddRelationshipModal(true)}
