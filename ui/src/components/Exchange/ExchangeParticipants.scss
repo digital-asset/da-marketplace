@@ -6,9 +6,10 @@
             display: flex;
             flex-direction: row;
             align-items: center;
+            padding-bottom: $spacing-s;
 
             h2 {
-                margin-right: $spacing-s;
+                margin-right: $spacing-l;
             }
 
             a {
