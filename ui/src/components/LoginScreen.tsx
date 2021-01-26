@@ -57,7 +57,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
-  const tiles = deploymentMode !== DeploymentMode.PROD_DABL ? dablTiles : localTiles;
+  const tiles = deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles;
 
   return (
     <div className='login-screen'>
