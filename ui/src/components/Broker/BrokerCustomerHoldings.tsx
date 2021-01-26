@@ -50,10 +50,8 @@ const BrokerCustomers: React.FC<Props> = ({ onLogout, sideNav, deposits }) => {
             menuTitle={<><UserIcon size='24'/> {customer?.contractData.brokerCustomer}</>}
             onLogout={onLogout}
         >
-            <PageSection>
-                <div className='broker-customer-holdings'>
-                    <TabViewer tabs={tabItems}/>
-                </div>
+            <PageSection className='broker-customer-holdings'>
+                <TabViewer tabs={tabItems}/>
             </PageSection>
         </Page>
     )

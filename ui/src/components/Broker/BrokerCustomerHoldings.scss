@@ -1,6 +1,5 @@
 @mixin broker-customer-holdings {
     .broker-customer-holdings {
-
         .order-history {
             padding: $spacing-m;
             .order-section {
@@ -27,6 +26,20 @@
 
                 table tr {
                     border-bottom: 2px solid var(--cool-grey-90);
+                }
+            }
+        }
+
+        @media screen and (max-width: 1000px) {
+            .allocations {
+                flex-direction: column;
+
+                .donut-chart {
+                    width: 100%;
+                }
+
+                .allocation-table {
+                    width: 100%;
                 }
             }
         }
