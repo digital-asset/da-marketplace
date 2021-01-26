@@ -24,37 +24,45 @@ setup = do
   bob <- onboardCustomer cr "Bob" cashAsset
 
   -- > Alice places a bid for JPM
-  (aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
     exerciseByKeyCmd @Trading.Service (operator, exchange, alice.customer) Trading.RequestCreateOrder
       with
-        market = "JPMUSD"
-        asset = shareAsset
-        price = priceAsset
-        isBid = True
+        orderDetails = Trading.OrderDetails with
+          id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
+          market = "JPMUSD"
+          asset = shareAsset
+          orderType = Trading.Limit with
+            price = priceAsset
+          side = Trading.Buy
+          timeInForce = Trading.GTC
         depositCid = alice.assetDepositCid
-  aliceOrderCid <- submit exchange do exerciseByKeyCmd @Trading.Service (operator, exchange, alice.customer) Trading.CreateOrder with id = 123; createOrderRequestCid = aliceCreateOrderRequestCid
 
   -- > Bob places a new offer for JPM
-  (bobCreateOrderRequestCid, _) <- submit bob.customer do
+  (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
     exerciseByKeyCmd @Trading.Service (operator, exchange, bob.customer) Trading.RequestCreateOrder
       with
-        market = "JPMUSD"
-        asset = shareAsset
-        price = priceAsset
-        isBid = False
+        orderDetails = Trading.OrderDetails with
+          id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
+          market = "JPMUSD"
+          asset = shareAsset
+          orderType = Trading.Limit with
+            price = priceAsset
+          side = Trading.Sell
+          timeInForce = Trading.GTC
         depositCid = bob.assetDepositCid
-  bobOrderCid <- submit exchange do exerciseByKeyCmd @Trading.Service (operator, exchange, bob.customer) Trading.CreateOrder with id = 456; createOrderRequestCid = bobCreateOrderRequestCid
 
   -- Exchange matches the two orders
   tradeCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
-        matchId = "789"
-        makerOrderCid = aliceOrderCid
-        takerOrderCid = bobOrderCid
-        filledQuantity = 200.0
-        filledPrice = 100.0
-  
+        fill = Trading.ExecutionFill with
+          matchId = "789"
+          makerOrderId = "123"
+          takerOrderId = "456"
+          executedQuantity = 200.0
+          executedPrice = 100.0
+          executedTimestamp = ""
+
   -- Exchange settles the instructed trade
   submit exchange do exerciseCmd settlementServiceCid Settlement.SettleTrade with ..
 

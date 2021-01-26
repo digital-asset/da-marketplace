@@ -23,10 +23,7 @@ template Service
     controller customer can
       nonconsuming RequestCreateOrder : (ContractId Trading.CreateOrderRequest, ContractId AssetDeposit)
         with
-          market : Text
-          asset : Asset
-          price : Asset
-          isBid : Bool
+          orderDetails : Trading.OrderDetails
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
@@ -38,6 +35,7 @@ template Service
         with
           orderCid : ContractId Trading.Order
         do
+          Trading.Order{..} <- fetch orderCid
           create Trading.CancelOrderRequest with ..
 
     controller provider can
@@ -46,6 +44,10 @@ template Service
           createOrderRequestCid : ContractId Trading.CreateOrderRequest
           id : Int
         do
+          let
+            status = Trading.New
+            providerOrderId = None
+            executionFills = []
           Trading.CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
           create Trading.Order with ..
@@ -56,8 +58,12 @@ template Service
         do
           Trading.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          order <- fetch orderCid
+          (orderCid, order@Trading.Order{..}) <- fetchByKey (provider, orderDetails.id.label)
           archive orderCid
+
+          orderCid <- create order with status = Trading.Cancelled
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
+
           exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccount.id
 
 template Offer

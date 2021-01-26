@@ -11,24 +11,23 @@ template Service
   where
     signatory operator, provider
 
-    key (operator, provider) : (Party, Party)
-    maintainer key._1
+    key provider : Party
+    maintainer key
 
     controller provider can
       nonconsuming MatchOrders : ContractId Trading.Trade
         with
-          matchId : Text
-          makerOrderCid : ContractId Trading.Order
-          takerOrderCid : ContractId Trading.Order
-          filledQuantity : Decimal
-          filledPrice : Decimal
+          fill : Trading.ExecutionFill
         do
-          makerOrder <- fetch makerOrderCid
-          takerOrder <- fetch takerOrderCid
+          (makerOrderCid, makerOrder) <- fetchByKey @Trading.Order (provider, fill.makerOrderId)
+          (takerOrderCid, takerOrder) <- fetchByKey @Trading.Order (provider, fill.takerOrderId)
 
           let
-            (buy, buyCid, sell, sellCid) = if makerOrder.isBid then (makerOrder, makerOrderCid, takerOrder, takerOrderCid) else (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
+            (buy, buyCid, sell, sellCid) = case makerOrder.orderDetails.side of
+              Trading.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
+              Trading.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
             tradeInstruction = Trading.TradeInstruction with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; ..
+
           tradeInstructionCid <- create tradeInstruction
           tradeInstructionCid <- exercise buyCid Trading.InstructTrade with ..
           tradeInstructionCid <- exercise sellCid Trading.InstructTrade with ..
