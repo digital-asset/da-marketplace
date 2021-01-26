@@ -8,7 +8,7 @@ import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/
 import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { DepositInfo, unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'

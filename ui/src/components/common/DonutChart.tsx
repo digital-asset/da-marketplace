@@ -17,18 +17,17 @@ const DonutChart = (props: {
 }) => {
 
     if (props.data.length === 0) {
-
         return (
             <div className='donut-chart'>
-            <PieChart
-                radius={30}
-                animate
-                lineWidth={25}
-                data={[{title: '', value: 100, color: disabledColor}]}
-                labelPosition={0}
-                viewBoxSize={[100,100]}
-                label={() => `No allocations`}
-            />
+                <PieChart
+                    radius={30}
+                    animate
+                    lineWidth={25}
+                    data={[{title: '', value: 100, color: disabledColor}]}
+                    labelPosition={0}
+                    viewBoxSize={[100,100]}
+                    label={() => `No allocations`}
+                />
             </div>
         )
     }
@@ -41,7 +40,8 @@ const DonutChart = (props: {
                 data={props.data}
                 labelPosition={110}
                 viewBoxSize={[100,100]}
-                label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.percentage.toFixed(1)}%`}
+                label={({ dataEntry }) => `${dataEntry.title} \n ${dataEntry.percentage.toFixed(1)}%`}
+                labelStyle={{ fontWeight: 600, fontSize: '3.5px', zIndex: 2 } }
             />
         </div>
     )

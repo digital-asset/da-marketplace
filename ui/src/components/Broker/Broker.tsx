@@ -165,6 +165,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 <Route path={`${path}/customer/:customerId`}>
                     <BrokerCustomerHoldings
                         sideNav={sideNav}
+                        deposits={allDeposits}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>
