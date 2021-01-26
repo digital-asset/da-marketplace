@@ -1,0 +1,25 @@
+@mixin exchange-participants {
+    .exchange-participants {
+        height: 100%;
+
+        .title {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            h2 {
+                margin-right: $spacing-s;
+            }
+
+            a {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+
+                .icon {
+                    margin-right: $spacing-xs;
+                }
+            }
+        }
+    }
+}
