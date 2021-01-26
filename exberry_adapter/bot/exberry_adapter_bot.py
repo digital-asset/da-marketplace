@@ -10,11 +10,11 @@ from datetime import datetime
 dazl.setup_default_logger(logging.INFO)
 
 # SID = 1 # default SID, use ExberrySID contract to change while running
-SID = int (time.mktime(datetime.now().timetuple))
-def get_sid() -> int:
-    global SID
-    SID = SID + 1
-    return SID
+# SID = int(time.mktime(datetime.now().timetuple()))
+# def get_sid() -> int:
+#     global SID
+#     SID = SID + 1
+#     return SID
 
 sid_to_order = {}
 
@@ -32,11 +32,12 @@ class EXBERRY:
 
 
 class MARKETPLACE:
-    OrderRequest = 'Marketplace.Trading:CreateOrderRequest'
-    OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
+    CreateOrderRequest = 'Marketplace.Trading:CreateOrderRequest'
+    CancelOrderRequest = 'Marketplace.Trading:CancelOrderRequest'
     Order = 'Marketplace.Trading:Order'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
+    MatchingService = 'Marketplace.Matching:Service'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
@@ -73,20 +74,19 @@ def main():
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
     def handle_order_request(event):
-        sid = get_sid()
+        logging.info(f'Received Create Order Request - {event}')
         order = event.cdata['orderDetails']
-        sid_to_order[sid] = event.cid
 
         return create(EXBERRY.NewOrderRequest, {
             'order': {
-                'orderType': order['orderType'],
-                'instrument': make_instrument(order['pair']),
+                'orderType': list(order['orderType'])[0],
+                'instrument': order['market'],
                 'quantity': float(order['asset']['quantity']),
-                'price': float(-1) if order['orderType'] == 'Market' else float(order['orderType']['price']),
+                'price': float(-1) if order['orderType'] == 'Market' else float(order['orderType']['Limit']['price']['quantity']),
                 'side': order['side'],
-                'timeInForce': makeTimeInForce(order['timeInForce']),
-                'mpOrderId': sid,  # we use sid for order ids
-                'userId': make_user_user_id(order['exchParticipant']),
+                'timeInForce': list(order['timeInForce'])[0],
+                'mpOrderId': int(order['id']['label']), # This will be the SID for now
+                'userId': make_user_user_id(event.cdata['provider']),
             },
             'integrationParty': client.party
         })
@@ -94,27 +94,22 @@ def main():
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.NewOrderSuccess)
     async def handle_new_order_success(event):
-        order = sid_to_order.pop(event.cdata['sid'])
-
-        req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, {
-            'order': order
-        })
-
-        return [exercise(req_cid, 'OrderRequest_Ack', {
-            'orderId': event.cdata['sid']
-        }), exercise(event.cid, 'Archive', {})]
+        return [exercise_by_key(MARKETPLACE.CreateOrderRequest,
+                                {'_1': client.party, '_2': event.cdata['sid']},
+                                'AcknowledgeRequest', {
+                                    'providerOrderId' : event.cdata['orderId']
+                                }
+                            ), exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.NewOrderFailure)
     async def handle_new_order_failure(event):
-        order = sid_to_order.pop(event.cdata['sid'])
-
-        req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, {
-            'order': order
-        })
-
-        return [exercise(req_cid, 'OrderRequest_Reject', {}),
-                exercise(event.cid, 'Archive', {})]
+        return [exercise_by_key(MARKETPLACE.CreateOrderRequest,
+                                {'_1': client.party, '_2': event.cdata['sid']},
+                                'RejectRequest', {
+                                    'errorCode': event.cdata['errorCode'],
+                                    'errorMessage': event.cdata['errorMessage']}
+                                ), exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
@@ -144,30 +139,33 @@ def main():
         })
 
     # Marketplace --> Exberry
-    @client.ledger_created(MARKETPLACE.OrderCancelRequest)
-    def handle_order_cancel_request(event):
-        order = event.cdata['order']
+    @client.ledger_created(MARKETPLACE.CancelOrderRequest)
+    async def handle_order_cancel_request(event):
+        cancel_request = event.cdata
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
-            'instrument': make_instrument(order['pair']),
-            'mpOrderId': order['orderId'],
-            'userId': make_user_user_id(order['exchParticipant'])
+            'instrument': cancel_request['orderDetails']['asset']['id']['label'],
+            'mpOrderId': cancel_request['orderDetails']['id']['label'],
+            'userId': make_user_user_id(event['provider'])
         })
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderSuccess)
     async def handle_cancel_order_success(event):
-        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
+        return [exercise_by_key(MARKETPLACE.CancelOrderRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Ack', {}),
+                                'AcknowledgeCancel', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderFailure)
     async def handle_cancel_order_failure(event):
-        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
+        return [exercise_by_key(MARKETPLACE.CancelOrderRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Reject', {}),
+                                'FailureCancel', {
+                                    'errorCode': event.cdata['errorCode'],
+                                    'errorMessage': event.cdata['errorMessage']
+                                }),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
@@ -175,31 +173,41 @@ def main():
     async def handle_execution_report(event):
         execution = event.cdata
 
-        taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['takerMpOrderId']
-        })
-        maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-            'orderId': execution['makerMpOrderId']
-        })
+        return [exercise_by_key(MARKETPLACE.MatchingService, client.party,
+            'fill', {
+                'matchId' : execution['matchId'],
+                'makerOrderId' : execution['makerMpOrderId'],
+                'takerOrderId' : execution['takerMpOrderId'],
+                'executedQuantity' : execution['executedQuantity'],
+                'executedPrice' : execution['executedPrice'],
+                'executedTimestamp' : execution['eventTimestamp']
+            }), exercise(event.cid, 'Archive', {})]
 
-        commands = [exercise(event.cid, 'Archive', {})]
+        # taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
+        #     'orderId': execution['takerMpOrderId']
+        # })
+        # maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
+        #     'orderId': execution['makerMpOrderId']
+        # })
 
-        commands.append(exercise(taker_cid, 'Order_Fill', {
-            'fillQty': execution['executedQuantity'],
-            'fillPrice': execution['executedPrice'],
-            'counterOrderId': maker['orderId'],
-            'counterParty': maker['exchParticipant'],
-            'timestamp': execution['eventTimestamp']
-        }))
-        commands.append(exercise(maker_cid, 'Order_Fill', {
-            'fillQty': execution['executedQuantity'],
-            'fillPrice': execution['executedPrice'],
-            'counterParty': taker['exchParticipant'],
-            'counterOrderId': taker['orderId'],
-            'timestamp': execution['eventTimestamp']
-        }))
+        # commands = [exercise(event.cid, 'Archive', {})]
 
-        return commands
+        # commands.append(exercise(taker_cid, 'Order_Fill', {
+        #     'fillQty': execution['executedQuantity'],
+        #     'fillPrice': execution['executedPrice'],
+        #     'counterOrderId': maker['orderId'],
+        #     'counterParty': maker['exchParticipant'],
+        #     'timestamp': execution['eventTimestamp']
+        # }))
+        # commands.append(exercise(maker_cid, 'Order_Fill', {
+        #     'fillQty': execution['executedQuantity'],
+        #     'fillPrice': execution['executedPrice'],
+        #     'counterParty': taker['exchParticipant'],
+        #     'counterOrderId': taker['orderId'],
+        #     'timestamp': execution['eventTimestamp']
+        # }))
+
+        # return commands
 
 
     network.run_forever()
@@ -212,17 +220,6 @@ def make_instrument(pair) -> str:
 def make_user_user_id(ledger_party) -> str:
     user_id = ''.join(ch for ch in ledger_party if ch.isalnum())
     return user_id[-20:]
-
-
-def makeTimeInForce(timeInForce) -> str:
-    switch = {
-        'GoodTillCancelled': 'GTC'
-        'GoodTillDate': 'GTD'
-        'GoodAtAuction': 'GAA'
-        'ImmediateOrCancel':'IOC'
-        'FillOrKill': 'FOK'
-    }
-    return switch.get(timeInForce)
 
 
 if __name__ == "__main__":

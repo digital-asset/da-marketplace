@@ -4,12 +4,13 @@ import Common
 import Daml.Script
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
+import Marketplace.Trading qualified as T
 
 setup : Script ()
 setup = do
   cr@CommonContracts{..} <- onboardCommon
 
-  -- Assets
+  -- -- Assets
   let
     shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
     cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
@@ -19,6 +20,31 @@ setup = do
 
   alice <- onboardCustomer cr "Alice" shareAsset
   bob <- onboardCustomer cr "Bob" cashAsset
+
+  -- Create Order Request
+  let
+    aliceOrderId = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
+    aliceOrderDetails = T.OrderDetails with
+      id = aliceOrderId
+      market = "JPM.N/USD"
+      asset = shareAsset
+      side = T.Sell
+      orderType = T.Limit with price = priceAsset
+      timeInForce = T.GTC
+    bobOrderId = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
+    bobOrderDetails = T.OrderDetails with
+      id = bobOrderId
+      market = "JPM.N/USD"
+      asset = cashAsset
+      side = T.Buy
+      orderType = T.Limit with price = priceAsset
+      timeInForce = T.GTC
+
+  (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid T.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = alice.assetDepositCid
+
+  (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid T.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bob.assetDepositCid
 
   pure ()
 

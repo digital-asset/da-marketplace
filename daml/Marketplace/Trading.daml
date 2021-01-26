@@ -29,7 +29,7 @@ data TimeInForce
     = GTC
       -- ^ Good Till Cancelled (Rests on book until cancellation)
     | GTD with
-        expiryDate : Date
+        expiryDate : Int
       -- ^ Good Till Date (At expiryDate, order will be automatically cancelled)
     | GAA
       -- ^ Good At Auction (Expires after auction if not filled)
@@ -53,7 +53,7 @@ data Status
     | PendingExecution
     | PartiallyExecuted
     | FullyExecuted
-    | Rejected with
+    | Rejected with -- OrderRejected
         errorCode : Int
         errorMessage : Text
     | PendingCancellation
@@ -63,6 +63,15 @@ data Status
     | Cancelled
   deriving (Eq, Show)
 
+data ExecutionFill = ExecutionFill with
+    matchId : Text
+    makerOrderId : Text
+    takerOrderId : Text
+    executedQuantity : Decimal
+    executedPrice : Decimal
+    executedTimestamp : Text -- Should this be an Int so we can order if necessary?
+  deriving (Eq, Show)
+
 template Order
   with
     operator : Party
@@ -70,129 +79,22 @@ template Order
     customer : Party
     orderDetails : OrderDetails
     status : Status
-    providerOrderId : Optional Int
+    providerOrderId : Optional Text
+    executionFills : [ExecutionFill]
     depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 
-<<<<<<< HEAD
-    key orderDetails.id : Id
-    maintainer key.signatories
+    key (provider, orderDetails.id.label) : (Party, Text)
+    maintainer key._1
 
-    controller provider can
-=======
     controller operator, provider can
       InstructTrade : ContractId TradeInstruction
         with
           tradeInstructionCid : ContractId TradeInstruction
         do
           exercise tradeInstructionCid Sign with ctrl = customer
->>>>>>> bf890dd3f3c332aacbbb4fa6908a977a4ea25b4b
 
-template TradeInstruction
-  with
-    operator : Party
-    provider : Party
-    buyer : Party
-    seller : Party
-    signed : Set Party
-  where
-    signatory signed
-
-    choice Sign : ContractId TradeInstruction
-      with
-        ctrl : Party
-      controller ctrl
-      do
-        assert (ctrl == buyer || ctrl == seller)
-        create this with signed = insert ctrl signed
-
-    controller provider can
-      Process : ContractId Trade
-        with
-          matchId : Text
-          buy : Order
-          sell : Order
-          filledQuantity : Decimal
-          filledPrice : Decimal
-        do
-          -- TODO: Check that price matches limit order price, quantity is less than order qty
-          (_, buyTradingService) <- fetchByKey @Service (operator, provider, buy.customer)
-          (_, sellTradingService) <- fetchByKey @Service (operator, provider, sell.customer)
-          let
-            delivery = buy.asset with quantity = filledQuantity
-            payment = buy.price with quantity = filledPrice * filledQuantity
-            tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = matchId; version = 0
-            masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
-            status = SettlementStatus_Instructed
-            settlementDate = None
-            deliveries = [ delivery ]
-            payments = [ payment ]
-            observers = empty
-            dvp = Dvp with ..
-          
-          sellDepositCid <-
-            if filledQuantity < buy.asset.quantity then
-              head <$> exercise sell.depositCid AssetDeposit_Split with quantities = [ filledQuantity ]
-            else
-              pure sell.depositCid
-          buyDepositCid <-
-            if filledQuantity < buy.asset.quantity then
-              head <$> exercise buy.depositCid AssetDeposit_Split with quantities = [ filledQuantity * filledPrice ]
-            else
-              pure buy.depositCid
-
-          let
-            deliveryAsset = buy.asset with quantity = filledQuantity
-            paymentAsset = buy.price with quantity = filledQuantity * filledPrice
-            deliverySteps = [ SettlementDetails with senderAccount = sellTradingService.allocationAccount; receiverAccount = buyTradingService.tradingAccount; depositCid = Some sellDepositCid ]
-            paymentSteps = [ SettlementDetails with senderAccount = buyTradingService.allocationAccount; receiverAccount = sellTradingService.tradingAccount; depositCid = Some buyDepositCid ]
-
-          when (filledQuantity < buy.asset.quantity) do
-            void $ create buy with asset = (buy.asset with quantity = buy.asset.quantity - filledQuantity)
-          when (filledQuantity < sell.asset.quantity) do
-            void $ create sell with asset = (sell.asset with quantity = sell.asset.quantity - filledQuantity)
-
-          dvpCid <- create dvp
-          deliveryInstructionCid <- create SettlementInstruction with steps = deliverySteps; asset = deliveryAsset; ..
-          paymentInstructionCid <- create SettlementInstruction with steps = paymentSteps; asset = paymentAsset; ..
-          create Trade with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = [paymentInstructionCid]; ..
-
-template Trade
-  with
-    operator : Party
-    provider : Party
-    buyer : Party
-    seller : Party
-    dvpCid : ContractId Dvp
-    deliveryInstructionCids : [ContractId SettlementInstruction]
-    paymentInstructionCids : [ContractId SettlementInstruction]
-  where
-    signatory operator, provider, buyer, seller
-
-    controller operator, provider can
-      Settle : (ContractId Dvp, [[ContractId AssetDeposit]], [[ContractId AssetDeposit]])
-        do
-          dvp <- fetchAndArchive dvpCid
-          dvp.status === SettlementStatus_Instructed
-          whenSome dvp.settlementDate (assertOnOrAfterDateMsg "expects settlementDate <= now")
-
-          let seller = if dvp.buyer == dvp.masterAgreement.party1 then dvp.masterAgreement.party2 else dvp.masterAgreement.party1
-
-          let work sender receiver (asset, instructionCid) = do
-                instruction <- fetch instructionCid
-                instruction.masterAgreement === dvp.masterAgreement
-                instruction.tradeId === dvp.tradeId
-                instruction.asset === asset
-                (head instruction.steps).senderAccount.owner === sender
-                (last instruction.steps).receiverAccount.owner === receiver
-                exercise instructionCid SettlementInstruction_Process
-
-          dvpNewCid <- create dvp with status = SettlementStatus_Settled
-          paymentDepositCids <- mapA (work dvp.buyer seller) $ zipChecked dvp.payments paymentInstructionCids
-          deliveryDepositCids <- mapA (work seller dvp.buyer) $ zipChecked dvp.deliveries deliveryInstructionCids
-          pure (dvpNewCid, paymentDepositCids, deliveryDepositCids)
-         
 template Service
   with
     operator : Party
@@ -217,7 +119,7 @@ template Service
           let
             status = New
             providerOrderId = None
-            id = orderId
+            executionFills = []
           depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
           createOrderRequestCid <- create CreateOrderRequest with ..
           orderCid <- create Order with ..
@@ -232,7 +134,7 @@ template Service
           archive orderCid
 
           orderCid <- create order with status = PendingCancellation
-          cancelOrderRequestCid <- create CancelOrderRequest with orderId = orderDetails.id; ..
+          cancelOrderRequestCid <- create CancelOrderRequest with ..
 
           return (orderCid, cancelOrderRequestCid)
 
@@ -240,31 +142,17 @@ template Service
       nonconsuming AcknowledgeOrderRequest : ContractId Order
         with
           createOrderRequestCid : ContractId CreateOrderRequest
-          providerOrderId : Int
+          providerOrderId : Text
         do
-          CreateOrderRequest{orderDetails} <- fetch createOrderRequestCid
+          CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey orderDetails.id
+          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
 
           case order.status of
             New -> do
               archive orderCid
               create order with status = PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
-
-      nonconsuming CancelOrder : (ContractId Order, ContractId AssetDeposit)
-        with
-          cancelOrderRequestCid : ContractId CancelOrderRequest
-        do
-          CancelOrderRequest{orderId} <- fetch cancelOrderRequestCid
-          archive cancelOrderRequestCid
-          (orderCid, order@Order{..}) <- fetchByKey orderId
-          archive orderCid
-
-          orderCid <- create order with status = Cancelled
-          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
-
-          return (orderCid, depositCid)
 
       nonconsuming RejectOrder : (ContractId Order, ContractId AssetDeposit)
         with
@@ -274,11 +162,25 @@ template Service
         do
           CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey orderDetails.id
+          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
           archive orderCid
 
           orderCid <- create order with status = Rejected with ..
           depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id, ..
+
+          return (orderCid, depositCid)
+
+      nonconsuming CancelOrder : (ContractId Order, ContractId AssetDeposit)
+        with
+          cancelOrderRequestCid : ContractId CancelOrderRequest
+        do
+          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          archive cancelOrderRequestCid
+          (orderCid, order@Order{..}) <- fetchByKey (provider, orderDetails.id.label)
+          archive orderCid
+
+          orderCid <- create order with status = Cancelled
+          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
 
           return (orderCid, depositCid)
 
@@ -288,9 +190,9 @@ template Service
           errorCode : Int
           errorMessage : Text
         do
-          CancelOrderRequest{orderId} <- fetch cancelOrderRequestCid
+          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order) <- fetchByKey orderId
+          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
           archive orderCid
 
           create order with status = CancellationRejected with ..
@@ -356,35 +258,35 @@ template CreateOrderRequest
   where
     signatory provider, customer
 
+    key (provider, orderDetails.id.label) : (Party, Text)
+    maintainer key._1
+
     let serviceKey = (operator, provider, customer)
 
     controller provider can
       nonconsuming AcknowledgeRequest : ContractId Order
         with
-          createOrderRequestCid : ContractId CreateOrderRequest
-          providerOrderId : Int
+          providerOrderId : Text
         do
-          exerciseByKey @Service serviceKey AcknowledgeOrderRequest with ..
+          exerciseByKey @Service serviceKey AcknowledgeOrderRequest with createOrderRequestCid = self, ..
 
       nonconsuming RejectRequest : (ContractId Order, ContractId AssetDeposit)
         with
-          createOrderRequestCid : ContractId CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          exerciseByKey @Service serviceKey RejectOrder with ..
+          exerciseByKey @Service serviceKey RejectOrder with createOrderRequestCid = self, ..
 
 template CancelOrderRequest
   with
     provider : Party
     customer : Party
     operator : Party
-    providerOrderId : Optional Int
-    orderId : Id
+    orderDetails : OrderDetails
   where
     signatory provider, customer
 
-    key (provider, customer, orderId) : (Party, Party, Id)
+    key (provider, orderDetails.id.label) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)
@@ -400,6 +302,116 @@ template CancelOrderRequest
           errorMessage : Text
         do
           exerciseByKey @Service serviceKey RejectCancellation with cancelOrderRequestCid = self, ..
+
+template TradeInstruction
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    signed : Set Party
+  where
+    signatory signed
+
+    key (provider, buyer, seller) : (Party, Party, Party)
+    maintainer key._1
+
+    choice Sign : ContractId TradeInstruction
+      with
+        ctrl : Party
+      controller ctrl
+      do
+        assert (ctrl == buyer || ctrl == seller)
+        create this with signed = insert ctrl signed
+
+    controller provider can
+      Process : ContractId Trade
+        with
+          fill : ExecutionFill
+          buy : Order
+          sell : Order
+        do
+          -- TODO: Check that price matches limit order price, quantity is less than order qty
+          (_, buyTradingService) <- fetchByKey @Service (operator, provider, buy.customer)
+          (_, sellTradingService) <- fetchByKey @Service (operator, provider, sell.customer)
+          let
+            filledQuantity = fill.executedQuantity
+            filledPrice = fill.executedPrice
+            matchId = fill.matchId
+            delivery = buy.orderDetails.asset with quantity = filledQuantity
+            -- payment = buy.price with quantity = filledPrice * filledQuantity
+            tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = matchId; version = 0
+            masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
+            status = SettlementStatus_Instructed
+            settlementDate = None
+            deliveries = [ delivery ]
+            -- payments = [ payment ]
+            payments = []
+            observers = empty
+            dvp = Dvp with ..
+
+          sellDepositCid <-
+            if filledQuantity < buy.orderDetails.asset.quantity then
+              head <$> exercise sell.depositCid AssetDeposit_Split with quantities = [ filledQuantity ]
+            else
+              pure sell.depositCid
+          buyDepositCid <-
+            if filledQuantity < buy.orderDetails.asset.quantity then
+              head <$> exercise buy.depositCid AssetDeposit_Split with quantities = [ filledQuantity * filledPrice ]
+            else
+              pure buy.depositCid
+
+          let
+            deliveryAsset = buy.orderDetails.asset with quantity = filledQuantity
+            -- paymentAsset = buy.price with quantity = filledQuantity * filledPrice
+            deliverySteps = [ SettlementDetails with senderAccount = sellTradingService.allocationAccount; receiverAccount = buyTradingService.tradingAccount; depositCid = Some sellDepositCid ]
+            paymentSteps = [ SettlementDetails with senderAccount = buyTradingService.allocationAccount; receiverAccount = sellTradingService.tradingAccount; depositCid = Some buyDepositCid ]
+
+          -- when (filledQuantity < buy.asset.quantity) do
+          --   void $ create buy with asset = (buy.asset with quantity = buy.asset.quantity - filledQuantity)
+          -- when (filledQuantity < sell.asset.quantity) do
+          --   void $ create sell with asset = (sell.asset with quantity = sell.asset.quantity - filledQuantity)
+
+          dvpCid <- create dvp
+          deliveryInstructionCid <- create SettlementInstruction with steps = deliverySteps; asset = deliveryAsset; ..
+          -- paymentInstructionCid <- create SettlementInstruction with steps = paymentSteps; asset = paymentAsset; ..
+          -- create Trade with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = [paymentInstructionCid]; ..
+          create Trade with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = []; ..
+
+template Trade
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    dvpCid : ContractId Dvp
+    deliveryInstructionCids : [ContractId SettlementInstruction]
+    paymentInstructionCids : [ContractId SettlementInstruction]
+  where
+    signatory operator, provider, buyer, seller
+
+    controller operator, provider can
+      Settle : (ContractId Dvp, [[ContractId AssetDeposit]], [[ContractId AssetDeposit]])
+        do
+          dvp <- fetchAndArchive dvpCid
+          dvp.status === SettlementStatus_Instructed
+          whenSome dvp.settlementDate (assertOnOrAfterDateMsg "expects settlementDate <= now")
+
+          let seller = if dvp.buyer == dvp.masterAgreement.party1 then dvp.masterAgreement.party2 else dvp.masterAgreement.party1
+
+          let work sender receiver (asset, instructionCid) = do
+                instruction <- fetch instructionCid
+                instruction.masterAgreement === dvp.masterAgreement
+                instruction.tradeId === dvp.tradeId
+                instruction.asset === asset
+                (head instruction.steps).senderAccount.owner === sender
+                (last instruction.steps).receiverAccount.owner === receiver
+                exercise instructionCid SettlementInstruction_Process
+
+          dvpNewCid <- create dvp with status = SettlementStatus_Settled
+          paymentDepositCids <- mapA (work dvp.buyer seller) $ zipChecked dvp.payments paymentInstructionCids
+          deliveryDepositCids <- mapA (work seller dvp.buyer) $ zipChecked dvp.deliveries deliveryInstructionCids
+          pure (dvpNewCid, paymentDepositCids, deliveryDepositCids)
 
 
 -- TODO: Revisit/reimplement
