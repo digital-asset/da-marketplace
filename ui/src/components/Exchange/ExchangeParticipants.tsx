@@ -11,12 +11,12 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { UserIcon, AddPlusIcon} from '../../icons/Icons'
+
 import { useContractQuery } from '../../websocket/queryStream'
 
 import { wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
