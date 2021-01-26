@@ -1,46 +1,16 @@
 
 @mixin tab-viewer {
     .tab-viewer {
-        display: flex;
-        flex-direction: column;
-        vertical-align: bottom;
-        width: 100%;
+        .segment {
+            background-color: var(--cool-grey-20);
 
-        .menu-entries {
-            display: flex;
-            flex-direction: row;
-            position: relative;
+            .pointing.menu {
+                border-bottom: 2px solid var(--cool-grey-30);
 
-            .menu-entry {
-                cursor: pointer;
-                padding: $spacing-s $spacing-m;
-                background-color: transparent;
-
-                &.current {
-                    background-color: var(--white);
-                    border-top: 3px solid var(--green-50);
-                    border-left: 1px solid var(--cool-grey-90);
-                    border-right: 1px solid var(--cool-grey-90);
-                    position: relative;
-                    z-index: 2;
-                    top: 1px;
-
-                    p {
-                        font-weight: 600;
-                    }
-
-                    &:hover {
-                        cursor: default;
-                    }
+                a.active {
+                    border-color: var(--cool-grey-60);
                 }
             }
-        }
-
-        .content-body {
-            overflow: auto;
-            padding: $spacing-s $spacing-m;
-            background-color: var(--white);
-            border: 1px solid var(--cool-grey-90);;
         }
     }
 }

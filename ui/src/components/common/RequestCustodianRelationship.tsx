@@ -16,9 +16,8 @@ import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
 import { useOperator } from './common'
 
-import { AddPlusIcon } from '../../icons/Icons'
-
 import AddRegisteredPartyModal from './AddRegisteredPartyModal'
+import AddRelationshipTile from '../common/AddRelationshipTile'
 
 type Props = {
     role: MarketRole;
@@ -72,13 +71,11 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
 
     return (
         <>
-            <Button
+            <AddRelationshipTile
                 disabled={partyOptions.length === 0}
-                className='profile-link add-relationship'
-                onClick={()=> setShowAddRelationshipModal(true)}>
-                    <AddPlusIcon/> <a className='bold'>Add Custodian</a>
-                    {partyOptions.length === 0 && <i className='disabled'>All registered custodians have been added</i>}
-            </Button>
+                disabledMessage='All registered custodians have been added'
+                onClick={()=> setShowAddRelationshipModal(true)}
+                label='Add Custodian'/>
             {showAddRelationshipModal &&
                 <AddRegisteredPartyModal
                     title='Add Custodian'

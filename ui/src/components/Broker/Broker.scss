@@ -2,7 +2,6 @@
 
 @import './BrokerOrders.scss';
 @import './BrokerCustomerHoldings.scss';
-@import './AddBrokerCustomer.scss';
 
 @mixin broker {
     .broker {
@@ -10,6 +9,5 @@
         @include wallet;
         @include broker-orders;
         @include broker-customer-holdings;
-        @include add-broker-customer;
     }
 }

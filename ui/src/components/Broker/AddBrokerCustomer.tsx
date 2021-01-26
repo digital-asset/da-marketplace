@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { Button } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 
@@ -7,12 +6,11 @@ import { BrokerCustomerInvitation, BrokerCustomer } from '@daml.js/da-marketplac
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 
-import { AddPlusIcon } from '../../icons/Icons'
-
 import { wrapDamlTuple } from '../common/damlTypes'
 
 import { useOperator } from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
+import AddRelationshipTile from '../common/AddRelationshipTile'
 
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
@@ -46,13 +44,11 @@ const AddBrokerCustomer = () => {
         });
     return (
         <>
-            <Button
+            <AddRelationshipTile
                 disabled={customerOptions.length === 0}
-                className='profile-link add-relationship'
-                onClick={()=> setShowAddCustomerModal(true)}>
-                    <AddPlusIcon/> <a className='bold'>Add Cleint</a>
-                    {customerOptions.length === 0 && <i className='disabled'>All registered clients have been added</i>}
-            </Button>
+                disabledMessage='All registered clients have been added'
+                onClick={()=> setShowAddCustomerModal(true)}
+                label='Add Cleint'/>
             {showAddCustomerModal &&
                 <AddRegisteredPartyModal
                     title='Add Investor'

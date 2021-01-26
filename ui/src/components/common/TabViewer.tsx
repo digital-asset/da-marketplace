@@ -1,55 +1,39 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Menu, Segment, Header } from 'semantic-ui-react'
 
-type TabViewerItem<T> = {
-    id: T;
-    label: string;
+type ITabInfo = {
+    name: string,
+    content: React.ReactElement
 }
 
-export type TabElementProps<T> = {
-    className: string;
-    children?: React.ReactElement;
-    itemId: T;
-}
+const TabViewer = (props: { tabs: ITabInfo[] }) =>  {
+    const { tabs } = props
+    const [ activeTab, setActiveTab ] = useState<ITabInfo>(tabs[0])
 
-type Props<T> = {
-    className?: string;
-    currentId: T;
-    items: TabViewerItem<T>[];
-    hideTabs?: boolean;
-    Tab: (props: TabElementProps<T>) => JSX.Element;
-}
+    if (tabs.length == 0) {
+        return null
+    }
 
-type TabProps<T> = React.PropsWithChildren<Props<T>>
-
-const TabViewer = <T,>({ children, className, currentId, items, hideTabs, Tab }: TabProps<T>) : React.ReactElement => {
+    const handleItemClick = (tab: ITabInfo) => setActiveTab(tab)
 
     return (
         <div className='tab-viewer'>
-            <div className='menu-entries'>
-                { items.filter(item => !hideTabs || item.id === currentId).map(item => Tab({
-                    className: `menu-entry ${currentId === item.id && 'current'}`,
-                    children: <p>{item.label}</p>,
-                    itemId: item.id,
-                }))}
-            </div>
-
-            <div className={`content-body ${className}`}>
-                { children }
-            </div>
+            <Segment inverted>
+                <Menu inverted pointing secondary>
+                    {tabs.map(t =>
+                        <Menu.Item
+                            name={t.name}
+                            active={activeTab.name === t.name}
+                            onClick={() => handleItemClick(t)}
+                        >
+                            <Header as='h3' className='dark'>{t.name}</Header>
+                        </Menu.Item>
+                    )}
+                </Menu>
+                {activeTab.content}
+            </Segment>
         </div>
-    );
+    )
 }
-
-export const DivTab = (
-    props: TabElementProps<string>,
-    handleTabChange: (tabId: string) => void
-): JSX.Element => (
-    <div key={props.itemId}
-         className={props.className}
-         onClick={() => handleTabChange(props.itemId)}
-    >
-        {props.children}
-    </div>
-);
 
 export default TabViewer;
