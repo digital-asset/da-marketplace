@@ -43,6 +43,10 @@
         background-color: transparent;
         border-color: var(--cool-grey-70);
       }
+
+      &.warning {
+        border-color: var(--red-50);
+      }
     }
 
     i.right.arrow.icon {

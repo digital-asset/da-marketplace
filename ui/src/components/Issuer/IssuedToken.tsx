@@ -20,7 +20,6 @@ import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 import { ContractInfo, wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
@@ -183,28 +182,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
         })
 
         return netTokenDeposits
-    }
-}
-
-// eslint-disable-next-line
-const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
-    if (props.nettedTokenDeposits.length === 0) {
-        return null
-    }
-    return (
-        <div className='allocations'>
-            <DonutChart data={formatNetTokenDeposits(props.nettedTokenDeposits)}/>
-        </div>
-    )
-
-    function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
-        return tokens.map(t => {
-            return {
-                title: `${t.investor}@${t.provider}`,
-                value: t.quantity,
-                color: getDonutChartColor(tokens.indexOf(t))
-            }
-        })
     }
 }
 
