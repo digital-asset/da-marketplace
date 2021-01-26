@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Checkbox, Form, Header } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
@@ -13,10 +13,13 @@ import {
 
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
+import classNames from 'classnames';
+
 import { wrapDamlTuple } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
-import FormToggle from '../common/FormToggle'
+
+import { LockIcon, PublicIcon, IconCircledCheck } from '../../icons/Icons'
 
 const IssueAsset = () => {
     const ledger = useLedger();
@@ -111,22 +114,33 @@ const IssueAsset = () => {
 
                 <div className='asset-row'>
                     <FormLabel label='Observers' subLabel='Who should be aware that this has been issued?'/>
-                    <div className='observer-select'>
-                        <div className='public-select'>
-                            <FormLabel label='Public' subLabel='All parties will be aware of this token.'/>
-                            <Checkbox checked={isPublic} onClick={() => setIsPublic(!isPublic)}/>
-                        </div>
+                    <div className='button-toggle'>
+                        <Button
+                            type="button"
+                            className={classNames('ghost checked', {'darken': !isPublic})}
+                            onClick={() => setIsPublic(true)}>
+                            { isPublic && <IconCircledCheck/> }
+                            <PublicIcon/><p>Public</p>
+                        </Button>
+                        <Button
+                            type="button"
+                            className={classNames('ghost checked', {'darken': isPublic})}
+                            onClick={() => setIsPublic(false)}>
+                            { !isPublic && <IconCircledCheck/> }
+                            <LockIcon/><p>Private</p>
+                        </Button>
+                    </div>
+                    {!isPublic &&
                         <Form.Select
                             multiple
-                            label={<FormLabel label='Private' subLabel='Only a set of parties will be aware of this token.'/>}
                             className='issue-asset-form-field select-observer'
                             disabled={isPublic}
                             placeholder='Select...'
                             options={partyOptions}
-                            onChange={handleObserversChange}/>
-                    </div>
+                            onChange={handleObserversChange}/>}
                 </div>
                 <Button
+                    type='submit'
                     className='ghost'
                     disabled={!name || !quantityPrecision || !description}
                     content='Submit'/>

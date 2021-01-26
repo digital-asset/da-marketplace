@@ -4,6 +4,8 @@ import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
 
+import classNames from 'classnames'
+
 export type ITopMenuButtonInfo = {
     label: string,
     onClick: () => void,
@@ -16,9 +18,10 @@ type Props = {
     onLogout: () => void;
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
+    landingPage?: boolean;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle }) => {
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage }) => {
     const history = useHistory()
 
     return (
@@ -39,14 +42,14 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             </Button>
                         </Menu.Item>
                     )}
-                    <Menu.Item as={() => (
-                        <Button className='log-out-button ghost smaller' onClick={onLogout}>
+                    <Menu.Item className={classNames('log-out-button', {'divider': !landingPage})}>
+                        <Button className='ghost smaller' onClick={onLogout}>
                             <div className='log-out'>
                                 <Header as='h3'>Log out</Header>
                                 <LogoutIcon/>
                             </div>
                         </Button>
-                    )}/>
+                    </Menu.Item>
                 </Menu.Menu>
             </Menu>
 

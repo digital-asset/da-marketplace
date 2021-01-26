@@ -138,7 +138,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                         <StripedTable
                             headings={StripedTableHeaders}
                             rows={StripedTableRows}/>
-                        {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
+                        <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                     </div>
                 </div>
             </PageSection>

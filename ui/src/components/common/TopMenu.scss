@@ -6,40 +6,46 @@
             box-shadow: none;
             border: none;
             margin: 0;
-            border-radius: 0px;;
-            min-height: 70px;
+            border-radius: 0px;
 
             .menu.left.menu {
                 animation: fadeIn .5s;
                 padding: $spacing-s;
             }
 
-            .menu > .item:before {
-                display: none;
-            }
-
-            .menu > .item > .header > .content {
-                display: flex;
-                align-items: center;
-            }
-
-            .menu > .ui.button:not(.icon) > .log-out {
-                display: flex;
-                align-items: center;
-
-                .icon.logout-icon {
-                    margin-left: $spacing-s;
+            .menu > .item {
+                &:before {
+                    display: none;
                 }
-            }
 
-            .menu > .item.menu-button {
-                animation: fadeIn .5s;
+                > .header > .content {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .menu-button {
+                    animation: fadeIn .5s;
+                    border-right: var(--cool-grey-90) 1px solid;
+                }
             }
 
             .log-out-button {
                 padding: $spacing-m;
-                margin-left: $spacing-s;
-                border-left: var(--cool-grey-90) solid 1px;
+                margin-top: $spacing-gap;
+                align-self: flex-start;
+
+                &.divider {
+                    border-left: var(--cool-grey-90) 1px solid;
+                }
+
+                .log-out {
+                    display: flex;
+                    align-items: flex-start;
+
+                    .icon.logout-icon {
+                        margin-left: $spacing-s;
+                    }
+                }
             }
         }
 
