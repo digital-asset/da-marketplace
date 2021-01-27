@@ -50,7 +50,7 @@ template Service
             executionFills = []
           Trading.CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          create Trading.Order with ..
+          create Trading.Order with remainingQuantity = orderDetails.asset.quantity, ..
 
       nonconsuming CancelOrder : ContractId AssetDeposit
         with
