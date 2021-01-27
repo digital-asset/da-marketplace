@@ -30,7 +30,6 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
                     <div>{`@ ${price}`}</div>
                     <div>{`Order ID: ${trade.orderId}`}</div>
                     <div>{`Counter Order ID: ${trade.counterOrderId}`}</div>
-                    <div>{timeLabel}</div>
                 </div>
                 <div className='actions'>
                     { timeLabel }

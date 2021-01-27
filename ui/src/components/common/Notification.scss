@@ -9,11 +9,19 @@
             justify-content: space-between;
             background-color: var(--cool-grey-100);
             border: 1px var(--cool-grey-90) solid;
-            border-radius: 0;
+            border-radius: 2px;
             box-shadow: none;
 
             p {
                 margin: 0;
+            }
+
+            button {
+                margin-left: $spacing-s;
+            }
+
+            .ui.message .header {
+                font-weight: normal;
             }
         }
     }
