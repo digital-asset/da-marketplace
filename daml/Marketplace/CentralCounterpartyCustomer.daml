@@ -3,6 +3,7 @@ module Marketplace.CentralCounterpartyCustomer where
 import qualified DA.Next.Set as Set
 
 import Marketplace.Notification
+import Marketplace.Transfer
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -97,6 +98,29 @@ template CCPCustomer
                     with quantities = [amountToTransfer]
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
                 create this with clearingDepositCid = newClearingDepositCid, marginDepositCid = remainingMarginDepositCid
+
+      CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
+        with
+          amount : Decimal
+        do
+          clearingDeposit <- fetch clearingDepositCid
+          [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
+              with quantities = [amount]
+
+          let receiverAccountId = Id with
+                signatories = clearingDeposit.account.id.signatories, label = getAccountLabel ccp custodian, version = 0
+
+          depositTransferReqCid <- create DepositTransferRequest with
+              sender = ccpCustomer, senderAccountId = clearingDeposit.account.id, depositCid = transferDepositCid, ..
+
+          (,) depositTransferReqCid <$> create this with clearingDepositCid = remainingDepositCid
+
+      -- CCPCustomer_TransferToClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
+      --   with
+      --     assetDepositCid : Decimal
+      --   do
+
+
 
 template CCPCustodianRelationshipRequest
   with

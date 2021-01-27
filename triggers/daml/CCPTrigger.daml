@@ -26,6 +26,7 @@ handleCCP = Trigger
   , updateState = \_ -> pure ()
   , rule = handleCCPRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @CCP
+                                               , registeredTemplate @AssetDeposit
                                                , registeredTemplate @DerivativeTrade
                                                , registeredTemplate @MarginCalculation
                                                , registeredTemplate @MarkToMarketCalculation ]
@@ -51,20 +52,26 @@ handleCCPRule party = do
                     CCP_NovateDerivativeTrade { derivativeTradeCid = cid }
                >> debug ("Novating trade: " <> show dt)
 
+
+  assetDeposits <- filter (\(_,ad) -> ad.account.owner == party) <$> query @AssetDeposit
+
   -- > Handle MarginCalculation
   marginCalculations <- query @MarginCalculation
   forA_ marginCalculations (handleMarginCalculation party)
 
   -- > Handle MarkToMarketCalculation
   markToMarketCalculations <- query @MarkToMarketCalculation
-  forA_ markToMarketCalculations (handleMarkToMarketCalculation party)
+  let incomingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount < 0.0) markToMarketCalculations
+      outgoingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount > 0.0) markToMarketCalculations
+
+  forA_ markToMarketCalculations (handleMarkToMarketCalculation party assetDeposits)
 
 
 handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
 handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}) = do
   CCPState { operatorParty } <- get
   (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
-  dedupExercise CCPCustomer_PerformMarginFill with targetAmount
+  dedupExercise ccpCustomerCid CCPCustomer_PerformMarginFill with targetAmount
 
   -- let accountId = ccpCustomer.accountId
 
@@ -80,7 +87,9 @@ handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}
 
 handleMarkToMarketCalculation
   : Party
+  -> [ContractPair AssetDeposit]
   -> ContractPair MarkToMarketCalculation
   -> TriggerA CCPState ()
-handleMarkToMarketCalculation party (mtmCid, mtm@MarkToMarketCalculation { accountId }) = do
+handleMarkToMarketCalculation party deposits (mtmCid, mtm@MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
+  -- ??
   return ()
