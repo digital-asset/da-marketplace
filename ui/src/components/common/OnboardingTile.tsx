@@ -1,27 +1,40 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
-import WelcomeHeader from './WelcomeHeader';
+import { OpenMarketplaceLogo } from '../../icons/Icons'
 
-import { LogoIcon } from '../../icons/Icons'
-
-import './OnboardingTile.css'
-
-type Props = {
+type TileProps = {
+    header?: React.ReactElement;
     subtitle?: string;
 }
 
-const OnboardingTile: React.FC<Props> = ({ children, subtitle }) => {
+export const Tile: React.FC<TileProps> = ({ children, subtitle, header }) => {
     return (
-        <Grid className='onboarding-tile' textAlign='center' verticalAlign='middle'>
+        <div className='onboarding-tile'>
+            { !!header && <div className='tile-header'>{header}</div> }
+            { !!subtitle && <p className='subtitle'>{subtitle}</p> }
+            <div className='onboarding-tile-content'>
+                { children }
+            </div>
+        </div>
+    )
+}
+
+type OnboardingTileProps = {
+    tiles?: React.ReactElement[];
+}
+
+export const logoHeader = <Header className='dark logo-header'><OpenMarketplaceLogo size='32'/> Daml Open Marketplace</Header>
+
+const OnboardingTile: React.FC<OnboardingTileProps> = ({ children, tiles }) => {
+    return (
+        <Grid className='onboarding-screen' textAlign='center' verticalAlign='middle'>
             <Grid.Row>
-                <Grid.Column width={8} className='onboarding-tile-content'>
-                    <Header as='h3' textAlign='center'>
-                        <Header.Content>
-                            <WelcomeHeader/>
-                        </Header.Content>
-                    </Header> 
-                    <p> { subtitle } </p>
-                    { children }
+                <Grid.Column center>
+                    { children &&
+                        <Tile header={logoHeader}>
+                            <Grid.Row>{children}</Grid.Row>
+                        </Tile> }
+                    { tiles?.map(tile => <Grid.Row key={tile.key}>{tile}</Grid.Row>) }
                 </Grid.Column>
             </Grid.Row>
         </Grid>

@@ -1,0 +1,107 @@
+@mixin issued-token {
+    .issued-token {
+        animation: fadeIn .5s;
+
+        .position-holdings-data {
+            margin-top: $spacing-m;
+        }
+
+        .allocations {
+            margin: $spacing-m 0;
+            border: 1px solid var(--cool-grey-90);
+            border-radius: 2px;
+            background-color: var(--white);
+        }
+
+        .token-subheading {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: $spacing-m;
+
+            .token-details {
+                display: flex;
+                flex-direction: row;
+                align-items: flex-end;
+                flex-wrap: wrap;
+
+                h3 {
+                    margin-left: $spacing-l;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    .globe-icon, .lock-icon {
+                        margin-right: $spacing-xs;
+                    }
+                }
+            }
+        }
+
+        .participants-viewer {
+            padding-bottom: $spacing-m;
+            margin-bottom: $spacing-m;
+            border-bottom: 2px solid var(--cool-grey-90);
+
+            a.a2 {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                width: fit-content;
+            }
+
+
+            .list-heading {
+                display: flex;
+                flex-direction: row;
+                padding: $spacing-m 0 $spacing-s 0;
+                align-items: center;
+
+                a.a2 {
+                    margin-left: $spacing-m;
+
+                    .icon {
+                        margin-right: $spacing-xs;
+                    }
+                }
+            }
+
+            ul.participants-list  {
+                display: inline-flex;
+                flex-direction: column;
+                max-height: 80px;
+                flex-wrap: wrap;
+                list-style-type: none;
+                padding-left: 0px;
+                width: unset;
+                margin: 0px;
+
+                li {
+                    padding: $spacing-xs $spacing-l 0 0;
+                    width: fit-content;
+                }
+
+            }
+        }
+
+        @media screen and (max-width: 850px) {
+            padding: 0px;
+
+            .token-subheading {
+                flex-direction: column;
+
+                .token-details {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: $spacing-xs;
+
+                    h3 {
+                        margin-left: 0px;
+                    }
+                }
+            }
+        }
+    }
+}

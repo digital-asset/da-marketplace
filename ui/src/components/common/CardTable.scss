@@ -1,0 +1,81 @@
+@mixin card-table {
+    .card-table {
+        animation: fadeIn .5s;
+
+        & > .ui.table {
+            border: none;
+
+            .card-table-cell:first-child {
+                padding-left: $spacing-m;
+            }
+        }
+
+        .ui.table.card-table-header-table {
+            margin-bottom: 0px;
+
+            th {
+                border: none;
+                background: var(--cool-grey-100);
+                padding-bottom: 0px;
+            }
+        }
+
+        .ui.table.card-table-body-table {
+            border-spacing: 0px $spacing-m;
+            border-collapse: separate;
+            margin: 0px;
+            background-color: transparent;
+
+            .card-table-row {
+                border-radius: 5px;
+            }
+
+            td .label {
+                display: none;
+            }
+
+            .card-table-cell {
+                background-color: var(--white);
+                border-top: 1px var(--cool-grey-90) solid;
+                border-bottom: 1px var(--cool-grey-90) solid;
+
+                .exchange-icon {
+                    width: 18px;
+                    height: 18px;
+                    margin: 0 $spacing-s;
+                }
+
+                &:first-child {
+                    display: flex;
+                    border-left: 1px var(--cool-grey-90) solid;
+                    border-radius: 4px 0px 0px 4px;
+                }
+
+                &:last-child {
+                    border-right:1px var(--cool-grey-90) solid;
+                    border-radius: 0px 4px 4px 0px;
+                }
+            }
+        }
+
+        @media screen and (max-width: 769px) {
+            .ui.table.card-table-header-table {
+                display: none
+            }
+
+            .ui.table.card-table-body-table {
+                tr {
+                    padding: 0px;
+
+                    td {
+                        text-align: left;
+
+                        .label {
+                            display: inline-flex;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

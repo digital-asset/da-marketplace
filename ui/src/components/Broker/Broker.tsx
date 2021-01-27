@@ -1,29 +1,30 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useOperator } from '../common/common'
+
 import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
 import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
+import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
-import Holdings from '../common/Holdings'
+import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
-import BrokerSideNav from './BrokerSideNav'
-import FormErrorHandled from '../common/FormErrorHandled'
-
 
 type Props = {
     onLogout: () => void;
@@ -35,42 +36,10 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const broker = useParty();
     const ledger = useLedger();
 
-    const registeredBroker = useStreamQueries(RegisteredBroker, () => [], [], (e) => {
-        console.log("Unexpected close from registeredBroker: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDepositBroker: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredBroker = useContractQuery(RegisteredBroker);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
-
-    const { custodianMap, exchangeMap } = useRegistryLookup();
-
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
-        .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
-            const name = exchangeMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
-            }
-        });
-
-    const allProviders = [
-        ...exchangeProviders,
-        ...allCustodianRelationships.map(relationship => {
-            const party = relationship.contractData.custodian;
-            const name = custodianMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`,
-            }
-        }),
-    ]
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -78,13 +47,14 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredBroker.contracts[0]) {
-            const rbData = registeredBroker.contracts[0].payload;
+        if (registeredBroker[0]) {
+            const rbData = registeredBroker[0].contractData;
             setProfile({
                 name: { ...profile.name, value: rbData.name },
                 location: { ...profile.location, value: rbData.location }
             })
         }
+    // eslint-disable-next-line
     }, [registeredBroker]);
 
     const updateProfile = async () => {
@@ -111,55 +81,64 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
+                role={MarketRole.BrokerRole}
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
+    const sideNav = <RoleSideNav url={url}
+                                 name={registeredBroker[0]?.contractData.name || broker}
+                                 items={[
+                                    {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                                    {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
+                                 ]}/>
 
-    const sideNav = <BrokerSideNav url={url}
-                                   name={registeredBroker.contracts[0]?.payload.name || broker}/>
+    const brokerScreen =
+        <div className='broker'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <BrokerProfile
+                                    content='Save'
+                                    role={MarketRole.BrokerRole}
+                                    defaultProfile={profile}
+                                    profileLinks={[
+                                        {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                        {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                                    ]}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <MarketRelationships role={MarketRole.BrokerRole}
+                                                custodianRelationships={allCustodianRelationships}/>}
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-    const brokerScreen = <Switch>
-        <Route exact path={path}>
-            <LandingPage
-                profile={
-                    <FormErrorHandled onSubmit={updateProfile}>
-                        <BrokerProfile
-                            content='Save'
-                            defaultProfile={profile}
-                            submitProfile={profile => setProfile(profile)}/>
-                    </FormErrorHandled>
-                }
-                marketRelationships={
-                    <MarketRelationships role={MarketRole.BrokerRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
-                sideNav={sideNav}
-                notifications={notifications}
-                onLogout={onLogout}/>
-        </Route>
+                <Route path={`${path}/wallet`}>
+                    <Wallet
+                        role={MarketRole.BrokerRole}
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
 
-        <Route path={`${path}/wallet`}>
-            <Holdings
-                deposits={allDeposits}
-                providers={allProviders}
-                role={MarketRole.BrokerRole}
-                sideNav={sideNav}
-                onLogout={onLogout} />
-        </Route>
+                <Route path={`${path}/orders`}>
+                    <BrokerOrders
+                        sideNav={sideNav}
+                        deposits={allDeposits}
+                        onLogout={onLogout}/>
+                </Route>
+            </Switch>
+        </div>
 
-        <Route path={`${path}/orders`}>
-            <BrokerOrders
-                sideNav={sideNav}
-                deposits={allDeposits}
-                onLogout={onLogout}/>
-        </Route>
-    </Switch>
 
-    return registeredBroker.loading
-        ? loadingScreen
-        : registeredBroker.contracts.length === 0 ? inviteScreen : brokerScreen
+    return registeredBroker.length === 0 ? inviteScreen : brokerScreen
 }
 
 export default Broker;

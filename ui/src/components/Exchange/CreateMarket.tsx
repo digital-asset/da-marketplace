@@ -1,27 +1,20 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { ExchangeIcon, PublicIcon } from '../../icons/Icons'
-import { TokenInfo, wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { ExchangeIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
-import PageSection from '../common/PageSection'
 import ContractSelect from '../common/ContractSelect'
-import Page from '../common/Page'
-import { countDecimals } from '../common/utils';
 
-import "./CreateMarket.css"
-
-type Props = {
-    sideNav: React.ReactElement;
-    onLogout: () => void;
-}
-
-const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
+const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
     const [ quoteToken, setQuoteToken ] = useState<TokenInfo>();
 
@@ -35,9 +28,7 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts.map(makeContractInfo);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
     const handleIdPairSubmit = async () => {
@@ -93,68 +84,63 @@ const CreateMarket: React.FC<Props> = ({ sideNav, onLogout }) => {
         setMaxQuantity(newMaxQuantity.toString())
     }
 
+    const { step, placeholder } = preciseInputSteps(quantityPrecision);
+
     return (
-        <Page
-            sideNav={sideNav}
-            onLogout={onLogout}
-            menuTitle={<><PublicIcon/>Create a Market</>}
-        >
-            <PageSection border='blue' background='white'>
-                <div className='create-market'>
-                    <FormErrorHandled onSubmit={handleIdPairSubmit}>
-                        <div className='create-market-options'>
-                            <ContractSelect
-                                clearable
-                                className='create-market-select'
-                                contracts={allTokens}
-                                label='Base Asset'
-                                placeholder='Select...'
-                                value={baseToken?.contractId || ''}
-                                getOptionText={token => token.contractData.id.label}
-                                setContract={token => setBaseToken(token)}/>
+        <div className='create-market'>
+            <Header as='h2'>Create a Market</Header>
+            <FormErrorHandled onSubmit={handleIdPairSubmit}>
+                <div className='create-market-options'>
+                    <ContractSelect
+                        clearable
+                        className='create-market-select'
+                        contracts={allTokens}
+                        label='Base Asset'
+                        placeholder='Select...'
+                        value={baseToken?.contractId || ''}
+                        getOptionText={token => token.contractData.id.label}
+                        setContract={token => setBaseToken(token)}/>
 
-                            <div className='token-select-exchange-icon'><ExchangeIcon/></div>
+                    <ExchangeIcon/>
 
-                            <ContractSelect
-                                clearable
-                                className='create-market-select'
-                                contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
-                                label='Quote Asset'
-                                placeholder='Select...'
-                                value={quoteToken?.contractId || ''}
-                                getOptionText={token => token.contractData.id.label}
-                                setContract={token => setQuoteToken(token)}/>
-
-                        </div>
-
-                        <div className='create-market-quantities'>
-                            <Form.Input
-                                label='Minimum Quantity'
-                                type='number'
-                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
-                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
-                                error={minQuantityError}
-                                disabled={!quoteToken || !baseToken}
-                                onChange={validateMinQuantity}/>
-
-                            <Form.Input
-                                label='Maximum Quantity'
-                                type='number'
-                                step={`0.${"0".repeat(quantityPrecision === 0? quantityPrecision : quantityPrecision-1)}1`}
-                                placeholder={`0.${"0".repeat(quantityPrecision)}`}
-                                error={maxQuantityError}
-                                disabled={!quoteToken || !baseToken}
-                                onChange={validateMaxQuantity}/>
-                        </div>
-                            <Button
-                                secondary
-                                content='Submit'
-                                className='create-market-save'
-                                disabled={!baseToken || !quoteToken}/>
-                        </FormErrorHandled>
+                    <ContractSelect
+                        clearable
+                        className='create-market-select'
+                        contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
+                        label='Quote Asset'
+                        placeholder='Select...'
+                        value={quoteToken?.contractId || ''}
+                        getOptionText={token => token.contractData.id.label}
+                        setContract={token => setQuoteToken(token)}/>
                 </div>
-            </PageSection>
-        </Page>
+
+                <div className='create-market-options'>
+                    <Form.Input
+                        className='quantity-select'
+                        label={<p className='p2'>Minimum Quantity</p>}
+                        type='number'
+                        step={step}
+                        placeholder={placeholder}
+                        error={minQuantityError}
+                        disabled={!quoteToken || !baseToken}
+                        onChange={validateMinQuantity}/>
+
+                    <Form.Input
+                        className='quantity-select'
+                        label={<p className='p2'>Maximum Quantity</p>}
+                        type='number'
+                        step={step}
+                        placeholder={placeholder}
+                        error={maxQuantityError}
+                        disabled={!quoteToken || !baseToken}
+                        onChange={validateMaxQuantity}/>
+                </div>
+                <Button
+                    content='Submit'
+                    className='create-market-save ghost'
+                    disabled={!baseToken || !quoteToken}/>
+            </FormErrorHandled>
+        </div>
     )
 }
 

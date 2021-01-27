@@ -1,25 +1,46 @@
 import React from 'react'
-import { Grid } from 'semantic-ui-react'
+import { Grid, Menu } from 'semantic-ui-react'
+import classNames from 'classnames'
 
-import SideMenu from './SideMenu'
-import TopMenu from './TopMenu'
-
-import './Page.css'
+import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
 
 type Props = {
+    className?: string;
     menuTitle?: React.ReactElement;
+    activeMenuTitle?: boolean;
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
-    isLandingPage?: boolean;
+    topMenuButtons?: ITopMenuButtonInfo[];
+    landingPage?: boolean;
 }
 
-const Page: React.FC<Props> = ({ children, menuTitle, sideNav, notifications, onLogout, isLandingPage }) => {
+const Page: React.FC<Props> = ({
+    children,
+    className,
+    menuTitle,
+    sideNav,
+    notifications,
+    onLogout,
+    topMenuButtons,
+    activeMenuTitle,
+    landingPage
+}) => {
     return (
-        <Grid className='page-content'>
-            <SideMenu>{ sideNav }</SideMenu>
+        <Grid className={classNames('page-content', className)}>
+            <Grid.Column className="page-sidemenu">
+                <Menu secondary vertical>
+                    { sideNav }
+                </Menu>
+            </Grid.Column>
             <Grid.Column className='page-body'>
-                <TopMenu onLogout={onLogout} title={menuTitle} notifications={notifications} isLandingPage={isLandingPage}/>
+                <TopMenu
+                    onLogout={onLogout}
+                    title={menuTitle}
+                    notifications={notifications}
+                    topMenuButtons={topMenuButtons}
+                    activeMenuTitle={activeMenuTitle}
+                    landingPage={landingPage}/>
                 { children }
             </Grid.Column>
         </Grid>

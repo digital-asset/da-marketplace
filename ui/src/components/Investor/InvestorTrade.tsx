@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
+import _ from 'lodash'
+import { Header } from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
+import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { ExchangeIcon } from '../../icons/Icons'
-import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { DepositInfo, unwrapDamlTuple } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
+import OrderLadder, { MarketDataMap } from './OrderLadder'
 import OrderForm from './OrderForm'
 
 type Props = {
@@ -41,19 +46,37 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
     const location = useLocation<LocationState>();
-    const operator = useOperator();
+    const history = useHistory();
     const investor = useParty();
-    const ledger = useLedger();
 
-    const exchangeData = location.state.exchange;
-    const tokenPair = location.state.tokenPair;
+    const allOrders = useContractQuery(Order);
+
+    const exchangeData = location.state && location.state.exchange;
+    const tokenPair = location.state && location.state.tokenPair;
 
     if (!exchangeData || !tokenPair) {
+        history.push('/role/investor');
         throw new Error('No exchange found.');
     }
 
     const { exchange } = exchangeData;
     const [ base, quote ] = tokenPair.map(t => t.label);
+
+    const tokens = useContractQuery(Token);
+
+    const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
+    const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;
+
+    const marketData = allOrders
+        .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+        .reduce((map, order) => {
+            const { price, qty } = order.contractData;
+
+            const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+            const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+            return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+    }, {} as MarketDataMap)
 
     useEffect(() => {
         const label = `'${investor}'@'${exchange}'`;
@@ -61,45 +84,23 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
         setOfferDeposits(filterDepositsForOrder(deposits, label, base));
     }, [ deposits, base, quote, investor, exchange ]);
 
-    const placeBid = async (depositCid: string, price: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            depositCid,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-    }
-
-    const placeOffer = async (depositCid: string, price: string) => {
-        const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            depositCid,
-            pair: wrapDamlTuple(tokenPair)
-        };
-
-        await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
-    }
-
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><ExchangeIcon/>{base}/{quote}</>}
+            menuTitle={<><ExchangeIcon color='green' size='24'/>{base}/{quote}</>}
             onLogout={onLogout}
         >
-            <PageSection border='blue' background='white'>
-                <div className='order-forms'>
-                    <OrderForm
-                        kind={OrderKind.BID}
-                        placeOrder={placeBid}
-                        deposits={bidDeposits}/>
-
-                    <OrderForm
-                        kind={OrderKind.OFFER}
-                        placeOrder={placeOffer}
-                        deposits={offerDeposits}/>
+            <PageSection className='investor-trade'>
+                <div className='order'>
+                    <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
+                    <div className='order-input'>
+                        <OrderForm
+                            assetPrecisions={[basePrecision, quotePrecision]}
+                            deposits={[bidDeposits, offerDeposits]}
+                            exchange={exchange}
+                            tokenPair={tokenPair}/>
+                        <OrderLadder orders={marketData}/>
+                    </div>
                 </div>
             </PageSection>
         </Page>

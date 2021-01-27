@@ -1,0 +1,34 @@
+
+@mixin role-selector {
+    .role-selector {
+        height: 100%;
+        animation: fadeIn .5s;
+
+        .role-select > .ui.button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--white);
+            padding: $spacing-m;
+
+            &:hover {
+                transform: scale(1.01);
+            }
+        }
+
+        .ui.card {
+            box-shadow: none;
+            width: 100%;
+
+            & > .ui.button {
+                width: 100%;
+                height: 100%;
+                padding: $spacing-m;
+
+                &.ghost:hover {
+                    background: none;
+                }
+            }
+        }
+    }
+}

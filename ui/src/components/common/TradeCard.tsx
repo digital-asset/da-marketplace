@@ -1,10 +1,10 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.css'
+import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
+import { ExchangeIcon } from '../../icons/Icons'
+import { unwrapDamlTuple } from '../common/damlTypes'
 
 export type TradeCardProps = {
     trade: SettledTradeSide;
@@ -23,18 +23,19 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
 
     return (
         <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
+            <Card fluid className='order-card'>
+                <div className='order-info'>
                     <div><ExchangeIcon/> {label}</div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                     <div>{`Order ID: ${trade.orderId}`}</div>
                     <div>{`Counter Order ID: ${trade.counterOrderId}`}</div>
-                    <div>{timeLabel}</div>
-                </Card>
-
-                { children }
-            </div>
+                </div>
+                <div className='actions'>
+                    { timeLabel }
+                    { children }
+                </div>
+            </Card>
         </div>
     )
 }

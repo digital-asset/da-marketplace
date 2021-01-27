@@ -1,0 +1,53 @@
+@mixin order-ladder {
+    .order-ladder {
+        flex: 1;
+        width: 100%;
+        background-color: var(--cool-grey-30);
+        color: var(--white);
+        animation: fadeIn .5s;
+
+        .grid-container {
+            display: grid;
+            height: 100%;
+
+            column-gap: $spacing-gap;
+            row-gap: $spacing-gap;
+
+            grid-template-columns: auto auto auto;
+
+            .order-cell {
+                &:nth-child(3n + 1) {
+                    color: var(--green-60);
+                }
+
+                &:nth-child(3n + 3) {
+                    color: var(--red-60);
+                }
+
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                p {
+                    font-size: 18px;
+                }
+
+                background-color: var(--cool-grey-10);
+            }
+
+
+            .column {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                margin: $spacing-s 0 $spacing-s $spacing-s;
+
+                .order-cell {
+                    width: 100%;
+                    height: 50px;
+                    background-color: var(--cool-grey-10);
+                }
+            }
+        }
+    }
+}

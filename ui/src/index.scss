@@ -1,0 +1,217 @@
+/* Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved. */
+/* SPDX-License-Identifier: Apache-2.0  */
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
+
+@import 'overrides/overrides.scss';
+@import 'colors.scss';
+@import 'icons/Icons.scss';
+
+@import 'components/App.scss';
+
+@include overrides;
+
+@font-face {
+  font-family: "BrownStd-Regular";
+  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Light";
+  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Bold";
+  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
+}
+
+:root {
+  --spacing-gap: 2px;
+  --spacing-xs: 6px;
+  --spacing-s: 12px;
+  --spacing-m: 24px;
+  --spacing-l: 32px;
+  --spacing-xl: 48px;
+
+  --input-height: 40px;
+  --max-page-width: 1000px;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity:0;
+  }
+  100% {
+    opacity:1;
+  }
+}
+
+$spacing-gap: #{var(--spacing-gap)};
+$spacing-xs: #{var(--spacing-xs)};
+$spacing-s: #{var(--spacing-s)};
+$spacing-m: #{var(--spacing-m)};
+$spacing-l: #{var(--spacing-l)};
+$spacing-xl: #{var(--spacing-xl)};
+
+$input-height: #{var(--input-height)};
+$max-page-width: #{var(--max-page-width)};
+
+* {
+  font-family: "Open Sans";
+}
+
+html {
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+  }
+
+  h1.ui.header {
+    font-family: "BrownStd-Light";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+    line-height: 19px;
+    color: var(--textcolor);
+    margin: 0px;
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-family: "BrownStd-Bold";
+    }
+  }
+
+  h2.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+    line-height: 27px;
+    margin: 0px;
+    color: var(--textcolor);
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-weight: 600;
+    }
+  }
+
+  h3.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 0px;
+    color: var(--textcolor);
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-weight: 600;
+    }
+  }
+
+  h4.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 19px;
+    color: var(--textcolor);
+  }
+
+  p {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 19px;
+    margin: 0px;
+    color: var(--grey-10);
+
+    &.bold {
+      font-weight: 600;
+    }
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.p2 {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--textcolor);
+
+      &.dark {
+        color: var(--white);
+      }
+
+      &.bold {
+        font-weight: 600;
+      }
+    }
+  }
+
+  a {
+    color: var(--blue-50);
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+
+    &.bold {
+      font-weight: 600;
+    }
+
+    &.a2 {
+      font-size: 14px;
+      line-height: 19px;
+
+      &.bold {
+        font-weight: 600;
+      }
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  body {
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: var(--textcolor);
+    background-color: var(--cool-grey-10);
+
+    #root {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+
+      @include app;
+    }
+  }
+}
+
+.ui.form .field>.selection.dropdown, .ui.form .field> .ui.input {
+  width: 230px;
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
+}
+
+.ui.form textarea {
+  border: 1px solid var(--cool-grey-10);
+  border-radius: 3px;
+}
+
+@include icons;

@@ -1,10 +1,10 @@
 import React from 'react'
 import { Card } from 'semantic-ui-react'
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.css'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
+import { unwrapDamlTuple } from '../common/damlTypes'
+import { ExchangeIcon } from '../../icons/Icons'
 
 export type OrderProps = {
     order: Order;
@@ -18,17 +18,16 @@ const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
 
     return (
         <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
-                    <div><ExchangeIcon/>
-                    {label}
-                    </div>
-                    <div>{ amount }</div>
-                    <div>{`@ ${price}`}</div>
-                </Card>
-
-                { children }
-            </div>
+            <Card fluid className='order-card'>
+                <div className='order-info'>
+                    <p><ExchangeIcon/> {label}</p>
+                    <p>{ amount }</p>
+                    <p>{`@ ${price}`}</p>
+                </div>
+                <div className='actions'>
+                    { children }
+                </div>
+            </Card>
         </div>
     )
 }

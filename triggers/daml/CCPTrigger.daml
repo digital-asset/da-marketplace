@@ -53,7 +53,6 @@ handleCCPRule party = do
                >> debug ("Novating trade: " <> show dt)
 
 
-  assetDeposits <- filter (\(_,ad) -> ad.account.owner == party) <$> query @AssetDeposit
 
   -- > Handle MarginCalculation
   marginCalculations <- query @MarginCalculation
@@ -64,7 +63,20 @@ handleCCPRule party = do
   let incomingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount < 0.0) markToMarketCalculations
       outgoingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount > 0.0) markToMarketCalculations
 
-  forA_ markToMarketCalculations (handleMarkToMarketCalculation party assetDeposits)
+  assetDeposits <- query @AssetDeposit
+  let ownedAssetDeposits    = filter (\(_,ad) -> ad.account.owner == party) assetDeposits
+      providerAssetDeposits = filter (\(_,ad) -> ad.account.provider == party) assetDeposits
+
+  forA_ incomingMarkToMarkets (handleIncomingMarkToMarketCalculation party)
+
+
+-- |Add any new deposits into a customer's clearing account | TODO: make this perform better
+handleProviderDeposits : Party -> ContractPair AssetDeposit -> TriggerA CCPState ()
+handleProviderDeposits ccp (depositCid,deposit) = do
+  CCPState { operatorParty } <- get
+  (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,deposit.account.owner)
+  unless (depositCid `elem` ccpCustomer.clearingDepositCids && depositCid /= ccpCustomer.marginDepositCid)
+    $ dedupExercise ccpCustomerCid CCPCustomer_AddDepositToClearingDeposits with depositCid
 
 
 handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
@@ -85,11 +97,23 @@ handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}
     depositIsAccount : Id -> ContractPair AssetDeposit -> Bool
     depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
 
-handleMarkToMarketCalculation
+handleIncomingMarkToMarketCalculation
   : Party
-  -> [ContractPair AssetDeposit]
   -> ContractPair MarkToMarketCalculation
   -> TriggerA CCPState ()
-handleMarkToMarketCalculation party deposits (mtmCid, mtm@MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
-  -- ??
+handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
+  CCPState { operatorParty } <- get
+  (ccpCustomerCid,ccpCustomer) <- fromSome <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
+  dedupExercise ccpCustomerCid CCPCustomer_TransferFromClearingAccount with amount = (mtmAmount * (-1.0))
   return ()
+
+handleOutgoingMTMCalculations
+  : Party
+  -> [ContractPair AssetDeposit]
+  -> [ContractPair MarkToMarketCalculation]
+  -> TriggerA CCPState ()
+handleOutgoingMTMCalculations party [] [] = return ()
+handleOutgoingMTMCalculations party xs ys = handleOutgoingMTMCalculations party xs ys
+-- -- handleMarkToMarketCalculation party deposits (mtmCid, mtm@MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
+-- --   -- ??
+--   return ()

@@ -1,6 +1,5 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-
 import React from 'react'
 import {
   HashRouter as Router,
@@ -12,6 +11,7 @@ import {
 import DamlLedger from '@daml/react'
 import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
 
+import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { computeCredentials, storeCredentials, retrieveCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
@@ -35,33 +35,38 @@ const App: React.FC = () => {
   }
 
   return (
-    <Router>
-      <Switch>
-        <Route exact path='/'>
-          <LoginScreen onLogin={handleCredentials}/>
-        </Route>
+    <div className='app'>
+      <Router>
+        <Switch>
+          <Route exact path='/'>
+            <LoginScreen onLogin={handleCredentials}/>
+          </Route>
 
-        <Route path='/role' render={() => {
-          return credentials
-            ? <DamlLedger
-                reconnectThreshold={0}
-                token={credentials.token}
-                party={credentials.party}
-                httpBaseUrl={httpBaseUrl}
-              >
-                <WellKnownPartiesProvider>
-                  <PublicProvider>
-                    <RegistryLookupProvider>
-                      <MainScreen onLogout={() => handleCredentials(undefined)}/>
-                    </RegistryLookupProvider>
-                  </PublicProvider>
-                </WellKnownPartiesProvider>
-            </DamlLedger>
-            : <Redirect to='/'/>
-          }}>
-        </Route>
-      </Switch>
-    </Router>
+          <Route path='/role' render={() => {
+            return credentials
+              ? <DamlLedger
+                  reconnectThreshold={0}
+                  token={credentials.token}
+                  party={credentials.party}
+                  httpBaseUrl={httpBaseUrl}
+                >
+                  <WellKnownPartiesProvider>
+                    <PublicProvider>
+                      <QueryStreamProvider>
+                        <RegistryLookupProvider>
+                          <MainScreen onLogout={() => handleCredentials(undefined)}/>
+                        </RegistryLookupProvider>
+                      </QueryStreamProvider>
+                    </PublicProvider>
+                  </WellKnownPartiesProvider>
+              </DamlLedger>
+              : <Redirect to='/'/>
+            }}>
+          </Route>
+        </Switch>
+      </Router>
+    </div>
+
   )
 }
 // APP_END

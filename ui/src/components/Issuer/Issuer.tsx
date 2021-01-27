@@ -1,28 +1,35 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
+import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import { wrapDamlTuple, damlTupleToString} from '../common/damlTypes'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
 import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import LandingPage from '../common/LandingPage'
 import PageSection from '../common/PageSection'
+import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
 
-import IssuerSideNav from './IssuerSideNav'
 import IssueAsset from './IssueAsset'
 import IssuedToken from './IssuedToken'
-import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -34,12 +41,55 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const issuer = useParty();
     const ledger = useLedger();
 
-    const registeredIssuer = useStreamQueries(RegisteredIssuer, () => [], [], (e) => {
-        console.log("Unexpected close from registeredIssuer: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
+
+    const registeredIssuer = useContractQuery(RegisteredIssuer);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allTokens = useContractQuery(Token);
+
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .map(investor => {
+            const party = investor.contractData.investor;
+            const name = investorMap.get(damlTupleToString(investor.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Investor`
+            }
+        })
+
+    const brokerProviders = useContractQuery(BrokerCustomer)
+        .map(broker => {
+            const party = broker.contractData.broker;
+            const name = brokerMap.get(damlTupleToString(broker.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Broker`
+            }
+        })
+
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
+        .map(exchParticipant => {
+            const party = exchParticipant.contractData.exchange;
+            const name = exchangeMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Exchange`
+            }
+        });
+
+    const allProviders = [
+        ...allCustodianRelationships.map(relationship => {
+            const party = relationship.contractData.custodian;
+            const name = custodianMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Custodian`
+            }
+        }),
+        ...exchangeProviders,
+        ...brokerProviders,
+    ];
+
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -50,8 +100,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredIssuer.contracts[0]) {
-            const riData = registeredIssuer.contracts[0].payload;
+        if (registeredIssuer[0]) {
+            const riData = registeredIssuer[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location },
@@ -59,6 +109,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 issuerID: { ...profile.issuerID, value: riData.issuerID }
             })
         }
+    // eslint-disable-next-line
     }, [registeredIssuer]);
 
     const updateProfile = async () => {
@@ -89,56 +140,89 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                role={MarketRole.IssuerRole}
+                inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-    const sideNav = <IssuerSideNav url={url}
-                                   name={registeredIssuer.contracts[0]?.payload.name || issuer}/>;
+    const sideNav = <RoleSideNav url={url}
+                        name={registeredIssuer[0]?.contractData.name || issuer}
+                        items={[
+                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
+                        ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Issued Tokens:</p>
+                            </Menu.Item>
+                            {allTokens.map(token => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
+                                    key={token.contractId}
+                                >
+                                    <p>{token.contractData.id.label}</p>
+                                </Menu.Item>
+                            ))}
+                        </Menu.Menu>
+                </RoleSideNav>
 
     const issuerScreen = (
-        <Switch>
-            <Route exact path={path}>
-                <LandingPage
-                    profile={
-                        <FormErrorHandled onSubmit={updateProfile}>
-                            <IssuerProfile
-                                content='Save'
-                                defaultProfile={profile}
-                                submitProfile={profile => setProfile(profile)}/>
-                        </FormErrorHandled>
-                    }
-                    marketRelationships={
-                        <MarketRelationships role={MarketRole.IssuerRole}
-                                             custodianRelationships={allCustodianRelationships}/>}
-                    sideNav={sideNav}
-                    notifications={notifications}
-                    onLogout={onLogout}/>
-            </Route>
+        <div className='issuer'>
+            <Switch>
+                <Route exact path={path}>
+                    <LandingPage
+                        profile={
+                            <FormErrorHandled onSubmit={updateProfile}>
+                                <IssuerProfile
+                                    content='Save'
+                                    role={MarketRole.IssuerRole}
+                                    profileLinks= {
+                                        allTokens.map(token => {
+                                            return {
+                                                to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
+                                                title: token.contractData.id.label,
+                                                subtitle: token.contractData.description}
+                                        })
+                                    }
+                                    defaultProfile={profile}
+                                    submitProfile={profile => setProfile(profile)}/>
+                            </FormErrorHandled>
+                        }
+                        marketRelationships={
+                            <MarketRelationships role={MarketRole.IssuerRole}
+                                                custodianRelationships={allCustodianRelationships}/>}
+                        sideNav={sideNav}
+                        notifications={notifications}
+                        onLogout={onLogout}/>
+                </Route>
 
-            <Route path={`${path}/issue-asset`}>
-                <Page
-                    menuTitle={<><PublicIcon/> Issue Asset</>}
-                    sideNav={sideNav}
-                    onLogout={onLogout}
-                >
-                    <PageSection border='blue' background='white'>
-                        <IssueAsset/>
-                    </PageSection>
-                </Page>
-            </Route>
+                <Route path={`${path}/issue-asset`}>
+                    <Page
+                        menuTitle={<><PublicIcon size='24'/> Issue Asset</>}
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                    >
+                        <PageSection>
+                            <IssueAsset/>
+                        </PageSection>
+                    </Page>
+                </Route>
 
-            <Route path={`${path}/issued-token/:tokenId`}>
-                <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
-            </Route>
-        </Switch>
+                <Route path={`${path}/issued-token/:tokenId`}>
+                    <IssuedToken
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        providers={allProviders}
+                        investors={allRegisteredInvestors}/>
+                </Route>
+            </Switch>
+        </div>
     )
 
-    return registeredIssuer.loading
-        ? loadingScreen
-        : registeredIssuer.contracts.length === 0 ? inviteScreen : issuerScreen
+    return registeredIssuer.length === 0 ? inviteScreen : issuerScreen
 };
 
 export default Issuer;

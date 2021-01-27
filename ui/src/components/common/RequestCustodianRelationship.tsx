@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
@@ -11,10 +10,14 @@ import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+
+import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
 import { useOperator } from './common'
-import { wrapDamlTuple, CustodianRelationshipInfo, makeContractInfo } from './damlTypes'
-import FormErrorHandled from './FormErrorHandled'
-import ContractSelect from './ContractSelect'
+
+import AddRelationshipTile from '../common/AddRelationshipTile'
+
+import AddRegisteredPartyModal from './AddRegisteredPartyModal'
 
 type Props = {
     role: MarketRole;
@@ -22,24 +25,23 @@ type Props = {
 }
 
 const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelationships }) => {
-    const [ custodianId, setCustodianId ] = useState('');
+    const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
+
     const ledger = useLedger();
     const party = useParty();
     const operator = useOperator();
 
-    const requestCustodians = useStreamQueries(CustodianRelationshipRequest, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationshipRequest: ", e);
-    }).contracts.map(cr => cr.payload.custodian);
+    const requestCustodians = useContractQuery(CustodianRelationshipRequest).map(cr => cr.contractData.custodian);
     const relationshipCustodians = custodianRelationships.map(cr => cr.contractData.custodian);
 
-    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
+    const registeredCustodians = useContractQuery(RegisteredCustodian, AS_PUBLIC)
         .filter(custodian =>
             !requestCustodians.includes(custodian.contractData.custodian) &&
             !relationshipCustodians.includes(custodian.contractData.custodian));
 
-    const requestCustodianRelationship = async () => {
+    const requestCustodianRelationship = async (custodianId: string) => {
         const key = wrapDamlTuple([operator, party]);
+
         const args = { custodian: custodianId };
 
         switch(role) {
@@ -58,28 +60,31 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
             default:
                 throw new Error(`The role '${role}' can not request a custodian relationship.`);
         }
-        setCustodianId('');
     }
 
-    return (
-        <FormErrorHandled onSubmit={requestCustodianRelationship}>
-            <Form.Group className='inline-form-group'>
-                <ContractSelect
-                    allowAdditions
-                    className='custodian-select-container'
-                    clearable
-                    search
-                    selection
-                    contracts={registeredCustodians}
-                    placeholder='Custodian ID'
-                    value={custodianId}
-                    getOptionText={rc => rc.contractData.name}
-                    setContract={ri => setCustodianId(ri ? ri.contractData.custodian : '')}
-                    setAddition={privateCustodianId => setCustodianId(privateCustodianId)}/>
+    const partyOptions = registeredCustodians.map(d => {
+            return {
+                text: `${d.contractData.name}`,
+                value: d.contractData.custodian
+            }
+        })
 
-                <Button className='request-custodian-relationship' secondary content='Send Request' disabled={!custodianId}/>
-            </Form.Group>
-        </FormErrorHandled>
+    return (
+        <>
+           <AddRelationshipTile
+                disabled={partyOptions.length === 0}
+                disabledMessage='All registered custodians have been added'
+                onClick={()=> setShowAddRelationshipModal(true)}
+                label='Add Custodian'/>
+            {showAddRelationshipModal &&
+                <AddRegisteredPartyModal
+                    title='Add Custodian'
+                    partyOptions={partyOptions}
+                    onRequestClose={() => setShowAddRelationshipModal(false)}
+                    multiple={false}
+                    onSubmit={requestCustodianRelationship}/>
+            }
+        </>
     )
 }
 

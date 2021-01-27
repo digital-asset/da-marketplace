@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Form, Message } from 'semantic-ui-react'
+import classNames from 'classnames'
 
 import { ErrorMessage, parseError } from './errorTypes'
-
-import "./FormErrorHandled.css";
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = ((callback: (fn: () => Promise<void>) => void) => Renderable);
@@ -46,16 +45,23 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
         setLoading(false);
     }
 
+    const errorMsgList = error?.message instanceof Array ? error.message : undefined;
+    const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
+
     return (
         <Form
-            className={className}
+            className={classNames('form-error-handled', className)}
             size={size}
             loading={loading}
             error={!!error}
             onSubmit={() => loadAndCatch(onSubmit)}
         >
             { isCallable(children) ? children(callback => loadAndCatch(callback)) : children }
-            <Message error header={error?.header} content={error?.message}/>
+            <Message
+                error
+                header={error?.header}
+                content={errorMsgContent}
+                list={errorMsgList}/>
         </Form>
     )
 }

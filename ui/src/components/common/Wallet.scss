@@ -1,0 +1,10 @@
+@mixin wallet {
+    .wallet {
+        display: flex;
+        flex-direction: row;
+
+        .holdings {
+            width: 100%;
+        }
+    }
+}

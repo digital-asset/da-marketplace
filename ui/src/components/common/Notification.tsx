@@ -1,8 +1,6 @@
 import React from 'react'
 import { Message } from 'semantic-ui-react'
 
-import "./Notification.css"
-
 const Notification: React.FC = ({ children }) => {
     return (
         <div className='notification'>

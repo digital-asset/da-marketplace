@@ -1,0 +1,33 @@
+@mixin landing-page {
+    .landing-page {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: space-between;
+
+        .ui.header {
+            padding-bottom: $spacing-s;
+        }
+
+        .landing-page-column {
+            height: fit-content;
+            width: 49%;
+
+            .ui.form > .fields.inline-form-group > .field {
+                padding-left: 0;
+            }
+
+            .custodian-select-container {
+                padding-right: $spacing-xs;
+            }
+        }
+
+        @media screen and (max-width: 1000px) {
+            .landing-page-column {
+                width: 100% !important;
+                padding-bottom: $spacing-l;
+            }
+        }
+    }
+}

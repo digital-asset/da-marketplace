@@ -1,14 +1,18 @@
 import React from 'react'
+import _ from 'lodash'
 
-import { useParty, useStreamFetchByKeys } from '@daml/react'
+import { useParty } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { unwrapDamlTuple } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import CardTable from '../common/CardTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import CreateMarket from './CreateMarket';
 
 type Props = {
     sideNav: React.ReactElement;
@@ -19,11 +23,16 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
 
-    const keys = () => [wrapDamlTuple([operator, exchange])];
-    const exchangeContract = useStreamFetchByKeys(Exchange, keys, [operator, exchange]).contracts;
+    const exchangeContract = useContractQuery(Exchange)
+    // Find contract by key
+    .find(contract => _.isEqual(
+        // Convert keys to the same data type for comparison
+        unwrapDamlTuple(contract.key),
+        [operator, exchange]
+    ));
 
     const header = ['Pair', 'Current Price', 'Change', 'Volume']
-    const rows = exchangeContract[0]?.payload.tokenPairs.map(pair => {
+    const rows = exchangeContract?.contractData.tokenPairs.map(pair => {
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
         return [pairLabel, '-', '-', '-'];
@@ -33,9 +42,10 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         <Page
             sideNav={sideNav}
             onLogout={onLogout}
-            menuTitle={<><PublicIcon/>Market Pairs</>}
+            menuTitle={<><PublicIcon size='24'/>Markets</>}
         >
-            <PageSection border='blue' background='white'>
+            <PageSection>
+                <CreateMarket/>
                 <CardTable
                     className='market-pairs'
                     header={header}

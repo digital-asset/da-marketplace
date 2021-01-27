@@ -10,7 +10,6 @@ import Marketplace.Utils
 import DA.Finance.Asset
 import DA.List
 
-
 template ExchangeParticipantInvitation
   with
     operator : Party
@@ -79,33 +78,59 @@ template ExchangeParticipant
 
       nonconsuming ExchangeParticipant_PlaceBid : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
           pair : IdPair
+          amount : Decimal
           price : Decimal
         do
-          deposit <- fetch depositCid
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
           assertMsg ("deposit should be for " <> pair._2.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._2 == deposit.asset.id
 
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision $ deposit.asset.quantity / price
+          newDepositCid <- if amount < deposit.asset.quantity
+                  then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                  else return mergedCid
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid, pair, price, qty, isBid = True
+          newDeposit <- fetch newDepositCid
+
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision $ newDeposit.asset.quantity / price
+
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = True
 
       nonconsuming ExchangeParticipant_PlaceOffer : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
           pair : IdPair
+          amount : Decimal
           price : Decimal
         do
-          deposit <- fetch depositCid
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          deposit <- fetch mergedCid
+
           assertMsg ("deposit should be for " <> pair._1.label <> " but it is for " <> deposit.asset.id.label)
             $ pair._1 == deposit.asset.id
 
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision deposit.asset.quantity
+          newDepositCid <- if amount < deposit.asset.quantity
+                           then head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                           else return mergedCid
 
-          exercise self ExchangeParticipant_MakeOrder with depositCid, pair, price, qty, isBid = False
+          newDeposit <- fetch newDepositCid
+
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision newDeposit.asset.quantity
+
+          exercise self ExchangeParticipant_MakeOrder with depositCid = newDepositCid, pair, price, qty, isBid = False
 
       nonconsuming ExchangeParticipant_MakeOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with

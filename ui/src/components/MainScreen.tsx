@@ -1,9 +1,11 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { Message } from 'semantic-ui-react'
+
+import { QueryStream, QueryStreamContext } from '../websocket/queryStream'
 
 import { useDablParties } from './common/common'
 import { parseError } from './common/errorTypes'
@@ -15,6 +17,7 @@ import Issuer from './Issuer/Issuer'
 import Exchange from './Exchange/Exchange'
 import Custodian from './Custodian/Custodian'
 import Broker from './Broker/Broker'
+import { StreamErrors } from '../websocket/websocket'
 
 
 type Props = {
@@ -28,11 +31,21 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const { path } = useRouteMatch();
   const { parties, loading, error } = useDablParties();
 
-  const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>;
-  const errorScreen = error &&
+  const [ streamErrors, setStreamErrors ] = React.useState<StreamErrors[]>();
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+
+  useEffect(() => {
+    if (queryStream) {
+      setStreamErrors(queryStream.streamErrors);
+    }
+  }, [queryStream]);
+
+  const loadingScreen = <OnboardingTile><p className='dark'>Loading...</p></OnboardingTile>;
+  const errorScreen = (error || streamErrors) &&
     <OnboardingTile>
       <Message error>
-        {parseError(error)?.message}
+        { error && parseError(error)?.message }
+        { streamErrors && streamErrors.map(se => se.errors).join(',') }
       </Message>
     </OnboardingTile>;
 
@@ -41,7 +54,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       <Route exact path={path}>
         { loading || !parties
           ? loadingScreen
-          : error ? errorScreen : <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
+          : error || streamErrors ? errorScreen : <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
         }
       </Route>
 

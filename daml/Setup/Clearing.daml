@@ -189,7 +189,7 @@ setupInvestorAccount lp usdTokenId custodianAmount marginAmount clearingAmount i
 
   -- > allocate deposit to CCP for Clearing Account
   transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
-      with depositCid = depositCid, provider = ccp
+      with depositCids = [depositCid], amount = clearingAmount, provider = ccp
   clearingDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
 
   -- > deposit USD into custodian account
@@ -198,7 +198,7 @@ setupInvestorAccount lp usdTokenId custodianAmount marginAmount clearingAmount i
 
   -- > allocate deposit to CCP for Margin Account
   transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
-      with depositCid = depositCid, provider = ccp
+      with depositCids = [depositCid], amount = marginAmount, provider = ccp
   marginDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
 
   -- > deposit more USD into custodian account

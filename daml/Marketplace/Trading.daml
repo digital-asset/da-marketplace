@@ -62,7 +62,11 @@ template Order
     status : Text
     orderId : Int
   where
+    let tokenObservers = if isBid
+                         then pair._2.signatories
+                         else pair._1.signatories
     signatory exchange, exchParticipant
+    observer tokenObservers
     ensure qty > 0.0
 
     key (exchange, orderId) : (Party, Int)

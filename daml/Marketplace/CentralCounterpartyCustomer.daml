@@ -39,7 +39,7 @@ template CCPCustomerInvitation
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
-          create CCPCustomer with inGoodStanding = True, ..
+          create CCPCustomer with inGoodStanding = True, clearingDepositCids = [clearingDepositCid], ..
 
       CCPCustomerInvitation_Reject : ()
         do
@@ -55,7 +55,7 @@ template CCPCustomer
     ccp : Party
     custodian : Party
     ccpCustomer : Party
-    clearingDepositCid : ContractId AssetDeposit
+    clearingDepositCids : [ContractId AssetDeposit]
     marginDepositCid : ContractId AssetDeposit
     inGoodStanding : Bool
   where
@@ -70,6 +70,10 @@ template CCPCustomer
           targetAmount : Decimal
         do
           marginDeposit <- fetch marginDepositCid
+
+          clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
+              with depositCids = tail clearingDepositCids
+
           let netDiff =  marginDeposit.asset.quantity - targetAmount
           case netDiff of
             0.0    -> create this
@@ -85,10 +89,10 @@ template CCPCustomer
                   newDepositCids <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case newDepositCids of
                     []               -> create this with inGoodStanding = False
-                    [diffDepositCid] -> create this with inGoodStanding = False, clearingDepositCid = diffDepositCid
+                    [diffDepositCid] -> create this with inGoodStanding = False, clearingDepositCids = [diffDepositCid]
                     (diffDepositCid::remainingClearingCids) -> do
                       newMarginDepositCid <- exercise marginDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
-                      create this with clearingDepositCid = (head remainingClearingCids), marginDepositCid = newMarginDepositCid
+                      create this with clearingDepositCids = remainingClearingCids, marginDepositCid = newMarginDepositCid
               else do
                 -- move money from margin account to clearing account
                 let amountToTransfer = amount * (-1.0)
@@ -97,12 +101,15 @@ template CCPCustomer
                 [diffDepositCid, remainingMarginDepositCid] <- exercise marginDepositCid AssetDeposit_Split
                     with quantities = [amountToTransfer]
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
-                create this with clearingDepositCid = newClearingDepositCid, marginDepositCid = remainingMarginDepositCid
+                create this with clearingDepositCids = [newClearingDepositCid], marginDepositCid = remainingMarginDepositCid
 
       CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
         with
           amount : Decimal
         do
+          clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
+              with depositCids = tail clearingDepositCids
+
           clearingDeposit <- fetch clearingDepositCid
           [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
               with quantities = [amount]
@@ -113,7 +120,14 @@ template CCPCustomer
           depositTransferReqCid <- create DepositTransferRequest with
               sender = ccpCustomer, senderAccountId = clearingDeposit.account.id, depositCid = transferDepositCid, ..
 
-          (,) depositTransferReqCid <$> create this with clearingDepositCid = remainingDepositCid
+          (,) depositTransferReqCid <$> create this with clearingDepositCids = [remainingDepositCid]
+
+      CCPCustomer_AddDepositToClearingDeposits : ContractId CCPCustomer
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          assertMsg "deposit cid already exists" $ depositCid `notElem` clearingDepositCids
+          create this with clearingDepositCids = depositCid :: clearingDepositCids
 
       -- CCPCustomer_TransferToClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
       --   with

@@ -9,6 +9,7 @@ import Marketplace.Utils
 import DA.Finance.Asset
 import DA.Finance.Types
 
+import DA.List
 
 template BrokerInvitation
   with
@@ -64,9 +65,17 @@ template Broker
 
       nonconsuming Broker_AllocateToProvider : ContractId DepositTransferRequest
         with
-          depositCid : ContractId AssetDeposit
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
           provider : Party
         do
+          aggregateQty <- getDepositQuantities depositCids
+
+          assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
+
+          mergedCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+          depositCid <- head <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+
           deposit <- fetch depositCid
           let receiverAccountId = Id
                 with

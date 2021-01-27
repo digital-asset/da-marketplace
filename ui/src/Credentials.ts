@@ -34,13 +34,17 @@ export function storeCredentials(credentials?: Credentials): void {
 export function retrieveCredentials(): Credentials | undefined {
   const credentialsJson = localStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
+  if (!credentialsJson) {
+    return undefined;
+  }
+
   try {
-    const credentials = JSON.parse(credentialsJson || '');
+    const credentials = JSON.parse(credentialsJson);
     if (isCredentials(credentials) && !expiredToken(credentials.token)) {
       return credentials;
     }
   } catch {
-    console.warn("Could not parse credentials: ", credentialsJson);
+    console.error("Could not parse credentials: ", credentialsJson);
   }
 
   return undefined;

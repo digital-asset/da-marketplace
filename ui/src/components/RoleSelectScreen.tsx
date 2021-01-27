@@ -1,15 +1,14 @@
 import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Card } from 'semantic-ui-react'
+import { Button, Card, Header} from 'semantic-ui-react'
 
-import { useParty, useStreamQueries, useLedger } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon } from '../icons/Icons'
+import { useContractQuery } from '../websocket/queryStream'
 
-import './RoleSelectScreen.css'
+import OnboardingTile from './common/OnboardingTile'
 
 type RoleSelectProps = {
     loading: boolean;
@@ -21,13 +20,13 @@ type RoleSelectProps = {
 const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, roleSelectClick }) => (
     <Card className='role-select centered'>
         <Button
-            className='ghost'
             disabled={disabled}
             loading={loading}
+            icon='right arrow blue'
+            labelPosition='right'
+            content={<p className='bold'> { caption } </p> }
             onClick={roleSelectClick}
-        >
-            { caption } <ArrowRightIcon/>
-        </Button>
+        />
     </Card>
 )
 
@@ -43,9 +42,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
-    const { contracts: userSessions, loading: userSessionsLoading } = useStreamQueries(UserSession, () => [], [], (e) => {
-        console.log("Unexpected close from userSession: ", e);
-    });
+    const userSessions = useContractQuery(UserSession);
 
     const handleRoleClick = async (role: MarketRole) => {
         setRole(role);
@@ -62,8 +59,9 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
     }
 
     return (
-        <>
+        <div className='role-selector'>
             <OnboardingTile>
+                <p className='dark bold'>What would you like to do?</p>
                 <RoleSelect
                     caption='I want to chat & invest'
                     loading={loading && role === MarketRole.InvestorRole}
@@ -89,7 +87,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>
             </OnboardingTile>
-        </>
+        </div>
     );
 }
 
