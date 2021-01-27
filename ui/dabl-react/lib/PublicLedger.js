@@ -65,9 +65,9 @@ function fetchPublicPartyToken(ledgerId, httpBaseUrl) {
         });
     });
 }
-var _a = react_2.createLedgerContext(), DamlLedger = _a.DamlLedger, useParty = _a.useParty, useLedger = _a.useLedger, useQuery = _a.useQuery, useFetchByKey = _a.useFetchByKey, useStreamQuery = _a.useStreamQuery, useStreamFetchByKey = _a.useStreamFetchByKey, useReload = _a.useReload;
+var _a = react_2.createLedgerContext(), DamlLedger = _a.DamlLedger, useParty = _a.useParty, useLedger = _a.useLedger, useQuery = _a.useQuery, useFetchByKey = _a.useFetchByKey, useStreamQuery = _a.useStreamQuery, useStreamQueries = _a.useStreamQueries, useStreamFetchByKey = _a.useStreamFetchByKey, useStreamFetchByKeys = _a.useStreamFetchByKeys, useReload = _a.useReload;
 function PublicLedger(_a) {
-    var ledgerId = _a.ledgerId, publicParty = _a.publicParty, httpBaseUrl = _a.httpBaseUrl, wsBaseUrl = _a.wsBaseUrl, defaultToken = _a.defaultToken, children = _a.children;
+    var ledgerId = _a.ledgerId, publicParty = _a.publicParty, httpBaseUrl = _a.httpBaseUrl, wsBaseUrl = _a.wsBaseUrl, defaultToken = _a.defaultToken, reconnectThreshold = _a.reconnectThreshold, children = _a.children;
     var _b = react_1.useState(defaultToken), publicToken = _b[0], setPublicToken = _b[1];
     react_1.useEffect(function () {
         function res() {
@@ -94,7 +94,7 @@ function PublicLedger(_a) {
         return null;
     }
     else {
-        return react_1.createElement(DamlLedger, { party: publicParty, token: publicToken, httpBaseUrl: httpBaseUrl, wsBaseUrl: wsBaseUrl }, children);
+        return react_1.createElement(DamlLedger, { party: publicParty, token: publicToken, httpBaseUrl: httpBaseUrl, wsBaseUrl: wsBaseUrl, reconnectThreshold: reconnectThreshold }, children);
     }
 }
 exports.PublicLedger = PublicLedger;
@@ -108,13 +108,37 @@ function useFetchByKeyAsPublic(template, keyFactory, keyDeps) {
     return useFetchByKey(template, keyFactory, keyDeps);
 }
 exports.useFetchByKeyAsPublic = useFetchByKeyAsPublic;
-function useStreamQueryAsPublic(template, queryFactory, queryDeps) {
-    return useStreamQuery(template, queryFactory, queryDeps);
+function useStreamQueryAsPublic(template, queryFactory, queryDeps, closeHandler) {
+    return useStreamQuery(template, queryFactory, queryDeps, closeHandler);
 }
 exports.useStreamQueryAsPublic = useStreamQueryAsPublic;
-function useStreamFetchByKeyAsPublic(template, keyFactory, keyDeps) {
-    return useStreamFetchByKey(template, keyFactory, keyDeps);
+function useStreamQueriesAsPublic(template, queryFactory, queryDeps, closeHandler) {
+    return useStreamQueries(template, queryFactory, queryDeps, closeHandler);
+}
+exports.useStreamQueriesAsPublic = useStreamQueriesAsPublic;
+/**
+ * React Hook to query the ledger. Same as useStreamQueryAsPublic, but query by contract key instead.
+ *
+ * @deprecated prefer useStreamFetchByKeysAsPublic
+ *
+ * @typeparam T The contract template type of the query.
+ * @typeparam K The contract key type of the query.
+ * @typeparam I The template id type.
+ *
+ * @param template The template of the contracts to match.
+ * @param queryFactory A function returning a contract key.
+ * @param queryDeps The dependencies of the query (for which a change triggers an update of the result).
+ * @param closeHandler A callback that will be called if the underlying WebSocket connection fails in an unrecoverable way.
+ *
+ * @return The matching (unique) contract, or null.
+ */
+function useStreamFetchByKeyAsPublic(template, keyFactory, keyDeps, closeHandler) {
+    return useStreamFetchByKey(template, keyFactory, keyDeps, closeHandler);
 }
 exports.useStreamFetchByKeyAsPublic = useStreamFetchByKeyAsPublic;
+function useStreamFetchByKeysAsPublic(template, keyFactory, keyDeps, closeHandler) {
+    return useStreamFetchByKeys(template, keyFactory, keyDeps, closeHandler);
+}
+exports.useStreamFetchByKeysAsPublic = useStreamFetchByKeysAsPublic;
 exports.useReloadAsPublic = useReload;
 //# sourceMappingURL=PublicLedger.js.map

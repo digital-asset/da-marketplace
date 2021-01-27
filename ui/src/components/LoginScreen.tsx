@@ -5,12 +5,14 @@ import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { Button, Form, Icon } from 'semantic-ui-react'
 
+import { DablPartiesInput, PartyDetails } from '@daml/dabl-react'
+
 import Credentials, { computeCredentials } from '../Credentials'
-import { Parties, retrieveParties, storeParties } from '../Parties'
+import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
 import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
-import { AppError, InvalidPartiesJSONError } from './common/errorTypes'
+import { AppError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
 
 function useQuery() {
@@ -142,7 +144,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
 
 const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ selectedPartyId, setSelectedPartyId ] = useState('');
-  const [ parties, setParties] = useState<Parties>();
+  const [ parties, setParties] = useState<PartyDetails[]>();
 
   const history = useHistory();
 
@@ -156,7 +158,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     const parties = retrieveParties();
     if (parties) {
       setParties(parties);
-      setSelectedPartyId(parties.find(_ => true)?.party || '');
+      setSelectedPartyId(parties[0]?.party || '');
     }
   }, []);
 
@@ -172,21 +174,15 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     }
   }
 
-  const handleFileUpload = async (contents: string) => {
-    try {
-      storeParties(JSON.parse(contents));
-      const parties = retrieveParties();
+  const handleLoad = async (parties: PartyDetails[]) => {
+    setParties(parties);
+    setSelectedPartyId(parties[0]?.party || '');
+    storeParties(parties);
+  }
 
-      if (parties) {
-        setParties(parties);
-        setSelectedPartyId(parties.find(_ => true)?.party || '');
-      }
-    } catch (err) {
-      if (err instanceof InvalidPartiesJSONError) {
-        throw err;
-      } else {
-        throw new InvalidPartiesJSONError("Not a JSON file or wrongly formatted JSON.")
-      }
+  const handleError = (error: string): () => Promise<void> => {
+    return async () => {
+      throw new AppError("Invalid Parties.json", error);
     }
   }
 
@@ -199,24 +195,12 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
         { loadAndCatch => (
           <>
             <Form.Group widths='equal'>
-
               <Form.Input className='upload-file-input'>
                 <label className="custom-file-upload button ui">
-                  <input type='file' value='' onChange={e => {
-                    const reader = new FileReader();
-
-                    reader.onload = function(event) {
-                      loadAndCatch(async () => {
-                        if (event.target && typeof event.target.result === 'string') {
-                          await handleFileUpload(event.target.result);
-                        }
-                      })
-                    };
-
-                    if (e.target && e.target.files) {
-                      reader.readAsText(e.target.files[0]);
-                    }
-                  }}/>
+                  <DablPartiesInput
+                    ledgerId={ledgerId}
+                    onError={error => loadAndCatch(handleError(error))}
+                    onLoad={handleLoad}/>
                   <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
                 </label>
               </Form.Input>
