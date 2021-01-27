@@ -138,7 +138,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                         <StripedTable
                             headings={StripedTableHeaders}
                             rows={StripedTableRows}/>
-                        {/* <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/> */}
+                        <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                     </div>
                 </div>
             </PageSection>
@@ -186,7 +186,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     }
 }
 
-// eslint-disable-next-line
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null

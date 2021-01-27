@@ -24,6 +24,7 @@ const LandingPage: React.FC<Props> = ({
         onLogout={onLogout}
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
+        landingPage={true}
     >
         <PageSection>
             <div className='landing-page'>
