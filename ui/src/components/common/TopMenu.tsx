@@ -48,7 +48,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                         <Menu.Item className='overflow-menu-item'>
                             <OverflowMenu>
                                 {topMenuButtons?.map(b =>
-                                    <OverflowMenuEntry label={b.label} onClick={b.onClick}/>
+                                    <OverflowMenuEntry key={b.label} label={b.label} onClick={b.onClick}/>
                                 )}
                             </OverflowMenu>
                         </Menu.Item>}
