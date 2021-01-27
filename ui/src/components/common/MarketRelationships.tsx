@@ -42,8 +42,8 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
     return (
         <div className='market-relationships'>
             <Header className='bold' as='h2'>Market Relationships</Header>
-            {rows}
             <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
+            {rows}
         </div>
     )
 }
