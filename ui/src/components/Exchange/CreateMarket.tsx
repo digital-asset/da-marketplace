@@ -127,7 +127,7 @@ const CreateMarket: React.FC<{}> = () => {
 
                     <Form.Input
                         className='quantity-select'
-                        label={<p className='p2'>Minimum Quantity</p>}
+                        label={<p className='p2'>Maximum Quantity</p>}
                         type='number'
                         step={step}
                         placeholder={placeholder}
