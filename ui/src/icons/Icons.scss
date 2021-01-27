@@ -53,5 +53,12 @@
         &.fill-green , path.fill-green{
             fill: var(--green-50);
         }
+
+        &.circled-check-icon {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            z-index: 2;
+        }
     }
 }

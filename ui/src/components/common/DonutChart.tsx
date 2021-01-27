@@ -2,6 +2,8 @@ import React from 'react'
 
 import { PieChart } from 'react-minimal-pie-chart';
 
+import { Table } from 'semantic-ui-react'
+
 export type IDonutChartData = {
     title: string,
     value: number,
@@ -15,22 +17,8 @@ export const disabledColor = '#303132'
 const DonutChart = (props: {
     data: IDonutChartData[]
 }) => {
+    const total = props.data.map(d => d.value).reduce((sum, item) => sum + item)
 
-    if (props.data.length === 0) {
-        return (
-            <div className='donut-chart'>
-                <PieChart
-                    radius={30}
-                    animate
-                    lineWidth={25}
-                    data={[{title: '', value: 100, color: disabledColor}]}
-                    labelPosition={0}
-                    viewBoxSize={[100,100]}
-                    label={() => `No allocations`}
-                />
-            </div>
-        )
-    }
     return (
         <div className='donut-chart'>
             <PieChart
@@ -40,12 +28,28 @@ const DonutChart = (props: {
                 data={props.data}
                 labelPosition={110}
                 viewBoxSize={[100,100]}
-                label={({ dataEntry }) => `${dataEntry.title} \n ${dataEntry.percentage.toFixed(1)}%`}
-                labelStyle={{ fontWeight: 600, fontSize: '3.5px', zIndex: 2 } }
+                label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.percentage.toFixed(1)}%`}
             />
+            <div className='key-table'>
+                <Table>
+                    <Table.Body>
+                        {props.data.map(d =>
+                            <Table.Row>
+                                <Table.Cell>
+                                    <div className='color-block' style={{backgroundColor: d.color}}></div>
+                                </Table.Cell>
+                                <Table.Cell>
+                                    <p>{d.title} {(total/d.value).toFixed(1)}%</p>
+                                </Table.Cell>
+                            </Table.Row>
+                        )}
+                    </Table.Body>
+                </Table>
+            </div>
         </div>
     )
 }
+
 export function getDonutChartColor(index: number) {
     return donutChartColors[index % donutChartColors.length]
 }

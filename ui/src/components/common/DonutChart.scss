@@ -8,5 +8,37 @@
                 font-size: 3px;
             }
         }
+
+        .key-table {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+        }
+
+        table {
+            display: none;
+            width: fit-content;
+        }
+
+        @media screen and (max-width: 1000px) {
+            text {
+                display: none
+            }
+
+            table {
+                display: flex;
+                border: none;
+
+                tr td {
+                    border: none;
+                }
+
+                .color-block {
+                    height: 20px;
+                    width: 30px;
+                    border-radius: 4px;
+                }
+            }
+        }
     }
 }

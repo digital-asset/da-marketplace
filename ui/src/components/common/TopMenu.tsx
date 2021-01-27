@@ -50,7 +50,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             </div>
                         </Button>
                     </Menu.Item>
-                    </Menu.Menu>
+                </Menu.Menu>
             </Menu>
 
             <div className='notifications'>

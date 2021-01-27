@@ -29,14 +29,14 @@
             margin-bottom: $spacing-s;
         }
 
-        .observer-select {
+        .button-toggle {
             display: flex;
             flex-direction: row;
-            align-items: baseline;
-            margin-top : $spacing-s;
+            align-items: center;
+            margin-bottom: $spacing-m;
 
-            .public-select {
-                margin-right : $spacing-l;
+            button {
+                margin: 0px;
             }
         }
     }

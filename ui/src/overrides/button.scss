@@ -47,6 +47,22 @@
       &.warning {
         border-color: var(--red-50);
       }
+      &.darken {
+        background-color: var(--cool-grey-90);
+        border-color: var(--cool-grey-90);
+        color: var(--cool-grey-40);
+
+        .icon.public-icon path{
+          fill: var(--cool-grey-40);
+        }
+        &:hover {
+          background-color: transparent;
+        }
+      }
+
+      &.checked {
+        position: relative;
+      }
     }
 
     i.right.arrow.icon {
