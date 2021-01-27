@@ -40,9 +40,9 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                     {topMenuButtons?.map(b =>
                         <Menu.Item className='menu-button'>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
-                                    <Header as='h3'>{b.label}</Header>
-                                </Button>
-                            </Menu.Item>
+                                <Header as='h3'>{b.label}</Header>
+                            </Button>
+                        </Menu.Item>
                     )}
                     {topMenuButtons &&
                         <Menu.Item className='overflow-menu-item'>
