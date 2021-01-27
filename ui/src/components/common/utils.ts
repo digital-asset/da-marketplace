@@ -126,7 +126,7 @@ export type IPartyInfo = {
 
 export function getPartyLabel(partyId: string, parties: IPartyInfo[]) {
     const partyInfo = parties.find(p => p.party === partyId)
-    return { party: partyInfo?.party || partyId , label: partyInfo?.label.substring(partyInfo.label.lastIndexOf('|')+1) || partyId}
+    return { party: partyInfo?.party || partyId , label: partyInfo?.label.substring(0, partyInfo.label.lastIndexOf('|')+1) || partyId}
 }
 
 export function getAbbreviation(phrase: string) {
