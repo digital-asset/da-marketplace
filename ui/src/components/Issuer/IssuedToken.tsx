@@ -186,7 +186,6 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     }
 }
 
-// eslint-disable-next-line
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null
