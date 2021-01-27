@@ -40,7 +40,7 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
-                    <Header as='h3'>Client Holdings</Header>
+                    <Header as='h2'>Client Holdings</Header>
                     <StripedTable
                         headings={['Asset', 'Amount']}
                         rows={tableRows}/>

@@ -43,7 +43,7 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
             <PageSection>
                 <div className='clients'>
                     <div className='client-list'>
-                        <Header as='h3'>Clients</Header>
+                        <Header as='h2'>Clients</Header>
                         <StripedTable
                             headings={tableHeadings}
                             rows={tableRows}

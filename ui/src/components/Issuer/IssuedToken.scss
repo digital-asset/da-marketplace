@@ -16,6 +16,7 @@
         .token-subheading {
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             justify-content: space-between;
             align-items: baseline;
             margin-bottom: $spacing-m;
@@ -24,6 +25,7 @@
                 display: flex;
                 flex-direction: row;
                 align-items: flex-end;
+                flex-wrap: wrap;
 
                 h3 {
                     margin-left: $spacing-l;
@@ -81,6 +83,24 @@
                     width: fit-content;
                 }
 
+            }
+        }
+
+        @media screen and (max-width: 850px) {
+            padding: 0px;
+
+            .token-subheading {
+                flex-direction: column;
+
+                .token-details {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: $spacing-xs;
+
+                    h3 {
+                        margin-left: 0px;
+                    }
+                }
             }
         }
     }

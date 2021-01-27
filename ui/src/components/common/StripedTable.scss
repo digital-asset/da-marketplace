@@ -23,6 +23,10 @@
 
             tr td {
                 border-top: 0px !important;
+
+                .label {
+                    display: none;
+                }
             }
 
             tbody {
@@ -36,9 +40,26 @@
         }
 
 
-        @media screen and (max-width: 1000px) {
-            .ui.table.issuer-striped-table tr:nth-child(odd) {
-                background-color: unset;
+        @media screen and (max-width: 769px) {
+            table {
+                border-bottom: none;
+
+                thead {
+                    display: none !important;
+                }
+
+                tr {
+                    background-color: var(--cool-grey-100);
+
+                    td {
+                        font-weight: normal;
+                        text-align: left;
+
+                        .label {
+                            display: inline-flex;
+                        }
+                    }
+                }
             }
         }
     }

@@ -5,7 +5,7 @@ type CellItem = string | React.ReactElement;
 
 type Props = {
     className?: string;
-    header?: CellItem[];
+    header: CellItem[];
     rows: CellItem[][];
 }
 
@@ -33,7 +33,9 @@ const CardTable: React.FC<Props> = ({ className, header, rows }) => {
                 { rows.map((row, rowIndex) => (
                     <Table.Row key={rowIndex} className='card-table-row'>
                         { row.map((cell, cellIndex) => (
-                            <Table.Cell key={cellIndex} className='card-table-cell'>{cell}</Table.Cell>
+                            <Table.Cell key={cellIndex} className='card-table-cell'>
+                               <b className='label'>{header[cellIndex]}: </b> {cell}
+                            </Table.Cell>
                         )) }
                     </Table.Row>
                 ))}

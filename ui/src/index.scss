@@ -197,7 +197,6 @@ html {
       height: 100vh;
       display: flex;
       flex-direction: column;
-      background-color: var(--cool-grey-20);
 
       @include app;
     }
