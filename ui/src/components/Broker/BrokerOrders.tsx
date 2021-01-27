@@ -41,11 +41,11 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             onLogout={onLogout}
         >
             <PageSection>
-                <div className='customers'>
-                    <BrokerCustomers brokerCustomers={allBrokerCustomers}
-                                     registeredInvestors={allRegisteredInvestors}/>
-                </div>
                 <div className='broker-orders'>
+                    <div className='order-section'>
+                        <BrokerCustomers brokerCustomers={allBrokerCustomers}
+                                        registeredInvestors={allRegisteredInvestors}/>
+                    </div>
                     <div className='order-section'>
                         <Header as='h2'>Requested Orders</Header>
                         { allBrokerOrderRequests.length > 0 ?

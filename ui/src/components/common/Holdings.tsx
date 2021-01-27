@@ -13,6 +13,7 @@ import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 
 import { AppError } from './errorTypes'
+import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
 type Props = {
     deposits: DepositInfo[];
@@ -84,6 +85,9 @@ const DepositRow: React.FC<DepositRowProps> = ({
                 <Button className='ghost' onClick={() => setShowForm(!showForm)}>
                     Allocate to Different Provider
                 </Button>
+                <OverflowMenu>
+                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setShowForm(!showForm)}/>
+                </OverflowMenu>
             </div>
             <div className='selected-form'>
                 {showForm &&

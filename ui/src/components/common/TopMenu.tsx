@@ -4,6 +4,8 @@ import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
 
+import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
+
 import classNames from 'classnames'
 
 export type ITopMenuButtonInfo = {
@@ -38,10 +40,18 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                     {topMenuButtons?.map(b =>
                         <Menu.Item className='menu-button'>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
-                                <Header as='h3'>{b.label}</Header>
-                            </Button>
-                        </Menu.Item>
+                                    <Header as='h3'>{b.label}</Header>
+                                </Button>
+                            </Menu.Item>
                     )}
+                    {topMenuButtons &&
+                        <Menu.Item className='overflow-menu-item'>
+                            <OverflowMenu>
+                                {topMenuButtons?.map(b =>
+                                    <OverflowMenuEntry label={b.label} onClick={b.onClick}/>
+                                )}
+                            </OverflowMenu>
+                        </Menu.Item>}
                     <Menu.Item className={classNames('log-out-button', {'divider': !landingPage})}>
                         <Button className='ghost smaller' onClick={onLogout}>
                             <div className='log-out'>

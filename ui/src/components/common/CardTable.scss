@@ -11,7 +11,7 @@
         }
 
         .ui.table.card-table-header-table {
-            margin-bottom: 0px;;
+            margin-bottom: 0px;
 
             th {
                 border: none;
@@ -28,6 +28,10 @@
 
             .card-table-row {
                 border-radius: 5px;
+            }
+
+            td .label {
+                display: none;
             }
 
             .card-table-cell {
@@ -50,6 +54,26 @@
                 &:last-child {
                     border-right:1px var(--cool-grey-90) solid;
                     border-radius: 0px 4px 4px 0px;
+                }
+            }
+        }
+
+        @media screen and (max-width: 769px) {
+            .ui.table.card-table-header-table {
+                display: none
+            }
+
+            .ui.table.card-table-body-table {
+                tr {
+                    padding: 0px;
+
+                    td {
+                        text-align: left;
+
+                        .label {
+                            display: inline-flex;
+                        }
+                    }
                 }
             }
         }

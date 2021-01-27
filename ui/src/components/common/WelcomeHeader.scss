@@ -26,5 +26,32 @@
                 }
             }
         }
+
+        @media screen and (max-width: 850px) {
+            .icon {
+                display: none;
+            }
+
+            .welcome-header-row {
+                justify-content: flex-start;
+                align-items: flex-start;
+                margin: 0;
+
+                .title {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+
+                    h1.ui.header.bold {
+                        margin-left: 0px;
+                    }
+                }
+
+                p {
+                    display: none;
+                }
+            }
+        }
     }
 }

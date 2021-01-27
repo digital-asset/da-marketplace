@@ -42,7 +42,7 @@ const StripedTable = (props: {
                                     <Table.Cell
                                         key={j}
                                         textAlign={j+1 > row.length/2 ? 'right': 'left'}>
-                                        {item}
+                                        <b className='label'>{headings[j]}: </b> {item}
                                     </Table.Cell>
                                 )}
                             </Table.Row>
