@@ -4,7 +4,6 @@ import { Header } from 'semantic-ui-react'
 
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-
 import { getAbbreviation } from '../common/utils';
 
 import { CustodianRelationshipInfo } from './damlTypes'

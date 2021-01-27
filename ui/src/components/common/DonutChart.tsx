@@ -12,8 +12,6 @@ export type IDonutChartData = {
 
 export const donutChartColors = ['#835AF7', '#5AF7AC', '#FF29D0', '#131720', '#CBD0CB']
 
-export const disabledColor = '#303132'
-
 const DonutChart = (props: {
     data: IDonutChartData[]
 }) => {

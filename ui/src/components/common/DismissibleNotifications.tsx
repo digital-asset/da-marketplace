@@ -48,11 +48,11 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     const senderRole = notification.contractData.senderRole;
     let name;
 
-    // useEffect(() => {
-    //     setTimeout(() => {
-    //         notificationDismiss();
-    //     }, 5000);
-    // })
+    useEffect(() => {
+        setTimeout(() => {
+            notificationDismiss();
+        }, 5000);
+    })
 
     switch(senderRole) {
         case MarketRole.InvestorRole:

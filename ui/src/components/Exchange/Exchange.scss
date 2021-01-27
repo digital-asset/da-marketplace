@@ -5,6 +5,7 @@
     .exchange {
         @include create-market;
         @include exchange-participants;
+
         height: 100%;
     }
 }

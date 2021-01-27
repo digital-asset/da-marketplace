@@ -20,10 +20,10 @@ import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 import { ContractInfo, wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
+import DonutChart, { getDonutChartColor, IDonutChartData }from '../common/DonutChart'
 import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
-import DonutChart, { getDonutChartColor, IDonutChartData }from '../common/DonutChart'
 
 type DepositInfo = {
     investor: string,

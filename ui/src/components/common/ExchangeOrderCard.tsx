@@ -25,7 +25,7 @@ const ExchangeOrderCard: React.FC<OrderProps> = ({ order }) => {
             <OrderCard order={order}>
                 <Button
                     content='Cancel'
-                className='ghost warning'
+                    className='ghost'
                 />
             </OrderCard>
         </FormErrorHandled>

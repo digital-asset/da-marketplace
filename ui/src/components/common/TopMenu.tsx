@@ -2,9 +2,9 @@ import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
-import classNames from 'classnames'
-
 import { LogoutIcon } from '../../icons/Icons'
+
+import classNames from 'classnames'
 
 export type ITopMenuButtonInfo = {
     label: string,
