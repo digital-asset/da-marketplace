@@ -15,9 +15,8 @@ import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
 import { useOperator } from './common'
 
-import AddRelationshipTile from '../common/AddRelationshipTile'
-
 import AddRegisteredPartyModal from './AddRegisteredPartyModal'
+import AddRelationshipTile from '../common/AddRelationshipTile'
 
 type Props = {
     role: MarketRole;

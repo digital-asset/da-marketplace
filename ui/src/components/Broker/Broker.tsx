@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
 
 import { useLedger, useParty } from '@daml/react'
+import { Menu } from 'semantic-ui-react'
+
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+
 import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { WalletIcon, OrdersIcon, UserIcon } from '../../icons/Icons'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -25,6 +30,8 @@ import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
+import BrokerCustomerHoldings from './BrokerCustomerHoldings'
+import AddBrokerCustomer from './AddBrokerCustomer'
 
 type Props = {
     onLogout: () => void;
@@ -38,6 +45,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
 
     const registeredBroker = useContractQuery(RegisteredBroker);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const brokerCustomers = useContractQuery(BrokerCustomer);
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
 
@@ -93,7 +101,23 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                  items={[
                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
                                     {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
-                                 ]}/>
+                                 ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Clients:</p>
+                            </Menu.Item>
+                            {brokerCustomers.map(customer => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/customer/${customer.contractId}`}
+                                    key={customer.contractId}
+                                >
+                                    <p>{customer.contractData.brokerCustomer}</p>
+                                </Menu.Item>
+                            ))}
+                        </Menu.Menu>
+                    </RoleSideNav>
 
     const brokerScreen =
         <div className='broker'>
@@ -114,8 +138,11 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.BrokerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                                <>
+                                <MarketRelationships role={MarketRole.BrokerRole}
+                                                    custodianRelationships={allCustodianRelationships}/>
+                                <AddBrokerCustomer/>
+                            </>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
@@ -132,6 +159,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                     <BrokerOrders
                         sideNav={sideNav}
                         deposits={allDeposits}
+                        onLogout={onLogout}/>
+                </Route>
+
+                <Route path={`${path}/customer/:customerId`}>
+                    <BrokerCustomerHoldings
+                        sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>

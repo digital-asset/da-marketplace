@@ -1,0 +1,47 @@
+@mixin broker-customer-holdings {
+    .broker-customer-holdings {
+        .order-history {
+            padding: $spacing-m;
+            .order-section {
+                margin-bottom: $spacing-m;
+            }
+        }
+
+        .allocations {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            padding: $spacing-m;
+            justify-content: space-between;
+
+            .donut-chart {
+                width: 60%;
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-90);
+                border-radius: 4px;
+            }
+
+            .allocation-table {
+                width: 35%;
+
+                table tr {
+                    border-bottom: 2px solid var(--cool-grey-90);
+                }
+            }
+        }
+
+        @media screen and (max-width: 1000px) {
+            .allocations {
+                flex-direction: column;
+
+                .donut-chart {
+                    width: 100%;
+                }
+
+                .allocation-table {
+                    width: 100%;
+                }
+            }
+        }
+    }
+}
