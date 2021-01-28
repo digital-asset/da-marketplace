@@ -29,10 +29,10 @@ setup = do
       with
         orderDetails = Trading.OrderDetails with
           id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
-          market = "JPMUSD"
+          symbol = "JPM/USD"
           asset = shareAsset
           orderType = Trading.Limit with
-            price = priceAsset
+            price = 100.0
           side = Trading.Buy
           timeInForce = Trading.GTC
         depositCid = alice.assetDepositCid
@@ -43,10 +43,10 @@ setup = do
       with
         orderDetails = Trading.OrderDetails with
           id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
-          market = "JPMUSD"
+          symbol = "JPM/USD"
           asset = shareAsset
           orderType = Trading.Limit with
-            price = priceAsset
+            price = 100.0
           side = Trading.Sell
           timeInForce = Trading.GTC
         depositCid = bob.assetDepositCid

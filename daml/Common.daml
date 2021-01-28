@@ -12,6 +12,7 @@ import qualified Marketplace.Exchange as Exchange
 import qualified Marketplace.Matching as Matching
 import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Trading as Trading
+import qualified Marketplace.Listing as Listing
 
 data CommonContracts = CommonContracts
   with
@@ -28,6 +29,7 @@ data CustomerContracts = CustomerContracts
   with
     customer : Party
     tradingServiceCid : ContractId Trading.Service
+    listingServiceCid : ContractId Listing.Service
     allocationAssetSettlementRuleCid : ContractId AssetSettlementRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
@@ -68,6 +70,8 @@ onboardCustomer CommonContracts{..} party asset = do
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
+  listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
+  listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
 
   -- Accounts
   tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = empty; ctrls = fromList [ custodian, exchange, customer ]
@@ -80,5 +84,5 @@ onboardCustomer CommonContracts{..} party asset = do
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..
   assetDepositCid <- submit custodian do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
-  
+
   pure $ CustomerContracts with ..

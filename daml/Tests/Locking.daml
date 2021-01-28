@@ -24,10 +24,10 @@ traderCannotMoveAllocatedAsset = do
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
-  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with depositCid = alice.assetDepositCid; orderDetails = Trading.OrderDetails with id = aliceOrderId, market = "JPM.N/USD", asset = shareAsset, side = Trading.Sell, timeInForce = Trading.GTC, orderType = Trading.Limit with price = priceAsset
+  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with depositCid = alice.assetDepositCid; orderDetails = Trading.OrderDetails with id = aliceOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Trading.Sell, timeInForce = Trading.GTC, orderType = Trading.Limit with price = 100.0
 
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
-  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bob.assetDepositCid; orderDetails = Trading.OrderDetails with id = bobOrderId, market = "JPM.N/USD", asset = shareAsset, side = Trading.Buy, timeInForce = Trading.GTC, orderType = Trading.Limit with price = priceAsset
+  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bob.assetDepositCid; orderDetails = Trading.OrderDetails with id = bobOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Trading.Buy, timeInForce = Trading.GTC, orderType = Trading.Limit with price = 100.0
 
   -- Can't move asset pledged as order collateral
   -- submitMustFail alice.customer do exerciseCmd alice.allocationAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid; receiverAccountId = alice.tradingAccountId

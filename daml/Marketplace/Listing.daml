@@ -2,6 +2,13 @@ module Marketplace.Listing where
 
 import DA.Finance.Types
 
+type T = Listing
+
+data Status
+    = Active
+    | Inactive
+  deriving (Eq, Show)
+
 template Listing
   with
     operator : Party
@@ -16,7 +23,7 @@ template Listing
     quotedAssetPrecision : Int
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
-    status : Text
+    status : Status
   where
     signatory operator, provider, customer
 
@@ -48,7 +55,7 @@ template Service
           minimumTradableQuantity : Decimal
           maximumTradableQuantity : Decimal
         do
-          create CreateListingRequest with status = "Active"; ..
+          create CreateListingRequest with status = Active; ..
 
       nonconsuming RequestDeleteListing : ContractId DeleteListingRequest
         with
@@ -122,7 +129,7 @@ template CreateListingRequest
     quotedAssetPrecision : Int
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
-    status : Text
+    status : Status
   where
     signatory operator, provider, customer
 

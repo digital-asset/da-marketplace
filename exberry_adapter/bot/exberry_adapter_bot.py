@@ -80,9 +80,9 @@ def main():
         return create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': list(order['orderType'])[0],
-                'instrument': order['market'],
-                'quantity': float(order['orderAsset']['asset']['quantity']),
-                'price': float(-1) if order['orderType'] == 'Market' else float(order['orderType']['Limit']['price']['quantity']),
+                'instrument': order['symbol'],
+                'quantity': float(order['asset']['quantity']),
+                'price': float(-1) if list(order['orderType'])[0] == 'Market' else float(order['orderType']['Limit']['price']),
                 'side': order['side'],
                 'timeInForce': list(order['timeInForce'])[0],
                 'mpOrderId': int(order['id']['label']), # This will be the SID for now

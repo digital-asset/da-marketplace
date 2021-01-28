@@ -2,18 +2,17 @@
 -- Use proper namespace
 module Marketplace.Trading where
 
-import DA.Action (when, void)
 import DA.Assert ((===))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
 import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..), SettlementInstruction_Process(..), SettlementDetails(..))
 import DA.Finance.Trade.Dvp (Dvp(..), SettlementStatus(..))
-import DA.Finance.Types (Id(..), Asset, Account, MasterAgreement(..))
+import DA.Finance.Types (Id(..), Asset(..), Account, MasterAgreement(..))
 import DA.Finance.Utils (assertOnOrAfterDateMsg, zipChecked, fetchAndArchive)
 import DA.List (head, last)
 import DA.Next.Set (Set, empty, insert, fromList)
 import DA.Optional (whenSome)
-import DA.Foldable (forA_)
+import Marketplace.Listing (Listing)
 
 data Side
     = Buy
@@ -23,7 +22,7 @@ data Side
 data OrderType
     = Market
     | Limit with
-        price : Asset
+        price : Decimal
   deriving (Eq, Show)
 
 data TimeInForce
@@ -42,7 +41,7 @@ data TimeInForce
 
 data OrderDetails = OrderDetails with
     id : Id
-    market : Text
+    symbol : Text
     asset : Asset
     side : Side
     orderType : OrderType
@@ -54,7 +53,7 @@ data Status
     | PendingExecution
     | PartiallyExecuted
     | FullyExecuted
-    | Rejected with -- OrderRejected
+    | Rejected with
         errorCode : Int
         errorMessage : Text
     | PendingCancellation
@@ -336,19 +335,15 @@ template TradeInstruction
           sell : Order
         do
           -- TODO: Check that price matches limit order price, quantity is less than order qty
-          (_, buyTradingService) <- fetchByKey @Service (operator, provider, buy.customer)
-          (_, sellTradingService) <- fetchByKey @Service (operator, provider, sell.customer)
-
-          paymentDetails <- case buy.orderDetails.orderType of
-              Market -> (.asset) <$> fetch buy.depositCid
-              Limit price -> pure $ price
+          [buyTradingService, sellTradingService] <- forA [buy, sell] \order -> snd <$> fetchByKey @Service (operator, provider, order.customer)
+          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buy.orderDetails.symbol)
 
           let
             filledQuantity = fill.executedQuantity
             filledPrice = fill.executedPrice
             matchId = fill.matchId
             delivery = buy.orderDetails.asset with quantity = filledQuantity
-            payment = paymentDetails with quantity = filledPrice * filledQuantity
+            payment = Asset with id = paymentCurrencyId, quantity = filledPrice * filledQuantity
             tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = matchId; version = 0
             masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
             status = SettlementStatus_Instructed
@@ -356,34 +351,30 @@ template TradeInstruction
             deliveries = [ delivery ]
             payments = [ payment ]
             observers = empty
-            dvp = Dvp with ..
+            deliveryAsset = buy.orderDetails.asset with quantity = filledQuantity
+            paymentAsset = payment
 
-          sellDepositCid <-
-            if filledQuantity < buy.remainingQuantity then
-              head <$> exercise sell.depositCid AssetDeposit_Split with quantities = [ filledQuantity ]
+          [buyDepositCid, sellDepositCid] <- forA [buy, sell] \order -> do
+            let
+              isPartialFill = filledQuantity < buy.remainingQuantity
+              status = if isPartialFill then PartiallyExecuted else FullyExecuted
+              executionFills = fill :: order.executionFills
+              remainingQuantity = order.remainingQuantity - filledQuantity
+              quantities = [case order.orderDetails.side of
+                    Buy  -> filledQuantity * filledPrice
+                    Sell -> filledQuantity]
+
+            create order with status, executionFills, remainingQuantity
+            if isPartialFill then
+              head <$> exercise order.depositCid AssetDeposit_Split with ..
             else
-              pure sell.depositCid
-          buyDepositCid <-
-            if filledQuantity < buy.remainingQuantity then
-              head <$> exercise buy.depositCid AssetDeposit_Split with quantities = [ filledQuantity * filledPrice ]
-            else
-              pure buy.depositCid
+              pure order.depositCid
 
           let
-            deliveryAsset = buy.orderDetails.asset with quantity = filledQuantity
-            paymentAsset = paymentDetails with quantity = filledQuantity * filledPrice
             deliverySteps = [ SettlementDetails with senderAccount = sellTradingService.allocationAccount; receiverAccount = buyTradingService.tradingAccount; depositCid = Some sellDepositCid ]
             paymentSteps = [ SettlementDetails with senderAccount = buyTradingService.allocationAccount; receiverAccount = sellTradingService.tradingAccount; depositCid = Some buyDepositCid ]
 
-          forA_ [buy, sell] \order -> do
-            let
-              status = if filledQuantity < order.remainingQuantity then PartiallyExecuted else FullyExecuted
-              executionFills = fill :: order.executionFills
-              remainingQuantity = order.remainingQuantity - filledQuantity
-
-            create order with status, executionFills, remainingQuantity
-
-          dvpCid <- create dvp
+          dvpCid <- create Dvp with ..
           deliveryInstructionCid <- create SettlementInstruction with steps = deliverySteps; asset = deliveryAsset; ..
           paymentInstructionCid <- create SettlementInstruction with steps = paymentSteps; asset = paymentAsset; ..
           create Trade with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = [paymentInstructionCid]; ..

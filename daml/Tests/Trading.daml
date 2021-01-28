@@ -5,6 +5,7 @@ import DA.Optional
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
 import Marketplace.Trading qualified as T
+import Marketplace.Listing qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
 
@@ -32,32 +33,45 @@ newOrders = do
   -- Get our parties
   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
+  -- Get the deposits created in the setup script
   (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @L.Service alice
+  let
+    listingId = "JPM.N/USD"
+    calendarId = "1"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+  createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+
   -- Create Order Request
   let
-    shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
-    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
-    shareAsset = Asset with id = shareId; quantity = 200.0
-    cashAsset = Asset with id = cashId; quantity = 20000.0
-    sharePriceAsset = Asset with id = shareId; quantity = 100.0
-    cashPriceAsset = Asset with id = cashId; quantity = 100.0
+    shareAsset = Asset with id = tradedAssetId; quantity = 200.0
     aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
     aliceOrderDetails = T.OrderDetails with
       id = aliceOrderId
-      market = "JPM.N/USD"
+      symbol = listingId
       asset = shareAsset
       side = T.Sell
-      orderType = T.Limit with price = cashPriceAsset
+      -- orderType = T.Limit with price = 100.0
+      orderType = T.Market
       timeInForce = T.GTC
     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
     bobOrderDetails = T.OrderDetails with
       id = bobOrderId
-      market = "JPM.N/USD"
+      symbol = listingId
       asset = shareAsset
       side = T.Buy
-      orderType = T.Limit with price = cashPriceAsset
+      -- orderType = T.Limit with price = 100.0
+      orderType = T.Market
       timeInForce = T.GTC
     tradingServicekey p = (operator, exchange, p)
 
