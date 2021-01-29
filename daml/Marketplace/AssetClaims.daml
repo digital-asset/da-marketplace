@@ -1,0 +1,15 @@
+module Marketplace.AssetClaims where
+-- Consider merging into DA.Finance.Types.Asset
+
+import qualified DA.Finance.Types as Asset (Id)
+import ContingentClaims.Claim.Serializable (Claim)
+
+type T = AssetClaims
+type Claims = Claim Date Asset.Id
+
+template AssetClaims
+  with
+    assetId: Asset.Id
+    claims: Claims
+  where
+    signatory assetId.signatories
