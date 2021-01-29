@@ -35,9 +35,31 @@
                 }
             }
 
-            a.edit-profile  {
-                margin-top: $spacing-m;
+            .button-row {
+                display: flex;
+
+                .invite-indicator {
+                    display: flex;
+                    align-items: center;
+
+                    .ui.loader {
+                        position: static;
+                        margin: 0px $spacing-m;
+                        transform: translateX(-0%) translateY(-0%);
+                    }
+                }
             }
+
+            .profile-actions {
+                display: flex;
+                flex-direction: row;
+                margin-top: $spacing-m;
+
+                a, p {
+                    margin-right: $spacing-s;
+                }
+            }
+
 
             .profile-form-field {
                 margin-top: $spacing-s;

@@ -3,7 +3,7 @@ import { useHistory } from 'react-router-dom'
 import { Button, Card, Header} from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
-import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import { User, UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useContractQuery } from '../websocket/queryStream'

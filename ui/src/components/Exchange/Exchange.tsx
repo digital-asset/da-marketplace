@@ -43,6 +43,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const investorMap = useRegistryLookup().investorMap;
 
     const registeredExchange = useContractQuery(RegisteredExchange);
+    const invitation = useContractQuery(ExchangeInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const exchangeParticipants = useContractQuery(ExchangeParticipant);
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
@@ -101,6 +102,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
                 role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}

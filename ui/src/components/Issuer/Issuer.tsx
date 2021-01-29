@@ -44,6 +44,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
     const registeredIssuer = useContractQuery(RegisteredIssuer);
+    const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allTokens = useContractQuery(Token);
 
@@ -140,6 +141,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
                 role={MarketRole.IssuerRole}
                 inviteAcceptTile
                 defaultProfile={profile}

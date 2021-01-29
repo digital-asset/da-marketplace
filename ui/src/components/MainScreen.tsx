@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useEffect } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom'
 import { Message } from 'semantic-ui-react'
 
-import { QueryStream, QueryStreamContext } from '../websocket/queryStream'
+import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+
+import { QueryStream, QueryStreamContext, useContractQuery } from '../websocket/queryStream'
 
 import { useDablParties } from './common/common'
 import { parseError } from './common/errorTypes'
@@ -34,6 +36,9 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
   const [ streamErrors, setStreamErrors ] = React.useState<StreamErrors[]>();
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
 
+  const userContracts = useContractQuery(User);
+  const currentRole = userContracts[0]?.contractData?.currentRole;
+
   useEffect(() => {
     if (queryStream) {
       setStreamErrors(queryStream.streamErrors);
@@ -49,13 +54,28 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       </Message>
     </OnboardingTile>;
 
+  const getMainScreen = () => {
+    if (currentRole) {
+      const path = `/role/${currentRole.slice(0, -4).toLowerCase()}`
+      return <Redirect to={path}/>
+    }
+
+    if (loading || !parties) {
+      return loadingScreen;
+    }
+
+    if (error || streamErrors) {
+      return errorScreen;
+    } else {
+      return <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
+    }
+  };
+
+
   return (
     <Switch>
       <Route exact path={path}>
-        { loading || !parties
-          ? loadingScreen
-          : error || streamErrors ? errorScreen : <RoleSelectScreen operator={parties.userAdminParty} onLogout={onLogout}/>
-        }
+        { getMainScreen() }
       </Route>
 
       <Route path={`${path}/investor`}>
