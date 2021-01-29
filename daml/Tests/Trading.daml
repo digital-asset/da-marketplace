@@ -61,9 +61,10 @@ newOrders = do
       symbol = listingId
       asset = shareAsset
       side = T.Sell
-      -- orderType = T.Limit with price = 100.0
-      orderType = T.Market
-      timeInForce = T.GTC
+      orderType = T.Limit with price = 100.0
+      -- orderType = T.Market
+      -- timeInForce = T.GTC
+      timeInForce = T.GTD with expiryDate = 1611992116
     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
     bobOrderDetails = T.OrderDetails with
       id = bobOrderId

@@ -30,7 +30,8 @@ data TimeInForce
       -- ^ Good Till Cancelled (Rests on book until cancellation)
     | GTD with
         expiryDate : Int
-      -- ^ Good Till Date (At expiryDate, order will be automatically cancelled)
+      -- ^ Good Till Date (At expiryDate, order will be automatically cancelled).
+      -- UTC date and time in seconds
     | GAA
       -- ^ Good At Auction (Expires after auction if not filled)
     | IOC
@@ -116,7 +117,7 @@ template Service
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos
+          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
           let
             status = New
             providerOrderId = None
@@ -199,16 +200,6 @@ template Service
           archive orderCid
 
           create order with status = CancellationRejected with ..
-
-      -- nonconsuming FillOrder : ContractId AssetDeposit
-      --   with
-      --     orderCid : ContractId CancelOrderRequest
-      --   do
-      --     CancelOrderRequest{..} <- fetch cancelOrderRequestCid
-      --     archive cancelOrderRequestCid
-      --     order <- fetch orderCid
-      --     archive orderCid
-      --     exerciseByKey @AssetSettlementRule allocationAccountId AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccountId
 
 template Offer
   with
@@ -354,7 +345,7 @@ template TradeInstruction
             deliveryAsset = buy.orderDetails.asset with quantity = filledQuantity
             paymentAsset = payment
 
-          [buyDepositCid, sellDepositCid] <- forA [buy, sell] \order -> do
+          [buyDepositCid, sellDepositCid] <- forA [buy, sell] (\order -> do
             let
               isPartialFill = filledQuantity < buy.remainingQuantity
               status = if isPartialFill then PartiallyExecuted else FullyExecuted
@@ -369,6 +360,7 @@ template TradeInstruction
               head <$> exercise order.depositCid AssetDeposit_Split with ..
             else
               pure order.depositCid
+            )
 
           let
             deliverySteps = [ SettlementDetails with senderAccount = sellTradingService.allocationAccount; receiverAccount = buyTradingService.tradingAccount; depositCid = Some sellDepositCid ]

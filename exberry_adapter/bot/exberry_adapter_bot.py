@@ -85,6 +85,7 @@ def main():
                 'price': float(-1) if list(order['orderType'])[0] == 'Market' else float(order['orderType']['Limit']['price']),
                 'side': order['side'],
                 'timeInForce': list(order['timeInForce'])[0],
+                'expiryDate': int(-1) if not list(order['timeInForce'])[0] == 'GTD' else int(order['timeInForce']['GTD']['expiryDate']),
                 'mpOrderId': int(order['id']['label']), # This will be the SID for now
                 'userId': make_user_user_id(event.cdata['provider']),
             },
