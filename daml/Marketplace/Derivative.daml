@@ -38,6 +38,7 @@ template Derivative
     uom : Text  -- Unit of measure (barrels, troy ounces, bushels, coins etc..)
     optionData : Optional OptionData
     underlying : Id  -- an identifier for the underlying instrument
+    isPublic : Bool
     observers : Set Party
   where
     signatory id.signatories
@@ -46,6 +47,49 @@ template Derivative
     key id : Id
     maintainer key.signatories
 
+    choice Derivative_AddObservers : ContractId Derivative
+      with
+        party : Party
+        newObservers : Set Party
+      controller party
+      do
+        assert $ member party $ union id.signatories newObservers
+        create this with observers = union observers newObservers
+
+    controller id.signatories can
+      Derivative_SetObservers : ContractId Derivative
+        with newObservers : Set Party
+        do create this with observers = newObservers
+
+template FairValueCalculationRequest
+  with
+    operator : Party
+    exchange : Party
+    ccp : Party
+    currency : Id
+    upTo : Time
+  where
+    signatory ccp
+    controller exchange can
+      FairValueCalculationRequest_Ack : ()
+        do return ()
+
+template ManualFairValueCalculation
+  with
+    exchange : Party
+    assetId : Id
+    currency : Id
+    upTo : Time
+  where
+    signatory exchange
+
+    controller exchange can
+      ManualFairValueCalculation_Calculate : ContractId FairValue
+        with
+          price : Decimal
+        do
+          timestamp <- getTime
+          create FairValue with observers = fromList [], ..
 
 template FairValue
   with
@@ -75,4 +119,5 @@ template FairValueInterval
       FairValueInterval_Calculate : ContractId FairValueInterval
         do
           time <- getTime
+
           create this with lastCalculated = time

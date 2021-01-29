@@ -3,7 +3,8 @@ module Marketplace.Utils where
 import DA.Finance.Asset
 import DA.Finance.Types
 
-import DA.Next.Set
+import DA.List (null,head,tail)
+import DA.Next.Set hiding (null)
 import DA.Optional
 import DA.Text
 
@@ -47,3 +48,24 @@ getDepositQuantities depositCids = do
   foldl (+) 0.0 <$> forA depositCids (\dcid -> do
       d <- fetch dcid
       return d.asset.quantity)
+
+splitDecimals : Decimal -> [Decimal] -> [Decimal]
+splitDecimals qty quantities = quantitiesAll
+  where
+    quantitySum = foldl (+) 0.0 quantities
+    quantitiesAll =
+                if quantitySum == qty
+                then quantities
+                else quantities ++ [qty - quantitySum]
+
+
+-- getEnoughDeposits : Decimal -> ([Decimal], [Decimal]) -> Optional ([Decimal],[Decimal])
+-- getEnoughDeposits restFunds (use,remaining)
+--   | restFunds > 0.0 && null remaining = None
+--   | restFunds <= 0.0 = Some (use,remaining)
+--   | otherwise = getEnoughDeposits (restFunds - head remaining) (((head remaining) :: use),(tail remaining))
+
+headNote : Text -> [a] -> a
+headNote msg [] = error ("headNote: " <> msg)
+headNote _ xs   = head xs
+

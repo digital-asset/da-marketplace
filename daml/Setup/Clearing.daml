@@ -2,6 +2,8 @@ module Setup.Clearing where
 
 import Daml.Script
 
+import Tests.Utils
+
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.ExchangeParticipant
@@ -9,6 +11,7 @@ import Marketplace.Investor
 import Marketplace.Issuer
 import Marketplace.Operator
 
+import Marketplace.Clearing
 import Marketplace.Derivative
 import Marketplace.CentralCounterparty
 import Marketplace.CentralCounterpartyCustomer
@@ -53,15 +56,18 @@ allocateParties = do
 
   return $ LedgerParties operator public custodian exchange issuer alice bob carl dana ccp
 
-setupClearing : Script ()
-setupClearing = allocateParties >>= doSetupClearing
+runSetupClearing : LedgerParties -> Script ()
+runSetupClearing lp = doSetupClearing False lp
 
-doSetupClearing : LedgerParties -> Script ()
-doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
+setupClearing : Script ()
+setupClearing = allocateParties >>= (doSetupClearing False)
+
+doSetupClearing : Bool -> LedgerParties -> Script ()
+doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
 
   time <- getTime
   -- Onboard and create relationships
-  handleOnboarding lp
+  handleOnboarding wt lp
 
   -- onbard investors
   onboardInvestor lp alice "Alice the Investor"
@@ -86,8 +92,8 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
   -- h20May21DerId <- createSimpleDerivative operator issuer "H2OMAY21" "H2O" "H2O MAY 21" 6 1 "h2o" h2oTokenId observers
   -- h20Jun21DerId <- createSimpleDerivative operator issuer "H2OJUN21" "H2O" "H2O JUN 21" 6 1 "h2o" h2oTokenId observers
 
-                                                     -- clearing   margin   custodian
-  let setupAccount = setupInvestorAccount lp usdTokenId 100000.0   100.0    100000.0
+                                                     -- custodian   margin   clearing
+  let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
 
   aliceAccts <- setupAccount alice
   bobAccts <- setupAccount bob
@@ -97,49 +103,154 @@ doSetupClearing lp@(LedgerParties operator public custodian exchange issuer alic
   -- ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
   --   with amount = 100.0
 
-  let tradePairs = [ (alice, bob, h2oQ421DerId, 50.0, 1000.0)
-                   , (alice, carl, h2oQ421DerId, 10.0, 3000.0)
+  let tradePairs = [ (alice, bob, h2oQ121DerId, 50.0, 1000.0)
+                   , (alice, carl, h2oQ321DerId, 10.0, 3000.0)
                    , (alice, dana, h2oQ221DerId, 34.0, 5044.0)
                    , (carl, bob, h2oQ321DerId, 10.0, 5044.0)
                    , (dana, alice, h2oQ121DerId, 10.0, 100.0)
-                   , (bob, dana, h2oQ421DerId, 456.0, 1434.0) ]
+                   , (bob, dana, h2oQ321DerId, 456.0, 1434.0) ]
 
   let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
 
   tradeCids <- mapA (\t -> exchange `submit` createCmd t) trades
-  forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
-      CCP_NovateDerivativeTrade with derivativeTradeCid = tCid)
+  awaitOrDo' wt 0.5 "novating trades"
+    $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
+         CCP_NovateDerivativeTrade with derivativeTradeCid = tCid)
 
   let fairValuePairs = [ (h2oQ121DerId, 1000.0)
-                       , (h2oQ221DerId, 1500.0)
-                       , (h2oQ321DerId, 1200.0)
-                       , (h2oQ421DerId, 1240.0) ]
+                       , (h2oQ221DerId, 1500.0) ]
 
   upTo <- getTime
-  forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue exchange derId price usdTokenId upTo observers
+  forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
+
+  newTime <- getTime
+
+  -- ccp `submit` exerciseByKeyCmd @CCP (operator,ccp) CCP_RequestFairValues
+  --     with exchange, currency = usdTokenId, upTo = newTime
+
+  return ()
+
+runSetupAccounts : LedgerParties -> Script ()
+runSetupAccounts = doSetupAccounts False
+
+doSetupAccounts : Bool -> LedgerParties -> Script ()
+doSetupAccounts wt lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
+
+  time <- getTime
+  -- Onboard and create relationships
+  handleOnboarding wt lp
+
+  -- onbard investors
+  onboardInvestor lp alice "Alice the Investor"
+  onboardInvestor lp bob "Bob the Investor"
+  onboardInvestor lp carl "Carl the Investor"
+  onboardInvestor lp dana "Dana the Investor"
+
+  let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
+
+  usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
+
+  h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
+
+  let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
+
+  aliceAccts <- setupAccount alice
+  bobAccts <- setupAccount bob
+  carlAccts <- setupAccount carl
+  danaAccts <- setupAccount dana
+
+  return ()
 
 
 testClearingResolution : Script ()
-testClearingResolution = allocateParties >>= doTestClearingResolution
+testClearingResolution = allocateParties >>= doTestClearingResolution False
 
-doTestClearingResolution : LedgerParties -> Script ()
-doTestClearingResolution lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
+doTestClearingResolution : Bool -> LedgerParties -> Script ()
+doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
+  debug "onboarding..."
   -- doSetupClearing lp
-  handleOnboarding lp
+  handleOnboarding False lp
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
   usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
 
   -- onbard investors
   onboardInvestor lp alice "Alice the Investor"
+  onboardInvestor lp bob "Bob the Investor"
                                                 -- clearing   margin   custodian
-  aliceAccts <- setupInvestorAccount lp usdTokenId 100000.0   1000.0    100000.0 alice
+  aliceAccts <- setupInvestorAccount wt lp usdTokenId 100000.0 1000.0  5000.0 alice
+  bobAccts <- setupInvestorAccount wt lp usdTokenId 100000.0   1000.0  5000.0 bob
+  time <- getTime
 
-  ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
-    with targetAmount = 800.0
+  debug "creating margin calculation..."
+  mcCid <- ccp `submit` createCmd MarginCalculation with
+    ccp
+    customer = alice
+    accountId = usdTokenId
+    currency = "USD"
+    targetAmount = 800.0
+    calculationTime = time
+    calculationId = "2134820934"
+  awaitOrDo' wt 0.25 "performing margin fill"
+    $ do
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill with targetAmount = 800.0
+      ccp `submit` exerciseCmd mcCid MarginCalculation_Resolve with note = "hello"
+
+  -- awaitOrDo' wt 0.25 "perfoming margin fill"
+  --   $ do
+  --       ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill with targetAmount = 800.0
+  --       -- ccp `submit` exerciseCmd mcCid MarginCalculation_Resolve with note = "hello"
+  --       return ()
+
+  ccp `submit` createCmd MarkToMarketCalculation with
+    ccp
+    customer = alice
+    accountId = usdTokenId
+    currency = "USD"
+    mtmAmount = 200.0
+    calculationTime = time
+    calculationId = "3098329048"
+
+  ccp `submit` createCmd MarkToMarketCalculation with
+    ccp
+    customer = bob
+    accountId = usdTokenId
+    currency = "USD"
+    mtmAmount = -200.0
+    calculationTime = time
+    calculationId = "120349834898"
+
+  ccp `submit` createCmd MarkToMarketCalculation with
+    ccp
+    customer = bob
+    accountId = usdTokenId
+    currency = "USD"
+    mtmAmount = -600.0
+    calculationTime = time
+    calculationId = "1223223232"
+
+  ccp `submit` createCmd MarkToMarketCalculation with
+    ccp
+    customer = alice
+    accountId = usdTokenId
+    currency = "USD"
+    mtmAmount = 500.0
+    calculationTime = time
+    calculationId = "34509823402938430498"
+
+  ccp `submit` createCmd MarkToMarketCalculation with
+    ccp
+    customer = alice
+    accountId = usdTokenId
+    currency = "USD"
+    mtmAmount = 9000.0
+    calculationTime = time
+    calculationId = "3sd4509823402938430498"
+  -- ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
+  --   with targetAmount = 800.0
   return ()
 
-makeFairValue : Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
-makeFairValue exchange assetId price currency upTo observers = do
+makeFairValue : Party -> Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
+makeFairValue operator exchange assetId price currency upTo observers = do
   timestamp <- getTime
   exchange `submit` createCmd FairValue with observers = fromList observers, ..
 
@@ -175,8 +286,8 @@ data InvestorAccounts = InvestorAccounts with
     iaClearing : ContractId AssetDeposit
   deriving (Show,Eq)
 
-setupInvestorAccount : LedgerParties -> Id -> Decimal -> Decimal -> Decimal -> Party -> Script InvestorAccounts
-setupInvestorAccount lp usdTokenId custodianAmount marginAmount clearingAmount investor = do
+setupInvestorAccount : Bool -> LedgerParties -> Id -> Decimal -> Decimal -> Decimal -> Party -> Script InvestorAccounts
+setupInvestorAccount wt lp usdTokenId custodianAmount marginAmount clearingAmount investor = do
 
   let operator  = lp.userAdmin
       custodian = lp.custodian
@@ -206,7 +317,10 @@ setupInvestorAccount lp usdTokenId custodianAmount marginAmount clearingAmount i
       with tokenId = usdTokenId, depositQuantity = custodianAmount, beneficiary = investor
 
   ccpInviteCid <- ccp `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
-  ccpCustomerCid <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept with clearingDepositCid, marginDepositCid
+  ccpCustomerCid <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept
+
+  awaitOrDo' wt 0.25 "move deposit to ccp account"
+    $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,investor) CCPCustomer_AddDepositToClearingDeposits with depositCid = clearingDepositCid
 
   return $ InvestorAccounts custodianDepositCid clearingDepositCid marginDepositCid
 
@@ -231,14 +345,15 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
         uom
         optionData = None
         underlying
+        isPublic = True
         observers = fromList observers
 
 
   issuer `submit` createCmd derivative
   return id
 
-handleOnboarding : LedgerParties -> Script ()
-handleOnboarding lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
+handleOnboarding : Bool -> LedgerParties -> Script ()
+handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer alice bob carl dana ccp) = do
   let name = "default name"
       title = "default title"
       issuerID = "default issuerID"
@@ -253,30 +368,33 @@ handleOnboarding lp@(LedgerParties operator public custodian exchange issuer ali
 
   -- onboard issuers
   issuerInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardIssuer with ..
-  issuerCid <- issuer `submit` exerciseCmd issuerInvCid IssuerInvitation_Accept with name = "Issuer", ..
+  issuer `submit` exerciseCmd issuerInvCid IssuerInvitation_Accept with name = "Issuer", ..
 
   -- oboard exchange
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
-  exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
+  exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
   -- onboard ccp
   ccpInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCCP with ccp = ccp, ..
-  (_,ccpCid) <- ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "CCP", ..
-
+  ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "CCP", ..
 
   -- issuers establish a relationship with the custodian
-  relationshipReqCid <- issuer `submit` exerciseCmd issuerCid Issuer_RequestCustodianRelationship with ..
-  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+  relationshipReqCid <- issuer `submit` exerciseByKeyCmd @Issuer (operator,issuer) Issuer_RequestCustodianRelationship with ..
+  awaitOrDo' wt 0.25 "approving custodian relationship"
+    $ custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
 
   -- exchange establishes a relationship with the custodian
-  relationshipReqCid <- exchange `submit` exerciseCmd exchangeCid Exchange_RequestCustodianRelationship with ..
-  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+  relationshipReqCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator,exchange) Exchange_RequestCustodianRelationship with ..
+  awaitOrDo' wt 0.25 "approving custodian relationship request"
+    $ custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- ccp establishes relationship with the custodian
-  (relationshipReqCid, ccpRelationshipReqCid) <- ccp `submit` exerciseCmd ccpCid CCP_RequestCustodianRelationship
-  custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
-  custodian `submit` exerciseCmd ccpRelationshipReqCid CCPCustodianRelationshipRequest_Approve
+  (relationshipReqCid, ccpRelationshipReqCid) <- ccp `submit` exerciseByKeyCmd @CCP (operator,ccp) CCP_RequestCustodianRelationship
+  awaitOrDo' wt 0.25 " approving custodian relationship request..."
+    $ do
+      custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
+      custodian `submit` exerciseCmd ccpRelationshipReqCid CCPCustodianRelationshipRequest_Approve
 
 
   -- exchange participants --

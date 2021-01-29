@@ -277,7 +277,7 @@ template DerivativeTrade
           buyerAccountId : Id
           sellerAccountId : Id
         do
-
+          timestamp <- getTime
           buyCid <- create DerivativeTradeSide with
             participant = buyer
             orderId = buyerOrderId
@@ -307,6 +307,7 @@ template DerivativeTradeSide
     executedQuantity : Decimal
     executedPrice : Decimal
     accountId : Id  -- the investor account at the ccp
+    timestamp : Time
   where
     signatory ccp, exchange
     observer exchange, participant

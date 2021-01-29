@@ -1,7 +1,11 @@
 module Marketplace.CentralCounterparty where
 
+import DA.Finance.Types
+
+import Marketplace.Derivative
 import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Custodian
+import Marketplace.Clearing
 import Marketplace.Registry
 import Marketplace.Trading
 import Marketplace.Utils
@@ -48,10 +52,42 @@ template CCP
           ccpRequestCid <- create CCPCustodianRelationshipRequest with ..
           return (cusRequestCid, ccpRequestCid)
 
+
       nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)
         with
           ccpCustomer : Party
         do create CCPCustomerInvitation with ..
+
+
+      nonconsuming CCP_CreateMarginCalculation : (ContractId MarginCalculation)
+        with
+          ccpCustomer : Party
+          optAccountId : Optional Id
+          currency : Text
+          targetAmount : Decimal
+          calculationTime : Time
+          calculationId : Text
+        do
+          let accountId = case optAccountId of
+                (Some aid) -> aid
+                None       -> getAccountId ccpCustomer ccp [custodian]
+          create MarginCalculation with customer = ccpCustomer, ..
+
+
+      nonconsuming CCP_CreateMarkToMarketCalculation : (ContractId MarkToMarketCalculation)
+        with
+          ccpCustomer : Party
+          optAccountId : Optional Id
+          currency : Text
+          mtmAmount : Decimal
+          calculationTime : Time
+          calculationId : Text
+        do
+          let accountId = case optAccountId of
+                (Some aid) -> aid
+                None       -> getAccountId ccpCustomer ccp [custodian]
+          create MarkToMarketCalculation with customer = ccpCustomer, ..
+
 
       nonconsuming CCP_NovateDerivativeTrade : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
         with
@@ -65,4 +101,12 @@ template CCP
           let buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
           exercise derivativeTradeCid DerivativeTrade_Novate with ..
+
+      nonconsuming CCP_RequestFairValues : ContractId FairValueCalculationRequest
+        with
+          exchange : Party
+          currency : Id
+          upTo : Time
+        do
+          create FairValueCalculationRequest with ..
 

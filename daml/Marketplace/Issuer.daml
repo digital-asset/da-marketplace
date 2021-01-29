@@ -59,6 +59,7 @@ template Issuer
           let tokenObservers = if isPublic then (public :: operator :: observers) else observers
           create Token with id = tokenId, observers = fromList tokenObservers, ..
 
+
       nonconsuming Issuer_IssueBinaryOption : ContractId BinaryOption
         with
           name : Text
@@ -72,6 +73,7 @@ template Issuer
           let binOptionObservers = if isPublic then (public :: observers) else observers
           create BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
 
+
       nonconsuming Issuer_IssueDerivative : (Id, ContractId Derivative)
         with
           prodSym : Text
@@ -84,10 +86,12 @@ template Issuer
           uom : Text
           optionData : Optional OptionData
           underlying : Id
+          isPublic : Bool
           observers : [Party]
         do
           let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
-          let derivative = Derivative with uuid = prodSym, observers = fromList observers, ..
+          let derivativeObservers = if isPublic then (public :: operator :: observers) else observers
+          let derivative = Derivative with uuid = prodSym, observers = fromList derivativeObservers, ..
           (,) id <$> create derivative
 
 

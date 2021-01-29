@@ -9,6 +9,7 @@ import qualified DA.Next.Set as Set
 
 import Daml.Trigger
 
+import Marketplace.Derivative
 import Marketplace.Operator hiding (broker, custodian, exchange, investor)
 import Marketplace.Onboarding
 import Marketplace.Registry
@@ -24,9 +25,11 @@ handleOperator = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator
                                               , registeredTemplate @UserSession
                                               , registeredTemplate @Token
+                                              , registeredTemplate @Derivative
                                               , registeredTemplate @RegisteredBroker
                                               , registeredTemplate @RegisteredCustodian
                                               , registeredTemplate @RegisteredExchange
+                                              , registeredTemplate @RegisteredCCP
                                               , registeredTemplate @RegisteredInvestor ]
   , heartbeat = None
   }
@@ -43,12 +46,22 @@ handleOperatorRule party = do
 
   -- Add all current parties to 'Token' observers if 'isPublic'
   tokens     <- query @Token
-  brokers    <- map (broker . snd)    <$> query @RegisteredBroker
-  custodians <- map (custodian . snd) <$> query @RegisteredCustodian
-  exchanges  <- map (exchange . snd)  <$> query @RegisteredExchange
-  investors  <- map (investor . snd)  <$> query @RegisteredInvestor
-  let parties = brokers <> custodians <> exchanges <> investors
+  brokers    <- map ((.broker) . snd)    <$> query @RegisteredBroker
+  custodians <- map ((.custodian) . snd) <$> query @RegisteredCustodian
+  exchanges  <- map ((.exchange) . snd)  <$> query @RegisteredExchange
+  investors  <- map ((.investor) . snd)  <$> query @RegisteredInvestor
+  ccps       <- map ((.ccp) . snd)       <$> query @RegisteredCCP
+  let parties = brokers <> custodians <> exchanges <> investors <> ccps
   forA_ tokens (handleToken party parties)
+
+-- |Add all parties as observers to a 'Token'
+handleDerivative : Party -> [Party] -> ContractPair Derivative -> TriggerA () ()
+handleDerivative party parties (cid,der) = do
+  let partiesToAdd = Set.difference (Set.fromList parties) der.observers
+  unless (Set.null partiesToAdd || not der.isPublic )
+    $ void $ emitExerciseCmd cid Derivative_AddObservers with
+        party = party, newObservers = (Set.insert party partiesToAdd)
+   >> debug "adding parties to token..."
 
 -- |Add all parties as observers to a 'Token'
 handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()
