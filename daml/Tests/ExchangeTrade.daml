@@ -6,7 +6,10 @@ import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
 import qualified Marketplace.Matching as Matching
 import qualified Marketplace.Settlement as Settlement
-import qualified Marketplace.Trading as Trading
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Service as TradingService
+import qualified Marketplace.Listing as Listing
+import DA.List
 
 setup : Script ()
 setup = do
@@ -23,39 +26,54 @@ setup = do
   alice <- onboardCustomer cr "Alice" shareAsset
   bob <- onboardCustomer cr "Bob" cashAsset
 
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    listingId = "JPM.N/USD"
+    calendarId = "1"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ alice.customer ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ alice.customer ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+
   -- > Alice places a bid for JPM
   (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
-    exerciseByKeyCmd @Trading.Service (operator, exchange, alice.customer) Trading.RequestCreateOrder
+    exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
-        orderDetails = Trading.OrderDetails with
+        orderDetails = Order.OrderDetails with
           id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
-          symbol = "JPM/USD"
+          symbol = listingId
           asset = shareAsset
-          orderType = Trading.Limit with
+          orderType = Order.Limit with
             price = 100.0
-          side = Trading.Buy
-          timeInForce = Trading.GTC
+          side = Order.Buy
+          timeInForce = Order.GTC
         depositCid = alice.assetDepositCid
 
   -- > Bob places a new offer for JPM
   (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
-    exerciseByKeyCmd @Trading.Service (operator, exchange, bob.customer) Trading.RequestCreateOrder
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
-        orderDetails = Trading.OrderDetails with
+        orderDetails = Order.OrderDetails with
           id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
-          symbol = "JPM/USD"
+          symbol = listingId
           asset = shareAsset
-          orderType = Trading.Limit with
+          orderType = Order.Limit with
             price = 100.0
-          side = Trading.Sell
-          timeInForce = Trading.GTC
+          side = Order.Sell
+          timeInForce = Order.GTC
         depositCid = bob.assetDepositCid
 
   -- Exchange matches the two orders
   tradeCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
-        fill = Trading.ExecutionFill with
+        fill = Order.ExecutionFill with
           matchId = "789"
           makerOrderId = "123"
           takerOrderId = "456"

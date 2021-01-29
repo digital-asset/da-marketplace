@@ -32,9 +32,9 @@ class EXBERRY:
 
 
 class MARKETPLACE:
-    CreateOrderRequest = 'Marketplace.Trading:CreateOrderRequest'
-    CancelOrderRequest = 'Marketplace.Trading:CancelOrderRequest'
-    Order = 'Marketplace.Trading:Order'
+    CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
+    CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
+    Order = 'Marketplace.Trading.Order:Order'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
     MatchingService = 'Marketplace.Matching:Service'

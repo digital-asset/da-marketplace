@@ -11,7 +11,7 @@ import qualified Marketplace.Custody as Custody
 import qualified Marketplace.Exchange as Exchange
 import qualified Marketplace.Matching as Matching
 import qualified Marketplace.Settlement as Settlement
-import qualified Marketplace.Trading as Trading
+import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Listing as Listing
 
 data CommonContracts = CommonContracts

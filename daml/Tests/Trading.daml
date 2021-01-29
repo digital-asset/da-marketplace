@@ -4,7 +4,8 @@ import Daml.Script
 import DA.Optional
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
-import Marketplace.Trading qualified as T
+import Marketplace.Trading.Order qualified as O
+import Marketplace.Trading.Service qualified as S
 import Marketplace.Listing qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
@@ -56,31 +57,31 @@ newOrders = do
   let
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
     aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
-    aliceOrderDetails = T.OrderDetails with
+    aliceOrderDetails = O.OrderDetails with
       id = aliceOrderId
       symbol = listingId
       asset = shareAsset
-      side = T.Sell
-      orderType = T.Limit with price = 100.0
+      side = O.Sell
+      orderType = O.Limit with price = 100.0
       -- orderType = T.Market
       -- timeInForce = T.GTC
-      timeInForce = T.GTD with expiryDate = 1611992116
+      timeInForce = O.GTD with expiryDate = 1611992116
     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
-    bobOrderDetails = T.OrderDetails with
+    bobOrderDetails = O.OrderDetails with
       id = bobOrderId
       symbol = listingId
       asset = shareAsset
-      side = T.Buy
+      side = O.Buy
       -- orderType = T.Limit with price = 100.0
-      orderType = T.Market
-      timeInForce = T.GTC
+      orderType = O.Market
+      timeInForce = O.GTC
     tradingServicekey p = (operator, exchange, p)
 
   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
-    exerciseByKeyCmd @T.Service (tradingServicekey alice) T.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
 
   (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
-    exerciseByKeyCmd @T.Service (tradingServicekey bob) T.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
 
   pure ()
 
@@ -89,9 +90,9 @@ cancelSentOrder = do
   -- Note : Setup and newOrders must be run before this script
 
   [alice, exchange, operator] <- getExistingParties ["Alice", "Exchange", "Operator"]
-  (aliceOrderCid, aliceOrder) <- head <$> query @T.Order alice
+  (aliceOrderCid, aliceOrder) <- head <$> query @O.Order alice
 
   (aliceOrderCid, aliceCancelOrderRequestCid) <- alice `submit` do
-    exerciseByKeyCmd @T.Service (operator, exchange, alice) T.RequestCancelOrder with orderCid = aliceOrderCid
+    exerciseByKeyCmd @S.Service (operator, exchange, alice) S.RequestCancelOrder with orderCid = aliceOrderCid
 
   pure ()

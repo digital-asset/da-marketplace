@@ -2,7 +2,7 @@ module Marketplace.Settlement where
 
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Trade.Dvp (Dvp(..))
-import qualified Marketplace.Trading as Trading
+import Marketplace.Trading.TradeInstruction qualified as TradeInstruction
 
 template Service
   with
@@ -17,9 +17,9 @@ template Service
     controller provider can
       nonconsuming SettleTrade : (ContractId Dvp, [[ContractId AssetDeposit]], [[ContractId AssetDeposit]])
         with
-          tradeCid : ContractId Trading.Trade
+          tradeCid : ContractId TradeInstruction.Trade
         do
-          exercise tradeCid Trading.Settle
+          exercise tradeCid TradeInstruction.Settle
 
 template Offer
   with
