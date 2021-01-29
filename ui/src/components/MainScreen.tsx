@@ -10,6 +10,7 @@ import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { QueryStream, QueryStreamContext, useContractQuery } from '../websocket/queryStream'
 
 import { useDablParties } from './common/common'
+import { roleRoute } from './common/utils'
 import { parseError } from './common/errorTypes'
 import OnboardingTile from './common/OnboardingTile'
 
@@ -56,8 +57,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
   const getMainScreen = () => {
     if (currentRole) {
-      const path = `/role/${currentRole.slice(0, -4).toLowerCase()}`
-      return <Redirect to={path}/>
+      return <Redirect to={roleRoute(currentRole)}/>
     }
 
     if (loading || !parties) {

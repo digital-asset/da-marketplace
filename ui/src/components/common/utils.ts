@@ -1,12 +1,21 @@
 import { useEffect, useRef } from 'react'
 
-import { DepositInfo } from './damlTypes'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { DepositInfo } from './damlTypes'
 
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 
 export const indefiniteArticle = (word: string): string => {
     return vowels.includes(word[0].toLowerCase()) ? `an ${word}` : `a ${word}`;
+}
+
+export const roleLabel = (role: MarketRole): string => {
+    return role.slice(0, -4);
+}
+
+export const roleRoute = (role: MarketRole): string => {
+    return `/role/${roleLabel(role).toLowerCase()}`
 }
 
 export type StringKeyedObject<T> = {

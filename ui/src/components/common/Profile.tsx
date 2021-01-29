@@ -11,11 +11,12 @@ import { ArrowRightIcon } from '../../icons/Icons'
 
 import classNames from 'classnames'
 
-import { StringKeyedObject } from './utils'
+import { roleLabel, roleRoute, StringKeyedObject } from './utils'
 import FormErrorHandled from './FormErrorHandled'
 import { useOperator } from './common'
 import { wrapDamlTuple } from './damlTypes'
 import { useContractQuery } from '../../websocket/queryStream'
+import RoleSelectScreen from '../RoleSelectScreen'
 
 type FieldType = 'text';
 
@@ -64,7 +65,7 @@ const RoleSelectForm: React.FC = () => {
     const options = MarketRole.keys.map(role => ({
         key: role,
         value: role,
-        text: role
+        text: roleLabel(role)
     }))
 
     const onSubmit = async () => {
@@ -75,7 +76,7 @@ const RoleSelectForm: React.FC = () => {
 
             await ledger.exerciseByKey(choice, key, args);
 
-            history.push(`/role/${selectedRole.slice(0, -4).toLowerCase()}`)
+            history.push(roleRoute(selectedRole));
         }
     }
 
@@ -139,7 +140,7 @@ const Profile: React.FC<ProfileProps> = ({
 
     const disableButton = Object.keys(profile).reduce((accumulator, key) => {
         return accumulator || !profile[key].value;
-    }, false);
+    }, false) || (inviteAcceptTile && !receivedInvitation);
 
     const profileForm =
         <Form>
@@ -148,11 +149,11 @@ const Profile: React.FC<ProfileProps> = ({
                 <Button
                     className={classNames('ghost', {'dark': inviteAcceptTile})}
                     content={content}
-                    disabled={disableButton || !receivedInvitation}
+                    disabled={disableButton}
                     onClick={() => handleSubmitProfile(profile)}
                     type='submit'/>
 
-                {!receivedInvitation &&
+                {!receivedInvitation && inviteAcceptTile &&
                     <div className='invite-indicator'>
                         <Loader active indeterminate size='small'/>
                         <p className='p2 dark'>Waiting for Operator invitation...</p>
@@ -183,15 +184,29 @@ const Profile: React.FC<ProfileProps> = ({
         <a className='a2 bold switch-roles' onClick={() => setRoleSelect(true)}>Add a Role</a>
     </div>
 
+    const getTileContent = () => {
+        if (inviteAcceptTile) {
+            return profileForm;
+        } else {
+            if (editing) {
+                return profileForm;
+            }
+
+            if (roleSelect) {
+                return <RoleSelectForm/>;
+            }
+
+            return <>
+                { profileValues }
+                { actions }
+            </>
+        }
+    }
+
     return (
         <div className='profile'>
             <div className={classNames('profile-form', {'landing-page': !inviteAcceptTile})}>
-                { inviteAcceptTile ?
-                    profileForm : editing ?
-                        profileForm : profileValues
-                }
-                { !inviteAcceptTile && roleSelect && <RoleSelectForm/>}
-                { !inviteAcceptTile && (!editing || !roleSelect) && actions }
+                { getTileContent() }
             </div>
             { !inviteAcceptTile && profileLinks?.map(item => <ProfileLink item={item}/>) }
         </div>

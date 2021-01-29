@@ -9,6 +9,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { useContractQuery } from '../websocket/queryStream'
 
 import OnboardingTile from './common/OnboardingTile'
+import { roleRoute } from './common/utils'
 
 type RoleSelectProps = {
     loading: boolean;
@@ -55,7 +56,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
+        history.push(roleRoute(role));
     }
 
     return (
