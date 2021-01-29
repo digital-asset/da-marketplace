@@ -42,9 +42,12 @@
                     display: flex;
                     align-items: center;
 
+                    p {
+                        margin: 0px $spacing-m;
+                    }
+
                     .ui.loader {
                         position: static;
-                        margin: 0px $spacing-m;
                         transform: translateX(-0%) translateY(-0%);
                     }
                 }

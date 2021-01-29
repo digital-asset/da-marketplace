@@ -54,8 +54,8 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile 
     )
 }
 
-const RoleSelectForm: React.FC = () => {
-    const [ selectedRole, setSelectedRole ] = useState<MarketRole>();
+const RoleSelectForm: React.FC<{role: MarketRole}> = ({role}) => {
+    const [ selectedRole, setSelectedRole ] = useState<MarketRole>(role);
 
     const history = useHistory();
     const ledger = useLedger();
@@ -69,15 +69,17 @@ const RoleSelectForm: React.FC = () => {
     }))
 
     const onSubmit = async () => {
-        if (selectedRole) {
-            const choice = User.User_RequestRoleChange;
-            const key = wrapDamlTuple([operator, user]);
-            const args = { newRole: selectedRole };
-
-            await ledger.exerciseByKey(choice, key, args);
-
-            history.push(roleRoute(selectedRole));
+        if (selectedRole === role) {
+            return;
         }
+
+        const choice = User.User_RequestRoleChange;
+        const key = wrapDamlTuple([operator, user]);
+        const args = { newRole: selectedRole };
+
+        await ledger.exerciseByKey(choice, key, args);
+
+        history.push(roleRoute(selectedRole));
     }
 
     const onChange = async (event: React.SyntheticEvent, result: any) => {
@@ -95,10 +97,11 @@ const RoleSelectForm: React.FC = () => {
                 onChange={onChange}
                 value={selectedRole}/>
             <Button
-                className={classNames('ghost', {'dark': false})}
                 content='Save'
+                className={classNames('ghost', {'dark': false})}
                 disabled={!selectedRole}
                 type='submit'/>
+
         </FormErrorHandled>
     )
 }
@@ -153,10 +156,10 @@ const Profile: React.FC<ProfileProps> = ({
                     onClick={() => handleSubmitProfile(profile)}
                     type='submit'/>
 
-                {!receivedInvitation && inviteAcceptTile &&
+                { inviteAcceptTile && !receivedInvitation &&
                     <div className='invite-indicator'>
-                        <Loader active indeterminate size='small'/>
                         <p className='p2 dark'>Waiting for Operator invitation...</p>
+                        <Loader active indeterminate size='small'/>
                     </div> }
             </div>
         </Form>
@@ -193,7 +196,7 @@ const Profile: React.FC<ProfileProps> = ({
             }
 
             if (roleSelect) {
-                return <RoleSelectForm/>;
+                return <RoleSelectForm role={role}/>;
             }
 
             return <>
