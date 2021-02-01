@@ -57,7 +57,7 @@ newOrders = do
   let
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
     aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
-    aliceOrderDetails = O.OrderDetails with
+    aliceOrderDetails = O.Details with
       id = aliceOrderId
       symbol = listingId
       asset = shareAsset
@@ -67,7 +67,7 @@ newOrders = do
       -- timeInForce = T.GTC
       timeInForce = O.GTD with expiryDate = 1611992116
     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
-    bobOrderDetails = O.OrderDetails with
+    bobOrderDetails = O.Details with
       id = bobOrderId
       symbol = listingId
       asset = shareAsset
@@ -78,10 +78,10 @@ newOrders = do
     tradingServicekey p = (operator, exchange, p)
 
   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
-    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with details = aliceOrderDetails, depositCid = aliceAssetDepositCid
 
   (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
-    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with details = bobOrderDetails, depositCid = bobAssetDepositCid
 
   pure ()
 

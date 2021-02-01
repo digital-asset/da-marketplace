@@ -4,7 +4,7 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
 import DA.Finance.Types (Account)
 import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.TradeInstruction qualified as TradeInstruction
+import Marketplace.Trading.Confirmation qualified as Confirmation
 
 type T = Service
 
@@ -24,7 +24,7 @@ template Service
     controller customer can
       nonconsuming RequestCreateOrder : (ContractId Order.T, ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
-          orderDetails : Order.OrderDetails
+          details : Order.Details
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
@@ -32,8 +32,9 @@ template Service
           let
             status = Order.New
             providerOrderId = None
-            executionFills = []
-            remainingQuantity = orderDetails.asset.quantity
+            executions = []
+            remainingQuantity = details.asset.quantity
+            orderDetails = details
 
           depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
           createOrderRequestCid <- create CreateOrderRequest with ..
@@ -61,7 +62,7 @@ template Service
         do
           CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id.label)
 
           case order.status of
             Order.New -> do
@@ -77,7 +78,7 @@ template Service
         do
           CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
           orderCid <- create order with status = Order.Rejected with ..
@@ -91,7 +92,7 @@ template Service
         do
           CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
           orderCid <- create order with status = Order.Cancelled
@@ -107,17 +108,17 @@ template Service
         do
           CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
           create order with status = Order.CancellationRejected with ..
 
     controller operator, provider can
-      nonconsuming InstructTrade : ContractId TradeInstruction.T
+      nonconsuming SignConfirmation : ContractId Confirmation.T
         with
-          tradeInstructionCid : ContractId TradeInstruction.T
+          confirmationCid : ContractId Confirmation.T
         do
-          exercise tradeInstructionCid TradeInstruction.Sign with ctrl = customer, ..
+          exercise confirmationCid Confirmation.Sign with ctrl = customer, ..
 
 template Offer
   with
@@ -165,12 +166,12 @@ template CreateOrderRequest
     provider : Party
     customer : Party
     operator : Party
-    orderDetails : Order.OrderDetails
+    details : Order.Details
     depositCid : ContractId AssetDeposit
   where
     signatory provider, customer
 
-    key (provider, orderDetails.id.label) : (Party, Text)
+    key (provider, details.id.label) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)
@@ -194,11 +195,11 @@ template CancelOrderRequest
     provider : Party
     customer : Party
     operator : Party
-    orderDetails : Order.OrderDetails
+    details : Order.Details
   where
     signatory provider, customer
 
-    key (provider, orderDetails.id.label) : (Party, Text)
+    key (provider, details.id.label) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)

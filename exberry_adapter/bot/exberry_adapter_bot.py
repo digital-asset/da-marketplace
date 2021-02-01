@@ -37,7 +37,7 @@ class MARKETPLACE:
     Order = 'Marketplace.Trading.Order:Order'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
-    MatchingService = 'Marketplace.Matching:Service'
+    MatchingService = 'Marketplace.Trading.Matching:Service'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
@@ -75,7 +75,7 @@ def main():
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
     def handle_order_request(event):
         logging.info(f'Received Create Order Request - {event}')
-        order = event.cdata['orderDetails']
+        order = event.cdata['details']
 
         return create(EXBERRY.NewOrderRequest, {
             'order': {
@@ -145,8 +145,8 @@ def main():
         cancel_request = event.cdata
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
-            'instrument': cancel_request['orderDetails']['asset']['id']['label'],
-            'mpOrderId': cancel_request['orderDetails']['id']['label'],
+            'instrument': cancel_request['details']['asset']['id']['label'],
+            'mpOrderId': cancel_request['details']['id']['label'],
             'userId': make_user_user_id(cancel_request['provider'])
         })
 
@@ -175,13 +175,13 @@ def main():
         execution = event.cdata
         # TODO: Check if we should be calling the matching service directly
         return [exercise_by_key(MARKETPLACE.MatchingService, client.party, 'MatchOrders'
-            , { 'fill' : {
+            , { 'execution' : {
                     'matchId' : execution['matchId'],
                     'makerOrderId' : execution['makerMpOrderId'],
                     'takerOrderId' : execution['takerMpOrderId'],
-                    'executedQuantity' : execution['executedQuantity'],
-                    'executedPrice' : execution['executedPrice'],
-                    'executedTimestamp' : execution['eventTimestamp']}
+                    'quantity' : execution['executedQuantity'],
+                    'price' : execution['executedPrice'],
+                    'timestamp' : execution['eventTimestamp']}
             }), exercise(event.cid, 'Archive', {})]
 
     network.run_forever()
