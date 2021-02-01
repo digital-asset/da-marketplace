@@ -46,11 +46,9 @@ template CCP
     maintainer key._2
 
     controller ccp can
-      nonconsuming CCP_RequestCustodianRelationship : (ContractId CustodianRelationshipRequest, ContractId CCPCustodianRelationshipRequest)
+      nonconsuming CCP_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         do
-          cusRequestCid <- create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
-          ccpRequestCid <- create CCPCustodianRelationshipRequest with ..
-          return (cusRequestCid, ccpRequestCid)
+          create CustodianRelationshipRequest with requester = ccp, role = CCPRole, ..
 
 
       nonconsuming CCP_InviteCustomer : (ContractId CCPCustomerInvitation)

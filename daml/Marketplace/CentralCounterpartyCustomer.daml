@@ -118,18 +118,6 @@ template CCPCustomer
                 exercise calculationCid MarginCalculation_Resolve { note = "good job" }
                 create this with marginDepositCids = [remainingMarginDepositCid]
 
-      -- CCPCustomer_TransferToMarginAccount : ContractId CCPCustomer
-      --   with
-      --     amount : Decimal
-      --     clearingDepositCid : ContractId AssetDeposit
-      --   do
-
-      -- CCPCustomer_TransferFromMarginAccount : ContractId CCPCustomer
-      --   with
-      --     amount : Decimal
-      --     clearingDepositCid : ContractId AssetDeposit
-      --   do
-
       CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
         with
           clearingDepositCids : [ContractId AssetDeposit]
@@ -179,53 +167,3 @@ template CCPCustomer
               sender = ccp, senderAccountId = newDeposit.account.id, depositCid = newDepositCid, ..
 
           create this
-
-      -- CCPCustomer_AddDepositToClearingDeposits : ContractId CCPCustomer
-      --   with
-      --     depositCid : ContractId AssetDeposit
-      --   do
-      --     assertMsg "deposit cid already exists" $ depositCid `notElem` clearingDepositCids
-      --     -- mergedCid <- exercise depositCid AssetDeposit_Merge with depositCids = clearingDepositCids
-      --     create this with clearingDepositCids = depositCid :: clearingDepositCids
-      --
-      -- -- CCPCustomer_TransferToClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
-      -- --   with
-      -- --     assetDepositCid : Decimal
-      -- --   do
-
-
-
-template CCPCustodianRelationshipRequest
-  with
-    operator : Party
-    custodian : Party
-    ccp : Party
-  where
-    signatory ccp
-
-    -- TODO: Move to custodian relationship request
-    controller custodian can
-      CCPCustodianRelationshipRequest_Approve : ContractId CCPCustodianRelationship
-        do
-          create CCPCustodianRelationship
-            with operator, custodian, ccp
-
-template CCPCustodianRelationship
-  with
-    operator : Party
-    custodian : Party
-    ccp : Party
-  where
-    signatory custodian, ccp
-    key (custodian, ccp) : (Party, Party)
-    maintainer key._1
-
-    controller ccp can
-      nonconsuming CCPCustodianRelationship_CreateSettlementRule : ContractId AssetSettlementRule
-        with
-          account : Account
-          observers : Set.Set Party
-          ctrls : Set.Set Party
-        do
-          create AssetSettlementRule
-            with account, observers, ctrls

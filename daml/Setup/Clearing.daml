@@ -23,7 +23,6 @@ import DA.Finance.Asset
 import DA.Finance.Types
 
 import DA.Action
-import DA.Optional
 import DA.Foldable (forA_)
 
 import DA.Next.Set
@@ -118,12 +117,6 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   upTo <- getTime
   forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
 
-  newTime <- getTime
-
-  -- ccp `submit` exerciseByKeyCmd @CCP (operator,ccp) CCP_RequestFairValues
-  --     with exchange, currency = usdTokenId, upTo = newTime
-
-  return ()
 
 runSetupAccounts : LedgerParties -> Script ()
 runSetupAccounts = doSetupAccounts False
@@ -173,10 +166,6 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
   onboardInvestor wt lp bob "Bob the Investor"
   time <- getTime
 
-                                                      -- clearing   margin   custodian
-      -- aliceAccts <- setupInvestorAccount wt lp usdTokenId 100000.0 1000.0  5000.0 alice
-      -- bobAccts   <- setupInvestorAccount wt lp usdTokenId 100000.0 1000.0  5000.0 bob
-
   (optAliceDepositCid,optBobDepositCid) <- awaitOrDo wt 0.25 "creating deposits..."
     (do
       createClearingDeposit wt lp alice usdTokenId 5000.0
@@ -186,8 +175,6 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
       aliceDepositCid <- createClearingDeposit wt lp alice usdTokenId 5000.0
       bobDepositCid <- createClearingDeposit wt lp bob usdTokenId 5000.0
       return (aliceDepositCid,bobDepositCid))
-
-    --return ())
 
   debug "creating margin calculation..."
   mcCid <- ccp `submit` createCmd MarginCalculation with
@@ -260,8 +247,7 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     mtmAmount = 9000.0
     calculationTime = time
     calculationId = "3sd4509823402938430498"
-  -- ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
-  --   with targetAmount = 800.0
+
   return ()
 
 makeFairValue : Party -> Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
@@ -428,14 +414,10 @@ handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer 
     $ custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
   -- ccp establishes relationship with the custodian
-  (relationshipReqCid, ccpRelationshipReqCid) <- ccp `submit` exerciseByKeyCmd @CCP (operator,ccp) CCP_RequestCustodianRelationship
+  relationshipReqCid <- ccp `submit` exerciseByKeyCmd @CCP (operator,ccp) CCP_RequestCustodianRelationship
   awaitOrDo' wt 0.25 " approving custodian relationship request..."
     $ do
       custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
-      custodian `submit` exerciseCmd ccpRelationshipReqCid CCPCustodianRelationshipRequest_Approve
-
-
-  -- exchange participants --
 
 
   return ()
@@ -455,9 +437,3 @@ createTrade ccp exchange currentId (buyer, seller, instrument, quantity, price) 
       matchId = currentId
       executedQuantity = quantity
       executedPrice = price
-  -- h2oJan21DerId <- createSimpleDerivative operator issuer "H2OJAN21" "H2O" "H2O Jan 21" 6 1 "h2o" h2oTokenId observers
-  -- h2oFeb21DerId <- createSimpleDerivative operator issuer "H2OFEB21" "H2O" "H2O Feb 21" 6 1 "h2o" h2oTokenId observers
-  -- h2oMar21DerId <- createSimpleDerivative operator issuer "H2OMAR21" "H2O" "H2O Mar 21" 6 1 "h2o" h2oTokenId observers
-  -- h20Apr21DerId <- createSimpleDerivative operator issuer "H2OAPR21" "H2O" "H2O APR 21" 6 1 "h2o" h2oTokenId observers
-  -- h20May21DerId <- createSimpleDerivative operator issuer "H2OMAY21" "H2O" "H2O MAY 21" 6 1 "h2o" h2oTokenId observers
-  -- h20Jun21DerId <- createSimpleDerivative operator issuer "H2OJUN21" "H2O" "H2O JUN 21" 6 1 "h2o" h2oTokenId observers
