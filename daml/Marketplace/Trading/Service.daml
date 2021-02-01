@@ -4,7 +4,7 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
 import DA.Finance.Types (Account)
 import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.TradeInstruction qualified as TradeInstruction
+import Marketplace.Trading.Confirmation qualified as Confirmation
 
 type T = Service
 
@@ -114,11 +114,11 @@ template Service
           create order with status = Order.CancellationRejected with ..
 
     controller operator, provider can
-      nonconsuming InstructTrade : ContractId TradeInstruction.T
+      nonconsuming SignConfirmation : ContractId Confirmation.T
         with
-          tradeInstructionCid : ContractId TradeInstruction.T
+          confirmationCid : ContractId Confirmation.T
         do
-          exercise tradeInstructionCid TradeInstruction.Sign with ctrl = customer, ..
+          exercise confirmationCid Confirmation.Sign with ctrl = customer, ..
 
 template Offer
   with

@@ -2,8 +2,8 @@ module Marketplace.Operator where
 
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Exchange as Exchange
-import qualified Marketplace.Matching as Matching
-import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Trading.Matching as Matching
+import qualified Marketplace.Trading.Settlement as Settlement
 
 template Service
   with

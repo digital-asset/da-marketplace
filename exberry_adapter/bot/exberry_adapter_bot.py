@@ -37,7 +37,7 @@ class MARKETPLACE:
     Order = 'Marketplace.Trading.Order:Order'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
-    MatchingService = 'Marketplace.Matching:Service'
+    MatchingService = 'Marketplace.Trading.Matching:Service'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 

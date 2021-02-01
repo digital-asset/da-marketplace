@@ -1,9 +1,11 @@
-module Marketplace.Matching where
+module Marketplace.Trading.Matching where
 
 import DA.Next.Set (fromList)
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
-import Marketplace.Trading.TradeInstruction qualified as TradeInstruction
+import Marketplace.Trading.Confirmation qualified as Confirmation
+import Marketplace.Trading.Settlement qualified as Settlement
+
 template Service
   with
     operator : Party
@@ -15,24 +17,23 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : ContractId TradeInstruction.Trade
+      nonconsuming MatchOrders : ContractId Settlement.T
         with
           execution : Order.Execution
         do
-          (makerOrderCid, makerOrder) <- fetchByKey @Order.T (provider, execution.makerOrderId)
-          (takerOrderCid, takerOrder) <- fetchByKey @Order.T (provider, execution.takerOrderId)
+          [(makerOrderCid, makerOrder), (takerOrderCid, takerOrder)] <- forA [execution.makerOrderId, execution.takerOrderId] (\orderId -> fetchByKey @Order.T (provider, orderId))
 
           let
-            serviceKey party = (operator, provider, party)
-            accounts = []
             (buy, buyCid, sell, sellCid) = case makerOrder.details.side of
               Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
               Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
+            signConfirmation customer confirmationCid = exerciseByKey @TradingService.T (operator, provider, customer) TradingService.SignConfirmation with ..
 
-          tradeInstructionCid <- create TradeInstruction.TradeInstruction with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; ..
-          tradeInstructionCid <- exerciseByKey @TradingService.T (serviceKey buy.customer)  TradingService.InstructTrade with ..
-          tradeInstructionCid <- exerciseByKey @TradingService.T (serviceKey sell.customer) TradingService.InstructTrade with ..
-          exercise tradeInstructionCid TradeInstruction.Process with ..
+          confirmationCid <- create Confirmation.Confirmation with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; accounts = [], ..
+            >>= signConfirmation buy.customer
+            >>= signConfirmation sell.customer
+
+          exercise confirmationCid Confirmation.Process with ..
 
 template Offer
   with

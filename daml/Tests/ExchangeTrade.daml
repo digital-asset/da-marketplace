@@ -4,8 +4,8 @@ import Common
 import Daml.Script
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
-import qualified Marketplace.Matching as Matching
-import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Trading.Matching as Matching
+import qualified Marketplace.Trading.Settlement as Settlement
 import qualified Marketplace.Trading.Order as Order
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing as Listing
@@ -70,7 +70,7 @@ setup = do
         depositCid = bob.assetDepositCid
 
   -- Exchange matches the two orders
-  tradeCid <- submit exchange do
+  settlementDetailsCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -82,6 +82,7 @@ setup = do
           timestamp = ""
 
   -- Exchange settles the instructed trade
-  submit exchange do exerciseCmd settlementServiceCid Settlement.SettleTrade with ..
+  -- submit exchange do exerciseCmd settlementServiceCid Settlement.Settle with ..
+  submit exchange do exerciseCmd settlementDetailsCid Settlement.Settle
 
   pure ()
