@@ -24,7 +24,7 @@ template Service
     controller customer can
       nonconsuming RequestCreateOrder : (ContractId TradingService.CreateOrderRequest, ContractId AssetDeposit)
         with
-          orderDetails : Order.OrderDetails
+          details : Order.Details
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
@@ -48,10 +48,10 @@ template Service
           let
             status = Order.New
             providerOrderId = None
-            executionFills = []
+            executions = []
           TradingService.CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          create Order.Order with remainingQuantity = orderDetails.asset.quantity, ..
+          create Order.Order with remainingQuantity = details.asset.quantity, ..
 
       nonconsuming CancelOrder : ContractId AssetDeposit
         with
@@ -59,7 +59,7 @@ template Service
         do
           TradingService.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
           orderCid <- create order with status = Order.Cancelled

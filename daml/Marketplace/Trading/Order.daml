@@ -29,7 +29,7 @@ data TimeInForce
       -- ^ Fill Or Kill (All or nothing)
   deriving (Eq, Show)
 
-data OrderDetails = OrderDetails with
+data Details = Details with
     id : Id
     symbol : Text
     asset : Asset
@@ -53,13 +53,13 @@ data Status
     | Cancelled
   deriving (Eq, Show)
 
-data ExecutionFill = ExecutionFill with
+data Execution = Execution with
     matchId : Text
     makerOrderId : Text
     takerOrderId : Text
-    executedQuantity : Decimal
-    executedPrice : Decimal
-    executedTimestamp : Text -- Should this be an Int so we can order if necessary?
+    quantity : Decimal
+    price : Decimal
+    timestamp : Text -- Should this be an Int so we can order if necessary?
   deriving (Eq, Show)
 
 type T = Order
@@ -70,14 +70,14 @@ template Order
     provider : Party
     customer : Party
     status : Status
-    orderDetails : OrderDetails
+    details : Details
     providerOrderId : Optional Text
-    executionFills : [ExecutionFill]
+    executions : [Execution]
     remainingQuantity : Decimal
     depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 
-    key (provider, orderDetails.id.label) : (Party, Text)
+    key (provider, details.id.label) : (Party, Text)
     maintainer key._1
 

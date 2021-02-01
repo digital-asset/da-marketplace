@@ -49,20 +49,20 @@ template TradeInstruction
     controller provider can
       Process : ContractId Trade
         with
-          fill : Order.ExecutionFill
+          execution : Order.Execution
           buyCid : ContractId Order.T
           sellCid : ContractId Order.T
         do
           [buy, sell] <- forA [buyCid, sellCid] fetchAndArchive
 
           -- TODO: Check that price matches limit order price, quantity is less than order qty
-          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buy.orderDetails.symbol)
+          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buy.details.symbol)
 
           let
-            filledQuantity = fill.executedQuantity
-            filledPrice = fill.executedPrice
-            matchId = fill.matchId
-            delivery = buy.orderDetails.asset with quantity = filledQuantity
+            filledQuantity = execution.quantity
+            filledPrice = execution.price
+            matchId = execution.matchId
+            delivery = buy.details.asset with quantity = filledQuantity
             payment = Asset with id = paymentCurrencyId, quantity = filledPrice * filledQuantity
             tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = matchId; version = 0
             masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
@@ -71,20 +71,20 @@ template TradeInstruction
             deliveries = [ delivery ]
             payments = [ payment ]
             observers = empty
-            deliveryAsset = buy.orderDetails.asset with quantity = filledQuantity
+            deliveryAsset = buy.details.asset with quantity = filledQuantity
             paymentAsset = payment
 
           [buyDepositCid, sellDepositCid] <- forA [buy, sell] (\order -> do
             let
               isPartialFill = filledQuantity < buy.remainingQuantity
               status = if isPartialFill then Order.PartiallyExecuted else Order.FullyExecuted
-              executionFills = fill :: order.executionFills
+              executions = execution :: order.executions
               remainingQuantity = order.remainingQuantity - filledQuantity
-              quantities = [case order.orderDetails.side of
+              quantities = [case order.details.side of
                     Order.Buy  -> filledQuantity * filledPrice
                     Order.Sell -> filledQuantity]
 
-            create order with status, executionFills, remainingQuantity
+            create order with status, executions, remainingQuantity
             if isPartialFill then
               head <$> exercise order.depositCid AssetDeposit_Split with ..
             else

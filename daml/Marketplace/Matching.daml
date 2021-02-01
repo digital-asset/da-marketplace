@@ -17,15 +17,15 @@ template Service
     controller provider can
       nonconsuming MatchOrders : ContractId TradeInstruction.Trade
         with
-          fill : Order.ExecutionFill
+          execution : Order.Execution
         do
-          (makerOrderCid, makerOrder) <- fetchByKey @Order.T (provider, fill.makerOrderId)
-          (takerOrderCid, takerOrder) <- fetchByKey @Order.T (provider, fill.takerOrderId)
+          (makerOrderCid, makerOrder) <- fetchByKey @Order.T (provider, execution.makerOrderId)
+          (takerOrderCid, takerOrder) <- fetchByKey @Order.T (provider, execution.takerOrderId)
 
           let
             serviceKey party = (operator, provider, party)
             accounts = []
-            (buy, buyCid, sell, sellCid) = case makerOrder.orderDetails.side of
+            (buy, buyCid, sell, sellCid) = case makerOrder.details.side of
               Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
               Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
 
