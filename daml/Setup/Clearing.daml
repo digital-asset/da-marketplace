@@ -24,6 +24,7 @@ import DA.Finance.Types
 
 import DA.Action
 import DA.Foldable (forA_)
+import DA.Optional
 
 import DA.Next.Set
 
@@ -182,13 +183,13 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     customer = alice
     accountId = usdTokenId
     currency = "USD"
-    targetAmount = 800.0
+    targetAmount = 4999.0
     calculationTime = time
     calculationId = "2134820934"
 
-  -- awaitOrDo' wt 0.25 "performing margin fill"
-  --   $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
-  --       with clearingDepositCids = [fromSomeNote "alice cid" $ optAliceDepositCid], targetAmount = 800.0, calculationCid = mcCid
+  awaitOrDo' wt 0.25 "performing margin fill"
+    $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
+        with clearingDepositCids = [fromSomeNote "alice cid" $ optAliceDepositCid], targetAmount = 4999.0, calculationCid = mcCid
 
   mcCid <- ccp `submit` createCmd MarginCalculation with
     ccp
