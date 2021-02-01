@@ -70,6 +70,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const allBeneficiaries = [...brokerBeneficiaries, ...investorBeneficiaries]
 
     const registeredCustodian = useContractQuery(RegisteredCustodian);
+    const invitation = useContractQuery(CustodianInvitation);
 
     const custodianContract = useContractQuery(CustodianModel)
         // Find contract by key
@@ -123,6 +124,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.CustodianRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <CustodianProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
                 role={MarketRole.CustodianRole}
                 inviteAcceptTile
                 defaultProfile={profile}

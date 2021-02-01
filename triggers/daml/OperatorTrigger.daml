@@ -23,6 +23,7 @@ handleOperator = Trigger
   , rule = handleOperatorRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator
                                               , registeredTemplate @UserSession
+                                              , registeredTemplate @UserRoleChangeRequest
                                               , registeredTemplate @Token
                                               , registeredTemplate @RegisteredBroker
                                               , registeredTemplate @RegisteredCustodian
@@ -40,6 +41,11 @@ handleOperatorRule party = do
   userSessions <- query @UserSession
   forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
                                >> debug ("Acknowledging user session: " <> show us)
+
+  -- Process user role change requests
+  userRoleRequests <- query @UserRoleChangeRequest
+  forA_ userRoleRequests \(cid,rr) -> emitCommands [exerciseCmd cid UserRoleChangeRequest_Approve] [toAnyContractId cid]
+                                   >> debug ("Acknowledging user role change request: " <> show rr)
 
   -- Add all current parties to 'Token' observers if 'isPublic'
   tokens     <- query @Token

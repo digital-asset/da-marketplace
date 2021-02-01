@@ -37,6 +37,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const registeredBroker = useContractQuery(RegisteredBroker);
+    const invitation = useContractQuery(BrokerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
@@ -81,6 +82,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
                 role={MarketRole.BrokerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
