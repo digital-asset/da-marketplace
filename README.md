@@ -27,6 +27,8 @@ To run the marketplace locally or to build to be deployed on DABL, the following
 
 # Setup
 
+This project uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules), so use `--recurse-submodules` or equivalent when cloning (see link).
+
 In the root folder, run:
 ```
 make package
