@@ -3,7 +3,8 @@ module Marketplace.Execution where
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
-import qualified Marketplace.Trading as Trading
+import Marketplace.Trading.Service qualified as TradingService
+import Marketplace.Trading.Order qualified as Order
 
 -- TODO: Implement
 
@@ -21,47 +22,47 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestCreateOrder : (ContractId Trading.CreateOrderRequest, ContractId AssetDeposit)
+      nonconsuming RequestCreateOrder : (ContractId TradingService.CreateOrderRequest, ContractId AssetDeposit)
         with
-          orderDetails : Trading.OrderDetails
+          orderDetails : Order.OrderDetails
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
           depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
-          createOrderRequestCid <- create Trading.CreateOrderRequest with ..
+          createOrderRequestCid <- create TradingService.CreateOrderRequest with ..
           pure (createOrderRequestCid, depositCid)
 
-      nonconsuming RequestCancelOrder : ContractId Trading.CancelOrderRequest
+      nonconsuming RequestCancelOrder : ContractId TradingService.CancelOrderRequest
         with
-          orderCid : ContractId Trading.Order
+          orderCid : ContractId Order.T
         do
-          Trading.Order{..} <- fetch orderCid
-          create Trading.CancelOrderRequest with ..
+          Order.Order{..} <- fetch orderCid
+          create TradingService.CancelOrderRequest with ..
 
     controller provider can
-      nonconsuming CreateOrder : ContractId Trading.Order
+      nonconsuming CreateOrder : ContractId Order.T
         with
-          createOrderRequestCid : ContractId Trading.CreateOrderRequest
+          createOrderRequestCid : ContractId TradingService.CreateOrderRequest
           id : Int
         do
           let
-            status = Trading.New
+            status = Order.New
             providerOrderId = None
             executionFills = []
-          Trading.CreateOrderRequest{..} <- fetch createOrderRequestCid
+          TradingService.CreateOrderRequest{..} <- fetch createOrderRequestCid
           archive createOrderRequestCid
-          create Trading.Order with ..
+          create Order.Order with remainingQuantity = orderDetails.asset.quantity, ..
 
       nonconsuming CancelOrder : ContractId AssetDeposit
         with
-          cancelOrderRequestCid : ContractId Trading.CancelOrderRequest
+          cancelOrderRequestCid : ContractId TradingService.CancelOrderRequest
         do
-          Trading.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          TradingService.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
           archive cancelOrderRequestCid
-          (orderCid, order@Trading.Order{..}) <- fetchByKey (provider, orderDetails.id.label)
+          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, orderDetails.id.label)
           archive orderCid
 
-          orderCid <- create order with status = Trading.Cancelled
+          orderCid <- create order with status = Order.Cancelled
           depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
 
           exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccount.id

@@ -32,9 +32,9 @@ class EXBERRY:
 
 
 class MARKETPLACE:
-    CreateOrderRequest = 'Marketplace.Trading:CreateOrderRequest'
-    CancelOrderRequest = 'Marketplace.Trading:CancelOrderRequest'
-    Order = 'Marketplace.Trading:Order'
+    CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
+    CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
+    Order = 'Marketplace.Trading.Order:Order'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
     MatchingService = 'Marketplace.Matching:Service'
@@ -80,11 +80,12 @@ def main():
         return create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': list(order['orderType'])[0],
-                'instrument': order['market'],
+                'instrument': order['symbol'],
                 'quantity': float(order['asset']['quantity']),
-                'price': float(-1) if order['orderType'] == 'Market' else float(order['orderType']['Limit']['price']['quantity']),
+                'price': float(-1) if list(order['orderType'])[0] == 'Market' else float(order['orderType']['Limit']['price']),
                 'side': order['side'],
                 'timeInForce': list(order['timeInForce'])[0],
+                'expiryDate': int(-1) if not list(order['timeInForce'])[0] == 'GTD' else int(order['timeInForce']['GTD']['expiryDate']),
                 'mpOrderId': int(order['id']['label']), # This will be the SID for now
                 'userId': make_user_user_id(event.cdata['provider']),
             },
@@ -146,7 +147,7 @@ def main():
             'integrationParty': client.party,
             'instrument': cancel_request['orderDetails']['asset']['id']['label'],
             'mpOrderId': cancel_request['orderDetails']['id']['label'],
-            'userId': make_user_user_id(event['provider'])
+            'userId': make_user_user_id(cancel_request['provider'])
         })
 
     # Marketplace <-- Exberry
@@ -172,43 +173,16 @@ def main():
     @client.ledger_created(EXBERRY.ExecutionReport)
     async def handle_execution_report(event):
         execution = event.cdata
-
-        return [exercise_by_key(MARKETPLACE.MatchingService, client.party,
-            'fill', {
-                'matchId' : execution['matchId'],
-                'makerOrderId' : execution['makerMpOrderId'],
-                'takerOrderId' : execution['takerMpOrderId'],
-                'executedQuantity' : execution['executedQuantity'],
-                'executedPrice' : execution['executedPrice'],
-                'executedTimestamp' : execution['eventTimestamp']
+        # TODO: Check if we should be calling the matching service directly
+        return [exercise_by_key(MARKETPLACE.MatchingService, client.party, 'MatchOrders'
+            , { 'fill' : {
+                    'matchId' : execution['matchId'],
+                    'makerOrderId' : execution['makerMpOrderId'],
+                    'takerOrderId' : execution['takerMpOrderId'],
+                    'executedQuantity' : execution['executedQuantity'],
+                    'executedPrice' : execution['executedPrice'],
+                    'executedTimestamp' : execution['eventTimestamp']}
             }), exercise(event.cid, 'Archive', {})]
-
-        # taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-        #     'orderId': execution['takerMpOrderId']
-        # })
-        # maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-        #     'orderId': execution['makerMpOrderId']
-        # })
-
-        # commands = [exercise(event.cid, 'Archive', {})]
-
-        # commands.append(exercise(taker_cid, 'Order_Fill', {
-        #     'fillQty': execution['executedQuantity'],
-        #     'fillPrice': execution['executedPrice'],
-        #     'counterOrderId': maker['orderId'],
-        #     'counterParty': maker['exchParticipant'],
-        #     'timestamp': execution['eventTimestamp']
-        # }))
-        # commands.append(exercise(maker_cid, 'Order_Fill', {
-        #     'fillQty': execution['executedQuantity'],
-        #     'fillPrice': execution['executedPrice'],
-        #     'counterParty': taker['exchParticipant'],
-        #     'counterOrderId': taker['orderId'],
-        #     'timestamp': execution['eventTimestamp']
-        # }))
-
-        # return commands
-
 
     network.run_forever()
 

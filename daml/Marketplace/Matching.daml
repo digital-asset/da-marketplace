@@ -1,9 +1,9 @@
 module Marketplace.Matching where
 
 import DA.Next.Set (fromList)
-
-import qualified Marketplace.Trading as Trading
-
+import Marketplace.Trading.Order qualified as Order
+import Marketplace.Trading.Service qualified as TradingService
+import Marketplace.Trading.TradeInstruction qualified as TradeInstruction
 template Service
   with
     operator : Party
@@ -15,23 +15,24 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : ContractId Trading.Trade
+      nonconsuming MatchOrders : ContractId TradeInstruction.Trade
         with
-          fill : Trading.ExecutionFill
+          fill : Order.ExecutionFill
         do
-          (makerOrderCid, makerOrder) <- fetchByKey @Trading.Order (provider, fill.makerOrderId)
-          (takerOrderCid, takerOrder) <- fetchByKey @Trading.Order (provider, fill.takerOrderId)
+          (makerOrderCid, makerOrder) <- fetchByKey @Order.T (provider, fill.makerOrderId)
+          (takerOrderCid, takerOrder) <- fetchByKey @Order.T (provider, fill.takerOrderId)
 
           let
+            serviceKey party = (operator, provider, party)
+            accounts = []
             (buy, buyCid, sell, sellCid) = case makerOrder.orderDetails.side of
-              Trading.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
-              Trading.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
-            tradeInstruction = Trading.TradeInstruction with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; ..
+              Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
+              Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
 
-          tradeInstructionCid <- create tradeInstruction
-          tradeInstructionCid <- exercise buyCid Trading.InstructTrade with ..
-          tradeInstructionCid <- exercise sellCid Trading.InstructTrade with ..
-          exercise tradeInstructionCid Trading.Process with ..
+          tradeInstructionCid <- create TradeInstruction.TradeInstruction with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; ..
+          tradeInstructionCid <- exerciseByKey @TradingService.T (serviceKey buy.customer)  TradingService.InstructTrade with ..
+          tradeInstructionCid <- exerciseByKey @TradingService.T (serviceKey sell.customer) TradingService.InstructTrade with ..
+          exercise tradeInstructionCid TradeInstruction.Process with ..
 
 template Offer
   with

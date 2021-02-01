@@ -4,47 +4,95 @@ import Daml.Script
 import DA.Optional
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
-import Marketplace.Trading qualified as T
+import Marketplace.Trading.Order qualified as O
+import Marketplace.Trading.Service qualified as S
+import Marketplace.Listing qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
 
+-- In order to test between daml, the Exberry bot with simulating the Integration bot responses
+-- 1/ "daml start" from root of da-marketplace
+-- 2/ "daml deploy --host=localhost --port=6865" from root of daml-dit-integration-exberry
+-- 3/ "poetry build && DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py" from exberry_adapter folder in da-marketplace
+-- 4/ "daml script --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Tests.Trading:<function_name> --ledger-host localhost --ledger-port 6865" from root of da-marketplace
+-- 5/ "daml repl --ledger-host=localhost --ledger-port=6865 .daml/dist/da-marketplace-0.1.8.dar ../daml-dit-integration-exberry/.daml/dist/dabl-integration-exberry-1.0.0.dar --import da-marketplace --import dabl-integration-exberry" from root of da-marketplace
+--  a/ To get an existing party - Run in repl "exchange <- pure . fromSome $ partyFromText "Exchange""
+--  b/ To execute a command to simulate the Integration bot (substituting values as necessary)
+--    - New Order success : "exchange `submit` (createCmd $ NewOrderSuccess with integrationParty = exchange, sid = 123, orderId = 99999)"
+--    - New Order failure : "exchange `submit` (createCmd $ NewOrderFailure with integrationParty = exchange, sid = 123, errorCode = 999, errorMessage = "oh dear, something wrong happened!")"
+--    - Cancel Order success : "exchange `submit` (createCmd $ CancelOrderSuccess with integrationParty = exchange, sid = 123)"
+--    - Cancel Order failure : "exchange `submit` (createCmd $ CancelOrderFailure with integrationParty = exchange, sid = 123, errorCode = 999, errorMessage = "oh dear, something wrong happened!")"
+--    - Execution report : "exchange `submit` (createCmd $ ExecutionReport with integrationParty = exchange, sid = 1, eventId = 2, eventTimestamp = "beep", instrument = "JPM.N/USD", trackingNumber = 3, makerMpId = 1, makerMpOrderId = 123, makerOrderId = 321, takerMpId = 1, takerMpOrderId = 456, takerOrderId = 654, matchId = 123456, executedQuantity = 200.0, executedPrice = 100.0)"
+
+getExistingParties : [Text] -> Script [Party]
+getExistingParties = \parties -> pure . fromSome $ mapA partyFromText parties
+
 newOrders : Script ()
 newOrders = do
-  -- Note : This script assumes the setup script in Setup.daml has already been ran against a ledger
+  -- Setup:Setup must be ran before running this script
 
   -- Get our parties
-  [alice, bob, exchange, custodian, operator] <- pure . fromSome $ forA ["Alice", "Bob", "Exchange", "Custodian", "Operator"] partyFromText
+  [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
-  let tradingServicekey p = (operator, exchange, p)
-
+  -- Get the deposits created in the setup script
   (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @L.Service alice
+  let
+    listingId = "JPM.N/USD"
+    calendarId = "1"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+  createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+
   -- Create Order Request
   let
-    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
-    priceAsset = Asset with id = cashId; quantity = 100.0
+    shareAsset = Asset with id = tradedAssetId; quantity = 200.0
     aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
-    aliceOrderDetails = T.OrderDetails with
+    aliceOrderDetails = O.OrderDetails with
       id = aliceOrderId
-      market = "JPM.N/USD"
-      asset = aliceAssetDeposit.asset
-      side = T.Sell
-      orderType = T.Limit with price = priceAsset
-      timeInForce = T.GTC
+      symbol = listingId
+      asset = shareAsset
+      side = O.Sell
+      orderType = O.Limit with price = 100.0
+      -- orderType = T.Market
+      -- timeInForce = T.GTC
+      timeInForce = O.GTD with expiryDate = 1611992116
     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
-    bobOrderDetails = T.OrderDetails with
+    bobOrderDetails = O.OrderDetails with
       id = bobOrderId
-      market = "JPM.N/USD"
-      asset = bobAssetDeposit.asset
-      side = T.Buy
-      orderType = T.Limit with price = priceAsset
-      timeInForce = T.GTC
+      symbol = listingId
+      asset = shareAsset
+      side = O.Buy
+      -- orderType = T.Limit with price = 100.0
+      orderType = O.Market
+      timeInForce = O.GTC
+    tradingServicekey p = (operator, exchange, p)
 
   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
-    exerciseByKeyCmd @T.Service (tradingServicekey alice) T.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with orderDetails = aliceOrderDetails, depositCid = aliceAssetDepositCid
 
   (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
-    exerciseByKeyCmd @T.Service (tradingServicekey bob) T.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
+    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with orderDetails = bobOrderDetails, depositCid = bobAssetDepositCid
+
+  pure ()
+
+cancelSentOrder : Script ()
+cancelSentOrder = do
+  -- Note : Setup and newOrders must be run before this script
+
+  [alice, exchange, operator] <- getExistingParties ["Alice", "Exchange", "Operator"]
+  (aliceOrderCid, aliceOrder) <- head <$> query @O.Order alice
+
+  (aliceOrderCid, aliceCancelOrderRequestCid) <- alice `submit` do
+    exerciseByKeyCmd @S.Service (operator, exchange, alice) S.RequestCancelOrder with orderCid = aliceOrderCid
 
   pure ()

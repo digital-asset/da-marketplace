@@ -18,3 +18,4 @@ yarn.lock
 daml.js/
 
 .idea/
+.vscode/
