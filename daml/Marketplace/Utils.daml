@@ -40,7 +40,7 @@ getAccountLabel owner provider = show owner <> "@" <> show provider
 
 getAccountOwnerProvider: Text -> (Party, Party)
 getAccountOwnerProvider label =
-  let [owner, provider] = map (fromSome . partyFromText . replace "'" "") (splitOn "@" label)
+  let [owner, provider] = map (fromSomeNote "account owner provider" . partyFromText . replace "'" "") (splitOn "@" label)
   in (owner, provider)
 
 getDepositQuantities : [ContractId AssetDeposit] -> Update (Decimal)

@@ -2,6 +2,7 @@ module Marketplace.CentralCounterpartyCustomer where
 
 import qualified DA.Next.Set as Set
 
+import Marketplace.Clearing
 import Marketplace.Notification
 import Marketplace.Transfer
 import Marketplace.Utils
@@ -9,7 +10,10 @@ import Marketplace.Utils
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+
+import DA.Action
 import DA.List
+import DA.Optional
 
 
 template CCPCustomerInvitation
@@ -36,7 +40,7 @@ template CCPCustomerInvitation
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
-          create CCPCustomer with inGoodStanding = True, clearingDepositCids = [], marginDepositCids = [], ..
+          create CCPCustomer with inGoodStanding = True, marginDepositCids = [], ..
 
       CCPCustomerInvitation_Reject : ()
         do
@@ -52,7 +56,7 @@ template CCPCustomer
     ccp : Party
     custodian : Party
     ccpCustomer : Party
-    clearingDepositCids : [ContractId AssetDeposit]
+    -- clearingDepositCids : [ContractId AssetDeposit]
     marginDepositCids : [ContractId AssetDeposit]
     inGoodStanding : Bool
   where
@@ -64,7 +68,9 @@ template CCPCustomer
     controller ccp can
       CCPCustomer_PerformMarginFill : ContractId CCPCustomer
         with
+          clearingDepositCids : [ContractId AssetDeposit]
           targetAmount : Decimal
+          calculationCid : ContractId MarginCalculation
         do
           assertMsg "there must be a clearing deposit" $ not $ null clearingDepositCids
           clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
@@ -79,22 +85,24 @@ template CCPCustomer
               if amount > 0.0
               then do
               --exercise self CCPCustomer_TransferToMarginAccount with amount, clearingDepositCid
-                (custCcpRelationshipCid,_) <- fetchByKey @CCPCustodianRelationship (custodian, ccp)
+                -- (custCcpRelationshipCid,_) <- fetchByKey @CCPCustodianRelationship (custodian, ccp)
                 clearingDeposit <- fetch clearingDepositCid
                 if clearingDeposit.asset.quantity <= amount
                 then create this with inGoodStanding = False
                 else do
                   newDepositCids <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case newDepositCids of
-                    []               -> create this with inGoodStanding = False
-                    [diffDepositCid] -> create this with inGoodStanding = False, clearingDepositCids = [diffDepositCid]
+                    []               -> exercise calculationCid MarginCalculation_Resolve { note = "not enough cash" } >> create this with inGoodStanding = False
+                    [diffDepositCid] -> exercise calculationCid MarginCalculation_Resolve { note = "not enough cash" } >> create this with inGoodStanding = False
                     (diffDepositCid::remainingClearingCids) -> do
                       case marginDepositCids of
                         [] -> do
-                          create this with clearingDepositCids = remainingClearingCids, marginDepositCids = [diffDepositCid]
+                          exercise calculationCid MarginCalculation_Resolve { note = "good job" }
+                          create this with marginDepositCids = [diffDepositCid]
                         xs -> do
+                          exercise calculationCid MarginCalculation_Resolve { note = "good job" }
                           newMarginDepositCid <- exercise (head xs) AssetDeposit_Merge with depositCids = diffDepositCid :: tail xs
-                          create this with clearingDepositCids = remainingClearingCids, marginDepositCids = [newMarginDepositCid]
+                          create this with marginDepositCids = [newMarginDepositCid]
               else do -- exercise self CCPCustomer_TransferFromMarginAccount with amount = amount * (-1.0), clearingDepositCid
                 assertMsg "no margin account found" $ not $ null marginDepositCids
                 marginDepositCid <- exercise (head marginDepositCids) AssetDeposit_Merge
@@ -107,7 +115,8 @@ template CCPCustomer
                 [diffDepositCid, remainingMarginDepositCid] <- exercise marginDepositCid AssetDeposit_Split
                     with quantities = [amount]
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
-                create this with clearingDepositCids = [newClearingDepositCid], marginDepositCids = [remainingMarginDepositCid]
+                exercise calculationCid MarginCalculation_Resolve { note = "good job" }
+                create this with marginDepositCids = [remainingMarginDepositCid]
 
       -- CCPCustomer_TransferToMarginAccount : ContractId CCPCustomer
       --   with
@@ -123,8 +132,11 @@ template CCPCustomer
 
       CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
         with
+          clearingDepositCids : [ContractId AssetDeposit]
           amount : Decimal
+          optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
+          assertMsg "there must be at least one clearing deposit" $ not $ null clearingDepositCids
           clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
               with depositCids = tail clearingDepositCids
 
@@ -138,7 +150,10 @@ template CCPCustomer
           depositTransferReqCid <- create DepositTransferRequest with
               sender = ccpCustomer, senderAccountId = clearingDeposit.account.id, depositCid = transferDepositCid, ..
 
-          (,) depositTransferReqCid <$> create this with clearingDepositCids = [remainingDepositCid]
+          when (isSome optMarkToMarketCalc) $
+            void $ exercise (fromSome optMarkToMarketCalc) MarkToMarketCalculation_Resolve with note = "resolved"
+
+          (,) depositTransferReqCid <$> create this
 
       CCPCustomer_TransferToClearingAccount : ContractId CCPCustomer
         with
@@ -165,18 +180,18 @@ template CCPCustomer
 
           create this
 
-      CCPCustomer_AddDepositToClearingDeposits : ContractId CCPCustomer
-        with
-          depositCid : ContractId AssetDeposit
-        do
-          assertMsg "deposit cid already exists" $ depositCid `notElem` clearingDepositCids
-          -- mergedCid <- exercise depositCid AssetDeposit_Merge with depositCids = clearingDepositCids
-          create this with clearingDepositCids = depositCid :: clearingDepositCids
-
-      -- CCPCustomer_TransferToClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
+      -- CCPCustomer_AddDepositToClearingDeposits : ContractId CCPCustomer
       --   with
-      --     assetDepositCid : Decimal
+      --     depositCid : ContractId AssetDeposit
       --   do
+      --     assertMsg "deposit cid already exists" $ depositCid `notElem` clearingDepositCids
+      --     -- mergedCid <- exercise depositCid AssetDeposit_Merge with depositCids = clearingDepositCids
+      --     create this with clearingDepositCids = depositCid :: clearingDepositCids
+      --
+      -- -- CCPCustomer_TransferToClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
+      -- --   with
+      -- --     assetDepositCid : Decimal
+      -- --   do
 
 
 
