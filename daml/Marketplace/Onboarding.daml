@@ -10,7 +10,7 @@ import Marketplace.Utils
 
 import DA.Action
 
-onboardRole: MarketRole -> Party -> Party -> Update ()
+onboardRole : MarketRole -> Party -> Party -> Update ()
 onboardRole role operator user = do
   let userKey = (operator, user)
   case role of

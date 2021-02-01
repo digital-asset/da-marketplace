@@ -8,6 +8,7 @@ import { Message } from 'semantic-ui-react'
 import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 
 import { QueryStream, QueryStreamContext, useContractQuery } from '../websocket/queryStream'
+import { StreamErrors } from '../websocket/websocket'
 
 import { useDablParties } from './common/common'
 import { roleRoute } from './common/utils'
@@ -20,7 +21,6 @@ import Issuer from './Issuer/Issuer'
 import Exchange from './Exchange/Exchange'
 import Custodian from './Custodian/Custodian'
 import Broker from './Broker/Broker'
-import { StreamErrors } from '../websocket/websocket'
 
 
 type Props = {

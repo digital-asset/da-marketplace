@@ -2,7 +2,7 @@ import React from 'react'
 
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { indefiniteArticle as a, roleLabel } from './utils'
+import { formatIndefiniteArticle, roleLabel } from './utils'
 import TopMenu from './TopMenu'
 import FormErrorHandled from './FormErrorHandled'
 import OnboardingTile, { Tile } from './OnboardingTile'
@@ -18,7 +18,10 @@ const InviteAcceptTile: React.FC<Props> = ({ children, role, onSubmit, onLogout 
         <TopMenu onLogout={onLogout}/>
         <OnboardingTile
             tiles={[
-                <Tile subtitle={`Please fill in some information about yourself as ${a(roleLabel(role))}`}>
+                <Tile subtitle={
+                    `Please fill in some information about yourself as
+                    ${formatIndefiniteArticle(roleLabel(role))}`
+                }>
                     <FormErrorHandled
                         className='invite-accept-form'
                         size='large'

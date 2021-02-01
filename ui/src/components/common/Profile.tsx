@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Header, Loader } from 'semantic-ui-react'
-
 import { NavLink, useHistory } from 'react-router-dom'
+import { Button, Form, Header, Loader } from 'semantic-ui-react'
+import classNames from 'classnames'
 
 import { useLedger, useParty } from '@daml/react'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -9,14 +9,10 @@ import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 
 import { ArrowRightIcon } from '../../icons/Icons'
 
-import classNames from 'classnames'
-
 import { roleLabel, roleRoute, StringKeyedObject } from './utils'
 import FormErrorHandled from './FormErrorHandled'
 import { useOperator } from './common'
 import { wrapDamlTuple } from './damlTypes'
-import { useContractQuery } from '../../websocket/queryStream'
-import RoleSelectScreen from '../RoleSelectScreen'
 
 type FieldType = 'text';
 
@@ -98,7 +94,7 @@ const RoleSelectForm: React.FC<{role: MarketRole}> = ({role}) => {
                 value={selectedRole}/>
             <Button
                 content='Save'
-                className={classNames('ghost', {'dark': false})}
+                className='ghost'
                 disabled={!selectedRole}
                 type='submit'/>
 
@@ -160,7 +156,8 @@ const Profile: React.FC<ProfileProps> = ({
                     <div className='invite-indicator'>
                         <p className='p2 dark'>Waiting for Operator invitation...</p>
                         <Loader active indeterminate size='small'/>
-                    </div> }
+                    </div>
+                }
             </div>
         </Form>
 
@@ -182,7 +179,7 @@ const Profile: React.FC<ProfileProps> = ({
         </div>
 
     const actions = <div className='profile-actions'>
-        <a className='a2 bold edit-profile' onClick={() => setEditing(true)}> Edit Profile</a>
+        <a className='a2 bold edit-profile' onClick={() => setEditing(true)}>Edit Profile</a>
         <p>or</p>
         <a className='a2 bold switch-roles' onClick={() => setRoleSelect(true)}>Add a Role</a>
     </div>
