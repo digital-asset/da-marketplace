@@ -1,0 +1,13 @@
+module Tests.Clearing where
+
+import Daml.Script
+
+import Setup.Clearing (LedgerParties, allocateParties, doTestClearingResolution, doSetupClearing)
+
+testClearingResolution : Script ()
+testClearingResolution = allocateParties >>= doTestClearingResolution True
+
+testSetupClearing : Script ()
+testSetupClearing = allocateParties >>= doSetupClearing True
+
+
