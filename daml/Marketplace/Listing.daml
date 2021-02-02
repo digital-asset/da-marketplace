@@ -6,9 +6,12 @@ type T = Listing
 
 data Status
     = Active
-    | Inactive
+    | Disabled
+    | Failure with
+        message : Text
+        name : Text
+        code : Text
   deriving (Eq, Show)
-
 template Listing
   with
     operator : Party
@@ -23,6 +26,7 @@ template Listing
     quotedAssetPrecision : Int
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
+    providerId : Text
     status : Status
   where
     signatory operator, provider, customer
@@ -57,29 +61,44 @@ template Service
         do
           create CreateListingRequest with status = Active; ..
 
-      nonconsuming RequestDeleteListing : ContractId DeleteListingRequest
+      nonconsuming RequestDisableListing : ContractId DisableListingRequest
         with
           listingId : Text
         do
-          create DeleteListingRequest with ..
+          create DisableListingRequest with ..
 
     controller provider can
       nonconsuming CreateListing : ContractId Listing
         with
           createListingRequestCid : ContractId CreateListingRequest
+          providerId : Text
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
           create Listing with ..
 
-      nonconsuming DeleteListing : ()
+      nonconsuming ListingFailure : ContractId CreateListingRequest
         with
-          deleteListingRequestCid : ContractId DeleteListingRequest
+          createListingRequestCid : ContractId CreateListingRequest
+          message : Text
+          name : Text
+          code : Text
         do
-          DeleteListingRequest{..} <- fetch deleteListingRequestCid
-          archive deleteListingRequestCid
-          (listingCid, _) <- fetchByKey @Listing (operator, provider, listingId)
+          createListingRequest <- fetch createListingRequestCid
+          archive createListingRequestCid
+
+          create createListingRequest with status = Failure with ..
+
+      nonconsuming DisableListing : ContractId Listing
+        with
+          disableListingRequestCid : ContractId DisableListingRequest
+        do
+          DisableListingRequest{..} <- fetch disableListingRequestCid
+          archive disableListingRequestCid
+          (listingCid, listing) <- fetchByKey @Listing (operator, provider, listingId)
           archive listingCid
+
+          create listing with status = Disabled
 
 template Offer
   with
@@ -133,7 +152,27 @@ template CreateListingRequest
   where
     signatory operator, provider, customer
 
-template DeleteListingRequest
+    key (provider, listingId) : (Party, Text)
+    maintainer key._1
+
+    let serviceKey = (operator, provider, customer)
+
+    controller provider can
+      nonconsuming ListingRequestSuccess : ContractId Listing
+        with
+          providerId : Text
+        do
+          exerciseByKey @Service serviceKey CreateListing with createListingRequestCid = self, ..
+
+      nonconsuming ListingRequestFailure : ContractId CreateListingRequest
+        with
+          message : Text
+          name : Text
+          code : Text
+        do
+          exerciseByKey @Service serviceKey ListingFailure with createListingRequestCid = self, ..
+
+template DisableListingRequest
   with
     operator : Party
     provider : Party

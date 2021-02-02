@@ -38,6 +38,7 @@ setup = do
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
+    providerId = "12345"
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 

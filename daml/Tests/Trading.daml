@@ -23,13 +23,15 @@ import DA.List
 --    - Cancel Order success : "exchange `submit` (createCmd $ CancelOrderSuccess with integrationParty = exchange, sid = 123)"
 --    - Cancel Order failure : "exchange `submit` (createCmd $ CancelOrderFailure with integrationParty = exchange, sid = 123, errorCode = 999, errorMessage = "oh dear, something wrong happened!")"
 --    - Execution report : "exchange `submit` (createCmd $ ExecutionReport with integrationParty = exchange, sid = 1, eventId = 2, eventTimestamp = "beep", instrument = "JPM.N/USD", trackingNumber = 3, makerMpId = 1, makerMpOrderId = 123, makerOrderId = 321, takerMpId = 1, takerMpOrderId = 456, takerOrderId = 654, matchId = 123456, executedQuantity = 200.0, executedPrice = 100.0)"
+--    - Listing request success : "exchange `submit` (createCmd Instrument with integrationParty = exchange, symbol = "JPM.N/USD", quoteCurrency = "", instrumentDescription = "", calendarId = "", pricePrecision = 0, quantityPrecision = 0, minQuantity = 0.0, maxQuantity = 0.0, status = "", instrumentId = "ABCD")"
+--    - Listing request failure : "exchange `submit` (createCmd FailedInstrumentRequest with integrationParty = exchange, symbol = "JPM.N/USD", quoteCurrency = "", instrumentDescription = "", calendarId = "", pricePrecision = 0, quantityPrecision = 0, minQuantity = 0.0, maxQuantity = 0.0, status = "", message = "message", name = "name", code = "code")"
 
 getExistingParties : [Text] -> Script [Party]
 getExistingParties = \parties -> pure . fromSome $ mapA partyFromText parties
 
 newOrders : Script ()
 newOrders = do
-  -- Setup:Setup must be ran before running this script
+  -- NOTE : Setup:Setup must be ran before running this script
 
   -- Get our parties
   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
@@ -50,8 +52,9 @@ newOrders = do
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
+    providerId = "12345"
   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
-  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+  -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
 
   -- Create Order Request
   let
