@@ -31,6 +31,8 @@ class MARKETPLACE:
     OrderRequest = 'Marketplace.Trading:OrderRequest'
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
+    ClearedOrderRequest = 'Marketplace.Trading:ClearedOrderRequest'
+    ClearedOrder = 'Marketplace.Trading:ClearedOrder'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
@@ -67,6 +69,27 @@ def main():
         return exercise(event.cid, 'ExberrySID_Ack', {})
 
     # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.ClearedOrderRequest)
+    def handle_cleared_order_request(event):
+        sid = get_sid()
+        order = event.cdata['order']
+        sid_to_order[sid] = order
+
+        return create(EXBERRY.NewOrderRequest, {
+            'order': {
+                'orderType': 'Limit',
+                'instrument': make_instrument(order['pair']),
+                'quantity': float(order['qty']),
+                'price': float(order['price']),
+                'side': 'Buy' if order['isBid'] else 'Sell',
+                'timeInForce': 'GTC',
+                'mpOrderId': sid,  # we use sid for order ids
+                'userId': make_user_user_id(order['exchParticipant']),
+            },
+            'integrationParty': client.party
+        })
+
+    # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.OrderRequest)
     def handle_order_request(event):
         sid = get_sid()
@@ -96,9 +119,18 @@ def main():
             'order': order
         })
 
-        return [exercise(req_cid, 'OrderRequest_Ack', {
-            'orderId': event.cdata['sid']
-        }), exercise(event.cid, 'Archive', {})]
+        if req_cid:
+            return [exercise(req_cid, 'OrderRequest_Ack', {
+                'orderId': event.cdata['sid']
+            }), exercise(event.cid, 'Archive', {})]
+        else:
+            req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, {
+                'order': order
+            })
+
+            return [exercise(req_cid, 'ClearedOrderRequest_Ack', {
+                'orderId': event.cdata['sid']
+            }), exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.NewOrderFailure)
@@ -109,8 +141,16 @@ def main():
             'order': order
         })
 
-        return [exercise(req_cid, 'OrderRequest_Reject', {}),
-                exercise(event.cid, 'Archive', {})]
+        if req_cid:
+            return [exercise(req_cid, 'OrderRequest_Reject', {}),
+                    exercise(event.cid, 'Archive', {})]
+        else:
+            req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, {
+                'order': order
+            })
+
+            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {}),
+                    exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
@@ -180,20 +220,32 @@ def main():
 
         commands = [exercise(event.cid, 'Archive', {})]
 
-        commands.append(exercise(taker_cid, 'Order_Fill', {
-            'fillQty': execution['executedQuantity'],
-            'fillPrice': execution['executedPrice'],
-            'counterOrderId': maker['orderId'],
-            'counterParty': maker['exchParticipant'],
-            'timestamp': execution['eventTimestamp']
-        }))
-        commands.append(exercise(maker_cid, 'Order_Fill', {
-            'fillQty': execution['executedQuantity'],
-            'fillPrice': execution['executedPrice'],
-            'counterParty': taker['exchParticipant'],
-            'counterOrderId': taker['orderId'],
-            'timestamp': execution['eventTimestamp']
-        }))
+        if taker and maker:
+            commands.append(exercise(taker_cid, 'Order_Fill', {
+                'fillQty': execution['executedQuantity'],
+                'fillPrice': execution['executedPrice'],
+                'counterOrderId': maker['orderId'],
+                'counterParty': maker['exchParticipant'],
+                'timestamp': execution['eventTimestamp']
+            }))
+            commands.append(exercise(maker_cid, 'Order_Fill', {
+                'fillQty': execution['executedQuantity'],
+                'fillPrice': execution['executedPrice'],
+                'counterParty': taker['exchParticipant'],
+                'counterOrderId': taker['orderId'],
+                'timestamp': execution['eventTimestamp']
+            }))
+        else:
+            taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
+                'orderId': execution['takerMpOrderId']
+            })
+            maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
+                'orderId': execution['makerMpOrderId']
+            })
+
+            # TO-DO: create ClearedTrade here too
+            commands.append(exercise(taker_cid, 'Archive', {}))
+            commands.append(exercise(maker_cid, 'Archive', {}))
 
         return commands
 
