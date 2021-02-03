@@ -9,6 +9,7 @@ import qualified Marketplace.Operator as Operator
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Custody as Custody
 import qualified Marketplace.Exchange as Exchange
+import qualified Marketplace.Issuance as Issuance
 import qualified Marketplace.Trading.Matching as Matching
 import qualified Marketplace.Trading.Settlement as Settlement
 import qualified Marketplace.Trading.Service as Trading
@@ -30,6 +31,7 @@ data CustomerContracts = CustomerContracts
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
+    issuanceServiceCid: ContractId Issuance.Service
     allocationAssetSettlementRuleCid : ContractId AssetSettlementRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
@@ -72,6 +74,8 @@ onboardCustomer CommonContracts{..} party asset = do
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
+  issuanceServiceOfferCid <- submit customer do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with client = customer, ..
+  issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
   -- Accounts
   tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = empty; ctrls = fromList [ custodian, exchange, customer ]

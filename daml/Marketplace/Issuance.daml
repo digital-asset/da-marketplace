@@ -3,6 +3,7 @@ module Marketplace.Issuance where
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import Marketplace.AssetDescription (AssetDescription)
 
 type T = Issuance
 
@@ -33,6 +34,12 @@ template Service
     maintainer key._1
 
     controller client can
+      nonconsuming RequestOrigination: ContractId OriginationRequest
+        with
+          description: AssetDescription
+        do
+          create OriginationRequest with ..
+          
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
         with
           issuanceId : Text
@@ -51,11 +58,22 @@ template Service
           create ReduceIssuanceRequest with ..
 
     controller provider can
+      nonconsuming Originate: ContractId AssetDescription
+        with
+          createOriginationCid: ContractId OriginationRequest
+        do
+          OriginationRequest{description} <- fetch createOriginationCid
+          -- assertMsg "issued must be 0" $ description.issued == 0.0
+          -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
+          archive createOriginationCid
+          create description
+
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with
           createIssuanceRequestCid : ContractId CreateIssuanceRequest
         do
           CreateIssuanceRequest{..} <- fetch createIssuanceRequestCid
+          Some _ <- lookupByKey @AssetDescription assetId
           archive createIssuanceRequestCid
           issuanceCid <- create Issuance with ..
           let asset = Asset with id = assetId; quantity
@@ -130,3 +148,9 @@ template ReduceIssuanceRequest
     depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, client
+
+template OriginationRequest
+  with
+     description: AssetDescription
+  where
+     signatory description.asset.id.signatories

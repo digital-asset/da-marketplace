@@ -1,0 +1,28 @@
+module Marketplace.AssetDescription where
+-- Consider merging into DA.Finance.Types.Asset
+
+import DA.Finance.Types (Id, Asset)
+import ContingentClaims.Claim.Serializable (Claim)
+
+type T = AssetDescription
+type Claims = Claim Date Id
+
+template AssetDescription
+  with
+    asset: Asset
+    description: Text
+    -- ^ Short description of the asset
+    issuer: Party
+    -- ^ The counterparty for any @claims@
+    claims: Claims
+    -- ^ Rights and obligations of the holder (and issuer)
+    -- terms: Text
+    -- ^ Any further contract terms not captured in @claims@; typically a URI.
+    -- authorized: Decimal
+    -- ^ Number of shares/contracts authorized for issuance
+    -- issued: Decimal
+    -- ^ Number of shares/contracts already issued for trading
+  where
+    signatory asset.id.signatories
+    key asset.id : Id
+    maintainer key.signatories

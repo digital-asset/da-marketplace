@@ -4,8 +4,7 @@ module Marketplace.Lifecycle where
 import DA.Finance.Types (Id)
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Transfer(..))
-import Marketplace.AssetClaims (Claims)
-import ContingentClaims.Claim (deserialize)
+import Marketplace.AssetDescription (Claims)
 import ContingentClaims.Lifecycle (settle)
 import DA.Date (toDateUTC)
 

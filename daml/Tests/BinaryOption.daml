@@ -1,0 +1,60 @@
+module Tests.BinaryOption where
+-- ^ This module tests the full lifecycle of a binary option
+
+import Common (onboardCommon, onboardCustomer)
+import ContingentClaims.Claim (serialize, cond, one, Claim(Zero))
+import ContingentClaims.FinancialClaim (european)
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation qualified as O
+import DA.Date (date, Month(Mar))
+import DA.Finance.Types (Id(..), Asset(..))
+import Daml.Script
+import DA.Next.Set qualified as Set
+import Marketplace.AssetDescription (AssetDescription(..))
+import Marketplace.Issuance (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
+
+
+endToEnd: Script ()
+endToEnd = do
+  common <- onboardCommon
+
+  let optionId = Id with 
+                   signatories = Set.singleton common.custodian
+                   label = "TSLA Mar21 910.0"
+                   version = 0
+      optionAsset = Asset with id = optionId, quantity = 50.0
+      usdId = Id with
+                signatories = Set.singleton common.custodian
+                label = "USD"
+                version = 0
+      usdAsset = Asset with id = usdId, quantity = 100.0
+      underlyingId = Id with
+                       signatories = Set.singleton common.custodian
+                       label = "TSLA"
+                       version = 0
+      underlyingAsset = Asset with id = underlyingId, quantity = 200.0
+
+      binary : Decimal -> Text -> Id -> Claim O.Observation Date Id 
+      binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) Zero (one ccy)
+
+  alice <- onboardCustomer common "Alice" usdAsset -- this is weird - we should be first issuing asset
+
+  -- Originate the option
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid (RequestOrigination 
+      AssetDescription with
+        asset = optionAsset
+        description = "TSLA March 2021 binary call option, strike 910.0$"
+        issuer = alice.customer
+        claims = serialize $ european (date 2020 Mar 18) (binary 910.0 underlyingId.label usdId)
+    )
+  optionDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
+
+  -- Issue the option
+  createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid 
+    RequestCreateIssuance with
+      issuanceId = "Myissuance"
+      accountId = Id (Set.fromList [alice.customer, common.custodian]) alice.tradingAccountId.label 0
+      assetId = optionId
+      quantity = 1000.0
+  optionIssueCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
+  return ()
