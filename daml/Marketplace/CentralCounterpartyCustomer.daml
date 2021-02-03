@@ -78,27 +78,31 @@ template CCPCustomer
           let netDiff =  targetAmount - marginQuantity
 
           case netDiff of
-            0.0    -> exercise calculationCid MarginCalculation_Resolve { note = "no change needed" } >> create this
+            0.0    -> do
+              exercise calculationCid MarginCalculation_Resolve with note = "Margin account already at target amount"
+              create this
             amount -> do
               if amount > 0.0
               then do
                 clearingDeposit <- fetch clearingDepositCid
                 if clearingDeposit.asset.quantity <= amount
-                then exercise calculationCid MarginCalculation_Reject { note = "not enough cash" } >> create this with inGoodStanding = False
+                then do
+                  exercise calculationCid MarginCalculation_Reject with note = "Not enough currency in Clearing Account"
+                  create this with inGoodStanding = False
                 else do
                   [diffDepositCid, remaingClearingCid] <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case marginDepositCids of
                     [] -> do
-                      exercise calculationCid MarginCalculation_Resolve { note = "good job" }
+                      exercise calculationCid MarginCalculation_Resolve with note = "Margin call successful"
                       create this with marginDepositCids = [diffDepositCid]
                     xs -> do
-                      exercise calculationCid MarginCalculation_Resolve { note = "good job" }
+                      exercise calculationCid MarginCalculation_Resolve with note = "Margin call successful"
                       newMarginDepositCid <- exercise (head xs) AssetDeposit_Merge with depositCids = diffDepositCid :: tail xs
                       create this with marginDepositCids = [newMarginDepositCid]
               else do
                 assertMsg "no margin account found" $ not $ null marginDepositCids
                 marginDepositCid <- exercise (head marginDepositCids) AssetDeposit_Merge
-                    with depositCids = tail clearingDepositCids
+                    with depositCids = tail marginDepositCids
                 marginDeposit <- fetch marginDepositCid
 
                 assertMsg ("amount to transfer: " <> show amount <> " exceeds amount in margin account: " <> show marginDeposit.asset.quantity)

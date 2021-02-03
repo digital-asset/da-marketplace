@@ -96,6 +96,7 @@ template CCP
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
           exercise derivativeTradeCid DerivativeTrade_Novate with ..
 
+
       nonconsuming CCP_RequestFairValues : ContractId FairValueCalculationRequest
         with
           exchange : Party
