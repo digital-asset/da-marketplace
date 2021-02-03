@@ -37,6 +37,8 @@ data CustomerContracts = CustomerContracts
     allocationAccountId : Id
     tradingAccountId : Id
     awayAccountId : Id
+     -- TODO: consider whether these services need to be more granular. i.e. does a custody relationship allow execution, tarde-away, safekeeping etc. in one go
+    safekeepingAccountId: Id
     assetDepositCid : ContractId AssetDeposit
 
 onboardCommon : Script CommonContracts
@@ -62,12 +64,14 @@ onboardCustomer : CommonContracts -> Text -> Asset -> Script CustomerContracts
 onboardCustomer CommonContracts{..} party asset = do
   customer <- allocatePartyWithHint party $ PartyIdHint party
   let
-    tradingAccountId    = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
-    tradingAccount      = Account with provider = custodian; owner = customer; id = tradingAccountId
-    allocationAccountId = Id with signatories = fromList [ custodian, customer ]; label = "AllocationAccount-" <> party; version = 0
-    allocationAccount   = Account with provider = custodian; owner = customer; id = allocationAccountId
-    awayAccountId       = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
-    awayAccount         = Account with provider = custodian; owner = customer; id = awayAccountId
+    tradingAccountId      = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
+    tradingAccount        = Account with provider = custodian; owner = customer; id = tradingAccountId
+    allocationAccountId   = Id with signatories = fromList [ custodian, customer ]; label = "AllocationAccount-" <> party; version = 0
+    allocationAccount     = Account with provider = custodian; owner = customer; id = allocationAccountId
+    awayAccountId         = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
+    awayAccount           = Account with provider = custodian; owner = customer; id = awayAccountId
+    safekeepingAccountId  = Id with signatories = fromList [ custodian, customer ]; label = "SafekeepingAccount-" <> party; version = 0
+    safekeepingAccount    = Account with provider = custodian; owner = customer; id = safekeepingAccountId
   custodyServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
@@ -84,6 +88,8 @@ onboardCustomer CommonContracts{..} party asset = do
   allocationAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = allocationOpenAccountRequestCid
   awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; ctrls = empty
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
+  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = empty
+  safekeepingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = safekeepingOpenAccountRequestCid
 
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..

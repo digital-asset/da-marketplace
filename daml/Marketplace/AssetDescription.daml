@@ -16,6 +16,8 @@ template AssetDescription
     -- ^ The counterparty for any @claims@
     claims: Claims
     -- ^ Rights and obligations of the holder (and issuer)
+    safekeepingAccountId: Id
+    -- ^ Source account used for issuing the security and any subsequent corporate actions, e.g. paying out a coupon.
     -- terms: Text
     -- ^ Any further contract terms not captured in @claims@; typically a URI.
     -- authorized: Decimal
@@ -23,6 +25,6 @@ template AssetDescription
     -- issued: Decimal
     -- ^ Number of shares/contracts already issued for trading
   where
-    signatory asset.id.signatories
+    signatory asset.id.signatories <> safekeepingAccountId.signatories
     key asset.id : Id
     maintainer key.signatories

@@ -43,6 +43,7 @@ endToEnd = do
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid (RequestOrigination 
       AssetDescription with
         asset = optionAsset
+        safekeepingAccountId = alice.safekeepingAccountId
         description = "TSLA March 2021 binary call option, strike 910.0$"
         issuer = alice.customer
         claims = serialize $ european (date 2020 Mar 18) (binary 910.0 underlyingId.label usdId)
@@ -53,7 +54,7 @@ endToEnd = do
   createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid 
     RequestCreateIssuance with
       issuanceId = "Myissuance"
-      accountId = Id (Set.fromList [alice.customer, common.custodian]) alice.tradingAccountId.label 0
+      accountId = Id (Set.fromList [alice.customer, common.custodian]) alice.safekeepingAccountId.label 0
       assetId = optionId
       quantity = 1000.0
   optionIssueCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
