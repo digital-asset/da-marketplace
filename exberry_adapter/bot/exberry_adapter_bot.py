@@ -16,7 +16,7 @@ dazl.setup_default_logger(logging.INFO)
 #     SID = SID + 1
 #     return SID
 
-sid_to_order = {}
+# sid_to_order = {}
 
 class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
@@ -35,10 +35,8 @@ class MARKETPLACE:
     CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
     CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
     Order = 'Marketplace.Trading.Order:Order'
-    Token = 'Marketplace.Token:Token'
-    MarketPair = 'Marketplace.Token:MarketPair'
+    CreateListingRequest = 'Marketplace.Listing:CreateListingRequest'
     MatchingService = 'Marketplace.Trading.Matching:Service'
-    ExberrySID = 'Marketplace.Utils:ExberrySID'
 
 
 def main():
@@ -57,19 +55,6 @@ def main():
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
-        sids = client.find_active(MARKETPLACE.ExberrySID)
-        global SID
-        for (_,item) in sids.items():
-            SID = item['sid']
-            logging.info(f'Changed current SID to {SID}')
-        return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
-
-    @client.ledger_created(MARKETPLACE.ExberrySID)
-    def handle_exberry_SID(event):
-        global SID
-        SID = event.cdata['sid']
-        logging.info(f'Changed current SID to {SID}')
-        return exercise(event.cid, 'ExberrySID_Ack', {})
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
@@ -113,18 +98,18 @@ def main():
                                 ), exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
-    @client.ledger_created(MARKETPLACE.MarketPair)
-    def handle_new_market_pair(event):
-        pair = event.cdata
-        symbol = pair['id']['label']
-        description = pair['description']
-        calendar_id = pair['calendarId']
-        quote_currency = pair['quoteTokenId']['label']
-        price_precision = pair['pricePrecision']
-        quantity_precision = pair['quantityPrecision']
-        min_quantity = pair['minQuantity']
-        max_quantity = pair['maxQuantity']
-        status = pair['status'][10:]
+    @client.ledger_created(MARKETPLACE.CreateListingRequest)
+    def handle_new_listing(event):
+        listing = event.cdata
+        symbol = listing['listingId']
+        description = listing['description']
+        calendar_id = listing['calendarId']
+        quote_currency = listing['quotedAssetId']['label']
+        price_precision = listing['quotedAssetPrecision']
+        quantity_precision = listing['tradedAssetPrecision']
+        min_quantity = listing['minimumTradableQuantity']
+        max_quantity = listing['maximumTradableQuantity']
+        status = listing['status']
 
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
@@ -138,6 +123,27 @@ def main():
             'maxQuantity': max_quantity,
             'status': status
         })
+
+    # Exberry --> Marketplace
+    @client.ledger_created(EXBERRY.Instrument)
+    def handle_new_listing_success(event):
+        return [exercise_by_key(MARKETPLACE.CreateListingRequest,
+                                {'_1': client.party, '_2': event.cdata['symbol']},
+                                'ListingRequestSuccess', {
+                                    'providerId': event.cdata['instrumentId']
+                                }), exercise(event.cid, 'Archive', {})]
+
+    # Exberry --> Marketplace
+    @client.ledger_created(EXBERRY.FailedInstrumentRequest)
+    def handle_new_listing_failure(event):
+        return [exercise_by_key(MARKETPLACE.CreateListingRequest,
+                                {'_1': client.party, '_2': event.cdata['symbol']},
+                                'ListingRequestFailure', {
+                                    'message': event.cdata['message'],
+                                    'name': event.cdata['name'],
+                                    'code': event.cdata['code']
+                                }), exercise(event.cid, 'Archive', {})]
+
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CancelOrderRequest)
