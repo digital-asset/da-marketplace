@@ -12,6 +12,7 @@ import Daml.Script
 import DA.Next.Set qualified as Set
 import Marketplace.AssetDescription (AssetDescription(..))
 import Marketplace.Issuance (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
+import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..))
 
 
 endToEnd: Script ()
@@ -34,12 +35,14 @@ endToEnd = do
                        version = 0
       underlyingAsset = Asset with id = underlyingId, quantity = 200.0
 
+      -- TODO: refactor into a more composable form and add to contingent-claims lib
       binary : Decimal -> Text -> Id -> Claim O.Observation Date Id 
       binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) Zero (one ccy)
 
   alice <- onboardCustomer common "Alice" usdAsset -- this is weird - we should be first issuing asset
+  bob <- onboardCustomer common "Bob" usdAsset
 
-  -- Originate the option
+  -- Alice originates the option
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid (RequestOrigination 
       AssetDescription with
         asset = optionAsset
@@ -50,12 +53,18 @@ endToEnd = do
     )
   optionDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 
-  -- Issue the option
+  -- Alice issues the option
   createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid 
     RequestCreateIssuance with
       issuanceId = "Myissuance"
       accountId = Id (Set.fromList [alice.customer, common.custodian]) alice.safekeepingAccountId.label 0
       assetId = optionId
       quantity = 1000.0
-  optionIssueCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
+  (_issuanceCid, optionDepositCid) <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
+
+  -- Alice gifts the option to Bob
+  xferReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid $ RequestTransferDeposit with accountId = alice.safekeepingAccountId, receiverAccountId = bob.awayAccountId, depositCid = optionDepositCid
+  optionDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid $ TransferDeposit xferReqCid
+
+  -- The option expires at maturity
   return ()

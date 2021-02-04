@@ -32,6 +32,7 @@ data CustomerContracts = CustomerContracts
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
     issuanceServiceCid: ContractId Issuance.Service
+    custodyServiceCid: ContractId Custody.Service
     allocationAssetSettlementRuleCid : ContractId AssetSettlementRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id

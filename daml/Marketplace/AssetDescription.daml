@@ -10,8 +10,9 @@ type Claims = Claim Date Id
 template AssetDescription
   with
     asset: Asset
+    -- ^ This is the master record for the asset, and has embedded it's unique identifier
     description: Text
-    -- ^ Short description of the asset
+    -- ^ Short description of the asset, mainly for display purposes
     issuer: Party
     -- ^ The counterparty for any @claims@
     claims: Claims
@@ -24,6 +25,8 @@ template AssetDescription
     -- ^ Number of shares/contracts authorized for issuance
     -- issued: Decimal
     -- ^ Number of shares/contracts already issued for trading
+    -- issuePrice: (Decimal, Asset)
+    -- ^ The price & currency of the *initial* offer.
   where
     signatory asset.id.signatories <> safekeepingAccountId.signatories
     key asset.id : Id
