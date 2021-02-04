@@ -7,6 +7,7 @@ import {
     Exchange,
     Registry,
     Custodian,
+    Clearing,
     Notification,
     Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
@@ -108,6 +109,14 @@ export type ExchangeParticipantInfo = ContractInfo<
     ExchangeParticipant.ExchangeParticipant.Key>;
 
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
+
+export type RejectedMarginCalculationInfo = ContractInfo<
+    Clearing.RejectedMarginCalculation,
+    Clearing.RejectedMarginCalculation.Key>;
+
+export type RejectedMarkToMarketCalculation = ContractInfo<
+    Clearing.RejectedMarkToMarketCalculation,
+    Clearing.RejectedMarkToMarketCalculation.Key>;
 
 export type RegisteredCustodianInfo = ContractInfo<
     Registry.RegisteredCustodian,

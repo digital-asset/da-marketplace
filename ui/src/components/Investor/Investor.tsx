@@ -25,6 +25,7 @@ import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
 
+import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
@@ -42,6 +43,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
 
     const notifications = [
+        ...useCCPCustomerNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
         ...useDismissibleNotifications(),
