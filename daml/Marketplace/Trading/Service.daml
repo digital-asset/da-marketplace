@@ -34,7 +34,6 @@ template Service
             providerOrderId = None
             executions = []
             remainingQuantity = details.asset.quantity
-            orderDetails = details
 
           depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
           createOrderRequestCid <- create CreateOrderRequest with ..

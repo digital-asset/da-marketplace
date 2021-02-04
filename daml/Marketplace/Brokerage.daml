@@ -1,0 +1,246 @@
+module Marketplace.Brokerage where
+
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_Credit(..), AssetSettlement_Debit(..), AssetSettlement_Transfer(..))
+import DA.Finance.Types (Id, Account(..), Asset)
+import DA.Next.Set (Set)
+import Marketplace.Trading.Order qualified as Order
+import Marketplace.Trading.Service qualified as TradingService
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
+        with
+          accountId : Id
+          observers : Set Party
+          ctrls : Set Party
+        do
+          -- TODO: Check signatories in id - do we want to allow flexible trust models?
+          create OpenAccountRequest with ..
+
+      nonconsuming RequestCloseAccount : ContractId CloseAccountRequest
+        with
+          accountId : Id
+        do
+          create CloseAccountRequest with ..
+
+      nonconsuming RequestCreditAccount : ContractId CreditAccountRequest
+        with
+          accountId : Id
+          asset : Asset
+        do
+          create CreditAccountRequest with ..
+
+      nonconsuming RequestDebitAccount : ContractId DebitAccountRequest
+        with
+          accountId : Id
+          depositCid : ContractId AssetDeposit
+        do
+          create DebitAccountRequest with ..
+
+      nonconsuming RequestTransferDeposit : ContractId TransferDepositRequest
+        with
+          accountId : Id
+          receiverAccountId : Id
+          depositCid : ContractId AssetDeposit
+        do
+          create TransferDepositRequest with ..
+
+      nonconsuming RequestSubmitOrder : ContractId SubmitOrderRequest
+        with
+          details : Order.Details
+          depositCid : ContractId AssetDeposit
+          tradingServiceCid : ContractId TradingService.T
+        do
+          -- Validate deposit - ensure it is allocated to the broker and that it matches the instrument being traded
+          -- Validate order
+          create SubmitOrderRequest with ..
+
+      nonconsuming RequestCancelOrder : ContractId CancelOrderRequest
+        with
+          orderCid : ContractId Order.T
+          tradingServiceCid : ContractId TradingService.T
+        do
+          create CancelOrderRequest with ..
+
+    controller provider can
+      nonconsuming OpenAccount : ContractId AssetSettlementRule
+        with
+          openAccountRequestCid : ContractId OpenAccountRequest
+        do
+          OpenAccountRequest{..} <- fetch openAccountRequestCid
+          archive openAccountRequestCid
+
+          let account = Account with owner = customer; id = accountId, ..
+          create AssetSettlementRule with ..
+
+      nonconsuming CloseAccount : ()
+        with
+          closeAccountRequestCid : ContractId CloseAccountRequest
+        do
+          closeAccountRequest <- fetch closeAccountRequestCid
+          archive closeAccountRequestCid
+          (assetSettlementRuleCid, _) <- fetchByKey @AssetSettlementRule closeAccountRequest.accountId
+          archive assetSettlementRuleCid
+
+      nonconsuming CreditAccount : ContractId AssetDeposit
+        with
+          creditAccountRequestCid : ContractId CreditAccountRequest
+        do
+          CreditAccountRequest{..} <- fetch creditAccountRequestCid
+          archive creditAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+
+      nonconsuming DebitAccount : Asset
+        with
+          debitAccountRequestCid : ContractId DebitAccountRequest
+        do
+          DebitAccountRequest{..} <- fetch debitAccountRequestCid
+          archive debitAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
+
+      nonconsuming TransferDeposit : ContractId AssetDeposit
+        with
+          transferDepositRequestCid : ContractId TransferDepositRequest
+        do
+          TransferDepositRequest{..} <- fetch transferDepositRequestCid
+          archive transferDepositRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
+
+      nonconsuming SubmitOrder : (ContractId Order.T, ContractId TradingService.CreateOrderRequest, ContractId AssetDeposit)
+        with
+          submitOrderRequestCid : ContractId SubmitOrderRequest
+        do
+          SubmitOrderRequest{..} <- fetch submitOrderRequestCid
+          archive submitOrderRequestCid
+          exercise tradingServiceCid TradingService.RequestCreateOrder with ..
+
+      nonconsuming CancelOrder : (ContractId Order.T, ContractId TradingService.CancelOrderRequest)
+        with
+          cancelOrderRequestCid : ContractId CancelOrderRequest
+        do
+          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          archive cancelOrderRequestCid
+          exercise tradingServiceCid TradingService.RequestCancelOrder with ..
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    customer : Party
+    provider : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, customer
+
+    controller provider can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+template OpenAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    observers : Set Party
+    ctrls : Set Party
+  where
+    signatory operator, provider, customer
+
+template CloseAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+  where
+    signatory operator, provider, customer
+
+template CreditAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    asset : Asset
+  where
+    signatory operator, provider, customer
+
+template DebitAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, provider, customer
+
+template TransferDepositRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    receiverAccountId : Id
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, provider, customer
+
+template SubmitOrderRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    details : Order.Details
+    depositCid : ContractId AssetDeposit
+    tradingServiceCid : ContractId TradingService.T
+  where
+    signatory operator, provider, customer
+
+template CancelOrderRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    orderCid : ContractId Order.T
+    tradingServiceCid : ContractId TradingService.T
+  where
+    signatory operator, provider, customer
