@@ -47,6 +47,20 @@ template CCPCustomerInvitation
             receiver = ccp, text = "CCP customer invitation rejected."
           return ()
 
+rejectMarginCalculation : ContractId MarginCalculation -> CCPCustomer -> Text -> Update (ContractId CCPCustomer)
+rejectMarginCalculation mcCid ccpCustomer reason = do
+  exercise mcCid MarginCalculation_Reject with note = reason
+  create ccpCustomer with inGoodStanding = False
+
+resolveMarginCalculation
+  : ContractId MarginCalculation
+  -> CCPCustomer
+  -> [ContractId AssetDeposit]
+  -> Text
+  -> Update (ContractId CCPCustomer)
+resolveMarginCalculation mcCid ccpCustomer newMarginCids reason = do
+  exercise mcCid MarginCalculation_Resolve with note = reason
+  create ccpCustomer with marginDepositCids = newMarginCids, inGoodStanding = True
 
 template CCPCustomer
   with
@@ -83,23 +97,18 @@ template CCPCustomer
               create this
             amount -> do
               if amount > 0.0
-              then do
+              then do -- transfer to margin account from clearing account
                 clearingDeposit <- fetch clearingDepositCid
                 if clearingDeposit.asset.quantity <= amount
-                then do
-                  exercise calculationCid MarginCalculation_Reject with note = "Not enough currency in Clearing Account"
-                  create this with inGoodStanding = False
+                then rejectMarginCalculation calculationCid this "Not enough in clearing account"
                 else do
                   [diffDepositCid, remaingClearingCid] <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case marginDepositCids of
-                    [] -> do
-                      exercise calculationCid MarginCalculation_Resolve with note = "Margin call successful"
-                      create this with marginDepositCids = [diffDepositCid]
+                    [] -> resolveMarginCalculation calculationCid this [diffDepositCid] "Margin call successful"
                     xs -> do
-                      exercise calculationCid MarginCalculation_Resolve with note = "Margin call successful"
                       newMarginDepositCid <- exercise (head xs) AssetDeposit_Merge with depositCids = diffDepositCid :: tail xs
-                      create this with marginDepositCids = [newMarginDepositCid]
-              else do
+                      resolveMarginCalculation calculationCid this [newMarginDepositCid] "Margin call successful"
+              else do -- transfer from margin account to clearing account
                 assertMsg "no margin account found" $ not $ null marginDepositCids
                 marginDepositCid <- exercise (head marginDepositCids) AssetDeposit_Merge
                     with depositCids = tail marginDepositCids
@@ -111,8 +120,7 @@ template CCPCustomer
                 [diffDepositCid, remainingMarginDepositCid] <- exercise marginDepositCid AssetDeposit_Split
                     with quantities = [amount]
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
-                exercise calculationCid MarginCalculation_Resolve { note = "good job" }
-                create this with marginDepositCids = [remainingMarginDepositCid]
+                resolveMarginCalculation calculationCid this [remainingMarginDepositCid] "Margin call successful"
 
       CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
         with
@@ -125,6 +133,7 @@ template CCPCustomer
               with depositCids = tail clearingDepositCids
 
           clearingDeposit <- fetch clearingDepositCid
+          assertMsg "amount to transfer exceeds amount in clearing account" $ amount < clearingDeposit.asset.quantity
           [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
               with quantities = [amount]
 
@@ -145,7 +154,7 @@ template CCPCustomer
           amount : Decimal
           optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
-          assertMsg ("depositCids must not be empty in TransferToClearingAccount") $ not $ null depositCids
+          assertMsg ("depositCids must not be empty") $ not $ null depositCids
           aggregateQty <- getDepositQuantities depositCids
           assertMsg ("amount should be less than or equal to total deposit amount") $ amount <= aggregateQty
 
@@ -153,8 +162,8 @@ template CCPCustomer
           deposit <- fetch mergedCid
 
           newDepositCid <- if amount < deposit.asset.quantity
-                  then headNote "transferToClearing" <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
-                  else return mergedCid
+                           then headNote "transferToClearing" <$> exercise mergedCid AssetDeposit_Split with quantities = [ amount ]
+                           else return mergedCid
           newDeposit <- fetch newDepositCid
 
           let receiverAccountId = Id with

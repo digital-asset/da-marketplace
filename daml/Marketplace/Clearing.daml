@@ -31,7 +31,7 @@ template MarginCalculation
         with
           note : Text
         do
-          create RejectedMarginCalculation with ..
+          create RejectedMarginCalculation with calculation = this, ..
 
 
 template FulfilledMarginCalculation
@@ -55,23 +55,19 @@ template RejectedMarginCalculation
   with
     ccp : Party
     customer : Party
-    accountId : Id
-    currency : Text
-    targetAmount : Decimal
-    calculationTime : Time
-    calculationId : Text
+    calculation : MarginCalculation
     note : Text
   where
     signatory ccp
     observer customer
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
     controller ccp can
       RejectedMarginCalculation_Retry : ContractId MarginCalculation
         do
-          create MarginCalculation with ..
+          create calculation
 
 
 template MarkToMarketCalculation
@@ -91,12 +87,35 @@ template MarkToMarketCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
+    controller customer can
       MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
         with
           note : Text
         do
           create FulfilledMarkToMarketCalculation {..}
+
+      MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
+        with
+          note : Text
+        do
+          create RejectedMarkToMarketCalculation with calculation = this, ..
+
+
+template RejectedMarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    calculation : MarkToMarketCalculation
+    note : Text
+  where
+    signatory ccp
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+    controller customer can
+      RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
+        do
+          create calculation
 
 
 template FulfilledMarkToMarketCalculation

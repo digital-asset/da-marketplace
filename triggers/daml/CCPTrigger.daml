@@ -126,8 +126,8 @@ handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
       debug ("resolving outgoing mtm calculation: " <> show (snd mtm))
       CCPState { operatorParty } <- get
       dedupExerciseByKey @CCPCustomer (party,operatorParty,(snd mtm).customer) CCPCustomer_TransferToClearingAccount
-          with depositCids = map fst toUse, amount
-      dedupExercise (fst mtm) MarkToMarketCalculation_Resolve with note = "resolved"
+          with depositCids = map fst toUse, optMarkToMarketCalc = Some (fst mtm), amount
+      -- dedupExercise (fst mtm) MarkToMarketCalculation_Resolve with note = "resolved"
       handleOutgoingMTMCalculations party remaining mtms
   where
     amount = (snd mtm).mtmAmount

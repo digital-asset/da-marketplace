@@ -38,7 +38,7 @@ handleExchangeRule party = do
   time <- getTime
 
   fairValueIntervals <- query @FairValueInterval
-  forA_ fairValueIntervals handleFairValue
+  forA_ fairValueIntervals handleFairValueInterval
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
