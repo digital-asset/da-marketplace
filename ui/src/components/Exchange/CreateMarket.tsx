@@ -36,8 +36,8 @@ const CreateMarket: React.FC<{}> = () => {
             throw new Error('Tokens not selected');
         }
 
-        if (minQuantity > maxQuantity) {
-            throw new Error('min quantity is greater than max quantity');
+        if (+minQuantity > +maxQuantity) {
+            throw new Error('Minimum quantity is greater than maximum quantity.');
         }
 
         const key = wrapDamlTuple([operator, exchange]);
