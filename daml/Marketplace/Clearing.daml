@@ -1,5 +1,8 @@
 module Marketplace.Clearing where
 
+import Marketplace.Notification
+import Marketplace.Utils
+
 import DA.Finance.Types
 
 
@@ -25,6 +28,9 @@ template MarginCalculation
         with
           note : Text
         do
+          create DismissibleNotification with
+            sender = ccp, receiver = customer
+            senderRole = Some CCPRole, text = note
           create FulfilledMarginCalculation with ..
 
       MarginCalculation_Reject : ContractId RejectedMarginCalculation
@@ -69,6 +75,11 @@ template RejectedMarginCalculation
         do
           create calculation
 
+    controller customer can
+      RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
+        do
+          create calculation
+
 
 template MarkToMarketCalculation
   with
@@ -92,6 +103,9 @@ template MarkToMarketCalculation
         with
           note : Text
         do
+          create DismissibleNotification with
+            sender = ccp, receiver = customer
+            senderRole = Some CCPRole, text = note
           create FulfilledMarkToMarketCalculation {..}
 
       MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
