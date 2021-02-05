@@ -2,6 +2,7 @@ import React from 'react'
 
 import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
@@ -26,11 +27,24 @@ const Wallet = (props: {
 }) => {
     const history = useHistory()
     const { path, url } = useRouteMatch();
-    const { brokerMap, custodianMap, exchangeMap } = useRegistryLookup();
+    const { brokerMap, custodianMap, exchangeMap, ccpMap } = useRegistryLookup();
 
     const { sideNav, onLogout, role } = props
 
     const allDeposits = useContractQuery(AssetDeposit);
+
+    const ccpCustomers = useContractQuery(CCPCustomer);
+    const marginDepositsCids = ccpCustomers
+        .flatMap(ccpCustomer => {
+            return ccpCustomer.contractData.marginDepositCids
+        });
+
+    const marginDeposits = allDeposits
+        .filter(deposit => marginDepositsCids.includes(deposit.contractId));
+
+    const nonMarginDeposits = allDeposits
+        .filter(deposit => !marginDepositsCids.includes(deposit.contractId));
+
 
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
@@ -54,6 +68,16 @@ const Wallet = (props: {
             }
         });
 
+    const ccpProviders = useContractQuery(CCPCustomer)
+        .map(ccpCustomer => {
+            const party = ccpCustomer.contractData.ccp
+            const name = ccpMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | CCP`
+            }
+        });
+
     const allProviders = [
         ...allCustodianRelationships.map(relationship => {
             const party = relationship.contractData.custodian;
@@ -65,13 +89,14 @@ const Wallet = (props: {
         }),
         ...exchangeProviders,
         ...brokerProviders,
+        ...ccpProviders
     ];
 
     const topMenuButtons: ITopMenuButtonInfo[] = role === MarketRole.InvestorRole ?
         [{
             label: 'Withdraw',
             onClick: () => history.push(`${url}/withdraw`),
-            disabled: allDeposits.length === 0
+            disabled: nonMarginDeposits.length === 0
         },
         {
             label: 'Deposit',
@@ -91,7 +116,7 @@ const Wallet = (props: {
                     <PageSection>
                         <div className='wallet'>
                             <Holdings
-                                deposits={allDeposits}
+                                deposits={nonMarginDeposits}
                                 providers={allProviders}
                                 role={MarketRole.InvestorRole}/>
                         </div>
@@ -102,7 +127,7 @@ const Wallet = (props: {
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    deposits={allDeposits}
+                    deposits={nonMarginDeposits}
                     transactionType='Withdraw'/>
             </Route>
             <Route path={`${path}/deposit`}>

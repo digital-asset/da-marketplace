@@ -183,12 +183,14 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     customer = alice
     accountId = usdTokenId
     currency = "USD"
-    targetAmount = 4999.0
+    targetAmount = 10000.0
     calculationTime = time
     calculationId = "2134820934"
 
   awaitOrDo' wt 0.25 "performing margin fill"
-    $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
+    $ do
+      debug "alice cid"
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
         with clearingDepositCids = [fromSomeNote "alice cid" $ optAliceDepositCid], targetAmount = 4999.0, calculationCid = mcCid
 
   mcCid <- ccp `submit` createCmd MarginCalculation with
