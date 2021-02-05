@@ -42,11 +42,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investor = useParty();
     const ledger = useLedger();
 
+    const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
         ...useCCPCustomerNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
-        ...useDismissibleNotifications(),
+        ...dismissibleNotifications
     ];
 
     const registeredInvestor = useContractQuery(RegisteredInvestor);
