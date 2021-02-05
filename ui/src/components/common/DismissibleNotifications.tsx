@@ -70,6 +70,9 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
         case MarketRole.CustodianRole:
             name = <>Custodian <b>@{lookup.custodianMap.get(sender)?.name || sender}</b></>;
             break;
+        case MarketRole.CCPRole:
+            name = <>CCP <b>@{lookup.ccpMap.get(sender)?.name || sender}</b></>;
+            break;
         default:
             name = <b>@{sender}</b>;
     }

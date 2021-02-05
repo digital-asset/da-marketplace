@@ -141,12 +141,12 @@ doSetupAccounts wt lp@(LedgerParties operator public custodian exchange issuer a
 
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
-  let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
-
-  aliceAccts <- setupAccount alice
-  bobAccts <- setupAccount bob
-  carlAccts <- setupAccount carl
-  danaAccts <- setupAccount dana
+  -- let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
+  --
+  -- aliceAccts <- setupAccount alice
+  -- bobAccts <- setupAccount bob
+  -- carlAccts <- setupAccount carl
+  -- danaAccts <- setupAccount dana
 
   return ()
 
@@ -183,7 +183,7 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     customer = alice
     accountId = usdTokenId
     currency = "USD"
-    targetAmount = 10000.0
+    targetAmount = 1200.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -202,9 +202,11 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     calculationTime = time
     calculationId = "2134820934"
 
-  -- awaitOrDo' wt 0.25 "performing margin fill"
-  --   $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,bob) CCPCustomer_PerformMarginFill
-  --        with clearingDepositCids = [fromSomeNote "bob cid" $ optBobDepositCid], targetAmount = 1200.0, calculationCid = mcCid
+  awaitOrDo' wt 0.25 "performing margin fill"
+    $ do
+      debug "bob cid"
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,bob) CCPCustomer_PerformMarginFill
+         with clearingDepositCids = [fromSomeNote "bob cid" $ optBobDepositCid], targetAmount = 1200.0, calculationCid = mcCid
 
   ccp `submit` createCmd MarkToMarketCalculation with
     ccp
@@ -403,7 +405,7 @@ handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer 
 
   -- onboard ccp
   ccpInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCCP with ccp = ccp, ..
-  ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "CCP", ..
+  ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "Baymarkets Clearinghouse", ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- issuer `submit` exerciseByKeyCmd @Issuer (operator,issuer) Issuer_RequestCustodianRelationship with ..

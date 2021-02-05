@@ -8,21 +8,36 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
+import { useCCPCustomerNotifications } from '../Investor/CCPCustomerNotifications'
 import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo } from './utils'
 import { useOperator } from './common'
 import FormErrorHandled from './FormErrorHandled'
 
 import { AppError } from './errorTypes'
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
+import {useDismissibleNotifications} from './DismissibleNotifications'
+import {useContractQuery} from '../../websocket/queryStream'
+import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
 type Props = {
     deposits: DepositInfo[];
+    clearingDeposits: DepositInfo[];
+    marginDeposits: DepositInfo[];
     providers: IPartyInfo[];
     role: MarketRole;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
+const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits, providers, role }) => {
+    const marginDepositsGrouped = groupDepositsByProvider(marginDeposits);
+    const clearingDepositsGrouped = groupDepositsByProvider(clearingDeposits);
     const depositsGrouped = groupDepositsByProvider(deposits);
+    const ccpCustomerNotifications = useCCPCustomerNotifications();
+    const ccpProviders = useContractQuery(CCPCustomer).map(c => {return c.contractData.ccp});
+    const ccpDismissibleNotifications = useDismissibleNotifications()
+        .filter(dn => {
+            console.log(dn);
+            return ccpProviders.includes(dn.props.notification.contractData.sender);
+        });
 
     const assetSections = Object.entries(depositsGrouped)
         .map(([providerLabel, depositsForProvider]) => {
@@ -51,11 +66,92 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             )
         })
 
+    const clearingSections = Object.entries(clearingDepositsGrouped)
+        .map(([providerLabel, depositsForProvider]) => {
+            const assetDeposits = groupDepositsByAsset(depositsForProvider);
+            const { label, party }  = getPartyLabel(providerLabel, providers)
+
+            return (
+                <div className='asset-sections' key={providerLabel}>
+                    <div className='provider-info'>
+                        <p className='bold'>
+                            {label}
+                        </p>
+                        <p className='p2'>
+                            {party}
+                        </p>
+                     </div>
+                    { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
+                        <DepositRow
+                            key={assetLabel}
+                            assetLabel={assetLabel}
+                            role={role}
+                            deposits={deposits}
+                            providers={providers}/>
+                    )) }
+                </div>
+            )
+        })
+
+    const marginSections = Object.entries(marginDepositsGrouped)
+        .map(([providerLabel, depositsForProvider]) => {
+            const assetDeposits = groupDepositsByAsset(depositsForProvider);
+            const { label, party }  = getPartyLabel(providerLabel, providers)
+
+            return (
+                <div className='asset-sections' key={providerLabel}>
+                    <div className='provider-info'>
+                        <p className='bold'>
+                            {label}
+                        </p>
+                        <p className='p2'>
+                            {party}
+                        </p>
+                     </div>
+                    { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
+                        <MarginRow
+                            key={assetLabel}
+                            assetLabel={assetLabel}
+                            deposits={deposits}/>
+                    )) }
+                </div>
+            )
+        })
+
     return (
         <div className='holdings'>
             <Header as='h2'>Holdings</Header>
             { assetSections.length === 0 ?
                 <i>none</i> : assetSections }
+            <Header as='h2'>Clearing Accounts</Header>
+            { ccpCustomerNotifications }
+            { ccpDismissibleNotifications }
+            { clearingSections.length === 0 ?
+                <i>none</i> : clearingSections }
+            <Header as='h3'>Margin Account</Header>
+            { marginSections.length === 0 ?
+                <i>none</i> : marginSections }
+        </div>
+    )
+}
+
+type MarginRowProps = {
+    assetLabel: string;
+    deposits: DepositInfo[];
+}
+
+const MarginRow: React.FC<MarginRowProps> = ({
+    assetLabel,
+    deposits,
+}) => {
+    const totalQty = sumDepositArray(deposits);
+
+    return (
+        <div className='deposit-row'>
+            <div className='deposit-info'>
+                <Header as='h3' className='bold'>{assetLabel}</Header>
+                <Header as='h3' >{totalQty}</Header>
+            </div>
         </div>
     )
 }

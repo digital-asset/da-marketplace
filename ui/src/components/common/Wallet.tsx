@@ -45,6 +45,13 @@ const Wallet = (props: {
     const nonMarginDeposits = allDeposits
         .filter(deposit => !marginDepositsCids.includes(deposit.contractId));
 
+    const clearingDeposits = nonMarginDeposits
+        .filter(deposit => {
+            return ccpCustomers.find(c =>{return c.contractData.ccp === deposit.contractData.account.provider})
+        });
+
+    const allOtherDeposits = nonMarginDeposits
+        .filter(deposit => !clearingDeposits.includes(deposit));
 
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
@@ -96,7 +103,7 @@ const Wallet = (props: {
         [{
             label: 'Withdraw',
             onClick: () => history.push(`${url}/withdraw`),
-            disabled: nonMarginDeposits.length === 0
+            disabled: allOtherDeposits.length === 0
         },
         {
             label: 'Deposit',
@@ -116,9 +123,11 @@ const Wallet = (props: {
                     <PageSection>
                         <div className='wallet'>
                             <Holdings
-                                deposits={nonMarginDeposits}
+                                deposits={allOtherDeposits}
                                 providers={allProviders}
-                                role={MarketRole.InvestorRole}/>
+                                role={MarketRole.InvestorRole}
+                                clearingDeposits={clearingDeposits}
+                                marginDeposits={marginDeposits}/>
                         </div>
                     </PageSection>
                 </Page>
