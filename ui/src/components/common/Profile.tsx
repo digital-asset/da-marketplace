@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react'
-import { Button, Form, Header } from 'semantic-ui-react'
-
-import { NavLink } from 'react-router-dom'
-
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-
-import { ArrowRightIcon, EditIcon } from '../../icons/Icons';
-
+import { NavLink, useHistory } from 'react-router-dom'
+import { Button, Form, Header, Loader } from 'semantic-ui-react'
 import classNames from 'classnames'
 
-import { StringKeyedObject } from './utils'
+import { useLedger, useParty } from '@daml/react'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+
+import { ArrowRightIcon } from '../../icons/Icons'
+
+import { roleLabel, roleRoute, StringKeyedObject } from './utils'
+import FormErrorHandled from './FormErrorHandled'
+import { useOperator } from './common'
+import { wrapDamlTuple } from './damlTypes'
 
 type FieldType = 'text';
 
@@ -47,18 +50,80 @@ const ProfileField: React.FC<FieldProps> = ({ field, setField, inviteAcceptTile 
     )
 }
 
+const RoleSelectForm: React.FC<{role: MarketRole}> = ({role}) => {
+    const [ selectedRole, setSelectedRole ] = useState<MarketRole>(role);
+
+    const history = useHistory();
+    const ledger = useLedger();
+    const user = useParty();
+    const operator = useOperator();
+
+    const options = MarketRole.keys.map(role => ({
+        key: role,
+        value: role,
+        text: roleLabel(role)
+    }))
+
+    const onSubmit = async () => {
+        if (selectedRole === role) {
+            return;
+        }
+
+        const choice = User.User_RequestRoleChange;
+        const key = wrapDamlTuple([operator, user]);
+        const args = { newRole: selectedRole };
+
+        await ledger.exerciseByKey(choice, key, args);
+
+        history.push(roleRoute(selectedRole));
+    }
+
+    const onChange = async (event: React.SyntheticEvent, result: any) => {
+        if (typeof result.value === 'string') {
+            setSelectedRole(result.value);
+        }
+    }
+
+    return (
+        <FormErrorHandled onSubmit={onSubmit}>
+            <Form.Select
+                required
+                label='Role'
+                options={options}
+                onChange={onChange}
+                value={selectedRole}/>
+            <Button
+                content='Save'
+                className='ghost'
+                disabled={!selectedRole}
+                type='submit'/>
+
+        </FormErrorHandled>
+    )
+}
+
 type ProfileProps = {
     content: string;
-    role: MarketRole;
     defaultProfile: Profile;
     inviteAcceptTile?: boolean;
+    receivedInvitation?: boolean;
+    role: MarketRole;
     profileLinks?: IProfileLinkItem[];
     submitProfile?: (profile: Profile) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfile, inviteAcceptTile, role, profileLinks }) => {
+const Profile: React.FC<ProfileProps> = ({
+    content,
+    defaultProfile,
+    inviteAcceptTile,
+    receivedInvitation,
+    role,
+    profileLinks,
+    submitProfile
+}) => {
     const [ profile, setProfile ] = useState<Profile>(defaultProfile);
-    const [ editing, setEditing ] = useState<boolean>(false)
+    const [ editing, setEditing ] = useState<boolean>(false);
+    const [ roleSelect, setRoleSelect ] = useState<boolean>(false);
 
     useEffect(() => {
         setProfile(defaultProfile);
@@ -74,17 +139,26 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
 
     const disableButton = Object.keys(profile).reduce((accumulator, key) => {
         return accumulator || !profile[key].value;
-    }, false);
+    }, false) || (inviteAcceptTile && !receivedInvitation);
 
     const profileForm =
         <Form>
             { fields }
-            <Button
-                className={classNames('ghost', {'dark': inviteAcceptTile})}
-                content={content}
-                disabled={disableButton}
-                onClick={() => handleSubmitProfile(profile)}
-                type='submit'/>
+            <div className='button-row'>
+                <Button
+                    className={classNames('ghost', {'dark': inviteAcceptTile})}
+                    content={content}
+                    disabled={disableButton}
+                    onClick={() => handleSubmitProfile(profile)}
+                    type='submit'/>
+
+                { inviteAcceptTile && !receivedInvitation &&
+                    <div className='invite-indicator'>
+                        <p className='p2 dark'>Waiting for Operator invitation...</p>
+                        <Loader active indeterminate size='small'/>
+                    </div>
+                }
+            </div>
         </Form>
 
     const profileValues =
@@ -104,13 +178,35 @@ const Profile: React.FC<ProfileProps> = ({ content, defaultProfile, submitProfil
             })}
         </div>
 
+    const actions = <div className='profile-actions'>
+        <a className='a2 bold edit-profile' onClick={() => setEditing(true)}>Edit Profile</a>
+        <p>or</p>
+        <a className='a2 bold switch-roles' onClick={() => setRoleSelect(true)}>Add a Role</a>
+    </div>
+
+    const getTileContent = () => {
+        if (inviteAcceptTile) {
+            return profileForm;
+        } else {
+            if (editing) {
+                return profileForm;
+            }
+
+            if (roleSelect) {
+                return <RoleSelectForm role={role}/>;
+            }
+
+            return <>
+                { profileValues }
+                { actions }
+            </>
+        }
+    }
+
     return (
         <div className='profile'>
             <div className={classNames('profile-form', {'landing-page': !inviteAcceptTile})}>
-                { inviteAcceptTile ? profileForm : editing? profileForm : profileValues }
-                { !inviteAcceptTile && !editing &&
-                    <a className='a2 bold edit-profile' onClick={() => setEditing(true)}> Edit Profile </a>
-                }
+                { getTileContent() }
             </div>
             { !inviteAcceptTile && profileLinks?.map(item => <ProfileLink item={item}/>) }
         </div>

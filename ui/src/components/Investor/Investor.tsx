@@ -48,6 +48,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     ];
 
     const registeredInvestor = useContractQuery(RegisteredInvestor);
+    const invitation = useContractQuery(InvestorInvitation);
     const allExchanges = useContractQuery(Exchange);
     const allDeposits = useContractQuery(AssetDeposit);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
@@ -135,6 +136,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <InvestorProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
                 role={MarketRole.InvestorRole}
                 inviteAcceptTile
                 defaultProfile={profile}

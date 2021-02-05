@@ -11,6 +11,45 @@ import Marketplace.Utils
 
 import DA.Action
 
+onboardRole : MarketRole -> Party -> Party -> Update ()
+onboardRole role operator user = do
+  let userKey = (operator, user)
+  case role of
+    CustodianRole -> do
+      optCustodianInvitation <- lookupByKey @CustodianInvitation userKey
+      optCustodian <- lookupByKey @Custodian userKey
+      case (optCustodianInvitation, optCustodian) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardCustodian with custodian = user
+        (Some custodianInvitationCid, Some custodianCid) -> archive custodianInvitationCid
+        _ -> return ()
+    IssuerRole -> do
+      optIssuerInvitation <- lookupByKey @IssuerInvitation userKey
+      optIssuer <- lookupByKey @Issuer userKey
+      case (optIssuerInvitation, optIssuer) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = user
+        (Some issuerInvitationCid, Some issuerCid) -> archive issuerInvitationCid
+        _ -> return ()
+    ExchangeRole -> do
+      optExchangeInvitation <- lookupByKey @ExchangeInvitation userKey
+      optExchange <- lookupByKey @Exchange userKey
+      case (optExchangeInvitation, optExchange) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardExchange with exchange = user
+        (Some exchangeInvitationCid, Some exchangeCid) -> archive exchangeInvitationCid
+        _ -> return ()
+    InvestorRole -> do
+      optInvestorInvitation <- lookupByKey @InvestorInvitation userKey
+      optInvestor <- lookupByKey @Investor userKey
+      case (optInvestorInvitation, optInvestor) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardInvestor with investor = user
+        (Some investorInvitationCid, Some investorCid) -> archive investorInvitationCid
+        _ -> return ()
+    BrokerRole -> do
+      optBrokerInvitation <- lookupByKey @BrokerInvitation userKey
+      optBroker <- lookupByKey @Broker userKey
+      case (optBrokerInvitation, optBroker) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
+        (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid
+        _ -> return ()
 
 template UserSession
   with
@@ -23,47 +62,50 @@ template UserSession
     controller operator can
       UserSession_Ack : ()
         do
-          let userKey = (operator, user)
-          case role of
-            CustodianRole -> do
-              optCustodianInvitation <- lookupByKey @CustodianInvitation userKey
-              optCustodian <- lookupByKey @Custodian userKey
-              case (optCustodianInvitation, optCustodian) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardCustodian with custodian = user
-                (Some custodianInvitationCid, Some custodianCid) -> archive custodianInvitationCid
-                _ -> return ()
-            IssuerRole -> do
-              optIssuerInvitation <- lookupByKey @IssuerInvitation userKey
-              optIssuer <- lookupByKey @Issuer userKey
-              case (optIssuerInvitation, optIssuer) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardIssuer with issuer = user
-                (Some issuerInvitationCid, Some issuerCid) -> archive issuerInvitationCid
-                _ -> return ()
-            ExchangeRole -> do
-              optExchangeInvitation <- lookupByKey @ExchangeInvitation userKey
-              optExchange <- lookupByKey @Exchange userKey
-              case (optExchangeInvitation, optExchange) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardExchange with exchange = user
-                (Some exchangeInvitationCid, Some exchangeCid) -> archive exchangeInvitationCid
-                _ -> return ()
-            InvestorRole -> do
-              optInvestorInvitation <- lookupByKey @InvestorInvitation userKey
-              optInvestor <- lookupByKey @Investor userKey
-              case (optInvestorInvitation, optInvestor) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardInvestor with investor = user
-                (Some investorInvitationCid, Some investorCid) -> archive investorInvitationCid
-                _ -> return ()
-            BrokerRole -> do
-              optBrokerInvitation <- lookupByKey @BrokerInvitation userKey
-              optBroker <- lookupByKey @Broker userKey
-              case (optBrokerInvitation, optBroker) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
-                (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid
-                _ -> return ()
-            CCPRole -> do
-              optCCPInvitation <- lookupByKey @CCPInvitation userKey
-              optCCP <- lookupByKey @CCP userKey
-              case (optCCPInvitation, optCCP) of
-                (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardCCP with ccp = user
-                (Some ccpInvitationCid, Some ccpCid) -> archive ccpInvitationCid
-                _ -> return ()
+          create User with currentRole = role, ..
+          onboardRole role operator user
+
+template User
+  with
+    operator : Party
+    user : Party
+    currentRole : MarketRole
+  where
+    signatory operator
+
+    key (operator, user) : (Party, Party)
+    maintainer key._1
+
+    controller user can
+      nonconsuming User_RequestRoleChange : ContractId UserRoleChangeRequest
+        with
+          newRole : MarketRole
+        do
+          create UserRoleChangeRequest with ..
+
+    controller operator can
+      User_ChangeRole : ContractId User
+        with
+          newRole : MarketRole
+        do
+          create this with currentRole = newRole
+
+      User_Offboard : ()
+        do return ()
+
+template UserRoleChangeRequest
+  with
+    operator : Party
+    user : Party
+    newRole : MarketRole
+  where
+    signatory user
+
+    controller operator can
+      UserRoleChangeRequest_Approve : ContractId User
+        do
+          onboardRole newRole operator user
+          exerciseByKey @User (operator, user) User_ChangeRole with newRole
+
+      UserRoleChangeRequest_Reject : ()
+        do return ()
