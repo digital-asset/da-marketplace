@@ -3,7 +3,7 @@ module Marketplace.Utils where
 import DA.Finance.Asset
 import DA.Finance.Types
 
-import DA.List (null,head,tail)
+import DA.List (head)
 import DA.Next.Set hiding (null)
 import DA.Optional
 import DA.Text
@@ -50,6 +50,7 @@ getDepositQuantities depositCids = do
       d <- fetch dcid
       return d.asset.quantity)
 
+
 -- |Version of AssetDeposit_Split that works on only decimals
 splitDecimals : Decimal -> [Decimal] -> [Decimal]
 splitDecimals qty quantities = quantitiesAll
@@ -61,6 +62,7 @@ splitDecimals qty quantities = quantitiesAll
                 else quantities ++ [qty - quantitySum]
 
 
+-- |More error friendly version of 'head'
 headNote : Text -> [a] -> a
 headNote msg [] = error ("headNote: " <> msg)
 headNote _ xs   = head xs
