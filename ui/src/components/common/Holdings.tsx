@@ -100,14 +100,6 @@ const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits,
 
             return (
                 <div className='asset-sections' key={providerLabel}>
-                    <div className='provider-info'>
-                        <p className='bold'>
-                            {label}
-                        </p>
-                        <p className='p2'>
-                            {party}
-                        </p>
-                     </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <MarginRow
                             key={assetLabel}
