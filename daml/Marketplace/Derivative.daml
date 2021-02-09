@@ -16,6 +16,7 @@ data ExerciseStyle = European | American | Bermudan
 data PutOrCall = Call | Put
   deriving (Eq, Show)
 
+
 data OptionData = OptionData
   with
     putCall : PutOrCall  -- put or call option
@@ -61,6 +62,7 @@ template Derivative
         with newObservers : Set Party
         do create this with observers = newObservers
 
+
 template FairValueCalculationRequest
   with
     operator : Party
@@ -73,6 +75,7 @@ template FairValueCalculationRequest
     controller exchange can
       FairValueCalculationRequest_Ack : ()
         do return ()
+
 
 template ManualFairValueCalculation
   with
@@ -90,6 +93,7 @@ template ManualFairValueCalculation
         do
           timestamp <- getTime
           create FairValue with observers = fromList [], ..
+
 
 template FairValue
   with
