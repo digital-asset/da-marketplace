@@ -6,7 +6,7 @@ import DA.Next.Set
 import DA.Optional
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.AllocationAccountRule (Transfer(..))
+import Marketplace.Trading.AllocationAccountRule (Transfer(..), Withdraw(..))
 import DA.Finance.Asset.Settlement
 import Common
 
@@ -35,6 +35,8 @@ traderCannotMoveAllocatedAsset = do
   -- Account owners can't move asset pledged as order collateral
   submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
   submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
 
   -- The exchange cannot move the asset pledged as order collateral on its own => even if it has control on the account owners trading account
   exchange <- pure . fromSome $ partyFromText "Exchange"
@@ -43,6 +45,8 @@ traderCannotMoveAllocatedAsset = do
 
   submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
   submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
 
   submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
   submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
