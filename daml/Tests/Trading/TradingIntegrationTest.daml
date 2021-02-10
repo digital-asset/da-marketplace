@@ -1,4 +1,4 @@
-module Tests.Trading where
+module Tests.Trading.TradingIntegrationTest where
 
 import Daml.Script
 import DA.Optional
@@ -14,9 +14,9 @@ import DA.List
 -- 1/ "daml start" from root of da-marketplace
 -- 2/ "daml deploy --host=localhost --port=6865" from root of daml-dit-integration-exberry
 -- 3/ "poetry build && DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py" from exberry_adapter folder in da-marketplace
--- 4/ "daml script --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Tests.Trading:<function_name> --ledger-host localhost --ledger-port 6865" from root of da-marketplace
+-- 4/ "daml script --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Tests.Trading.TradingIntegrationTest:<function_name> --ledger-host localhost --ledger-port 6865" from root of da-marketplace
 -- 5/ "daml repl --ledger-host=localhost --ledger-port=6865 .daml/dist/da-marketplace-0.1.8.dar ../daml-dit-integration-exberry/.daml/dist/dabl-integration-exberry-1.0.0.dar --import da-marketplace --import dabl-integration-exberry" from root of da-marketplace
---  a/ To get an existing party - Run in repl "exchange <- pure . fromSome $ partyFromText "Exchange""
+--  a/ To get an existing party - Run in repl "import DA.Optional" followed by "exchange <- pure . fromSome $ partyFromText "Exchange""
 --  b/ To execute a command to simulate the Integration bot (substituting values as necessary)
 --    - New Order success : "exchange `submit` (createCmd $ NewOrderSuccess with integrationParty = exchange, sid = 123, orderId = 99999)"
 --    - New Order failure : "exchange `submit` (createCmd $ NewOrderFailure with integrationParty = exchange, sid = 123, errorCode = 999, errorMessage = "oh dear, something wrong happened!")"
@@ -39,8 +39,8 @@ submitInstrumentCreation = do
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @L.Service alice
   let
-    listingId = "JPM.N/USD"
-    calendarId = "1"
+    listingId = "JPMUSD"
+    calendarId = "1261007448"
     description = "JPMorgan Chase & Co."
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
     quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
@@ -48,8 +48,9 @@ submitInstrumentCreation = do
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
+    providerId = "123"
   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
-  -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
   pure ()
 
 submitBuyOrder : Script ()
@@ -64,10 +65,10 @@ submitBuyOrder = do
   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
   let
-    listingId = "JPM.N/USD"
+    listingId = "JPMUSD"
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
-    bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
+    bobOrderId = Id with signatories = fromList [ bob ]; label = "678"; version = 0
     bobOrderDetails = O.Details with
       id = bobOrderId
       symbol = listingId
@@ -95,19 +96,19 @@ submitSellOrder = do
   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
   let
-    listingId = "JPM.N/USD"
+    listingId = "JPMUSD"
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
-    aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
+    aliceOrderId = Id with signatories = fromList [ alice ]; label = "1224"; version = 0
     aliceOrderDetails = O.Details with
       id = aliceOrderId
       symbol = listingId
       asset = shareAsset
       side = O.Sell
       orderType = O.Limit with price = 100.0
-      -- orderType = T.Market
-      timeInForce = O.GTC
-      -- timeInForce = O.GTD with expiryDate = 1611992116
+      -- orderType = O.Market
+      -- timeInForce = O.FOK
+      timeInForce = O.GTD with expiryDate = 1612467273
     tradingServicekey p = (operator, exchange, p)
 
   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
@@ -129,7 +130,7 @@ newOrders = do
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @L.Service alice
   let
-    listingId = "JPM.N/USD"
+    listingId = "JPMUSD"
     calendarId = "1"
     description = "JPMorgan Chase & Co."
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
