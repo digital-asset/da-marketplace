@@ -41,6 +41,7 @@ data InstrumentStatus = InstrumentActive
 template MarketPair
   with
     id : Id
+    clearedMarket : Bool
     exchange : Party
     description : Text
     baseTokenId : Id

@@ -34,7 +34,7 @@ template ExchangeInvitation
           location : Text
         do
           create RegisteredExchange with ..
-          create Exchange with tokenPairs = [], binOptions = [], participants = [], ..
+          create Exchange with tokenPairs = [], clearedMarkets = [], binOptions = [], participants = [], ..
 
 
 -- |Request from an investor or broker to be added to the exchange
@@ -72,6 +72,7 @@ template Exchange
     public : Party
     tokenPairs : [IdPair] -- tokens pairs that are tradable on the exchange
     binOptions : [IdPair]
+    clearedMarkets : [IdPair] -- token pairs that represent cleared markets
     participants : [Party]
   where
     signatory operator, exchange
@@ -119,6 +120,7 @@ template Exchange
           quoteTokenId : Id
           minQuantity : Decimal
           maxQuantity : Decimal
+          clearedMarket : Bool
         do
           (_, baseToken) <- fetchByKey @Token baseTokenId
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
@@ -135,6 +137,7 @@ template Exchange
           let instrumentName = baseToken.id.label <> quoteToken.id.label
           let newMarket = MarketPair with
                 id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
+                clearedMarket
                 exchange
                 description = baseToken.id.label <> " vs " <> quoteToken.id.label
                 baseTokenId
@@ -147,7 +150,10 @@ template Exchange
                 status = InstrumentActive
                 observers = fromList participants
           create newMarket
-          create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
+          if clearedMarket then
+            create this with clearedMarkets = dedup $ (baseTokenId, quoteTokenId) :: clearedMarkets
+          else
+            create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 
       Exchange_AddBinaryOption : ContractId Exchange
         with
