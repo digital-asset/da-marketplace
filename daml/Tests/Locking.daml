@@ -35,7 +35,6 @@ traderCannotMoveAllocatedAsset = do
   submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
   submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
 
-
   -- Cancel order
   (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
   (aliceOrderCid, aliceAssetDepositCid2) <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
@@ -43,7 +42,7 @@ traderCannotMoveAllocatedAsset = do
   (bobOrderCid, bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
 
   -- Transfer from trading account to away account
-  submit alice.customer do exerciseCmd alice.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
-  submit bob.customer do exerciseCmd bob.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
 
   pure ()

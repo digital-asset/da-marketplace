@@ -15,7 +15,6 @@ import Marketplace.Listing qualified as Listing
 import Marketplace.Trading.Matching qualified as Matching
 import Marketplace.Trading.Settlement qualified as Settlement
 
-
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches = \orderCid party status -> do
   order <- fromSome <$> queryContractId @Order.T party orderCid
