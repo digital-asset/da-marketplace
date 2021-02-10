@@ -60,10 +60,10 @@ template AllocationAccountRule
         do
           assertMsg "Cannot deallocate to target account" $ account.owner == transferTo.owner && account /= transferTo
           let
-            addNomineeToTransferAccount = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = nominee
-            removeNomineeFromTransferAcccount = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = nominee
+            addNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = nominee
+            removeNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = nominee
 
-          addNomineeToTransferAccount *> (debit depositCid >>= creditAccount transferTo) <* removeNomineeFromTransferAcccount
+          addNominee *> (debit depositCid >>= creditAccount transferTo) <* removeNominee
 
     controller provider can
       nonconsuming ApproveWithdrawal : ContractId AssetDeposit

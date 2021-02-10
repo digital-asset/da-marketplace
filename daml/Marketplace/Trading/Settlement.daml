@@ -90,9 +90,9 @@ template SettlementInstruction
             let
               transferTo = settlementDetails.receiverAccount
               depositCid = settlementDetails.depositCid
-              addProviderToTransferAccount = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = provider
-              removeProviderFromTransferAcccount = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = provider
+              addProvider = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = provider
+              removeProvider = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = provider
               settle = exerciseByKey @AllocationAccountRule settlementDetails.senderAccount.id Transfer with ..
 
-            addProviderToTransferAccount *> settle <* removeProviderFromTransferAcccount
+            addProvider *> settle <* removeProvider
             )
