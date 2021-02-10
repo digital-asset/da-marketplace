@@ -26,6 +26,7 @@ type Props = {
 }
 
 type LocationState = {
+    isCleared?: boolean;
     exchange?: Exchange;
     tokenPair?: Id[];
 }
@@ -53,6 +54,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
+    const isCleared = location.state && !!location.state.isCleared;
 
     if (!exchangeData || !tokenPair) {
         history.push('/role/investor');
@@ -98,6 +100,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
                             exchange={exchange}
+                            isCleared={isCleared}
                             tokenPair={tokenPair}/>
                         <OrderLadder orders={marketData}/>
                     </div>

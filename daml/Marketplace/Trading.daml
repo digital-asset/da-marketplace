@@ -263,6 +263,7 @@ template ClearedOrderRequest
 
 template ClearedOrder
   with
+    ccp : Party
     exchange : Party
     exchParticipant : Party
     pair : IdPair
@@ -280,105 +281,80 @@ template ClearedOrder
     key (exchange, orderId) : (Party, Int)
     maintainer key._1
 
-    -- controller exchange can
-    --   Order_FillBinaryOption : (ContractId TradeSide, Optional (ContractId Order))
-    --     with
-    --       fillQty : Decimal
-    --       fillPrice : Decimal
-    --       counterParty : Party
-    --       counterOrderId : Int
-    --       timestamp : Text
-    --     do
-    --       assert $ fillQty > 0.0
-    --       assert $ fillQty <= qty
-    --       assert $ if isBid then fillPrice <= price
-    --                         else fillPrice >= price
-    --       let receiverAccountId = Id
-    --             with signatories = account.id.signatories,
-    --                   label = getAccountLabel counterParty exchange, version = 0
-    --           isBinaryOption = True
-    --       (_, binOption) <- fetchByKey @BinaryOption pair._1
-    --       (_, quoteToken) <- fetchByKey @Token pair._2
-    --       if fillQty < qty then do
-    --         let depositFillQty = roundBankers quoteToken.quantityPrecision $
-    --                                 if isBid then fillQty * fillPrice
-    --                                 else fillQty * (binOption.maxPrice - fillPrice)
-    --         let [filledAsset, restAsset] = assetSplit asset [depositFillQty]
-    --         remainingCid <- create this
-    --           with qty = qty - fillQty, status = "PartiallyFilled", asset = restAsset
-    --         tradeCid <- create TradeSide with
-    --             isBuy = isBid, optAsset = Some filledAsset
-    --             qty = fillQty, price = fillPrice, ..
+    controller exchange can
+      ClearedOrder_Fill : ()
+        do return ()
 
-    --         return $ (tradeCid, Some remainingCid)
-    --       else do
-    --         tradeCid <- create TradeSide with isBuy = isBid, optAsset = Some asset, price = fillPrice, ..
-    --         return $ (tradeCid, None)
-
-    --   Order_Fill : (ContractId TradeSide, Optional (ContractId Order))
-    --     with
-    --       fillQty : Decimal
-    --       fillPrice : Decimal
-    --       counterParty : Party
-    --       counterOrderId : Int
-    --       timestamp : Text
-    --     do
-    --       assert $ fillQty > 0.0
-    --       assert $ fillQty <= qty
-    --       assert $ if isBid then fillPrice <= price
-    --                         else fillPrice >= price
-
-    --       let receiverAccountId = Id
-    --             with signatories = account.id.signatories,
-    --                   label = getAccountLabel counterParty exchange, version = 0
-    --           isBinaryOption = False
-    --       (_, baseToken) <- fetchByKey @Token pair._1
-    --       (_, quoteToken) <- fetchByKey @Token pair._2
-    --       if fillQty < qty then do
-    --         let minFillQty = 10.0 ** (- intToDecimal if isBid then quoteToken.quantityPrecision
-    --                                                           else baseToken.quantityPrecision)
-    --         let depositFillQty = min (if isBid
-    --                                   then roundBankers quoteToken.quantityPrecision $ fillQty * fillPrice
-    --                                   else fillQty)
-    --                                  (asset.quantity - minFillQty)
-    --         if (depositFillQty > 0.0 && depositFillQty < asset.quantity)
-    --         then do
-    --           let [filledAsset, restAsset] = assetSplit asset [depositFillQty]
-
-    --           remainingCid <- create this
-    --             with qty = qty - fillQty, status = "PartiallyFilled"
-    --                  asset = restAsset
-
-    --           tradeCid <- create TradeSide with
-    --               isBuy = isBid, optAsset = Some filledAsset
-    --               qty = fillQty, price = fillPrice, ..
-
-    --           return $ (tradeCid, Some remainingCid)
-    --         else do
-    --           -- the fillQty is not enough to warrant a deposit transfer
-    --           remainingCid <- create this with qty = qty - fillQty, status = "PartiallyFilled"
-    --           tradeCid <- create TradeSide with
-    --               isBuy = isBid, optAsset = None
-    --               qty = fillQty, price = fillPrice, ..
-
-    --           return $ (tradeCid, Some remainingCid)
-    --       else do
-    --         tradeCid <- create TradeSide with
-    --             isBuy = isBid, optAsset = Some asset
-    --             price = fillPrice, ..
-
-    --         return $ (tradeCid, None)
-
-    --   Order_Cancel : ContractId DepositCreditRequest
-    --     do
-    --       create DepositCreditRequest with
-    --         owner = exchParticipant
-    --         account = account
-    --         asset = asset
+      -- Order_Cancel : ContractId DepositCreditRequest
+      --   do
+      --     create DepositCreditRequest with
+      --       owner = exchParticipant
+      --       account = account
+      --       asset = asset
 
     -- controller exchParticipant can
-    --   nonconsuming Order_RequestCancel : ContractId OrderCancelRequest
+    --   nonconsuming ClearedOrder_RequestCancel : ContractId OrderCancelRequest
     --     do create OrderCancelRequest with order = this
+
+
+template ClearedTrade
+  with
+    ccp : Party
+    exchange : Party
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id  -- id of order
+    trackingNumber : Int
+    buyer : Party
+    buyerOrderId : Int
+    seller : Party
+    sellerOrderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+  where
+    signatory exchange
+    observer ccp
+    controller ccp can
+      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+        with
+          buyerAccountId : Id
+          sellerAccountId : Id
+        do
+          timestamp <- getTime
+          buyCid <- create ClearedTradeSide with
+            participant = buyer
+            orderId = buyerOrderId
+            accountId = buyerAccountId
+            isBuy = True
+            ..
+          sellCid <- create ClearedTradeSide with
+            participant = seller
+            orderId = sellerOrderId
+            accountId = sellerAccountId
+            isBuy = False
+            ..
+          return (buyCid, sellCid)
+
+
+template ClearedTradeSide
+  with
+    participant : Party
+    ccp : Party
+    exchange : Party
+    isBuy : Bool
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id
+    orderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+    accountId : Id  -- the investor account at the ccp
+    timestamp : Time
+  where
+    signatory ccp, exchange
+    observer exchange, participant
 
 template DerivativeTrade
   with

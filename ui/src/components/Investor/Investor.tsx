@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import { Label, Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -103,7 +103,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                             { allExchanges.length > 0 ?
                                 allExchanges.map(exchange => {
-                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                    const tokenPairs = exchange.contractData.tokenPairs.map(tokenPair => {
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
                                         return <Menu.Item
@@ -111,6 +111,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                             to={{
                                                 pathname: `${url}/trade/${base}-${quote}`,
                                                 state: {
+                                                    isCleared: false,
                                                     exchange: exchange.contractData,
                                                     tokenPair: unwrapDamlTuple(tokenPair)
                                                 }
@@ -121,6 +122,29 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                                         </Menu.Item>
                                     })
+
+                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(tokenPair => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}`,
+                                                state: {
+                                                    isCleared: true,
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={exchange.contractId}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                            <Label className='cleared-market-label'>Cleared</Label>
+                                        </Menu.Item>
+                                    })
+
+                                    return [...tokenPairs, ...clearedMarkets]
                                 }).flat()
                             :
                             <Menu.Item className='empty-item'>

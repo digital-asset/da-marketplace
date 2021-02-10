@@ -13,6 +13,7 @@ import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
+import FormToggle from '../common/FormToggle'
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
@@ -20,6 +21,7 @@ const CreateMarket: React.FC<{}> = () => {
 
     const [ minQuantity, setMinQuantity ] = useState('');
     const [ maxQuantity, setMaxQuantity ] = useState('');
+    const [ clearedMarket, setClearedMarket ] = useState(false);
 
     const [ minQuantityError, setMinQuantityError ] = useState<string>()
     const [ maxQuantityError, setMaxQuantityError ] = useState<string>()
@@ -42,10 +44,11 @@ const CreateMarket: React.FC<{}> = () => {
 
         const key = wrapDamlTuple([operator, exchange]);
         const args = {
+            minQuantity,
+            maxQuantity,
+            clearedMarket,
             baseTokenId: baseToken.contractData.id,
-            quoteTokenId: quoteToken.contractData.id,
-            minQuantity: minQuantity,
-            maxQuantity: maxQuantity
+            quoteTokenId: quoteToken.contractData.id
         };
 
         await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
@@ -135,6 +138,12 @@ const CreateMarket: React.FC<{}> = () => {
                         disabled={!quoteToken || !baseToken}
                         onChange={validateMaxQuantity}/>
                 </div>
+
+                <FormToggle
+                    onLabel='Cleared'
+                    offLabel='Collateralized'
+                    onClick={cleared => setClearedMarket(cleared)}/>
+
                 <Button
                     content='Submit'
                     className='create-market-save ghost'

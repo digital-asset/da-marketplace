@@ -6,7 +6,7 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 1 # default SID, use ExberrySID contract to change while running
+SID = 160 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
@@ -34,6 +34,7 @@ class MARKETPLACE:
     Order = 'Marketplace.Trading:Order'
     ClearedOrderRequest = 'Marketplace.Trading:ClearedOrderRequest'
     ClearedOrder = 'Marketplace.Trading:ClearedOrder'
+    ClearedTrade = 'Marketplace.Trading:ClearedTrade'
     Token = 'Marketplace.Token:Token'
     MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
@@ -60,6 +61,12 @@ def main():
         for (_,item) in sids.items():
             SID = item['sid']
             logging.info(f'Changed current SID to {SID}')
+
+        # Populate market_pairs store on startup
+        marketpairs = client.find_active(MARKETPLACE.MarketPair)
+        for (_, pair) in marketpairs.items():
+            market_pairs[pair['id']['label']] = pair
+
         return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
@@ -243,18 +250,41 @@ def main():
 
         if cleared_market:
             logging.info(f"Processing cleared order report")
+            commands = [exercise(event.cid, 'Archive', {})]
 
-            taker_cid, _ = await client.find_one(MARKETPLACE.ClearedOrder, {
+            taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
                 'orderId': execution['takerMpOrderId']
             })
-            maker_cid, _ = await client.find_one(MARKETPLACE.ClearedOrder, {
+            maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
                 'orderId': execution['makerMpOrderId']
             })
 
+            ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
+
+            if not ccp:
+                logging.error(f"Error: non-matching ccp parties: ${taker['ccp']} !== ${maker['ccp']}")
+                return commands
+
+            pair = market_pairs[execution['instrument']]
+
             # TO-DO: create ClearedTrade here too
-            commands = [exercise(event.cid, 'Archive', {})]
-            commands.append(exercise(taker_cid, 'Archive', {}))
-            commands.append(exercise(maker_cid, 'Archive', {}))
+            commands.append(create(MARKETPLACE.ClearedTrade, {
+                'ccp': ccp,
+                'exchange': client.party,
+                'eventId': execution['eventId'],
+                'eventTimestamp': execution['eventTimestamp'],
+                'instrument': pair['id'],
+                'trackingNumber': execution['trackingNumber'],
+                'buyer': taker['exchParticipant'],
+                'buyerOrderId': taker['orderId'],
+                'seller': maker['exchParticipant'],
+                'sellerOrderId': maker['orderId'],
+                'matchId': execution['matchId'],
+                'executedQuantity': execution['executedQuantity'],
+                'executedPrice': execution['executedPrice']
+            }))
+            commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {}))
+            commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {}))
         else:
             logging.info(f"Processing collateralized order report")
 

@@ -17,6 +17,7 @@ type Props = {
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
     exchange: string;
+    isCleared: boolean;
     tokenPair: Id[];
 }
 
@@ -24,6 +25,7 @@ const OrderForm: React.FC<Props> = ({
     assetPrecisions,
     deposits,
     exchange,
+    isCleared,
     tokenPair
 }) => {
     const [ price, setPrice ] = useState('');
@@ -53,9 +55,24 @@ const OrderForm: React.FC<Props> = ({
     };
 
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
+        const key = wrapDamlTuple([exchange, operator, investor]);
+
+        if (isCleared) {
+            console.log("Placing a cleared order.");
+            const choice = ExchangeParticipant.ExchangeParticipant_MakeClearedOrder
+            const makeClearedArgs = {
+                price,
+                ccp: 'Ccp',
+                qty: amount,
+                pair: wrapDamlTuple(tokenPair),
+                isBid: kind === OrderKind.BID
+            }
+            await ledger.exerciseByKey(choice, key, makeClearedArgs);
+            return;
+        }
+
         const depositCids = validateDeposits(deposits, amount);
 
-        const key = wrapDamlTuple([exchange, operator, investor]);
         const args = {
             price,
             amount,

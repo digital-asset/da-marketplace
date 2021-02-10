@@ -9,4 +9,8 @@
     @include wallet-transaction;
     @include investor-trade;
     @include investor-orders;
+
+    .cleared-market-label {
+        background: var(--cool-grey-40);
+    }
 }

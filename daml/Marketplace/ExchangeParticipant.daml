@@ -163,7 +163,8 @@ template ExchangeParticipant
 
       nonconsuming ExchangeParticipant_MakeClearedOrder : ContractId ClearedOrderRequest
         with
-          pair: IdPair
+          ccp : Party
+          pair : IdPair
           price : Decimal
           qty : Decimal
           isBid : Bool
