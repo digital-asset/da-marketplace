@@ -65,7 +65,7 @@ template AllocationAccountRule
 
           addNominee *> (debit depositCid >>= creditAccount transferTo) <* removeNominee
 
-    controller provider can
+    controller nominee can
       nonconsuming ApproveWithdrawal : ContractId AssetDeposit
         with
           unallocateCid : ContractId WithdrawalRequest

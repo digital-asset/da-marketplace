@@ -3,6 +3,7 @@ module Tests.Locking where
 import Daml.Script
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
+import DA.Optional
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.AllocationAccountRule (Transfer(..))
@@ -31,9 +32,20 @@ traderCannotMoveAllocatedAsset = do
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
   (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bob.assetDepositCid; details = Order.Details with id = bobOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
-  -- Can't move asset pledged as order collateral
+  -- Account owners can't move asset pledged as order collateral
   submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
   submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+
+  -- The exchange cannot move the asset pledged as order collateral on its own => even if it has control on the account owners trading account
+  exchange <- pure . fromSome $ partyFromText "Exchange"
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_AddController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = exchange
+
+  submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
 
   -- Cancel order
   (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
