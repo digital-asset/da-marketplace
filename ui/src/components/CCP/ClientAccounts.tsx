@@ -13,6 +13,7 @@ import StripedTable from '../common/StripedTable'
 
 import MarginCall from './MarginCall'
 import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import {useCCPCustomerNotifications} from './CCPCustomerNotifications'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -25,6 +26,8 @@ type Props = {
 
 const ClientAccounts: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
     const { investorId } = useParams<{investorId: string}>()
+
+    const notifications = useCCPCustomerNotifications();
 
     const ccpCustomers = useContractQuery(CCPCustomer);
     const allDeposits = useContractQuery(AssetDeposit);
@@ -52,6 +55,8 @@ const ClientAccounts: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
+                    {notifications.length > 0 && <Header as='h2'>Notifications</Header>}
+                    {notifications}
                     <Header as='h2'>Clearing Accounts</Header>
                     <StripedTable
                         headings={['Asset', 'Amount']}

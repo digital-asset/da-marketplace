@@ -11,7 +11,7 @@ import ActionRequiredNotification from '../common/ActionRequiredNotification'
 
 type RejectedMarginCalculationProps = {
     calculation: RejectedMarginCalculationInfo;
-    calculationRetry: () => Promise<void>;
+    calculationCancel: () => Promise<void>;
 }
 
 export const useCCPCustomerNotifications = () => {
@@ -19,10 +19,10 @@ export const useCCPCustomerNotifications = () => {
     const marginCallFailures = useContractQuery(RejectedMarginCalculation)
         .map(rejectedCalculation => <RejectedMarginCalculationNotification key={rejectedCalculation.contractId}
             calculation={rejectedCalculation}
-            calculationRetry={async () => await retryMarginCalculation(rejectedCalculation.contractId)}/>);
+            calculationCancel={async () => await cancelMarginCalculation(rejectedCalculation.contractId)}/>);
 
-    const retryMarginCalculation = async (cid: ContractId<RejectedMarginCalculation>) => {
-        const choice = RejectedMarginCalculation.RejectedMarginCalculation_CustomerRetry;
+    const cancelMarginCalculation = async (cid: ContractId<RejectedMarginCalculation>) => {
+        const choice = RejectedMarginCalculation.RejectedMarginCalculation_Cancel;
         await ledger.exercise(choice, cid, {});
     }
 
@@ -31,14 +31,13 @@ export const useCCPCustomerNotifications = () => {
 
 const RejectedMarginCalculationNotification: React.FC<RejectedMarginCalculationProps> = ({
     calculation,
-    calculationRetry
+    calculationCancel
 }) => {
-    const { ccpMap } = useRegistryLookup();
-    const name = ccpMap.get(calculation.contractData.ccp)?.name || calculation.contractData.ccp;
+    const { investorMap } = useRegistryLookup();
+    const name = investorMap.get(calculation.contractData.customer)?.name || calculation.contractData.customer;
     return (
-        <ActionRequiredNotification onAction={calculationRetry} actionText = 'Retry'>
-            <p>CCP <b>@{name}</b>: {calculation.contractData.note}</p>
+        <ActionRequiredNotification onAction={calculationCancel} actionText = 'Cancel'>
+            <p>Investor <b>@{name}</b>: {calculation.contractData.note}</p>
         </ActionRequiredNotification>
     )
 }
-
