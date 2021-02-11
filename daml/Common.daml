@@ -5,6 +5,7 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Asset.Settlement (AssetSettlementRule)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Next.Set
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import qualified Marketplace.Operator as Operator
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Custody as Custody
@@ -30,11 +31,14 @@ data CustomerContracts = CustomerContracts
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
-    allocationAssetSettlementRuleCid : ContractId AssetSettlementRule
+    allocationAccountRuleCid : ContractId AllocationAccountRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
+    allocationAccount : Account
     tradingAccountId : Id
+    tradingAccount : Account
     awayAccountId : Id
+    awayAccount : Account
     assetDepositCid : ContractId AssetDeposit
 
 onboardCommon : Script CommonContracts
@@ -66,20 +70,24 @@ onboardCustomer CommonContracts{..} party asset = do
     allocationAccount   = Account with provider = custodian; owner = customer; id = allocationAccountId
     awayAccountId       = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
     awayAccount         = Account with provider = custodian; owner = customer; id = awayAccountId
+
+  -- Custody service
   custodyServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
+
+  -- Accounts
+  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [exchange]; ctrls = fromList [ custodian, customer ]
+  tradingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = tradingOpenAccountRequestCid
+  allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee = exchange
+  allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
+  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; ctrls = fromList [customer]
+  awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
+
+  -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
-
-  -- Accounts
-  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = empty; ctrls = fromList [ custodian, exchange, customer ]
-  tradingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = tradingOpenAccountRequestCid
-  allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = allocationAccountId; observers = empty; ctrls = fromList [ custodian, exchange, customer ]
-  allocationAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = allocationOpenAccountRequestCid
-  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; ctrls = empty
-  awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
 
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..

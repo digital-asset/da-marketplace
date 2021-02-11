@@ -4,6 +4,8 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Next.Set
+import Marketplace.Trading.AllocationAccountRule
+import DA.Finance.Utils (fetchAndArchive)
 
 template Service
   with
@@ -25,6 +27,14 @@ template Service
         do
           -- TODO: Check signatories in id - do we want to allow flexible trust models?
           create OpenAccountRequest with ..
+
+      nonconsuming RequestOpenAllocationAccount : ContractId OpenAllocationAccountRequest
+        with
+          accountId : Id
+          observers : Set Party
+          nominee : Party
+        do
+          create OpenAllocationAccountRequest with ..
 
       nonconsuming RequestCloseAccount : ContractId CloseAccountRequest
         with
@@ -59,43 +69,55 @@ template Service
         with
           openAccountRequestCid : ContractId OpenAccountRequest
         do
-          OpenAccountRequest{..} <- fetch openAccountRequestCid
-          archive openAccountRequestCid
+          OpenAccountRequest{..} <- fetchAndArchive openAccountRequestCid
           let
             account = Account with provider = provider; owner = customer; id = accountId
           create AssetSettlementRule with ..
+
+      nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
+        with
+          openAllocationAccountRequestCid : ContractId OpenAllocationAccountRequest
+        do
+          OpenAllocationAccountRequest{..} <- fetchAndArchive openAllocationAccountRequestCid
+          let
+            account = Account with provider = provider; owner = customer; id = accountId
+          create AllocationAccountRule with ..
 
       nonconsuming CloseAccount : ()
         with
           closeAccountRequestCid : ContractId CloseAccountRequest
         do
-          closeAccountRequest <- fetch closeAccountRequestCid
-          archive closeAccountRequestCid
+          closeAccountRequest <- fetchAndArchive closeAccountRequestCid
           (assetSettlementRuleCid, _) <- fetchByKey @AssetSettlementRule closeAccountRequest.accountId
           archive assetSettlementRuleCid
+
+      nonconsuming CloseAllocationAccount : ()
+        with
+          closeAllocationAccountRequestCid : ContractId CloseAllocationAccountRequest
+        do
+          closeAccountRequest <- fetchAndArchive closeAllocationAccountRequestCid
+          (allocationAccountRuleCid, _) <- fetchByKey @AllocationAccountRule closeAccountRequest.accountId
+          archive allocationAccountRuleCid
 
       nonconsuming CreditAccount : ContractId AssetDeposit
         with
           creditAccountRequestCid : ContractId CreditAccountRequest
         do
-          CreditAccountRequest{..} <- fetch creditAccountRequestCid
-          archive creditAccountRequestCid
+          CreditAccountRequest{..} <- fetchAndArchive creditAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
 
       nonconsuming DebitAccount : Asset
         with
           debitAccountRequestCid : ContractId DebitAccountRequest
         do
-          DebitAccountRequest{..} <- fetch debitAccountRequestCid
-          archive debitAccountRequestCid
+          DebitAccountRequest{..} <- fetchAndArchive debitAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
 
       nonconsuming TransferDeposit : ContractId AssetDeposit
         with
           transferDepositRequestCid : ContractId TransferDepositRequest
         do
-          TransferDepositRequest{..} <- fetch transferDepositRequestCid
-          archive transferDepositRequestCid
+          TransferDepositRequest{..} <- fetchAndArchive transferDepositRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
 
 template Offer
@@ -143,7 +165,27 @@ template OpenAccountRequest
   where
     signatory operator, provider, customer
 
+template OpenAllocationAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    nominee : Party
+    accountId : Id
+    observers : Set Party
+  where
+    signatory operator, provider, customer
+
 template CloseAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+  where
+    signatory operator, provider, customer
+
+template CloseAllocationAccountRequest
   with
     operator : Party
     provider : Party

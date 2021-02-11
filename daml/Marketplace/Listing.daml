@@ -1,17 +1,15 @@
 module Marketplace.Listing where
 
 import DA.Finance.Types
+import Marketplace.Error qualified as Error
 
 type T = Listing
 
 data Status
     = Active
     | Disabled
-    | Failure with
-        message : Text
-        name : Text
-        code : Text
   deriving (Eq, Show)
+
 template Listing
   with
     operator : Party
@@ -77,17 +75,18 @@ template Service
           archive createListingRequestCid
           create Listing with ..
 
-      nonconsuming ListingFailure : ContractId CreateListingRequest
+      nonconsuming ListingFailure : ContractId FailedListingCreation
         with
           createListingRequestCid : ContractId CreateListingRequest
           message : Text
           name : Text
           code : Text
         do
-          createListingRequest <- fetch createListingRequestCid
+          CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
 
-          create createListingRequest with status = Failure with ..
+          let error = Error.Error with message = name <> " : " <> message, ..
+          create FailedListingCreation with ..
 
       nonconsuming DisableListing : ContractId Listing
         with
@@ -164,13 +163,32 @@ template CreateListingRequest
         do
           exerciseByKey @Service serviceKey CreateListing with createListingRequestCid = self, ..
 
-      nonconsuming ListingRequestFailure : ContractId CreateListingRequest
+      nonconsuming ListingRequestFailure : ContractId FailedListingCreation
         with
           message : Text
           name : Text
           code : Text
         do
           exerciseByKey @Service serviceKey ListingFailure with createListingRequestCid = self, ..
+
+template FailedListingCreation
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    error : Error.T
+    listingId : Text
+    calendarId : Text
+    description : Text
+    tradedAssetId : Id
+    quotedAssetId : Id
+    tradedAssetPrecision : Int
+    quotedAssetPrecision : Int
+    minimumTradableQuantity : Decimal
+    maximumTradableQuantity : Decimal
+    status : Status
+  where
+    signatory operator, provider, customer
 
 template DisableListingRequest
   with

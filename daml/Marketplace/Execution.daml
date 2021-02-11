@@ -1,8 +1,7 @@
 module Marketplace.Execution where
 
-import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
-import DA.Finance.Types
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Id, Asset, Account)
 import Marketplace.Trading.Service qualified as TradingService
 import Marketplace.Trading.Order qualified as Order
 
@@ -22,50 +21,39 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestCreateOrder : (ContractId TradingService.CreateOrderRequest, ContractId AssetDeposit)
+      nonconsuming RequestCreateOrder : ContractId CreateOrderRequest
         with
-          details : Order.Details
+          orderId : Id
+          symbol : Text
+          asset : Asset
+          side : Order.Side
+          orderType : Order.OrderType
+          timeInForce : Order.TimeInForce
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          depositCid <- exerciseByKey @AssetSettlementRule tradingAccount.id AssetSettlement_Transfer with receiverAccountId = allocationAccount.id; ..
-          createOrderRequestCid <- create TradingService.CreateOrderRequest with ..
-          pure (createOrderRequestCid, depositCid)
+          create CreateOrderRequest with ..
 
-      nonconsuming RequestCancelOrder : ContractId TradingService.CancelOrderRequest
+      nonconsuming RequestCancelOrder : ContractId CancelOrderRequest
         with
           orderCid : ContractId Order.T
         do
-          Order.Order{..} <- fetch orderCid
-          create TradingService.CancelOrderRequest with ..
+          create CancelOrderRequest with ..
 
     controller provider can
-      nonconsuming CreateOrder : ContractId Order.T
+      nonconsuming CreateOrder : (ContractId Order.T, ContractId TradingService.CreateOrderRequest, ContractId AssetDeposit)
         with
-          createOrderRequestCid : ContractId TradingService.CreateOrderRequest
-          id : Int
+          createOrderRequestCid : ContractId CreateOrderRequest
         do
-          let
-            status = Order.New
-            providerOrderId = None
-            executions = []
-          TradingService.CreateOrderRequest{..} <- fetch createOrderRequestCid
-          archive createOrderRequestCid
-          create Order.Order with remainingQuantity = details.asset.quantity, ..
+          CreateOrderRequest{..} <- fetch createOrderRequestCid
+          exerciseByKey @TradingService.T (operator, provider, customer) TradingService.RequestCreateOrder with details = Order.Details with id = orderId; ..; ..
 
-      nonconsuming CancelOrder : ContractId AssetDeposit
+      nonconsuming CancelOrder : (ContractId Order.T, ContractId TradingService.CancelOrderRequest)
         with
-          cancelOrderRequestCid : ContractId TradingService.CancelOrderRequest
+          cancelOrderRequestCid : ContractId CancelOrderRequest
         do
-          TradingService.CancelOrderRequest{..} <- fetch cancelOrderRequestCid
-          archive cancelOrderRequestCid
-          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id.label)
-          archive orderCid
-
-          orderCid <- create order with status = Order.Cancelled
-          depositCid <- exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with receiverAccountId = tradingAccount.id; ..
-
-          exerciseByKey @AssetSettlementRule allocationAccount.id AssetSettlement_Transfer with depositCid = order.depositCid; receiverAccountId = tradingAccount.id
+          CancelOrderRequest{..} <- fetch cancelOrderRequestCid
+          exerciseByKey @TradingService.T (operator, provider, customer) TradingService.RequestCancelOrder with ..
 
 template Offer
   with
@@ -105,3 +93,27 @@ template Request
       Reject : ()
         do
           return ()
+
+template CreateOrderRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    orderId : Id
+    symbol : Text
+    asset : Asset
+    side : Order.Side
+    orderType : Order.OrderType
+    timeInForce : Order.TimeInForce
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, provider, customer
+
+template CancelOrderRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    orderCid : ContractId Order.T
+  where
+    signatory operator, provider, customer

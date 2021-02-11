@@ -71,7 +71,7 @@ setup = do
         depositCid = bob.assetDepositCid
 
   -- Exchange matches the two orders
-  settlementDetailsCid <- submit exchange do
+  settlementInstructionCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -83,7 +83,6 @@ setup = do
           timestamp = ""
 
   -- Exchange settles the instructed trade
-  -- submit exchange do exerciseCmd settlementServiceCid Settlement.Settle with ..
-  submit exchange do exerciseCmd settlementDetailsCid Settlement.Settle
+  submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
 
   pure ()
