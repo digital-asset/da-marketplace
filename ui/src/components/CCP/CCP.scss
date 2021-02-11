@@ -1,0 +1,11 @@
+@import './Clients.scss';
+@import './MarginCall.scss';
+
+@mixin ccp {
+    .ccp {
+        height: 100%;
+
+        @include clients;
+        @include margin-call;
+    }
+}

@@ -20,6 +20,7 @@ import Investor from './Investor/Investor'
 import Issuer from './Issuer/Issuer'
 import Exchange from './Exchange/Exchange'
 import Custodian from './Custodian/Custodian'
+import CCP from './CCP/CCP'
 import Broker from './Broker/Broker'
 
 
@@ -96,6 +97,10 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
       <Route path={`${path}/broker`}>
         <Broker onLogout={onLogout}/>
+      </Route>
+
+      <Route path={`${path}/ccp`}>
+        <CCP onLogout={onLogout}/>
       </Route>
     </Switch>
   );

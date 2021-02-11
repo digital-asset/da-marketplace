@@ -87,6 +87,11 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
                     caption='Bank'
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>
+
+                <RoleSelect
+                    caption='Central Counterparty'
+                    loading={loading && role === MarketRole.CCPRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.CCPRole)}/>
             </OnboardingTile>
         </div>
     );

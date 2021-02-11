@@ -260,8 +260,7 @@ makeFairValue operator exchange assetId price currency upTo observers = do
 
 onboardInvestor : Bool -> LedgerParties -> Party -> Text-> Script ()
 onboardInvestor wt lp investor name = do
-  let name     = "default name"
-      title    = "default title"
+  let title    = "default title"
       issuerID = "default issuerID"
       location = "default location"
 

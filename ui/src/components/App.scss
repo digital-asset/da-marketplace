@@ -26,6 +26,7 @@
 
 @import './Broker/Broker.scss';
 @import './Custodian/Custodian.scss';
+@import './CCP/CCP.scss';
 @import './Exchange/Exchange.scss';
 @import './Investor/Investor.scss';
 @import './Issuer/Issuer.scss';
@@ -69,5 +70,6 @@
         @include issuer;
         @include broker;
         @include custodian;
+        @include ccp;
     }
 }

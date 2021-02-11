@@ -61,9 +61,9 @@ template CCP
           optAccountId : Optional Id
           currency : Text
           targetAmount : Decimal
-          calculationTime : Time
           calculationId : Text
         do
+          calculationTime <- getTime
           let accountId = case optAccountId of
                 (Some aid) -> aid
                 None       -> getAccountId ccpCustomer ccp [custodian]

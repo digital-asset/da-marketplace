@@ -2,6 +2,7 @@ import { CreateEvent } from '@daml/ledger'
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
+    CentralCounterpartyCustomer,
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
@@ -83,6 +84,10 @@ export type BrokerCustomerInfo = ContractInfo<
     BrokerCustomer.BrokerCustomer.Key>;
 
 export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
+
+export type CCPCustomerInfo = ContractInfo<
+    CentralCounterpartyCustomer.CCPCustomer,
+    CentralCounterpartyCustomer.CCPCustomer.Key>;
 
 export type CustodianInfo = ContractInfo<
     Custodian.Custodian,
