@@ -61,8 +61,11 @@ template CCP
           optAccountId : Optional Id
           currency : Text
           targetAmount : Decimal
-          calculationId : Text
+          calculationId : Text -- TODO: add calculationTime
         do
+          -- reject any previous calculation
+          (rejectedCid,_) <- fetchByKey @RejectedMarginCalculation (ccp,ccpCustomer,calculationId)
+          exercise rejectedCid RejectedMarginCalculation_Cancel
           calculationTime <- getTime
           let accountId = case optAccountId of
                 (Some aid) -> aid

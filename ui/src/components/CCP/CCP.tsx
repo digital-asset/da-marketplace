@@ -25,7 +25,7 @@ import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
-// import ClientAccounts from './ClientAccounts'
+import ClientAccounts from './ClientAccounts'
 import {CCPInvitation} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 
 type Props = {
@@ -182,7 +182,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                         onLogout={onLogout}/>
                 </Route>
                 <Route path={`${path}/client/:investorId`}>
-                    <Clients
+                    <ClientAccounts
                         sideNav={sideNav}
                         clients={allCustomers}
                         onLogout={onLogout}/>

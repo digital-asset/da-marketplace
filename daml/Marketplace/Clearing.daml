@@ -75,6 +75,9 @@ template RejectedMarginCalculation
         do
           create calculation
 
+      RejectedMarginCalculation_Cancel : ()
+        do return ()
+
     controller customer can
       RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
         do

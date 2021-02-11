@@ -1,5 +1,5 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
+import { Header, Divider } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
@@ -12,6 +12,7 @@ import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'
 
 import MarginCall from './MarginCall'
+import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -22,14 +23,25 @@ type Props = {
     }[];
 }
 
-const Clients: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
+const ClientAccounts: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
     const { investorId } = useParams<{investorId: string}>()
 
+    const ccpCustomers = useContractQuery(CCPCustomer);
     const allDeposits = useContractQuery(AssetDeposit);
 
-    const deposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
+    const currentCCPCustomers = ccpCustomers.filter(ccpCustomer => ccpCustomer.contractData.ccpCustomer === investorId)
+    const marginDepositCids = currentCCPCustomers
+        .flatMap(ccpCustomer => {
+            return ccpCustomer.contractData.marginDepositCids
+        });
 
-    const tableRows = depositSummary(deposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
+    const allCustomerDeposits = allDeposits.filter(deposit => deposit.contractData.account.owner === investorId)
+    const marginDeposits = allCustomerDeposits.
+            filter(deposit => marginDepositCids.includes(deposit.contractId));
+    const clearingDeposits = allCustomerDeposits.filter(cd => !marginDepositCids.includes(cd.contractId));
+
+    const clearingRows = depositSummary(clearingDeposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
+    const marginRows = depositSummary(marginDeposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
 
     const client = clients.find(i => i.party == investorId)
 
@@ -40,10 +52,15 @@ const Clients: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
             onLogout={onLogout}>
             <PageSection className='clients'>
                 <div className='client-list'>
-                    <Header as='h2'>Client Holdings</Header>
+                    <Header as='h2'>Clearing Accounts</Header>
                     <StripedTable
                         headings={['Asset', 'Amount']}
-                        rows={tableRows}/>
+                        rows={clearingRows}/>
+                    <Divider/>
+                    <Header as='h3'>Margin Accounts</Header>
+                    <StripedTable
+                        headings={['Asset', 'Amount']}
+                        rows={marginRows}/>
                 </div>
                 <MarginCall/>
             </PageSection>
@@ -51,4 +68,4 @@ const Clients: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
     )
 }
 
-export default Clients;
+export default ClientAccounts;
