@@ -9,6 +9,7 @@ import DA.Foldable (forA_)
 import Daml.Trigger
 
 import Marketplace.Derivative
+import Marketplace.CentralCounterparty
 import Marketplace.Exchange
 import Marketplace.Token
 import Marketplace.Trading
@@ -28,6 +29,7 @@ handleExchange = Trigger
                                                , registeredTemplate @FairValue
                                                , registeredTemplate @FairValueCalculationRequest
                                                , registeredTemplate @FairValueInterval
+                                               , registeredTemplate @CCPExchangeRelationshipRequest
                                                , registeredTemplate @SettledBinaryOption ]
   , heartbeat = None
   }
@@ -51,6 +53,11 @@ handleExchangeRule party = do
   forA_ participantRequests
     $ \(cid,rq) -> emitExerciseCmd cid ExchangeParticipantInvitationRequest_Accept
                >> debug ("Approving participant request from " <> show rq.participant)
+
+  ccpRelationshipRequests <- filter (\(_,rq) -> rq.party == party) <$> query @CCPExchangeRelationshipRequest
+  forA_ ccpRelationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid CCPExchangeRelationshipRequest_Approve
+               >> debug ("Accepting relationship request from: " <> show rq.requester)
 
   -- Handle all calculation requests
   calculationRequests <- query @FairValueCalculationRequest
