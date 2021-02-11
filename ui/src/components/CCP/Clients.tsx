@@ -1,9 +1,9 @@
-import React from 'react'
-import { Header } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import { Header, Divider } from 'semantic-ui-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { UserIcon } from '../../icons/Icons'
+import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
@@ -12,8 +12,13 @@ import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
 import MarginCall from './MarginCall'
+import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import {CCPCustomerInfo} from '../common/damlTypes'
+import {CCPCustomerInfo, wrapDamlTuple} from '../common/damlTypes'
+import { useParty, useLedger } from '@daml/react'
+import {useOperator} from '../common/common'
+import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
+import {RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 type Props = {
     clients: {
@@ -26,6 +31,26 @@ type Props = {
 
 const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
+    const ccp = useParty();
+    const ledger = useLedger();
+    const operator = useOperator();
+    const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
+
+    const handleCCPCustomerInviteSubmit = async (party: string) => {
+        const choice = CCP.CCP_InviteCustomer;
+        const key = wrapDamlTuple([operator, ccp]);
+        const args = { ccpCustomer: party };
+
+        await ledger.exerciseByKey(choice, key, args);
+    }
+
+    const registeredInvestors = useContractQuery(RegisteredInvestor);
+    const partyOptions = registeredInvestors.map(d => {
+        return {
+            text: `${d.contractData.name}`,
+            value: d.contractData.investor
+        }
+    })
 
     const tableHeadings = ['Name', 'In Good Standing', 'Clearing Account', 'Margin Account']
     const ccpCustomers = useContractQuery(CCPCustomer);
@@ -54,13 +79,25 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
             <PageSection>
                 <div className='clients'>
                     <div className='client-list'>
-                        <Header as='h2'>Clients</Header>
+                        <Header as='h2'>Customers</Header>
+                        <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
+                            <AddPlusIcon/> Add Investor
+                        </a>
                         <StripedTable
                             headings={tableHeadings}
                             rows={tableRows}
                             emptyLabel='There are no customers.'/>
                     </div>
                     <MarginCall/>
+                    {showAddRelationshipModal &&
+                        <AddRegisteredPartyModal
+                            title='Add Investor'
+                            partyOptions={partyOptions}
+                            onRequestClose={() => setShowAddRelationshipModal(false)}
+                            multiple={false}
+                            emptyMessage='All registered investors have been added'
+                            onSubmit={handleCCPCustomerInviteSubmit}/>
+                    }
                 </div>
             </PageSection>
         </Page>

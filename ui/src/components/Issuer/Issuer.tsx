@@ -29,7 +29,10 @@ import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
 
 import IssueAsset from './IssueAsset'
+import IssueDerivative from './IssueDerivative'
+import IssuedDerivative from './IssuedDerivative'
 import IssuedToken from './IssuedToken'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 type Props = {
     onLogout: () => void;
@@ -47,6 +50,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allTokens = useContractQuery(Token);
+    const allDerivatives = useContractQuery(Derivative);
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
@@ -152,7 +156,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                         name={registeredIssuer[0]?.contractData.name || issuer}
                         items={[
-                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
+                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>},
+                            {to: `${url}/issue-derivative`, label: 'Issue Derivative', icon: <PublicIcon/>}
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
@@ -166,6 +171,19 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                     key={token.contractId}
                                 >
                                     <p>{token.contractData.id.label}</p>
+                                </Menu.Item>
+                            ))}
+                            <Menu.Item>
+                                <p className='p2'>Issued Derivaties:</p>
+                            </Menu.Item>
+                            {allDerivatives.map(derivative => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/issued-derivative/${encodeURIComponent(derivative.contractId)}`}
+                                    key={derivative.contractId}
+                                >
+                                    <p>{derivative.contractData.id.label}</p>
                                 </Menu.Item>
                             ))}
                         </Menu.Menu>
@@ -220,6 +238,24 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         providers={allProviders}
                         investors={allRegisteredInvestors}/>
                 </Route>
+
+                <Route path={`${path}/issue-derivative`}>
+                    <Page
+                        menuTitle={<><PublicIcon size='24'/> Issue Derivative</>}
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                    >
+                        <PageSection>
+                            <IssueDerivative/>
+                        </PageSection>
+                    </Page>
+                </Route>
+                <Route path={`${path}/issued-derivative/:derivativeId`}>
+                    <IssuedDerivative
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+
             </Switch>
         </div>
     )
