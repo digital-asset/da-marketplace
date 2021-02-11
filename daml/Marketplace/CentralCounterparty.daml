@@ -11,6 +11,51 @@ import Marketplace.Registry
 import Marketplace.Trading
 import Marketplace.Utils
 
+template CCPExchangeRelationship
+  with
+    operator : Party
+    ccp : Party
+    exchange : Party
+  where
+    signatory ccp, exchange
+    key (ccp, operator, exchange) : (Party, Party, Party)
+    maintainer key._1
+
+
+template CCPExchangeRelationshipRequest
+  with
+    operator : Party
+    requester : Party
+    party : Party
+    requesterRole : MarketRole
+  where
+  signatory operator, requester
+  key (operator, requester, party) : (Party, Party, Party)
+  maintainer key._1
+
+  controller party can
+    CCPExchangeRelationshipRequest_Approve : ContractId CCPExchangeRelationship
+      do
+        case requesterRole of
+          CCPRole      -> do
+            let ccp      = requester
+                exchange = party
+            optRelationshipCid <- lookupByKey @CCPExchangeRelationship (ccp, operator, exchange)
+            case optRelationshipCid of
+              (Some cid) -> return cid
+              None       -> create CCPExchangeRelationship with ..
+
+          ExchangeRole -> do
+            let ccp      = party
+                exchange = requester
+            optRelationshipCid <- lookupByKey @CCPExchangeRelationship (ccp, operator, exchange)
+            case optRelationshipCid of
+              (Some cid) -> return cid
+              None       -> create CCPExchangeRelationship with ..
+          _            -> error "Parties that are not exchanges cannot request a CCP/Exchange relationship"
+    CCPExchangeRelationshipRequest_Reject : ()
+      do return ()
+
 
 template CCPInvitation
   with
@@ -100,6 +145,11 @@ template CCP
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
           exercise derivativeTradeCid DerivativeTrade_Novate with ..
 
+      nonconsuming CCP_RequestExchangeRelationship : ContractId CCPExchangeRelationshipRequest
+        with
+          exchange : Party
+        do
+          create CCPExchangeRelationshipRequest with requester = ccp, party = exchange, requesterRole = CCPRole, ..
 
       nonconsuming CCP_RequestFairValues : ContractId FairValueCalculationRequest
         with

@@ -30,6 +30,7 @@ handleCCP = Trigger
   , rule = handleCCPRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @CCP
                                                , registeredTemplate @CCPCustomer
+                                               , registeredTemplate @CCPExchangeRelationshipRequest
                                                , registeredTemplate @AssetDeposit
                                                , registeredTemplate @DerivativeTrade
                                                , registeredTemplate @MarginCalculation
@@ -56,6 +57,11 @@ handleCCPRule party = do
     $ \(cid,dt) -> dedupExerciseByKey @CCP (state.operatorParty,party)
                     CCP_NovateDerivativeTrade { derivativeTradeCid = cid }
                >> debug ("Novating trade: " <> show dt)
+
+  exchangeRelationshipRequests <- filter (\(_,rq) -> rq.party == party) <$> query @CCPExchangeRelationshipRequest
+  forA_ exchangeRelationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid CCPExchangeRelationshipRequest_Approve
+               >> debug ("Accepting relationship request from: " <> show rq.requester)
 
   -- > Handle MarginCalculation
   marginCalculations <- query @MarginCalculation
