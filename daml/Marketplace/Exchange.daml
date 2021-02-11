@@ -160,4 +160,5 @@ template Exchange
           let pair = orderRequest.order.pair
           assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
             $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
+
           exercise orderRequestCid OrderRequest_Ack with ..

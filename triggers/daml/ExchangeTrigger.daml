@@ -57,7 +57,7 @@ handleExchangeRule party = do
   forA_ calculationRequests (handleCalculationRequests party)
 
 
--- |Handler for calculating FairValues at an interval. The actual calculations are _not_
+-- |Handler for calculating FairValues at an interval. TODO: The actual calculations are _not_
 -- fully implemented, however if 'heartbeat' is set for the trigger, this will be called
 -- at the specified interval.
 handleFairValueInterval : ContractPair FairValueInterval -> TriggerA () ()

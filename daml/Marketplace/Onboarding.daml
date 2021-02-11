@@ -50,6 +50,13 @@ onboardRole role operator user = do
         (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardBroker with broker = user
         (Some brokerInvitationCid, Some brokerCid) -> archive brokerInvitationCid
         _ -> return ()
+    CCPRole -> do
+      optCCPInvitation <- lookupByKey @CCPInvitation userKey
+      optCCP <- lookupByKey @CCP userKey
+      case (optCCPInvitation, optCCP) of
+        (None, None) -> void $ exerciseByKey @Operator operator Operator_OnboardCCP with ccp = user
+        (Some ccpInvitationCid, Some ccpCid) -> archive ccpInvitationCid
+        _ -> return ()
 
 template UserSession
   with

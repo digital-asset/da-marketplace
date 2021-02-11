@@ -172,6 +172,7 @@ template Order
       nonconsuming Order_RequestCancel : ContractId OrderCancelRequest
         do create OrderCancelRequest with order = this
 
+
 assetSplit : Asset -> [Decimal] -> [Asset]
 assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
   where
@@ -179,14 +180,6 @@ assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
     quantitiesAll = if quantitySum == asset.quantity
                     then quantities
                     else quantities ++ [asset.quantity - quantitySum]
-
-quantitySplit : Decimal -> [Decimal] -> [Decimal]
-quantitySplit quantity quantities = quantitiesAll -- map (\q -> asset with quantity = q) quantitiesAll
-  where
-    quantitySum = foldl (+) 0.0 quantities
-    quantitiesAll = if quantitySum == quantity
-                    then quantities
-                    else quantities ++ [quantity - quantitySum]
 
 
 template BrokerOrderRequest

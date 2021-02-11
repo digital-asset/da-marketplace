@@ -46,11 +46,13 @@ template CCPCustomerInvitation
             receiver = ccp, text = "CCP customer invitation rejected."
           return ()
 
+-- |Reject 'MarginCalculation' and set CCPCustomer to not 'inGoodStanding'
 rejectMarginCalculation : ContractId MarginCalculation -> CCPCustomer -> Text -> Update (ContractId CCPCustomer)
 rejectMarginCalculation mcCid ccpCustomer reason = do
   exercise mcCid MarginCalculation_Reject with note = reason
   create ccpCustomer with inGoodStanding = False
 
+-- |Resolve 'MarginCalculation' and recreate 'CCPCustomer' with new margin deposit cids
 resolveMarginCalculation
   : ContractId MarginCalculation
   -> CCPCustomer
@@ -60,6 +62,7 @@ resolveMarginCalculation
 resolveMarginCalculation mcCid ccpCustomer newMarginCids reason = do
   exercise mcCid MarginCalculation_Resolve with note = reason
   create ccpCustomer with marginDepositCids = newMarginCids, inGoodStanding = True
+
 
 template CCPCustomer
   with
@@ -106,6 +109,7 @@ template CCPCustomer
                     xs -> do
                       newMarginDepositCid <- exercise (head xs) AssetDeposit_Merge with depositCids = diffDepositCid :: tail xs
                       resolveMarginCalculation calculationCid this [newMarginDepositCid] "Margin call successful."
+
               else do -- transfer from margin account to clearing account
                 let newAmount = amount * (-1.0)
                 assertMsg "no margin account found" $ not $ null marginDepositCids

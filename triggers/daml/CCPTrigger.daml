@@ -69,19 +69,25 @@ handleCCPRule party = do
   assetDeposits <- query @AssetDeposit
   let ownedAssetDeposits    = filter (\(_,ad) -> ad.account.owner == party) assetDeposits
       providerAssetDeposits = filter (\(_,ad) -> ad.account.provider == party) assetDeposits
-  -- forA_ providerAssetDeposits (handleProviderDeposits party)
 
   forA_ incomingMarkToMarkets (handleIncomingMarkToMarketCalculation party)
   handleOutgoingMTMCalculations party ownedAssetDeposits outgoingMarkToMarkets
 
 
+-- |Find all 'AssetDeposit' that a CCP Customer has with the CCP that are
+-- _not_ margin deposits.
 getCustomerDeposits : Party -> Party -> TriggerA CCPState [ContractId AssetDeposit]
 getCustomerDeposits ccp customer = do
     state@CCPState { operatorParty, usedDepositCids } <- get
     (_,ccpCustomer) <- fromSomeNote "getCustomerDeposits" <$> queryContractKey @CCPCustomer (ccp,operatorParty,customer)
-    map fst . filter (\(dCid,d) -> d.account.owner == customer && d.account.provider == ccp && dCid `notElem` ccpCustomer.marginDepositCids) <$> query @AssetDeposit
+    map fst . filter (checkDeposit ccpCustomer) <$> query @AssetDeposit
+  where
+    checkDeposit ccpCustomer (dCid,d)  = d.account.owner == customer
+                                      && d.account.provider == ccp
+                                      && dCid `notElem` ccpCustomer.marginDepositCids
 
 
+-- |Transfer to and from the CCPCustomer's margin deposits from their clearing account.
 handleMarginCalculation : Party -> ContractPair MarginCalculation -> TriggerA CCPState ()
 handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}) = do
   debug ("resolving margin calculation: " <> show mc)
@@ -99,6 +105,7 @@ handleMarginCalculation ccp (mcCid, mc@MarginCalculation{customer, targetAmount}
     depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
 
 
+-- |Transfer from from the CCPCustomer to the CCP for a MarkToMarketCalculation
 handleIncomingMarkToMarketCalculation
   : Party
   -> ContractPair MarkToMarketCalculation
@@ -113,13 +120,15 @@ handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@MarkToMarketCalculation {
   return ()
 
 
+-- |Transfer from from the CCP to CCPCustomer for a MarkToMarketCalculation
 handleOutgoingMTMCalculations
   : Party
   -> [ContractPair AssetDeposit]
   -> [ContractPair MarkToMarketCalculation]
   -> TriggerA CCPState ()
-handleOutgoingMTMCalculations _     [] _           = return ()
-handleOutgoingMTMCalculations _     _  []          = return ()
+handleOutgoingMTMCalculations _ [] _  = return ()
+handleOutgoingMTMCalculations _ _  [] = return ()
+
 handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
     None -> handleOutgoingMTMCalculations party ds mtms
     (Some (toUse,remaining)) -> do
@@ -127,13 +136,14 @@ handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
       CCPState { operatorParty } <- get
       dedupExerciseByKey @CCPCustomer (party,operatorParty,(snd mtm).customer) CCPCustomer_TransferToClearingAccount
           with depositCids = map fst toUse, optMarkToMarketCalc = Some (fst mtm), amount
-      -- dedupExercise (fst mtm) MarkToMarketCalculation_Resolve with note = "resolved"
       handleOutgoingMTMCalculations party remaining mtms
   where
     amount = (snd mtm).mtmAmount
     ds' = collectDeposits amount ([],ds)
 
 
+-- |Recurses through 'AssetDeposit's until the amount of necessary funds is
+-- satisfied. Returns (used,remaining), or None if there are not enough AssetDeposits.
 collectDeposits
   :  Decimal
   -> ([ContractPair AssetDeposit], [ContractPair AssetDeposit])

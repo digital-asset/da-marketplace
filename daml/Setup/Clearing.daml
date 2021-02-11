@@ -87,8 +87,7 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
   h2oQ421DerId <- createSimpleDerivative operator issuer "H2OQ421" "H2O" "H2O Q4 21" 6 1 "h2o" h2oTokenId observers
 
-                                                     -- custodian   margin   clearing
-  let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
+  let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0  10_000.0 3000.0
 
   aliceAccts <- setupAccount alice
   bobAccts   <- setupAccount bob
@@ -138,15 +137,14 @@ doSetupAccounts wt lp@(LedgerParties operator public custodian exchange issuer a
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
 
   usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
-
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
-  -- let setupAccount = setupInvestorAccount wt lp usdTokenId 99999.0  1000.0    5000.0
-  --
-  -- aliceAccts <- setupAccount alice
-  -- bobAccts <- setupAccount bob
-  -- carlAccts <- setupAccount carl
-  -- danaAccts <- setupAccount dana
+  let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0 10_000.0 3000.0
+
+  aliceAccts <- setupAccount alice
+  bobAccts <- setupAccount bob
+  carlAccts <- setupAccount carl
+  danaAccts <- setupAccount dana
 
   return ()
 
@@ -291,48 +289,42 @@ onboardInvestor wt lp investor name = do
   return ()
 
 data InvestorAccounts = InvestorAccounts with
-    iaCustodian : Optional (ContractId AssetDeposit)
-    iaMargin : ContractId AssetDeposit
-    iaClearing : ContractId AssetDeposit
+    iaCustodian : ContractId AssetDeposit
+    iaClearing : Optional (ContractId AssetDeposit)
   deriving (Show,Eq)
 
 setupInvestorAccount : Bool -> LedgerParties -> Id -> Decimal -> Decimal -> Decimal -> Party -> Script InvestorAccounts
-setupInvestorAccount wt lp usdTokenId custodianAmount marginAmount clearingAmount investor = do
+setupInvestorAccount wt lp usdTokenId custodianAmount clearingAmount marginAmount investor = do
 
   let operator  = lp.userAdmin
       custodian = lp.custodian
       exchange  = lp.exchange
       ccp       = lp.ccp
 
-  -- > deposit USD into Custodian account
-  depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit
-      with tokenId = usdTokenId, depositQuantity = clearingAmount, beneficiary = investor
+  optClearingDeopsitCid <- createClearingDeposit wt lp investor usdTokenId clearingAmount
 
-  -- > allocate deposit to CCP for Clearing Account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
-      with depositCids = [depositCid], amount = clearingAmount, provider = ccp
-  clearingDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+  time <- getTime
+  -- > create margin account
+  mcCid <- ccp `submit` createCmd MarginCalculation with
+    ccp
+    customer = investor
+    accountId = usdTokenId
+    currency = "USD"
+    targetAmount = marginAmount
+    calculationTime = time
+    calculationId = "2134820934"
 
-  -- > deposit USD into custodian account
-  depositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit
-      with tokenId = usdTokenId, depositQuantity = marginAmount, beneficiary = investor
+  awaitOrDo' wt 0.25 "performing margin fill"
+    $ do
+      debug "filling optional margin"
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,investor) CCPCustomer_PerformMarginFill
+        with clearingDepositCids = [fromSomeNote "alice cid" $ optClearingDeopsitCid], targetAmount = marginAmount, calculationCid = mcCid
 
-  -- > allocate deposit to CCP for Margin Account
-  transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
-      with depositCids = [depositCid], amount = marginAmount, provider = ccp
-  marginDepositCid <- custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+  -- > deposit more USD into custodian account
+  custodianDepositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit
+      with tokenId = usdTokenId, depositQuantity = custodianAmount, beneficiary = investor
 
-  -- -- > deposit more USD into custodian account
-  -- custodianDepositCid <- custodian `submit` exerciseByKeyCmd @Custodian (operator, custodian) Custodian_CreateDeposit
-  --     with tokenId = usdTokenId, depositQuantity = custodianAmount, beneficiary = investor
-
-  -- ccpInviteCid <- ccp `submit` exerciseByKeyCmd @CCP (operator, ccp) CCP_InviteCustomer with ccpCustomer = investor
-  -- ccpCustomerCid <- investor `submit` exerciseCmd ccpInviteCid CCPCustomerInvitation_Accept
-
-  -- awaitOrDo' wt 0.25 "move deposit to ccp account"
-  --   $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,investor) CCPCustomer_AddDepositToClearingDeposits with depositCid = clearingDepositCid
-
-  return $ InvestorAccounts (None) clearingDepositCid marginDepositCid
+  return $ InvestorAccounts custodianDepositCid optClearingDeopsitCid
 
 createClearingDeposit : Bool -> LedgerParties -> Party -> Id -> Decimal -> Script (Optional (ContractId AssetDeposit))
 createClearingDeposit wt lp@LedgerParties{userAdmin = operator, custodian, ccp} investor usdTokenId amount = do
@@ -343,8 +335,7 @@ createClearingDeposit wt lp@LedgerParties{userAdmin = operator, custodian, ccp} 
   -- > allocate deposit to CCP for Clearing Account
   transferRequestCid <- investor `submit` exerciseByKeyCmd @Investor (operator, investor) Investor_AllocateToProvider
       with depositCids = [depositCid], amount = amount, provider = ccp
-  -- awaitOrDo' wt 0.25 "approving transfer "
-  --   $ custodian `submit` exerciseCmd transferRequestCid DepositTransferRequest_Approve
+
   if wt
   then do
     sleep (decToRelTime 0.25)
@@ -376,7 +367,6 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
         underlying
         isPublic = True
         observers = fromList observers
-
 
   issuer `submit` createCmd derivative
   return id
