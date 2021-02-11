@@ -261,6 +261,7 @@ template ClearedOrderRequest
       ClearedOrderRequest_Reject : ()
         do return ()
 
+-- TODO: Allow for cancelling pending orders
 template ClearedOrder
   with
     ccp : Party
@@ -270,8 +271,6 @@ template ClearedOrder
     isBid : Bool
     price : Decimal
     qty : Decimal
-    -- asset : Asset
-    -- account : Account
     status : Text
     orderId : Int
   where
@@ -285,18 +284,7 @@ template ClearedOrder
       ClearedOrder_Fill : ()
         do return ()
 
-      -- Order_Cancel : ContractId DepositCreditRequest
-      --   do
-      --     create DepositCreditRequest with
-      --       owner = exchParticipant
-      --       account = account
-      --       asset = asset
-
-    -- controller exchParticipant can
-    --   nonconsuming ClearedOrder_RequestCancel : ContractId OrderCancelRequest
-    --     do create OrderCancelRequest with order = this
-
-
+-- TODO: Replace DerivativeTrade with ClearedTrade
 template ClearedTrade
   with
     ccp : Party

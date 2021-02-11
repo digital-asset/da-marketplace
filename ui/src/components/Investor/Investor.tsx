@@ -15,7 +15,7 @@ import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -29,6 +29,7 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 
 
 type Props = {
@@ -123,14 +124,25 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                         </Menu.Item>
                                     })
 
-                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(tokenPair => {
+                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(marketListing => {
+                                        const listing = unwrapDamlTuple(marketListing);
+                                        const tokenPair = typeof listing[0] !== 'string' && listing[0];
+                                        const defaultCCP = typeof listing[1] === 'string' && listing[1];
+
+                                        if (!tokenPair || !defaultCCP) {
+                                            throw new Error("blab")
+                                        }
+
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                                        console.log("Hmmmmm: ", base, quote, defaultCCP, tokenPair)
 
                                         return <Menu.Item
                                             as={NavLink}
                                             to={{
                                                 pathname: `${url}/trade/${base}-${quote}`,
                                                 state: {
+                                                    defaultCCP,
                                                     isCleared: true,
                                                     exchange: exchange.contractData,
                                                     tokenPair: unwrapDamlTuple(tokenPair)

@@ -16,6 +16,7 @@ import { OrderKind } from './InvestorTrade'
 type Props = {
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
+    defaultCCP: string;
     exchange: string;
     isCleared: boolean;
     tokenPair: Id[];
@@ -24,6 +25,7 @@ type Props = {
 const OrderForm: React.FC<Props> = ({
     assetPrecisions,
     deposits,
+    defaultCCP,
     exchange,
     isCleared,
     tokenPair
@@ -59,31 +61,35 @@ const OrderForm: React.FC<Props> = ({
 
         if (isCleared) {
             console.log("Placing a cleared order.");
-            const choice = ExchangeParticipant.ExchangeParticipant_MakeClearedOrder
             const makeClearedArgs = {
                 price,
-                ccp: 'Ccp',
-                qty: amount,
-                pair: wrapDamlTuple(tokenPair),
-                isBid: kind === OrderKind.BID
+                amount,
+                ccp: defaultCCP, // TODO: Allow user-selectable CCP
+                pair: wrapDamlTuple(tokenPair)
             }
-            await ledger.exerciseByKey(choice, key, makeClearedArgs);
-            return;
-        }
+            const placeClearedBid = ExchangeParticipant.ExchangeParticipant_PlaceClearedBid;
+            const placeClearedOffer = ExchangeParticipant.ExchangeParticipant_PlaceClearedOffer;
 
-        const depositCids = validateDeposits(deposits, amount);
+            if (kind === OrderKind.BID) {
+                await ledger.exerciseByKey(placeClearedBid, key, makeClearedArgs);
+            } else if (kind === OrderKind.OFFER) {
+                await ledger.exerciseByKey(placeClearedOffer, key, makeClearedArgs);
+            }
+        } else {
+            const depositCids = validateDeposits(deposits, amount);
 
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        }
+            const args = {
+                price,
+                amount,
+                depositCids,
+                pair: wrapDamlTuple(tokenPair)
+            }
 
-        if (kind === OrderKind.BID) {
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-        } else if (kind === OrderKind.OFFER) {
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
+            if (kind === OrderKind.BID) {
+                await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
+            } else if (kind === OrderKind.OFFER) {
+                await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
+            }
         }
     }
 
@@ -174,6 +180,8 @@ const OrderForm: React.FC<Props> = ({
                             computeValues(e.target.value, quotePrecision, 'total', setAmountQuote)}/>
                     <label className='order-label badge'>{quoteLabel}</label>
                 </Form.Field>
+
+                {isCleared && <p className='p2 dark'>Market CCP Party: <b>{defaultCCP}</b></p>}
 
                 <div className='buttons'>
                     <Button

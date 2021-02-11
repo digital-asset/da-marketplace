@@ -44,7 +44,7 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
   -- the exchange adds support for BTC/USDT pair
   exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
       with baseTokenId = btcTokenId, quoteTokenId = usdTokenId
-           minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False
+           minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
   aliceUsdId <- setupExchangeAccount lp usdTokenId 10000.0 alice
   bobBtcId <- setupExchangeAccount lp btcTokenId 10.0 bob

@@ -6,7 +6,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { ExchangeIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
@@ -14,6 +14,7 @@ import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 import FormToggle from '../common/FormToggle'
+import { RegisteredCCP } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
@@ -21,6 +22,8 @@ const CreateMarket: React.FC<{}> = () => {
 
     const [ minQuantity, setMinQuantity ] = useState('');
     const [ maxQuantity, setMaxQuantity ] = useState('');
+    const [ ccpInput, setCcpInput ] = useState('');
+    const [ defaultCCP, setDefaultCCP ] = useState<string | null>(null);
     const [ clearedMarket, setClearedMarket ] = useState(false);
 
     const [ minQuantityError, setMinQuantityError ] = useState<string>()
@@ -31,6 +34,7 @@ const CreateMarket: React.FC<{}> = () => {
     const operator = useOperator();
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
+    const registeredCCPs = useContractQuery(RegisteredCCP, AS_PUBLIC);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
     const handleIdPairSubmit = async () => {
@@ -47,9 +51,12 @@ const CreateMarket: React.FC<{}> = () => {
             minQuantity,
             maxQuantity,
             clearedMarket,
+            defaultCCP,
             baseTokenId: baseToken.contractData.id,
             quoteTokenId: quoteToken.contractData.id
         };
+
+        console.log("Adding pair: ", args);
 
         await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
 
@@ -143,6 +150,16 @@ const CreateMarket: React.FC<{}> = () => {
                     onLabel='Cleared'
                     offLabel='Collateralized'
                     onClick={cleared => setClearedMarket(cleared)}/>
+                { clearedMarket && (
+                    <ContractSelect
+                        className='ccp-select'
+                        contracts={registeredCCPs} // TODO: Lookup from exchange relationships, not public
+                        label='CCP Party'
+                        placeholder='Select...'
+                        value={ccpInput}
+                        getOptionText={ccp => ccp.contractData.name}
+                        setContract={ccp => setDefaultCCP(ccp.contractData.ccp)}/>
+                )}
 
                 <Button
                     content='Submit'

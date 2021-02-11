@@ -11,6 +11,7 @@ import Marketplace.Trading
 import Marketplace.Utils
 
 import DA.Finance.Types
+import DA.Optional
 
 import DA.List
 import DA.Next.Set hiding (delete)
@@ -72,7 +73,7 @@ template Exchange
     public : Party
     tokenPairs : [IdPair] -- tokens pairs that are tradable on the exchange
     binOptions : [IdPair]
-    clearedMarkets : [IdPair] -- token pairs that represent cleared markets
+    clearedMarkets : [(IdPair, Party)] -- tuple of market pairs and the default CCP party for that market
     participants : [Party]
   where
     signatory operator, exchange
@@ -121,6 +122,7 @@ template Exchange
           minQuantity : Decimal
           maxQuantity : Decimal
           clearedMarket : Bool
+          defaultCCP : Optional Party
         do
           (_, baseToken) <- fetchByKey @Token baseTokenId
           (_, quoteToken) <- fetchByKey @Token quoteTokenId
@@ -134,6 +136,7 @@ template Exchange
             $ minQuantity < maxQuantity
 
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
+          -- TODO: Append "_CLEARED" to instrumentName if cleared instrument
           let instrumentName = baseToken.id.label <> quoteToken.id.label
           let newMarket = MarketPair with
                 id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
@@ -150,8 +153,10 @@ template Exchange
                 status = InstrumentActive
                 observers = fromList participants
           create newMarket
-          if clearedMarket then
-            create this with clearedMarkets = dedup $ (baseTokenId, quoteTokenId) :: clearedMarkets
+          if clearedMarket then do
+            let ccp = fromSomeNote "defaultCCP must be provided for cleared markets" defaultCCP
+            let clearedMarketPair = ((baseTokenId, quoteTokenId), ccp)
+            create this with clearedMarkets = dedup $ clearedMarketPair :: clearedMarkets
           else
             create this with tokenPairs = dedup $ (baseTokenId, quoteTokenId) :: tokenPairs
 

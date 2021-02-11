@@ -161,6 +161,31 @@ template ExchangeParticipant
 
           return (orderRequestCid, debitRequestCid)
 
+      nonconsuming ExchangeParticipant_PlaceClearedBid : ContractId ClearedOrderRequest
+        with
+          ccp : Party
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision $ amount / price
+
+          exercise self ExchangeParticipant_MakeClearedOrder with ccp, pair, price, qty, isBid = True
+
+      nonconsuming ExchangeParticipant_PlaceClearedOffer : ContractId ClearedOrderRequest
+        with
+          ccp : Party
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision amount
+
+          exercise self ExchangeParticipant_MakeClearedOrder with ccp, pair, price, qty, isBid = False
+
+      -- TODO: Add wrapper choices to normalize "price per unit" (UI) to price for the whole order
       nonconsuming ExchangeParticipant_MakeClearedOrder : ContractId ClearedOrderRequest
         with
           ccp : Party
