@@ -1,5 +1,6 @@
 module Marketplace.CentralCounterparty where
 
+import DA.Optional
 import DA.Finance.Types
 
 import Marketplace.Derivative
@@ -64,8 +65,8 @@ template CCP
           calculationId : Text -- TODO: add calculationTime
         do
           -- reject any previous calculation
-          (rejectedCid,_) <- fetchByKey @RejectedMarginCalculation (ccp,ccpCustomer,calculationId)
-          exercise rejectedCid RejectedMarginCalculation_Cancel
+          optRejectedCid <- lookupByKey @RejectedMarginCalculation (ccp,ccpCustomer,calculationId)
+          whenSome optRejectedCid $ \rcid -> exercise rcid RejectedMarginCalculation_Cancel
           calculationTime <- getTime
           let accountId = case optAccountId of
                 (Some aid) -> aid
