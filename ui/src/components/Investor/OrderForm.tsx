@@ -14,6 +14,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import { OrderKind } from './InvestorTrade'
 
 type Props = {
+    allowedToOrder: boolean;
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
     defaultCCP: string;
@@ -23,6 +24,7 @@ type Props = {
 }
 
 const OrderForm: React.FC<Props> = ({
+    allowedToOrder,
     assetPrecisions,
     deposits,
     defaultCCP,
@@ -61,6 +63,10 @@ const OrderForm: React.FC<Props> = ({
 
         if (isCleared) {
             console.log("Placing a cleared order.");
+            if (!allowedToOrder) {
+                throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
+            }
+
             const makeClearedArgs = {
                 price,
                 amount,

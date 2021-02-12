@@ -5,6 +5,7 @@ import { Header } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
@@ -53,6 +54,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     const allOrders = useContractQuery(Order);
     const allClearedOrders = useContractQuery(ClearedOrder);
+    const ccpCustomerContracts = useContractQuery(CCPCustomer);
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
@@ -115,6 +117,9 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                     <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
+                            allowedToOrder={
+                                !!ccpCustomerContracts.find(ccp => ccp.contractData.ccpCustomer === investor)
+                            }
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
                             defaultCCP={defaultCCP}

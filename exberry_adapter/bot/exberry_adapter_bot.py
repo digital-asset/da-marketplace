@@ -6,7 +6,7 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 180 # default SID, use ExberrySID contract to change while running
+SID = 190 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1

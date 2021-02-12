@@ -249,7 +249,7 @@ template ClearedOrderRequest
   with
     order : ClearedOrder
   where
-    signatory order.exchange, order.exchParticipant
+    signatory order.ccp, order.exchParticipant
     ensure order.qty > 0.0
 
     controller order.exchange can
