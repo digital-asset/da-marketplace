@@ -158,19 +158,6 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                                     <p>{client.label.substring(0, client.label.indexOf('|'))}</p>
                                 </Menu.Item>
                             )}
-                            <Menu.Item>
-                                <p className='p2'>Derivaties:</p>
-                            </Menu.Item>
-                            {allDerivatives.map(derivative => (
-                                <Menu.Item
-                                    className='sidemenu-item-normal'
-                                    as={NavLink}
-                                    to={`${url}/issued-derivative/${encodeURIComponent(derivative.contractId)}`}
-                                    key={derivative.contractId}
-                                >
-                                    <p>{derivative.contractData.id.label}</p>
-                                </Menu.Item>
-                            ))}
                         </Menu.Menu>
                     </RoleSideNav>
 
