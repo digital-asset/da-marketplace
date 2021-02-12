@@ -150,7 +150,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                                     tokenPair: unwrapDamlTuple(tokenPair)
                                                 }
                                             }}
-                                            className='sidemenu-item-normal-clr'
+                                            className='sidemenu-item-normal'
                                             key={`${base}${quote}CLR`}
                                         >
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
