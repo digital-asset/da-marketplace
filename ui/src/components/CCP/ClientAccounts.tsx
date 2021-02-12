@@ -3,6 +3,7 @@ import { Header, Divider } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
 import { useContractQuery } from '../../websocket/queryStream'
 
@@ -12,8 +13,7 @@ import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'
 
 import MarginCall from './MarginCall'
-import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import {useCCPCustomerNotifications} from './CCPCustomerNotifications'
+import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
 
 type Props = {
     sideNav: React.ReactElement;

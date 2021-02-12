@@ -144,7 +144,7 @@ template CCPCustomer
                 with depositCids = tail clearingDepositCids
 
             clearingDeposit <- fetch clearingDepositCid
-            assertMsg "amount to transfer exceeds amount in clearing account" $ amount < clearingDeposit.asset.quantity
+            assertMsg "amount to transfer exceeds amount in clearing account" $ amount <= clearingDeposit.asset.quantity
             [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
                 with quantities = [amount]
 

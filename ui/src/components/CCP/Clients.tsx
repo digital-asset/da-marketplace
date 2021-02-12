@@ -1,7 +1,11 @@
 import React, {useState} from 'react'
-import { Header, Divider } from 'semantic-ui-react'
+import { useParty, useLedger } from '@daml/react'
+import { Header } from 'semantic-ui-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
@@ -10,16 +14,11 @@ import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
+import { useOperator } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
 
 import MarginCall from './MarginCall'
-import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import {CCPCustomerInfo, wrapDamlTuple} from '../common/damlTypes'
-import { useParty, useLedger } from '@daml/react'
-import {useOperator} from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-import {RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import MarkToMarketCalc from './MarkToMarketCalc'
 
 type Props = {
     clients: {

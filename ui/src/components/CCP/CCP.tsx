@@ -6,11 +6,13 @@ import _ from 'lodash'
 import { useLedger, useParty } from '@daml/react'
 
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import { CCPInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { RegisteredInvestor, RegisteredCCP, RegisteredBroker, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { CCP as CCPModel, CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { UserIcon } from '../../icons/Icons'
+import { UserIcon, MarketIcon } from '../../icons/Icons'
 
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
@@ -26,8 +28,9 @@ import RoleSideNav from '../common/RoleSideNav'
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientAccounts from './ClientAccounts'
-import {CCPInvitation} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import ExchangeRelationships from './ExchangeRelationships'
+import IssuedDerivative from '../Issuer/IssuedDerivative'
+import DerivativeList from '../common/DerivativeList'
 
 type Props = {
     onLogout: () => void;
@@ -39,7 +42,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const ccp = useParty();
     const ledger = useLedger();
 
-    const keys = () => [wrapDamlTuple([operator, ccp])];
+    const allDerivatives = useContractQuery(Derivative);
 
     const customers = useContractQuery(CCPCustomer);
     const exchanges = useContractQuery(CCPExchangeRelationship);
@@ -82,17 +85,9 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const ccpContract = useContractQuery(CCPModel)
-        // Find contract by key
-        .find(contract => _.isEqual(
-            // Convert keys to the same data type for comparison
-            unwrapDamlTuple(contract.key),
-            [operator, ccp]
-        ));
-
     const investors = customers; // ccpContract?.contractData.investors || [];
-
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
+    const derivatives = useContractQuery(Derivative, AS_PUBLIC);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -142,13 +137,12 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
         </InviteAcceptTile>
     );
 
-    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
-
     const sideNav = <RoleSideNav url={url}
                         name={registeredCCP[0]?.contractData.name || ccp}
                         items={[
                             {to: `${url}/exchanges`, label: "Exchanges", icon: <UserIcon/>},
                             {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
+                            {to: `${url}/derivatives`, label: 'Derivatives', icon: <MarketIcon/>},
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
@@ -164,6 +158,19 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                                     <p>{client.label.substring(0, client.label.indexOf('|'))}</p>
                                 </Menu.Item>
                             )}
+                            <Menu.Item>
+                                <p className='p2'>Derivaties:</p>
+                            </Menu.Item>
+                            {allDerivatives.map(derivative => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/issued-derivative/${encodeURIComponent(derivative.contractId)}`}
+                                    key={derivative.contractId}
+                                >
+                                    <p>{derivative.contractData.id.label}</p>
+                                </Menu.Item>
+                            ))}
                         </Menu.Menu>
                     </RoleSideNav>
 
@@ -205,6 +212,17 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                     <ClientAccounts
                         sideNav={sideNav}
                         clients={allCustomers}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/derivatives`}>
+                    <DerivativeList
+                        sideNav={sideNav}
+                        derivatives={derivatives}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/issued-derivative/:derivativeId`}>
+                    <IssuedDerivative
+                        sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>

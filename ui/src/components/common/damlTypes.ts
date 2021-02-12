@@ -10,7 +10,8 @@ import {
     Custodian,
     Clearing,
     Notification,
-    Token
+    Token,
+    Derivative
 } from '@daml.js/da-marketplace/lib/Marketplace'
 import { ContractId } from '@daml/types';
 
@@ -119,7 +120,7 @@ export type RejectedMarginCalculationInfo = ContractInfo<
     Clearing.RejectedMarginCalculation,
     Clearing.RejectedMarginCalculation.Key>;
 
-export type RejectedMarkToMarketCalculation = ContractInfo<
+export type RejectedMarkToMarketCalculationInfo = ContractInfo<
     Clearing.RejectedMarkToMarketCalculation,
     Clearing.RejectedMarkToMarketCalculation.Key>;
 
@@ -138,3 +139,7 @@ export type RegisteredInvestorInfo = ContractInfo<
 export type TokenInfo = ContractInfo<
     Token.Token,
     Token.Token.Key>;
+
+export type DerivativeInfo = ContractInfo<
+    Derivative.Derivative,
+    Derivative.Derivative.Key>;

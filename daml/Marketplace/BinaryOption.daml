@@ -3,6 +3,7 @@ module Marketplace.BinaryOption where
 import DA.Finance.Types
 
 import DA.Next.Set
+import qualified DA.Text as T
 
 
 -- | Reference data describing a binary option.
@@ -56,3 +57,6 @@ template SettledBinaryOption
 
     key id : Id
     maintainer key.signatories
+
+addZeros : Int -> Text -> Text
+addZeros n txt = T.implode $ T.explode txt <> replicate (n - T.length txt) "0"

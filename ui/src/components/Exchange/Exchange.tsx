@@ -4,6 +4,7 @@ import { Switch, Route, useRouteMatch } from 'react-router-dom'
 import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -18,6 +19,8 @@ import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
+import ExchangeParticipants from './ExchangeParticipants'
+import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -28,8 +31,6 @@ import { useRegistryLookup } from '../common/RegistryLookup'
 import { Header } from 'semantic-ui-react'
 
 import MarketPairs from './MarketPairs'
-
-import ExchangeParticipants from './ExchangeParticipants'
 
 type Props = {
     onLogout: () => void;
@@ -49,6 +50,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
     const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
     const investorCount = exchangeParticipants.length;
+    const derivatives = useContractQuery(Derivative, AS_PUBLIC);
 
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
@@ -96,7 +98,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                  name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
-                                    {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
+                                    {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>},
+                                    {to: `${url}/derivatives`, label: 'Derivatives', icon: <PublicIcon/>},
                                  ]}/>
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
@@ -168,6 +171,13 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                         registeredInvestors={investorOptions}/>
+                </Route>
+
+                <Route path={`${path}/derivatives`}>
+                    <DerivativeList
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        derivatives={derivatives}/>
                 </Route>
             </Switch>
         </div>

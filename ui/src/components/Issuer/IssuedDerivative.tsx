@@ -48,7 +48,6 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
     const party = useParty()
 
     const derivative = useContractQuery(Derivative).find(c => c.contractId === decodeURIComponent(derivativeId))
-    const allFairValues = useContractQuery(FairValue);
     const fairValues = useContractQuery(FairValue).filter(fv => fv.contractData.assetId.label === derivative?.contractData.id.label);
 
     const allRegisteredParties = [
