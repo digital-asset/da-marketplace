@@ -147,9 +147,11 @@ const CreateMarket: React.FC<{}> = () => {
                 </div>
 
                 <FormToggle
+                    className='cleared-market-toggle'
                     onLabel='Cleared'
                     offLabel='Collateralized'
                     onClick={cleared => setClearedMarket(cleared)}/>
+
                 { clearedMarket && (
                     <ContractSelect
                         className='ccp-select'

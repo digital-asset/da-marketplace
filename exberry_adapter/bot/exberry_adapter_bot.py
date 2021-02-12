@@ -6,7 +6,7 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 190 # default SID, use ExberrySID contract to change while running
+SID = 220 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
@@ -88,10 +88,13 @@ def main():
 
         sid_to_order[sid] = order
 
+        instrument = make_instrument(order['pair'], True)
+        logging.info(f"Instrument label is: {instrument}")
+
         return create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': 'Limit',
-                'instrument': make_instrument(order['pair']),
+                'instrument': instrument,
                 'quantity': float(order['qty']),
                 'price': float(order['price']),
                 'side': 'Buy' if order['isBid'] else 'Sell',
@@ -191,7 +194,7 @@ def main():
 
         market_pairs[symbol] = pair
 
-        logging.info(f"New market_pairs is ${market_pairs}")
+        logging.info(f"New market_pairs is {market_pairs}")
 
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
@@ -262,7 +265,7 @@ def main():
             ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
             if not ccp:
-                logging.error(f"Error: non-matching ccp parties: ${taker['ccp']} !== ${maker['ccp']}")
+                logging.error(f"Error: non-matching ccp parties: {taker['ccp']} !== {maker['ccp']}")
                 return commands
 
             pair = market_pairs[execution['instrument']]
@@ -315,8 +318,9 @@ def main():
     network.run_forever()
 
 
-def make_instrument(pair) -> str:
-    return f"{pair['_1']['label']}{pair['_2']['label']}"
+def make_instrument(pair, cleared = False) -> str:
+    label = f"{pair['_1']['label']}{pair['_2']['label']}"
+    return f"{label}CLR" if cleared else label
 
 
 def make_user_user_id(ledger_party) -> str:

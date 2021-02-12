@@ -136,8 +136,12 @@ template Exchange
             $ minQuantity < maxQuantity
 
           assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
-          -- TODO: Append "_CLEARED" to instrumentName if cleared instrument
-          let instrumentName = baseToken.id.label <> quoteToken.id.label
+
+          let instrumentName = if clearedMarket
+              -- TODO : figure out how to pad instrument names to a length of 13, then append CLR or 000
+              then baseToken.id.label <> quoteToken.id.label <> "CLR"
+              else baseToken.id.label <> quoteToken.id.label
+
           let newMarket = MarketPair with
                 id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
                 clearedMarket
