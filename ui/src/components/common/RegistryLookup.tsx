@@ -1,4 +1,4 @@
-import React, {PropsWithChildren, createContext, useEffect, useState } from "react";
+import React, { PropsWithChildren, createContext, useEffect, useState } from 'react'
 import {
     RegisteredExchange,
     RegisteredCCP,
@@ -7,7 +7,7 @@ import {
     RegisteredIssuer,
     RegisteredInvestor
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { AS_PUBLIC, useContractQuery } from "../../websocket/queryStream";
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 export type RegistryLookup = {
     exchangeMap: Map<string, RegisteredExchange>;
@@ -53,7 +53,7 @@ export function RegistryLookupProvider({children}: PropsWithChildren<RegistryLoo
             brokerMap: brokerMap,
             investorMap: investorMap
         });
-    },[exchanges, ccps, custodians, brokers, issuers, investors]);
+    },[ exchanges, ccps, custodians, brokers, issuers, investors ]);
 
     return React.createElement(RegistryLookupContext.Provider, {value: registryLookup}, children);
 }

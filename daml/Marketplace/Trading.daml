@@ -245,6 +245,104 @@ template BrokerOrder
           create BrokerTrade with isBuy = isBid, ..
           create DepositTransferRequest with sender = broker, ..
 
+template ClearedOrderRequest
+  with
+    order : ClearedOrder
+  where
+    signatory order.ccp, order.exchParticipant
+    ensure order.qty > 0.0
+
+    controller order.exchange can
+      ClearedOrderRequest_Ack : ContractId ClearedOrder
+        with
+          orderId : Int
+        do create order with orderId = orderId
+
+      ClearedOrderRequest_Reject : ()
+        do return ()
+
+-- TODO: Allow for cancelling pending orders
+template ClearedOrder
+  with
+    ccp : Party
+    exchange : Party
+    exchParticipant : Party
+    pair : IdPair
+    isBid : Bool
+    price : Decimal
+    qty : Decimal
+    status : Text
+    orderId : Int
+  where
+    signatory exchange, exchParticipant
+    ensure qty > 0.0
+
+    key (exchange, orderId) : (Party, Int)
+    maintainer key._1
+
+    controller exchange can
+      ClearedOrder_Fill : ()
+        do return ()
+
+-- TODO: Replace DerivativeTrade with ClearedTrade
+template ClearedTrade
+  with
+    ccp : Party
+    exchange : Party
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id  -- id of order
+    trackingNumber : Int
+    buyer : Party
+    buyerOrderId : Int
+    seller : Party
+    sellerOrderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+  where
+    signatory exchange
+    observer ccp
+    controller ccp can
+      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+        with
+          buyerAccountId : Id
+          sellerAccountId : Id
+        do
+          timestamp <- getTime
+          buyCid <- create ClearedTradeSide with
+            participant = buyer
+            orderId = buyerOrderId
+            accountId = buyerAccountId
+            isBuy = True
+            ..
+          sellCid <- create ClearedTradeSide with
+            participant = seller
+            orderId = sellerOrderId
+            accountId = sellerAccountId
+            isBuy = False
+            ..
+          return (buyCid, sellCid)
+
+
+template ClearedTradeSide
+  with
+    participant : Party
+    ccp : Party
+    exchange : Party
+    isBuy : Bool
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id
+    orderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+    accountId : Id  -- the investor account at the ccp
+    timestamp : Time
+  where
+    signatory ccp, exchange
+    observer exchange, participant
 
 template DerivativeTrade
   with

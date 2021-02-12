@@ -1,6 +1,7 @@
 module Marketplace.ExchangeParticipant where
 
 import Marketplace.BinaryOption
+import Marketplace.CentralCounterpartyCustomer
 import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Transfer
@@ -9,6 +10,7 @@ import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.List
+import DA.Next.Set
 
 template ExchangeParticipantInvitation
   with
@@ -45,7 +47,6 @@ template ExchangeParticipant
     maintainer key._1
 
     controller exchParticipant can
-
       nonconsuming ExchangeParticipant_PlaceBinaryOptionOrder : (ContractId OrderRequest, ContractId DepositDebitRequest)
         with
           depositCid : ContractId AssetDeposit
@@ -160,3 +161,58 @@ template ExchangeParticipant
           orderRequestCid <- create OrderRequest with ..
 
           return (orderRequestCid, debitRequestCid)
+
+      nonconsuming ExchangeParticipant_PlaceClearedBid : ContractId ClearedOrderRequest
+        with
+          ccp : Party
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision $ amount / price
+
+          let order = ClearedOrder with
+                isBid = True, qty, status = "New", orderId = -1, ..
+
+          exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
+            with pair, price, order
+
+      nonconsuming ExchangeParticipant_PlaceClearedOffer : ContractId ClearedOrderRequest
+        with
+          ccp : Party
+          pair : IdPair
+          amount : Decimal
+          price : Decimal
+        do
+          (_, baseToken) <- fetchByKey @Token pair._1
+          let qty = roundBankers baseToken.quantityPrecision amount
+
+          let order = ClearedOrder with
+                isBid = False, qty, status = "New", orderId = -1, ..
+
+          exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
+            with pair, price, order
+
+      -- nonconsuming ExchangeParticipant_MakeClearedOrder : ContractId ClearedOrderRequest
+      --   with
+      --     ccp : Party
+      --     pair : IdPair
+      --     price : Decimal
+      --     qty : Decimal
+      --     isBid : Bool
+      --   do
+      --     (_, quoteToken) <- fetchByKey @Token pair._2
+      --     assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
+      --       $ roundBankers quoteToken.quantityPrecision price == price
+
+      --     let order = ClearedOrder with
+      --           isBid, qty, status = "New", orderId = -1, ..
+
+      --     create ClearedOrderRequest with ..
+
+    -- controller exchange can
+    --   ExchangeParticipant_AddCCP : ContractId ExchangeParticipant
+    --     with
+    --       ccp : Party
+    --     do create this with exchParticipantCCPs = insert ccp exchParticipantCCPs

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import { Label, Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -15,7 +15,7 @@ import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -30,6 +30,7 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 
 
 type Props = {
@@ -106,24 +107,61 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                             { allExchanges.length > 0 ?
                                 allExchanges.map(exchange => {
-                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                    const tokenPairs = exchange.contractData.tokenPairs.map(tokenPair => {
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
                                         return <Menu.Item
                                             as={NavLink}
+                                            exact
                                             to={{
                                                 pathname: `${url}/trade/${base}-${quote}`,
                                                 state: {
+                                                    isCleared: false,
                                                     exchange: exchange.contractData,
                                                     tokenPair: unwrapDamlTuple(tokenPair)
                                                 }
                                             }}
                                             className='sidemenu-item-normal'
-                                            key={exchange.contractId}
+                                            key={`${base}${quote}`}
                                         >
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                                         </Menu.Item>
                                     })
+
+                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(marketListing => {
+                                        const listing = unwrapDamlTuple(marketListing);
+                                        const tokenPair = typeof listing[0] !== 'string' && listing[0];
+                                        const defaultCCP = typeof listing[1] === 'string' && listing[1];
+
+                                        if (!tokenPair || !defaultCCP) {
+                                            throw new Error("Expected token pair and default CCP")
+                                        }
+
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                                        console.log("Hmmmmm: ", base, quote, defaultCCP, tokenPair)
+
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            exact
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}/cleared`,
+                                                state: {
+                                                    defaultCCP,
+                                                    isCleared: true,
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={`${base}${quote}CLR`}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                            <Label className='cleared-market-label'>Cleared</Label>
+                                        </Menu.Item>
+                                    })
+
+                                    return [...tokenPairs, ...clearedMarkets]
                                 }).flat()
                             :
                             <Menu.Item className='empty-item'>

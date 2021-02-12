@@ -14,16 +14,22 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import { OrderKind } from './InvestorTrade'
 
 type Props = {
+    allowedToOrder: boolean;
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
+    defaultCCP?: string;
     exchange: string;
+    isCleared: boolean;
     tokenPair: Id[];
 }
 
 const OrderForm: React.FC<Props> = ({
+    allowedToOrder,
     assetPrecisions,
     deposits,
+    defaultCCP,
     exchange,
+    isCleared,
     tokenPair
 }) => {
     const [ price, setPrice ] = useState('');
@@ -53,20 +59,47 @@ const OrderForm: React.FC<Props> = ({
     };
 
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
-        const depositCids = validateDeposits(deposits, amount);
-
         const key = wrapDamlTuple([exchange, operator, investor]);
-        const args = {
-            price,
-            amount,
-            depositCids,
-            pair: wrapDamlTuple(tokenPair)
-        }
 
-        if (kind === OrderKind.BID) {
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
-        } else if (kind === OrderKind.OFFER) {
-            await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
+        if (isCleared) {
+            console.log("Placing a cleared order.");
+            if (!defaultCCP) {
+                throw new AppError('Order Error.', 'The CCP is missing');
+            }
+
+            if (!allowedToOrder) {
+                throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
+            }
+
+            const makeClearedArgs = {
+                price,
+                amount,
+                ccp: defaultCCP, // TODO: Allow user-selectable CCP
+                pair: wrapDamlTuple(tokenPair)
+            }
+            const placeClearedBid = ExchangeParticipant.ExchangeParticipant_PlaceClearedBid;
+            const placeClearedOffer = ExchangeParticipant.ExchangeParticipant_PlaceClearedOffer;
+
+            if (kind === OrderKind.BID) {
+                await ledger.exerciseByKey(placeClearedBid, key, makeClearedArgs);
+            } else if (kind === OrderKind.OFFER) {
+                await ledger.exerciseByKey(placeClearedOffer, key, makeClearedArgs);
+            }
+        } else {
+            const depositCids = validateDeposits(deposits, amount);
+
+            const args = {
+                price,
+                amount,
+                depositCids,
+                pair: wrapDamlTuple(tokenPair)
+            }
+
+            if (kind === OrderKind.BID) {
+                await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceBid, key, args);
+            } else if (kind === OrderKind.OFFER) {
+                await ledger.exerciseByKey(ExchangeParticipant.ExchangeParticipant_PlaceOffer, key, args);
+            }
         }
     }
 
@@ -157,6 +190,8 @@ const OrderForm: React.FC<Props> = ({
                             computeValues(e.target.value, quotePrecision, 'total', setAmountQuote)}/>
                     <label className='order-label badge'>{quoteLabel}</label>
                 </Form.Field>
+
+                {isCleared && <p className='p2 dark'>Market CCP Party: <b>{defaultCCP}</b></p>}
 
                 <div className='buttons'>
                     <Button

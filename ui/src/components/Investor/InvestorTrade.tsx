@@ -5,9 +5,10 @@ import { Header } from 'semantic-ui-react'
 
 import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
@@ -26,6 +27,8 @@ type Props = {
 }
 
 type LocationState = {
+    isCleared?: boolean;
+    defaultCCP?: string;
     exchange?: Exchange;
     tokenPair?: Id[];
 }
@@ -50,9 +53,15 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const investor = useParty();
 
     const allOrders = useContractQuery(Order);
+    const allClearedOrders = useContractQuery(ClearedOrder);
+    const ccpCustomerContracts = useContractQuery(CCPCustomer);
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
+    const isCleared = location.state && !!location.state.isCleared;
+    const defaultCCP = location.state && location.state.defaultCCP;
+
+    console.log("Investor Trade: ", location.state);
 
     if (!exchangeData || !tokenPair) {
         history.push('/role/investor');
@@ -67,16 +76,29 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
     const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;
 
-    const marketData = allOrders
-        .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
-        .reduce((map, order) => {
-            const { price, qty } = order.contractData;
+    const marketData = isCleared ?
+        allClearedOrders
+            .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+            .reduce((map, order) => {
+                const { price, qty } = order.contractData;
 
-            const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
-            const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+                const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+                const qtyOrders = map[order.contractId]?.qtyOrders || 0;
 
-            return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
-    }, {} as MarketDataMap)
+                return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+        }, {} as MarketDataMap)
+        :
+        allOrders
+            .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+            .reduce((map, order) => {
+                const { price, qty } = order.contractData;
+
+                const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+                const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+                return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+        }, {} as MarketDataMap)
+
 
     useEffect(() => {
         const label = `'${investor}'@'${exchange}'`;
@@ -95,9 +117,14 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                     <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
+                            allowedToOrder={
+                                !!ccpCustomerContracts.find(ccp => ccp.contractData.ccpCustomer === investor)
+                            }
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
+                            defaultCCP={defaultCCP}
                             exchange={exchange}
+                            isCleared={isCleared}
                             tokenPair={tokenPair}/>
                         <OrderLadder orders={marketData}/>
                     </div>
