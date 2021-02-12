@@ -6,7 +6,7 @@ import { DateTimeInput } from 'semantic-ui-calendar-react'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
@@ -49,7 +49,7 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
         await ledger.exerciseByKey(choice, key, args);
     }
 
-    const registeredExchanges = useContractQuery(RegisteredExchange);
+    const registeredExchanges = useContractQuery(RegisteredExchange, AS_PUBLIC);
     const partyOptions = registeredExchanges.map(d => {
         return {
             text: `${d.contractData.name}`,

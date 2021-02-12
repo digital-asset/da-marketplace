@@ -124,6 +124,8 @@ export type RejectedMarkToMarketCalculationInfo = ContractInfo<
     Clearing.RejectedMarkToMarketCalculation,
     Clearing.RejectedMarkToMarketCalculation.Key>;
 
+export type ManualFairValueCalculationInfo = ContractInfo<Derivative.ManualFairValueCalculation>;
+
 export type RegisteredCustodianInfo = ContractInfo<
     Registry.RegisteredCustodian,
     Registry.RegisteredCustodian.Key>;
