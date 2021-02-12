@@ -25,7 +25,6 @@ import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/Donut
 import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
-import { useRegistryLookup } from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,
@@ -140,7 +139,10 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                         <StripedTable
                             headings={StripedTableHeaders}
                             rows={StripedTableRows}/>
-                        <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
+                        <AllocationsChart
+                            providers={providers}
+                            investors={investors}
+                            nettedTokenDeposits={nettedTokenDeposits}/>
                     </div>
                 </div>
             </PageSection>
@@ -188,9 +190,11 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     }
 }
 
-const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
-    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
-
+const AllocationsChart = (props: {
+    nettedTokenDeposits: DepositInfo[],
+    providers: IPartyInfo[],
+    investors: IPartyInfo[]
+}) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null
     }
@@ -201,13 +205,9 @@ const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     )
 
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
-
         return tokens.map(t => {
-            const investor = investorMap.get(t.investor)?.name || t.investor;
-            const provider = custodianMap.get(t.provider)?.name ||
-                             exchangeMap.get(t.provider)?.name ||
-                             brokerMap.get(t.provider)?.name ||
-                             t.provider;
+            const provider = getPartyLabel(t.provider, props.providers)
+            const investor = getPartyLabel(t.investor, props.investors)
 
             return {
                 title: `${investor}@${provider}`,
