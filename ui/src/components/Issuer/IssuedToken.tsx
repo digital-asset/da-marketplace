@@ -4,6 +4,7 @@ import { Header, List } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
+
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import {
@@ -24,6 +25,7 @@ import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/Donut
 import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,
@@ -187,6 +189,8 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
 }
 
 const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
+
     if (props.nettedTokenDeposits.length === 0) {
         return null
     }
@@ -199,8 +203,14 @@ const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
 
         return tokens.map(t => {
+            const investor = investorMap.get(t.investor)?.name || t.investor;
+            const provider = custodianMap.get(t.provider)?.name ||
+                             exchangeMap.get(t.provider)?.name ||
+                             brokerMap.get(t.provider)?.name ||
+                             t.provider;
+
             return {
-                title: `${t.investor.replace('|','')}@${t.provider}`,
+                title: `${investor}@${provider}`,
                 value: t.quantity,
                 color: getDonutChartColor(tokens.indexOf(t))
             }
