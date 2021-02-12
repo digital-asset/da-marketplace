@@ -129,8 +129,16 @@ template RejectedMarkToMarketCalculation
     key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller customer can
+    controller ccp can
       RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
+        do
+          create calculation
+
+      RejectedMarkToMarketCalculation_Cancel : ()
+        do return ()
+
+    controller customer can
+      RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
         do
           create calculation
 
