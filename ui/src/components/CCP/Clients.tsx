@@ -19,6 +19,7 @@ import { useParty, useLedger } from '@daml/react'
 import {useOperator} from '../common/common'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import {RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import MarkToMarketCalc from './MarkToMarketCalc'
 
 type Props = {
     clients: {

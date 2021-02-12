@@ -1,5 +1,7 @@
 import React, {useState} from 'react'
 import { Header, Form, Button } from 'semantic-ui-react'
+import SemanticDatePicker from 'react-semantic-ui-datepickers'
+import { DateTimeInput } from 'semantic-ui-calendar-react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
@@ -11,7 +13,6 @@ import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-import MarginCall from './MarginCall'
 import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import {CCPCustomerInfo, wrapDamlTuple, TokenInfo} from '../common/damlTypes'
@@ -25,7 +26,6 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
 type Props = {
-    x: Party,
     exchanges: {
         party: any;
         label: string;
@@ -34,7 +34,7 @@ type Props = {
     onLogout: () => void;
 }
 
-const Clients: React.FC<Props> = ({ exchanges, sideNav, onLogout }) => {
+const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
     const ccp = useParty();
     const ledger = useLedger();
@@ -72,16 +72,16 @@ const Clients: React.FC<Props> = ({ exchanges, sideNav, onLogout }) => {
             <PageSection>
                 <div className='clients'>
                     <div className='client-list'>
-                        <Header as='h2'>Customers</Header>
+                        <Header as='h2'>Exchanges</Header>
                         <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
-                            <AddPlusIcon/> Add Investor
+                            <AddPlusIcon/> Add Exchange
                         </a>
                         <StripedTable
                             headings={tableHeadings}
                             rows={tableRows}
                             emptyLabel='There are no customers.'/>
                     </div>
-                    <MarginCall/>
+                    <RequestFairValues exchanges={exchanges}/>
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
                             title='Add Investor'
@@ -107,7 +107,7 @@ type RequestFairValuesProps = {
 const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
     const [ exchange, setExchange ] = useState('');
     const [ currency, setCurrency ] = useState<TokenInfo>();
-    const [ upTo, setUpTo ] = useState<Time>('');
+    const [ upTo, setUpTo ] = useState('');
 
     const operator = useOperator();
     const custodian = useParty();
@@ -115,6 +115,11 @@ const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
 
+    const handleUpToChange = (event: any, result: any) => {
+        if (typeof result.value === 'string') {
+            setUpTo(result.value);
+        }
+    }
     const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setExchange(result.value);
@@ -128,6 +133,8 @@ const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
         }));
 
     const handleRequestFairValue = async () => {
+        const date = new Date();
+        const currentTime = date.toISOString();
         if (!currency) {
             throw new Error('Currency not selected');
         }
@@ -135,7 +142,7 @@ const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
         const args = {
             exchange: exchange,
             currency: currency.contractData.id,
-            upTo
+            upTo: currentTime
         };
         const key = wrapDamlTuple([operator, custodian]);
         await ledger.exerciseByKey(CCP.CCP_RequestFairValues, key, args);
@@ -148,7 +155,7 @@ const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
     return (
         <div className='margin-call'>
             <FormErrorHandled onSubmit={handleRequestFairValue}>
-                <Header as='h2'>Margin Call</Header>
+                <Header as='h2'>Request Fair Values</Header>
                     <Form.Select
                         clearable
                         className='beneficiary-select'
@@ -169,14 +176,11 @@ const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
                             setContract={token => setCurrency(token)}/>
                     </Form.Group>
                     <Button
-                        disabled={!exchange || !currency || !upTo}
-                        content='Create Margin Call'
+                        disabled={!exchange || !currency }
+                        content='Request all Fair Values'
                         className='ghost'/>
             </FormErrorHandled>
         </div>
     )
 }
-
-export default MarginCall;
-
-export default Clients;
+export default ExchangeRelationships;

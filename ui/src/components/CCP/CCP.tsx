@@ -6,9 +6,9 @@ import _ from 'lodash'
 import { useLedger, useParty } from '@daml/react'
 
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import { RegisteredInvestor, RegisteredCCP, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor, RegisteredCCP, RegisteredBroker, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { CCP as CCPModel } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import { CCP as CCPModel, CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 
 import { UserIcon } from '../../icons/Icons'
 
@@ -27,6 +27,7 @@ import { useRelationshipRequestNotifications } from './RelationshipRequestNotifi
 import Clients from './Clients'
 import ClientAccounts from './ClientAccounts'
 import {CCPInvitation} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import ExchangeRelationships from './ExchangeRelationships'
 
 type Props = {
     onLogout: () => void;
@@ -41,6 +42,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const keys = () => [wrapDamlTuple([operator, ccp])];
 
     const customers = useContractQuery(CCPCustomer);
+    const exchanges = useContractQuery(CCPExchangeRelationship);
 
     const brokerCustomers = useContractQuery(RegisteredBroker, AS_PUBLIC)
         .filter(broker => customers.find(p => broker.contractData.broker === p.contractData.ccpCustomer))
@@ -68,6 +70,17 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
 
     const registeredCCP = useContractQuery(RegisteredCCP);
     const invitation = useContractQuery(CCPInvitation);
+
+    const allExchanges = useContractQuery(RegisteredExchange, AS_PUBLIC)
+        .filter(exchange => exchanges.find(p => exchange.contractData.exchange === p.contractData.exchange))
+        .map(exchange => {
+            const party = exchange.contractData.exchange;
+            const name = exchange.contractData.name;
+            return {
+                party,
+                label: `${name} | ${party}`
+            }
+        })
 
     const ccpContract = useContractQuery(CCPModel)
         // Find contract by key
@@ -134,6 +147,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const sideNav = <RoleSideNav url={url}
                         name={registeredCCP[0]?.contractData.name || ccp}
                         items={[
+                            {to: `${url}/exchanges`, label: "Exchanges", icon: <UserIcon/>},
                             {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
                         ]}>
                         <Menu.Menu className='sub-menu'>
@@ -171,6 +185,12 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/exchanges`}>
+                    <ExchangeRelationships
+                        exchanges={allExchanges}
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
