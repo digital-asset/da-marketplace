@@ -22,9 +22,10 @@ import { ContractInfo, wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import { getPartyLabel, IPartyInfo } from '../common/utils'
+import { IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,
@@ -44,6 +45,8 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
     const [ showAddRegisteredPartyModal, setShowAddRegisteredPartyModal ] = useState(false)
 
     const { tokenId } = useParams<{tokenId: string}>()
+
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
     const history = useHistory()
     const ledger = useLedger()
@@ -139,10 +142,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
                         <StripedTable
                             headings={StripedTableHeaders}
                             rows={StripedTableRows}/>
-                        <AllocationsChart
-                            providers={providers}
-                            investors={investors}
-                            nettedTokenDeposits={nettedTokenDeposits}/>
+                        <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                     </div>
                 </div>
             </PageSection>
@@ -181,9 +181,14 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
             if (token) {
                 return token.quantity += Number(asset.quantity)
             }
-            const provider = getPartyLabel(account.provider, providers)
-            const investor = getPartyLabel(account.owner, investors)
-            return netTokenDeposits = [...netTokenDeposits, {investor: investor.label, provider: provider.label, quantity: Number(asset.quantity) }]
+            const investor = investorMap.get(account.owner)?.name || account.owner;
+            const provider =
+                custodianMap.get(account.provider)?.name ||
+                brokerMap.get(account.owner)?.name ||
+                exchangeMap.get(account.provider)?.name ||
+                account.provider;
+
+            return netTokenDeposits = [...netTokenDeposits, {investor: investor, provider: provider, quantity: Number(asset.quantity) }]
         })
 
         return netTokenDeposits
@@ -191,9 +196,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
 }
 
 const AllocationsChart = (props: {
-    nettedTokenDeposits: DepositInfo[],
-    providers: IPartyInfo[],
-    investors: IPartyInfo[]
+    nettedTokenDeposits: DepositInfo[]
 }) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null
@@ -206,11 +209,8 @@ const AllocationsChart = (props: {
 
     function formatNetTokenDeposits(tokens: DepositInfo[]): IDonutChartData[] {
         return tokens.map(t => {
-            const provider = getPartyLabel(t.provider, props.providers)
-            const investor = getPartyLabel(t.investor, props.investors)
-
             return {
-                title: `${investor}@${provider}`,
+                title: `${t.investor}@${t.provider}`,
                 value: t.quantity,
                 color: getDonutChartColor(tokens.indexOf(t))
             }
