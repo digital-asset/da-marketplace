@@ -63,7 +63,7 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
 
     console.log("Investor Trade: ", location.state);
 
-    if (!exchangeData || !tokenPair || !defaultCCP) {
+    if (!exchangeData || !tokenPair) {
         history.push('/role/investor');
         throw new Error('No exchange found.');
     }

@@ -109,6 +109,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                                         return <Menu.Item
                                             as={NavLink}
+                                            exact
                                             to={{
                                                 pathname: `${url}/trade/${base}-${quote}`,
                                                 state: {
@@ -118,7 +119,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                                 }
                                             }}
                                             className='sidemenu-item-normal'
-                                            key={exchange.contractId}
+                                            key={`${base}${quote}`}
                                         >
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                                         </Menu.Item>
@@ -130,7 +131,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                         const defaultCCP = typeof listing[1] === 'string' && listing[1];
 
                                         if (!tokenPair || !defaultCCP) {
-                                            throw new Error("blab")
+                                            throw new Error("Expected token pair and default CCP")
                                         }
 
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
@@ -139,8 +140,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                                         return <Menu.Item
                                             as={NavLink}
+                                            exact
                                             to={{
-                                                pathname: `${url}/trade/${base}-${quote}`,
+                                                pathname: `${url}/trade/${base}-${quote}/cleared`,
                                                 state: {
                                                     defaultCCP,
                                                     isCleared: true,
@@ -148,8 +150,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                                     tokenPair: unwrapDamlTuple(tokenPair)
                                                 }
                                             }}
-                                            className='sidemenu-item-normal'
-                                            key={exchange.contractId}
+                                            className='sidemenu-item-normal-clr'
+                                            key={`${base}${quote}CLR`}
                                         >
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                                             <Label className='cleared-market-label'>Cleared</Label>

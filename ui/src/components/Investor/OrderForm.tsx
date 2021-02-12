@@ -17,7 +17,7 @@ type Props = {
     allowedToOrder: boolean;
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
-    defaultCCP: string;
+    defaultCCP?: string;
     exchange: string;
     isCleared: boolean;
     tokenPair: Id[];
@@ -63,6 +63,10 @@ const OrderForm: React.FC<Props> = ({
 
         if (isCleared) {
             console.log("Placing a cleared order.");
+            if (!defaultCCP) {
+                throw new AppError('Order Error.', 'The CCP is missing');
+            }
+
             if (!allowedToOrder) {
                 throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
             }
