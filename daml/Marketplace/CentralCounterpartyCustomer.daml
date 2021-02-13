@@ -83,10 +83,17 @@ template CCPCustomer
     controller ccpCustomer can
       nonconsuming CCPCustomer_MakeClearedOrder : ContractId ClearedOrderRequest
         with
+          -- exchange : Party
           order : ClearedOrder
           pair : IdPair
           price : Decimal
         do
+          -- TODO : the following lines cause a circular import with ExchangeParticipant <-> CCPCustomer
+
+          -- optExchParticipant <- lookupByKey @ExchangeParticipant (exchange, operator, ccpCustomer)
+          -- assertMsg "CCP Customer must be an exchange participant to place an order."
+          --   $ isSome optExchParticipant
+
           (_, quoteToken) <- fetchByKey @Token pair._2
           assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
             $ roundBankers quoteToken.quantityPrecision price == price

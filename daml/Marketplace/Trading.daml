@@ -281,7 +281,50 @@ template ClearedOrder
     maintainer key._1
 
     controller exchange can
-      ClearedOrder_Fill : ()
+      ClearedOrder_Fill : Optional (ContractId ClearedOrder)
+        with
+          fillQty : Decimal
+          fillPrice : Decimal
+          counterParty : Party -- TODO Might be unneeded params
+          counterOrderId : Int
+          timestamp : Text
+        do
+          assert $ fillQty > 0.0
+          assert $ fillQty <= qty
+          assert $ if isBid then fillPrice <= price
+                            else fillPrice >= price
+
+          if qty == fillQty
+            then do return None
+            else do
+              partialOrder <- create this with
+                qty = qty - fillQty, status = "PartiallyFilled"
+
+              return $ Some partialOrder
+
+      ClearedOrder_Cancel : ()
+        do return ()
+
+    controller exchParticipant can
+      nonconsuming ClearedOrder_RequestCancel : ContractId ClearedOrderCancelRequest
+        do create ClearedOrderCancelRequest with order = this
+
+template ClearedOrderCancelRequest
+  with
+    order : ClearedOrder
+  where
+    signatory order.exchange, order.exchParticipant
+
+    key (order.exchange, order.orderId) : (Party, Int)
+    maintainer key._1
+
+    controller order.exchange can
+      ClearedOrderCancel_Ack : ()
+        do
+          exerciseByKey @ClearedOrder (order.exchange, order.orderId) ClearedOrder_Cancel
+          return ()
+
+      ClearedOrderCancel_Reject : ()
         do return ()
 
 -- TODO: Replace DerivativeTrade with ClearedTrade

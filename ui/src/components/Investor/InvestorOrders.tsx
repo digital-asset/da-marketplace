@@ -3,6 +3,8 @@ import { Header } from 'semantic-ui-react'
 
 import {
     BrokerTrade,
+    ClearedOrder,
+    ClearedOrderRequest,
     Order,
     OrderRequest,
     SettledTradeSide
@@ -27,6 +29,8 @@ type Props = {
 const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allOrders = useContractQuery(Order);
     const allOrderRequests = useContractQuery(OrderRequest);
+    const allClearedOrders = useContractQuery(ClearedOrder);
+    const allClearedOrderRequests = useContractQuery(ClearedOrderRequest);
     const allExchangeTrades = useContractQuery(SettledTradeSide);
     const allBrokerTrades = useContractQuery(BrokerTrade);
 
@@ -40,8 +44,11 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                 <div className='investor-orders'>
                     <div className='order-section'>
                         <Header as='h2'>Requested Orders</Header>
-                        {allOrderRequests.length > 0 ?
-                            allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+                        { (allOrderRequests.length > 0 || allClearedOrderRequests.length > 0) ?
+                            [
+                                ...allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>),
+                                ...allClearedOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+                            ]
                             :
                                 <i>none</i>
                         }
@@ -49,8 +56,11 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
 
                     <div className='order-section'>
                         <Header as='h2'>Open Orders</Header>
-                        {allOrders.length > 0 ?
-                            allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>)
+                        { (allOrders.length > 0 || allClearedOrders.length > 0) ?
+                            [
+                                ...allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>),
+                                ...allClearedOrders.map(o => <ExchangeOrderCard cleared key={o.contractId} order={o.contractData}/>)
+                            ]
                             :
                             <i>none</i>
                         }
