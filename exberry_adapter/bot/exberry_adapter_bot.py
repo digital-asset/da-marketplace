@@ -6,13 +6,14 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 220 # default SID, use ExberrySID contract to change while running
+SID = 310 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
     return SID
 
 sid_to_order = {}
+sid_is_cleared = {}
 market_pairs = {}
 
 class EXBERRY:
@@ -33,6 +34,7 @@ class MARKETPLACE:
     OrderCancelRequest = 'Marketplace.Trading:OrderCancelRequest'
     Order = 'Marketplace.Trading:Order'
     ClearedOrderRequest = 'Marketplace.Trading:ClearedOrderRequest'
+    ClearedOrderCancelRequest = 'Marketplace.Trading:ClearedOrderCancelRequest'
     ClearedOrder = 'Marketplace.Trading:ClearedOrder'
     ClearedTrade = 'Marketplace.Trading:ClearedTrade'
     Token = 'Marketplace.Token:Token'
@@ -139,6 +141,8 @@ def main():
         event_sid = event.cdata['sid']
         order = sid_to_order.pop(event_sid)
 
+        sid_is_cleared[event_sid] = order['isCleared']
+
         query = { 'order': order }
 
         if order['isCleared']:
@@ -222,12 +226,33 @@ def main():
             'userId': make_user_user_id(order['exchParticipant'])
         })
 
+    # Marketplace --> Exberry
+    @client.ledger_created(MARKETPLACE.ClearedOrderCancelRequest)
+    def handle_cleared_order_cancel_request(event):
+        logging.info(f"Handling ClearedOrderCancelRequest")
+
+        order = event.cdata['order']
+        return create(EXBERRY.CancelOrderRequest, {
+            'integrationParty': client.party,
+            'instrument': make_instrument(order['pair'], True),
+            'mpOrderId': order['orderId'],
+            'userId': make_user_user_id(order['exchParticipant'])
+        })
+
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.CancelOrderSuccess)
     async def handle_cancel_order_success(event):
         logging.info(f"Handling CancelOrderSuccess")
 
-        return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
+        if sid_is_cleared[event.cdata['sid']]:
+            return [
+                exercise_by_key(MARKETPLACE.ClearedOrderCancelRequest,
+                                {'_1': client.party, '_2': event.cdata['sid']},
+                                'ClearedOrderCancel_Ack', {}),
+                exercise(event.cid, 'Archive', {})
+                ]
+        else:
+            return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
                                 'OrderCancel_Ack', {}),
                 exercise(event.cid, 'Archive', {})]
@@ -285,8 +310,20 @@ def main():
                 'executedQuantity': execution['executedQuantity'],
                 'executedPrice': execution['executedPrice']
             }))
-            commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {}))
-            commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {}))
+            commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
+                'fillQty': execution['executedQuantity'],
+                'fillPrice': execution['executedPrice'],
+                'counterOrderId': maker['orderId'],
+                'counterParty': maker['exchParticipant'],
+                'timestamp': execution['eventTimestamp']
+            }))
+            commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
+                'fillQty': execution['executedQuantity'],
+                'fillPrice': execution['executedPrice'],
+                'counterOrderId': maker['orderId'],
+                'counterParty': maker['exchParticipant'],
+                'timestamp': execution['eventTimestamp']
+            }))
         else:
             logging.info(f"Processing collateralized order report")
 
