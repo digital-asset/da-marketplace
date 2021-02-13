@@ -2,6 +2,7 @@ module Marketplace.ExchangeParticipant where
 
 import Marketplace.BinaryOption
 import Marketplace.CentralCounterpartyCustomer
+import Marketplace.Derivative
 import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Transfer
@@ -166,33 +167,48 @@ template ExchangeParticipant
         with
           ccp : Party
           pair : IdPair
+          baseType: AssetType
+          quoteType: AssetType
           amount : Decimal
           price : Decimal
         do
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision $ amount / price
+          quantityPrecision <- case baseType of
+            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token pair._1
+            DerivativeAsset -> do
+              (_,deriv) <- fetchByKey @Derivative pair._1
+              (_,underlying) <- fetchByKey @Token deriv.underlying
+              return underlying.quantityPrecision
+
+          let qty = roundBankers quantityPrecision $ amount / price
 
           let order = ClearedOrder with
                 isBid = True, qty, status = "New", orderId = -1, ..
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
-            with pair, price, order
+            with pair, price, order, ..
 
       nonconsuming ExchangeParticipant_PlaceClearedOffer : ContractId ClearedOrderRequest
         with
           ccp : Party
           pair : IdPair
+          baseType: AssetType
+          quoteType: AssetType
           amount : Decimal
           price : Decimal
         do
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision amount
+          quantityPrecision <- case baseType of
+            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token pair._1
+            DerivativeAsset -> do
+              (_,deriv) <- fetchByKey @Derivative pair._1
+              (_,underlying) <- fetchByKey @Token deriv.underlying
+              return underlying.quantityPrecision
+          let qty = roundBankers quantityPrecision amount
 
           let order = ClearedOrder with
                 isBid = False, qty, status = "New", orderId = -1, ..
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
-            with pair, price, order
+            with pair, price, order, ..
 
       -- nonconsuming ExchangeParticipant_MakeClearedOrder : ContractId ClearedOrderRequest
       --   with

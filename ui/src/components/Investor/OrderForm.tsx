@@ -5,13 +5,17 @@ import { useParty, useLedger } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, wrapDamlTuple, TokenInfo, DerivativeInfo } from '../common/damlTypes'
 import { AppError } from '../common/errorTypes'
 import { useOperator } from '../common/common'
 import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
+import {useContractQuery} from '../../websocket/queryStream'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {AssetType} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 type Props = {
     allowedToOrder: boolean;
@@ -58,6 +62,21 @@ const OrderForm: React.FC<Props> = ({
         return deposits.map(d => d.contractId);
     };
 
+    const allTokens: TokenInfo[] = useContractQuery(Token);
+    const allDerivatives: DerivativeInfo[] = useContractQuery(Derivative);
+    const tokenMap = new Map(allTokens.map(tk => [tk.contractData.id.label, 1]));
+    const derivativeMap = new Map(allDerivatives.map(dr => [dr.contractData.id.label, 1]));
+
+    const getType = (val: Id) => {
+        console.log(val);
+        const derivative = derivativeMap.get(val.label);
+        const token = tokenMap.get(val.label);
+        if (!token && !derivative) {
+            throw new Error('Options not found');
+        }
+        return !derivative ? AssetType.TokenAsset : AssetType.DerivativeAsset;
+    }
+
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
 
@@ -70,12 +89,14 @@ const OrderForm: React.FC<Props> = ({
             if (!allowedToOrder) {
                 throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
             }
-
+            console.log(getType(tokenPair[0]));
             const makeClearedArgs = {
                 price,
                 amount,
                 ccp: defaultCCP, // TODO: Allow user-selectable CCP
-                pair: wrapDamlTuple(tokenPair)
+                pair: wrapDamlTuple(tokenPair),
+                baseType: getType(tokenPair[0]),
+                quoteType: getType(tokenPair[1])
             }
             const placeClearedBid = ExchangeParticipant.ExchangeParticipant_PlaceClearedBid;
             const placeClearedOffer = ExchangeParticipant.ExchangeParticipant_PlaceClearedOffer;

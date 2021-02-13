@@ -4,21 +4,27 @@ import { Button, Form, Header } from 'semantic-ui-react'
 import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import { TokenInfo, DerivativeInfo, wrapDamlTuple } from '../common/damlTypes'
 import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 import FormToggle from '../common/FormToggle'
 import { RegisteredCCP } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
     const [ quoteToken, setQuoteToken ] = useState<TokenInfo>();
+
+    const [ baseOption, setBaseOption ] = useState('');
+    const [ quoteOption, setQuoteOption ] = useState('');
 
     const [ minQuantity, setMinQuantity ] = useState('');
     const [ maxQuantity, setMaxQuantity ] = useState('');
@@ -34,34 +40,111 @@ const CreateMarket: React.FC<{}> = () => {
     const operator = useOperator();
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
+    const allDerivatives: DerivativeInfo[] = useContractQuery(Derivative);
     const registeredCCPs = useContractQuery(RegisteredCCP, AS_PUBLIC);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
 
+    const allTokenOptions = allTokens.map(tk => {
+            return {
+                key: tk.contractId,
+                text: `${tk.contractData.id.label} - Spot`,
+                value: tk.contractId
+            }
+        });
+
+    const allDerivativeOptions = allDerivatives.map(dr => {
+        return {
+            key: dr.contractId,
+            text: `${dr.contractData.id.label} - Derivative`,
+            value: dr.contractId
+        }
+    });
+    const tokenMap = new Map(allTokens.map(tk => [String(tk.contractId), tk.contractData.id]));
+    const derivativeMap = new Map(allDerivatives.map(dr => [String(dr.contractId), dr.contractData.id]));
+    const allMap = new Map([...Array.from(tokenMap.entries()), ...Array.from(derivativeMap.entries())]);
+    const allOptions = [...allTokenOptions, ...allDerivativeOptions]
+
+    const handleQuoteOptionSet = (event: React.SyntheticEvent, result: any) => {
+        setQuoteOption(result.value);
+    }
+    const handleBaseOptionSet = (event: React.SyntheticEvent, result: any) => {
+        setBaseOption(result.value);
+    }
+
+    const getType = (val: string) => {
+        const derivative = derivativeMap.get(val);
+        const token = tokenMap.get(val);
+        if (!token && !derivative) {
+            throw new Error('Options not found');
+        }
+        return !derivative ? AssetType.TokenAsset : AssetType.DerivativeAsset;
+    }
+
     const handleIdPairSubmit = async () => {
-        if (!baseToken || !quoteToken) {
-            throw new Error('Tokens not selected');
+        if (clearedMarket) {
+            if (!baseOption || !quoteOption) {
+                throw new Error('Options not selected');
+            }
+            const baseId = allMap.get(baseOption);
+            const quoteId = allMap.get(quoteOption);
+
+            if (!baseId || !quoteId) {
+                throw new Error('Options do not exist');
+            }
+
+            const baseType = getType(baseOption);
+            const quoteType = getType(quoteOption);
+
+            if (+minQuantity > +maxQuantity) {
+                throw new Error('Minimum quantity is greater than maximum quantity.');
+            }
+
+            const key = wrapDamlTuple([operator, exchange]);
+            const args = {
+                minQuantity,
+                maxQuantity,
+                clearedMarket,
+                defaultCCP,
+                baseTokenId: baseId,
+                baseType: baseType,
+                quoteTokenId: quoteId,
+                quoteType: quoteType
+            };
+
+            console.log("Adding pair: ", args);
+
+            await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
+
+            setBaseOption('');
+            setQuoteOption('');
+        } else {
+            if (!baseToken || !quoteToken) {
+                throw new Error('Tokens not selected');
+            }
+
+            if (+minQuantity > +maxQuantity) {
+                throw new Error('Minimum quantity is greater than maximum quantity.');
+            }
+
+            const key = wrapDamlTuple([operator, exchange]);
+            const args = {
+                minQuantity,
+                maxQuantity,
+                clearedMarket,
+                defaultCCP,
+                baseTokenId: baseToken.contractData.id,
+                baseType: AssetType.TokenAsset,
+                quoteTokenId: quoteToken.contractData.id,
+                quoteType: AssetType.TokenAsset
+            };
+
+            console.log("Adding pair: ", args);
+
+            await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
+
+            setBaseToken(undefined);
+            setQuoteToken(undefined);
         }
-
-        if (+minQuantity > +maxQuantity) {
-            throw new Error('Minimum quantity is greater than maximum quantity.');
-        }
-
-        const key = wrapDamlTuple([operator, exchange]);
-        const args = {
-            minQuantity,
-            maxQuantity,
-            clearedMarket,
-            defaultCCP,
-            baseTokenId: baseToken.contractData.id,
-            quoteTokenId: quoteToken.contractData.id
-        };
-
-        console.log("Adding pair: ", args);
-
-        await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
-
-        setBaseToken(undefined);
-        setQuoteToken(undefined);
     }
 
     const validateMinQuantity = (event: React.SyntheticEvent, result: any) => {
@@ -101,27 +184,47 @@ const CreateMarket: React.FC<{}> = () => {
             <Header as='h2'>Create a Market</Header>
             <FormErrorHandled onSubmit={handleIdPairSubmit}>
                 <div className='create-market-options'>
-                    <ContractSelect
-                        clearable
-                        className='create-market-select'
-                        contracts={allTokens}
-                        label='Base Asset'
-                        placeholder='Select...'
-                        value={baseToken?.contractId || ''}
-                        getOptionText={token => token.contractData.id.label}
-                        setContract={token => setBaseToken(token)}/>
+                    {clearedMarket ? <>
+                    <Form.Select
+                            multiple={false}
+                            label={<p>Base</p>}
+                            // className='issue-asset-form-field select-observer'
+                            className='create-market-select'
+                            disabled={allOptions.length === 0}
+                            placeholder='Select...'
+                            options={allOptions}
+                            onChange={handleBaseOptionSet}/>
+                        <Form.Select
+                            multiple={false}
+                            label={<p>Quote</p>}
+                            className='issue-asset-form-field select-observer'
+                            disabled={allOptions.length === 0}
+                            placeholder='Select...'
+                            options={allOptions}
+                            onChange={handleQuoteOptionSet}/>
+                        </>:<>
+                        <ContractSelect
+                            clearable
+                            className='create-market-select'
+                            contracts={allTokens}
+                            label='Base Asset'
+                            placeholder='Select...'
+                            value={baseToken?.contractId || ''}
+                            getOptionText={token => token.contractData.id.label}
+                            setContract={token => setBaseToken(token)}/>
 
-                    <ExchangeIcon/>
+                        <ExchangeIcon/>
 
-                    <ContractSelect
-                        clearable
-                        className='create-market-select'
-                        contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
-                        label='Quote Asset'
-                        placeholder='Select...'
-                        value={quoteToken?.contractId || ''}
-                        getOptionText={token => token.contractData.id.label}
-                        setContract={token => setQuoteToken(token)}/>
+                        <ContractSelect
+                            clearable
+                            className='create-market-select'
+                            contracts={allTokens.filter(t => t.contractId !== baseToken?.contractId)}
+                            label='Quote Asset'
+                            placeholder='Select...'
+                            value={quoteToken?.contractId || ''}
+                            getOptionText={token => token.contractData.id.label}
+                            setContract={token => setQuoteToken(token)}/>
+                        </>}
                 </div>
 
                 <div className='create-market-options'>
@@ -132,7 +235,7 @@ const CreateMarket: React.FC<{}> = () => {
                         step={step}
                         placeholder={placeholder}
                         error={minQuantityError}
-                        disabled={!quoteToken || !baseToken}
+                        disabled={clearedMarket ? !baseOption || !quoteOption : !baseToken || !quoteToken}
                         onChange={validateMinQuantity}/>
 
                     <Form.Input
@@ -142,7 +245,7 @@ const CreateMarket: React.FC<{}> = () => {
                         step={step}
                         placeholder={placeholder}
                         error={maxQuantityError}
-                        disabled={!quoteToken || !baseToken}
+                        disabled={clearedMarket ? !baseOption || !quoteOption : !baseToken || !quoteToken}
                         onChange={validateMaxQuantity}/>
                 </div>
 
@@ -166,7 +269,7 @@ const CreateMarket: React.FC<{}> = () => {
                 <Button
                     content='Submit'
                     className='create-market-save ghost'
-                    disabled={!baseToken || !quoteToken}/>
+                    disabled={clearedMarket ? !baseOption || !quoteOption : !baseToken || !quoteToken}/>
             </FormErrorHandled>
         </div>
     )

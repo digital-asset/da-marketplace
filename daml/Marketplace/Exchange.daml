@@ -3,6 +3,7 @@ module Marketplace.Exchange where
 import Marketplace.BinaryOption
 import Marketplace.CentralCounterparty
 import Marketplace.Custodian
+import Marketplace.Derivative
 import Marketplace.ExchangeParticipant
 import Marketplace.Registry
 import Marketplace.Notification
@@ -15,7 +16,6 @@ import DA.Optional
 
 import DA.List
 import DA.Next.Set hiding (delete)
-
 
 template ExchangeInvitation
   with
@@ -118,40 +118,54 @@ template Exchange
       Exchange_AddPair : ContractId Exchange
         with
           baseTokenId : Id
+          baseType : AssetType
           quoteTokenId : Id
+          quoteType : AssetType
           minQuantity : Decimal
           maxQuantity : Decimal
           clearedMarket : Bool
           defaultCCP : Optional Party
         do
-          (_, baseToken) <- fetchByKey @Token baseTokenId
-          (_, quoteToken) <- fetchByKey @Token quoteTokenId
+          baseQuantityPrecision <- case baseType of
+            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token baseTokenId
+            DerivativeAsset -> do
+              (_,deriv) <- fetchByKey @Derivative baseTokenId
+              (_,underlying) <- fetchByKey @Token deriv.underlying
+              return underlying.quantityPrecision
 
-          assertMsg ("minimum quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
-            $ roundBankers baseToken.quantityPrecision minQuantity == minQuantity
-          assertMsg ("max quantity should be rounded to at most " <> show baseToken.quantityPrecision <> " decimal places")
-            $ roundBankers baseToken.quantityPrecision maxQuantity == maxQuantity
+          quoteQuantityPrecision <- case quoteType of
+            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token quoteTokenId
+            DerivativeAsset -> do
+              (_,deriv) <- fetchByKey @Derivative quoteTokenId
+              (_,underlying) <- fetchByKey @Token deriv.underlying
+              return underlying.quantityPrecision
+
+          assertMsg ("minimum quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
+            $ roundBankers baseQuantityPrecision minQuantity == minQuantity
+
+          assertMsg ("max quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
+            $ roundBankers baseQuantityPrecision maxQuantity == maxQuantity
 
           assertMsg "minimum quantity should be less than the maximum quantity"
             $ minQuantity < maxQuantity
 
-          assertMsg "Pair must have different base and quote tokens" $ baseToken.id.label /= quoteToken.id.label
+          assertMsg "Pair must have different base and quote tokens" $ baseTokenId.label /= quoteTokenId.label
 
           let instrumentName = if clearedMarket
               -- TODO : figure out how to pad instrument names to a length of 13, then append CLR or 000
-              then baseToken.id.label <> quoteToken.id.label <> "CLR"
-              else baseToken.id.label <> quoteToken.id.label
+              then baseTokenId.label <> quoteTokenId.label <> "CLR"
+              else baseTokenId.label <> quoteTokenId.label
 
           let newMarket = MarketPair with
                 id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
                 clearedMarket
                 exchange
-                description = baseToken.id.label <> " vs " <> quoteToken.id.label
+                description = baseTokenId.label <> " vs " <> quoteTokenId.label
                 baseTokenId
                 quoteTokenId
                 calendarId = "1261007448"
-                pricePrecision = quoteToken.quantityPrecision
-                quantityPrecision = baseToken.quantityPrecision
+                pricePrecision = quoteQuantityPrecision
+                quantityPrecision = baseQuantityPrecision
                 minQuantity = minQuantity : Decimal
                 maxQuantity = maxQuantity : Decimal
                 status = InstrumentActive

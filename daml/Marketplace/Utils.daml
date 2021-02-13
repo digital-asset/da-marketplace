@@ -14,6 +14,7 @@ type IdPair = (Id, Id)
 data MarketRole = CustodianRole | IssuerRole | ExchangeRole | InvestorRole | BrokerRole | CCPRole
     deriving (Show, Eq)
 
+data AssetType = TokenAsset | DerivativeAsset deriving (Show,Eq)
 
 template ExberrySID
   with

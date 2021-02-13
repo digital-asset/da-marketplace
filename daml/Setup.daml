@@ -130,7 +130,8 @@ doSetup (LedgerParties operator public custodian exchange btcIssuer usdtIssuer a
   depositCid3 <- alice `submit` exerciseCmd depositCid1 AssetDeposit_Merge with depositCids = [depositCid2]
 
   -- the exchange adds support for BTC/USDT pair
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 10000.0
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
+    with baseTokenId = btcTokenId, baseType = TokenAsset, quoteTokenId = usdtTokenId, quoteType = TokenAsset, minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
   -- Alice gets onboarded as an exchange participant
   (_, aliceInvCid) <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_InviteParticipant with exchParticipant = alice
@@ -207,7 +208,8 @@ doSetupBroker (LedgerParties operator public custodian exchange btcIssuer usdtIs
   exchangeInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardExchange with ..
   exchangeCid <- exchange `submit` exerciseCmd exchangeInvCid ExchangeInvitation_Accept with name = "Exberry Exchange", ..
 
-  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair with baseTokenId = btcTokenId, quoteTokenId = usdtTokenId, minQuantity = 0.01, maxQuantity = 10000.0
+  exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
+    with baseTokenId = btcTokenId, baseType = TokenAsset, quoteTokenId = usdtTokenId, quoteType = TokenAsset, minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_RequestCustodianRelationship with ..
