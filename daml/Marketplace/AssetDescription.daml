@@ -1,7 +1,7 @@
 module Marketplace.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
-import DA.Finance.Types (Id, Asset)
+import DA.Finance.Types (Id)
 import ContingentClaims.Claim.Serializable (Claim)
 
 type T = AssetDescription
@@ -9,7 +9,7 @@ type Claims = Claim Date Id
 
 template AssetDescription
   with
-    asset: Asset
+    assetId: Id
     -- ^ This is the master record for the asset, and has embedded it's unique identifier
     description: Text
     -- ^ Short description of the asset, mainly for display purposes
@@ -28,6 +28,6 @@ template AssetDescription
     -- issuePrice: (Decimal, Asset)
     -- ^ The price & currency of the *initial* offer.
   where
-    signatory asset.id.signatories <> safekeepingAccountId.signatories
-    key asset.id : Id
+    signatory assetId.signatories <> safekeepingAccountId.signatories
+    key assetId : Id
     maintainer key.signatories

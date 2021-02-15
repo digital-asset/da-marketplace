@@ -1,7 +1,7 @@
 module Marketplace.Custody where
 
 import ContingentClaims.Lifecycle qualified as ContingentClaims
-import ContingentClaims.Claim qualified as ContingentClaims
+import ContingentClaims.Claim (deserialize)
 import DA.Date (toDateUTC, toGregorian, fromGregorian)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
@@ -12,7 +12,7 @@ import DA.Next.Map (Map, MapKey)
 -- TODO: remove and replace with GenMap
 import DA.Next.Map qualified as Map
 import DA.Text (splitOn, parseInt, unwords)
-import Marketplace.AssetDescription
+import Marketplace.AssetDescription (AssetDescription)
 import DA.Optional (fromSomeNote)
 
 template Service
@@ -125,17 +125,17 @@ template Service
                     receiverAccountId = assetDeposit.account.id
                     depositCid = payoutDepositCid
               spot :  Text -> Date -> Update Decimal
-              spot label dt = pure $ fromSomeNote 
+              spot label dt = pure $ fromSomeNote
                 ("Underlying data '" <> label <> "' missing on " <> Map.keyToText dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
-          ContingentClaims.settle payout spot (ContingentClaims.deserialize description.claims) t
+          ContingentClaims.settle payout spot (deserialize description.claims) t
           -- TODO: bump assetDeposit.version
 
 -- TODO: remove when @fixings@ param above is removed; or replace with GenMap
 instance MapKey Date where
   keyToText dt = case toGregorian dt of (y,m,d) -> unwords . intersperse "-" $ show <$> [y, fromEnum m, d]
-  keyFromText s = case mapA parseInt $ splitOn "-" s of 
-                    Some [y, m, d] -> fromGregorian (y, toEnum m, d) 
+  keyFromText s = case mapA parseInt $ splitOn "-" s of
+                    Some [y, m, d] -> fromGregorian (y, toEnum m, d)
                     _ -> error "invalid date input"
 
 template Offer

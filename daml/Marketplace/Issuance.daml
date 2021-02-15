@@ -3,9 +3,17 @@ module Marketplace.Issuance where
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
-import Marketplace.AssetDescription (AssetDescription)
+import DA.Next.Set (Set)
+import Marketplace.AssetDescription (AssetDescription(..), Claims)
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize)
+import ContingentClaims.Observation (Observation)
+import Daml.Control.Recursion
 
 type T = Issuance
+
+-- TODO: don't export
+type C = Claim Observation Date Id
+type F = ClaimF Observation Date Id
 
 template Issuance
   with
@@ -36,7 +44,12 @@ template Service
     controller client can
       nonconsuming RequestOrigination: ContractId OriginationRequest
         with
-          description: AssetDescription
+          assetLabel: Text
+          assetSignatories: Set Party
+          description: Text
+          issuer: Party
+          claims: Claims
+          safekeepingAccountId: Id
         do
           create OriginationRequest with ..
           
@@ -58,15 +71,40 @@ template Service
           create ReduceIssuanceRequest with ..
 
     controller provider can
-      nonconsuming Originate: ContractId AssetDescription
+      nonconsuming Originate: [ContractId AssetDescription]
         with
           createOriginationCid: ContractId OriginationRequest
         do
-          OriginationRequest{description} <- fetch createOriginationCid
+          OriginationRequest{..} <- fetch createOriginationCid
+          let genAssetDescriptionVersions: C -> [C]
+              genAssetDescriptionVersions = concat . para levels
+                where
+                  levels : F (C, [[C]]) -> [[C]] -- each inner list has the subtrees at that level
+                  levels ZeroF = [[Zero]]
+                  levels (OneF id) = [[One id]]
+                  levels (GiveF (claim, cs)) = [Give claim] :: cs
+                  levels (ScaleF o (claim, cs)) = [Scale o claim] :: cs
+                  levels (WhenF o (claim, cs)) = [When o claim] :: cs
+                  levels (OrF (claim, cs) (claim', cs')) = [Or claim claim'] :: zipWithLongest (<>) (cs, cs')
+                  levels (AndF (claim, cs) (claim', cs')) = [And claim claim'] :: zipWithLongest (<>) (cs, cs')
+                  levels (CondF o (claim, cs) (claim', cs')) = [Cond o claim claim'] :: zipWithLongest (<>) (cs, cs')
+                  zipWithLongest f = apo \case
+                      ([], []) -> Nil
+                      (a :: as, []) -> Cons a (Left as)
+                      ([], a' :: as') -> Cons a' (Left as')
+                      (a :: as, a' :: as') -> Cons (f a a') (Right (as, as'))
+              zipWithIndex = ana \case
+                (_, []) -> Nil
+                (i, x :: xs) -> Cons (i, x) (succ i, xs)
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
-          create description
+          forA (zipWithIndex . (0, ) . genAssetDescriptionVersions . deserialize $ claims) \(i, unserializedClaims) ->
+            let claims = serialize unserializedClaims in
+            create AssetDescription with assetId = Id with label = assetLabel
+                                                           signatories = assetSignatories
+                                                           version = i
+                                         ..
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with
@@ -151,6 +189,11 @@ template ReduceIssuanceRequest
 
 template OriginationRequest
   with
-     description: AssetDescription
+    assetLabel: Text
+    assetSignatories: Set Party
+    description: Text
+    issuer: Party
+    claims: Claims
+    safekeepingAccountId: Id
   where
-     signatory description.asset.id.signatories
+     signatory assetSignatories

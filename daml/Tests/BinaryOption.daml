@@ -10,7 +10,6 @@ import DA.Date (date, Month(Mar))
 import DA.Finance.Types (Id(..), Asset(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
-import Marketplace.AssetDescription (AssetDescription(..))
 import Marketplace.Issuance (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..))
 
@@ -23,7 +22,6 @@ endToEnd = do
                    signatories = Set.singleton common.custodian
                    label = "TSLA Mar21 910.0"
                    version = 0
-      optionAsset = Asset with id = optionId, quantity = 50.0
       usdId = Id with
                 signatories = Set.singleton common.custodian
                 label = "USD"
@@ -43,14 +41,13 @@ endToEnd = do
   bob <- onboardCustomer common "Bob" usdAsset
 
   -- Alice originates the option
-  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid (RequestOrigination 
-      AssetDescription with
-        asset = optionAsset
-        safekeepingAccountId = alice.safekeepingAccountId
-        description = "TSLA March 2021 binary call option, strike 910.0$"
-        issuer = alice.customer
-        claims = serialize $ european (date 2020 Mar 18) (binary 910.0 underlyingId.label usdId)
-    )
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
+      assetLabel = optionId.label
+      assetSignatories = optionId.signatories
+      safekeepingAccountId = alice.safekeepingAccountId
+      description = "TSLA March 2021 binary call option, strike 910.0$"
+      issuer = alice.customer
+      claims = serialize $ european (date 2020 Mar 18) (binary 910.0 underlyingId.label usdId)
   optionDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 
   -- Alice issues the option
