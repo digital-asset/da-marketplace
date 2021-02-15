@@ -17,7 +17,7 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : ContractId Settlement.T
+      nonconsuming MatchOrders : ContractId Settlement.SettlementInstruction
         with
           execution : Order.Execution
         do

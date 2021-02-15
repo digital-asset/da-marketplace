@@ -9,15 +9,6 @@ from datetime import datetime
 
 dazl.setup_default_logger(logging.INFO)
 
-# SID = 1 # default SID, use ExberrySID contract to change while running
-# SID = int(time.mktime(datetime.now().timetuple()))
-# def get_sid() -> int:
-#     global SID
-#     SID = SID + 1
-#     return SID
-
-# sid_to_order = {}
-
 class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
     NewOrderSuccess = 'Exberry.Integration:NewOrderSuccess'
@@ -100,6 +91,7 @@ def main():
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateListingRequest)
     def handle_new_listing(event):
+        logging.info(f'Received Listing request - {event}')
         listing = event.cdata
         symbol = listing['listingId']
         description = listing['description']
@@ -151,7 +143,7 @@ def main():
         cancel_request = event.cdata
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
-            'instrument': cancel_request['details']['asset']['id']['label'],
+            'instrument': cancel_request['details']['symbol'],
             'mpOrderId': cancel_request['details']['id']['label'],
             'userId': make_user_user_id(cancel_request['provider'])
         })
