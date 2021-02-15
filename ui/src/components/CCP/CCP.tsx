@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import { Menu, Form } from 'semantic-ui-react'
 import _ from 'lodash'
 
 import { useLedger, useParty } from '@daml/react'
 
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { CCPInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import { RegisteredInvestor, RegisteredCCP, RegisteredBroker, RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { RegisteredInvestor, RegisteredCCP, RegisteredBroker, RegisteredExchange, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { CCP as CCPModel, CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
@@ -31,6 +31,7 @@ import ClientAccounts from './ClientAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
 import IssuedDerivative from '../Issuer/IssuedDerivative'
 import DerivativeList from '../common/DerivativeList'
+import {AppError} from '../common/errorTypes'
 
 type Props = {
     onLogout: () => void;
@@ -116,14 +117,30 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     }
 
     const acceptInvite = async () => {
+        if (inviteCustodian === '') {
+            throw new Error('You must select a default custodian!');
+        }
         const key = wrapDamlTuple([operator, ccp]);
         const args = {
             name: profile.name.value,
-            location: profile.location.value
+            location: profile.location.value,
+            custodian: inviteCustodian
         };
         await ledger.exerciseByKey(CCPInvitation.CCPInvitation_Accept, key, args)
                     .catch(err => console.error(err));
     }
+
+    const [ inviteCustodian, setInviteCustodian ] = useState('');
+    const handleSelectInviteCustodian = (event: React.SyntheticEvent, result: any) => {
+        setInviteCustodian(result.value);
+    }
+
+    const custodianOptions = useContractQuery(RegisteredCustodian, AS_PUBLIC).map(d => {
+            return {
+                text: `${d.contractData.name}`,
+                value: d.contractData.custodian
+            }
+        })
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.CCPRole} onSubmit={acceptInvite} onLogout={onLogout}>
@@ -133,7 +150,16 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                 role={MarketRole.CCPRole}
                 inviteAcceptTile
                 defaultProfile={profile}
-                submitProfile={profile => setProfile(profile)}/>
+                submitProfile={profile => setProfile(profile)}>
+                    <Form.Select
+                        label={<p className='p2 dark'>Primary Custodian</p>}
+                        multiple={false}
+                        className='profile-form-field'
+                        disabled={custodianOptions.length === 0}
+                        placeholder='Select...'
+                        options={custodianOptions}
+                        onChange={handleSelectInviteCustodian}/>
+                </CCPProfile>
         </InviteAcceptTile>
     );
 

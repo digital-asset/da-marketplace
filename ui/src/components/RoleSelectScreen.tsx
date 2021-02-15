@@ -64,7 +64,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
             <OnboardingTile>
                 <p className='dark bold'>What would you like to do?</p>
                 <RoleSelect
-                    caption='I want to chat & invest'
+                    caption='Invest'
                     loading={loading && role === MarketRole.InvestorRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.InvestorRole)}/>
 
@@ -74,22 +74,22 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
                     roleSelectClick={() => handleRoleClick(MarketRole.IssuerRole)}/>
 
                 <RoleSelect
-                    caption='Exchange'
+                    caption='List markets and match orders'
                     loading={loading && role === MarketRole.ExchangeRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.ExchangeRole)}/>
 
                 <RoleSelect
-                    caption='Broker'
+                    caption='Intermediate access to markets'
                     loading={loading && role === MarketRole.BrokerRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.BrokerRole)}/>
 
                 <RoleSelect
-                    caption='Bank'
+                    caption='Safekeep assets'
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>
 
                 <RoleSelect
-                    caption='Central Counterparty'
+                    caption='Clear trades'
                     loading={loading && role === MarketRole.CCPRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CCPRole)}/>
             </OnboardingTile>

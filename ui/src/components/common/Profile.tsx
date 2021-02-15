@@ -113,6 +113,7 @@ type ProfileProps = {
 }
 
 const Profile: React.FC<ProfileProps> = ({
+    children,
     content,
     defaultProfile,
     inviteAcceptTile,
@@ -144,6 +145,7 @@ const Profile: React.FC<ProfileProps> = ({
     const profileForm =
         <Form>
             { fields }
+            { children }
             <div className='button-row'>
                 <Button
                     className={classNames('ghost', {'dark': inviteAcceptTile})}
