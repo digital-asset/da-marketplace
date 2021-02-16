@@ -6,13 +6,15 @@ import ContingentClaims.Claim (serialize, cond, one, Claim(Zero))
 import ContingentClaims.FinancialClaim (european)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import DA.Date (date, Month(Mar))
+import DA.Date (date, datetime, Month(Mar))
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
+import DA.Next.Map qualified as Map
 import Marketplace.Issuance (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
-import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..))
+import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
+import DA.Functor (void)
 
 
 endToEnd: Script ()
@@ -62,8 +64,24 @@ endToEnd = do
 
   -- Alice gifts the option to Bob
   addProvider <- submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = alice.customer
-  xferReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid $ RequestTransferDeposit with accountId = alice.safekeepingAccountId, receiverAccountId = bob.tradingAccountId, depositCid = optionDepositCid
+  xferReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestTransferDeposit with accountId = alice.safekeepingAccountId, receiverAccountId = bob.tradingAccountId, depositCid = optionDepositCid
   optionDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid $ TransferDeposit xferReqCid
 
   -- The option expires at maturity
-  return ()
+  setTime $ datetime 2020 Mar 18 16 30 00
+
+  -- The issuer, Alice, must deposit the payout in the safekeeping account
+  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestCreditAccount with
+    accountId = alice.safekeepingAccountId
+    asset = usdAsset
+  corpActDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid CreditAccount with 
+    creditAccountRequestCid = corpActReqCid
+
+  -- Bob exercises the Option
+  lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
+    assetDepositCid = optionDepositCid
+    postAssetVersion = 2 -- TODO: How do we get this in practice? From a UI?
+  void $ submit common.custodian $ exerciseCmd bob.custodyServiceCid $ Lifecycle with
+    safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
+    lifecycleRequestCid = lifecycleReqCid
+    fixings = Map.fromList [ ("TSLA", Map.insert (date 2020 Mar 18) 920.0 Map.empty) ]

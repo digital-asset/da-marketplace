@@ -158,13 +158,13 @@ template Service
                     depositCid = payoutDepositCid
               spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
-                ("Underlying data '" <> label <> "' missing on " <> Map.keyToText dt)
+                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> Map.keyToText dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
               election _ _ = deserialize description'.claims -- will throw if the claims don't match
           payoutCids <- ContingentClaims.settle payout spot election (deserialize description.claims) t
-          archive assetDepositCid
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
+          archive assetDepositCid
           return $ assetDepositCid' :: payoutCids
 
 -- TODO: remove when @fixings@ param above is removed; or replace with GenMap
