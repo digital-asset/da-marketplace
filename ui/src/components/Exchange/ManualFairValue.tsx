@@ -64,7 +64,7 @@ const ManualFairValue: React.FC<Props> = ({fairValueRequest}) => {
     return (
         <div className='manual-fair-value'>
             <FormErrorHandled onSubmit={handleCalculate}>
-                <Header as='h2'>Fair Value Request for {fairValueRequest.contractData.assetId.label}</Header>
+                <Header as='h2'>Fair Value Request for {fairValueRequest.contractData.instrumentId.label}</Header>
                     <Form.Group>
                         <Form.Input
                             className='create-deposit-quantity'

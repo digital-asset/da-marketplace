@@ -156,6 +156,10 @@ template Exchange
               then baseTokenId.label <> quoteTokenId.label <> "CLR"
               else baseTokenId.label <> quoteTokenId.label
 
+          let marketObservers = case defaultCCP of
+                 (Some x) -> x :: participants
+                 None     -> participants
+
           let newMarket = MarketPair with
                 id = Id with signatories = fromList [exchange], label = instrumentName, version = 0
                 clearedMarket
@@ -169,7 +173,8 @@ template Exchange
                 minQuantity = minQuantity : Decimal
                 maxQuantity = maxQuantity : Decimal
                 status = InstrumentActive
-                observers = fromList participants
+                observers = fromList marketObservers
+
           create newMarket
           if clearedMarket then do
             let ccp = fromSomeNote "defaultCCP must be provided for cleared markets" defaultCCP

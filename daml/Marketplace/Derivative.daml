@@ -80,9 +80,10 @@ template FairValueCalculationRequest
 template ManualFairValueCalculation
   with
     exchange : Party
-    assetId : Id
+    instrumentId : Id
     currency : Id
     upTo : Time
+    observers : Set Party
   where
     signatory exchange
 
@@ -92,13 +93,13 @@ template ManualFairValueCalculation
           price : Decimal
         do
           timestamp <- getTime
-          create FairValue with observers = fromList [], ..
+          create FairValue with ..
 
 
 template FairValue
   with
     exchange : Party
-    assetId : Id
+    instrumentId : Id
     price : Decimal
     currency : Id
     timestamp : Time

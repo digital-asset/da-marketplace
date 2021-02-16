@@ -12,7 +12,7 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { CCP as CCPModel, CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { UserIcon, MarketIcon } from '../../icons/Icons'
+import { UserIcon, MarketIcon, PublicIcon } from '../../icons/Icons'
 
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
@@ -31,7 +31,9 @@ import ClientAccounts from './ClientAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
 import IssuedDerivative from '../Issuer/IssuedDerivative'
 import DerivativeList from '../common/DerivativeList'
+import InstrumentList from '../common/InstrumentList'
 import {AppError} from '../common/errorTypes'
+import {MarketPair} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 type Props = {
     onLogout: () => void;
@@ -89,6 +91,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const investors = customers; // ccpContract?.contractData.investors || [];
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
+    const instruments = useContractQuery(MarketPair);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -168,7 +171,8 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                         items={[
                             {to: `${url}/exchanges`, label: "Exchanges", icon: <UserIcon/>},
                             {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
-                            {to: `${url}/derivatives`, label: 'Derivatives', icon: <MarketIcon/>},
+                            {to: `${url}/instruments`, label: 'Instruments', icon: <PublicIcon/>}
+                            // {to: `${url}/derivatives`, label: 'Derivatives', icon: <PublicIcon/>},
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
@@ -225,6 +229,12 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                     <ClientAccounts
                         sideNav={sideNav}
                         clients={allCustomers}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/instruments`}>
+                    <InstrumentList
+                        sideNav={sideNav}
+                        instruments={instruments}
                         onLogout={onLogout}/>
                 </Route>
                 <Route path={`${path}/derivatives`}>

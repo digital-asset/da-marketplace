@@ -48,7 +48,7 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
     const party = useParty()
 
     const derivative = useContractQuery(Derivative).find(c => c.contractId === decodeURIComponent(derivativeId))
-    const fairValues = useContractQuery(FairValue).filter(fv => fv.contractData.assetId.label === derivative?.contractData.id.label);
+    // const fairValues = useContractQuery(FairValue).filter(fv => fv.contractData.instrumentId.label === derivative?.contractData.id.label);
 
     const allRegisteredParties = [
         useContractQuery(RegisteredCustodian, AS_PUBLIC)
@@ -75,8 +75,8 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
             }
         })
 
-    const StripedTableRows = fairValues.map(fv => [fv.contractData.exchange, fv.contractData.upTo, fv.contractData.price]);
-    const StripedTableHeaders = ["Exchange", "Time", "Price"]
+    // const StripedTableRows = fairValues.map(fv => [fv.contractData.exchange, fv.contractData.upTo, fv.contractData.price]);
+    // const StripedTableHeaders = ["Exchange", "Time", "Price"]
 
     const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
@@ -124,12 +124,6 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
                                 </>}
                         </div>
                     }
-                    <Header as='h3'>Fair Values</Header>
-                    <div className='position-holdings-data'>
-                        <StripedTable
-                            headings={StripedTableHeaders}
-                            rows={StripedTableRows}/>
-                    </div>
                 </div>
             </PageSection>
             {showAddRegisteredPartyModal &&

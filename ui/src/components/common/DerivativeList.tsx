@@ -21,13 +21,13 @@ type Props = {
 
 const DerivativeList: React.FC<Props> = ({ derivatives, sideNav, onLogout }) => {
 
-    const tableHeadings = ['Description', 'Current Fair Value']
-    const allFairValues = useContractQuery(FairValue);
+    const tableHeadings = ['Description']
+    // const allFairValues = useContractQuery(FairValue);
 
     const tableRows = derivatives.map(derivative => {
-        const fairValues = allFairValues.filter(fv => fv.contractData.assetId.label === derivative?.contractData.id.label);
-        const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
-        return [derivative.contractData.description, price]
+        // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === derivative?.contractData.id.label);
+        // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
+        return [derivative.contractData.description]
     });
 
     return (

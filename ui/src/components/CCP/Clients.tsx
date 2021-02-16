@@ -8,7 +8,7 @@ import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCoun
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
@@ -44,7 +44,7 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
         await ledger.exerciseByKey(choice, key, args);
     }
 
-    const registeredInvestors = useContractQuery(RegisteredInvestor);
+    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
     const partyOptions = registeredInvestors.map(d => {
         return {
             text: `${d.contractData.name}`,

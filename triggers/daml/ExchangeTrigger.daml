@@ -26,6 +26,8 @@ handleExchange = Trigger
                                                , registeredTemplate @Derivative
                                                , registeredTemplate @Token
                                                , registeredTemplate @DerivativeTradeSide
+                                               , registeredTemplate @ClearedTradeSide
+                                               , registeredTemplate @MarketPair
                                                , registeredTemplate @FairValue
                                                , registeredTemplate @FairValueCalculationRequest
                                                , registeredTemplate @FairValueInterval
@@ -44,7 +46,6 @@ handleExchangeRule party = do
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
-  derivativeTradeSide <- query @DerivativeTradeSide
   binaryOptions <- query @SettledBinaryOption
   forA_ tradeSides (handleTradeSide party binaryOptions)
 
@@ -92,9 +93,8 @@ handleTradeSide party  options (cid,tradeSide) = do
 handleCalculationRequests : Party -> ContractPair FairValueCalculationRequest -> TriggerA () ()
 handleCalculationRequests party (requestCid, rq@FairValueCalculationRequest{..}) = do
   debug "handling calculation requests..."
-  derivatives <- query @Derivative
-  tokens <- query @Token
-  forA_ derivatives (handleDerivativeCalculation party currency upTo)
+  pairs <- filter (\(_,mp) -> mp.clearedMarket) <$> query @MarketPair
+  forA_ pairs (handleFairValueCalculation party currency upTo)
   emitExerciseCmd requestCid FairValueCalculationRequest_Ack
   return ()
 
@@ -107,17 +107,17 @@ handleCalculationRequests party (requestCid, rq@FairValueCalculationRequest{..})
 --
 -- TODO: Allow user to specify a 'from' Time interval before which trades and
 -- fairvalues will be ignored.
-handleDerivativeCalculation : Party -> Id -> Time -> ContractPair Derivative -> TriggerA () ()
-handleDerivativeCalculation party currency upTo (derivativeCid,d@(Derivative{..})) = do
+handleFairValueCalculation : Party -> Id -> Time -> ContractPair MarketPair -> TriggerA () ()
+handleFairValueCalculation party currency upTo (marketPairCid,m@(MarketPair{..})) = do
   debug ("calculating derivative FVR: " <> id.label)
-  fairValues <- sortOn ((.upTo) . snd) . filter (\(_,fv) -> fv.assetId == id) <$> query @FairValue
+  fairValues <- sortOn ((.upTo) . snd) . filter (\(_,fv) -> fv.instrumentId == id) <$> query @FairValue
   trades <- sortOn ((.timestamp) . snd) . filter (\(_,dts) -> dts.instrument == id) <$> query @DerivativeTradeSide
 
   let relevantTrades = filter (\(_,dt) -> (subTime dt.timestamp upTo) < (seconds 0)) trades
   timestamp <- getTime
   case getBestPrice relevantTrades fairValues of
-    (Some bp) -> dedupCreate $ FairValue with exchange = party, assetId = id, price = bp, ..
-    None      -> dedupCreate $ ManualFairValueCalculation with exchange = party, assetId = id, ..
+    (Some bp) -> dedupCreate $ FairValue with exchange = party, instrumentId = id, price = bp, ..
+    None      -> dedupCreate $ ManualFairValueCalculation with exchange = party, instrumentId = id, ..
 
   return ()
 

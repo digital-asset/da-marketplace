@@ -111,11 +111,11 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
     $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
          CCP_NovateDerivativeTrade with derivativeTradeCid = tCid)
 
-  let fairValuePairs = [ (h2oQ121DerId, 1000.0)
-                       , (h2oQ221DerId, 1500.0) ]
-
-  upTo <- getTime
-  forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
+  -- let fairValuePairs = [ (h2oQ121DerId, 1000.0)
+  --                      , (h2oQ221DerId, 1500.0) ]
+  --
+  -- upTo <- getTime
+  -- forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
 
 
 runSetupAccounts : LedgerParties -> Script ()
@@ -254,7 +254,7 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
   return ()
 
 makeFairValue : Party -> Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
-makeFairValue operator exchange assetId price currency upTo observers = do
+makeFairValue operator exchange instrumentId price currency upTo observers = do
   timestamp <- getTime
   exchange `submit` createCmd FairValue with observers = fromList observers, ..
 

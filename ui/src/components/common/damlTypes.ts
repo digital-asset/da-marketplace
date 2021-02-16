@@ -90,6 +90,8 @@ export type CCPCustomerInfo = ContractInfo<
     CentralCounterpartyCustomer.CCPCustomer,
     CentralCounterpartyCustomer.CCPCustomer.Key>;
 
+export type CCPCustomerInviteInfo = ContractInfo<CentralCounterpartyCustomer.CCPCustomerInvitation>;
+
 export type CustodianInfo = ContractInfo<
     Custodian.Custodian,
     Custodian.Custodian.Key>;
@@ -109,6 +111,10 @@ export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleN
 export type ExchangeInfo = ContractInfo<
     Exchange.Exchange,
     Exchange.Exchange.Key>;
+
+export type MarketPairInfo = ContractInfo<
+    Token.MarketPair,
+    Token.MarketPair.Key>;
 
 export type ExchangeParticipantInfo = ContractInfo<
     ExchangeParticipant.ExchangeParticipant,

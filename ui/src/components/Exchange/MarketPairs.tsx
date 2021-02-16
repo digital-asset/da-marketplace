@@ -13,6 +13,8 @@ import Page from '../common/Page'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
+import {ManualFairValueCalculation} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import ManualFairValue from './ManualFairValue'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -22,6 +24,8 @@ type Props = {
 const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const exchange = useParty();
     const operator = useOperator();
+
+    const allManualCalculations = useContractQuery(ManualFairValueCalculation);
 
     const exchangeContract = useContractQuery(Exchange)
     // Find contract by key
@@ -66,6 +70,10 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
                     title='Cleared Markets'
                     header={header}
                     rows={clearedRows}/>
+            </PageSection>
+
+            <PageSection>
+                { allManualCalculations.map(calc => <ManualFairValue fairValueRequest={calc}/>) }
             </PageSection>
         </Page>
     )

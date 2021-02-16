@@ -26,6 +26,7 @@ import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
 
 import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
+import { useCCPCustomerInviteNotifications } from './CCPInviteNotifications'
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
@@ -46,6 +47,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
         ...useCCPCustomerNotifications(),
+        ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
         ...dismissibleNotifications
