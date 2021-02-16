@@ -1,7 +1,8 @@
 module Marketplace.Custody where
 
 import ContingentClaims.Lifecycle qualified as ContingentClaims
-import ContingentClaims.Claim (deserialize)
+import ContingentClaims.Claim (Claim, deserialize)
+import ContingentClaims.Observation (Observation)
 import DA.Date (toDateUTC, toGregorian, fromGregorian)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
@@ -74,6 +75,13 @@ template Service
         do
           create TransferDepositRequest with ..
 
+      nonconsuming RequestLifecycle: ContractId LifecycleRequest
+        with
+          assetDepositCid: ContractId AssetDeposit
+          postAssetVersion: Int
+        do
+          create LifecycleRequest with ..
+
     controller provider can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
         with
@@ -132,13 +140,15 @@ template Service
 
       nonconsuming Lifecycle : [ContractId AssetDeposit]
         with
-          assetDepositCid: ContractId AssetDeposit
+          lifecycleRequestCid: ContractId LifecycleRequest
           safekeepingDepositCid: ContractId AssetDeposit
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
         do
           t <- toDateUTC <$> getTime
+          LifecycleRequest{assetDepositCid, postAssetVersion} <- fetch lifecycleRequestCid
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
+          (_, description') <- fetchByKey @AssetDescription (assetDeposit.asset.id with version = postAssetVersion)
           let payout: Id -> Decimal -> Date -> Update (ContractId AssetDeposit)
               payout asset qty dt = do
                 payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
@@ -146,12 +156,16 @@ template Service
                   AssetSettlement_Transfer with
                     receiverAccountId = assetDeposit.account.id
                     depositCid = payoutDepositCid
-              spot :  Text -> Date -> Update Decimal
+              spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
                 ("Underlying data '" <> label <> "' missing on " <> Map.keyToText dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
-          ContingentClaims.settle payout spot (deserialize description.claims) t
-          -- TODO: bump assetDeposit.version
+              election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
+              election _ _ = deserialize description'.claims -- will throw if the claims don't match
+          payoutCids <- ContingentClaims.settle payout spot election (deserialize description.claims) t
+          archive assetDepositCid
+          assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
+          return $ assetDepositCid' :: payoutCids
 
 -- TODO: remove when @fixings@ param above is removed; or replace with GenMap
 instance MapKey Date where
@@ -262,5 +276,15 @@ template TransferDepositRequest
     accountId : Id
     receiverAccountId : Id
     depositCid : ContractId AssetDeposit
+  where
+    signatory operator, provider, customer
+
+template LifecycleRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    assetDepositCid: ContractId AssetDeposit
+    postAssetVersion: Int
   where
     signatory operator, provider, customer
