@@ -89,7 +89,7 @@ onboardCustomer CommonContracts{..} party asset = do
   allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
   awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; ctrls = fromList [customer]
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
-  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = empty
+  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = fromList [ custodian, customer ]
   safekeepingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = safekeepingOpenAccountRequestCid
 
   -- Trading and Listing services
