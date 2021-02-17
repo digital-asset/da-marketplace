@@ -8,16 +8,16 @@ import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
 import DA.Date (date, datetime, Month(Mar))
 import DA.Finance.Types (Id(..), Asset(..))
-import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..))
+import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..))
+import DA.Finance.Asset (AssetDeposit(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
 import DA.Next.Map qualified as Map
 import Marketplace.Issuance (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
-import DA.Functor (void)
 
 
-endToEnd: Script ()
+endToEnd: Script [ ContractId AssetDeposit ]
 endToEnd = do
   common <- onboardCommon
 
@@ -38,7 +38,7 @@ endToEnd = do
 
       -- TODO: refactor into a more composable form and add to contingent-claims lib
       binary : Decimal -> Text -> Id -> Claim O.Observation Date Id 
-      binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) Zero (one ccy)
+      binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one ccy) Zero
 
   alice <- onboardCustomer common "Alice" usdAsset -- this is weird - we should be first issuing asset
   bob <- onboardCustomer common "Bob" usdAsset
@@ -63,9 +63,10 @@ endToEnd = do
   (_issuanceCid, optionDepositCid) <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
 
   -- Alice gifts the option to Bob
-  addProvider <- submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = alice.customer
+  submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = alice.customer
   xferReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestTransferDeposit with accountId = alice.safekeepingAccountId, receiverAccountId = bob.tradingAccountId, depositCid = optionDepositCid
   optionDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid $ TransferDeposit xferReqCid
+  submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_RemoveController with ctrl = alice.customer
 
   -- The option expires at maturity
   setTime $ datetime 2020 Mar 18 16 30 00
@@ -81,7 +82,7 @@ endToEnd = do
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = optionDepositCid
     postAssetVersion = 2 -- TODO: How do we get this in practice? From a UI?
-  void $ submit common.custodian $ exerciseCmd bob.custodyServiceCid $ Lifecycle with
+  submit common.custodian $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
     safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList [ ("TSLA", Map.insert (date 2020 Mar 18) 920.0 Map.empty) ]
