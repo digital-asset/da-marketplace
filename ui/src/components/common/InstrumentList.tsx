@@ -32,7 +32,7 @@ const InstrumentList: React.FC<Props> = ({ exchanges, instruments, sideNav, onLo
 
     const tableRows = instruments.map(instrument => {
         const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
-        const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
+        const price = fairValues[fairValues.length - 1] ? fairValues[fairValues.length - 1].contractData.price : "No FV";
         const exchangeParty = instrument.contractData.exchange;
         const exchange = exchangeMap.get(exchangeParty)?.name || exchangeParty;
         return [instrument.contractData.description, exchange, price]
@@ -45,8 +45,8 @@ const InstrumentList: React.FC<Props> = ({ exchanges, instruments, sideNav, onLo
             menuTitle={<><UserIcon size='24'/>Instruments</>}
         >
             <PageSection>
-                <div className='clients'>
-                    <div className='client-list'>
+                <div className='members'>
+                    <div className='member-list'>
                         <Header as='h2'>Instruments</Header>
                         <StripedTable
                             headings={tableHeadings}

@@ -3,7 +3,6 @@ module Marketplace.Exchange where
 import Marketplace.BinaryOption
 import Marketplace.CentralCounterparty
 import Marketplace.Custodian
-import Marketplace.Derivative
 import Marketplace.ExchangeParticipant
 import Marketplace.Registry
 import Marketplace.Notification

@@ -2,7 +2,6 @@ module Marketplace.ExchangeParticipant where
 
 import Marketplace.BinaryOption
 import Marketplace.CentralCounterpartyCustomer
-import Marketplace.Derivative
 import Marketplace.Notification
 import Marketplace.Trading
 import Marketplace.Transfer
@@ -10,10 +9,7 @@ import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
-import DA.Finance.Types
 import DA.List
-import DA.Optional
-import DA.Next.Set
 
 template ExchangeParticipantInvitation
   with
