@@ -1,12 +1,11 @@
 @import './Members.scss';
 @import './MarginCall.scss';
-@import './MarkToMarketCalc.scss';
 
 @mixin ccp {
     .ccp {
         height: 100%;
 
-        @include clients;
+        @include members;
         @include margin-call;
     }
 }

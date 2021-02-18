@@ -30,13 +30,14 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
+import DerivativeList from '../common/DerivativeList'
+import InstrumentList from '../common/InstrumentList'
+
+import IssuedDerivative from '../Issuer/IssuedDerivative'
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
-import IssuedDerivative from '../Issuer/IssuedDerivative'
-import DerivativeList from '../common/DerivativeList'
-import InstrumentList from '../common/InstrumentList'
 
 type Props = {
     onLogout: () => void;

@@ -10,6 +10,7 @@ import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
+import DA.Finance.Types
 import DA.List
 import DA.Optional
 import DA.Next.Set
@@ -173,12 +174,7 @@ template ExchangeParticipant
           amount : Decimal
           price : Decimal
         do
-          quantityPrecision <- case baseType of
-            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token pair._1
-            DerivativeAsset -> do
-              (_,deriv) <- fetchByKey @Derivative pair._1
-              (_,underlying) <- fetchByKey @Token deriv.underlying
-              return underlying.quantityPrecision
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
 
           let qty = roundBankers quantityPrecision $ amount / price
 
@@ -197,12 +193,8 @@ template ExchangeParticipant
           amount : Decimal
           price : Decimal
         do
-          quantityPrecision <- case baseType of
-            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token pair._1
-            DerivativeAsset -> do
-              (_,deriv) <- fetchByKey @Derivative pair._1
-              (_,underlying) <- fetchByKey @Token deriv.underlying
-              return underlying.quantityPrecision
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
+
           let qty = roundBankers quantityPrecision amount
 
           let order = ClearedOrder with
@@ -210,3 +202,4 @@ template ExchangeParticipant
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
             with pair, price, order, ..
+

@@ -4,6 +4,11 @@ import { Button, Form, Header} from 'semantic-ui-react'
 import { useParty, useLedger } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { DepositInfo, wrapDamlTuple, TokenInfo, DerivativeInfo } from '../common/damlTypes'
 import { AppError } from '../common/errorTypes'
@@ -12,10 +17,6 @@ import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
-import {useContractQuery} from '../../websocket/queryStream'
-import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
-import {AssetType} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 type Props = {
     allowedToOrder: boolean;
@@ -64,13 +65,13 @@ const OrderForm: React.FC<Props> = ({
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
     const allDerivatives: DerivativeInfo[] = useContractQuery(Derivative);
-    const tokenMap = new Map(allTokens.map(tk => [tk.contractData.id.label, 1]));
-    const derivativeMap = new Map(allDerivatives.map(dr => [dr.contractData.id.label, 1]));
+
+    const tokenSet = new Set(allTokens.map(tk => tk.contractData.id.label));
+    const derivativeSet = new Set(allDerivatives.map(dr => dr.contractData.id.label));
 
     const getType = (val: Id) => {
-        console.log(val);
-        const derivative = derivativeMap.get(val.label);
-        const token = tokenMap.get(val.label);
+        const derivative = derivativeSet.has(val.label);
+        const token = tokenSet.has(val.label);
         if (!token && !derivative) {
             throw new Error('Options not found');
         }

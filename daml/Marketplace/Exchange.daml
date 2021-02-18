@@ -126,19 +126,8 @@ template Exchange
           clearedMarket : Bool
           defaultCCP : Optional Party
         do
-          baseQuantityPrecision <- case baseType of
-            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token baseTokenId
-            DerivativeAsset -> do
-              (_,deriv) <- fetchByKey @Derivative baseTokenId
-              (_,underlying) <- fetchByKey @Token deriv.underlying
-              return underlying.quantityPrecision
-
-          quoteQuantityPrecision <- case quoteType of
-            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token quoteTokenId
-            DerivativeAsset -> do
-              (_,deriv) <- fetchByKey @Derivative quoteTokenId
-              (_,underlying) <- fetchByKey @Token deriv.underlying
-              return underlying.quantityPrecision
+          baseQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType baseTokenId
+          quoteQuantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType quoteTokenId
 
           assertMsg ("minimum quantity should be rounded to at most " <> show baseQuantityPrecision <> " decimal places")
             $ roundBankers baseQuantityPrecision minQuantity == minQuantity

@@ -35,10 +35,10 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         [operator, exchange]
     ));
 
-    // const allFairValues = useContractQuery(FairValue);
 
     const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value']
     const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
+        // TODO: Show all fair values
         // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
         // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
         const [ base, quote ] = unwrapDamlTuple(pair);

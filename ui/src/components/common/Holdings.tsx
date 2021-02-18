@@ -2,22 +2,23 @@ import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { useCCPCustomerNotifications } from '../Investor/CCPCustomerNotifications'
 import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo } from './utils'
 import { useOperator } from './common'
-import FormErrorHandled from './FormErrorHandled'
-
 import { AppError } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
+import { useCCPCustomerNotifications } from '../Investor/CCPCustomerNotifications'
+import { useDismissibleNotifications } from './DismissibleNotifications'
+
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
-import {useDismissibleNotifications} from './DismissibleNotifications'
-import {useContractQuery} from '../../websocket/queryStream'
-import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
 type Props = {
     deposits: DepositInfo[];
