@@ -124,6 +124,6 @@ handleFairValueCalculation party currency upTo (marketPairCid,m@(MarketPair{..})
   where
     getBestPrice : [ContractPair ClearedTradeSide] -> [ContractPair FairValue] -> Optional Decimal
     getBestPrice ts fvs
-      | not (null ts)  = Some $ ((.executedPrice) . snd) (head ts)
+      | not (null ts)  = Some $ ((.price) . snd) (head ts)
       | not (null fvs) = Some $ ((.price) . snd) (head fvs)
       | otherwise      = None
