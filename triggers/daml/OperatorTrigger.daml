@@ -62,6 +62,7 @@ handleOperatorRule party = do
   forA_ tokens (handleToken party parties)
   forA_ derivatives (handleDerivative party parties)
 
+
 -- |Add all parties as observers to a 'Token'
 handleDerivative : Party -> [Party] -> ContractPair Derivative -> TriggerA () ()
 handleDerivative party parties (cid,der) = do
@@ -70,6 +71,7 @@ handleDerivative party parties (cid,der) = do
     $ void $ emitExerciseCmd cid Derivative_AddObservers with
         party = party, newObservers = (Set.insert party partiesToAdd)
    >> debug "adding parties to token..."
+
 
 -- |Add all parties as observers to a 'Token'
 handleToken : Party -> [Party] -> ContractPair Token -> TriggerA () ()

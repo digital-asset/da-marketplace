@@ -56,14 +56,13 @@ splitDecimals : Decimal -> [Decimal] -> [Decimal]
 splitDecimals qty quantities = quantitiesAll
   where
     quantitySum = foldl (+) 0.0 quantities
-    quantitiesAll =
-                if quantitySum == qty
-                then quantities
-                else quantities ++ [qty - quantitySum]
+    quantitiesAll = if quantitySum == qty
+                    then quantities
+                    else quantities ++ [qty - quantitySum]
 
 
 -- |More error friendly version of 'head'
 headNote : Text -> [a] -> a
 headNote msg [] = error ("headNote: " <> msg)
-headNote _ xs   = head xs
+headNote _   xs = head xs
 
