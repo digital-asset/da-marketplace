@@ -30,6 +30,7 @@ handleOperator = Trigger
                                               , registeredTemplate @RegisteredBroker
                                               , registeredTemplate @RegisteredCustodian
                                               , registeredTemplate @RegisteredExchange
+                                              , registeredTemplate @RegisteredIssuer
                                               , registeredTemplate @RegisteredCCP
                                               , registeredTemplate @RegisteredInvestor ]
   , heartbeat = None
@@ -58,7 +59,8 @@ handleOperatorRule party = do
   exchanges   <- map ((.exchange) . snd)  <$> query @RegisteredExchange
   investors   <- map ((.investor) . snd)  <$> query @RegisteredInvestor
   ccps        <- map ((.ccp) . snd)       <$> query @RegisteredCCP
-  let parties = brokers <> custodians <> exchanges <> investors <> ccps
+  issuers     <- map ((.issuer) . snd)    <$> query @RegisteredIssuer
+  let parties = brokers <> custodians <> exchanges <> investors <> ccps <> issuers
   forA_ tokens (handleToken party parties)
   forA_ derivatives (handleDerivative party parties)
 
