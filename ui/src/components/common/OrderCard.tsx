@@ -21,10 +21,12 @@ const OrderCard: React.FC<OrderProps> = ({ children, cleared, order }) => {
         <div className='order-card-container'>
             <Card fluid className='order-card'>
                 <div className='order-info'>
-                    <p><ExchangeIcon/> {label}</p>
+                    <p className='order-icon'><ExchangeIcon/>
+                        { cleared && <Label>Cleared</Label> }
+                        { label }
+                    </p>
                     <p>{ amount }</p>
                     <p>{`@ ${price}`}</p>
-                    <Label>Cleared</Label>
                 </div>
                 <div className='actions'>
                     { children }

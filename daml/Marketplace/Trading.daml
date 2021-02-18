@@ -335,6 +335,7 @@ template ClearedTrade
     eventId : Int
     eventTimestamp : Text
     instrument : Id  -- id of order
+    pair : IdPair
     trackingNumber : Int
     buyer : Party
     buyerOrderId : Int
@@ -358,12 +359,18 @@ template ClearedTrade
             orderId = buyerOrderId
             accountId = buyerAccountId
             isBuy = True
+            qty = executedQuantity
+            price = executedPrice
+            counterOrderId = sellerOrderId
             ..
           sellCid <- create ClearedTradeSide with
             participant = seller
             orderId = sellerOrderId
             accountId = sellerAccountId
             isBuy = False
+            qty = executedQuantity
+            price = executedPrice
+            counterOrderId = buyerOrderId
             ..
           return (buyCid, sellCid)
 
@@ -377,10 +384,12 @@ template ClearedTradeSide
     eventId : Int
     eventTimestamp : Text
     instrument : Id
+    pair : IdPair
     orderId : Int
+    counterOrderId : Int
     matchId : Int
-    executedQuantity : Decimal
-    executedPrice : Decimal
+    qty : Decimal
+    price : Decimal
     accountId : Id  -- the investor account at the ccp
     timestamp : Time
   where
