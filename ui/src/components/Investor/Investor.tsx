@@ -136,8 +136,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
-                                        console.log("Hmmmmm: ", base, quote, defaultCCP, tokenPair)
-
                                         return <Menu.Item
                                             as={NavLink}
                                             exact

@@ -62,7 +62,6 @@ const OrderForm: React.FC<Props> = ({
         const key = wrapDamlTuple([exchange, operator, investor]);
 
         if (isCleared) {
-            console.log("Placing a cleared order.");
             if (!defaultCCP) {
                 throw new AppError('Order Error.', 'The CCP is missing');
             }

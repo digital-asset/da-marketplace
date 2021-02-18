@@ -53,8 +53,6 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const brokerTrades = allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>);
 
-    console.log("trades", trades);
-
     return (
         <Page
             sideNav={sideNav}

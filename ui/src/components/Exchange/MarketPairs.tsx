@@ -41,7 +41,7 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {
         const pair = unwrapDamlTuple(listing)[0];
         if (typeof pair === 'string') {
-            throw new Error('blah')
+            throw new Error(`Expected a tuple for cleared market pair, found a string: ${pair}.`)
         }
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;

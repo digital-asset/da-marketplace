@@ -56,8 +56,6 @@ const CreateMarket: React.FC<{}> = () => {
             quoteTokenId: quoteToken.contractData.id
         };
 
-        console.log("Adding pair: ", args);
-
         await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
 
         setBaseToken(undefined);
