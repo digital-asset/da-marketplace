@@ -13,8 +13,8 @@ template AllocationAccountRule
   with
     operator : Party
     provider : Party
-    nominee : Party
     account : Account
+    nominee : Party
     observers : Set Party
   where
     signatory operator, provider, account.owner
@@ -75,25 +75,25 @@ template AllocationAccountRule
 
           exercise self Withdraw with ..
 
-      nonconsuming RejectDeallocation : ()
+      nonconsuming RejectWithdrawal : ()
         with
-          unallocateCid : ContractId WithdrawalRequest
+          withdrawalRequestCid : ContractId WithdrawalRequest
         do
-          archive unallocateCid
+          archive withdrawalRequestCid
 
     controller account.owner can
-      nonconsuming RequestDeallocate : ContractId WithdrawalRequest
+      nonconsuming RequestWithdrawal : ContractId WithdrawalRequest
         with
           transferTo : Account
           depositCid : ContractId AssetDeposit
         do
           create WithdrawalRequest with ..
 
-      nonconsuming CancelDeallocateRequest : ()
+      nonconsuming CancelWithdrawalRequest : ()
         with
-          unallocateCid : ContractId WithdrawalRequest
+          withdrawalRequestCid : ContractId WithdrawalRequest
         do
-          archive unallocateCid
+          archive withdrawalRequestCid
 
 template WithdrawalRequest
   with

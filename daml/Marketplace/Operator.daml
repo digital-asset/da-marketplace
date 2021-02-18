@@ -1,9 +1,10 @@
 module Marketplace.Operator where
 
 import qualified Marketplace.Custodian as Custodian
-import qualified Marketplace.Exchange as Exchange
+import qualified Marketplace.Distribution.Auctioneer as Auctioneer
+import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Trading.Exchange as Exchange
 import qualified Marketplace.Trading.Matching as Matching
-import qualified Marketplace.Trading.Settlement as Settlement
 
 template Service
   with
@@ -38,3 +39,9 @@ template Service
           provider : Party
         do
           create Settlement.Offer with ..
+
+      nonconsuming OfferAuctioneerRole : ContractId Auctioneer.Offer
+        with
+          provider : Party
+        do
+          create Auctioneer.Offer with ..

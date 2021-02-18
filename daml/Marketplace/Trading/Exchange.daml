@@ -1,6 +1,6 @@
-module Marketplace.Exchange where
+module Marketplace.Trading.Exchange where
 
-import Marketplace.Listing qualified as Listing
+import Marketplace.Trading.Listing qualified as Listing
 import Marketplace.Trading.Service qualified as TradingService
 
 template Role

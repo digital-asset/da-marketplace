@@ -26,7 +26,7 @@ class MARKETPLACE:
     CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
     CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
     Order = 'Marketplace.Trading.Order:Order'
-    CreateListingRequest = 'Marketplace.Listing:CreateListingRequest'
+    CreateListingRequest = 'Marketplace.Trading.Listing:CreateListingRequest'
     MatchingService = 'Marketplace.Trading.Matching:Service'
 
 
