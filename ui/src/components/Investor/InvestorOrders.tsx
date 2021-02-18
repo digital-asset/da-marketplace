@@ -5,6 +5,7 @@ import {
     BrokerTrade,
     ClearedOrder,
     ClearedOrderRequest,
+    ClearedTradeSide,
     Order,
     OrderRequest,
     SettledTradeSide
@@ -31,8 +32,28 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
     const allOrderRequests = useContractQuery(OrderRequest);
     const allClearedOrders = useContractQuery(ClearedOrder);
     const allClearedOrderRequests = useContractQuery(ClearedOrderRequest);
+    const allClearedOrderTrades = useContractQuery(ClearedTradeSide);
     const allExchangeTrades = useContractQuery(SettledTradeSide);
     const allBrokerTrades = useContractQuery(BrokerTrade);
+
+    const orderRequests = [
+        ...allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>),
+        ...allClearedOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+    ];
+
+    const openOrders = [
+        ...allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>),
+        ...allClearedOrders.map(o => <ExchangeOrderCard cleared key={o.contractId} order={o.contractData}/>)
+    ]
+
+    const trades = [
+        ...allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>),
+        ...allClearedOrderTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>)
+    ]
+
+    const brokerTrades = allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>);
+
+    console.log("trades", trades);
 
     return (
         <Page
@@ -44,44 +65,22 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
                 <div className='investor-orders'>
                     <div className='order-section'>
                         <Header as='h2'>Requested Orders</Header>
-                        { (allOrderRequests.length > 0 || allClearedOrderRequests.length > 0) ?
-                            [
-                                ...allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>),
-                                ...allClearedOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
-                            ]
-                            :
-                                <i>none</i>
-                        }
+                        { orderRequests.length > 0 ? orderRequests : <i>none</i> }
                     </div>
 
                     <div className='order-section'>
                         <Header as='h2'>Open Orders</Header>
-                        { (allOrders.length > 0 || allClearedOrders.length > 0) ?
-                            [
-                                ...allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>),
-                                ...allClearedOrders.map(o => <ExchangeOrderCard cleared key={o.contractId} order={o.contractData}/>)
-                            ]
-                            :
-                            <i>none</i>
-                        }
+                        { openOrders.length > 0 ? openOrders : <i>none</i> }
                     </div>
 
                     <div className='order-section'>
                         <Header as='h2'>Exchange Trades</Header>
-                        {allExchangeTrades.length > 0 ?
-                            allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>)
-                            :
-                            <i>none</i>
-                        }
+                        { trades.length > 0 ? trades : <i>none</i> }
                     </div>
 
                     <div className='order-section'>
                         <Header as='h2'>Broker Trades</Header>
-                        {allBrokerTrades.length > 0 ?
-                            allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>)
-                            :
-                            <i>none</i>
-                        }
+                        { brokerTrades.length > 0 ? brokerTrades : <i>none</i> }
                     </div>
                 </div>
             </PageSection>

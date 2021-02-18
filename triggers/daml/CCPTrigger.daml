@@ -50,7 +50,7 @@ handleCCPRule party = do
   ccpRoles <- query @CCP
   forA_ ccpRoles
     $ \(_,ccp) -> void $ put (state { operatorParty = ccp.operator })
-               >> debug ("Setting oooperator party to: " <> show ccp.operator)
+               >> debug ("Setting operator party to: " <> show ccp.operator)
 
   -- > Handle ClearedTrades
   clearedTrades <- query @ClearedTrade

@@ -6,7 +6,7 @@ from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 310 # default SID, use ExberrySID contract to change while running
+SID = 350 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
@@ -273,8 +273,14 @@ def main():
         logging.info(f"Handling execution report")
 
         execution = event.cdata
-        instrumentName = execution['instrument']
-        cleared_market = market_pairs[instrumentName]['clearedMarket']
+        instrument_name = execution['instrument']
+        cleared_market = market_pairs[instrument_name]['clearedMarket']
+        base_token_id = market_pairs[instrument_name]['baseTokenId']
+        quote_token_id = market_pairs[instrument_name]['quoteTokenId']
+        token_pair = {
+            '_1': base_token_id,
+            '_2': quote_token_id
+        }
 
         if cleared_market:
             logging.info(f"Processing cleared order report")
@@ -301,6 +307,7 @@ def main():
                 'eventId': execution['eventId'],
                 'eventTimestamp': execution['eventTimestamp'],
                 'instrument': pair['id'],
+                'pair': token_pair,
                 'trackingNumber': execution['trackingNumber'],
                 'buyer': taker['exchParticipant'],
                 'buyerOrderId': taker['orderId'],
