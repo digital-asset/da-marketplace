@@ -18,6 +18,7 @@ import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 
 import MarginCall from './MarginCall'
+import MarkToMarketCalc from './MarkToMarketCalc'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 
 type Props = {
@@ -89,9 +90,10 @@ const Clients: React.FC<Props> = ({ clients, sideNav, onLogout }) => {
                             emptyLabel='There are no customers.'/>
                     </div>
                     <MarginCall/>
+                    <MarkToMarketCalc/>
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
-                            title='Add Investor'
+                            title='Add Member'
                             partyOptions={partyOptions}
                             onRequestClose={() => setShowAddRelationshipModal(false)}
                             multiple={false}

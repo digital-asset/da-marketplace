@@ -13,7 +13,7 @@ import Page from '../common/Page'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
-import {ManualFairValueCalculation} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {ManualFairValueCalculation, FairValue} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import ManualFairValue from './ManualFairValue'
 
 type Props = {
@@ -35,11 +35,15 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         [operator, exchange]
     ));
 
-    const header = ['Pair', 'Current Price', 'Change', 'Volume']
+    // const allFairValues = useContractQuery(FairValue);
+
+    const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value']
     const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
+        // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
+        // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
-        return [pairLabel, '-', '-', '-'];
+        return [pairLabel, '-', '-', '-', '-'];
     }) || [];
 
     const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {

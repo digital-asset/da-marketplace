@@ -155,7 +155,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}>
                     <Form.Select
-                        label={<p className='p2 dark'>Primary Custodian</p>}
+                        label={<p className='p2 dark'>Margin/Clearing Account Custodian</p>}
                         multiple={false}
                         className='profile-form-field'
                         disabled={custodianOptions.length === 0}
@@ -170,7 +170,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                         name={registeredCCP[0]?.contractData.name || ccp}
                         items={[
                             {to: `${url}/exchanges`, label: "Exchanges", icon: <UserIcon/>},
-                            {to: `${url}/clients`, label: 'Clients', icon: <UserIcon/>},
+                            {to: `${url}/clients`, label: 'Members', icon: <UserIcon/>},
                             {to: `${url}/instruments`, label: 'Instruments', icon: <PublicIcon/>}
                             // {to: `${url}/derivatives`, label: 'Derivatives', icon: <PublicIcon/>},
                         ]}>
@@ -202,7 +202,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                                 <CCPProfile
                                     content='Save'
                                     profileLinks={[
-                                        {to: `${url}/clients`, title: 'Go to Clients list', subtitle: `${investors.length} Active Clients`}
+                                        {to: `${url}/clients`, title: 'Go to Members list', subtitle: `${investors.length} Active Clients`}
                                     ]}
                                     role={MarketRole.CustodianRole}
                                     defaultProfile={profile}
@@ -233,6 +233,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                 </Route>
                 <Route path={`${path}/instruments`}>
                     <InstrumentList
+                        exchanges={allExchanges}
                         sideNav={sideNav}
                         instruments={instruments}
                         onLogout={onLogout}/>

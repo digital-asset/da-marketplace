@@ -160,7 +160,6 @@ template CCPCustomer
           amount : Decimal
           optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
-          assertMsg "there must be at least one clearing deposit" $ not $ null clearingDepositCids
           aggregateQty <- getDepositQuantities clearingDepositCids
           if aggregateQty < amount
           then do

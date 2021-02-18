@@ -22,9 +22,6 @@ const MarginCall = () => {
     const [ targetAmount, setTargetAmount ] = useState('');
     const [ targetAmountError, setTargetAmountError ] = useState<string>()
 
-    const [ mtmAmount, setMtmAmount ] = useState('');
-    const [ mtmAmountError, setMtmAmountError ] = useState<string>()
-
     const { investorId } = useParams<{investorId: string}>()
 
     const operator = useOperator();
@@ -80,39 +77,6 @@ const MarginCall = () => {
         }
     }
 
-    const handleMarkToMarketCalc = async () => {
-        if (!token) {
-            throw new Error('Token not selected');
-        }
-        const time = new Date();
-        const tokenId = token.contractData.id;
-        const args = {
-            ccpCustomer: customer,
-            optAccountId: null,
-            currency: tokenId.label,
-            mtmAmount: mtmAmount,
-            calculationId: time.toString(),
-            calculationTime: time.toISOString()
-        };
-        const key = wrapDamlTuple([operator, custodian]);
-        await ledger.exerciseByKey(CCP.CCP_CreateMarkToMarketCalculation, key, args);
-
-        setCustomer(investorId? investorId : '')
-        setToken(undefined)
-        setMtmAmount('')
-    }
-
-    const validateMtmAmount = (event: React.SyntheticEvent, result: any) => {
-        const number = Number(result.value)
-
-        if (countDecimals(number) > quantityPrecision) {
-            return setMtmAmountError(`The decimal precision of this quantity must be equal to ${quantityPrecision !== 0 && 'or less than'} ${quantityPrecision}.`)
-        }
-
-        setMtmAmountError(undefined)
-        setMtmAmount(number.toString())
-    }
-
     const handleMarginCall = async () => {
         if (!token) {
             throw new Error('Token not selected');
@@ -154,7 +118,7 @@ const MarginCall = () => {
     return (
         <div className='margin-call'>
             <FormErrorHandled onSubmit={handleMarginCall}>
-                <Header as='h2'>Calculations</Header>
+                <Header as='h2'>Margin Call</Header>
                     {!investorId &&
                         <Form.Select
                             clearable
@@ -189,21 +153,6 @@ const MarginCall = () => {
                         disabled={!customer || !token || !targetAmount}
                         content='Create Margin Call'
                         className='ghost'/>
-                        <Form.Input
-                            className='create-deposit-quantity'
-                            label={<p>MTM Amount</p>}
-                            type='number'
-                            step={step}
-                            value={mtmAmount}
-                            placeholder={placeholder}
-                            error={mtmAmountError}
-                            disabled={!token}
-                            onChange={validateMtmAmount}/>
-                    <Button
-                        disabled={!customer || !token || !mtmAmount}
-                        content='Mark To Market Calc'
-                        className='ghost'
-                        onClick={handleMarkToMarketCalc}/>
             </FormErrorHandled>
         </div>
     )

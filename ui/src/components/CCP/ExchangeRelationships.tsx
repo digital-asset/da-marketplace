@@ -104,7 +104,7 @@ type RequestFairValuesProps = {
     }[];
 }
 
-const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
+export const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges}) => {
     const [ exchange, setExchange ] = useState('');
     const [ currency, setCurrency ] = useState<TokenInfo>();
     const [ upTo, setUpTo ] = useState('');

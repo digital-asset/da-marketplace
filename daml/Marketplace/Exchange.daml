@@ -115,7 +115,7 @@ template Exchange
         do
           create this with tokenPairs = delete pair tokenPairs
 
-      Exchange_AddPair : ContractId Exchange
+      Exchange_AddPair : (ContractId MarketPair, ContractId Exchange)
         with
           baseTokenId : Id
           baseType : AssetType
@@ -175,8 +175,9 @@ template Exchange
                 status = InstrumentActive
                 observers = fromList marketObservers
 
-          create newMarket
-          if clearedMarket then do
+          marketCid <- create newMarket
+
+          (,) marketCid <$> if clearedMarket then do
             let ccp = fromSomeNote "defaultCCP must be provided for cleared markets" defaultCCP
             let clearedMarketPair = ((baseTokenId, quoteTokenId), ccp)
             create this with clearedMarkets = dedup $ clearedMarketPair :: clearedMarkets

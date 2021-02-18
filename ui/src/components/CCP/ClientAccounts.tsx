@@ -14,6 +14,7 @@ import StripedTable from '../common/StripedTable'
 
 import MarginCall from './MarginCall'
 import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
+import MarkToMarketCalc from './MarkToMarketCalc'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -68,6 +69,7 @@ const ClientAccounts: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
                         rows={marginRows}/>
                 </div>
                 <MarginCall/>
+                <MarkToMarketCalc/>
             </PageSection>
         </Page>
     )
