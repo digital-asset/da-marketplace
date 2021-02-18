@@ -96,7 +96,6 @@ const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits,
     const marginSections = Object.entries(marginDepositsGrouped)
         .map(([providerLabel, depositsForProvider]) => {
             const assetDeposits = groupDepositsByAsset(depositsForProvider);
-            const { label, party }  = getPartyLabel(providerLabel, providers)
 
             return (
                 <div className='asset-sections' key={providerLabel}>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'

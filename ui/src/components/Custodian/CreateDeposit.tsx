@@ -11,7 +11,7 @@ import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { countDecimals, preciseInputSteps } from '../common/utils'
-import { TokenInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 

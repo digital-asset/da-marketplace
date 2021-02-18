@@ -1,27 +1,21 @@
 import React, {useState} from 'react'
+import { useParty, useLedger } from '@daml/react'
 import { Header, Form, Button } from 'semantic-ui-react'
-import SemanticDatePicker from 'react-semantic-ui-datepickers'
-import { DateTimeInput } from 'semantic-ui-calendar-react'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-
-import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import {CCPCustomerInfo, wrapDamlTuple, TokenInfo} from '../common/damlTypes'
-import { useParty, useLedger } from '@daml/react'
-import {useOperator} from '../common/common'
+import { useOperator } from '../common/common'
+import { wrapDamlTuple, TokenInfo } from '../common/damlTypes'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-import {RegisteredInvestor, RegisteredExchange} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import {Party, Time} from '@daml/types'
+
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 
@@ -35,7 +29,6 @@ type Props = {
 }
 
 const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }) => {
-    const allDeposits = useContractQuery(AssetDeposit);
     const ccp = useParty();
     const ledger = useLedger();
     const operator = useOperator();
@@ -115,12 +108,13 @@ export const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges})
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
 
-    const handleUpToChange = (event: any, result: any) => {
+    // TODO: Add a date picker widget
+    const handleUpToChange = (_: any, result: any) => {
         if (typeof result.value === 'string') {
             setUpTo(result.value);
         }
     }
-    const handleExchangeChange = (event: React.SyntheticEvent, result: any) => {
+    const handleExchangeChange = (_: React.SyntheticEvent, result: any) => {
         if (typeof result.value === 'string') {
             setExchange(result.value);
         }

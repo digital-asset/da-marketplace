@@ -4,8 +4,8 @@ import { Header, List } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import {
     RegisteredCustodian,
     RegisteredIssuer,
@@ -17,20 +17,10 @@ import {
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { ContractInfo, wrapTextMap } from '../common/damlTypes'
+import { wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import { getPartyLabel, IPartyInfo } from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
-import StripedTable from '../common/StripedTable'
-import {Derivative, FairValue} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
-
-type DepositInfo = {
-    investor: string,
-    provider: string,
-    quantity: number
-}
 
 type Props = {
     sideNav: React.ReactElement;
@@ -48,7 +38,6 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
     const party = useParty()
 
     const derivative = useContractQuery(Derivative).find(c => c.contractId === decodeURIComponent(derivativeId))
-    // const fairValues = useContractQuery(FairValue).filter(fv => fv.contractData.instrumentId.label === derivative?.contractData.id.label);
 
     const allRegisteredParties = [
         useContractQuery(RegisteredCustodian, AS_PUBLIC)
@@ -75,6 +64,9 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
             }
         })
 
+    // TODO: Show all FairValues for derivative
+    //
+    // const fairValues = useContractQuery(FairValue).filter(fv => fv.contractData.instrumentId.label === derivative?.contractData.id.label);
     // const StripedTableRows = fairValues.map(fv => [fv.contractData.exchange, fv.contractData.upTo, fv.contractData.price]);
     // const StripedTableHeaders = ["Exchange", "Time", "Price"]
 

@@ -1,22 +1,27 @@
 import React, { useEffect, useState } from 'react'
+import { useParty, useLedger } from '@daml/react'
 import { Button, Form, Header } from 'semantic-ui-react'
 import { useParams } from 'react-router-dom'
 
-import { useParty, useLedger } from '@daml/react'
-import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery } from '../../websocket/queryStream'
+import ContractSelect from '../common/ContractSelect'
 
 import { useOperator } from '../common/common'
-import { countDecimals, preciseInputSteps } from '../common/utils'
-import { TokenInfo, wrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
-import ContractSelect from '../common/ContractSelect'
-import {CCP} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import { countDecimals, preciseInputSteps } from '../common/utils'
+import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
 
-const MarginCall = () => {
+type Props = {
+    allCustomers: {
+        party: any;
+        label: string;
+    }[];
+}
+
+const MarginCall: React.FC<Props> = ({ allCustomers }) => {
     const [ customer, setCustomer ] = useState('');
     const [ token, setToken ] = useState<TokenInfo>();
     const [ targetAmount, setTargetAmount ] = useState('');
@@ -25,7 +30,7 @@ const MarginCall = () => {
     const { investorId } = useParams<{investorId: string}>()
 
     const operator = useOperator();
-    const custodian = useParty();
+    const ccp = useParty();
     const ledger = useLedger();
 
     useEffect(()=> {
@@ -36,33 +41,6 @@ const MarginCall = () => {
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
     const quantityPrecision = Number(token?.contractData.quantityPrecision) || 0
-
-    const customerParties = useContractQuery(CCPCustomer)
-        .map(customer => customer.contractData.ccpCustomer)
-
-    const brokerCustomers = useContractQuery(RegisteredBroker, AS_PUBLIC)
-        .filter(broker => customerParties.find(p => broker.contractData.broker === p))
-        .map(broker => {
-            const party = broker.contractData.broker;
-            const name = broker.contractData.name;
-            return {
-                party,
-                label: `${name} | ${party}`
-            }
-        })
-
-    const investorCustomers = useContractQuery(RegisteredInvestor, AS_PUBLIC)
-        .filter(investor => customerParties.find(p => investor.contractData.investor === p))
-        .map(investor => {
-            const party = investor.contractData.investor;
-            const name = investor.contractData.name;
-            return {
-                party,
-                label: `${name} | ${party}`
-            }
-        })
-
-    const allCustomers = [...brokerCustomers, ...investorCustomers]
 
     const customerOptions = allCustomers
         .map(customer => ({
@@ -90,7 +68,7 @@ const MarginCall = () => {
             targetAmount: targetAmount,
             calculationId: time.toISOString()
         };
-        const key = wrapDamlTuple([operator, custodian]);
+        const key = wrapDamlTuple([operator, ccp]);
         await ledger.exerciseByKey(CCP.CCP_CreateMarginCalculation, key, args);
 
         setCustomer(investorId? investorId : '')

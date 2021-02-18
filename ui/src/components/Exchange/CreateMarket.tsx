@@ -5,6 +5,8 @@ import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import { RegisteredCCP } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
@@ -15,9 +17,6 @@ import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 import FormToggle from '../common/FormToggle'
-import { RegisteredCCP } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
-import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();

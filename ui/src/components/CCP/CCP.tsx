@@ -1,23 +1,28 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
 import { Menu, Form } from 'semantic-ui-react'
-import _ from 'lodash'
 
 import { useLedger, useParty } from '@daml/react'
 
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { CCPInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import { RegisteredInvestor, RegisteredCCP, RegisteredBroker, RegisteredExchange, RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import {
+    RegisteredInvestor,
+    RegisteredCCP,
+    RegisteredBroker,
+    RegisteredExchange,
+    RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { CCP as CCPModel, CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import { MarketPair } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { UserIcon, MarketIcon, PublicIcon } from '../../icons/Icons'
+import { UserIcon, PublicIcon } from '../../icons/Icons'
 
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CCPProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -26,14 +31,12 @@ import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
-import Clients from './Clients'
-import ClientAccounts from './ClientAccounts'
+import Members from './Members'
+import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
 import IssuedDerivative from '../Issuer/IssuedDerivative'
 import DerivativeList from '../common/DerivativeList'
 import InstrumentList from '../common/InstrumentList'
-import {AppError} from '../common/errorTypes'
-import {MarketPair} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
 type Props = {
     onLogout: () => void;
@@ -44,8 +47,6 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const ccp = useParty();
     const ledger = useLedger();
-
-    const allDerivatives = useContractQuery(Derivative);
 
     const customers = useContractQuery(CCPCustomer);
     const exchanges = useContractQuery(CCPExchangeRelationship);
@@ -88,7 +89,6 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const investors = customers; // ccpContract?.contractData.investors || [];
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
     const instruments = useContractQuery(MarketPair);
@@ -134,7 +134,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     }
 
     const [ inviteCustodian, setInviteCustodian ] = useState('');
-    const handleSelectInviteCustodian = (event: React.SyntheticEvent, result: any) => {
+    const handleSelectInviteCustodian = (_: React.SyntheticEvent, result: any) => {
         setInviteCustodian(result.value);
     }
 
@@ -170,22 +170,21 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                         name={registeredCCP[0]?.contractData.name || ccp}
                         items={[
                             {to: `${url}/exchanges`, label: "Exchanges", icon: <UserIcon/>},
-                            {to: `${url}/clients`, label: 'Members', icon: <UserIcon/>},
+                            {to: `${url}/members`, label: 'Members', icon: <UserIcon/>},
                             {to: `${url}/instruments`, label: 'Instruments', icon: <PublicIcon/>}
-                            // {to: `${url}/derivatives`, label: 'Derivatives', icon: <PublicIcon/>},
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
-                                <p className='p2'>Client Holdings:</p>
+                                <p className='p2'>Member Holdings:</p>
                             </Menu.Item>
-                            {allCustomers.map(client =>
+                            {allCustomers.map(customer =>
                                 <Menu.Item
                                     className='sidemenu-item-normal'
                                     as={NavLink}
-                                    to={`${url}/client/${client.party}`}
-                                    key={client.party}
+                                    to={`${url}/member/${customer.party}`}
+                                    key={customer.party}
                                 >
-                                    <p>{client.label.substring(0, client.label.indexOf('|'))}</p>
+                                    <p>{customer.label.substring(0, customer.label.indexOf('|'))}</p>
                                 </Menu.Item>
                             )}
                         </Menu.Menu>
@@ -202,7 +201,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                                 <CCPProfile
                                     content='Save'
                                     profileLinks={[
-                                        {to: `${url}/clients`, title: 'Go to Members list', subtitle: `${investors.length} Active Clients`}
+                                        {to: `${url}/members`, title: 'Go to Members list', subtitle: `${customers.length} Active Members`}
                                     ]}
                                     role={MarketRole.CustodianRole}
                                     defaultProfile={profile}
@@ -219,16 +218,16 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                         onLogout={onLogout}/>
                 </Route>
 
-                <Route path={`${path}/clients`}>
-                    <Clients
-                        clients={allCustomers}
+                <Route path={`${path}/members`}>
+                    <Members
+                        members={allCustomers}
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
-                <Route path={`${path}/client/:investorId`}>
-                    <ClientAccounts
+                <Route path={`${path}/member/:investorId`}>
+                    <MemberAccounts
                         sideNav={sideNav}
-                        clients={allCustomers}
+                        members={allCustomers}
                         onLogout={onLogout}/>
                 </Route>
                 <Route path={`${path}/instruments`}>

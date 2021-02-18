@@ -3,6 +3,7 @@ import _ from 'lodash'
 
 import { useParty } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
 import { unwrapDamlTuple } from '../common/damlTypes'
@@ -13,7 +14,6 @@ import Page from '../common/Page'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
-import {ManualFairValueCalculation, FairValue} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import ManualFairValue from './ManualFairValue'
 
 type Props = {
@@ -49,7 +49,7 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {
         const pair = unwrapDamlTuple(listing)[0];
         if (typeof pair === 'string') {
-            throw new Error('blah')
+            throw new Error(`Expected a tuple for cleared market pair, found a string: ${pair}.`)
         }
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;

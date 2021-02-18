@@ -4,9 +4,9 @@ import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
 import { RejectedMarginCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Clearing'
 
+import { useContractQuery } from '../../websocket/queryStream'
 import { RejectedMarginCalculationInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
-import { useContractQuery } from '../../websocket/queryStream'
 import ActionRequiredNotification from '../common/ActionRequiredNotification'
 
 type RejectedMarginCalculationProps = {

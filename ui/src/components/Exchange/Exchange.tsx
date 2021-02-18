@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Header } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -9,7 +10,6 @@ import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { getAbbreviation } from '../common/utils';
 
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
@@ -17,20 +17,19 @@ import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
+import { getAbbreviation } from '../common/utils';
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
-import ExchangeParticipants from './ExchangeParticipants'
-import DerivativeList from './DerivativeList'
+import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { Header } from 'semantic-ui-react'
-
 import MarketPairs from './MarketPairs'
+import ExchangeParticipants from './ExchangeParticipants'
 
 type Props = {
     onLogout: () => void;
