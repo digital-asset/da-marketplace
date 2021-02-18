@@ -1,0 +1,26 @@
+module Tests.Utils where
+
+import Daml.Script
+
+import DA.Action
+import DA.Time
+
+
+-- |If 'isTrigger' is true, wait specified amount of time and do nothing,
+-- otherwise run 'withoutTrigger'
+awaitOrDo' : Bool -> Decimal -> Text -> (Script a) -> Script ()
+awaitOrDo' isTrigger s txt withoutTrigger
+  = awaitOrDo isTrigger s txt (return ()) (void $ withoutTrigger)
+
+
+-- |If 'isTrigger' is true, wait specified amount of time and run 'isTrigger',
+-- otherwise run 'withoutTrigger'
+awaitOrDo : Bool -> Decimal -> Text -> (Script a) -> (Script a) -> Script a
+awaitOrDo isTrigger s txt withTrigger withoutTrigger
+  = if isTrigger
+    then debug ("waiting for trigger to " <> txt) >> sleep (decToRelTime s) >> withTrigger
+    else withoutTrigger
+
+
+decToRelTime : Decimal -> RelTime
+decToRelTime d = convertMicrosecondsToRelTime (floor(d * 1000000.0))

@@ -5,13 +5,15 @@ init-script: Setup:setup
 parties:
   - Alice
   - Bob
+  - Carl
+  - Dana
   - Operator
   - Custodian
-  - BtcIssuer
-  - UsdtIssuer
+  - Issuer
   - Public
   - Exchange
   - Broker
+  - Ccp
 version: 0.1.11
 dependencies:
   - daml-prim

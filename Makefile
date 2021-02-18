@@ -38,9 +38,12 @@ broker_log := $(state_dir)/broker.log
 exchange_pid := $(state_dir)/exchange.pid
 exchange_log := $(state_dir)/exchange.log
 
+ccp_pid := $(state_dir)/ccp.pid
+ccp_log := $(state_dir)/ccp.log
+
 
 ### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine
+.PHONY: clean stop_daml_server stop_operator stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine stop_ccp
 
 $(state_dir):
 	mkdir $(state_dir)
@@ -118,6 +121,20 @@ stop_exchange:
 	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
 
 
+### DA Marketplace CCP Bot
+
+$(ccp_pid): |$(state_dir) $(trigger_build)
+	(daml trigger --dar $(trigger_build) \
+	    --trigger-name CCPTrigger:handleCCP \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Ccp > $(ccp_log) & echo "$$!" > $(ccp_pid))
+
+start_ccp: $(ccp_pid)
+
+stop_ccp:
+	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
+
+
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
 	cd exberry_adapter && poetry install && poetry build
@@ -145,7 +162,7 @@ stop_matching_engine:
 
 start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid)
 
-stop_bots: stop_broker stop_custodian stop_exchange stop_operator
+stop_bots: stop_broker stop_custodian stop_exchange stop_operator stop_ccp
 
 target_dir := target
 
@@ -175,6 +192,9 @@ $(dar): $(target_dir) $(daml_build_log)
 
 $(trigger): $(target_dir) $(trigger_build)
 	cp $(trigger_build) $@
+
+$(ccp_bot): $(target_dir) $(ccp_bot_dir)
+	cp automation/ccp/dist/bot-$(ccp_bot_version).tar.gz $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@

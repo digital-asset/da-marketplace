@@ -58,6 +58,7 @@ template DepositTransferRequest
 
           return newDepositCid'
 
+
       DepositTransferRequest_Reject : ()
         do return ()
 

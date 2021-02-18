@@ -1,6 +1,7 @@
 module Marketplace.Operator where
 
 import Marketplace.Broker
+import Marketplace.CentralCounterparty
 import Marketplace.Custodian
 import Marketplace.Exchange
 import Marketplace.Investor
@@ -47,3 +48,9 @@ template Operator
           broker : Party
         do
           create BrokerInvitation with ..
+
+      nonconsuming Operator_OnboardCCP : ContractId CCPInvitation
+        with
+          ccp : Party
+        do
+          create CCPInvitation with ..

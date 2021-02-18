@@ -1,0 +1,127 @@
+module Marketplace.Derivative where
+
+import DA.Finance.Types
+
+import DA.Next.Set
+
+
+data SecType = CMDTYSWAP | FRA | FUT | FWD | IRS | MLEG | OPT | SWAPTION
+  deriving (Eq, Show)
+
+
+data ExerciseStyle = European | American | Bermudan
+  deriving (Eq, Show)
+
+
+data PutOrCall = Call | Put
+  deriving (Eq, Show)
+
+
+data OptionData = OptionData
+  with
+    putCall : PutOrCall  -- put or call option
+    strikePx : Decimal  -- the Strike Price
+    exerStyle : ExerciseStyle  -- option exercise style
+  deriving (Eq, Show)
+
+
+template Derivative
+  with
+    id : Id
+    pricePrecision : Int
+    description : Text
+    prodSym : Text  -- BTCF21
+    prodCode : Text  -- BTC
+    uuid : Text
+    secType : SecType
+    mmy : Text  -- YYYYMM or YYYYMMDD or YYYMMwN
+    mult : Int  -- Contract Multiplier
+    uom : Text  -- Unit of measure (barrels, troy ounces, bushels, coins etc..)
+    optionData : Optional OptionData
+    underlying : Id  -- an identifier for the underlying instrument
+    isPublic : Bool
+    observers : Set Party
+  where
+    signatory id.signatories
+    observer observers
+
+    key id : Id
+    maintainer key.signatories
+
+    choice Derivative_AddObservers : ContractId Derivative
+      with
+        party : Party
+        newObservers : Set Party
+      controller party
+      do
+        assert $ member party $ union id.signatories newObservers
+        create this with observers = union observers newObservers
+
+    controller id.signatories can
+      Derivative_SetObservers : ContractId Derivative
+        with newObservers : Set Party
+        do create this with observers = newObservers
+
+
+template FairValueCalculationRequest
+  with
+    operator : Party
+    exchange : Party
+    ccp : Party
+    currency : Id
+    upTo : Time
+  where
+    signatory ccp
+    controller exchange can
+      FairValueCalculationRequest_Ack : ()
+        do return ()
+
+
+template ManualFairValueCalculation
+  with
+    exchange : Party
+    assetId : Id
+    currency : Id
+    upTo : Time
+  where
+    signatory exchange
+
+    controller exchange can
+      ManualFairValueCalculation_Calculate : ContractId FairValue
+        with
+          price : Decimal
+        do
+          timestamp <- getTime
+          create FairValue with observers = fromList [], ..
+
+
+template FairValue
+  with
+    exchange : Party
+    assetId : Id
+    price : Decimal
+    currency : Id
+    timestamp : Time
+    upTo : Time
+    observers : Set Party
+  where
+    signatory exchange
+    observer observers
+
+
+template FairValueInterval
+  with
+    exchange : Party
+    lastCalculated : Time
+    hoursBetweenCalculations : Int
+  where
+    signatory exchange
+    key exchange : Party
+    maintainer key
+
+    controller exchange can
+      FairValueInterval_Calculate : ContractId FairValueInterval
+        do
+          time <- getTime
+
+          create this with lastCalculated = time

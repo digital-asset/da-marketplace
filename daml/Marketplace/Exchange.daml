@@ -1,6 +1,7 @@
 module Marketplace.Exchange where
 
 import Marketplace.BinaryOption
+import Marketplace.CentralCounterparty
 import Marketplace.Custodian
 import Marketplace.ExchangeParticipant
 import Marketplace.Registry
@@ -86,6 +87,12 @@ template Exchange
           custodian : Party
         do create CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
 
+      nonconsuming Exchange_RequestCCPRelationship : ContractId CCPExchangeRelationshipRequest
+        with
+          ccp : Party
+        do
+          create CCPExchangeRelationshipRequest with requester = exchange, party = ccp, requesterRole = ExchangeRole, ..
+
       Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
         with
           exchParticipant : Party
@@ -160,4 +167,5 @@ template Exchange
           let pair = orderRequest.order.pair
           assertMsg ("pair " <> pair._1.label <> "/" <> pair._2.label <> " is not supported by exchange")
             $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
+
           exercise orderRequestCid OrderRequest_Ack with ..

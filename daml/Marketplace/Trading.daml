@@ -172,6 +172,7 @@ template Order
       nonconsuming Order_RequestCancel : ContractId OrderCancelRequest
         do create OrderCancelRequest with order = this
 
+
 assetSplit : Asset -> [Decimal] -> [Asset]
 assetSplit asset quantities = map (\q -> asset with quantity = q) quantitiesAll
   where
@@ -243,6 +244,66 @@ template BrokerOrder
               receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel brokerCustomer broker, version = 0
           create BrokerTrade with isBuy = isBid, ..
           create DepositTransferRequest with sender = broker, ..
+
+
+template DerivativeTrade
+  with
+    ccp : Party
+    exchange : Party
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id  -- id of Derivative
+    trackingNumber : Int
+    buyer : Party
+    buyerOrderId : Int
+    seller : Party
+    sellerOrderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+  where
+    signatory exchange
+    observer ccp
+    controller ccp can
+      DerivativeTrade_Novate : (ContractId DerivativeTradeSide, ContractId DerivativeTradeSide)
+        with
+          buyerAccountId : Id
+          sellerAccountId : Id
+        do
+          timestamp <- getTime
+          buyCid <- create DerivativeTradeSide with
+            participant = buyer
+            orderId = buyerOrderId
+            accountId = buyerAccountId
+            isBuy = True
+            ..
+          sellCid <- create DerivativeTradeSide with
+            participant = seller
+            orderId = sellerOrderId
+            accountId = sellerAccountId
+            isBuy = False
+            ..
+          return (buyCid, sellCid)
+
+
+template DerivativeTradeSide
+  with
+    participant : Party
+    ccp : Party
+    exchange : Party
+    isBuy : Bool
+    eventId : Int
+    eventTimestamp : Text
+    instrument : Id
+    orderId : Int
+    matchId : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
+    accountId : Id  -- the investor account at the ccp
+    timestamp : Time
+  where
+    signatory ccp, exchange
+    observer exchange, participant
 
 
 template TradeSide

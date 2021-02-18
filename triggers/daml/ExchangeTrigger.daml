@@ -1,9 +1,17 @@
 module ExchangeTrigger where
 
-import DA.Foldable
+import DA.Finance.Types
+
+import DA.Action
+import DA.Time
+import DA.List
+import DA.Foldable (forA_)
 import Daml.Trigger
 
+import Marketplace.Derivative
+import Marketplace.CentralCounterparty
 import Marketplace.Exchange
+import Marketplace.Token
 import Marketplace.Trading
 import Marketplace.BinaryOption
 
@@ -15,6 +23,13 @@ handleExchange = Trigger
   , updateState = \_ -> pure ()
   , rule = handleExchangeRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @TradeSide
+                                               , registeredTemplate @Derivative
+                                               , registeredTemplate @Token
+                                               , registeredTemplate @DerivativeTradeSide
+                                               , registeredTemplate @FairValue
+                                               , registeredTemplate @FairValueCalculationRequest
+                                               , registeredTemplate @FairValueInterval
+                                               , registeredTemplate @CCPExchangeRelationshipRequest
                                                , registeredTemplate @SettledBinaryOption ]
   , heartbeat = None
   }
@@ -22,10 +37,14 @@ handleExchange = Trigger
 
 handleExchangeRule : Party -> TriggerA () ()
 handleExchangeRule party = do
-  debug "Running exchange rule..."
+  time <- getTime
+
+  fairValueIntervals <- query @FairValueInterval
+  forA_ fairValueIntervals handleFairValueInterval
 
   -- |Settle all 'TradeSide' and 'SettledBinaryOption'
   tradeSides <- query @TradeSide
+  derivativeTradeSide <- query @DerivativeTradeSide
   binaryOptions <- query @SettledBinaryOption
   forA_ tradeSides (handleTradeSide party binaryOptions)
 
@@ -35,7 +54,29 @@ handleExchangeRule party = do
     $ \(cid,rq) -> emitExerciseCmd cid ExchangeParticipantInvitationRequest_Accept
                >> debug ("Approving participant request from " <> show rq.participant)
 
+  ccpRelationshipRequests <- filter (\(_,rq) -> rq.party == party) <$> query @CCPExchangeRelationshipRequest
+  forA_ ccpRelationshipRequests
+    $ \(cid,rq) -> emitExerciseCmd cid CCPExchangeRelationshipRequest_Approve
+               >> debug ("Accepting relationship request from: " <> show rq.requester)
 
+  -- Handle all calculation requests
+  calculationRequests <- query @FairValueCalculationRequest
+  forA_ calculationRequests (handleCalculationRequests party)
+
+
+-- |Handler for calculating FairValues at an interval. TODO: The actual calculations are _not_
+-- fully implemented, however if 'heartbeat' is set for the trigger, this will be called
+-- at the specified interval.
+handleFairValueInterval : ContractPair FairValueInterval -> TriggerA () ()
+handleFairValueInterval (srCid,fvi@FairValueInterval {..}) = do
+  currentTime <- getTime
+  let timeBetween = subTime currentTime lastCalculated
+  debug $ "time since last settlement: " <> show timeBetween
+  debug $ "needed time between: " <> show hoursBetweenCalculations
+  when (timeBetween > seconds hoursBetweenCalculations) (void $ dedupExercise srCid FairValueInterval_Calculate)
+
+
+-- |Settles TradeSides and BinaryOption TradeSides
 handleTradeSide : Party ->  [ContractPair SettledBinaryOption] -> ContractPair TradeSide -> TriggerA () ()
 handleTradeSide party  options (cid,tradeSide) = do
   debug $ "Handling trade side: " <> show tradeSide
@@ -45,3 +86,44 @@ handleTradeSide party  options (cid,tradeSide) = do
     let settledOptions = filter (\(_,opt) -> opt.id == tradeSide.pair._1) options
     forA_ settledOptions
       $ \(soCid,_) -> emitExerciseCmd cid TradeSide_SettleBinaryOption with settledBinOptionCid = soCid
+
+
+-- |Calculates the FairValue for all Derivatives known to Exchange
+handleCalculationRequests : Party -> ContractPair FairValueCalculationRequest -> TriggerA () ()
+handleCalculationRequests party (requestCid, rq@FairValueCalculationRequest{..}) = do
+  debug "handling calculation requests..."
+  derivatives <- query @Derivative
+  tokens <- query @Token
+  forA_ derivatives (handleDerivativeCalculation party currency upTo)
+  emitExerciseCmd requestCid FairValueCalculationRequest_Ack
+  return ()
+
+
+-- |Calculates a FairValue for a single derivative.
+-- Order of precedence:
+--    1. The price of the most recent trade before the specified 'upTo'
+--    2. If there are no trades, the most recent 'FairValue'
+--    3. If there are no 'FairValue', request manual calculation
+--
+-- TODO: Allow user to specify a 'from' Time interval before which trades and
+-- fairvalues will be ignored.
+handleDerivativeCalculation : Party -> Id -> Time -> ContractPair Derivative -> TriggerA () ()
+handleDerivativeCalculation party currency upTo (derivativeCid,d@(Derivative{..})) = do
+  debug ("calculating derivative FVR: " <> id.label)
+  fairValues <- sortOn ((.upTo) . snd) . filter (\(_,fv) -> fv.assetId == id) <$> query @FairValue
+  trades <- sortOn ((.timestamp) . snd) . filter (\(_,dts) -> dts.instrument == id) <$> query @DerivativeTradeSide
+
+  let relevantTrades = filter (\(_,dt) -> (subTime dt.timestamp upTo) < (seconds 0)) trades
+  timestamp <- getTime
+  case getBestPrice relevantTrades fairValues of
+    (Some bp) -> dedupCreate $ FairValue with exchange = party, assetId = id, price = bp, ..
+    None      -> dedupCreate $ ManualFairValueCalculation with exchange = party, assetId = id, ..
+
+  return ()
+
+  where
+    getBestPrice : [ContractPair DerivativeTradeSide] -> [ContractPair FairValue] -> Optional Decimal
+    getBestPrice ts fvs
+      | not (null ts)  = Some $ ((.executedPrice) . snd) (head ts)
+      | not (null fvs) = Some $ ((.price) . snd) (head fvs)
+      | otherwise      = None
