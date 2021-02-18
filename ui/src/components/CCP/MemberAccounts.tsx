@@ -28,7 +28,7 @@ type Props = {
 const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members }) => {
     const { investorId } = useParams<{investorId: string}>()
 
-    const notifications = useCCPCustomerNotifications();
+    const notifications = useCCPCustomerNotifications(investorId);
 
     const ccpCustomers = useContractQuery(CCPCustomer);
     const allDeposits = useContractQuery(AssetDeposit);
@@ -54,8 +54,8 @@ const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members }) => {
             sideNav={sideNav}
             menuTitle={<Header as='h1'>{client?.label.substring(0, client.label.lastIndexOf('|'))}</Header>}
             onLogout={onLogout}>
-            <PageSection className='clients'>
-                <div className='client-list'>
+            <PageSection className='members'>
+                <div className='member-list'>
                     {notifications.length > 0 && <Header as='h2'>Notifications</Header>}
                     {notifications}
                     <Header as='h2'>Clearing Accounts</Header>

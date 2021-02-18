@@ -20,6 +20,7 @@ import { OrderKind } from './InvestorTrade'
 
 type Props = {
     allowedToOrder: boolean;
+    inGoodStanding: boolean;
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
     defaultCCP?: string;
@@ -30,6 +31,7 @@ type Props = {
 
 const OrderForm: React.FC<Props> = ({
     allowedToOrder,
+    inGoodStanding,
     assetPrecisions,
     deposits,
     defaultCCP,
@@ -89,6 +91,11 @@ const OrderForm: React.FC<Props> = ({
             if (!allowedToOrder) {
                 throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
             }
+
+            if (!inGoodStanding) {
+                throw new AppError('Insufficient permissions.', `You must be in good standing with ${defaultCCP} and to place trades on this market.`)
+            }
+
             console.log(getType(tokenPair[0]));
             const makeClearedArgs = {
                 price,

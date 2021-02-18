@@ -17,6 +17,7 @@ import Page from '../common/Page'
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 
+import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
 import MarginCall from './MarginCall'
 import MarkToMarketCalc from './MarkToMarketCalc'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
@@ -36,6 +37,8 @@ const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
     const ledger = useLedger();
     const operator = useOperator();
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
+
+    const notifications = useCCPCustomerNotifications();
 
     const handleCCPCustomerInviteSubmit = async (party: string) => {
         const choice = CCP.CCP_InviteCustomer;
@@ -80,6 +83,8 @@ const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
             <PageSection>
                 <div className='members'>
                     <div className='member-list'>
+                        {notifications.length > 0 && <Header as='h2'>Notifications</Header>}
+                        {notifications}
                         <Header as='h2'>Clearing Members</Header>
                         <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
                             <AddPlusIcon/> Add Investor

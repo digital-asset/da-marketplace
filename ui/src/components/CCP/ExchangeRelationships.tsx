@@ -63,8 +63,8 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
             menuTitle={<><UserIcon size='24'/> Clients</>}
         >
             <PageSection>
-                <div className='clients'>
-                    <div className='client-list'>
+                <div className='members'>
+                    <div className='member-list'>
                         <Header as='h2'>Exchanges</Header>
                         <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
                             <AddPlusIcon/> Add Exchange
@@ -72,7 +72,7 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
                         <StripedTable
                             headings={tableHeadings}
                             rows={tableRows}
-                            emptyLabel='There are no customers.'/>
+                            emptyLabel='There are no exchanges.'/>
                     </div>
                     <RequestFairValues exchanges={exchanges}/>
                     {showAddRelationshipModal &&
