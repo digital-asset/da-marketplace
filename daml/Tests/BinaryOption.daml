@@ -37,8 +37,7 @@ endToEnd = do
 
   -- Alice originates the option
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestBinaryCallOptionOrigination with
-      assetLabel = optionId.label
-      assetSignatories = optionId.signatories
+      assetId = optionId
       safekeepingAccountId = alice.safekeepingAccountId
       issuer = alice.customer
       expiry = date 2020 Mar 18

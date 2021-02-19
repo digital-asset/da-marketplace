@@ -9,7 +9,6 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import Daml.Control.Recursion
-import DA.Next.Set (Set)
 import DA.Text (unwords)
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
 
@@ -48,8 +47,7 @@ template Service
     controller client can
       nonconsuming RequestOrigination: ContractId OriginationRequest
         with
-          assetLabel: Text
-          assetSignatories: Set Party
+          assetId: Id
           description: Text
           issuer: Party
           claims: Claims
@@ -59,8 +57,7 @@ template Service
 
       nonconsuming RequestBinaryCallOptionOrigination: ContractId OriginationRequest
         with
-          assetLabel: Text
-          assetSignatories: Set Party
+          assetId: Id
           issuer: Party
           safekeepingAccountId: Id
           expiry: Date
@@ -75,7 +72,6 @@ template Service
             claims = serialize $ european expiry (binary strike underlyingId.label currencyId)
             description = unwords [ underlyingId.label, show expiry, "Binary Call @", show strike ]
             ..
-      
           
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
         with
@@ -101,7 +97,7 @@ template Service
         do
           OriginationRequest{..} <- fetch createOriginationCid
           let assetDescVers: C -> [Update (ContractId AssetDescription)]
-              assetDescVers = ana write . ana zipWithIndex . (1, ) . para depthFst --TODO: use ghylo
+              assetDescVers = ana write . ana zipWithIndex . (assetId.version + 1, ) . para depthFst --TODO: use ghylo
                 where
                   depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
                   depthFst ZeroF = []
@@ -115,15 +111,15 @@ template Service
                   zipWithIndex (_, []) = Nil
                   zipWithIndex (i, x :: xs) = Cons (i, x) (succ i, xs)
                   write : [(Int, C)] -> ListF (Update (ContractId AssetDescription)) [(Int, C)]
-                  write ((version, claims') :: vcs) = 
-                    let assetId = Id with label = assetLabel, signatories = assetSignatories, ..
+                  write ((version', claims') :: vcs) = 
+                    let assetId' = assetId with version = version'
                         claims = serialize claims'
-                    in Cons (create AssetDescription with ..) vcs
+                    in Cons (create AssetDescription with assetId = assetId', ..) vcs
                   write [] = Nil
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
-          create AssetDescription with assetId = (Id with label = assetLabel, signatories = assetSignatories, version = 0), ..
+          create AssetDescription with ..
           sequence $ assetDescVers $ deserialize claims
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
@@ -209,11 +205,10 @@ template ReduceIssuanceRequest
 
 template OriginationRequest
   with
-    assetLabel: Text
-    assetSignatories: Set Party
+    assetId: Id
     description: Text
     issuer: Party
     claims: Claims
     safekeepingAccountId: Id
   where
-     signatory assetSignatories
+     signatory assetId.signatories
