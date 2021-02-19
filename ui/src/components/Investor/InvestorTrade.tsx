@@ -117,12 +117,8 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                     <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
-                            allowedToOrder={
-                                !!ccpCustomer
-                            }
-                            inGoodStanding={
-                                ccpCustomer ? ccpCustomer.contractData.inGoodStanding : false
-                            }
+                            allowedToOrder={!!ccpCustomer}
+                            inGoodStanding={!!ccpCustomer?.contractData?.inGoodStanding}
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
                             defaultCCP={defaultCCP}

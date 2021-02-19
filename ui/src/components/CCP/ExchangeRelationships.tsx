@@ -21,7 +21,7 @@ import ContractSelect from '../common/ContractSelect'
 
 type Props = {
     exchanges: {
-        party: any;
+        party: string;
         label: string;
     }[];
     sideNav: React.ReactElement;

@@ -18,6 +18,7 @@ import { countDecimals, preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 import FormToggle from '../common/FormToggle'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 
 const CreateMarket: React.FC<{}> = () => {
     const [ baseToken, setBaseToken ] = useState<TokenInfo>();
@@ -76,8 +77,23 @@ const CreateMarket: React.FC<{}> = () => {
             value: dr.contractId
         }
     });
-    const tokenMap = new Map(allTokens.map(tk => [String(tk.contractId), tk.contractData.id]));
-    const derivativeMap = new Map(allDerivatives.map(dr => [String(dr.contractId), dr.contractData.id]));
+
+    type AssetMap = Map<string, {id: Id, assetType: AssetType}>
+
+    const tokenMap: AssetMap = new Map(allTokens.map(tk =>
+        [String(tk.contractId), {
+            id: tk.contractData.id,
+            assetType: AssetType.TokenAsset
+        }]
+    ));
+
+    const derivativeMap: AssetMap = new Map(allDerivatives.map(dr =>
+        [String(dr.contractId), {
+            id: dr.contractData.id,
+            assetType: AssetType.DerivativeAsset
+        }]
+    ));
+
     const allMap = new Map([...Array.from(tokenMap.entries()), ...Array.from(derivativeMap.entries())]);
     const allOptions = [...allTokenOptions, ...allDerivativeOptions]
 
@@ -89,12 +105,12 @@ const CreateMarket: React.FC<{}> = () => {
     }
 
     const getType = (val: string) => {
-        const derivative = derivativeMap.get(val);
-        const token = tokenMap.get(val);
-        if (!token && !derivative) {
-            throw new Error('Options not found');
+        const asset = allMap.get(val);
+        if (!asset) {
+            throw new Error('Option not found');
         }
-        return !derivative ? AssetType.TokenAsset : AssetType.DerivativeAsset;
+
+        return asset.assetType;
     }
 
     const handleIdPairSubmit = async () => {
@@ -102,8 +118,8 @@ const CreateMarket: React.FC<{}> = () => {
             if (!baseOption || !quoteOption) {
                 throw new Error('Options not selected');
             }
-            const baseId = allMap.get(baseOption);
-            const quoteId = allMap.get(quoteOption);
+            const baseId = allMap.get(baseOption)?.id;
+            const quoteId = allMap.get(quoteOption)?.id;
 
             if (!baseId || !quoteId) {
                 throw new Error('Options do not exist');
@@ -154,8 +170,6 @@ const CreateMarket: React.FC<{}> = () => {
                 quoteTokenId: quoteToken.contractData.id,
                 quoteType: AssetType.TokenAsset
             };
-
-            console.log("Adding pair: ", args);
 
             await ledger.exerciseByKey(Exchange.Exchange_AddPair, key, args);
 

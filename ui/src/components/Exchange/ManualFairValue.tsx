@@ -34,7 +34,7 @@ const ManualFairValue: React.FC<Props> = ({fairValueRequest}) => {
         const number = Number(result.value)
 
         if (number < 0) {
-            return setPriceError(`The quantity must be a positive number.`)
+            return setPriceError(`The price must be a positive number.`)
         }
 
         setPriceError(undefined)

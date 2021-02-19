@@ -98,7 +98,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                  items={[
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
-                                    // {to: `${url}/derivatives`, label: 'Derivatives', icon: <PublicIcon/>},
                                  ]}/>
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
