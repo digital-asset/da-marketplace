@@ -1,0 +1,45 @@
+module Marketplace.Distribution.Bid.Model where
+
+import DA.Finance.Types (Account, Id)
+import DA.Finance.Asset (AssetDeposit)
+
+type T = Bid
+
+data Details = Details with
+    price : Decimal
+    quantity : Decimal
+    time : Time
+  deriving (Eq, Show)
+
+instance Ord Details where
+  compare x y = compare (x.price, x.quantity, Down x.time) (y.price, y.quantity, Down y.time)
+
+data Status
+    = Pending
+    | FullAllocation with
+        price : Decimal
+    | PartialAllocation with
+        price : Decimal
+        quantity : Decimal
+    | NoAllocation
+    | Invalid
+  deriving (Eq, Show)
+
+template Bid
+  with
+    operator : Party
+    provider : Party
+    issuer : Party
+    customer : Party
+    assetId : Id
+    details : Details
+    tradingAccount : Account
+    allocationAccount : Account
+    depositCid : ContractId AssetDeposit
+    status : Status
+  where
+    signatory operator, provider, issuer, customer
+    ensure details.quantity > 0.0
+
+    key (assetId, customer) : (Id, Party)
+    maintainer key._2

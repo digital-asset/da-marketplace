@@ -11,11 +11,13 @@ import DA.Optional
 import Daml.Script
 import Common
 import Marketplace.Distribution.Auctioneer qualified as Auctioneer
-import Marketplace.Distribution.Auction qualified as Auction
-import Marketplace.Distribution.Bid qualified as Bid
+import Marketplace.Distribution.Auction.Model qualified as Auction
+import Marketplace.Distribution.Auction.Service qualified as Auction
+import Marketplace.Distribution.Bid.Model qualified as Bid
+import Marketplace.Distribution.Bid.Service qualified as Bid
 import Marketplace.Settlement qualified as Settle
 
-setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.Auction, ContractId Auction.T, [ContractId Bid.Service])
+setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Bid.Service])
 setup = do
   cr@CommonContracts{..} <- onboardCommon
 

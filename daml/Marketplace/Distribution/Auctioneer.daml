@@ -1,6 +1,6 @@
 module Marketplace.Distribution.Auctioneer where
 
-import Marketplace.Distribution.Auction qualified as Auction
+import Marketplace.Distribution.Auction.Service qualified as Auction
 
 template Role
   with

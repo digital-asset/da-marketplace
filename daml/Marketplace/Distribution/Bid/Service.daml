@@ -1,22 +1,16 @@
-module Marketplace.Distribution.Bid where
+module Marketplace.Distribution.Bid.Service where
 
 import DA.List (head, last)
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Account, Asset, Id)
-import DA.Finance.Utils (fetchAndArchive)
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule, Deposit(..), Withdraw(..))
-import Marketplace.Settlement (SettlementInstruction(..), SettlementDetails)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement (SettlementInstruction(..))
+import Marketplace.Distribution.Bid.Model qualified as Bid
+import Marketplace.Distribution.Bid.Model (Bid(..))
+import Marketplace.Trading.AllocationAccountRule qualified as Allocation
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
-type T = Service
-
-data Details = Details with
-    price : Decimal
-    quantity : Decimal
-    time : Time
-  deriving (Eq, Show)
-
-instance Ord Details where
-  compare details1 details2 = compare (details1.price, details1.quantity, Down details1.time) (details2.price, details2.quantity, Down details2.time)
+type S = Service
 
 template Service
   with
@@ -34,29 +28,30 @@ template Service
     let assetId = asset.id
 
     controller customer can
-      nonconsuming SubmitBid : ContractId Bid
+      nonconsuming SubmitBid : ContractId Bid.T
         with
-          details : Details
+          details : Bid.Details
           tradingAccount : Account
           allocationAccount : Account
           depositCid : ContractId AssetDeposit
         do
           -- TODO: Check for parallism of this choice
           -- TODO: Check bid details match whats contained in the asset deposit
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Deposit with ..
-          create Bid with status = Pending; ..
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          create Bid with status = Bid.Pending; ..
 
-      nonconsuming WithdrawBid : ContractId AssetDeposit
-        with
-          bidCid : ContractId Bid
-        do
-          Bid{..} <- fetchAndArchive bidCid
-          exerciseByKey @AllocationAccountRule allocationAccount.id Withdraw with transferTo = tradingAccount; ..
+      -- TBC : Remove for now to block bidders from withdrawing bids
+      -- nonconsuming WithdrawBid : ContractId AssetDeposit
+      --   with
+      --     bidCid : ContractId Bid
+      --   do
+      --     Bid{..} <- fetchAndArchive bidCid
+      --     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
 
     controller provider, issuer can
       nonconsuming UpdateStatus : ContractId Bid
         with
-          newStatus : Status
+          newStatus : Bid.Status
         do
           (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
           archive bidCid *> create bid with status = newStatus
@@ -70,24 +65,24 @@ template Service
           -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
           (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
           let newStatus = if bid.details.quantity == quantity
-                            then FullAllocation with ..
-                            else PartialAllocation with ..
+                            then Bid.FullAllocation with ..
+                            else Bid.PartialAllocation with ..
           bidCid <- exercise self UpdateStatus with ..
 
           bidDeposit <- fetch bid.depositCid
           bidDepositCid <- if bidDeposit.asset.quantity > amount
                               then do
                                 splitDepositCids <- exercise bid.depositCid AssetDeposit_Split with quantities = [amount]
-                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
+                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
                                 pure $ head splitDepositCids
                               else pure bid.depositCid
 
           pure (bidCid, bidDepositCid)
 
-      nonconsuming GenerateSettlementInstrution : ContractId SettlementInstruction
+      nonconsuming GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
         with
-          delivery : SettlementDetails
-          payment : SettlementDetails
+          delivery : Settlement.SettlementDetails
+          payment : Settlement.SettlementDetails
         do
           create SettlementInstruction with buyer = customer; seller = issuer; ..
 
@@ -128,33 +123,3 @@ template Request
       Reject : ()
         do
           return ()
-
-data Status
-    = Pending
-    | FullAllocation with
-        price : Decimal
-    | PartialAllocation with
-        price : Decimal
-        quantity : Decimal
-    | NoAllocation
-    | Invalid
-  deriving (Eq, Show)
-
-template Bid
-  with
-    operator : Party
-    provider : Party
-    issuer : Party
-    customer : Party
-    assetId : Id
-    details : Details
-    tradingAccount : Account
-    allocationAccount : Account
-    depositCid : ContractId AssetDeposit
-    status : Status
-  where
-    signatory operator, provider, issuer, customer
-    ensure details.quantity > 0.0
-
-    key (assetId, customer) : (Id, Party)
-    maintainer key._2
