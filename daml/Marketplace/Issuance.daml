@@ -1,17 +1,17 @@
 module Marketplace.Issuance where
 
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize)
+import ContingentClaims.Observation (Observation)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import Daml.Control.Recursion
 import DA.Next.Set (Set)
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
-import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize)
-import ContingentClaims.Observation (Observation)
-import Daml.Control.Recursion
 
 type T = Issuance
 
--- TODO: don't export
+-- TODO: don't export; used below in Origination
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
 
@@ -76,35 +76,31 @@ template Service
           createOriginationCid: ContractId OriginationRequest
         do
           OriginationRequest{..} <- fetch createOriginationCid
-          let genAssetDescriptionVersions: C -> [C]
-              genAssetDescriptionVersions = concat . para levels
+          let assetDescVers: C -> [Update (ContractId AssetDescription)]
+              assetDescVers = ana write . ana zipWithIndex . (1, ) . para depthFst --TODO: use ghylo
                 where
-                  levels : F (C, [[C]]) -> [[C]] -- each inner list has the subtrees at that level
-                  levels ZeroF = [[Zero]]
-                  levels (OneF id) = [[One id]]
-                  levels (GiveF (claim, cs)) = [Give claim] :: cs
-                  levels (ScaleF o (claim, cs)) = [Scale o claim] :: cs
-                  levels (WhenF o (claim, cs)) = [When o claim] :: cs
-                  levels (OrF (claim, cs) (claim', cs')) = [Or claim claim'] :: zipWithLongest (<>) (cs, cs')
-                  levels (AndF (claim, cs) (claim', cs')) = [And claim claim'] :: zipWithLongest (<>) (cs, cs')
-                  levels (CondF o (claim, cs) (claim', cs')) = [Cond o claim claim'] :: zipWithLongest (<>) (cs, cs')
-                  zipWithLongest f = apo \case
-                      ([], []) -> Nil
-                      (a :: as, []) -> Cons a (Left as)
-                      ([], a' :: as') -> Cons a' (Left as')
-                      (a :: as, a' :: as') -> Cons (f a a') (Right (as, as'))
-              zipWithIndex = ana \case
-                (_, []) -> Nil
-                (i, x :: xs) -> Cons (i, x) (succ i, xs)
+                  depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
+                  depthFst ZeroF = []
+                  depthFst (OneF _) = []
+                  depthFst (ScaleF _ (_, cs)) = cs
+                  depthFst (WhenF _ (_, cs)) = cs
+                  depthFst (GiveF (_, cs)) = cs
+                  depthFst (AndF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+                  depthFst (OrF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+                  depthFst (CondF _ (_, cs) (_, cs')) = cs ++ cs'
+                  zipWithIndex (_, []) = Nil
+                  zipWithIndex (i, x :: xs) = Cons (i, x) (succ i, xs)
+                  write : [(Int, C)] -> ListF (Update (ContractId AssetDescription)) [(Int, C)]
+                  write ((version, claims') :: vcs) = 
+                    let assetId = Id with label = assetLabel, signatories = assetSignatories, ..
+                        claims = serialize claims'
+                    in Cons (create AssetDescription with ..) vcs
+                  write [] = Nil
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
-          forA (zipWithIndex . (0, ) . genAssetDescriptionVersions . deserialize $ claims) \(i, unserializedClaims) ->
-            let claims = serialize unserializedClaims in
-            create AssetDescription with assetId = Id with label = assetLabel
-                                                           signatories = assetSignatories
-                                                           version = i
-                                         ..
+          create AssetDescription with assetId = (Id with label = assetLabel, signatories = assetSignatories, version = 0), ..
+          sequence $ assetDescVers $ deserialize claims
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with

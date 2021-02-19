@@ -81,7 +81,7 @@ endToEnd = do
   -- Bob exercises the Option
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = optionDepositCid
-    postAssetVersion = 2 -- TODO: How do we get this in practice? From a UI?
+    postAssetVersion = 1 -- TODO: How do we get this in practice? From a UI?
   submit common.custodian $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
     safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
     lifecycleRequestCid = lifecycleReqCid
