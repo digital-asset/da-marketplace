@@ -14,11 +14,18 @@ template Role
     maintainer key._1
 
     controller provider can
+    
       nonconsuming OfferCustodyService : ContractId Custody.Offer
         with
-          customer : Party
+          client : Party
         do
           create Custody.Offer with ..
+
+      nonconsuming AcceptCustodyRequest : ContractId Custody.Service
+        with
+          custodyRequestCid : ContractId Custody.Request
+        do
+          exercise custodyRequestCid Custody.Approve with ..
 
       nonconsuming TerminateCustodyService : ()
         with

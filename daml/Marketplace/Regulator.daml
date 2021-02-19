@@ -1,0 +1,90 @@
+module Marketplace.Regulator where
+
+import DA.Next.Set (Set, fromList)
+
+template VerifiedIdentity
+  with
+    operator : Party
+    provider : Party
+    client : Party
+    observers : Set Party
+    legalName : Text
+    location : Text
+  where
+    signatory operator, provider, client
+    observer observers
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    client : Party
+  where
+    signatory operator, provider, client
+
+    key (operator, provider, client) : (Party, Party, Party)
+    maintainer key._1
+
+    controller client can
+      nonconsuming RequestIdentityVerification : ContractId IdentityVerificationRequest
+        with
+          legalName : Text
+          location : Text
+          observers : [Party]
+        do
+          create IdentityVerificationRequest with observers = fromList observers; ..
+
+    controller provider can
+      nonconsuming VerifyIdentity : ContractId VerifiedIdentity
+        with
+          identityVerificationRequestCid : ContractId IdentityVerificationRequest
+        do
+          IdentityVerificationRequest{..} <- fetch identityVerificationRequestCid
+          archive identityVerificationRequestCid
+          create VerifiedIdentity with ..
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    client : Party
+  where
+    signatory operator, provider
+
+    controller client can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    client : Party
+    provider : Party
+  where
+    signatory operator, client
+
+    controller provider can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+template IdentityVerificationRequest
+  with
+    operator : Party
+    provider : Party
+    client : Party
+    observers : Set Party
+    legalName : Text
+    location : Text
+  where
+    signatory operator, provider, client
+    observer observers
