@@ -21,7 +21,7 @@ endToEnd: Script [ ContractId AssetDeposit ]
 endToEnd = do
   common <- onboardCommon
 
-  let optionId = Id with 
+  let optionId = Id with
                    signatories = Set.singleton common.custodian
                    label = "TSLA Mar21 910.0"
                    version = 0
@@ -37,11 +37,11 @@ endToEnd = do
       underlyingAsset = Asset with id = underlyingId, quantity = 200.0
 
       -- TODO: refactor into a more composable form and add to contingent-claims lib
-      binary : Decimal -> Text -> Id -> Claim O.Observation Date Id 
+      binary : Decimal -> Text -> Id -> Claim O.Observation Date Id
       binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one ccy) Zero
 
-  alice <- onboardCustomer common "Alice" usdAsset -- this is weird - we should be first issuing asset
-  bob <- onboardCustomer common "Bob" usdAsset
+  alice <- onboardCustomer common "Alice" usdAsset common.exchange -- this is weird - we should be first issuing asset
+  bob <- onboardCustomer common "Bob" usdAsset common.exchange
 
   -- Alice originates the option
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
@@ -54,7 +54,7 @@ endToEnd = do
   optionDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 
   -- Alice issues the option
-  createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid 
+  createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid
     RequestCreateIssuance with
       issuanceId = "Myissuance"
       accountId = Id (Set.fromList [alice.customer, common.custodian]) alice.safekeepingAccountId.label 0
@@ -75,7 +75,7 @@ endToEnd = do
   corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestCreditAccount with
     accountId = alice.safekeepingAccountId
     asset = usdAsset
-  corpActDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid CreditAccount with 
+  corpActDepositCid <- submit common.custodian $ exerciseCmd alice.custodyServiceCid CreditAccount with
     creditAccountRequestCid = corpActReqCid
 
   -- Bob exercises the Option

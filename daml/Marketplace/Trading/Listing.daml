@@ -1,4 +1,4 @@
-module Marketplace.Listing where
+module Marketplace.Trading.Listing where
 
 import DA.Finance.Types
 import Marketplace.Error qualified as Error

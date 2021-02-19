@@ -6,7 +6,7 @@ import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
 import Marketplace.Trading.Order qualified as O
 import Marketplace.Trading.Service qualified as S
-import Marketplace.Listing qualified as L
+import Marketplace.Trading.Listing qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
 

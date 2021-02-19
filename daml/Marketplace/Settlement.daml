@@ -1,4 +1,4 @@
-module Marketplace.Trading.Settlement where
+module Marketplace.Settlement where
 
 import DA.Finance.Types (Account)
 import DA.Finance.Asset (AssetDeposit)
@@ -94,5 +94,6 @@ template SettlementInstruction
               removeProvider = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = provider
               settle = exerciseByKey @AllocationAccountRule settlementDetails.senderAccount.id Transfer with ..
 
+            -- Sequence the transaction, ignoring the output of the add and remove provider transactions but return the output of the settle transaction
             addProvider *> settle <* removeProvider
             )

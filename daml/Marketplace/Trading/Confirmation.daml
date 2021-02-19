@@ -5,9 +5,9 @@ import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Next.Set (Set, insert)
-import Marketplace.Listing (Listing)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Trading.Listing (Listing)
 import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Settlement qualified as Settlement
 
 -- TODO: Try to turn this into a service
 
