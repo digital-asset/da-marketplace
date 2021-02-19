@@ -11,6 +11,7 @@ import Marketplace.Operator
 
 import Marketplace.Trading
 import Marketplace.Transfer
+import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.Finance.Types
@@ -43,7 +44,7 @@ doSetupTransfer lp@(LedgerParties operator public custodian exchange issuer _ al
 
   -- the exchange adds support for BTC/USDT pair
   exchange `submit` exerciseByKeyCmd @Exchange (operator, exchange) Exchange_AddPair
-      with baseTokenId = btcTokenId, quoteTokenId = usdTokenId
+      with baseTokenId = btcTokenId, baseType = TokenAsset, quoteTokenId = usdTokenId, quoteType = TokenAsset
            minQuantity = 0.01, maxQuantity = 10000.0, clearedMarket = False, defaultCCP = None
 
   aliceUsdId <- setupExchangeAccount lp usdTokenId 10000.0 alice

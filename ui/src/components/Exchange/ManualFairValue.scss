@@ -1,0 +1,28 @@
+
+@mixin manual-fair-value {
+    .manual-fair-value {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        padding: $spacing-m;
+        margin-left: $spacing-m;
+        border-radius: 2px;
+        height: fit-content;
+        animation: fadeIn .5s;
+
+        h2 {
+            margin-bottom: $spacing-m;
+        }
+
+        .inline-form-group {
+            margin-bottom: $spacing-m;
+        }
+
+        @media screen and (max-width: 1100px) {
+            width: 100%;
+            margin: $spacing-m 0 0 0;
+        }
+    }
+}
+

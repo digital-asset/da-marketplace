@@ -25,6 +25,8 @@ import LandingPage from '../common/LandingPage'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
 
+import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
+import { useCCPCustomerInviteNotifications } from './CCPInviteNotifications'
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
@@ -42,10 +44,13 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investor = useParty();
     const ledger = useLedger();
 
+    const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
+        ...useCCPCustomerNotifications(),
+        ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
-        ...useDismissibleNotifications(),
+        ...dismissibleNotifications
     ];
 
     const registeredInvestor = useContractQuery(RegisteredInvestor);

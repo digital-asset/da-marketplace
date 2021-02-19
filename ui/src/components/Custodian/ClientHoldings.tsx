@@ -31,7 +31,7 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
 
     const tableRows = depositSummary(deposits).map(d =>  [d.split(':')[0], d.split(':')[1]]);
 
-    const client = clients.find(i => i.party == investorId)
+    const client = clients.find(i => i.party === investorId)
 
     return (
         <Page

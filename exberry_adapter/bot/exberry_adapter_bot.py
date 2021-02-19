@@ -275,84 +275,88 @@ def main():
 
         execution = event.cdata
         instrument_name = execution['instrument']
-        cleared_market = market_pairs[instrument_name]['clearedMarket']
-        base_token_id = market_pairs[instrument_name]['baseTokenId']
-        quote_token_id = market_pairs[instrument_name]['quoteTokenId']
-        token_pair = {
-            '_1': base_token_id,
-            '_2': quote_token_id
-        }
+        if instrument_name in market_pairs:
+            cleared_market = market_pairs[instrument_name]['clearedMarket']
+            base_token_id = market_pairs[instrument_name]['baseTokenId']
+            quote_token_id = market_pairs[instrument_name]['quoteTokenId']
+            token_pair = {
+                '_1': base_token_id,
+                '_2': quote_token_id
+            }
 
-        if cleared_market:
-            logging.info(f"Processing cleared order report")
-            commands = [exercise(event.cid, 'Archive', {})]
+            if cleared_market:
+                logging.info(f"Processing cleared order report")
+                commands = [exercise(event.cid, 'Archive', {})]
 
-            taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
-                'orderId': execution['takerMpOrderId']
-            })
-            maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
-                'orderId': execution['makerMpOrderId']
-            })
+                taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
+                    'orderId': execution['takerMpOrderId']
+                })
+                maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
+                    'orderId': execution['makerMpOrderId']
+                })
 
-            ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
+                ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
-            if not ccp:
-                logging.error(f"Error: non-matching ccp parties: {taker['ccp']} !== {maker['ccp']}")
-                return commands
+                if not ccp:
+                    logging.error(f"Error: non-matching ccp parties: {taker['ccp']} !== {maker['ccp']}")
+                    return commands
 
-            pair = market_pairs[execution['instrument']]
+                pair = market_pairs[execution['instrument']]
 
-            commands.append(create(MARKETPLACE.ClearedTrade, {
-                'ccp': ccp,
-                'exchange': client.party,
-                'eventId': execution['eventId'],
-                'timeMatched': execution['eventTimestamp'],
-                'instrument': pair['id'],
-                'pair': token_pair,
-                'trackingNumber': execution['trackingNumber'],
-                'buyer': maker['exchParticipant'],
-                'buyerOrderId': maker['orderId'],
-                'seller': taker['exchParticipant'],
-                'sellerOrderId': taker['orderId'],
-                'matchId': execution['matchId'],
-                'executedQuantity': execution['executedQuantity'],
-                'executedPrice': execution['executedPrice']
-            }))
-            commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
-                'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice']
-            }))
-            commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
-                'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice']
-            }))
+                commands.append(create(MARKETPLACE.ClearedTrade, {
+                    'ccp': ccp,
+                    'exchange': client.party,
+                    'eventId': execution['eventId'],
+                    'timeMatched': execution['eventTimestamp'],
+                    'instrument': pair['id'],
+                    'pair': token_pair,
+                    'trackingNumber': execution['trackingNumber'],
+                    'buyer': maker['exchParticipant'],
+                    'buyerOrderId': maker['orderId'],
+                    'seller': taker['exchParticipant'],
+                    'sellerOrderId': taker['orderId'],
+                    'matchId': execution['matchId'],
+                    'executedQuantity': execution['executedQuantity'],
+                    'executedPrice': execution['executedPrice']
+                }))
+                commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
+                    'fillQty': execution['executedQuantity'],
+                    'fillPrice': execution['executedPrice']
+                }))
+                commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
+                    'fillQty': execution['executedQuantity'],
+                    'fillPrice': execution['executedPrice']
+                }))
+            else:
+                logging.info(f"Processing collateralized order report")
+
+                taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
+                    'orderId': execution['takerMpOrderId']
+                })
+                maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
+                    'orderId': execution['makerMpOrderId']
+                })
+
+                commands = [exercise(event.cid, 'Archive', {})]
+                commands.append(exercise(taker_cid, 'Order_Fill', {
+                    'fillQty': execution['executedQuantity'],
+                    'fillPrice': execution['executedPrice'],
+                    'counterOrderId': maker['orderId'],
+                    'counterParty': maker['exchParticipant'],
+                    'timeMatched': execution['eventTimestamp']
+                }))
+                commands.append(exercise(maker_cid, 'Order_Fill', {
+                    'fillQty': execution['executedQuantity'],
+                    'fillPrice': execution['executedPrice'],
+                    'counterParty': taker['exchParticipant'],
+                    'counterOrderId': taker['orderId'],
+                    'timeMatched': execution['eventTimestamp']
+                }))
+
+            return commands
         else:
-            logging.info(f"Processing collateralized order report")
-
-            taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
-                'orderId': execution['takerMpOrderId']
-            })
-            maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
-                'orderId': execution['makerMpOrderId']
-            })
-
+            logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
             commands = [exercise(event.cid, 'Archive', {})]
-            commands.append(exercise(taker_cid, 'Order_Fill', {
-                'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice'],
-                'counterOrderId': maker['orderId'],
-                'counterParty': maker['exchParticipant'],
-                'timeMatched': execution['eventTimestamp']
-            }))
-            commands.append(exercise(maker_cid, 'Order_Fill', {
-                'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice'],
-                'counterParty': taker['exchParticipant'],
-                'counterOrderId': taker['orderId'],
-                'timeMatched': execution['eventTimestamp']
-            }))
-
-        return commands
 
     network.run_forever()
 

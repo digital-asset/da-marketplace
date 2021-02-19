@@ -10,6 +10,8 @@ import Marketplace.ExchangeParticipant
 import Marketplace.Investor
 import Marketplace.Issuer
 import Marketplace.Operator
+import Marketplace.Token
+import Marketplace.Utils
 
 import Marketplace.Clearing
 import Marketplace.Derivative
@@ -22,7 +24,6 @@ import Marketplace.Transfer
 import DA.Finance.Asset
 import DA.Finance.Types
 
-import DA.Action
 import DA.Foldable (forA_)
 import DA.Optional
 
@@ -79,13 +80,16 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
 
   usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
-
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
   h2oQ121DerId <- createSimpleDerivative operator issuer "H2OQ121" "H2O" "H2O Q1 21" 6 1 "h2o" h2oTokenId observers
   h2oQ221DerId <- createSimpleDerivative operator issuer "H2OQ221" "H2O" "H2O Q2 21" 6 1 "h2o" h2oTokenId observers
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
   h2oQ421DerId <- createSimpleDerivative operator issuer "H2OQ421" "H2O" "H2O Q4 21" 6 1 "h2o" h2oTokenId observers
+
+  (q121usdId, q121usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ121DerId DerivativeAsset ccp
+  (q221usdId, q221usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ221DerId DerivativeAsset ccp
+  (q321q421Id, q321q421Pair) <- createMarketPair exchange operator h2oQ321DerId DerivativeAsset h2oQ421DerId DerivativeAsset ccp
 
   let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0  10_000.0 3000.0
 
@@ -97,25 +101,25 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   -- ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
   --   with amount = 100.0
 
-  let tradePairs = [ (alice, bob,   h2oQ121DerId, 50.0,  1000.0)
-                   , (alice, carl,  h2oQ321DerId, 10.0,  3000.0)
-                   , (alice, dana,  h2oQ221DerId, 34.0,  5044.0)
-                   , (carl,  bob,   h2oQ321DerId, 10.0,  5044.0)
-                   , (dana,  alice, h2oQ121DerId, 10.0,  100.0)
-                   , (bob,   dana,  h2oQ321DerId, 456.0, 1434.0) ]
+  let tradePairs = [ (alice, bob,   q121usdId, q121usdPair, 50.0,  1000.0)
+                   , (alice, carl,  q221usdId, q221usdPair, 10.0,  3000.0)
+                   , (alice, dana,  q121usdId, q221usdPair, 34.0,  5044.0)
+                   , (carl,  bob,   q221usdId, q221usdPair, 10.0,  5044.0)
+                   , (dana,  alice, q121usdId, q121usdPair, 10.0,  100.0)
+                   , (bob,   dana,  q121usdId, q121usdPair, 456.0, 1434.0) ]
 
   let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
 
   tradeCids <- mapA (\t -> exchange `submit` createCmd t) trades
   awaitOrDo' wt 0.5 "novating trades"
     $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
-         CCP_NovateDerivativeTrade with derivativeTradeCid = tCid)
+         CCP_NovateClearedTrade with clearedTradeCid = tCid)
 
-  let fairValuePairs = [ (h2oQ121DerId, 1000.0)
-                       , (h2oQ221DerId, 1500.0) ]
-
-  upTo <- getTime
-  forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
+  -- let fairValuePairs = [ (h2oQ121DerId, 1000.0)
+  --                      , (h2oQ221DerId, 1500.0) ]
+  --
+  -- upTo <- getTime
+  -- forA_ fairValuePairs $ \(derId, price) -> void $ makeFairValue operator exchange derId price usdTokenId upTo observers
 
 
 runSetupAccounts : LedgerParties -> Script ()
@@ -181,12 +185,14 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     customer = alice
     accountId = usdTokenId
     currency = "USD"
-    targetAmount = 4999.0
+    targetAmount = 1200.0
     calculationTime = time
     calculationId = "2134820934"
 
   awaitOrDo' wt 0.25 "performing margin fill"
-    $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
+    $ do
+      debug "alice cid"
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
         with clearingDepositCids = [fromSomeNote "alice cid" $ optAliceDepositCid], targetAmount = 4999.0, calculationCid = mcCid
 
   mcCid <- ccp `submit` createCmd MarginCalculation with
@@ -198,9 +204,11 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     calculationTime = time
     calculationId = "2134820934"
 
-  -- awaitOrDo' wt 0.25 "performing margin fill"
-  --   $ ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,bob) CCPCustomer_PerformMarginFill
-  --        with clearingDepositCids = [fromSomeNote "bob cid" $ optBobDepositCid], targetAmount = 1200.0, calculationCid = mcCid
+  awaitOrDo' wt 0.25 "performing margin fill"
+    $ do
+      debug "bob cid"
+      ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,bob) CCPCustomer_PerformMarginFill
+         with clearingDepositCids = [fromSomeNote "bob cid" $ optBobDepositCid], targetAmount = 1200.0, calculationCid = mcCid
 
   ccp `submit` createCmd MarkToMarketCalculation with
     ccp
@@ -249,15 +257,14 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
 
   return ()
 
-makeFairValue : Party -> Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
-makeFairValue operator exchange assetId price currency upTo observers = do
+makeFairValue : Party -> Party -> Id -> IdPair -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
+makeFairValue operator exchange instrumentId pair price currency upTo observers = do
   timestamp <- getTime
   exchange `submit` createCmd FairValue with observers = fromList observers, ..
 
 onboardInvestor : Bool -> LedgerParties -> Party -> Text-> Script ()
 onboardInvestor wt lp investor name = do
-  let name     = "default name"
-      title    = "default title"
+  let title    = "default title"
       issuerID = "default issuerID"
       location = "default location"
 
@@ -391,7 +398,7 @@ handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer 
 
   -- onboard ccp
   ccpInvCid <- operator `submit` exerciseByKeyCmd @Operator operator Operator_OnboardCCP with ccp = ccp, ..
-  ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "CCP", ..
+  ccp `submit` exerciseCmd ccpInvCid CCPInvitation_Accept with name = "Baymarkets Clearinghouse", ..
 
   -- issuers establish a relationship with the custodian
   relationshipReqCid <- issuer `submit` exerciseByKeyCmd @Issuer (operator,issuer) Issuer_RequestCustodianRelationship with ..
@@ -417,12 +424,22 @@ handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer 
 
   return ()
 
-createTrade : Party -> Party -> Int -> (Party, Party, Id, Decimal, Decimal) -> DerivativeTrade
-createTrade ccp exchange currentId (buyer, seller, instrument, quantity, price) = DerivativeTrade with
+createMarketPair : Party -> Party -> Id -> AssetType -> Id -> AssetType -> Party -> Script (Id, IdPair)
+createMarketPair exchange operator baseTokenId baseType quoteTokenId quoteType ccp = do
+  (pairCid,_) <- exchange `submit` exerciseByKeyCmd @Exchange (operator,exchange) Exchange_AddPair with
+    minQuantity = 1.0
+    maxQuantity = 100_000.0
+    clearedMarket = True
+    defaultCCP = Some ccp, ..
+  Some pair <- queryContractId @MarketPair exchange pairCid
+  return (pair.id, (baseTokenId, quoteTokenId))
+
+createTrade : Party -> Party -> Int -> (Party, Party, Id, IdPair, Decimal, Decimal) -> ClearedTrade
+createTrade ccp exchange currentId (buyer, seller, instrument, pair, quantity, price) = ClearedTrade with
       ccp = ccp
       exchange = exchange
       eventId = currentId + 50
-      eventTimestamp = "1329834"
+      timeMatched = "1329834"
       instrument = instrument
       trackingNumber = currentId + 5000
       buyer = buyer
@@ -432,3 +449,4 @@ createTrade ccp exchange currentId (buyer, seller, instrument, quantity, price) 
       matchId = currentId
       executedQuantity = quantity
       executedPrice = price
+      pair = pair

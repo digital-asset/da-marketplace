@@ -78,7 +78,7 @@ template Issuer
           prodCode : Text
           description : Text
           pricePrecision : Int
-          secType : SecType
+          secType : Optional SecType
           mmy : Text
           mult : Int
           uom : Text
@@ -88,8 +88,11 @@ template Issuer
           observers : [Party]
         do
           let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
-          let derivativeObservers = if isPublic then (public :: operator :: observers) else observers
-          let derivative = Derivative with uuid = prodSym, observers = fromList derivativeObservers, ..
+              derivativeObservers = if isPublic then (public :: operator :: observers) else observers
+              typ = case secType of
+                (Some t) -> t
+                None     -> OPT
+              derivative = Derivative with uuid = prodSym, observers = fromList derivativeObservers, secType = typ, ..
           (,) id <$> create derivative
 
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest

@@ -61,6 +61,8 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const isCleared = location.state && !!location.state.isCleared;
     const defaultCCP = location.state && location.state.defaultCCP;
 
+    const ccpCustomer = ccpCustomerContracts.find(ccp => ccp.contractData.ccpCustomer === investor)
+
     if (!exchangeData || !tokenPair) {
         history.push('/role/investor');
         throw new Error('No exchange found.');
@@ -115,9 +117,8 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
                     <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
-                            allowedToOrder={
-                                !!ccpCustomerContracts.find(ccp => ccp.contractData.ccpCustomer === investor)
-                            }
+                            allowedToOrder={!!ccpCustomer}
+                            inGoodStanding={!!ccpCustomer?.contractData?.inGoodStanding}
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
                             defaultCCP={defaultCCP}

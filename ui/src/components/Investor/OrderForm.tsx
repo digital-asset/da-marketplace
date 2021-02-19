@@ -4,17 +4,24 @@ import { Button, Form, Header} from 'semantic-ui-react'
 import { useParty, useLedger } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { DepositInfo, wrapDamlTuple } from '../common/damlTypes'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { DepositInfo, wrapDamlTuple, TokenInfo, DerivativeInfo } from '../common/damlTypes'
 import { AppError } from '../common/errorTypes'
 import { useOperator } from '../common/common'
 import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
+import {useRegistryLookup} from '../common/RegistryLookup'
 
 type Props = {
     allowedToOrder: boolean;
+    inGoodStanding: boolean;
     assetPrecisions: [ number, number ];
     deposits: [ DepositInfo[], DepositInfo[] ];
     defaultCCP?: string;
@@ -25,6 +32,7 @@ type Props = {
 
 const OrderForm: React.FC<Props> = ({
     allowedToOrder,
+    inGoodStanding,
     assetPrecisions,
     deposits,
     defaultCCP,
@@ -58,6 +66,22 @@ const OrderForm: React.FC<Props> = ({
         return deposits.map(d => d.contractId);
     };
 
+    const allTokens: TokenInfo[] = useContractQuery(Token);
+    const allDerivatives: DerivativeInfo[] = useContractQuery(Derivative);
+
+    const tokenSet = new Set(allTokens.map(tk => tk.contractData.id.label));
+    const derivativeSet = new Set(allDerivatives.map(dr => dr.contractData.id.label));
+
+    const getType = (val: Id) => {
+        const derivative = derivativeSet.has(val.label);
+        const token = tokenSet.has(val.label);
+        if (!token && !derivative) {
+            throw new Error('Options not found');
+        }
+        return !derivative ? AssetType.TokenAsset : AssetType.DerivativeAsset;
+    }
+
+    const { ccpMap } = useRegistryLookup();
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
 
@@ -65,16 +89,23 @@ const OrderForm: React.FC<Props> = ({
             if (!defaultCCP) {
                 throw new AppError('Order Error.', 'The CCP is missing');
             }
+            const ccpName = ccpMap.get(defaultCCP)?.name || defaultCCP;
 
             if (!allowedToOrder) {
-                throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
+                throw new AppError('Insufficient permissions.', `You are not a customer of ${ccpName} and can not place trades on this market.`)
+            }
+
+            if (!inGoodStanding) {
+                throw new AppError('Insufficient permissions.', `You must be in good standing with ${ccpName} to place trades on this market.`)
             }
 
             const makeClearedArgs = {
                 price,
                 amount,
                 ccp: defaultCCP, // TODO: Allow user-selectable CCP
-                pair: wrapDamlTuple(tokenPair)
+                pair: wrapDamlTuple(tokenPair),
+                baseType: getType(tokenPair[0]),
+                quoteType: getType(tokenPair[1])
             }
             const placeClearedBid = ExchangeParticipant.ExchangeParticipant_PlaceClearedBid;
             const placeClearedOffer = ExchangeParticipant.ExchangeParticipant_PlaceClearedOffer;

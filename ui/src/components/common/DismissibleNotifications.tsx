@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import { Button, Form, Header } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -48,11 +48,11 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     const senderRole = notification.contractData.senderRole;
     let name;
 
-    useEffect(() => {
-        setTimeout(() => {
-            notificationDismiss();
-        }, 5000);
-    })
+    // useEffect(() => {
+    //     setTimeout(() => {
+    //         notificationDismiss();
+    //     }, 5000);
+    // })
 
     switch(senderRole) {
         case MarketRole.InvestorRole:
@@ -69,6 +69,9 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
             break;
         case MarketRole.CustodianRole:
             name = <>Custodian <b>@{lookup.custodianMap.get(sender)?.name || sender}</b></>;
+            break;
+        case MarketRole.CCPRole:
+            name = <>CCP <b>@{lookup.ccpMap.get(sender)?.name || sender}</b></>;
             break;
         default:
             name = <b>@{sender}</b>;

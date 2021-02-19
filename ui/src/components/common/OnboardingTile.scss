@@ -41,6 +41,11 @@
                     color: var(--white);
                 }
 
+                form .field .dropdown {
+                    background-color: var(--cool-grey-30);
+                    color: var(--white);
+                }
+
                 .username-login {
                     margin: $spacing-m;
                     .ui.input {

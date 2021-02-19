@@ -40,8 +40,6 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const custodian = useParty();
     const ledger = useLedger();
 
-    const keys = () => [wrapDamlTuple([operator, custodian])];
-
     const relationshipParties = useContractQuery(CustodianRelationship)
         .map(relationship => relationship.contractData.party)
 
@@ -131,8 +129,6 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-
-    const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
 
     const sideNav = <RoleSideNav url={url}
                         name={registeredCustodian[0]?.contractData.name || custodian}

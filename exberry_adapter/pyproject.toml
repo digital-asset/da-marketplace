@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "bot"
-version = "0.1.11"
+version = "0.1.12"
 description = "The DA Marketplace <> Exberry Adapter Bot"
 authors = ["Digital Asset"]
 

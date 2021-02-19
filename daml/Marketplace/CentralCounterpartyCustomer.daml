@@ -92,17 +92,18 @@ template CCPCustomer
           -- exchange : Party
           order : ClearedOrder
           pair : IdPair
+          quoteType : AssetType
           price : Decimal
         do
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType pair._2
+          assertMsg ("price should be rounded to at most " <> show quantityPrecision <> " decimal places")
+            $ roundBankers quantityPrecision price == price
+
           -- TODO : the following lines cause a circular import with ExchangeParticipant <-> CCPCustomer
 
           -- optExchParticipant <- lookupByKey @ExchangeParticipant (exchange, operator, ccpCustomer)
           -- assertMsg "CCP Customer must be an exchange participant to place an order."
           --   $ isSome optExchParticipant
-
-          (_, quoteToken) <- fetchByKey @Token pair._2
-          assertMsg ("price should be rounded to at most " <> show quoteToken.quantityPrecision <> " decimal places")
-            $ roundBankers quoteToken.quantityPrecision price == price
 
           create ClearedOrderRequest with ..
 
@@ -140,16 +141,17 @@ template CCPCustomer
                       resolveMarginCalculation calculationCid this [newMarginDepositCid] "Margin call successful."
 
               else do -- transfer from margin account to clearing account
+                let newAmount = amount * (-1.0)
                 assertMsg "no margin account found" $ not $ null marginDepositCids
                 marginDepositCid <- exercise (head marginDepositCids) AssetDeposit_Merge
                     with depositCids = tail marginDepositCids
                 marginDeposit <- fetch marginDepositCid
 
-                assertMsg ("amount to transfer: " <> show amount <> " exceeds amount in margin account: " <> show marginDeposit.asset.quantity)
-                  $ amount < marginDeposit.asset.quantity
+                assertMsg ("amount to transfer: " <> show newAmount <> " exceeds amount in margin account: " <> show marginDeposit.asset.quantity)
+                  $ newAmount < marginDeposit.asset.quantity
 
                 [diffDepositCid, remainingMarginDepositCid] <- exercise marginDepositCid AssetDeposit_Split
-                    with quantities = [amount]
+                    with quantities = [newAmount]
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
                 resolveMarginCalculation calculationCid this [remainingMarginDepositCid] "Margin call successful."
 
@@ -160,7 +162,6 @@ template CCPCustomer
           amount : Decimal
           optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
-          assertMsg "there must be at least one clearing deposit" $ not $ null clearingDepositCids
           aggregateQty <- getDepositQuantities clearingDepositCids
 
           if aggregateQty < amount
@@ -173,7 +174,7 @@ template CCPCustomer
                 with depositCids = tail clearingDepositCids
 
             clearingDeposit <- fetch clearingDepositCid
-            assertMsg "amount to transfer exceeds amount in clearing account" $ amount < clearingDeposit.asset.quantity
+            assertMsg "amount to transfer exceeds amount in clearing account" $ amount <= clearingDeposit.asset.quantity
             [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
                 with quantities = [amount]
 

@@ -1,5 +1,8 @@
 module Marketplace.Token where
 
+import Marketplace.Derivative
+import Marketplace.Utils
+
 import DA.Finance.Types
 
 import DA.Next.Set
@@ -58,3 +61,12 @@ template MarketPair
     key id : Id
     maintainer key.signatories
     observer observers
+
+-- |Fetches the 'Token' if the 'AssetType' is a Token, if it is a 'Derivative', fetch the
+-- underlying 'Token'
+tokenOrUnderlying : AssetType -> Id -> Update Token
+tokenOrUnderlying TokenAsset      assetId = snd <$> fetchByKey @Token assetId
+tokenOrUnderlying DerivativeAsset assetId = do
+  (_, deriv) <- fetchByKey @Derivative assetId
+  snd <$> fetchByKey @Token deriv.underlying
+

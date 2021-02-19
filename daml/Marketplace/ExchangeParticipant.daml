@@ -10,8 +10,6 @@ import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.List
-import DA.Optional
-import DA.Next.Set
 
 template ExchangeParticipantInvitation
   with
@@ -167,30 +165,36 @@ template ExchangeParticipant
         with
           ccp : Party
           pair : IdPair
+          baseType: AssetType
+          quoteType: AssetType
           amount : Decimal
           price : Decimal
         do
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision $ amount / price
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
+
+          let qty = roundBankers quantityPrecision $ amount / price
 
           let order = ClearedOrder with
                 isBid = True, qty, status = "New", orderId = -1, ..
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
-            with pair, price, order
+            with pair, price, order, ..
 
       nonconsuming ExchangeParticipant_PlaceClearedOffer : ContractId ClearedOrderRequest
         with
           ccp : Party
           pair : IdPair
+          baseType: AssetType
+          quoteType: AssetType
           amount : Decimal
           price : Decimal
         do
-          (_, baseToken) <- fetchByKey @Token pair._1
-          let qty = roundBankers baseToken.quantityPrecision amount
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying baseType pair._1
+
+          let qty = roundBankers quantityPrecision amount
 
           let order = ClearedOrder with
                 isBid = False, qty, status = "New", orderId = -1, ..
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
-            with pair, price, order
+            with pair, price, order, ..

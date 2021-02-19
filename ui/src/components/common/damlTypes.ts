@@ -2,13 +2,16 @@ import { CreateEvent } from '@daml/ledger'
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
+    CentralCounterpartyCustomer,
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
     Registry,
     Custodian,
+    Clearing,
     Notification,
-    Token
+    Token,
+    Derivative
 } from '@daml.js/da-marketplace/lib/Marketplace'
 import { ContractId } from '@daml/types';
 
@@ -83,6 +86,12 @@ export type BrokerCustomerInfo = ContractInfo<
 
 export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
 
+export type CCPCustomerInfo = ContractInfo<
+    CentralCounterpartyCustomer.CCPCustomer,
+    CentralCounterpartyCustomer.CCPCustomer.Key>;
+
+export type CCPCustomerInviteInfo = ContractInfo<CentralCounterpartyCustomer.CCPCustomerInvitation>;
+
 export type CustodianInfo = ContractInfo<
     Custodian.Custodian,
     Custodian.Custodian.Key>;
@@ -103,11 +112,25 @@ export type ExchangeInfo = ContractInfo<
     Exchange.Exchange,
     Exchange.Exchange.Key>;
 
+export type MarketPairInfo = ContractInfo<
+    Token.MarketPair,
+    Token.MarketPair.Key>;
+
 export type ExchangeParticipantInfo = ContractInfo<
     ExchangeParticipant.ExchangeParticipant,
     ExchangeParticipant.ExchangeParticipant.Key>;
 
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
+
+export type RejectedMarginCalculationInfo = ContractInfo<
+    Clearing.RejectedMarginCalculation,
+    Clearing.RejectedMarginCalculation.Key>;
+
+export type RejectedMarkToMarketCalculationInfo = ContractInfo<
+    Clearing.RejectedMarkToMarketCalculation,
+    Clearing.RejectedMarkToMarketCalculation.Key>;
+
+export type ManualFairValueCalculationInfo = ContractInfo<Derivative.ManualFairValueCalculation>;
 
 export type RegisteredCustodianInfo = ContractInfo<
     Registry.RegisteredCustodian,
@@ -124,3 +147,7 @@ export type RegisteredInvestorInfo = ContractInfo<
 export type TokenInfo = ContractInfo<
     Token.Token,
     Token.Token.Key>;
+
+export type DerivativeInfo = ContractInfo<
+    Derivative.Derivative,
+    Derivative.Derivative.Key>;

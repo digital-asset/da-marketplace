@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Header } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { getAbbreviation } from '../common/utils';
 
 import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
@@ -16,19 +17,18 @@ import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
+import { getAbbreviation } from '../common/utils';
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
+import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import RoleSideNav from '../common/RoleSideNav'
 
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { Header } from 'semantic-ui-react'
-
 import MarketPairs from './MarketPairs'
-
 import ExchangeParticipants from './ExchangeParticipants'
 
 type Props = {
@@ -49,6 +49,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
     const currentInvitations = useContractQuery(ExchangeParticipantInvitation);
     const investorCount = exchangeParticipants.length;
+    const derivatives = useContractQuery(Derivative, AS_PUBLIC);
 
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
@@ -168,6 +169,13 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                         registeredInvestors={investorOptions}/>
+                </Route>
+
+                <Route path={`${path}/derivatives`}>
+                    <DerivativeList
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        derivatives={derivatives}/>
                 </Route>
             </Switch>
         </div>
