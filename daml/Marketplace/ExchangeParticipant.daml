@@ -10,6 +10,8 @@ import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.List
+import DA.Optional
+import DA.Next.Set
 
 template ExchangeParticipantInvitation
   with
@@ -198,4 +200,3 @@ template ExchangeParticipant
 
           exerciseByKey @CCPCustomer (ccp, operator, exchParticipant) CCPCustomer_MakeClearedOrder
             with pair, price, order, ..
-

@@ -352,13 +352,11 @@ def main():
                     'counterOrderId': taker['orderId'],
                     'timeMatched': execution['eventTimestamp']
                 }))
-            return commands
 
+            return commands
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
             commands = [exercise(event.cid, 'Archive', {})]
-
-            return commands
 
     network.run_forever()
 

@@ -99,7 +99,6 @@ const OrderForm: React.FC<Props> = ({
                 throw new AppError('Insufficient permissions.', `You must be in good standing with ${ccpName} to place trades on this market.`)
             }
 
-            console.log(getType(tokenPair[0]));
             const makeClearedArgs = {
                 price,
                 amount,

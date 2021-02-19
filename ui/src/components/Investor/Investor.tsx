@@ -15,7 +15,7 @@ import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -31,6 +31,7 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 
 
 type Props = {

@@ -35,7 +35,6 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         [operator, exchange]
     ));
 
-
     const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value']
     const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
         // TODO: Show all fair values

@@ -96,14 +96,10 @@ template CCPCustomer
           quoteType : AssetType
           price : Decimal
         do
-          quantityPrecision <- case quoteType of
-            TokenAsset -> (.quantityPrecision) . snd <$> fetchByKey @Token pair._2
-            DerivativeAsset -> do
-              (_,deriv) <- fetchByKey @Derivative pair._2
-              (_,underlying) <- fetchByKey @Token deriv.underlying
-              return underlying.quantityPrecision
+          quantityPrecision <- (.quantityPrecision) <$> tokenOrUnderlying quoteType pair._2
           assertMsg ("price should be rounded to at most " <> show quantityPrecision <> " decimal places")
             $ roundBankers quantityPrecision price == price
+
           -- TODO : the following lines cause a circular import with ExchangeParticipant <-> CCPCustomer
 
           -- optExchParticipant <- lookupByKey @ExchangeParticipant (exchange, operator, ccpCustomer)
