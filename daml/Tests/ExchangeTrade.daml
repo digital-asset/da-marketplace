@@ -4,11 +4,11 @@ import Common
 import Daml.Script
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
+import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Trading.Matching as Matching
-import qualified Marketplace.Trading.Settlement as Settlement
 import qualified Marketplace.Trading.Order as Order
 import qualified Marketplace.Trading.Service as TradingService
-import qualified Marketplace.Listing as Listing
+import qualified Marketplace.Trading.Listing as Listing
 import DA.List
 
 setup : Script ()
@@ -23,8 +23,8 @@ setup = do
     cashAsset = Asset with id = cashId; quantity = 20000.0
     priceAsset = Asset with id = cashId; quantity = 100.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset
-  bob <- onboardCustomer cr "Bob" cashAsset
+  alice <- onboardCustomer cr "Alice" shareAsset exchange
+  bob <- onboardCustomer cr "Bob" cashAsset exchange
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
@@ -38,6 +38,7 @@ setup = do
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
+    providerId = "12345"
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
@@ -70,7 +71,7 @@ setup = do
         depositCid = bob.assetDepositCid
 
   -- Exchange matches the two orders
-  settlementDetailsCid <- submit exchange do
+  settlementInstructionCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -82,7 +83,6 @@ setup = do
           timestamp = ""
 
   -- Exchange settles the instructed trade
-  -- submit exchange do exerciseCmd settlementServiceCid Settlement.Settle with ..
-  submit exchange do exerciseCmd settlementDetailsCid Settlement.Settle
+  submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
 
   pure ()

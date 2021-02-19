@@ -2,16 +2,14 @@ module Marketplace.Trading.Confirmation where
 
 import DA.List (head)
 import DA.Finance.Asset (AssetDeposit_Split(..))
-import DA.Finance.Trade.SettlementInstruction (SettlementInstruction(..), SettlementDetails(..))
-import DA.Finance.Trade.Dvp (Dvp(..), SettlementStatus(..))
-import DA.Finance.Types (Id(..), Asset(..), Account(..), MasterAgreement(..))
+import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
-import DA.Next.Set (Set, empty, insert, fromList)
-import Marketplace.Listing (Listing)
+import DA.Next.Set (Set, insert)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Trading.Listing (Listing)
 import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Settlement qualified as Settlement
 
--- TODO: Try to turn this into a service. This will create issues around authorisations
+-- TODO: Try to turn this into a service
 
 data CustomerAccounts = CustomerAccounts with
     customer : Party
@@ -36,9 +34,6 @@ template Confirmation
   where
     signatory signed
 
-    key (provider, buyer, seller) : (Party, Party, Party)
-    maintainer key._1
-
     choice Sign : ContractId Confirmation
       with
         ctrl : Party
@@ -52,50 +47,35 @@ template Confirmation
           accounts = (CustomerAccounts with customer = ctrl; ..) :: accounts
 
     controller provider can
-      Process : ContractId Settlement.T
+      Process : ContractId Settlement.SettlementInstruction
         with
           buyCid : ContractId Order.T
           sellCid : ContractId Order.T
         do
-          [buy, sell] <- forA [buyCid, sellCid] fetchAndArchive
+          [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
 
-          -- TODO: Check that price matches limit order price, quantity is less than order qty
-          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buy.details.symbol)
+          -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
+          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
 
-          [buyDepositCid, sellDepositCid] <- forA [buy, sell] (\order -> do
+          [payment, delivery] <- forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
             let
               isPartialFill = execution.quantity < order.remainingQuantity
               status = if isPartialFill then Order.PartiallyExecuted else Order.FullyExecuted
               executions = execution :: order.executions
               remainingQuantity = order.remainingQuantity - execution.quantity
               quantities = [case order.details.side of
-                    Order.Buy  -> execution.quantity * execution.price
-                    Order.Sell -> execution.quantity]
+                Order.Buy  -> execution.quantity * execution.price
+                Order.Sell -> execution.quantity]
+              getAllocationAccount = getAccount accounts (.allocationAccount)
+              getTradingAccount    = getAccount accounts (.tradingAccount)
+
+            depositCid <- if isPartialFill
+              then head <$> exercise order.depositCid AssetDeposit_Split with ..
+              else pure order.depositCid
 
             create order with status, executions, remainingQuantity
-            if isPartialFill then
-              head <$> exercise order.depositCid AssetDeposit_Split with ..
-            else
-              pure order.depositCid
+            pure Settlement.SettlementDetails with senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty; ..
             )
 
-          let
-            tradeId = Id with signatories = fromList [ provider, buy.customer, sell.customer ]; label = execution.matchId; version = 0
-            masterAgreement = MasterAgreement with party1 = buy.customer, party2 = sell.customer; id = tradeId
-            delivery = buy.details.asset with quantity = execution.quantity
-            payment = Asset with id = paymentCurrencyId, quantity = execution.price * execution.quantity
-            getAllocationAccount = getAccount accounts (.allocationAccount)
-            getTradingAccount    = getAccount accounts (.tradingAccount)
-            deliverySteps = [ SettlementDetails with senderAccount = getAllocationAccount seller; receiverAccount = getTradingAccount buyer;  depositCid = Some sellDepositCid ]
-            paymentSteps =  [ SettlementDetails with senderAccount = getAllocationAccount buyer;  receiverAccount = getTradingAccount seller; depositCid = Some buyDepositCid  ]
-            observers = empty
+          create Settlement.SettlementInstruction with ..
 
-          dvpCid <- create Dvp with
-            status = SettlementStatus_Instructed
-            settlementDate = None
-            deliveries = [ delivery ]
-            payments = [ payment ]
-            ..
-
-          [deliveryInstructionCid, paymentInstructionCid] <- forA [(delivery, deliverySteps), (payment, paymentSteps)] (\(asset, steps) -> create SettlementInstruction with ..)
-          create Settlement.SettlementDetails with deliveryInstructionCids = [deliveryInstructionCid]; paymentInstructionCids = [paymentInstructionCid]; ..

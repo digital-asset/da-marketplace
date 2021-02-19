@@ -1,0 +1,99 @@
+module Marketplace.Settlement where
+
+import DA.Finance.Types (Account)
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Utils (fetchAndArchive)
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule, Transfer(..))
+import DA.Finance.Asset.Settlement
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator, provider
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+      nonconsuming SettleInstruction : [ContractId AssetDeposit]
+        with
+          settlementInstructionCid : ContractId SettlementInstruction
+        do
+          SettlementInstruction{..} <- fetchAndArchive settlementInstructionCid
+
+          forA [payment, delivery] (\settlementDetails -> do
+            let
+              transferTo = settlementDetails.receiverAccount
+              depositCid = settlementDetails.depositCid
+
+            exerciseByKey @AllocationAccountRule settlementDetails.senderAccount.id Transfer with ..
+            )
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()
+
+data SettlementDetails = SettlementDetails
+  with
+    senderAccount : Account
+    depositCid : ContractId AssetDeposit
+    receiverAccount : Account
+  deriving (Eq, Show)
+
+template SettlementInstruction
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    payment : SettlementDetails
+    delivery : SettlementDetails
+  where
+    signatory operator, provider, buyer, seller
+
+    controller provider can
+      nonconsuming Settle : [ContractId AssetDeposit]
+        do
+          forA [payment, delivery] (\settlementDetails -> do
+            let
+              transferTo = settlementDetails.receiverAccount
+              depositCid = settlementDetails.depositCid
+              addProvider = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = provider
+              removeProvider = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = provider
+              settle = exerciseByKey @AllocationAccountRule settlementDetails.senderAccount.id Transfer with ..
+
+            -- Sequence the transaction, ignoring the output of the add and remove provider transactions but return the output of the settle transaction
+            addProvider *> settle <* removeProvider
+            )

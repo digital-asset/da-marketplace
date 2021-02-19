@@ -1,0 +1,125 @@
+module Marketplace.Distribution.Bidding.Service where
+
+import DA.List (head, last)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Types (Account, Asset, Id)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement (SettlementInstruction(..))
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Bidding.Model (Bid(..))
+import Marketplace.Trading.AllocationAccountRule qualified as Allocation
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
+
+type S = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    issuer : Party
+    customer : Party
+    asset : Asset
+  where
+    signatory operator, provider, issuer, customer
+
+    key (assetId, customer) : (Id, Party)
+    maintainer key._2
+
+    let assetId = asset.id
+
+    controller customer can
+      nonconsuming SubmitBid : ContractId Bidding.T
+        with
+          details : Bidding.Details
+          tradingAccount : Account
+          allocationAccount : Account
+          depositCid : ContractId AssetDeposit
+        do
+          -- TODO: Check for parallism of this choice
+          -- TODO: Check bid details match whats contained in the asset deposit
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          create Bid with status = Bidding.Pending; ..
+
+      -- TBC : Remove for now to block bidders from withdrawing bids
+      -- nonconsuming WithdrawBid : ContractId AssetDeposit
+      --   with
+      --     bidCid : ContractId Bid
+      --   do
+      --     Bid{..} <- fetchAndArchive bidCid
+      --     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
+
+    controller provider, issuer can
+      nonconsuming UpdateStatus : ContractId Bid
+        with
+          newStatus : Bidding.Status
+        do
+          (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
+          archive bidCid *> create bid with status = newStatus
+
+      nonconsuming ProcessAllocation : (ContractId Bid, ContractId AssetDeposit)
+        with
+          quantity : Decimal
+          amount : Decimal
+          price : Decimal
+        do
+          -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
+          (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
+          let newStatus = if bid.details.quantity == quantity
+                            then Bidding.FullAllocation with ..
+                            else Bidding.PartialAllocation with ..
+          bidCid <- exercise self UpdateStatus with ..
+
+          bidDeposit <- fetch bid.depositCid
+          bidDepositCid <- if bidDeposit.asset.quantity > amount
+                              then do
+                                splitDepositCids <- exercise bid.depositCid AssetDeposit_Split with quantities = [amount]
+                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
+                                pure $ head splitDepositCids
+                              else pure bid.depositCid
+
+          pure (bidCid, bidDepositCid)
+
+      nonconsuming GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
+        with
+          delivery : Settlement.SettlementDetails
+          payment : Settlement.SettlementDetails
+        do
+          create SettlementInstruction with buyer = customer; seller = issuer; ..
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    issuer : Party
+    customer : Party
+    asset : Asset
+  where
+    signatory operator, provider, issuer
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    operator : Party
+    customer : Party
+    provider : Party
+    issuer : Party
+    asset : Asset
+  where
+    signatory operator, customer, issuer
+
+    controller provider can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()

@@ -1,11 +1,13 @@
 module Tests.Locking where
 
 import Daml.Script
-import DA.Finance.Asset.Settlement (AssetSettlement_Transfer(..))
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
+import DA.Optional
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Order qualified as Order
+import Marketplace.Trading.AllocationAccountRule (Transfer(..), Withdraw(..))
+import DA.Finance.Asset.Settlement
 import Common
 
 traderCannotMoveAllocatedAsset : Script ()
@@ -20,8 +22,8 @@ traderCannotMoveAllocatedAsset = do
     cashAsset = Asset with id = cashId; quantity = 20000.0
     priceAsset = Asset with id = cashId; quantity = 100.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset
-  bob <- onboardCustomer cr "Bob" cashAsset
+  alice <- onboardCustomer cr "Alice" shareAsset exchange
+  bob <- onboardCustomer cr "Bob" cashAsset exchange
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
@@ -30,9 +32,24 @@ traderCannotMoveAllocatedAsset = do
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
   (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bob.assetDepositCid; details = Order.Details with id = bobOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
-  -- Can't move asset pledged as order collateral
-  -- submitMustFail alice.customer do exerciseCmd alice.allocationAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid; receiverAccountId = alice.tradingAccountId
-  -- submitMustFail bob.customer do exerciseCmd bob.allocationAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = bobAssetDepositCid; receiverAccountId = bob.tradingAccountId
+  -- Account owners can't move asset pledged as order collateral
+  submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+
+  -- The exchange cannot move the asset pledged as order collateral on its own => even if it has control on the account owners trading account
+  exchange <- pure . fromSome $ partyFromText "Exchange"
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_AddController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = exchange
+
+  submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
+  submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
 
   -- Cancel order
   (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
@@ -40,7 +57,8 @@ traderCannotMoveAllocatedAsset = do
   (bobOrderCid, bobCancelOrderRequestCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCancelOrder with orderCid = bobOrderCid
   (bobOrderCid, bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
 
-  -- submit alice.customer do exerciseCmd alice.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
-  -- submit bob.customer do exerciseCmd bob.tradingAssetSettlementRuleCid AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
+  -- Transfer from trading account to away account
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
 
   pure ()

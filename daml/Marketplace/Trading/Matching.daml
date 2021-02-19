@@ -1,10 +1,10 @@
 module Marketplace.Trading.Matching where
 
 import DA.Next.Set (fromList)
+import Marketplace.Settlement qualified as Settlement
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
 import Marketplace.Trading.Confirmation qualified as Confirmation
-import Marketplace.Trading.Settlement qualified as Settlement
 
 template Service
   with
@@ -17,7 +17,7 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : ContractId Settlement.T
+      nonconsuming MatchOrders : ContractId Settlement.SettlementInstruction
         with
           execution : Order.Execution
         do
