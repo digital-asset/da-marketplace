@@ -257,8 +257,8 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
 
   return ()
 
-makeFairValue : Party -> Party -> Id -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
-makeFairValue operator exchange instrumentId price currency upTo observers = do
+makeFairValue : Party -> Party -> Id -> IdPair -> Decimal -> Id -> Time -> [Party] -> Script (ContractId FairValue)
+makeFairValue operator exchange instrumentId pair price currency upTo observers = do
   timestamp <- getTime
   exchange `submit` createCmd FairValue with observers = fromList observers, ..
 

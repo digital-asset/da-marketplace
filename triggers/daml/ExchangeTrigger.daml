@@ -116,8 +116,10 @@ handleFairValueCalculation party currency upTo (marketPairCid,m@(MarketPair{..})
   let relevantTrades = filter (\(_,ct) -> (subTime ct.timestamp upTo) < (seconds 0)) trades
   timestamp <- getTime
   case getBestPrice relevantTrades fairValues of
-    (Some bp) -> dedupCreate $ FairValue with exchange = party, instrumentId = id, price = bp, ..
-    None      -> dedupCreate $ ManualFairValueCalculation with exchange = party, instrumentId = id, ..
+    (Some bp) -> dedupCreate $ FairValue with
+        exchange = party, instrumentId = id, price = bp, pair = (baseTokenId,quoteTokenId), ..
+    None      -> dedupCreate $ ManualFairValueCalculation
+        with exchange = party, instrumentId = id, pair = (baseTokenId,quoteTokenId), ..
 
   return ()
 

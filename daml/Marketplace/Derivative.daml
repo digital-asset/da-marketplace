@@ -2,6 +2,8 @@ module Marketplace.Derivative where
 
 import DA.Finance.Types
 
+import Marketplace.Utils
+
 import DA.Next.Set
 
 
@@ -81,6 +83,7 @@ template ManualFairValueCalculation
   with
     exchange : Party
     instrumentId : Id
+    pair : IdPair
     currency : Id
     upTo : Time
     observers : Set Party
@@ -100,6 +103,7 @@ template FairValue
   with
     exchange : Party
     instrumentId : Id
+    pair : IdPair
     price : Decimal
     currency : Id
     timestamp : Time
