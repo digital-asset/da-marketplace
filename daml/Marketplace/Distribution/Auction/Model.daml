@@ -2,7 +2,7 @@ module Marketplace.Distribution.Auction.Model where
 
 import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Distribution.Bid.Model qualified as Bid
+import Marketplace.Distribution.Bidding.Model qualified as Bid
 
 type T = Auction
 
@@ -35,7 +35,6 @@ template Auction
     operator : Party
     provider : Party
     customer : Party
-    leadBidder : Party
     asset : Asset
     quotedAssetId : Id
     depositCid : ContractId AssetDeposit

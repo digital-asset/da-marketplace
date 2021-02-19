@@ -1,12 +1,12 @@
-module Marketplace.Distribution.Bid.Service where
+module Marketplace.Distribution.Bidding.Service where
 
 import DA.List (head, last)
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Account, Asset, Id)
 import Marketplace.Settlement qualified as Settlement
 import Marketplace.Settlement (SettlementInstruction(..))
-import Marketplace.Distribution.Bid.Model qualified as Bid
-import Marketplace.Distribution.Bid.Model (Bid(..))
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Bidding.Model (Bid(..))
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
@@ -28,9 +28,9 @@ template Service
     let assetId = asset.id
 
     controller customer can
-      nonconsuming SubmitBid : ContractId Bid.T
+      nonconsuming SubmitBid : ContractId Bidding.T
         with
-          details : Bid.Details
+          details : Bidding.Details
           tradingAccount : Account
           allocationAccount : Account
           depositCid : ContractId AssetDeposit
@@ -38,7 +38,7 @@ template Service
           -- TODO: Check for parallism of this choice
           -- TODO: Check bid details match whats contained in the asset deposit
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
-          create Bid with status = Bid.Pending; ..
+          create Bid with status = Bidding.Pending; ..
 
       -- TBC : Remove for now to block bidders from withdrawing bids
       -- nonconsuming WithdrawBid : ContractId AssetDeposit
@@ -51,7 +51,7 @@ template Service
     controller provider, issuer can
       nonconsuming UpdateStatus : ContractId Bid
         with
-          newStatus : Bid.Status
+          newStatus : Bidding.Status
         do
           (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
           archive bidCid *> create bid with status = newStatus
@@ -65,8 +65,8 @@ template Service
           -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
           (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
           let newStatus = if bid.details.quantity == quantity
-                            then Bid.FullAllocation with ..
-                            else Bid.PartialAllocation with ..
+                            then Bidding.FullAllocation with ..
+                            else Bidding.PartialAllocation with ..
           bidCid <- exercise self UpdateStatus with ..
 
           bidDeposit <- fetch bid.depositCid

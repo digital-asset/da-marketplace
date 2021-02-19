@@ -12,8 +12,8 @@ import Marketplace.Settlement qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Model (Auction(..))
 import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, withdrawAllocation, updateBidStatus, generateSettlementInstruction)
-import Marketplace.Distribution.Bid.Service qualified as Bid
-import Marketplace.Distribution.Bid.Model qualified as Bid
+import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
@@ -27,7 +27,8 @@ template Service
   where
     signatory operator, provider, customer
 
-    nonconsuming choice OfferBidder : ContractId Bid.Offer
+    -- TODO: Move this to the Distributor role contract. Ie, make the offering independent of the Auction service
+    nonconsuming choice OfferBidder : ContractId Bidding.Offer
       with
         submitter : Party
         auctionCid : ContractId Auction.T
@@ -36,12 +37,12 @@ template Service
       do
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
         Auction{..} <- fetch auctionCid
-        create Bid.Offer with issuer = customer; customer = bidder; ..
+        create Bidding.Offer with issuer = customer; customer = bidder; ..
 
     nonconsuming choice RemoveBidderOffer : ()
       with
         submitter : Party
-        bidOfferCid : ContractId Bid.Offer
+        bidOfferCid : ContractId Bidding.Offer
       controller submitter
       do
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
@@ -50,27 +51,27 @@ template Service
     nonconsuming choice RemoveBidder : ()
       with
         submitter : Party
-        bidServiceCid : ContractId Bid.S
+        bidServiceCid : ContractId Bidding.S
       controller submitter
       do
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
         archive bidServiceCid
 
-    nonconsuming choice AddLeadBidder : ContractId LeadBidder
+    nonconsuming choice PublishBid : ContractId PublishedBid
       with
         submitter : Party
-        leadBidCid : ContractId Bid.T
+        leadBidCid : ContractId Bidding.T
       controller submitter
       do
+        -- TODO: The bidder needs to agree to their bid being published
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
         bid <- fetch leadBidCid
         (_, auction) <- fetchByKey @Auction (bid.provider, bid.assetId)
-        assertMsg ("Unexpected lead bidder - " <> show bid.customer) (bid.customer == auction.leadBidder)
 
         let
-          allocationPercentage = roundBankers 2 $ bid.details.quantity / auction.asset.quantity
+          allocationPercentage = bid.details.quantity / auction.asset.quantity
           leadBidder = bid.customer
-        create LeadBidder with ..
+        create PublishedBid with ..
 
     controller customer can
       nonconsuming RequestCreateAuction : ContractId CreateAuctionRequest
@@ -111,7 +112,7 @@ template Service
       nonconsuming ProcessAuction : (ContractId Auction.T, [ContractId Settlement.SettlementInstruction])
         with
           auctionCid : ContractId Auction.T
-          bidCids : [ContractId Bid.T]
+          bidCids : [ContractId Bidding.T]
         do
           auction@Auction{..} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
@@ -125,8 +126,8 @@ template Service
             (allocatedBids, unallocatedBids) = splitList (\allocation -> allocation.quantity == 0.0) allocations
 
           -- Return assets of all invalid and unallocated bids. Also update their bid status accordingly
-          forA_ invalidBids $ withdrawAllocation *> updateBidStatus Bid.Invalid
-          forA_ ((.bid) `map` unallocatedBids) $ withdrawAllocation *> updateBidStatus Bid.NoAllocation
+          forA_ invalidBids $ withdrawAllocation *> updateBidStatus Bidding.Invalid
+          forA_ ((.bid) `map` unallocatedBids) $ withdrawAllocation *> updateBidStatus Bidding.NoAllocation
 
           -- Generate Settlement instructions for allocated bids
           let settleAllocations = (\allocation -> Auction.SettleAllocation with price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount; ..) <$> allocatedBids
@@ -190,7 +191,7 @@ template CreateAuctionRequest
   where
     signatory operator, provider, customer
 
-template LeadBidder
+template PublishedBid
   with
     operator : Party
     provider : Party
