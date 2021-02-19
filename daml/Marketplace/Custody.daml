@@ -152,7 +152,7 @@ instance MapKey Date where
   keyToText dt = case toGregorian dt of (y,m,d) -> unwords . intersperse "-" $ show <$> [y, fromEnum m, d]
   keyFromText s = case mapA parseInt $ splitOn "-" s of
                     Some [y, m, d] -> fromGregorian (y, toEnum m, d)
-                    _ -> error "invalid date input"
+                    _ -> error $ "invalid date input" <> s
 
 template Offer
   with
