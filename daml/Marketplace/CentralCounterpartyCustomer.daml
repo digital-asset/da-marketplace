@@ -48,11 +48,17 @@ template CCPCustomerInvitation
             receiver = ccp, text = "CCP customer invitation rejected."
           return ()
 
+
 -- |Reject 'MarginCalculation' and set CCPCustomer to not 'inGoodStanding'
-rejectMarginCalculation : ContractId MarginCalculation -> CCPCustomer -> Text -> Update (ContractId CCPCustomer)
+rejectMarginCalculation
+  : ContractId MarginCalculation
+  -> CCPCustomer
+  -> Text
+  -> Update (ContractId CCPCustomer)
 rejectMarginCalculation mcCid ccpCustomer reason = do
   exercise mcCid MarginCalculation_Reject with note = reason
   create ccpCustomer with inGoodStanding = False
+
 
 -- |Resolve 'MarginCalculation' and recreate 'CCPCustomer' with new margin deposit cids
 resolveMarginCalculation
@@ -123,7 +129,8 @@ template CCPCustomer
               then do -- transfer to margin account from clearing account
                 clearingDeposit <- fetch clearingDepositCid
                 if clearingDeposit.asset.quantity <= amount
-                then rejectMarginCalculation calculationCid this ("Not enough in clearing account to satisfy margin call, please deposit: " <> show amount)
+                then rejectMarginCalculation calculationCid this
+                      ("Not enough in clearing account to satisfy margin call, please deposit: " <> show amount)
                 else do
                   [diffDepositCid, remaingClearingCid] <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case marginDepositCids of
@@ -146,32 +153,41 @@ template CCPCustomer
                 newClearingDepositCid <- exercise clearingDepositCid AssetDeposit_Merge with depositCids = [diffDepositCid]
                 resolveMarginCalculation calculationCid this [remainingMarginDepositCid] "Margin call successful."
 
-      CCPCustomer_TransferFromClearingAccount : (ContractId DepositTransferRequest, ContractId CCPCustomer)
+      CCPCustomer_TransferFromClearingAccount : Either (ContractId CCPCustomer)
+                                                       (ContractId DepositTransferRequest, ContractId CCPCustomer)
         with
           clearingDepositCids : [ContractId AssetDeposit]
           amount : Decimal
           optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
           assertMsg "there must be at least one clearing deposit" $ not $ null clearingDepositCids
-          clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
-              with depositCids = tail clearingDepositCids
+          aggregateQty <- getDepositQuantities clearingDepositCids
 
-          clearingDeposit <- fetch clearingDepositCid
-          assertMsg "amount to transfer exceeds amount in clearing account" $ amount < clearingDeposit.asset.quantity
-          [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
-              with quantities = [amount]
+          if aggregateQty < amount
+          then do
+            whenSome optMarkToMarketCalc \calcCid -> void $ exercise calcCid MarkToMarketCalculation_Reject with
+                  note = "Mark to Market calculation failed, please add enough to satisfy " <> show amount
+            Left <$> create this with inGoodStanding = False
+          else do
+            clearingDepositCid <- exercise (head clearingDepositCids) AssetDeposit_Merge
+                with depositCids = tail clearingDepositCids
 
-          let receiverAccountId = Id with
-                signatories = clearingDeposit.account.id.signatories, label = getAccountLabel ccp custodian, version = 0
+            clearingDeposit <- fetch clearingDepositCid
+            assertMsg "amount to transfer exceeds amount in clearing account" $ amount < clearingDeposit.asset.quantity
+            [transferDepositCid, remainingDepositCid] <- exercise clearingDepositCid AssetDeposit_Split
+                with quantities = [amount]
 
-          depositTransferReqCid <- create DepositTransferRequest with
-              sender = ccpCustomer, senderAccountId = clearingDeposit.account.id, depositCid = transferDepositCid, ..
+            let receiverAccountId = Id with
+                  signatories = clearingDeposit.account.id.signatories, label = getAccountLabel ccp custodian, version = 0
 
-          whenSome optMarkToMarketCalc \calcCid ->
-            void $ exercise calcCid MarkToMarketCalculation_Resolve with
-              note = "Mark to Market Calculation resolved, removed " <> show amount <> " from clearing account."
+            depositTransferReqCid <- create DepositTransferRequest with
+                sender = ccpCustomer, senderAccountId = clearingDeposit.account.id, depositCid = transferDepositCid, ..
 
-          (,) depositTransferReqCid <$> create this
+            whenSome optMarkToMarketCalc \calcCid ->
+              void $ exercise calcCid MarkToMarketCalculation_Resolve with
+                note = "Mark to Market Calculation resolved, removed " <> show amount <> " from clearing account."
+
+            Right . (,) depositTransferReqCid <$> create this
 
       CCPCustomer_TransferToClearingAccount : ContractId CCPCustomer
         with

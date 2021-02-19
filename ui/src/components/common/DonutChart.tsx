@@ -26,7 +26,7 @@ const DonutChart = (props: {
                 data={props.data}
                 labelPosition={110}
                 viewBoxSize={[100,100]}
-                label={({ dataEntry }) => `${dataEntry.title} ${dataEntry.percentage.toFixed(1)}%`}
+                label={({ dataEntry }) => +dataEntry.percentage.toFixed(1) > 5 ? `${dataEntry.title} ${dataEntry.percentage.toFixed(1)}%`: ''}
             />
             <div className='key-table'>
                 <Table>
@@ -37,7 +37,7 @@ const DonutChart = (props: {
                                     <div className='color-block' style={{backgroundColor: d.color}}></div>
                                 </Table.Cell>
                                 <Table.Cell>
-                                    <p>{d.title} {(total/d.value).toFixed(1)}%</p>
+                                    <p>{d.title} {((total/d.value)*100).toFixed(1)}%</p>
                                 </Table.Cell>
                             </Table.Row>
                         )}
