@@ -439,7 +439,7 @@ createTrade ccp exchange currentId (buyer, seller, instrument, pair, quantity, p
       ccp = ccp
       exchange = exchange
       eventId = currentId + 50
-      eventTimestamp = "1329834"
+      timeMatched = "1329834"
       instrument = instrument
       trackingNumber = currentId + 5000
       buyer = buyer

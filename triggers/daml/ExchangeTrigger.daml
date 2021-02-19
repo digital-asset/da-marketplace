@@ -111,9 +111,9 @@ handleFairValueCalculation : Party -> Id -> Time -> ContractPair MarketPair -> T
 handleFairValueCalculation party currency upTo (marketPairCid,m@(MarketPair{..})) = do
   debug ("calculating derivative FVR: " <> id.label)
   fairValues <- sortOn ((.upTo) . snd) . filter (\(_,fv) -> fv.instrumentId == id) <$> query @FairValue
-  trades <- sortOn (Down . (.timestamp) . snd) . filter (\(_,cts) -> cts.instrument == id) <$> query @ClearedTradeSide
+  trades <- sortOn (Down . (.timeNovated) . snd) . filter (\(_,cts) -> cts.instrument == id) <$> query @ClearedTradeSide
 
-  let relevantTrades = filter (\(_,ct) -> (subTime ct.timestamp upTo) < (seconds 0)) trades
+  let relevantTrades = filter (\(_,ct) -> (subTime ct.timeNovated upTo) < (seconds 0)) trades
   timestamp <- getTime
   case getBestPrice relevantTrades fairValues of
     (Some bp) -> dedupCreate $ FairValue with

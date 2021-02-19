@@ -10,8 +10,6 @@ import Marketplace.Utils
 
 import DA.Finance.Asset
 import DA.List
-import DA.Optional
-import DA.Next.Set
 
 template ExchangeParticipantInvitation
   with

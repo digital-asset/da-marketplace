@@ -1,7 +1,6 @@
 module Marketplace.CentralCounterpartyCustomer where
 
 import Marketplace.Clearing
-import Marketplace.Derivative
 import Marketplace.Notification
 import Marketplace.Token
 import Marketplace.Trading
