@@ -22,8 +22,8 @@ traderCannotMoveAllocatedAsset = do
     cashAsset = Asset with id = cashId; quantity = 20000.0
     priceAsset = Asset with id = cashId; quantity = 100.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset
-  bob <- onboardCustomer cr "Bob" cashAsset
+  alice <- onboardCustomer cr "Alice" shareAsset exchange
+  bob <- onboardCustomer cr "Bob" cashAsset exchange
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0

@@ -9,28 +9,32 @@ import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import qualified Marketplace.Operator as Operator
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Custody as Custody
-import qualified Marketplace.Exchange as Exchange
+import qualified Marketplace.Trading.Exchange as Exchange
 import qualified Marketplace.Trading.Matching as Matching
-import qualified Marketplace.Trading.Settlement as Settlement
 import qualified Marketplace.Trading.Service as Trading
-import qualified Marketplace.Listing as Listing
+import qualified Marketplace.Trading.Listing as Listing
+import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Distribution.Distributor as Distributor
 
 data CommonContracts = CommonContracts
   with
     operator : Party
     custodian : Party
     exchange : Party
+    auctionAgent : Party
     operatorServiceCid : ContractId Operator.Service
     custodianRoleCid : ContractId Custodian.Role
     exchangeRoleCid : ContractId Exchange.Role
     matchingServiceCid : ContractId Matching.Service
     settlementServiceCid : ContractId Settlement.Service
+    distributorRoleCid : ContractId Distributor.Role
 
 data CustomerContracts = CustomerContracts
   with
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
+    custodyServiceCid : ContractId Custody.Service
     allocationAccountRuleCid : ContractId AllocationAccountRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
@@ -47,6 +51,7 @@ onboardCommon = do
   operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   custodian <- allocatePartyWithHint "Custodian" $ PartyIdHint "Custodian"
   exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+  auctionAgent <- allocatePartyWithHint "AuctionAgent" $ PartyIdHint "AuctionAgent"
 
   -- Roles
   operatorServiceCid <- submit operator do createCmd Operator.Service with ..
@@ -58,10 +63,12 @@ onboardCommon = do
   matchingServiceCid <- submit exchange do exerciseCmd matchingServiceOfferCid Matching.Accept
   settlementServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferSettlementService with provider = exchange
   settlementServiceCid <- submit exchange do exerciseCmd settlementServiceOfferCid Settlement.Accept
+  distributorRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = auctionAgent
+  distributorRoleCid <- submit auctionAgent do exerciseCmd distributorRoleOfferCid Distributor.Accept
   pure CommonContracts with ..
 
-onboardCustomer : CommonContracts -> Text -> Asset -> Script CustomerContracts
-onboardCustomer CommonContracts{..} party asset = do
+onboardCustomer : CommonContracts -> Text -> Asset -> Party -> Script CustomerContracts
+onboardCustomer CommonContracts{..} party asset accountNominee = do
   customer <- allocatePartyWithHint party $ PartyIdHint party
   let
     tradingAccountId    = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
@@ -76,11 +83,11 @@ onboardCustomer CommonContracts{..} party asset = do
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
 
   -- Accounts
-  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [exchange]; ctrls = fromList [ custodian, customer ]
+  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [accountNominee]; ctrls = fromList [ custodian, customer ]
   tradingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = tradingOpenAccountRequestCid
-  allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee = exchange
+  allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee = accountNominee
   allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
-  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = empty; ctrls = fromList [customer]
+  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = fromList [accountNominee]; ctrls = fromList [customer]
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
 
   -- Trading and Listing services

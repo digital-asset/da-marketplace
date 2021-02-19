@@ -4,11 +4,11 @@ import Common
 import Daml.Script
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set
+import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Trading.Matching as Matching
-import qualified Marketplace.Trading.Settlement as Settlement
 import qualified Marketplace.Trading.Order as Order
 import qualified Marketplace.Trading.Service as TradingService
-import qualified Marketplace.Listing as Listing
+import qualified Marketplace.Trading.Listing as Listing
 import DA.List
 
 setup : Script ()
@@ -23,8 +23,8 @@ setup = do
     cashAsset = Asset with id = cashId; quantity = 20000.0
     priceAsset = Asset with id = cashId; quantity = 100.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset
-  bob <- onboardCustomer cr "Bob" cashAsset
+  alice <- onboardCustomer cr "Alice" shareAsset exchange
+  bob <- onboardCustomer cr "Bob" cashAsset exchange
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
