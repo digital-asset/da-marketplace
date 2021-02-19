@@ -1,12 +1,16 @@
 module Marketplace.Issuance where
 
-import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize)
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize, cond, one)
+import ContingentClaims.FinancialClaim (european)
+import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
+import ContingentClaims.Observation qualified as O
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import Daml.Control.Recursion
 import DA.Next.Set (Set)
+import DA.Text (unwords)
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
 
 type T = Issuance
@@ -52,6 +56,26 @@ template Service
           safekeepingAccountId: Id
         do
           create OriginationRequest with ..
+
+      nonconsuming RequestBinaryCallOptionOrigination: ContractId OriginationRequest
+        with
+          assetLabel: Text
+          assetSignatories: Set Party
+          issuer: Party
+          safekeepingAccountId: Id
+          expiry: Date
+          strike: Decimal
+          underlyingId: Id
+          currencyId: Id
+        do
+          -- TODO: refactor into a more composable form and add to contingent-claims lib
+          let binary : Decimal -> Text -> Id -> Claim O.Observation Date Id
+              binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one currencyId) Zero
+          create OriginationRequest with
+            claims = serialize $ european expiry (binary strike underlyingId.label currencyId)
+            description = unwords [ underlyingId.label, show expiry, "Binary Call @", show strike ]
+            ..
+      
           
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
         with
