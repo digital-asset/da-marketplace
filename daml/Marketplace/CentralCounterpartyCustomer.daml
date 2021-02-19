@@ -49,11 +49,17 @@ template CCPCustomerInvitation
             receiver = ccp, text = "CCP customer invitation rejected."
           return ()
 
+
 -- |Reject 'MarginCalculation' and set CCPCustomer to not 'inGoodStanding'
-rejectMarginCalculation : ContractId MarginCalculation -> CCPCustomer -> Text -> Update (ContractId CCPCustomer)
+rejectMarginCalculation
+  : ContractId MarginCalculation
+  -> CCPCustomer
+  -> Text
+  -> Update (ContractId CCPCustomer)
 rejectMarginCalculation mcCid ccpCustomer reason = do
   exercise mcCid MarginCalculation_Reject with note = reason
   create ccpCustomer with inGoodStanding = False
+
 
 -- |Resolve 'MarginCalculation' and recreate 'CCPCustomer' with new margin deposit cids
 resolveMarginCalculation
@@ -129,7 +135,8 @@ template CCPCustomer
               then do -- transfer to margin account from clearing account
                 clearingDeposit <- fetch clearingDepositCid
                 if clearingDeposit.asset.quantity <= amount
-                then rejectMarginCalculation calculationCid this ("Not enough in clearing account to satisfy margin call, please deposit: " <> show amount)
+                then rejectMarginCalculation calculationCid this
+                      ("Not enough in clearing account to satisfy margin call, please deposit: " <> show amount)
                 else do
                   [diffDepositCid, remaingClearingCid] <- exercise clearingDepositCid AssetDeposit_Split with quantities = [amount]
                   case marginDepositCids of
@@ -161,6 +168,7 @@ template CCPCustomer
           optMarkToMarketCalc : Optional (ContractId MarkToMarketCalculation)
         do
           aggregateQty <- getDepositQuantities clearingDepositCids
+
           if aggregateQty < amount
           then do
             whenSome optMarkToMarketCalc \calcCid -> void $ exercise calcCid MarkToMarketCalculation_Reject with

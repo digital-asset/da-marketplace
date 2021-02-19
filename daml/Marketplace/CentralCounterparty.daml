@@ -37,22 +37,24 @@ template CCPExchangeRelationshipRequest
     CCPExchangeRelationshipRequest_Approve : ContractId CCPExchangeRelationship
       do
         case requesterRole of
-          CCPRole      -> do
-            let ccp      = requester
+          CCPRole -> do
+            let ccp = requester
                 exchange = party
-            optRelationshipCid <- lookupByKey @CCPExchangeRelationship (ccp, operator, exchange)
-            case optRelationshipCid of
+
+            lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
               (Some cid) -> return cid
               None       -> create CCPExchangeRelationship with ..
 
           ExchangeRole -> do
-            let ccp      = party
+            let ccp = party
                 exchange = requester
-            optRelationshipCid <- lookupByKey @CCPExchangeRelationship (ccp, operator, exchange)
-            case optRelationshipCid of
+
+            lookupByKey @CCPExchangeRelationship (ccp, operator, exchange) >>= \case
               (Some cid) -> return cid
               None       -> create CCPExchangeRelationship with ..
-          _            -> error "Parties that are not exchanges cannot request a CCP/Exchange relationship"
+
+          _ -> error "Parties that are not exchanges cannot request a CCP/Exchange relationship"
+
     CCPExchangeRelationshipRequest_Reject : ()
       do return ()
 
@@ -107,10 +109,10 @@ template CCP
           optAccountId : Optional Id
           currency : Text
           targetAmount : Decimal
-          calculationId : Text -- TODO: add calculationTime
+          calculationId : Text
         do
           -- reject any previous calculation
-          optRejectedCid <- lookupByKey @RejectedMarginCalculation (ccp,ccpCustomer,calculationId)
+          optRejectedCid <- lookupByKey @RejectedMarginCalculation (ccp, ccpCustomer, calculationId)
           whenSome optRejectedCid $ \rcid -> exercise rcid RejectedMarginCalculation_Cancel
           calculationTime <- getTime
           let accountId = case optAccountId of
@@ -141,7 +143,7 @@ template CCP
           fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.buyer)
           fetchByKey @CCPCustomer (ccp, operator, derivativeTrade.seller)
 
-          let buyerAccountId = getAccountId derivativeTrade.buyer ccp [custodian]
+          let buyerAccountId  = getAccountId derivativeTrade.buyer ccp [custodian]
               sellerAccountId = getAccountId derivativeTrade.seller ccp [custodian]
           exercise derivativeTradeCid DerivativeTrade_Novate with ..
 

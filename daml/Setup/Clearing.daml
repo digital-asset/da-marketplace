@@ -405,7 +405,6 @@ handleOnboarding wt lp@(LedgerParties operator public custodian exchange issuer 
   awaitOrDo' wt 0.25 "approving custodian relationship"
     $ custodian `submit` exerciseCmd relationshipReqCid CustodianRelationshipRequest_Approve
 
-
   -- exchange establishes a relationship with the custodian
   relationshipReqCid <- exchange `submit` exerciseByKeyCmd @Exchange (operator,exchange) Exchange_RequestCustodianRelationship with ..
   awaitOrDo' wt 0.25 "approving custodian relationship request"

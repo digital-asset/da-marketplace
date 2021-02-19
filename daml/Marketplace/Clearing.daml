@@ -17,7 +17,6 @@ template MarginCalculation
     calculationId : Text
   where
     signatory ccp
-
     observer customer
 
     key (ccp, customer, calculationId) : (Party, Party, Text)
@@ -57,6 +56,7 @@ template FulfilledMarginCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
+
 template RejectedMarginCalculation
   with
     ccp : Party
@@ -72,16 +72,14 @@ template RejectedMarginCalculation
 
     controller ccp can
       RejectedMarginCalculation_Retry : ContractId MarginCalculation
-        do
-          create calculation
+        do create calculation
 
       RejectedMarginCalculation_Cancel : ()
         do return ()
 
     controller customer can
       RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
-        do
-          create calculation
+        do create calculation
 
 
 template MarkToMarketCalculation
@@ -95,7 +93,6 @@ template MarkToMarketCalculation
     calculationId : Text
   where
     signatory ccp
-
     observer customer
 
     key (ccp, customer, calculationId) : (Party, Party, Text)
@@ -109,7 +106,7 @@ template MarkToMarketCalculation
           create DismissibleNotification with
             sender = ccp, receiver = customer
             senderRole = Some CCPRole, text = note
-          create FulfilledMarkToMarketCalculation {..}
+          create FulfilledMarkToMarketCalculation with ..
 
       MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
         with
@@ -126,21 +123,20 @@ template RejectedMarkToMarketCalculation
     note : Text
   where
     signatory ccp
+
     key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
     controller ccp can
       RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
-        do
-          create calculation
+        do create calculation
 
       RejectedMarkToMarketCalculation_Cancel : ()
         do return ()
 
     controller customer can
       RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
-        do
-          create calculation
+        do create calculation
 
 
 template FulfilledMarkToMarketCalculation
@@ -154,7 +150,6 @@ template FulfilledMarkToMarketCalculation
     calculationId : Text
   where
     signatory ccp
-
     observer customer
 
     key (ccp, customer, calculationId) : (Party, Party, Text)
