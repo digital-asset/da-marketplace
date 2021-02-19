@@ -82,12 +82,12 @@ handleOrder party orders (orderCid, order) = do
           fillQty, fillPrice
           counterOrderId = passive.orderId
           counterParty = passive.exchParticipant
-          timestamp = show time
+          timeMatched = show time
 
       emitExerciseCmd passiveCid Order_Fill with
           fillQty, fillPrice
           counterOrderId = aggressive.orderId
           counterParty = aggressive.exchParticipant
-          timestamp = show time
+          timeMatched = show time
 
       return ()

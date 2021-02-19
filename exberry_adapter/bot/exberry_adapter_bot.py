@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 
 import dazl
 from dazl import create, exercise, exercise_by_key
@@ -274,7 +275,6 @@ def main():
 
         execution = event.cdata
         instrument_name = execution['instrument']
-
         if instrument_name in market_pairs:
             cleared_market = market_pairs[instrument_name]['clearedMarket']
             base_token_id = market_pairs[instrument_name]['baseTokenId']
@@ -307,31 +307,25 @@ def main():
                     'ccp': ccp,
                     'exchange': client.party,
                     'eventId': execution['eventId'],
-                    'eventTimestamp': execution['eventTimestamp'],
+                    'timeMatched': execution['eventTimestamp'],
                     'instrument': pair['id'],
                     'pair': token_pair,
                     'trackingNumber': execution['trackingNumber'],
-                    'buyer': taker['exchParticipant'],
-                    'buyerOrderId': taker['orderId'],
-                    'seller': maker['exchParticipant'],
-                    'sellerOrderId': maker['orderId'],
+                    'buyer': maker['exchParticipant'],
+                    'buyerOrderId': maker['orderId'],
+                    'seller': taker['exchParticipant'],
+                    'sellerOrderId': taker['orderId'],
                     'matchId': execution['matchId'],
                     'executedQuantity': execution['executedQuantity'],
                     'executedPrice': execution['executedPrice']
                 }))
                 commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
                     'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice'],
-                    'counterOrderId': maker['orderId'],
-                    'counterParty': maker['exchParticipant'],
-                    'timestamp': execution['eventTimestamp']
+                    'fillPrice': execution['executedPrice']
                 }))
                 commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
                     'fillQty': execution['executedQuantity'],
-                    'fillPrice': execution['executedPrice'],
-                    'counterOrderId': maker['orderId'],
-                    'counterParty': maker['exchParticipant'],
-                    'timestamp': execution['eventTimestamp']
+                    'fillPrice': execution['executedPrice']
                 }))
             else:
                 logging.info(f"Processing collateralized order report")
@@ -349,20 +343,21 @@ def main():
                     'fillPrice': execution['executedPrice'],
                     'counterOrderId': maker['orderId'],
                     'counterParty': maker['exchParticipant'],
-                    'timestamp': execution['eventTimestamp']
+                    'timeMatched': execution['eventTimestamp']
                 }))
                 commands.append(exercise(maker_cid, 'Order_Fill', {
                     'fillQty': execution['executedQuantity'],
                     'fillPrice': execution['executedPrice'],
                     'counterParty': taker['exchParticipant'],
                     'counterOrderId': taker['orderId'],
-                    'timestamp': execution['eventTimestamp']
+                    'timeMatched': execution['eventTimestamp']
                 }))
-
             return commands
+
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
             commands = [exercise(event.cid, 'Archive', {})]
+
             return commands
 
     network.run_forever()
@@ -376,7 +371,6 @@ def make_instrument(pair, cleared = False) -> str:
 def make_user_user_id(ledger_party) -> str:
     user_id = ''.join(ch for ch in ledger_party if ch.isalnum())
     return user_id[-20:]
-
 
 if __name__ == "__main__":
     logging.info("DA Marketplace <> Exberry adapter is starting up...")

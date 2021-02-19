@@ -25,11 +25,8 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
     const amount = trade.isBuy ? `+ ${trade.qty} ${base}` : `- ${trade.qty} ${base}`;
     const time = new Date(0);
     // timestamp is in nanos with microsecond precision
-    if (isClearedTrade(trade)) {
-        time.setUTCMilliseconds(timestringToInt(trade.eventTimestamp))
-    } else {
-        time.setUTCMilliseconds(timestringToInt(trade.timestamp))
-    }
+    time.setUTCMilliseconds(timestringToInt(trade.timeMatched))
+
     const timeLabel = new Intl.DateTimeFormat('en-US',
         { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(time)
 
@@ -37,7 +34,11 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
         <div className='order-card-container'>
             <Card fluid className='order-card'>
                 <div className='order-info'>
-                    <div className='order-icon'><ExchangeIcon/> { isClearedTrade(trade) && <Label>Cleared</Label> } {label}</div>
+                    <div className='order-icon'>
+                        <ExchangeIcon/>
+                        { isClearedTrade(trade) && <Label>Cleared</Label> }
+                        { label }
+                    </div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                     <div>{`Order ID: ${trade.orderId}`}</div>
