@@ -17,6 +17,7 @@ import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
 
 import { OrderKind } from './InvestorTrade'
+import {useRegistryLookup} from '../common/RegistryLookup'
 
 type Props = {
     allowedToOrder: boolean;
@@ -80,6 +81,7 @@ const OrderForm: React.FC<Props> = ({
         return !derivative ? AssetType.TokenAsset : AssetType.DerivativeAsset;
     }
 
+    const { ccpMap } = useRegistryLookup();
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
 
@@ -87,13 +89,14 @@ const OrderForm: React.FC<Props> = ({
             if (!defaultCCP) {
                 throw new AppError('Order Error.', 'The CCP is missing');
             }
+            const ccpName = ccpMap.get(defaultCCP)?.name || defaultCCP;
 
             if (!allowedToOrder) {
-                throw new AppError('Insufficient permissions.', `You are not a customer of ${defaultCCP} and can not place trades on this market.`)
+                throw new AppError('Insufficient permissions.', `You are not a customer of ${ccpName} and can not place trades on this market.`)
             }
 
             if (!inGoodStanding) {
-                throw new AppError('Insufficient permissions.', `You must be in good standing with ${defaultCCP} and to place trades on this market.`)
+                throw new AppError('Insufficient permissions.', `You must be in good standing with ${ccpName} to place trades on this market.`)
             }
 
             console.log(getType(tokenPair[0]));

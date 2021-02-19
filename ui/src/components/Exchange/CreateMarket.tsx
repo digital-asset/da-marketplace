@@ -5,11 +5,12 @@ import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { RegisteredCCP } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import { CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { ExchangeIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { TokenInfo, DerivativeInfo, wrapDamlTuple } from '../common/damlTypes'
@@ -40,8 +41,25 @@ const CreateMarket: React.FC<{}> = () => {
 
     const allTokens: TokenInfo[] = useContractQuery(Token);
     const allDerivatives: DerivativeInfo[] = useContractQuery(Derivative);
-    const registeredCCPs = useContractQuery(RegisteredCCP, AS_PUBLIC);
     const quantityPrecision = Number(baseToken?.contractData.quantityPrecision) || 0
+
+    const ccpRelationships = useContractQuery(CCPExchangeRelationship);
+    const { ccpMap } = useRegistryLookup();
+    const ccpOptions = ccpRelationships
+        .map(relationship => {
+            const party = relationship.contractData.ccp;
+            const name = ccpMap.get(party)?.name;
+            return {
+                key: party,
+                text: name ? name : party,
+                value: party
+            }
+        });
+
+    const handleSetCcp = (event: React.SyntheticEvent, result: any) => {
+        setCcpInput(result.value);
+        setDefaultCCP(result.value);
+    }
 
     const allTokenOptions = allTokens.map(tk => {
             return {
@@ -184,23 +202,27 @@ const CreateMarket: React.FC<{}> = () => {
             <FormErrorHandled onSubmit={handleIdPairSubmit}>
                 <div className='create-market-options'>
                     {clearedMarket ? <>
-                    <Form.Select
-                            multiple={false}
-                            label={<p>Base</p>}
-                            // className='issue-asset-form-field select-observer'
-                            className='create-market-select'
-                            disabled={allOptions.length === 0}
-                            placeholder='Select...'
-                            options={allOptions}
-                            onChange={handleBaseOptionSet}/>
-                        <Form.Select
-                            multiple={false}
-                            label={<p>Quote</p>}
-                            className='issue-asset-form-field select-observer'
-                            disabled={allOptions.length === 0}
-                            placeholder='Select...'
-                            options={allOptions}
-                            onChange={handleQuoteOptionSet}/>
+                        <div className='contract-select-container'>
+                            <Form.Select
+                                multiple={false}
+                                label={<p>Base</p>}
+                                className='create-market-select'
+                                disabled={allOptions.length === 0}
+                                placeholder='Select...'
+                                options={allOptions}
+                                onChange={handleBaseOptionSet}/>
+                        </div>
+                        <ExchangeIcon/>
+                        <div className='contract-select-container'>
+                            <Form.Select
+                                multiple={false}
+                                label={<p>Quote</p>}
+                                className='create-market-select'
+                                disabled={allOptions.length === 0}
+                                placeholder='Select...'
+                                options={allOptions}
+                                onChange={handleQuoteOptionSet}/>
+                        </div>
                         </>:<>
                         <ContractSelect
                             clearable
@@ -254,15 +276,18 @@ const CreateMarket: React.FC<{}> = () => {
                     offLabel='Collateralized'
                     onClick={cleared => setClearedMarket(cleared)}/>
 
-                { clearedMarket && (
-                    <ContractSelect
-                        className='ccp-select'
-                        contracts={registeredCCPs} // TODO: Lookup from exchange relationships, not public
-                        label='CCP Party'
-                        placeholder='Select...'
-                        value={ccpInput}
-                        getOptionText={ccp => ccp.contractData.name}
-                        setContract={ccp => setDefaultCCP(ccp.contractData.ccp)}/>
+                { clearedMarket && (ccpOptions.length == 0 ?
+                        <p>You must have a relationship with a Clearinghouse to list a cleared market!</p>
+                    : (
+                        <Form.Select
+                            clearable
+                            className='beneficiary-select'
+                            label='CCP Party'
+                            // value={ccpInput}
+                            placeholder='Select...'
+                            options={ccpOptions}
+                            onChange={handleSetCcp}/>
+                    )
                 )}
 
                 <Button
