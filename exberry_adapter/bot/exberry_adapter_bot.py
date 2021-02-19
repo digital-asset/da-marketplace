@@ -1,12 +1,13 @@
 import logging
 import os
+from datetime import datetime
 
 import dazl
 from dazl import create, exercise, exercise_by_key
 
 dazl.setup_default_logger(logging.INFO)
 
-SID = 1 # default SID, use ExberrySID contract to change while running
+SID = 420 # default SID, use ExberrySID contract to change while running
 def get_sid() -> int:
     global SID
     SID = SID + 1
@@ -305,31 +306,25 @@ def main():
                 'ccp': ccp,
                 'exchange': client.party,
                 'eventId': execution['eventId'],
-                'eventTimestamp': execution['eventTimestamp'],
+                'timeMatched': execution['eventTimestamp'],
                 'instrument': pair['id'],
                 'pair': token_pair,
                 'trackingNumber': execution['trackingNumber'],
-                'buyer': taker['exchParticipant'],
-                'buyerOrderId': taker['orderId'],
-                'seller': maker['exchParticipant'],
-                'sellerOrderId': maker['orderId'],
+                'buyer': maker['exchParticipant'],
+                'buyerOrderId': maker['orderId'],
+                'seller': taker['exchParticipant'],
+                'sellerOrderId': taker['orderId'],
                 'matchId': execution['matchId'],
                 'executedQuantity': execution['executedQuantity'],
                 'executedPrice': execution['executedPrice']
             }))
             commands.append(exercise(taker_cid, 'ClearedOrder_Fill', {
                 'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice'],
-                'counterOrderId': maker['orderId'],
-                'counterParty': maker['exchParticipant'],
-                'timestamp': execution['eventTimestamp']
+                'fillPrice': execution['executedPrice']
             }))
             commands.append(exercise(maker_cid, 'ClearedOrder_Fill', {
                 'fillQty': execution['executedQuantity'],
-                'fillPrice': execution['executedPrice'],
-                'counterOrderId': maker['orderId'],
-                'counterParty': maker['exchParticipant'],
-                'timestamp': execution['eventTimestamp']
+                'fillPrice': execution['executedPrice']
             }))
         else:
             logging.info(f"Processing collateralized order report")
@@ -347,14 +342,14 @@ def main():
                 'fillPrice': execution['executedPrice'],
                 'counterOrderId': maker['orderId'],
                 'counterParty': maker['exchParticipant'],
-                'timestamp': execution['eventTimestamp']
+                'timeMatched': execution['eventTimestamp']
             }))
             commands.append(exercise(maker_cid, 'Order_Fill', {
                 'fillQty': execution['executedQuantity'],
                 'fillPrice': execution['executedPrice'],
                 'counterParty': taker['exchParticipant'],
                 'counterOrderId': taker['orderId'],
-                'timestamp': execution['eventTimestamp']
+                'timeMatched': execution['eventTimestamp']
             }))
 
         return commands
@@ -370,7 +365,6 @@ def make_instrument(pair, cleared = False) -> str:
 def make_user_user_id(ledger_party) -> str:
     user_id = ''.join(ch for ch in ledger_party if ch.isalnum())
     return user_id[-20:]
-
 
 if __name__ == "__main__":
     logging.info("DA Marketplace <> Exberry adapter is starting up...")

@@ -79,11 +79,12 @@ template Order
           fillPrice : Decimal
           counterParty : Party
           counterOrderId : Int
-          timestamp : Text
+          timeMatched : Text
         do
-          assert $ fillQty > 0.0
-          assert $ fillQty <= qty
-          assert $ if isBid then fillPrice <= price
+          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+          assertMsg "Fill price is outside of the order's price bounds"
+                 $ if isBid then fillPrice <= price
                             else fillPrice >= price
           let receiverAccountId = Id
                 with signatories = account.id.signatories,
@@ -113,11 +114,12 @@ template Order
           fillPrice : Decimal
           counterParty : Party
           counterOrderId : Int
-          timestamp : Text
+          timeMatched : Text
         do
-          assert $ fillQty > 0.0
-          assert $ fillQty <= qty
-          assert $ if isBid then fillPrice <= price
+          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+          assertMsg "Fill price is outside of the order's price bounds"
+                 $ if isBid then fillPrice <= price
                             else fillPrice >= price
 
           let receiverAccountId = Id
@@ -200,7 +202,7 @@ template BrokerOrderRequest
           brokerOrderId : Int
         do
           deposit <- fetch depositCid
-          assert $ deposit.account.owner == brokerCustomer
+          assertMsg "Deposit account does not belong to brokerCustomer" $ deposit.account.owner == brokerCustomer
           brokerOrderCid <- create BrokerOrder with ..
           let receiverAccountId = Id with signatories = deposit.account.id.signatories, label = getAccountLabel broker broker, version = 0
           depositTransferReqCid <- create DepositTransferRequest with sender = brokerCustomer, senderAccountId = deposit.account.id, ..
@@ -285,13 +287,11 @@ template ClearedOrder
         with
           fillQty : Decimal
           fillPrice : Decimal
-          counterParty : Party -- TODO Might be unneeded params
-          counterOrderId : Int
-          timestamp : Text
         do
-          assert $ fillQty > 0.0
-          assert $ fillQty <= qty
-          assert $ if isBid then fillPrice <= price
+          assertMsg "Fill quantity must be greater than 0" $ fillQty > 0.0
+          assertMsg "Fill quantity must be less than or equal to order quantity" $ fillQty <= qty
+          assertMsg "Fill price is outside of the order's price bounds"
+                 $ if isBid then fillPrice <= price
                             else fillPrice >= price
 
           if qty == fillQty
@@ -332,18 +332,18 @@ template ClearedTrade
   with
     ccp : Party
     exchange : Party
-    eventId : Int
-    eventTimestamp : Text
     instrument : Id  -- id of order
     pair : IdPair
-    trackingNumber : Int
+    executedQuantity : Decimal
+    executedPrice : Decimal
     buyer : Party
     buyerOrderId : Int
     seller : Party
     sellerOrderId : Int
+    eventId : Int
+    timeMatched : Text
     matchId : Int
-    executedQuantity : Decimal
-    executedPrice : Decimal
+    trackingNumber : Int
   where
     signatory exchange
     observer ccp
@@ -353,7 +353,7 @@ template ClearedTrade
           buyerAccountId : Id
           sellerAccountId : Id
         do
-          timestamp <- getTime
+          timeNovated <- getTime
           buyCid <- create ClearedTradeSide with
             participant = buyer
             orderId = buyerOrderId
@@ -377,21 +377,21 @@ template ClearedTrade
 
 template ClearedTradeSide
   with
-    participant : Party
     ccp : Party
     exchange : Party
-    isBuy : Bool
-    eventId : Int
-    eventTimestamp : Text
+    participant : Party
     instrument : Id
     pair : IdPair
-    orderId : Int
-    counterOrderId : Int
-    matchId : Int
+    isBuy : Bool
     qty : Decimal
     price : Decimal
+    timeMatched : Text -- previously eventTimestamp
+    timeNovated : Time -- previously timestamp
+    orderId : Int
+    counterOrderId : Int
     accountId : Id  -- the investor account at the ccp
-    timestamp : Time
+    eventId : Int
+    matchId : Int
   where
     signatory ccp, exchange
     observer exchange, participant
@@ -466,7 +466,7 @@ template TradeSide
     isBuy : Bool
     orderId : Int
     counterOrderId : Int
-    timestamp : Text
+    timeMatched : Text
     optAsset : Optional Asset
     receiverAccountId : Id
     isBinaryOption : Bool
@@ -476,7 +476,7 @@ template TradeSide
     controller exchange can
       TradeSide_Settle : (ContractId SettledTradeSide, Optional (ContractId DepositCreditRequest))
         do
-          assert $ not isBinaryOption
+          assertMsg "Binary option settlement must be done with the SettleBinaryOption choice." $ not isBinaryOption
           optDepositTxReqCid <- case optAsset of
             Some asset -> do
               let (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
@@ -494,7 +494,7 @@ template TradeSide
         with
           settledBinOptionCid : ContractId SettledBinaryOption
         do
-          assert isBinaryOption
+          assertMsg "Only binary option trades can be settled with this choice." isBinaryOption
           settledBinOption <- fetch settledBinOptionCid
           let needsTransfer = settledBinOption.outcome /= isBuy
           optCreditRequestCid <- case (optAsset, needsTransfer) of
@@ -521,7 +521,7 @@ template SettledTradeSide
     isBuy : Bool
     orderId : Int
     counterOrderId : Int
-    timestamp : Text
+    timeMatched : Text
   where
     signatory exchange, exchParticipant
 
