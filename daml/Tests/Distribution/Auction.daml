@@ -89,6 +89,8 @@ auctionAndBidsFullyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction auctionAgent
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.awayAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of
       Bid.FullAllocation price -> do
@@ -132,13 +134,14 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction auctionAgent
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.awayAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of
       Bid.FullAllocation price -> do
         assertAssetDeposits auction issuer originalDeposits price bid.details.quantity bid
       _ -> pure ()
     pure ()
-
 
 auctionFullyAllocatedBidsParticallyAllocated : Script ()
 auctionFullyAllocatedBidsParticallyAllocated = do
@@ -173,6 +176,8 @@ auctionFullyAllocatedBidsParticallyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction auctionAgent
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.awayAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of
       Bid.FullAllocation price -> do
@@ -181,8 +186,6 @@ auctionFullyAllocatedBidsParticallyAllocated = do
         assertAssetDeposits auction issuer originalDeposits price quantity bid
       _ -> pure ()
     pure ()
-
-  pure ()
 
 auctionNoBidsAboveFloorPrice : Script ()
 auctionNoBidsAboveFloorPrice = do
@@ -211,8 +214,6 @@ auctionNoBidsAboveFloorPrice = do
   bids <- query @Bid.Bid auctionAgent
   all ((\bid -> bid.status == Bid.Invalid) . snd) bids === True
 
-  pure ()
-
 assertAssetDeposits : Auction.Auction -> CustomerContracts -> [AssetDeposit] -> Decimal -> Decimal -> Bid.Bid -> Script ()
 assertAssetDeposits auction issuer originalDeposits price quantity bid = do
   -- Correct Distribution of new asset check
@@ -228,6 +229,13 @@ assertAssetDeposits auction issuer originalDeposits price quantity bid = do
     ((_, x) :: []) -> do
       let originalDeposit = filter (\deposit -> deposit.account.owner == x.account.owner) originalDeposits
       assertMsg "Investor/Bidder split deposit contains incorrect quantity" (x.asset.quantity == (bid.details.quantity * price))
+    _ -> pure ()
+
+assertAuctionMatchesPayments : Auction.Auction -> [AssetDeposit] -> Script ()
+assertAuctionMatchesPayments auction issuerPayments = do
+  case auction.status of
+    Auction.FullyAllocated price                -> auction.asset.quantity * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
+    Auction.ParticallyAllocated price remaining -> (auction.asset.quantity - remaining) * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
     _ -> pure ()
 
 bidSortingTest : Script ()
