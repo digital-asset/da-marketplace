@@ -1,10 +1,22 @@
 module Marketplace.Issuance where
 
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), deserialize, serialize, cond, one)
+import ContingentClaims.FinancialClaim (european)
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation (Observation)
+import ContingentClaims.Observation qualified as O
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import Daml.Control.Recursion
+import DA.Text (unwords)
+import Marketplace.AssetDescription (AssetDescription(..), Claims)
 
 type T = Issuance
+
+-- TODO: don't export; used below in Origination
+type C = Claim Observation Date Id
+type F = ClaimF Observation Date Id
 
 template Issuance
   with
@@ -33,6 +45,34 @@ template Service
     maintainer key._1
 
     controller client can
+      nonconsuming RequestOrigination: ContractId OriginationRequest
+        with
+          assetId: Id
+          description: Text
+          issuer: Party
+          claims: Claims
+          safekeepingAccountId: Id
+        do
+          create OriginationRequest with ..
+
+      nonconsuming RequestBinaryCallOptionOrigination: ContractId OriginationRequest
+        with
+          assetId: Id
+          issuer: Party
+          safekeepingAccountId: Id
+          expiry: Date
+          strike: Decimal
+          underlyingId: Id
+          currencyId: Id
+        do
+          -- TODO: refactor into a more composable form and add to contingent-claims lib
+          let binary : Decimal -> Text -> Id -> Claim O.Observation Date Id
+              binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one currencyId) Zero
+          create OriginationRequest with
+            claims = serialize $ european expiry (binary strike underlyingId.label currencyId)
+            description = unwords [ underlyingId.label, show expiry, "Binary Call @", show strike ]
+            ..
+          
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
         with
           issuanceId : Text
@@ -51,11 +91,43 @@ template Service
           create ReduceIssuanceRequest with ..
 
     controller provider can
+      nonconsuming Originate: [ContractId AssetDescription]
+        with
+          createOriginationCid: ContractId OriginationRequest
+        do
+          OriginationRequest{..} <- fetch createOriginationCid
+          let assetDescVers: C -> [Update (ContractId AssetDescription)]
+              assetDescVers = ana write . ana zipWithIndex . (assetId.version + 1, ) . para depthFst --TODO: use ghylo
+                where
+                  depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
+                  depthFst ZeroF = []
+                  depthFst (OneF _) = []
+                  depthFst (ScaleF _ (_, cs)) = cs
+                  depthFst (WhenF _ (_, cs)) = cs
+                  depthFst (GiveF (_, cs)) = cs
+                  depthFst (AndF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+                  depthFst (OrF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+                  depthFst (CondF _ (_, cs) (_, cs')) = cs ++ cs'
+                  zipWithIndex (_, []) = Nil
+                  zipWithIndex (i, x :: xs) = Cons (i, x) (succ i, xs)
+                  write : [(Int, C)] -> ListF (Update (ContractId AssetDescription)) [(Int, C)]
+                  write ((version', claims') :: vcs) = 
+                    let assetId' = assetId with version = version'
+                        claims = serialize claims'
+                    in Cons (create AssetDescription with assetId = assetId', ..) vcs
+                  write [] = Nil
+          -- assertMsg "issued must be 0" $ description.issued == 0.0
+          -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
+          archive createOriginationCid
+          create AssetDescription with ..
+          sequence $ assetDescVers $ deserialize claims
+
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with
           createIssuanceRequestCid : ContractId CreateIssuanceRequest
         do
           CreateIssuanceRequest{..} <- fetch createIssuanceRequestCid
+          Some _ <- lookupByKey @AssetDescription assetId
           archive createIssuanceRequestCid
           issuanceCid <- create Issuance with ..
           let asset = Asset with id = assetId; quantity
@@ -130,3 +202,13 @@ template ReduceIssuanceRequest
     depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, client
+
+template OriginationRequest
+  with
+    assetId: Id
+    description: Text
+    issuer: Party
+    claims: Claims
+    safekeepingAccountId: Id
+  where
+     signatory assetId.signatories

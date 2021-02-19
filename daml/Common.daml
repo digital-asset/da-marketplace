@@ -9,6 +9,7 @@ import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import qualified Marketplace.Operator as Operator
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Custody as Custody
+import qualified Marketplace.Issuance as Issuance
 import qualified Marketplace.Trading.Exchange as Exchange
 import qualified Marketplace.Trading.Matching as Matching
 import qualified Marketplace.Trading.Service as Trading
@@ -34,7 +35,8 @@ data CustomerContracts = CustomerContracts
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
-    custodyServiceCid : ContractId Custody.Service
+    issuanceServiceCid: ContractId Issuance.Service
+    custodyServiceCid: ContractId Custody.Service
     allocationAccountRuleCid : ContractId AllocationAccountRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
@@ -42,6 +44,8 @@ data CustomerContracts = CustomerContracts
     tradingAccountId : Id
     tradingAccount : Account
     awayAccountId : Id
+     -- TODO: consider whether these services need to be more granular. i.e. does a custody relationship allow execution, tarde-away, safekeeping etc. in one go
+    safekeepingAccountId: Id
     awayAccount : Account
     assetDepositCid : ContractId AssetDeposit
 
@@ -71,12 +75,14 @@ onboardCustomer : CommonContracts -> Text -> Asset -> Party -> Script CustomerCo
 onboardCustomer CommonContracts{..} party asset accountNominee = do
   customer <- allocatePartyWithHint party $ PartyIdHint party
   let
-    tradingAccountId    = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
-    tradingAccount      = Account with provider = custodian; owner = customer; id = tradingAccountId
-    allocationAccountId = Id with signatories = fromList [ custodian, customer ]; label = "AllocationAccount-" <> party; version = 0
-    allocationAccount   = Account with provider = custodian; owner = customer; id = allocationAccountId
-    awayAccountId       = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
-    awayAccount         = Account with provider = custodian; owner = customer; id = awayAccountId
+    tradingAccountId      = Id with signatories = fromList [ custodian, customer ]; label = "TradingAccount-" <> party; version = 0
+    tradingAccount        = Account with provider = custodian; owner = customer; id = tradingAccountId
+    allocationAccountId   = Id with signatories = fromList [ custodian, customer ]; label = "AllocationAccount-" <> party; version = 0
+    allocationAccount     = Account with provider = custodian; owner = customer; id = allocationAccountId
+    awayAccountId         = Id with signatories = fromList [ custodian, customer ]; label = "AwayAccount-" <> party; version = 0
+    awayAccount           = Account with provider = custodian; owner = customer; id = awayAccountId
+    safekeepingAccountId  = Id with signatories = fromList [ custodian, customer ]; label = "SafekeepingAccount-" <> party; version = 0
+    safekeepingAccount    = Account with provider = custodian; owner = customer; id = safekeepingAccountId
 
   -- Custody service
   custodyServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
@@ -89,12 +95,16 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
   awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = fromList [accountNominee]; ctrls = fromList [customer]
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
+  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = fromList [ custodian, customer ]
+  safekeepingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = safekeepingOpenAccountRequestCid
 
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
+  issuanceServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with client = customer, ..
+  issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..

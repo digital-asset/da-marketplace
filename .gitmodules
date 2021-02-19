@@ -2,3 +2,8 @@
 	path = lib-finance
 	url = git@github.com:digital-asset/lib-finance.git
 	branch = marketplace
+
+[submodule "contingent-claims"]
+	path = contingent-claims
+	url = git@github.com:DACH-NY/contingent-claims.git
+	branch = master
