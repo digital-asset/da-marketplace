@@ -153,6 +153,19 @@ template CCP
         do
           create CCPExchangeRelationshipRequest with requester = ccp, party = exchange, requesterRole = CCPRole, ..
 
+      nonconsuming CCP_NovateClearedTrade : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+        with
+          clearedTradeCid : ContractId ClearedTrade
+        do
+          clearedTrade <- fetch clearedTradeCid
+          -- verify that both buyer and seller are ccp customers
+          fetchByKey @CCPCustomer (ccp, operator, clearedTrade.buyer)
+          fetchByKey @CCPCustomer (ccp, operator, clearedTrade.seller)
+
+          let buyerAccountId = getAccountId clearedTrade.buyer ccp [custodian]
+              sellerAccountId = getAccountId clearedTrade.seller ccp [custodian]
+          exercise clearedTradeCid ClearedTrade_Novate with ..
+
       nonconsuming CCP_RequestFairValues : ContractId FairValueCalculationRequest
         with
           exchange : Party
@@ -160,4 +173,3 @@ template CCP
           upTo : Time
         do
           create FairValueCalculationRequest with ..
-

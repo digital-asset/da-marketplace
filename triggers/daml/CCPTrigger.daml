@@ -32,6 +32,7 @@ handleCCP = Trigger
                                                , registeredTemplate @CCPCustomer
                                                , registeredTemplate @CCPExchangeRelationshipRequest
                                                , registeredTemplate @AssetDeposit
+                                               , registeredTemplate @ClearedTrade
                                                , registeredTemplate @DerivativeTrade
                                                , registeredTemplate @MarginCalculation
                                                , registeredTemplate @MarkToMarketCalculation ]
@@ -50,6 +51,13 @@ handleCCPRule party = do
   forA_ ccpRoles
     $ \(_,ccp) -> void $ put (state { operatorParty = ccp.operator })
                >> debug ("Setting operator party to: " <> show ccp.operator)
+
+  -- > Handle ClearedTrades
+  clearedTrades <- query @ClearedTrade
+  forA_ clearedTrades
+    $ \(cid,dt) -> dedupExerciseByKey @CCP (state.operatorParty,party)
+                    CCP_NovateClearedTrade { clearedTradeCid = cid }
+               >> debug ("Novating trade: " <> show dt)
 
   -- > Handle DerivativeTrades
   derivativeTrades <- query @DerivativeTrade

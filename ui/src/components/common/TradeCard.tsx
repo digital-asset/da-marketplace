@@ -1,13 +1,21 @@
 import React from 'react'
-import { Card } from 'semantic-ui-react'
+import { Card, Label } from 'semantic-ui-react'
 
-import { SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { ClearedTradeSide, SettledTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { ExchangeIcon } from '../../icons/Icons'
 import { unwrapDamlTuple } from '../common/damlTypes'
 
 export type TradeCardProps = {
-    trade: SettledTradeSide;
+    trade: SettledTradeSide | ClearedTradeSide;
+}
+
+const isClearedTrade = (trade: any): trade is ClearedTradeSide => {
+    return !!trade.ccp
+}
+
+const timestringToInt = (timestring: string) => {
+    return parseInt(timestring.substring(0, timestring.length - 6));
 }
 
 const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
@@ -17,7 +25,8 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
     const amount = trade.isBuy ? `+ ${trade.qty} ${base}` : `- ${trade.qty} ${base}`;
     const time = new Date(0);
     // timestamp is in nanos with microsecond precision
-    time.setUTCMilliseconds(parseInt(trade.timestamp.substring(0, trade.timestamp.length - 6)))
+    time.setUTCMilliseconds(timestringToInt(trade.timeMatched))
+
     const timeLabel = new Intl.DateTimeFormat('en-US',
         { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(time)
 
@@ -25,7 +34,11 @@ const TradeCard: React.FC<TradeCardProps> = ({ children, trade }) => {
         <div className='order-card-container'>
             <Card fluid className='order-card'>
                 <div className='order-info'>
-                    <div><ExchangeIcon/> {label}</div>
+                    <div className='order-icon'>
+                        <ExchangeIcon/>
+                        { isClearedTrade(trade) && <Label>Cleared</Label> }
+                        { label }
+                    </div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                     <div>{`Order ID: ${trade.orderId}`}</div>

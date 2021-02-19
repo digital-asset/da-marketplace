@@ -32,7 +32,17 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
     ));
 
     const header = ['Pair', 'Current Price', 'Change', 'Volume']
-    const rows = exchangeContract?.contractData.tokenPairs.map(pair => {
+    const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
+        const [ base, quote ] = unwrapDamlTuple(pair);
+        const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
+        return [pairLabel, '-', '-', '-'];
+    }) || [];
+
+    const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {
+        const pair = unwrapDamlTuple(listing)[0];
+        if (typeof pair === 'string') {
+            throw new Error(`Expected a tuple for cleared market pair, found a string: ${pair}.`)
+        }
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
         return [pairLabel, '-', '-', '-'];
@@ -49,7 +59,13 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
                 <CardTable
                     className='market-pairs'
                     header={header}
-                    rows={rows}/>
+                    rows={collateralizedRows}/>
+
+                <CardTable
+                    className='market-pairs'
+                    title='Cleared Markets'
+                    header={header}
+                    rows={clearedRows}/>
             </PageSection>
         </Page>
     )

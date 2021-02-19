@@ -24,11 +24,20 @@
             align-items: center;
             width: 70%;
 
-            .exchange-icon {
-                width: 16px;
-                height: 16px;
-                margin-right: $spacing-s;
-                margin-left: $spacing-s;
+            .order-icon {
+                display: flex;
+                align-items: center;
+
+                .label {
+                    margin-right: $spacing-xs;
+                }
+
+                .exchange-icon {
+                    width: 16px;
+                    height: 16px;
+                    margin-right: $spacing-s;
+                    margin-left: $spacing-s;
+                }
             }
 
             p:first-child {

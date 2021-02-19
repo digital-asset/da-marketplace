@@ -22,6 +22,10 @@
             }
         }
 
+        .cleared-market-toggle, .ccp-select {
+            margin-bottom: $spacing-m;
+        }
+
         @media screen and (max-width: 1000px) {
             .create-market-options  {
                 flex-direction: column;

@@ -160,7 +160,7 @@ start_matching_engine: $(matching_engine_pid)
 stop_matching_engine:
 	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
 
-start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid)
+start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid) $(ccp_pid)
 
 stop_bots: stop_broker stop_custodian stop_exchange stop_operator stop_ccp
 

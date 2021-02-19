@@ -7,13 +7,14 @@ type Props = {
     className?: string;
     header: CellItem[];
     rows: CellItem[][];
+    title?: string;
 }
 
-const CardTable: React.FC<Props> = ({ className, header, rows }) => {
+const CardTable: React.FC<Props> = ({ className, header, rows, title }) => {
     return (
         <div className={`${className} card-table`}>
             {/* Split the header into its own table because `border-spacing` would affect the header if included in the body table */}
-            <Header as='h2'>Market Pairs</Header>
+            <Header as='h2'>{title || 'Market Pairs'}</Header>
 
             { header && (
                 <Table fixed className='card-table-header-table'>
