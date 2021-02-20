@@ -5,7 +5,7 @@ import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.Confirmation qualified as Confirmation
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule, Deposit(..), Withdraw(..))
+import qualified Marketplace.Trading.AllocationAccountRule as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 
 type T = Service
 
@@ -36,7 +36,7 @@ template Service
             executions = []
             remainingQuantity = details.asset.quantity
 
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Deposit with ..
+          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
           createOrderRequestCid <- create CreateOrderRequest with ..
           orderCid <- create Order.Order with ..
 
@@ -79,7 +79,7 @@ template Service
           archive orderCid
 
           orderCid <- create order with status = Order.Rejected with ..
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Withdraw with transferTo = tradingAccount, ..
+          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
           return (orderCid, depositCid)
 
@@ -92,7 +92,7 @@ template Service
           archive orderCid
 
           orderCid <- create order with status = Order.Cancelled
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Withdraw with transferTo = tradingAccount, ..
+          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
           return (orderCid, depositCid)
 
@@ -115,6 +115,12 @@ template Service
         do
           exercise confirmationCid Confirmation.Sign with ctrl = customer, ..
 
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
+
 template Offer
   with
     operator : Party
@@ -136,25 +142,34 @@ template Offer
         do
           return ()
 
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+
 template Request
   with
-    operator : Party
     customer : Party
     provider : Party
     tradingAccount : Account
     allocationAccount : Account
   where
-    signatory operator, customer
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template CreateOrderRequest
   with

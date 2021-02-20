@@ -6,26 +6,26 @@ template VerifiedIdentity
   with
     operator : Party
     provider : Party
-    client : Party
+    customer : Party
     observers : Set Party
     legalName : Text
     location : Text
   where
-    signatory operator, provider, client
+    signatory operator, provider, customer
     observer observers
 
 template Service
   with
     operator : Party
     provider : Party
-    client : Party
+    customer : Party
   where
-    signatory operator, provider, client
+    signatory operator, provider, customer
 
-    key (operator, provider, client) : (Party, Party, Party)
+    key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller client can
+    controller customer can
       nonconsuming RequestIdentityVerification : ContractId IdentityVerificationRequest
         with
           legalName : Text
@@ -47,44 +47,53 @@ template Offer
   with
     operator : Party
     provider : Party
-    client : Party
+    customer : Party
   where
     signatory operator, provider
 
-    controller client can
+    controller customer can
       Accept : ContractId Service
         do
           create Service with ..
 
       Decline : ()
-        do
-          return ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
 
 template Request
   with
-    operator : Party
-    client : Party
+    customer : Party
     provider : Party
   where
-    signatory operator, client
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template IdentityVerificationRequest
   with
     operator : Party
     provider : Party
-    client : Party
+    customer : Party
     observers : Set Party
     legalName : Text
     location : Text
   where
-    signatory operator, provider, client
+    signatory operator, provider, customer
     observer observers

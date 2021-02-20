@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, 
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing'
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Listing'
 import useStyles from "../styles";
 import { getName } from "../../config";
 
@@ -46,7 +46,7 @@ const MarketsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                   {listings.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{c.payload.listingId}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{c.payload.tradedAssetId.label}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.quotedAssetId.label}</TableCell>

@@ -8,7 +8,7 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody";
-import { AssetSettlementRule } from "@daml.js/finlib/lib/DA/Finance/Asset/Settlement";
+import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
 
 const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -17,7 +17,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
 
   const services = useStreamQueries(Service).contracts;
 
-  const clientServices = services.filter(s => s.payload.client === party);
+  const clientServices = services.filter(s => s.payload.customer === party);
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
 
   const requestCloseAccount = async (c : CreateEvent<AssetSettlementRule>) => {

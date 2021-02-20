@@ -32,7 +32,7 @@ template Service
       nonconsuming OfferRegulatorService : ContractId Regulator.Offer
         with
           provider : Party
-          client : Party
+          customer : Party
         do
           create Regulator.Offer with ..
 

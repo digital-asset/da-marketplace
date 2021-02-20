@@ -12,7 +12,7 @@ import useStyles from "../styles";
 import { getName, getTemplateId } from "../../config";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
 
-const ListingComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+const DistributionComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
@@ -231,4 +231,4 @@ const ListingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
   );
 };
 
-export const Listing = withRouter(ListingComponent);
+export const Distribution = withRouter(DistributionComponent);

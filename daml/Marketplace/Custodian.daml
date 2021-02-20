@@ -17,7 +17,7 @@ template Role
     
       nonconsuming OfferCustodyService : ContractId Custody.Offer
         with
-          client : Party
+          customer : Party
         do
           create Custody.Offer with ..
 
@@ -35,7 +35,7 @@ template Role
 
       nonconsuming OfferIssuanceService : ContractId Issuance.Offer
         with
-          client : Party
+          customer : Party
         do
           create Issuance.Offer with ..
 

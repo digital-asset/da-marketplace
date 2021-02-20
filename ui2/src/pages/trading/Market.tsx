@@ -5,14 +5,14 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, TextField, Button, Slider, Paper } from "@material-ui/core";
 import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
 import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Order/module";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service";
-import { AssetDeposit } from "@daml.js/finlib/lib/DA/Finance/Asset/module";
 import { withStyles } from "@material-ui/styles";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 
 const PercentageSlider = withStyles({
   root: {
@@ -72,7 +72,7 @@ export const Market : React.FC<RouteComponentProps> = () => {
   const party = useParty();
   const ledger = useLedger();
   const services = useStreamQueries(Service).contracts;
-  const clientServices = services.filter(s => s.payload.client === party);
+  const clientServices = services.filter(s => s.payload.customer === party);
   const listings = useStreamQueries(Listing).contracts;
   const listing = listings.find(c => c.contractId === cid);
 

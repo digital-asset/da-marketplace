@@ -41,7 +41,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
       setRequestDialogProps({ ...defaultRequestDialogProps, open: false });
       const identity = identities.find(i => i.payload.legalName === state?.provider);
       if (!state || !identity) return;
-      await ledger.create(Request, { provider: identity.payload.client, client: party });
+      await ledger.create(Request, { provider: identity.payload.customer, customer: party });
     };
     setRequestDialogProps({ ...defaultRequestDialogProps, open: true, onClose });
   };
@@ -61,7 +61,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
       setOfferDialogProps({ ...defaultRequestDialogProps, open: false });
       const identity = identities.find(i => i.payload.legalName === state?.client);
       if (!state || !identity || !hasRole) return;
-      await ledger.exercise(Role.OfferCustodyService, roles[0].contractId, { client: identity.payload.client });
+      await ledger.exercise(Role.OfferCustodyService, roles[0].contractId, { customer: identity.payload.customer });
     };
     setOfferDialogProps({ ...defaultOfferDialogProps, open: true, onClose });
   };
@@ -133,7 +133,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.operator)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={3} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={3} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => terminateService(c)}>Terminate</Button>
@@ -170,10 +170,10 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>
-                        {c.payload.client === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>}
+                        {c.payload.customer === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>}
                         {c.payload.provider === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => approveRequest(c)}>Approve</Button>}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
@@ -208,11 +208,11 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.provider === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => withdrawOffer(c)}>Withdraw</Button>}
-                        {c.payload.client === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => acceptOffer(c)}>Accept</Button>}
+                        {c.payload.customer === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => acceptOffer(c)}>Accept</Button>}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/custody/offer/" + c.contractId.replace("#", "_"))}>

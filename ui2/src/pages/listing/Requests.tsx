@@ -1,11 +1,12 @@
 import React from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, Typography } from "@material-ui/core";
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Service, CreateListingRequest, DeleteListingRequest, Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing'
+import { Service, CreateListingRequest, DisableListingRequest, Listing } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Listing'
 import useStyles from "../styles";
 import { getName } from "../../config";
 
@@ -17,21 +18,21 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
   const createRequests = useStreamQueries(CreateListingRequest).contracts;
-  const deleteRequests = useStreamQueries(DeleteListingRequest).contracts;
+  const disableRequests = useStreamQueries(DisableListingRequest).contracts;
   const listings = useStreamQueries(Listing).contracts;
-  const deleteEntries = deleteRequests.map(dr => ({ request: dr, listing: listings.find(l => l.contractId === dr.payload.listingCid)?.payload }));
+  const deleteEntries = disableRequests.map(dr => ({ request: dr, listing: listings.find(l => l.contractId === dr.payload.listingCid)?.payload }));
   
   const createListing = async (c : CreateEvent<CreateListingRequest>) => {
-    const service = providerServices.find(s => s.payload.client === c.payload.client);
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
-    await ledger.exercise(Service.CreateListing, service.contractId, { createListingRequestCid: c.contractId });
+    await ledger.exercise(Service.CreateListing, service.contractId, { createListingRequestCid: c.contractId, providerId: uuidv4() });
     history.push("/apps/listing/listings");
   }
 
-  const deleteListing = async (c : CreateEvent<DeleteListingRequest>) => {
-    const service = providerServices.find(s => s.payload.client === c.payload.client);
+  const deleteListing = async (c : CreateEvent<DisableListingRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
-    await ledger.exercise(Service.DeleteListing, service.contractId, { deleteListingRequestCid: c.contractId });
+    await ledger.exercise(Service.DisableListing, service.contractId, { disableListingRequestCid: c.contractId });
     history.push("/apps/listing/listings");
   }
 
@@ -72,7 +73,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                   {createRequests.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Client"}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{c.payload.listingId}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.calendarId}</TableCell>
@@ -114,7 +115,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                   {deleteEntries.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getName(c.request.payload.provider)}</TableCell>
-                      <TableCell key={1} className={classes.tableCell}>{getName(c.request.payload.client)}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.request.payload.customer)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{party === c.request.payload.provider ? "Provider" : "Client"}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{c.listing?.listingId}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.listing?.calendarId}</TableCell>

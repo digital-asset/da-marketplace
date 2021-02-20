@@ -22,7 +22,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const maxSteps = 2;
 
   const services = useStreamQueries(Service).contracts
-  const clientServices = services.filter(s => s.payload.client === party);
+  const clientServices = services.filter(s => s.payload.customer === party);
 
   if (clientServices.length === 0) return (<></>);
   const service = services[0]; // TODO: Handle multiple services
@@ -30,9 +30,9 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const requestAccount = async () => {
     setCanRequest(false);
     const request : RequestOpenAccount = {
-      accountId: { signatories: { textMap: { [service.payload.provider]: {}, [service.payload.client]: {} } }, label: state.label, version: "0" },
+      accountId: { signatories: { textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} } }, label: state.label, version: "0" },
       observers: [ "Public" ], // TODO: Use real public party
-      ctrls: [ service.payload.provider, service.payload.client ]
+      ctrls: [ service.payload.provider, service.payload.customer ]
     };
     await ledger.exercise(Service.RequestOpenAccount, service.contractId, request);
     history.push("/apps/custody/requests");
@@ -66,7 +66,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
             <div>
               <TextField key={0} className={classes.inputField} fullWidth label="Operator" type="text" value={getName(service.payload.operator)} disabled={true} />
               <TextField key={1} className={classes.inputField} fullWidth label="Provider" type="text" value={getName(service.payload.provider)} disabled={true} />
-              <TextField key={2} className={classes.inputField} fullWidth label="Client" type="text" value={getName(service.payload.client)} disabled={true} />
+              <TextField key={2} className={classes.inputField} fullWidth label="Client" type="text" value={getName(service.payload.customer)} disabled={true} />
               <TextField key={3} className={classes.inputField} autoFocus fullWidth label="Account Label" type="text" value={state.label} onChange={e => setState({ ...state, label: e.target.value as string})} />
             </div>
           )}
@@ -87,7 +87,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
                   <TableRow key={2} className={classes.tableRow}>
                     <TableCell key={0} className={classes.tableCell}><b>Client</b></TableCell>
                     <TableCell key={1} className={classes.tableCell}></TableCell>
-                    <TableCell key={2} className={classes.tableCell}>{getName(service.payload.client)}</TableCell>
+                    <TableCell key={2} className={classes.tableCell}>{getName(service.payload.customer)}</TableCell>
                   </TableRow>
                   <TableRow key={3} className={classes.tableRow}>
                     <TableCell key={0} className={classes.tableCell}><b>Account Label</b></TableCell>

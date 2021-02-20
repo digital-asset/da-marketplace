@@ -5,14 +5,14 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, TextField, Button, Slider, Paper } from "@material-ui/core";
 import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing";
-import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Order/module";
+import { Auction as AuctionContract } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
+import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
-import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service";
-import { AssetDeposit } from "@daml.js/finlib/lib/DA/Finance/Asset/module";
 import { withStyles } from "@material-ui/styles";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
+import { Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module";
 
 const PercentageSlider = withStyles({
   root: {
@@ -72,17 +72,17 @@ export const Auction : React.FC<RouteComponentProps> = () => {
   const party = useParty();
   const ledger = useLedger();
   const services = useStreamQueries(Service).contracts;
-  const clientServices = services.filter(s => s.payload.client === party);
-  const listings = useStreamQueries(Listing).contracts;
-  const listing = listings.find(c => c.contractId === cid);
+  const clientServices = services.filter(s => s.payload.customer === party);
+  const auctions = useStreamQueries(AuctionContract).contracts;
+  const auction = auctions.find(c => c.contractId === cid);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
-  const orders = useStreamQueries(Order).contracts;
-  const limits = orders.filter(c => c.payload.details.orderType.tag === "Limit")
-  const bids = limits.filter(c => c.payload.details.side === Side.Buy).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
-  const asks = limits.filter(c => c.payload.details.side === Side.Sell).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
+  const bids = useStreamQueries(Bid).contracts;
+  // const limits = orders.filter(c => c.payload.details.orderType.tag === "Limit")
+  // const bids = limits.filter(c => c.payload.details.side === Side.Buy).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
+  // const asks = limits.filter(c => c.payload.details.side === Side.Sell).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
   
-  if (!listing || clientServices.length === 0) return (<></>); // TODO: Return 404 not found
+  if (!auction || clientServices.length === 0) return (<></>); // TODO: Return 404 not found
   const service = clientServices[0];
 
   const available = assets.filter(c => c.payload.account.id.label === service.payload.tradingAccount.id.label);
@@ -91,50 +91,34 @@ export const Auction : React.FC<RouteComponentProps> = () => {
   const tradedAssetsTotal = tradedAssets.reduce((acc, c) => acc + parseFloat(c.payload.asset.quantity), 0);
   const quotedAssetsTotal = quotedAssets.reduce((acc, c) => acc + parseFloat(c.payload.asset.quantity), 0);
 
-  const getAsset = async (deposits : CreateEvent<AssetDeposit>[], quantity : number) : Promise<ContractId<AssetDeposit> | null> => {
-    const deposit = deposits.find(c => parseFloat(c.payload.asset.quantity) >= quantity);
-    if (!deposit) return null;
-    if (parseFloat(deposit.payload.asset.quantity) > quantity) {
-      const [ [ split,], ] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, { quantities: [quantity.toString()] });
-      return split;
-    }
-    return deposit.contractId;
-  }
+  // const getAsset = async (deposits : CreateEvent<AssetDeposit>[], quantity : number) : Promise<ContractId<AssetDeposit> | null> => {
+  //   const deposit = deposits.find(c => parseFloat(c.payload.asset.quantity) >= quantity);
+  //   if (!deposit) return null;
+  //   if (parseFloat(deposit.payload.asset.quantity) > quantity) {
+  //     const [ [ split,], ] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, { quantities: [quantity.toString()] });
+  //     return split;
+  //   }
+  //   return deposit.contractId;
+  // }
 
-  const requestCreateOrder = async () => {
-    const depositCid = isBuy ? await getAsset(quotedAssets, price * quantity) : await getAsset(tradedAssets, quantity);
-    if (!depositCid) return;
-    const details : Details = {
-      id: { signatories: { textMap: {} }, label: uuidv4(), version: "0" },
-      symbol: listing.payload.listingId,
-      asset: { id : listing.payload.tradedAssetId, quantity: quantity.toString() },
-      side: isBuy ? Side.Buy : Side.Sell,
-      orderType: isLimit ? { tag: "Limit", value: { price: price.toString() } } : { tag: "Market", value: {} },
-      timeInForce: { tag: "GTC", value: {} }
-    }
-    await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
-  };
-
-  const getPrice = (c : CreateEvent<Order>) => {
-    return parseFloat((c.payload.details.orderType.value as OrderType.Limit).price);
-  }
-
-  const getQuantity = (c : CreateEvent<Order>) => {
-    return parseFloat(c.payload.details.asset.quantity);
-  }
-
-  const getVolume = (c : CreateEvent<Order>) => {
-    return getPrice(c) * getQuantity(c);
-  }
-
-  const getColor = (c : CreateEvent<Order>) => {
-    return c.payload.details.side === Side.Buy ? "green" : "red";
-  }
+  // const requestCreateOrder = async () => {
+  //   const depositCid = isBuy ? await getAsset(quotedAssets, price * quantity) : await getAsset(tradedAssets, quantity);
+  //   if (!depositCid) return;
+  //   const details : Details = {
+  //     id: { signatories: { textMap: {} }, label: uuidv4(), version: "0" },
+  //     symbol: listing.payload.listingId,
+  //     asset: { id : listing.payload.tradedAssetId, quantity: quantity.toString() },
+  //     side: isBuy ? Side.Buy : Side.Sell,
+  //     orderType: isLimit ? { tag: "Limit", value: { price: price.toString() } } : { tag: "Market", value: {} },
+  //     timeInForce: { tag: "GTC", value: {} }
+  //   }
+  //   await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
+  // };
 
   return (
     <Grid container direction="column" spacing={2}>
       <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>{listing.payload.listingId}</Typography>
+        <Typography variant="h3" className={classes.heading}>Auction</Typography>
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={4}>
@@ -146,37 +130,19 @@ export const Auction : React.FC<RouteComponentProps> = () => {
                   <Table size="small">
                     <TableBody>
                       <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}></TableCell>
-                        <TableCell key={1} className={classes.tableCell}></TableCell>
+                        <TableCell key={0} className={classes.tableCell}><b>Bidder</b></TableCell>
+                        <TableCell key={1} className={classes.tableCell}><b>Quantity</b></TableCell>
                         <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
-                        <TableCell key={3} className={classes.tableCell}><b>Sell Quantity ({listing.payload.tradedAssetId.label})</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Sell Volume ({listing.payload.quotedAssetId.label})</b></TableCell>
+                        <TableCell key={3} className={classes.tableCell}><b>Time</b></TableCell>
                       </TableRow>
-                      {asks.map((c, i) => (
-                        <TableRow key={i+1} className={classes.tableRow}>
-                          <TableCell key={0} className={classes.tableCell}></TableCell>
-                          <TableCell key={1} className={classes.tableCell}></TableCell>
-                          <TableCell key={2} className={classes.tableCell} style={{ color: "red"}}>{getPrice(c)}</TableCell>
-                          <TableCell key={3} className={classes.tableCell}>{getQuantity(c)}</TableCell>
-                          <TableCell key={4} className={classes.tableCell}>{getVolume(c)}</TableCell>
-                        </TableRow>
-                      ))}
                       {bids.map((c, i) => (
                         <TableRow key={i+1} className={classes.tableRow}>
-                          <TableCell key={0} className={classes.tableCell}>{getVolume(c)}</TableCell>
-                          <TableCell key={1} className={classes.tableCell}>{getQuantity(c)}</TableCell>
-                          <TableCell key={2} className={classes.tableCell} style={{ color: "green"}}>{getPrice(c)}</TableCell>
-                          <TableCell key={3} className={classes.tableCell}></TableCell>
-                          <TableCell key={4} className={classes.tableCell}></TableCell>
+                          <TableCell key={0} className={classes.tableCell}>{c.payload.customer}</TableCell>
+                          <TableCell key={1} className={classes.tableCell}>{c.payload.details.quantity}</TableCell>
+                          <TableCell key={2} className={classes.tableCell}>{c.payload.details.price}</TableCell>
+                          <TableCell key={3} className={classes.tableCell}>{c.payload.details.time}</TableCell>
                         </TableRow>
                       ))}
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Buy Volume ({listing.payload.quotedAssetId.label})</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}><b>Buy Quantity ({listing.payload.tradedAssetId.label})</b></TableCell>
-                        <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
-                        <TableCell key={3} className={classes.tableCell}></TableCell>
-                        <TableCell key={4} className={classes.tableCell}></TableCell>
-                      </TableRow>
                     </TableBody>
                   </Table>
                 </Paper>
@@ -186,14 +152,6 @@ export const Auction : React.FC<RouteComponentProps> = () => {
           <Grid item xs={4}>
             <Grid container direction="column" spacing={2}>
               <Grid item xs={12}>
-                <ToggleButtonGroup className={classes.fullWidth} value={isBuy} exclusive onChange={(_, v) => { if (v !== null) setIsBuy(v); }}>
-                  <ToggleButton className={classes.fullWidth} color="primary" value={true}>Buy</ToggleButton>
-                  <ToggleButton className={classes.fullWidth} value={false}>Sell</ToggleButton>
-                </ToggleButtonGroup>
-                <ToggleButtonGroup className={classnames(classes.fullWidth, classes.buttonMargin)} value={isLimit} exclusive onChange={(_, v) => { if (v !== null) setIsLimit(v); }}>
-                  <ToggleButton className={classes.fullWidth} value={true}>Limit</ToggleButton>
-                  <ToggleButton className={classes.fullWidth} value={false}>Market</ToggleButton>
-                </ToggleButtonGroup>
                 <TextField className={classes.inputField} fullWidth label="Price" type="number" value={isLimit ? price : "Market"} disabled={!isLimit} onChange={e => handlePriceChange(parseFloat(e.target.value))}/>
                 <TextField className={classes.inputField} fullWidth label="Quantity" type="number" value={quantity} onChange={e => handleQuantityChange(parseFloat(e.target.value))}/>
                 <PercentageSlider step={1} valueLabelFormat={v => v + "%"} value={percentage} valueLabelDisplay="auto" onChange={(_, v) => handlePercentageChange(v as number)} />
@@ -204,7 +162,7 @@ export const Auction : React.FC<RouteComponentProps> = () => {
           </Grid>
         </Grid>
       </Grid>
-      <Grid item xs={12}>
+      {/* <Grid item xs={12}>
         <Grid container spacing={4}>
           <Grid item xs={8}>
             <Paper className={classnames(classes.fullWidth, classes.paper)}>
@@ -245,7 +203,7 @@ export const Auction : React.FC<RouteComponentProps> = () => {
             </Paper>
           </Grid>
         </Grid>
-      </Grid>
+      </Grid> */}
     </Grid>
   );
 };

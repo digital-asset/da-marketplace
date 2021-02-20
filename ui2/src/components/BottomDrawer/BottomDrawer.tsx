@@ -5,8 +5,8 @@ import { useTheme } from "@material-ui/styles";
 import { useLayoutState, useLayoutDispatch, toggleSidebar } from "../../context/LayoutContext";
 import useStyles from "../../pages/styles";
 import { useStreamQueries } from "@daml/react";
-import { AssetDeposit } from "@daml.js/finlib/lib/DA/Finance/Asset/module";
 import { getName } from "../../config";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 
 export const BottomDrawer = () => {
   const classes = useStyles();

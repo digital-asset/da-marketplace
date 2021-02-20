@@ -6,12 +6,12 @@ import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator'
-import { Role }  from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { Role }  from '@daml.js/da-marketplace/lib/Marketplace/Trading/Exchange'
 import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service'
 import useStyles from "../styles";
 import { getName, getTemplateId } from "../../config";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
-import { AssetSettlementRule } from "@daml.js/finlib/lib/DA/Finance/Asset/Settlement";
+import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
 
 const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -46,7 +46,7 @@ const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
       setOfferDialogProps({ ...defaultRequestDialogProps, open: false });
       const identity = identities.find(i => i.payload.legalName === state?.client);
       if (!state || !identity || !hasRole) return;
-      await ledger.exercise(Role.OfferTradingService, roles[0].contractId, { client: identity.payload.client });
+      await ledger.exercise(Role.OfferTradingService, roles[0].contractId, { customer: identity.payload.customer });
     };
     setOfferDialogProps({ ...defaultOfferDialogProps, open: true, onClose });
   };
@@ -72,7 +72,7 @@ const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
       const tradingAccount = accounts.find(a => a.id.label === state?.tradingAccount);
       const allocationAccount = accounts.find(a => a.id.label === state?.allocationAccount);
       if (!state || !identity || !tradingAccount || !allocationAccount) return;
-      await ledger.create(Request, { provider: identity.payload.client, client: party, tradingAccount, allocationAccount });
+      await ledger.create(Request, { provider: identity.payload.customer, customer: party, tradingAccount, allocationAccount });
     };
     setRequestDialogProps({ ...defaultRequestDialogProps, open: true, onClose });
   };
@@ -165,7 +165,7 @@ const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.operator)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={3} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={3} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>{c.payload.tradingAccount.id.label}</TableCell>
                       <TableCell key={6} className={classes.tableCell}>{c.payload.allocationAccount.id.label}</TableCell>
@@ -206,12 +206,12 @@ const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.tradingAccount.id.label}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>{c.payload.allocationAccount.id.label}</TableCell>
                       <TableCell key={6} className={classes.tableCell}>
-                        {c.payload.client === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>}
+                        {c.payload.customer === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>}
                         {c.payload.provider === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => approveRequest(c)}>Approve</Button>}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
@@ -246,11 +246,11 @@ const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getTemplateId(c.templateId)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Consumer"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.provider === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => withdrawOffer(c)}>Withdraw</Button>}
-                        {c.payload.client === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => acceptOffer(c)}>Accept</Button>}
+                        {c.payload.customer === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => acceptOffer(c)}>Accept</Button>}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/trading/offer/" + c.contractId.replace("#", "_"))}>

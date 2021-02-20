@@ -10,8 +10,8 @@ import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { getName } from "../../config";
 import useStyles from "../styles";
-import { AssetCategorization } from "@daml.js/finlib/lib/DA/Finance/Asset/module";
-import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing";
+import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
+import { AssetCategorization } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();
@@ -23,7 +23,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const maxSteps = 3;
 
   const services = useStreamQueries(Service).contracts
-  const clientServices = services.filter(s => s.payload.client === party);
+  const clientServices = services.filter(s => s.payload.customer === party);
   const assetCategorizations = useStreamQueries(AssetCategorization).contracts;
   const assets = assetCategorizations.map(a => a.payload.id);
 
@@ -80,7 +80,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
             <div>
               <TextField key={0} className={classes.inputField} fullWidth label="Operator" type="text" value={getName(service.payload.operator)} disabled={true} />
               <TextField key={1} className={classes.inputField} fullWidth label="Provider" type="text" value={getName(service.payload.provider)} disabled={true} />
-              <TextField key={2} className={classes.inputField} fullWidth label="Client" type="text" value={getName(service.payload.client)} disabled={true} />
+              <TextField key={2} className={classes.inputField} fullWidth label="Client" type="text" value={getName(service.payload.customer)} disabled={true} />
               <TextField key={3} className={classes.inputField} autoFocus fullWidth label="Listing ID" type="text" value={state.listingId} onChange={e => setState({ ...state, listingId: e.target.value as string})} />
               <TextField key={4} className={classes.inputField} autoFocus fullWidth label="Calendar ID" type="text" value={state.calendarId} disabled={true} />
             </div>
@@ -130,7 +130,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
                   <TableRow key={2} className={classes.tableRow}>
                     <TableCell key={0} className={classes.tableCell}><b>Client</b></TableCell>
                     <TableCell key={1} className={classes.tableCell}></TableCell>
-                    <TableCell key={2} className={classes.tableCell}>{getName(service.payload.client)}</TableCell>
+                    <TableCell key={2} className={classes.tableCell}>{getName(service.payload.customer)}</TableCell>
                   </TableRow>
                   <TableRow key={3} className={classes.tableRow}>
                     <TableCell key={0} className={classes.tableCell}><b>Listing ID</b></TableCell>

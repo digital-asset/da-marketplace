@@ -20,14 +20,14 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
   
   const openAccount = async (c : CreateEvent<OpenAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.client === c.payload.client);
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.OpenAccount, service.contractId, { openAccountRequestCid: c.contractId });
     history.push("/apps/custody/accounts");
   }
 
   const closeAccount = async (c : CreateEvent<CloseAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.client === c.payload.client);
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.CloseAccount, service.contractId, { closeAccountRequestCid: c.contractId });
     history.push("/apps/custody/accounts");
@@ -69,7 +69,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{c.payload.accountId.label}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Client"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{Object.keys(c.payload.ctrls.textMap).join(", ")}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
@@ -106,7 +106,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{c.payload.accountId.label}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Client"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {party === c.payload.provider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => closeAccount(c)}>Process</Button>}

@@ -1,7 +1,7 @@
 sdk-version: 1.10.0
 name: da-marketplace
 source: daml
-init-script: Setup:setup
+init-script: Demo:auctionAndBidsFullyAllocated
 parties:
   - Alice
   - Bob
@@ -17,6 +17,12 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
+start-navigator: no
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
+codegen:
+  js:
+    output-directory: daml.js
+    npm-scope: daml.js
+    

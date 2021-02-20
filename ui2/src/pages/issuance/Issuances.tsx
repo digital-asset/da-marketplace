@@ -58,7 +58,7 @@ const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteC
                   {issuances.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.client)}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{c.payload.issuanceId}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{c.payload.accountId.label}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.assetId.label}</TableCell>

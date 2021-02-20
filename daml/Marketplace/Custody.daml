@@ -3,8 +3,8 @@ module Marketplace.Custody where
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
-import DA.Next.Set
-import Marketplace.Trading.AllocationAccountRule
+import DA.Next.Set (Set, fromList)
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import DA.Finance.Utils (fetchAndArchive)
 
 template Service
@@ -22,11 +22,11 @@ template Service
       nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
         with
           accountId : Id
-          observers : Set Party
-          ctrls : Set Party
+          observers : [Party]
+          ctrls : [Party]
         do
           -- TODO: Check signatories in id - do we want to allow flexible trust models?
-          create OpenAccountRequest with ..
+          create OpenAccountRequest with observers = fromList observers; ctrls = fromList ctrls; ..
 
       nonconsuming RequestOpenAllocationAccount : ContractId OpenAllocationAccountRequest
         with
@@ -120,6 +120,12 @@ template Service
           TransferDepositRequest{..} <- fetchAndArchive transferDepositRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
 
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
+
 template Offer
   with
     operator : Party
@@ -134,25 +140,34 @@ template Offer
           create Service with ..
 
       Decline : ()
-        do
-          return ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
 
 template Request
   with
-    operator : Party
     customer : Party
     provider : Party
   where
-    signatory operator, customer
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template OpenAccountRequest
   with

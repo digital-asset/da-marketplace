@@ -17,7 +17,7 @@ template Role
 
       nonconsuming OfferTradingService : ContractId TradingService.Offer
         with
-          client : Party
+          customer : Party
         do
           create TradingService.Offer with ..
 
@@ -35,7 +35,7 @@ template Role
 
       nonconsuming OfferListingService : ContractId Listing.Offer
         with
-          client : Party
+          customer : Party
         do
           create Listing.Offer with ..
 
