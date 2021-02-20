@@ -15,7 +15,7 @@ import DA.Next.Map qualified as Map
 import DA.Text (splitOn, parseInt, unwords)
 import Marketplace.AssetDescription (AssetDescription)
 import DA.Optional (fromSomeNote)
-import Marketplace.Trading.AllocationAccountRule
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import DA.Finance.Utils (fetchAndArchive)
 
 template Service

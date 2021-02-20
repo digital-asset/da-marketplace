@@ -13,7 +13,7 @@ import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
-import Marketplace.Settlement qualified as Settle
+-- import Marketplace.Settlement qualified as Settle
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Trading.Order as Order
 import qualified Marketplace.Trading.Listing as Listing

@@ -109,7 +109,7 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
   awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = [accountNominee]; ctrls = [customer]
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
-  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = fromList [ custodian, customer ]
+  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = []; ctrls = [ custodian, customer ]
   safekeepingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = safekeepingOpenAccountRequestCid
 
   -- Trading and Listing services
@@ -117,7 +117,7 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
-  issuanceServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with client = customer, ..
+  issuanceServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
   -- Identitiy
