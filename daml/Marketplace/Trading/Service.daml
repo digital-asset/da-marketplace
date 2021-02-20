@@ -146,7 +146,6 @@ template Offer
       Withdraw : ()
         do pure ()
 
-
 template Request
   with
     customer : Party

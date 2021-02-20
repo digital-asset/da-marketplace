@@ -35,7 +35,7 @@ setup = do
     newDistributionAsset = Asset with id = newDistributionId; quantity = 1000.0
   issuer <- onboardCustomer cr "Issuer" newDistributionAsset auctionAgent
   auctionOfferCid <- auctionAgent `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with allocationAccount = issuer.allocationAccount; receivableAccount = issuer.awayAccount
 
   -- Create an Auction request and approve it
   let
@@ -45,8 +45,6 @@ setup = do
       asset = newDistributionAsset
       assetDepositCid = issuer.assetDepositCid
       floorPrice = 5.0
-      allocationAccount = issuer.allocationAccount
-      receivableAccount = issuer.awayAccount
       ..
   auctionCid <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 

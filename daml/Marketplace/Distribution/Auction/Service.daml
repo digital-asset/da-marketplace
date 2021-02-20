@@ -24,6 +24,8 @@ template Service
     operator : Party
     provider : Party
     customer : Party
+    allocationAccount : Account
+    receivableAccount : Account
   where
     signatory operator, provider, customer
 
@@ -80,8 +82,6 @@ template Service
           asset : Asset
           quotedAssetId : Id
           assetDepositCid : ContractId AssetDeposit
-          allocationAccount : Account
-          receivableAccount : Account
           floorPrice : Decimal
         do
           create CreateAuctionRequest with ..
@@ -152,6 +152,9 @@ template Offer
 
     controller customer can
       Accept : ContractId Service
+        with
+          allocationAccount : Account
+          receivableAccount : Account
         do
           create Service with ..
 
@@ -159,22 +162,33 @@ template Offer
         do
           return ()
 
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
 template Request
   with
-    operator : Party
-    customer : Party
     provider : Party
+    customer : Party
+    allocationAccount : Account
+    receivableAccount : Account
   where
-    signatory operator, customer
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template CreateAuctionRequest
   with

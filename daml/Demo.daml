@@ -80,8 +80,6 @@ demo = do
   forA_ aliceBuyTriples    (\(depositCid, orderType, orderId) -> submitOrder alice.customer orderId Order.Buy (shareAsset with quantity = 400.0) orderType depositCid)
   forA_ aliceSellTriples    (\(depositCid, orderType, orderId) -> submitOrder alice.customer orderId Order.Sell (shareAsset with quantity = 400.0) orderType depositCid)
 
-
-
 setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Bidding.S])
 setup = do
   cr@CommonContracts{..} <- onboardCommon
@@ -100,7 +98,7 @@ setup = do
     newDistributionAsset = Asset with id = newDistributionId; quantity = 1000.0
   issuer <- onboardCustomer cr "Issuer" newDistributionAsset auctionAgent
   auctionOfferCid <- auctionAgent `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with allocationAccount = issuer.allocationAccount; receivableAccount = issuer.awayAccount
 
   -- Create an Auction request and approve it
   let
@@ -110,8 +108,6 @@ setup = do
       asset = newDistributionAsset
       assetDepositCid = issuer.assetDepositCid
       floorPrice = 5.0
-      allocationAccount = issuer.allocationAccount
-      receivableAccount = issuer.awayAccount
       ..
   auctionCid <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 
