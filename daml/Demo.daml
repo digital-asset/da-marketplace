@@ -94,7 +94,7 @@ setup = do
 
   -- Create our Issuer with their new asset to distribute
   let
-    newDistributionId = Id with signatories = fromList [ auctionAgent ]; label = "New Distribution"; version = 0
+    newDistributionId = Id with signatories = fromList [ auctionAgent ]; label = "D-Unit"; version = 0
     newDistributionAsset = Asset with id = newDistributionId; quantity = 1000.0
   issuer <- onboardCustomer cr "Issuer" newDistributionAsset auctionAgent
   auctionOfferCid <- auctionAgent `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
@@ -104,7 +104,7 @@ setup = do
   let
     quotedAssetId = Id with signatories = fromList [ auctionAgent, issuer.customer ]; label = "USD"; version = 0
   createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
-      leadBidder = alice.customer
+      auctionId = "DUnit-Auction"
       asset = newDistributionAsset
       assetDepositCid = issuer.assetDepositCid
       floorPrice = 5.0
@@ -132,7 +132,7 @@ auctionAndBidsFullyAllocated = do
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; leadBidCid = head bidCids
+  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- -- Kick off the auction
   -- (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..

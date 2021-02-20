@@ -53,27 +53,27 @@ template Service
     nonconsuming choice PublishBid : ContractId PublishedBid
       with
         submitter : Party
-        leadBidCid : ContractId Bidding.Bid
+        bidCid : ContractId Bidding.Bid
       controller submitter
       do
         -- TODO: The bidder needs to agree to their bid being published
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        bid <- fetch leadBidCid
+        bid <- fetch bidCid
         (_, auction) <- fetchByKey @Auction (bid.provider, bid.assetId)
 
         let
           allocationPercentage = bid.details.quantity / auction.asset.quantity
-          leadBidder = bid.customer
+          bidder = bid.customer
         create PublishedBid with ..
 
     controller customer can
       nonconsuming RequestCreateAuction : ContractId CreateAuctionRequest
         with
-          leadBidder : Party
+          auctionId : Text
           asset : Asset
           quotedAssetId : Id
-          assetDepositCid : ContractId AssetDeposit
           floorPrice : Decimal
+          assetDepositCid : ContractId AssetDeposit
         do
           create CreateAuctionRequest with ..
 
@@ -186,13 +186,11 @@ template CreateAuctionRequest
     operator : Party
     provider : Party
     customer : Party
-    leadBidder : Party
+    auctionId : Text
     asset : Asset
-    assetDepositCid : ContractId AssetDeposit
     quotedAssetId : Id
-    allocationAccount : Account
-    receivableAccount : Account
     floorPrice : Decimal
+    assetDepositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 
@@ -201,7 +199,7 @@ template PublishedBid
     operator : Party
     provider : Party
     customer : Party
-    leadBidder : Party
+    bidder : Party
     allocationPercentage : Decimal
   where
     signatory operator, provider, customer

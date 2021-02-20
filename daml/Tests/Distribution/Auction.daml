@@ -41,7 +41,7 @@ setup = do
   let
     quotedAssetId = Id with signatories = fromList [ auctionAgent, issuer.customer ]; label = "USD"; version = 0
   createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
-      leadBidder = alice.customer
+      auctionId = "MyAuction"
       asset = newDistributionAsset
       assetDepositCid = issuer.assetDepositCid
       floorPrice = 5.0
@@ -69,7 +69,7 @@ auctionAndBidsFullyAllocated = do
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; leadBidCid = head bidCids
+  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- Kick off the auction
   (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
@@ -111,7 +111,7 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; leadBidCid = head bidCids
+  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- Kick off the auction
   (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
@@ -155,7 +155,7 @@ auctionFullyAllocatedBidsParticallyAllocated = do
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; leadBidCid = head bidCids
+  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- Kick off the auction
   (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
@@ -199,7 +199,7 @@ auctionNoBidsAboveFloorPrice = do
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; leadBidCid = head bidCids
+  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- Kick off the auction
   (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..

@@ -35,6 +35,7 @@ template Auction
     operator : Party
     provider : Party
     customer : Party
+    auctionId : Text
     asset : Asset
     quotedAssetId : Id
     depositCid : ContractId AssetDeposit
