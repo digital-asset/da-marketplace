@@ -14,10 +14,10 @@ import Marketplace.Distribution.Distributor qualified as Distributor
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Bidding.Request qualified as Bidding
 import Marketplace.Settlement qualified as Settle
 
-setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Bidding.S])
+setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Bidding.Request])
 setup = do
   cr@CommonContracts{..} <- onboardCommon
 
@@ -49,21 +49,20 @@ setup = do
   auctionCid <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 
   -- Add our parties as bidders
-  bidServices@[aliceBidServiceCid, bobBidServiceCid, charlieBidServiceCid, daveBidServiceCid] <- forA parties \party -> do
-      offerCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.OfferBidder with submitter = issuer.customer; bidder = party.customer; ..
-      party.customer `submit` exerciseCmd offerCid Bidding.Accept
+  bidRequests@[aliceBidRequestCid, bobBidRequestCid, charlieBidRequestCid, daveBidRequestCid] <- forA parties \party -> do
+      issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestBid with submitter = issuer.customer; bidder = party.customer; ..
 
-  pure (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidServices)
+  pure (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidRequests)
 
 auctionAndBidsFullyAllocated : Script ()
 auctionAndBidsFullyAllocated = do
-  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidServices) <- setup
+  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidRequests) <- setup
 
   -- Create our bids
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 100.0, now), (50.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
-  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidServices bidDetails) \(party, bidServiceCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidServiceCid Bidding.SubmitBid with
+  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
+      party.customer `submit` exerciseCmd bidRequestCid Bidding.SubmitBid with
           tradingAccount = party.tradingAccount
           allocationAccount = party.allocationAccount
           depositCid = party.assetDepositCid
@@ -79,7 +78,7 @@ auctionAndBidsFullyAllocated = do
   length siCids === 4
   auction <- fromSome <$> queryContractId auctionAgent auctionCid
   auction.status === Auction.FullyAllocated with finalPrice = 10.0
-  bids <- query @Bidding.T auctionAgent
+  bids <- query @Bidding.Bid auctionAgent
   all ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids === True
 
   -- Settle
@@ -99,13 +98,13 @@ auctionAndBidsFullyAllocated = do
 
 auctionParticallyAllocatedOneBidFullyAllocated : Script ()
 auctionParticallyAllocatedOneBidFullyAllocated = do
-  (parties@[alice, bob, charlie, dave], originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidServices) <- setup
+  (parties@[alice, bob, charlie, dave], originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidRequests) <- setup
 
   -- Create our bids
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (1.0, 300.0, now), (2.0, 100.0, now), (3.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
-  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidServices bidDetails) \(party, bidServiceCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidServiceCid Bidding.SubmitBid with
+  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
+      party.customer `submit` exerciseCmd bidRequestCid Bidding.SubmitBid with
           tradingAccount = party.tradingAccount
           allocationAccount = party.allocationAccount
           depositCid = party.assetDepositCid
@@ -121,7 +120,7 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
   length siCids === 1
   auction <- fromSome <$> queryContractId auctionAgent auctionCid
   auction.status === Auction.ParticallyAllocated with finalPrice = 10.0; remaining = 500.0
-  bids <- query @Bidding.T auctionAgent
+  bids <- query @Bidding.Bid auctionAgent
   length (filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids) === 1
   let fullAllocationParty = (.customer) . snd . head $ filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids
   fullAllocationParty === alice.customer
@@ -143,13 +142,13 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
 
 auctionFullyAllocatedBidsParticallyAllocated : Script ()
 auctionFullyAllocatedBidsParticallyAllocated = do
-  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidServices) <- setup
+  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidRequests) <- setup
 
   -- Create our bids
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 200.0, now), (11.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
-  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidServices bidDetails) \(party, bidServiceCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidServiceCid Bidding.SubmitBid with
+  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
+      party.customer `submit` exerciseCmd bidRequestCid Bidding.SubmitBid with
           tradingAccount = party.tradingAccount
           allocationAccount = party.allocationAccount
           depositCid = party.assetDepositCid
@@ -165,7 +164,7 @@ auctionFullyAllocatedBidsParticallyAllocated = do
   length siCids === 4
   auction <- fromSome <$> queryContractId auctionAgent auctionCid
   auction.status === Auction.FullyAllocated with finalPrice = 10.0
-  bids <- query @Bidding.T auctionAgent
+  bids <- query @Bidding.Bid auctionAgent
   length (filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids) === 3
   length (filter ((\bid -> bid.status == Bidding.PartialAllocation with price = 10.0; quantity = 400.0) . snd) bids) === 1
 
@@ -187,13 +186,13 @@ auctionFullyAllocatedBidsParticallyAllocated = do
 
 auctionNoBidsAboveFloorPrice : Script ()
 auctionNoBidsAboveFloorPrice = do
-  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidServices) <- setup
+  (parties, originalDeposits, issuer, auctionAgent, custodian, auctionCid, auctionServiceCid, bidRequests) <- setup
 
   -- Create our bids
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(1.0, 500.0, now), (2.0, 300.0, now), (3.0, 100.0, now), (4.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
-  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidServices bidDetails) \(party, bidServiceCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidServiceCid Bidding.SubmitBid with
+  bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
+      party.customer `submit` exerciseCmd bidRequestCid Bidding.SubmitBid with
           tradingAccount = party.tradingAccount
           allocationAccount = party.allocationAccount
           depositCid = party.assetDepositCid
@@ -212,7 +211,7 @@ auctionNoBidsAboveFloorPrice = do
   bids <- query @Bidding.Bid auctionAgent
   all ((\bid -> bid.status == Bidding.Invalid) . snd) bids === True
 
-assertAssetDeposits : Auction.Auction -> CustomerContracts -> [AssetDeposit] -> Decimal -> Decimal -> Bidding.T -> Script ()
+assertAssetDeposits : Auction.Auction -> CustomerContracts -> [AssetDeposit] -> Decimal -> Decimal -> Bidding.Bid -> Script ()
 assertAssetDeposits auction issuer originalDeposits price quantity bid = do
   -- Correct Distribution of new asset check
   deposit <- snd . head <$> queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == bid.assetId)
@@ -224,7 +223,7 @@ assertAssetDeposits auction issuer originalDeposits price quantity bid = do
   -- If Investor/Bidder original deposit is split -> Check deposit contains the correct remaining amount
   quotedDeposit <- queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == auction.quotedAssetId)
   case quotedDeposit of
-    ((_, x) :: []) -> do
+    ([(_, x)]) -> do
       let originalDeposit = filter (\deposit -> deposit.account.owner == x.account.owner) originalDeposits
       assertMsg "Investor/Bidder split deposit contains incorrect quantity" (x.asset.quantity == (bid.details.quantity * price))
     _ -> pure ()

@@ -12,7 +12,7 @@ import Marketplace.Settlement qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Model (Auction(..))
 import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, withdrawAllocation, updateBidStatus, generateSettlementInstruction)
-import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Bidding.Request qualified as Bidding
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
@@ -30,7 +30,7 @@ template Service
     signatory operator, provider, customer
 
     -- TODO: Move this to the Distributor role contract. Ie, make the offering independent of the Auction service
-    nonconsuming choice OfferBidder : ContractId Bidding.Offer
+    nonconsuming choice RequestBid : ContractId Bidding.Request
       with
         submitter : Party
         auctionCid : ContractId Auction.T
@@ -39,30 +39,21 @@ template Service
       do
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
         Auction{..} <- fetch auctionCid
-        create Bidding.Offer with issuer = customer; customer = bidder; ..
+        create Bidding.Request with issuer = customer; customer = bidder; ..
 
-    nonconsuming choice RemoveBidderOffer : ()
+    nonconsuming choice WithdrawBidRequest : ()
       with
         submitter : Party
-        bidOfferCid : ContractId Bidding.Offer
+        bidRequestCid : ContractId Bidding.Request
       controller submitter
       do
         assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        archive bidOfferCid
-
-    nonconsuming choice RemoveBidder : ()
-      with
-        submitter : Party
-        bidServiceCid : ContractId Bidding.S
-      controller submitter
-      do
-        assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        archive bidServiceCid
+        archive bidRequestCid
 
     nonconsuming choice PublishBid : ContractId PublishedBid
       with
         submitter : Party
-        leadBidCid : ContractId Bidding.T
+        leadBidCid : ContractId Bidding.Bid
       controller submitter
       do
         -- TODO: The bidder needs to agree to their bid being published
@@ -112,7 +103,7 @@ template Service
       nonconsuming ProcessAuction : (ContractId Auction.T, [ContractId Settlement.SettlementInstruction])
         with
           auctionCid : ContractId Auction.T
-          bidCids : [ContractId Bidding.T]
+          bidCids : [ContractId Bidding.Bid]
         do
           auction@Auction{..} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
