@@ -1,0 +1,48 @@
+module Marketplace.Claims (
+    assetDescVers
+  , binaryCallOption
+) where
+
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), serialize, cond, one)
+import ContingentClaims.FinancialClaim (european)
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation (Observation)
+import ContingentClaims.Observation qualified as O
+import DA.Finance.Types (Id)
+import Marketplace.AssetDescription (AssetDescription(..))
+import Daml.Control.Recursion
+
+type C = Claim Observation Date Id
+type F = ClaimF Observation Date Id
+
+assetDescVers: Id 
+             -> Text  
+             -> Party 
+             -> Id 
+             -> C -> [Update (ContractId AssetDescription)]
+assetDescVers assetId description issuer safekeepingAccountId = 
+  ana write . ana zipWithIndex . (assetId.version + 1, ) . para depthFst --TODO: use ghylo
+    where
+      depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
+      depthFst ZeroF = []
+      depthFst (OneF _) = []
+      depthFst (ScaleF _ (_, cs)) = cs
+      depthFst (WhenF _ (_, cs)) = cs
+      depthFst (GiveF (_, cs)) = cs
+      depthFst (AndF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+      depthFst (OrF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
+      depthFst (CondF _ (_, cs) (_, cs')) = cs ++ cs'
+      zipWithIndex (_, []) = Nil
+      zipWithIndex (i, x :: xs) = Cons (i, x) (succ i, xs)
+      write : [(Int, C)] -> ListF (Update (ContractId AssetDescription)) [(Int, C)]
+      write ((version', claims') :: vcs) =
+        let assetId' = assetId with version = version'
+            claims = serialize claims'
+        in Cons (create AssetDescription with assetId = assetId', ..) vcs
+      write [] = Nil
+
+binaryCallOption : Date -> Decimal -> Id -> Id -> C
+binaryCallOption expiry strike underlyingId currencyId =
+  european expiry (binary strike underlyingId.label currencyId)
+    where binary : Decimal -> Text -> Id -> Claim O.Observation Date Id
+          binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one currencyId) Zero
