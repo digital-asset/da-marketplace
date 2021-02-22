@@ -1,14 +1,14 @@
 module Tests.Trading.TradingIntegrationTest where
 
--- import Daml.Script
--- import DA.Optional
--- import DA.Finance.Types (Id(..), Asset(..))
--- import DA.Next.Set (fromList)
--- import Marketplace.Trading.Order qualified as O
--- import Marketplace.Trading.Service qualified as S
--- import Marketplace.Trading.Listing qualified as L
--- import DA.Finance.Asset (AssetDeposit)
--- import DA.List
+import Daml.Script
+import DA.Optional
+import DA.Finance.Types (Id(..), Asset(..))
+import DA.Next.Set (fromList)
+import Marketplace.Trading.Order qualified as O
+import Marketplace.Trading.Service qualified as S
+import Marketplace.Trading.Listing qualified as L
+import DA.Finance.Asset (AssetDeposit)
+import DA.List
 
 -- In order to test between daml, the Exberry bot with simulating the Integration bot responses
 -- 1/ "daml start" from root of da-marketplace
@@ -26,165 +26,165 @@ module Tests.Trading.TradingIntegrationTest where
 --    - Listing request success : "exchange `submit` (createCmd Instrument with integrationParty = exchange, symbol = "JPM.N/USD", quoteCurrency = "", instrumentDescription = "", calendarId = "", pricePrecision = 0, quantityPrecision = 0, minQuantity = 0.0, maxQuantity = 0.0, status = "", instrumentId = "ABCD")"
 --    - Listing request failure : "exchange `submit` (createCmd FailedInstrumentRequest with integrationParty = exchange, symbol = "JPM.N/USD", quoteCurrency = "", instrumentDescription = "", calendarId = "", pricePrecision = 0, quantityPrecision = 0, minQuantity = 0.0, maxQuantity = 0.0, status = "", message = "message", name = "name", code = "code")"
 
--- getExistingParties : [Text] -> Script [Party]
--- getExistingParties parties = pure . fromSome $ mapA partyFromText parties
+getExistingParties : [Text] -> Script [Party]
+getExistingParties parties = pure . fromSome $ mapA partyFromText parties
 
--- submitInstrumentCreation : Script ()
--- submitInstrumentCreation = do
---   -- Setup:Setup must be ran before running this script
+submitInstrumentCreation : Script ()
+submitInstrumentCreation = do
+  -- Setup:Setup must be ran before running this script
 
---   -- Get our parties
---   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
+  -- Get our parties
+  [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
---   -- List a Security to trade
---   (listingServiceCid, _) <- head <$> query @L.Service alice
---   let
---     listingId = "JPMUSD"
---     calendarId = "1261007448"
---     description = "JPMorgan Chase & Co."
---     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
---     quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
---     tradedAssetPrecision = 2
---     quotedAssetPrecision = 2
---     minimumTradableQuantity = 1.0
---     maximumTradableQuantity = 1000000.0
---     providerId = "123"
---     observers = []
---   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
---   listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
---   pure ()
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @L.Service alice
+  let
+    listingId = "JPMUSD"
+    calendarId = "1261007448"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "123"
+    observers = []
+  createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+  pure ()
 
--- submitBuyOrder : Script ()
--- submitBuyOrder = do
---   -- Setup:Setup must be ran before running this script
+submitBuyOrder : Script ()
+submitBuyOrder = do
+  -- Setup:Setup must be ran before running this script
 
---   -- Get our parties
---   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
+  -- Get our parties
+  [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
---   -- Get the deposits created in the setup script
---   (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
---   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
+  -- Get the deposits created in the setup script
+  (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
+  (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
---   let
---     listingId = "JPMUSD"
---     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
---     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
---     bobOrderId = Id with signatories = fromList [ bob ]; label = "678"; version = 0
---     bobOrderDetails = O.Details with
---       id = bobOrderId
---       symbol = listingId
---       asset = shareAsset
---       side = O.Buy
---       orderType = O.Limit with price = 100.0
---       -- orderType = O.Market
---       timeInForce = O.GTC
---     tradingServicekey p = (operator, exchange, p)
+  let
+    listingId = "JPMUSD"
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    shareAsset = Asset with id = tradedAssetId; quantity = 200.0
+    bobOrderId = Id with signatories = fromList [ bob ]; label = "678"; version = 0
+    bobOrderDetails = O.Details with
+      id = bobOrderId
+      symbol = listingId
+      asset = shareAsset
+      side = O.Buy
+      orderType = O.Limit with price = 100.0
+      -- orderType = O.Market
+      timeInForce = O.GTC
+    tradingServicekey p = (operator, exchange, p)
 
---   (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
---     exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with details = bobOrderDetails, depositCid = bobAssetDepositCid
+  (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
+    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with details = bobOrderDetails, depositCid = bobAssetDepositCid
 
---   pure ()
+  pure ()
 
--- submitSellOrder : Script ()
--- submitSellOrder = do
---   -- Setup:Setup must be ran before running this script
+submitSellOrder : Script ()
+submitSellOrder = do
+  -- Setup:Setup must be ran before running this script
 
---   -- Get our parties
---   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
+  -- Get our parties
+  [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
---   -- Get the deposits created in the setup script
---   (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
---   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
+  -- Get the deposits created in the setup script
+  (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
+  (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
---   let
---     listingId = "JPMUSD"
---     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
---     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
---     aliceOrderId = Id with signatories = fromList [ alice ]; label = "1224"; version = 0
---     aliceOrderDetails = O.Details with
---       id = aliceOrderId
---       symbol = listingId
---       asset = shareAsset
---       side = O.Sell
---       orderType = O.Limit with price = 100.0
---       -- orderType = O.Market
---       -- timeInForce = O.FOK
---       timeInForce = O.GTD with expiryDate = 1612467273
---     tradingServicekey p = (operator, exchange, p)
+  let
+    listingId = "JPMUSD"
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    shareAsset = Asset with id = tradedAssetId; quantity = 200.0
+    aliceOrderId = Id with signatories = fromList [ alice ]; label = "1224"; version = 0
+    aliceOrderDetails = O.Details with
+      id = aliceOrderId
+      symbol = listingId
+      asset = shareAsset
+      side = O.Sell
+      orderType = O.Limit with price = 100.0
+      -- orderType = O.Market
+      -- timeInForce = O.FOK
+      timeInForce = O.GTD with expiryDate = 1612467273
+    tradingServicekey p = (operator, exchange, p)
 
---   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
---     exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with details = aliceOrderDetails, depositCid = aliceAssetDepositCid
+  (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
+    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with details = aliceOrderDetails, depositCid = aliceAssetDepositCid
 
---   pure ()
+  pure ()
 
--- newOrders : Script ()
--- newOrders = do
---   -- NOTE : Setup:Setup must be ran before running this script
+newOrders : Script ()
+newOrders = do
+  -- NOTE : Setup:Setup must be ran before running this script
 
---   -- Get our parties
---   [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
+  -- Get our parties
+  [alice, bob, exchange, custodian, operator] <- getExistingParties ["Alice", "Bob", "Exchange", "Custodian", "Operator"]
 
---   -- Get the deposits created in the setup script
---   (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
---   (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
+  -- Get the deposits created in the setup script
+  (aliceAssetDepositCid, aliceAssetDeposit) <- head <$> query @AssetDeposit alice
+  (bobAssetDepositCid, bobAssetDeposit)     <- head <$> query @AssetDeposit bob
 
---   -- List a Security to trade
---   (listingServiceCid, _) <- head <$> query @L.Service alice
---   let
---     listingId = "JPMUSD"
---     calendarId = "1"
---     description = "JPMorgan Chase & Co."
---     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
---     quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
---     tradedAssetPrecision = 2
---     quotedAssetPrecision = 2
---     minimumTradableQuantity = 1.0
---     maximumTradableQuantity = 1000000.0
---     providerId = "12345"
---     observers = []
---   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
---   -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @L.Service alice
+  let
+    listingId = "JPMUSD"
+    calendarId = "1"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ alice ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "12345"
+    observers = []
+  createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
+  -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
 
---   -- Create Order Request
---   let
---     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
---     aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
---     aliceOrderDetails = O.Details with
---       id = aliceOrderId
---       symbol = listingId
---       asset = shareAsset
---       side = O.Sell
---       orderType = O.Limit with price = 100.0
---       -- orderType = T.Market
---       -- timeInForce = T.GTC
---       timeInForce = O.GTD with expiryDate = 1611992116
---     bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
---     bobOrderDetails = O.Details with
---       id = bobOrderId
---       symbol = listingId
---       asset = shareAsset
---       side = O.Buy
---       -- orderType = T.Limit with price = 100.0
---       orderType = O.Market
---       timeInForce = O.FOK
---     tradingServicekey p = (operator, exchange, p)
+  -- Create Order Request
+  let
+    shareAsset = Asset with id = tradedAssetId; quantity = 200.0
+    aliceOrderId = Id with signatories = fromList [ alice ]; label = "123"; version = 0
+    aliceOrderDetails = O.Details with
+      id = aliceOrderId
+      symbol = listingId
+      asset = shareAsset
+      side = O.Sell
+      orderType = O.Limit with price = 100.0
+      -- orderType = T.Market
+      -- timeInForce = T.GTC
+      timeInForce = O.GTD with expiryDate = 1611992116
+    bobOrderId = Id with signatories = fromList [ bob ]; label = "456"; version = 0
+    bobOrderDetails = O.Details with
+      id = bobOrderId
+      symbol = listingId
+      asset = shareAsset
+      side = O.Buy
+      -- orderType = T.Limit with price = 100.0
+      orderType = O.Market
+      timeInForce = O.FOK
+    tradingServicekey p = (operator, exchange, p)
 
---   (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
---     exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with details = aliceOrderDetails, depositCid = aliceAssetDepositCid
+  (aliceOrderCid, aliceOrderRequestCid, aliceAssetDepositCid) <- alice `submit` do
+    exerciseByKeyCmd @S.Service (tradingServicekey alice) S.RequestCreateOrder with details = aliceOrderDetails, depositCid = aliceAssetDepositCid
 
---   (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
---     exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with details = bobOrderDetails, depositCid = bobAssetDepositCid
+  (bobOrderCid, bobOrderRequestCid, bobAssetDepositCid) <- bob `submit` do
+    exerciseByKeyCmd @S.Service (tradingServicekey bob) S.RequestCreateOrder with details = bobOrderDetails, depositCid = bobAssetDepositCid
 
---   pure ()
+  pure ()
 
--- cancelSentOrder : Script ()
--- cancelSentOrder = do
---   -- Note : Setup and newOrders must be run before this script
+cancelSentOrder : Script ()
+cancelSentOrder = do
+  -- Note : Setup and newOrders must be run before this script
 
---   [alice, exchange, operator] <- getExistingParties ["Alice", "Exchange", "Operator"]
---   (aliceOrderCid, aliceOrder) <- head <$> query @O.Order alice
+  [alice, exchange, operator] <- getExistingParties ["Alice", "Exchange", "Operator"]
+  (aliceOrderCid, aliceOrder) <- head <$> query @O.Order alice
 
---   (aliceOrderCid, aliceCancelOrderRequestCid) <- alice `submit` do
---     exerciseByKeyCmd @S.Service (operator, exchange, alice) S.RequestCancelOrder with orderCid = aliceOrderCid
+  (aliceOrderCid, aliceCancelOrderRequestCid) <- alice `submit` do
+    exerciseByKeyCmd @S.Service (operator, exchange, alice) S.RequestCancelOrder with orderCid = aliceOrderCid
 
---   pure ()
+  pure ()
