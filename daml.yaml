@@ -1,7 +1,7 @@
 sdk-version: 1.10.0
 name: da-marketplace
 source: daml
-init-script: Setup:setup
+init-script: Demo:issuance
 parties:
   - Alice
   - Bob
@@ -25,4 +25,3 @@ codegen:
   js:
     output-directory: daml.js
     npm-scope: daml.js
-    

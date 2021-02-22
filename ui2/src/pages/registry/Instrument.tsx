@@ -11,7 +11,6 @@ import { Claim } from "@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serial
 import { Date } from "@daml/types";
 import { Id } from "@daml.js/da-marketplace/lib/DA/Finance/Types/module";
 import { Observation } from "@daml.js/da-marketplace/lib/ContingentClaims/Observation/module";
-import { ContactsOutlined } from "@material-ui/icons";
 
 export const Instrument : React.FC<RouteComponentProps> = () => {
   const classes = useStyles();
@@ -20,41 +19,41 @@ export const Instrument : React.FC<RouteComponentProps> = () => {
 
   const { contractId } = useParams<any>();
   const cid = contractId.replace("_", "#");
-  
+
   const instruments = useStreamQueries(AssetDescription).contracts;
   const instrument = instruments.find(c => c.contractId === cid);
 
-  const transformObservation = useCallback((obs : Observation<Date, boolean>) : any => {
+  const transformObservation = useCallback((obs : Observation<Date, boolean>, linkText : string) : any => {
     switch (obs.tag) {
       case "DateEqu":
-        return { ...obs, type: "Observation", text: "==", children: [ transformObservation(obs.value._1), transformObservation(obs.value._2) ] };
+        return { ...obs, linkText, type: "Observation", text: "==", children: [ transformObservation(obs.value._1, "left"), transformObservation(obs.value._2, "right") ] };
       case "DateIdentity":
-        return { ...obs, type: "Observation", text: "Today", children: [] };
+        return { ...obs, linkText, type: "Observation", text: "Today", children: [] };
       case "DateConst":
-        return { ...obs, type: "Observation", text: obs.value, children: [] };
+        return { ...obs, linkText, type: "Observation", text: obs.value, children: [] };
       case "DecimalLte":
-        return { ...obs, type: "Observation", text: "<=", children: [ transformObservation(obs.value._1), transformObservation(obs.value._2) ] };
+        return { ...obs, linkText, type: "Observation", text: "<=", children: [ transformObservation(obs.value._1, "left"), transformObservation(obs.value._2, "right") ] };
       case "DecimalConst":
-        return { ...obs, type: "Observation", text: obs.value, children: [] };
+        return { ...obs, linkText, type: "Observation", text: obs.value, children: [] };
       case "DecimalSpot":
-        return { ...obs, type: "Observation", text: `Spot(${obs.value})`, children: [] };
+        return { ...obs, linkText, type: "Observation", text: `Spot(${obs.value})`, children: [] };
       default:
         throw new Error("Unknown observation tag: " + obs.tag);
     }
   }, []);
 
-  const transformClaim = useCallback((claim : Claim<Date, Id>) : any => {
+  const transformClaim = useCallback((claim : Claim<Date, Id>, linkText : string) : any => {
     switch (claim.tag) {
       case "When":
-        return { ...claim, type: "Claim", children: [ transformObservation(claim.value.predicate), transformClaim(claim.value.obligation) ] };
+        return { ...claim, linkText, type: "Claim", children: [ transformObservation(claim.value.predicate, "condition"), transformClaim(claim.value.obligation, "then") ] };
       case "Or":
-        return { ...claim, type: "Claim", children: [ transformClaim(claim.value.lhs), transformClaim(claim.value.rhs) ] };
+        return { ...claim, linkText, type: "Claim", children: [ transformClaim(claim.value.lhs, "left"), transformClaim(claim.value.rhs, "right") ] };
       case "Cond":
-        return { ...claim, type: "Claim", children: [ transformObservation(claim.value.predicate), transformClaim(claim.value.failure), transformClaim(claim.value.success) ] };
+        return { ...claim, linkText, type: "Claim", children: [ transformObservation(claim.value.predicate, "if"), transformClaim(claim.value.success, "then"), transformClaim(claim.value.failure, "else") ] };
       case "Zero":
-        return { ...claim, type: "Claim", children: [] };
+        return { ...claim, linkText, type: "Claim", children: [] };
       case "One":
-        return { ...claim, type: "Claim", text: "1 " + claim.value.label, children: [] };
+        return { ...claim, linkText, type: "Claim", text: "1 " + claim.value.label, children: [] };
       default:
         throw new Error("Unknown claim tag: " + claim.tag);
     }
@@ -62,7 +61,7 @@ export const Instrument : React.FC<RouteComponentProps> = () => {
 
   useEffect(() => {
     if (!el.current || !instrument) return;
-    const data = transformClaim(instrument.payload.claims);
+    const data = transformClaim(instrument.payload.claims, "root");
     console.log(data);
     render(el.current, data);
   }, [el, instrument, transformClaim]);
