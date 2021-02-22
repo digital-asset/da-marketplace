@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
+import DateFnsUtils from '@date-io/date-fns';
 import SwipeableViews from "react-swipeable-views";
 import { Box, FormControl, InputLabel, MenuItem, Select, Table, TableBody, TableCell, TableRow, TextField } from "@material-ui/core";
 import MobileStepper from "@material-ui/core/MobileStepper";
@@ -12,20 +14,31 @@ import { getName } from "../../config";
 import useStyles from "../styles";
 import { RequestCreateIssuance, Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();
+  const el = useRef<HTMLDivElement>(null);
+
   const party = useParty();
   const ledger = useLedger();
   const [activeStep, setActiveStep] = React.useState(0);
   const [canRequest, setCanRequest] = React.useState(true);
   const [state, setState] = React.useState<any>({ issuanceId: "", accountLabel: "", assetLabel: "", quantity: 0 });
-  const maxSteps = 2;
+  const maxSteps = 3;
+
+  useEffect(() => {
+    if (!el.current) return;
+    // render(el.current);
+  }, [el, activeStep])
 
   const services = useStreamQueries(Service).contracts
   const clientServices = services.filter(s => s.payload.customer === party);
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accountLabels = assetSettlementRules.map(c => c.payload.account.id.label);
+
+  const assetDescriptions = useStreamQueries(AssetDescription).contracts;
+  console.log(assetDescriptions);
 
   if (clientServices.length === 0) return (<></>);
   const service = clientServices[0]; // TODO: Randomly selects first client, need to handle multiple services
@@ -60,7 +73,8 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
 
   const getStepTitle = (i : number) => {
     if (i === 0) return "Issuance";
-    if (i === 1) return "Confirmation";
+    if (i === 1) return "Claims";
+    if (i === 2) return "Confirmation";
     return "Invalid Step";
   }
 
@@ -74,22 +88,54 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
               <TextField key={0} className={classes.inputField} fullWidth label="Operator" type="text" value={getName(service.payload.operator)} disabled={true} />
               <TextField key={1} className={classes.inputField} fullWidth label="Provider" type="text" value={getName(service.payload.provider)} disabled={true} />
               <TextField key={2} className={classes.inputField} fullWidth label="Client" type="text" value={getName(service.payload.customer)} disabled={true} />
-              <TextField key={3} className={classes.inputField} autoFocus fullWidth label="Issuance ID" type="text" value={state.listingId} onChange={e => setState({ ...state, issuanceId: e.target.value as string})} />
-              <FormControl key={4} className={classes.inputField} fullWidth>
+              <TextField key={3} className={classes.inputField} autoFocus fullWidth label="Issuance ID" type="text" value={state.issuanceId} onChange={e => setState({ ...state, issuanceId: e.target.value as string})} />
+              <TextField key={4} className={classes.inputField}  fullWidth label="Asset ID" type="text" value={state.assetLabel} onChange={e => setState({ ...state, assetLabel: e.target.value as string})} />
+              <TextField key={5} className={classes.inputField}  fullWidth label="Quantity" type="number" value={state.quantity} onChange={e => setState({ ...state, quantity: e.target.value as string})} />
+              <FormControl key={6} className={classes.inputField} fullWidth>
                 <InputLabel>Issuance Account</InputLabel>
                 <Select
-                    autoFocus
                     value={state.accountLabel}
                     onChange={e => setState({ ...state, accountLabel: e.target.value as string })}
                     MenuProps={{ anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null }}>
                   {accountLabels.map((a, i) => <MenuItem key={i} value={a}>{a}</MenuItem>)}
                 </Select>
               </FormControl>
-              <TextField key={5} className={classes.inputField}  fullWidth label="Asset ID" type="text" value={state.assetLabel} onChange={e => setState({ ...state, assetLabel: e.target.value as string})} />
-              <TextField key={6} className={classes.inputField}  fullWidth label="Quantity" type="number" value={state.quantity} onChange={e => setState({ ...state, quantity: e.target.value as string})} />
             </div>
           )}
           {activeStep === 1 && (
+            <div>
+              <FormControl key={0} className={classes.inputField} fullWidth>
+                <InputLabel>Payoff</InputLabel>
+                <Select
+                    value={state.payoff}
+                    onChange={e => setState({ ...state, payoff: e.target.value as string })}
+                    MenuProps={{ anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null }}>
+                  <MenuItem key={0} value={"Binary Option"}>Binary Option</MenuItem>
+                  <MenuItem key={1} value={"European Option"}>European Option</MenuItem>
+                </Select>
+              </FormControl>
+              {state.payoff === "Binary Option" && (
+                <>
+                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                    <KeyboardDatePicker
+                      className={classes.inputField}
+                      fullWidth
+                      disableToolbar
+                      variant="inline"
+                      format="yyyy-MM-dd"
+                      margin="normal"
+                      label="Expiry Date"
+                      defaultValue=""
+                      value={state.expiry}
+                      onChange={e => setState({ ...state, expiry: e })} />
+                  </MuiPickersUtilsProvider>
+                  <TextField key={1} className={classes.inputField} fullWidth label="Strike" type="number" value={state.strike} onChange={e => setState({ ...state, strike: e.target.value as string})} />
+                </>
+              )}
+            <div ref={el} />
+            </div>
+          )}
+          {activeStep === 2 && (
             <div>
               <Table>
                 <TableBody>

@@ -4,6 +4,7 @@ import { Card, CardActionArea, CardMedia, CardContent, Typography, Grid, Box } f
 import { makeStyles, createStyles } from "@material-ui/styles";
 import networkImage from "./images/network.jpg";
 import custodyImage from "./images/custody.jpg";
+import registryImage from "./images/registry.png";
 import issuanceImage from "./images/issuance.jpg";
 import distributionImage from "./images/distribution.png";
 import listingImage from "./images/listing.jpg";
@@ -43,6 +44,21 @@ export default function Apps({ history } : RouteComponentProps) {
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Custody</Typography>
                         <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your custodial services</Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Box>
+                </Card>
+              </Grid>
+            </Grid>
+            <Grid item xs={4}>
+              <Grid container justify="center">
+                <Card className={classes.root}>
+                  <Box border={2} borderColor="primary.main">
+                    <CardActionArea onClick={() => history.push("/apps/registry/instruments")}>
+                      <CardMedia className={classes.media} image={registryImage} title="Registry" />
+                      <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Registry</Typography>
+                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Register new instruments</Typography>
                       </CardContent>
                     </CardActionArea>
                   </Box>

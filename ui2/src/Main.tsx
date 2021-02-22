@@ -7,10 +7,12 @@ import Apps from "./Apps";
 import DamlLedger from "@daml/react";
 import { httpBaseUrl, wsBaseUrl } from "./config";
 import { Network } from "./apps/Network";
-import { Listing } from "./apps/Listing";
 import { Custody } from "./apps/Custody";
-import { Trading } from "./apps/Trading";
 import { Issuance } from "./apps/Issuance";
+import { Distribution } from "./apps/Distribution";
+import { Listing } from "./apps/Listing";
+import { Trading } from "./apps/Trading";
+import { Registry } from "./apps/Registry";
 
 type MainProps = {
   defaultPath: string
@@ -26,9 +28,11 @@ export default function Main({ defaultPath }: MainProps) {
           <Route exact path="/" component={RootRoute} />
           <PrivateRoute exact path="/apps" component={Apps} />
           <PrivateRoute path="/apps/network" component={Network} />
-          <PrivateRoute path="/apps/issuance" component={Issuance} />
-          <PrivateRoute path="/apps/listing" component={Listing} />
           <PrivateRoute path="/apps/custody" component={Custody} />
+          <PrivateRoute path="/apps/registry" component={Registry} />
+          <PrivateRoute path="/apps/issuance" component={Issuance} />
+          <PrivateRoute path="/apps/distribution" component={Distribution} />
+          <PrivateRoute path="/apps/listing" component={Listing} />
           <PrivateRoute path="/apps/trading" component={Trading} />
           <PublicRoute path="/login" component={Login} />
           <Route component={ErrorComponent} />

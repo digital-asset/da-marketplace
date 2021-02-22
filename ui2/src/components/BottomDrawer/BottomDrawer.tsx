@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import Drawer from "@material-ui/core/Drawer";
-import { Table, TableBody, TableCell, TableHead, TableRow, Theme } from "@material-ui/core";
-import { useTheme } from "@material-ui/styles";
-import { useLayoutState, useLayoutDispatch, toggleSidebar } from "../../context/LayoutContext";
+import { Table, TableBody, TableCell, TableHead, TableRow } from "@material-ui/core";
+import { useLayoutState } from "../../context/LayoutContext";
 import useStyles from "../../pages/styles";
 import { useStreamQueries } from "@daml/react";
 import { getName } from "../../config";
@@ -10,7 +9,7 @@ import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/modul
 
 export const BottomDrawer = () => {
   const classes = useStyles();
-  const theme = useTheme() as Theme;
+  // const theme = useTheme() as Theme;
 
   // const [ open, setOpen ] = useState(true);
   const { isSidebarOpened } = useLayoutState();
