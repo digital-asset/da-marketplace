@@ -23,7 +23,7 @@ data CommonContracts = CommonContracts
     operator : Party
     custodian : Party
     exchange : Party
-    auctionAgent : Party
+    agent : Party
     public : Party
     operatorServiceCid : ContractId Operator.Service
     custodianRoleCid : ContractId Custodian.Role
@@ -57,7 +57,7 @@ onboardCommon = do
   operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   custodian <- allocatePartyWithHint "Custodian" $ PartyIdHint "Custodian"
   exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
-  auctionAgent <- allocatePartyWithHint "AuctionAgent" $ PartyIdHint "AuctionAgent"
+  agent <- allocatePartyWithHint "Agent" $ PartyIdHint "Agent"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
@@ -70,8 +70,8 @@ onboardCommon = do
   matchingServiceCid <- submit exchange do exerciseCmd matchingServiceOfferCid Matching.Accept
   settlementServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferSettlementService with provider = exchange
   settlementServiceCid <- submit exchange do exerciseCmd settlementServiceOfferCid Settlement.Accept
-  distributorRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = auctionAgent
-  distributorRoleCid <- submit auctionAgent do exerciseCmd distributorRoleOfferCid Distributor.Accept
+  distributorRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = agent
+  distributorRoleCid <- submit agent do exerciseCmd distributorRoleOfferCid Distributor.Accept
 
   -- Identities
   regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = custodian
