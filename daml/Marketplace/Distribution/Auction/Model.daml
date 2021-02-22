@@ -22,11 +22,7 @@ data SettleAllocation = SettleAllocation with
 
 data Status
     = Open
-<<<<<<< HEAD
     | PartiallyAllocated with
-=======
-    | ParticallyAllocated with
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
         finalPrice : Decimal
         remaining : Decimal
     | FullyAllocated with

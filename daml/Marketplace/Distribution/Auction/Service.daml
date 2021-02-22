@@ -3,10 +3,7 @@
 module Marketplace.Distribution.Auction.Service where
 
 import DA.Action (foldlA)
-<<<<<<< HEAD
 import DA.Either (partitionEithers)
-=======
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
 import DA.Foldable (forA_)
 import DA.List (sortOn, mapAccumL)
 import DA.Finance.Asset (AssetDeposit)
@@ -124,17 +121,10 @@ template Service
 
           -- Split bids on those above / below the floor price -> Sort valid bids descendingly -> Execute Auction -> Split auction result on allocated / unallocated (ie, zero allocation)
           let
-<<<<<<< HEAD
             (invalidBids, validBids) = partitionEithers $ splitList (\bid -> bid.details.price >= floorPrice) bids
             sortedBids = sortOn (\bid -> Down bid.details) validBids
             ((remaining, finalPrice), allocations) = mapAccumL dutchAuction (asset.quantity, 0.0) sortedBids
             (allocatedBids, unallocatedBids) = partitionEithers $ splitList (\allocation -> allocation.quantity == 0.0) allocations
-=======
-            (validBids, invalidBids) = splitList (\bid -> bid.details.price < floorPrice) bids
-            sortedBids = sortOn (\bid -> Down bid.details) validBids
-            ((remaining, finalPrice), allocations) = mapAccumL dutchAuction (asset.quantity, 0.0) sortedBids
-            (allocatedBids, unallocatedBids) = splitList (\allocation -> allocation.quantity == 0.0) allocations
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
 
           -- Return assets of all invalid and unallocated bids. Also update their bid status accordingly
           forA_ invalidBids $ withdrawAllocation *> updateBidStatus Bidding.Invalid
@@ -147,11 +137,7 @@ template Service
           -- Update Auction contract with the outcome of the auction processing
           let newStatus = if
                 | remaining == asset.quantity -> Auction.NoValidBids
-<<<<<<< HEAD
                 | remaining > 0.0             -> Auction.PartiallyAllocated with ..
-=======
-                | remaining > 0.0             -> Auction.ParticallyAllocated with ..
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
                 | otherwise                   -> Auction.FullyAllocated with ..
           auctionCid <- archive auctionCid *> create auction with status = newStatus
 
