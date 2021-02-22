@@ -122,7 +122,7 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
   -- Assertions
   length siCids === 1
   auction <- fromSome <$> queryContractId auctionAgent auctionCid
-  auction.status === Auction.ParticallyAllocated with finalPrice = 10.0; remaining = 500.0
+  auction.status === Auction.PartiallyAllocated with finalPrice = 10.0; remaining = 500.0
   bids <- query @Bidding.T auctionAgent
   length (filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids) === 1
   let fullAllocationParty = (.customer) . snd . head $ filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids
@@ -234,8 +234,8 @@ assertAssetDeposits auction issuer originalDeposits price quantity bid = do
 assertAuctionMatchesPayments : Auction.Auction -> [AssetDeposit] -> Script ()
 assertAuctionMatchesPayments auction issuerPayments = do
   case auction.status of
-    Auction.FullyAllocated price                -> auction.asset.quantity * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
-    Auction.ParticallyAllocated price remaining -> (auction.asset.quantity - remaining) * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
+    Auction.FullyAllocated price               -> auction.asset.quantity * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
+    Auction.PartiallyAllocated price remaining -> (auction.asset.quantity - remaining) * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
     _ -> pure ()
 
 bidSortingTest : Script ()

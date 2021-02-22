@@ -54,7 +54,9 @@ template Service
           newStatus : Bidding.Status
         do
           (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
-          archive bidCid *> create bid with status = newStatus
+
+          archive bidCid
+          create bid with status = newStatus
 
       nonconsuming ProcessAllocation : (ContractId Bid, ContractId AssetDeposit)
         with
