@@ -9,9 +9,15 @@ import Marketplace.Distribution.Bidding.Service qualified as Bidding
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
+<<<<<<< HEAD
 -- | Takes a list and splits it based off a predicate.
 splitList : (a -> Bool) -> [a] -> [Either a a]
 splitList p xs = foldr (\x acc -> if p x then Right x :: acc else Left x :: acc) [] xs
+=======
+-- | Takes a list and splits it based off a predicate. Values which match the predicate go in the right list of the tuple
+splitList : (a -> Bool) -> [a] -> ([a], [a])
+splitList p xs = foldr (\x (y,z) -> if p x then (y, x :: z) else (x :: y, z)) ([],[]) xs
+>>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
 
 -- | Returns a bidder's allocation to their trading account
 withdrawAllocation : Bidding.T -> Update (ContractId AssetDeposit)
@@ -20,8 +26,13 @@ withdrawAllocation bid@Bid{..} = do
 
 -- | Updates a bid's status
 updateBidStatus : Bidding.Status -> Bidding.T -> Update (ContractId Bid)
+<<<<<<< HEAD
 updateBidStatus newStatus Bid{..} = do
     exerciseByKey @Bidding.S (assetId, customer) Bidding.UpdateStatus with ..
+=======
+updateBidStatus newStatus bid@Bid{..} = do
+    exerciseByKey @Bidding.S (bid.assetId, bid.customer) Bidding.UpdateStatus with ..
+>>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
 
 -- | A map/accumulator function for processing a submitted bid.
 -- Accepts the remaining quantity and price as an accululator along the current Bid as input
@@ -66,8 +77,13 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
     let
       seller = issuer
       (allocatedDepositCid, remainingDepositCidOpt) = case issuerDepositCids of
+<<<<<<< HEAD
         [x]    -> (x, None)
         [x, y] -> (x, Some y)
+=======
+        (x :: [])      -> (x, None)
+        (x :: y :: []) -> (x, Some y)
+>>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
         _ -> error "Auction:generateSettlementInstruction - Unexpected AssetDeposit split"
       delivery = Settlement.SettlementDetails with senderAccount = issuerDeposit.account; depositCid = allocatedDepositCid; receiverAccount = bid.tradingAccount
 
