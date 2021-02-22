@@ -39,7 +39,13 @@ const App: React.FC = () => {
       <Router>
         <Switch>
           <Route exact path='/'>
-            <LoginScreen onLogin={handleCredentials}/>
+            <WellKnownPartiesProvider>
+              <PublicProvider>
+                <QueryStreamProvider>
+                  <LoginScreen onLogin={handleCredentials}/>
+                </QueryStreamProvider>
+              </PublicProvider>
+            </WellKnownPartiesProvider>
           </Route>
 
           <Route path='/role' render={() => {

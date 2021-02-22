@@ -1,6 +1,5 @@
 module Marketplace.Registry where
 
-
 template RegisteredCustodian
   with
     operator : Party
