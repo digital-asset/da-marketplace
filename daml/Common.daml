@@ -9,10 +9,7 @@ import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import qualified Marketplace.Operator as Operator
 import qualified Marketplace.Custodian as Custodian
 import qualified Marketplace.Custody as Custody
-<<<<<<< HEAD
-=======
 import qualified Marketplace.Issuance as Issuance
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
 import qualified Marketplace.Trading.Exchange as Exchange
 import qualified Marketplace.Trading.Matching as Matching
 import qualified Marketplace.Trading.Service as Trading
@@ -38,12 +35,8 @@ data CustomerContracts = CustomerContracts
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
-<<<<<<< HEAD
-    custodyServiceCid : ContractId Custody.Service
-=======
     issuanceServiceCid: ContractId Issuance.Service
     custodyServiceCid: ContractId Custody.Service
->>>>>>> 86d893c5aec78c5a869287e05b87dc237a44da21
     allocationAccountRuleCid : ContractId AllocationAccountRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
