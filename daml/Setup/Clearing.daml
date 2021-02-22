@@ -87,8 +87,8 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
   h2oQ421DerId <- createSimpleDerivative operator issuer "H2OQ421" "H2O" "H2O Q4 21" 6 1 "h2o" h2oTokenId observers
 
-  (q121usdId, q121usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ121DerId DerivativeAsset ccp
-  (q221usdId, q221usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ221DerId DerivativeAsset ccp
+  (q121usdId, q121usdPair) <- createMarketPair exchange operator h2oQ121DerId DerivativeAsset usdTokenId TokenAsset ccp
+  (q221usdId, q221usdPair) <- createMarketPair exchange operator h2oQ221DerId DerivativeAsset usdTokenId TokenAsset ccp
   (q321q421Id, q321q421Pair) <- createMarketPair exchange operator h2oQ321DerId DerivativeAsset h2oQ421DerId DerivativeAsset ccp
 
   let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0  10_000.0 3000.0
