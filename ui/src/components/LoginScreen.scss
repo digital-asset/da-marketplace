@@ -6,6 +6,9 @@
         .setup-required {
             color: var(--white);
             font-weight: normal;
+            a.dark {
+                color: var(--blue-80);
+            }
         }
 
         .login-header {
