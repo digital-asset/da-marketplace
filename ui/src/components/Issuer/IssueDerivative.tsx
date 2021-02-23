@@ -72,7 +72,9 @@ const IssueDerivative = () => {
             isPublic,
             observers,
             secType: null,
-            optionData: null}
+            optionData: null,
+            optEndDate: null
+        }
 
         await ledger.exerciseByKey(Issuer.Issuer_IssueDerivative, key, args);
         clearForm()

@@ -24,6 +24,8 @@ import Marketplace.Transfer
 import DA.Finance.Asset
 import DA.Finance.Types
 
+import DA.Date
+import DA.Time
 import DA.Foldable (forA_)
 import DA.Optional
 
@@ -369,6 +371,7 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
         optionData = None
         underlying
         isPublic = True
+        endDate = time (date 2020 Dec 15) 0 0 0
         observers = fromList observers
 
   issuer `submit` createCmd derivative
