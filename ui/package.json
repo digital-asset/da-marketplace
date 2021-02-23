@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.1.13",
-    "@daml/dabl-react": "file:./dabl-react",
+    "@daml/hub-react": "0.1.0",
     "@daml/ledger": "1.7.0",
     "@daml/react": "1.7.0",
     "@daml/types": "1.7.0",

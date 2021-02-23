@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { Button, Form, Icon } from 'semantic-ui-react'
 
-import { DablPartiesInput, PartyDetails } from '@daml/dabl-react'
+import { DablPartiesInput, PartyDetails } from '@daml/hub-react'
 
 import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 

@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { WellKnownPartiesProvider } from '@daml/dabl-react'
+import { WellKnownPartiesProvider } from '@daml/hub-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
