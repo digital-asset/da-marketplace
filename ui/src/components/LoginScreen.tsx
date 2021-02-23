@@ -90,7 +90,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
         <p>
           It looks like you have not completed the necessary deployment steps to configure this app.
           Please create an Operator role contract for the UserAdmin party, and deploy the necessary triggers.</p>
-        <h4>See <a href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
+        <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
       </div>
     </Tile>
   )
