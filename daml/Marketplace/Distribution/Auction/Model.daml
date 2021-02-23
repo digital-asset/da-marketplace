@@ -46,5 +46,19 @@ template Auction
     signatory operator, provider, customer
     ensure asset.quantity > 0.0
 
-    key (provider, asset.id) : (Party, Id)
+    key (provider, auctionId) : (Party, Text)
+    maintainer key._1
+
+template AuctionObserver
+  with
+    provider : Party
+    customer : Party
+    auctionId : Text
+    asset : Asset
+    quotedAssetId : Id
+    bidder : Party
+  where
+    signatory provider, customer, bidder
+
+    key (bidder, auctionId) : (Party, Text)
     maintainer key._1

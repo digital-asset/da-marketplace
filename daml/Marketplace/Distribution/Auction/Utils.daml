@@ -3,6 +3,7 @@ module Marketplace.Distribution.Auction.Utils where
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import Marketplace.Settlement qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
+import Marketplace.Distribution.Bidding.Request qualified as Bidding
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Model (Bid(..))
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
@@ -14,13 +15,14 @@ splitList p xs = foldr (\x acc -> if p x then Right x :: acc else Left x :: acc)
 
 -- | Returns a bidder's allocation to their trading account
 withdrawAllocation : Bidding.Bid -> Update (ContractId AssetDeposit)
-withdrawAllocation bid@Bid{..} = do
+withdrawAllocation Bid{..} = do
     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
 
 -- | Updates a bid's status
-updateBidStatus : Bidding.Status -> Bidding.Bid -> Update (ContractId Bid)
-updateBidStatus newStatus Bid{..} = do
-    exerciseByKey @Bidding.Bid (assetId, customer) Bidding.UpdateStatus with ..
+updateBidStatus : Bidding.Status -> Bidding.Bid -> Update (ContractId Bidding.Bid)
+updateBidStatus newStatus Bidding.Bid{customer, auctionId} = do
+    (bidCid, _) <- fetchByKey @Bidding.Bid (customer, auctionId)
+    exerciseByKey @Bidding.Request (customer, auctionId) Bidding.UpdateBidStatus with ..
 
 -- | A map/accumulator function for processing a submitted bid.
 -- Accepts the remaining quantity and price as an accululator along the current Bid as input
@@ -43,13 +45,15 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
     let
       allocatedQuantity = allocation.quantity
       bid = allocation.bid
+      requestKey = (bid.customer, bid.auctionId)
       allocatedAmount = allocatedQuantity * price
       newStatus = if bid.details.quantity == allocatedQuantity
                     then Bidding.FullAllocation with ..
                     else Bidding.PartialAllocation with quantity = allocatedQuantity; ..
 
     -- | Process bid side
-    (_, bidDepositCid) <- exerciseByKey @Bidding.Bid (bid.assetId, bid.customer) Bidding.ProcessAllocation with quantity = allocatedQuantity; amount = allocatedAmount; ..
+    (bidCid, _) <- fetchByKey @Bidding.Bid (bid.customer, bid.auctionId)
+    (_, bidDepositCid) <- exerciseByKey @Bidding.Request requestKey Bidding.ProcessAllocation with quantity = allocatedQuantity; amount = allocatedAmount; ..
     let
       buyer = bid.customer
       payment = Settlement.SettlementDetails with senderAccount = bid.allocationAccount; depositCid = bidDepositCid; receiverAccount = issuerReceivableAccount
@@ -71,6 +75,6 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
       delivery = Settlement.SettlementDetails with senderAccount = issuerDeposit.account; depositCid = allocatedDepositCid; receiverAccount = bid.tradingAccount
 
     -- | Create the Settlement Instruction to deliver the asset against the payment atomically
-    settlementInstructionCid <- exerciseByKey @Bidding.Bid (bid.assetId, bid.customer) Bidding.GenerateSettlementInstrution with ..
+    settlementInstructionCid <- exerciseByKey @Bidding.Request requestKey Bidding.GenerateSettlementInstrution with ..
 
     pure (remainingDepositCidOpt, settlementInstructionCid :: settlementInstructionCids)

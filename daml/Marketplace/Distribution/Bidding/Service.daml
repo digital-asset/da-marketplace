@@ -1,0 +1,81 @@
+module Marketplace.Distribution.Bidding.Service where
+
+import DA.Finance.Types (Account)
+import Marketplace.Distribution.Bidding.Request qualified as Bidding
+import Marketplace.Distribution.Auction.Model qualified as Auction
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, provider, customer
+
+    controller provider can
+      nonconsuming CreateBiddingRequest : (ContractId Bidding.T, ContractId Auction.AuctionObserver)
+        with
+          auctionCid : ContractId Auction.T
+        do
+          auction <- fetch auctionCid
+          auctionObserverCid <- create Auction.AuctionObserver with
+              bidder = customer
+              asset = auction.asset
+              auctionId = auction.auctionId
+              quotedAssetId = auction.quotedAssetId
+              ..
+          bidRequestCid <- create Bidding.Request with auctionId = auction.auctionId; ..
+
+          return (bidRequestCid, auctionObserverCid)
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+          tradingAccount : Account
+          allocationAccount : Account
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..

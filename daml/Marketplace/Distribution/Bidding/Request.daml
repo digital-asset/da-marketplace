@@ -1,7 +1,12 @@
 module Marketplace.Distribution.Bidding.Request where
 
-import DA.Finance.Asset (AssetDeposit)
-import DA.Finance.Types (Account, Asset)
+import DA.List (head, last)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Types (Account)
+import DA.Finance.Utils (fetchAndArchive)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement (SettlementInstruction(..))
+import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
@@ -12,14 +17,13 @@ template Request
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
     auctionId : Text
-    asset : Asset
   where
-    signatory operator, provider, issuer
+    signatory operator, provider, customer
 
-    let assetId = asset.id
+    key (customer, auctionId) : (Party, Text)
+    maintainer key._1
 
     controller customer can
       nonconsuming SubmitBid : ContractId Bidding.Bid
@@ -28,16 +32,59 @@ template Request
           tradingAccount : Account
           allocationAccount : Account
           depositCid : ContractId AssetDeposit
+          publishBid : Bool
         do
           -- TODO: Check for parallism of this choice
-          -- TODO: Check bid details match whats contained in the asset deposit
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
-          create Bidding.Bid with status = Bidding.Pending; ..
+          deposit <- fetch depositCid
+          (_, auction) <- fetchByKey @Auction.AuctionObserver (customer, auctionId)
+          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= details.price * details.quantity)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == auction.quotedAssetId.label)
 
-      -- TBC : Remove for now to block bidders from withdrawing bids
-      -- nonconsuming WithdrawBid : ContractId AssetDeposit
-      --   with
-      --     bidCid : ContractId Bid
-      --   do
-      --     Bid{..} <- fetchAndArchive bidCid
-      --     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          create Bidding.Bid with status = Bidding.Pending; publish = publishBid; assetId = auction.asset.id; issuer = auction.customer; ..
+
+    controller provider can
+      nonconsuming ProcessAllocation : (ContractId Bidding.T, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.T
+          quantity : Decimal
+          amount : Decimal
+          price : Decimal
+        do
+          -- Fetch Bid -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor -> Update Bid Status
+          bid <- fetch bidCid
+          bidDeposit <- fetch bid.depositCid
+          bidDepositCid <- if bidDeposit.asset.quantity > amount
+                              then do
+                                splitDepositCids <- exercise bid.depositCid AssetDeposit_Split with quantities = [amount]
+                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
+                                pure $ head splitDepositCids
+                              else pure bid.depositCid
+
+          let newStatus = if bid.details.quantity == quantity
+                            then Bidding.FullAllocation with ..
+                            else Bidding.PartialAllocation with ..
+          bidCid <- exercise self UpdateBidStatus with ..
+
+          pure (bidCid, bidDepositCid)
+
+      nonconsuming UpdateBidStatus : ContractId Bidding.T
+        with
+          bidCid : ContractId Bidding.T
+          newStatus : Bidding.Status
+        do
+          bid <- fetchAndArchive bidCid
+
+          create bid with status = newStatus
+
+    nonconsuming choice GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
+      with
+        delivery : Settlement.SettlementDetails
+        payment : Settlement.SettlementDetails
+        issuer : Party
+      controller issuer
+      do
+        (_, auction) <- fetchByKey @Auction.T (provider, auctionId)
+        assertMsg ("Unexpected Issuer " <> show issuer <> "for Auction") (auction.customer == issuer)
+
+        create SettlementInstruction with buyer = customer; seller = issuer; ..
