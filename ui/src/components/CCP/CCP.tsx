@@ -19,7 +19,7 @@ import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 import { UserIcon, PublicIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -28,6 +28,7 @@ import CCPProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
 
 import DerivativeList from '../common/DerivativeList'
@@ -48,6 +49,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const ccp = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const customers = useContractQuery(CCPCustomer);
     const exchanges = useContractQuery(CCPExchangeRelationship);
@@ -252,7 +254,8 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredCCP.length === 0 ? inviteScreen : ccpScreen
+    const shouldLoad = loading || (registeredCCP.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredCCP.length !== 0 ? ccpScreen : inviteScreen
 }
 
 export default CCP;

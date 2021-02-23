@@ -179,7 +179,10 @@ In the deployments tab, launch and configure each trigger with the following par
 | `ExchangeTrigger`  | `Exchange`      |
 | `MatchingEngine`   | `Exchange`      |
 | `CustodianTrigger` | `Custodian`     |
+| `CCPTrigger`       | `Ccp`           |
 | `BrokerTrigger`    | `Broker`        |
+
+Note that the `OperatorTrigger` running as the `UserAdmin` trigger is required to have the app run. If you are choosing to bootstrap your own data with different parties, the remaining triggers can be set up for each party performing those respective roles.
 
 After uploading, add the first configuration (the human readable name has no bearing on the functionality of the bot), and click launch:
 

@@ -7,6 +7,9 @@ import { Button, Form, Icon } from 'semantic-ui-react'
 
 import { DablPartiesInput, PartyDetails } from '@daml/dabl-react'
 
+import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
+
+import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../websocket/queryStream'
 import Credentials, { computeCredentials } from '../Credentials'
 import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
@@ -14,6 +17,7 @@ import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../confi
 import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
+import LoadingScreen from './common/LoadingScreen'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -47,6 +51,28 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
+  const isLoading = usePublicLoading();
+  const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC);
+  const query = useQuery();
+  const history = useHistory();
+  const location = useLocation();
+
+  useEffect(() => {
+    raiseParamsToHash();
+  }, [location]);
+
+  useEffect(() => {
+    const party = query.get("party");
+    const token = getTokenFromCookie();
+
+    if (!token || !party) {
+      return
+    }
+
+    onLogin({token, party, ledgerId});
+    history.push('/role');
+  }, [onLogin, query, history]);
+
   const localTiles = [
     <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
@@ -57,11 +83,25 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
-  const tiles = deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles;
+  const setupRequiredTile = (
+    <Tile key='test' header={logoHeader}>
+      <div className='setup-required'>
+        <h3>Welcome to the Daml Open Marketplace!</h3>
+        <p>
+          It looks like you have not completed the necessary deployment steps to configure this app.
+          Please create an Operator role contract for the UserAdmin party, and deploy the necessary triggers.</p>
+        <h4>See <a href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
+      </div>
+    </Tile>
+  )
+
+  const tiles = appInfos.length !== 0
+    ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
+    : [setupRequiredTile];
 
   return (
     <div className='login-screen'>
-      <OnboardingTile tiles={tiles}/>
+      {isLoading ? <LoadingScreen/> : <OnboardingTile tiles={tiles}/>}
     </div>
   );
 };
@@ -229,29 +269,10 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
 }
 
 const DablLoginForm: React.FC<Props> = ({onLogin}) => {
-  const query = useQuery();
-  const history = useHistory();
-  const location = window.location;
 
   const handleDablLogin = () => {
     window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }
-
-  useEffect(() => {
-    raiseParamsToHash();
-  }, [location]);
-
-  useEffect(() => {
-    const party = query.get("party");
-    const token = getTokenFromCookie();
-
-    if (!token || !party) {
-      return
-    }
-
-    onLogin({token, party, ledgerId});
-    history.push('/role');
-  }, [onLogin, query, history]);
 
   return (
     <Form size='large'>

@@ -12,16 +12,17 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
 
@@ -31,8 +32,6 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
-
 
 type Props = {
     onLogout: () => void;
@@ -43,6 +42,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
@@ -230,7 +230,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredInvestor.length === 0 ? inviteScreen : investorScreen
+    const shouldLoad = loading || (registeredInvestor.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredInvestor.length !== 0 ? investorScreen : inviteScreen
 }
 
 export default Investor;

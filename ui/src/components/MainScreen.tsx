@@ -7,7 +7,7 @@ import { Message } from 'semantic-ui-react'
 
 import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 
-import { QueryStream, QueryStreamContext, useContractQuery } from '../websocket/queryStream'
+import { QueryStream, QueryStreamContext, useContractQuery, useLoading } from '../websocket/queryStream'
 import { StreamErrors } from '../websocket/websocket'
 
 import { useDablParties } from './common/common'
@@ -22,6 +22,7 @@ import Exchange from './Exchange/Exchange'
 import Custodian from './Custodian/Custodian'
 import CCP from './CCP/CCP'
 import Broker from './Broker/Broker'
+import LoadingScreen from './common/LoadingScreen'
 
 
 type Props = {
@@ -40,6 +41,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
 
   const userContracts = useContractQuery(User);
   const currentRole = userContracts[0]?.contractData?.currentRole;
+  const wsLoading = useLoading();
 
   useEffect(() => {
     if (queryStream) {
@@ -47,7 +49,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
     }
   }, [queryStream]);
 
-  const loadingScreen = <OnboardingTile><p className='dark'>Loading...</p></OnboardingTile>;
+  const loadingScreen = <LoadingScreen/>;
   const errorScreen = (error || streamErrors) &&
     <OnboardingTile>
       <Message error>
@@ -61,7 +63,7 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       return <Redirect to={roleRoute(currentRole)}/>
     }
 
-    if (loading || !parties) {
+    if (loading || !parties || wsLoading) {
       return loadingScreen;
     }
 

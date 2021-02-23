@@ -18,6 +18,8 @@ export type QueryStream<T extends object = any, K = unknown> = {
   partyTemplateIds: string[];
   partyContracts: ContractInfo<T,K>[];
   streamErrors: any[] | undefined;
+  publicLoading: boolean;
+  partyLoading: boolean;
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
 }
 
@@ -68,8 +70,8 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     })
   }, [publicParty]);
 
-  const { contracts: partyContracts, errors: partyStreamErrors } = useDamlStreamQuery(partyTemplateIds, partyToken);
-  const { contracts: publicContracts, errors: publicStreamErrors } = useDamlStreamQuery(publicTemplateIds, publicToken);
+  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading } = useDamlStreamQuery(partyTemplateIds, partyToken);
+  const { contracts: publicContracts, errors: publicStreamErrors, loading: publicLoading } = useDamlStreamQuery(publicTemplateIds, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {
@@ -96,7 +98,17 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     partyContracts: [],
     streamErrors: [],
     subscribeTemplate,
+    publicLoading,
+    partyLoading
   });
+
+  useEffect(() => {
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        partyLoading,
+        publicLoading
+      }))
+  }, [partyLoading, publicLoading]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
@@ -129,6 +141,22 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
+
+export function usePublicLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading;
+}
+
+export function usePartyLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.partyLoading;
+}
+
+export function useLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading || queryStream?.partyLoading
+}
+
 
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);

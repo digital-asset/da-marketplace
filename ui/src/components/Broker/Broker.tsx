@@ -10,7 +10,7 @@ import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/C
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -22,6 +22,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
@@ -35,6 +36,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const broker = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const registeredBroker = useContractQuery(RegisteredBroker);
     const invitation = useContractQuery(BrokerInvitation);
@@ -140,7 +142,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </div>
 
 
-    return registeredBroker.length === 0 ? inviteScreen : brokerScreen
+    const shouldLoad = loading || (registeredBroker.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredBroker.length !== 0 ? brokerScreen : inviteScreen
 }
 
 export default Broker;
