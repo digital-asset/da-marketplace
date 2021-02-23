@@ -9,19 +9,16 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
+import { WellKnownPartiesProvider } from '@daml/dabl-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
-import Credentials, { computeCredentials, storeCredentials, retrieveCredentials } from '../Credentials'
+import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
 import { RegistryLookupProvider } from './common/RegistryLookup'
-import { useDablParties } from './common/common'
-import OnboardingTile from './common/OnboardingTile'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
-import LoadingScreen from './common/LoadingScreen'
 
 /**
  * React component for the entry point into the application.
@@ -73,22 +70,5 @@ const App: React.FC = () => {
   )
 }
 // APP_END
-                    // <PublicProvider>
-                    // </PublicProvider>
-
-const PublicProvider: React.FC = ({ children }) => {
-  const { parties, loading } = useDablParties();
-  const { party, ledgerId, token } = computeCredentials(parties.publicParty);
-
-    return loading ? <LoadingScreen/> : (
-    <PublicLedger
-      ledgerId={ledgerId}
-      publicParty={party}
-      defaultToken={token}
-      httpBaseUrl={httpBaseUrl}
-    >
-      { children }
-    </PublicLedger>
-  )
-}
+//
 export default App;

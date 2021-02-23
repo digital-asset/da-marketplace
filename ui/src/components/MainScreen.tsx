@@ -50,7 +50,6 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
   }, [queryStream]);
 
   const loadingScreen = <LoadingScreen/>;
-  // <OnboardingTile><p className='dark'>Loading...</p></OnboardingTile>;
   const errorScreen = (error || streamErrors) &&
     <OnboardingTile>
       <Message error>
@@ -83,11 +82,11 @@ const MainScreen: React.FC<Props> = ({ onLogout }) => {
       </Route>
 
       <Route path={`${path}/investor`}>
-        {wsLoading ? <LoadingScreen/> : <Investor onLogout={onLogout}/>}
+        <Investor onLogout={onLogout}/>
       </Route>
 
       <Route path={`${path}/issuer`}>
-        {wsLoading ? <LoadingScreen/> : <Issuer onLogout={onLogout}/>}
+        <Issuer onLogout={onLogout}/>
       </Route>
 
       <Route path={`${path}/exchange`}>

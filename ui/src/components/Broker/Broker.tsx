@@ -22,10 +22,10 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
-import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;

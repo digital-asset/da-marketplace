@@ -28,6 +28,7 @@ import CCPProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
 
 import DerivativeList from '../common/DerivativeList'
@@ -38,7 +39,6 @@ import { useRelationshipRequestNotifications } from './RelationshipRequestNotifi
 import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
-import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;

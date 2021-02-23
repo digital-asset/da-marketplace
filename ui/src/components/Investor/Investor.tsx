@@ -15,13 +15,14 @@ import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
 import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
 
@@ -31,9 +32,6 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
-import LoadingScreen from '../common/LoadingScreen'
-
 
 type Props = {
     onLogout: () => void;

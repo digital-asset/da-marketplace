@@ -24,12 +24,12 @@ import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
-import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;

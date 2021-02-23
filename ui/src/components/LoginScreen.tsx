@@ -95,16 +95,8 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     </Tile>
   )
 
-  const loadingTile = (
-    <Tile key='test' header={logoHeader}>
-      <div className='setup-required'>
-        Loading...
-      </div>
-    </Tile>
-  );
-
-  // const tiles = isLoading ? [loadingTile] : appInfos.length !== 0
-  const tiles = appInfos.length !== 0 ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
+  const tiles = appInfos.length !== 0
+    ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
     : [setupRequiredTile];
 
   return (

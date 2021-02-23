@@ -51,9 +51,6 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
             const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
-            if (data.offset === undefined) {
-                console.log("loading!!");
-            }
 
             if (data.offset !== undefined) {
                 setLoading(false);
