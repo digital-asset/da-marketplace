@@ -21,6 +21,7 @@ import OnboardingTile from './common/OnboardingTile'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
+import LoadingScreen from './common/LoadingScreen'
 
 /**
  * React component for the entry point into the application.
@@ -40,11 +41,9 @@ const App: React.FC = () => {
         <Switch>
           <Route exact path='/'>
             <WellKnownPartiesProvider>
-              <PublicProvider>
                 <QueryStreamProvider>
                   <LoginScreen onLogin={handleCredentials}/>
                 </QueryStreamProvider>
-              </PublicProvider>
             </WellKnownPartiesProvider>
           </Route>
 
@@ -57,13 +56,11 @@ const App: React.FC = () => {
                   httpBaseUrl={httpBaseUrl}
                 >
                   <WellKnownPartiesProvider>
-                    <PublicProvider>
                       <QueryStreamProvider>
                         <RegistryLookupProvider>
                           <MainScreen onLogout={() => handleCredentials(undefined)}/>
                         </RegistryLookupProvider>
                       </QueryStreamProvider>
-                    </PublicProvider>
                   </WellKnownPartiesProvider>
               </DamlLedger>
               : <Redirect to='/'/>
@@ -76,12 +73,14 @@ const App: React.FC = () => {
   )
 }
 // APP_END
+                    // <PublicProvider>
+                    // </PublicProvider>
 
 const PublicProvider: React.FC = ({ children }) => {
   const { parties, loading } = useDablParties();
   const { party, ledgerId, token } = computeCredentials(parties.publicParty);
 
-  return loading ? <OnboardingTile>Loading...</OnboardingTile> : (
+    return loading ? <LoadingScreen/> : (
     <PublicLedger
       ledgerId={ledgerId}
       publicParty={party}

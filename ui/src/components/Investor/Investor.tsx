@@ -12,7 +12,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple, unwrapDamlTuple, ContractInfo } from '../common/damlTypes'
@@ -32,6 +32,7 @@ import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNoti
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
+import LoadingScreen from '../common/LoadingScreen'
 
 
 type Props = {
@@ -43,6 +44,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
@@ -230,7 +232,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredInvestor.length === 0 ? inviteScreen : investorScreen
+    const shouldLoad = loading || (registeredInvestor.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredInvestor.length !== 0 ? investorScreen : inviteScreen
 }
 
 export default Investor;

@@ -11,7 +11,7 @@ import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exch
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 
@@ -30,6 +30,7 @@ import RoleSideNav from '../common/RoleSideNav'
 
 import MarketPairs from './MarketPairs'
 import ExchangeParticipants from './ExchangeParticipants'
+import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;
@@ -40,6 +41,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const exchange = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
     const investorMap = useRegistryLookup().investorMap;
 
     const registeredExchange = useContractQuery(RegisteredExchange);
@@ -180,7 +182,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredExchange.length === 0 ? inviteScreen : exchangeScreen
+    const shouldLoad = loading || (registeredExchange.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredExchange.length !== 0 ? exchangeScreen : inviteScreen
 }
 
 export default Exchange;

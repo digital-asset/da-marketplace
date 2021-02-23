@@ -9,7 +9,7 @@ import { DablPartiesInput, PartyDetails } from '@daml/dabl-react'
 
 import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 
-import { useContractQuery, AS_PUBLIC } from '../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../websocket/queryStream'
 import Credentials, { computeCredentials } from '../Credentials'
 import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
@@ -17,6 +17,7 @@ import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../confi
 import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
+import LoadingScreen from './common/LoadingScreen'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -50,7 +51,28 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
+  const isLoading = usePublicLoading();
   const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC);
+  const query = useQuery();
+  const history = useHistory();
+  const location = useLocation();
+
+  useEffect(() => {
+    raiseParamsToHash();
+  }, [location]);
+
+  useEffect(() => {
+    const party = query.get("party");
+    const token = getTokenFromCookie();
+
+    if (!token || !party) {
+      return
+    }
+
+    onLogin({token, party, ledgerId});
+    history.push('/role');
+  }, [onLogin, query, history]);
+
   const localTiles = [
     <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
@@ -73,13 +95,21 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     </Tile>
   )
 
-  const tiles = appInfos.length !== 0
-    ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
+  const loadingTile = (
+    <Tile key='test' header={logoHeader}>
+      <div className='setup-required'>
+        Loading...
+      </div>
+    </Tile>
+  );
+
+  // const tiles = isLoading ? [loadingTile] : appInfos.length !== 0
+  const tiles = appInfos.length !== 0 ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
     : [setupRequiredTile];
 
   return (
     <div className='login-screen'>
-      <OnboardingTile tiles={tiles}/>
+      {isLoading ? <LoadingScreen/> : <OnboardingTile tiles={tiles}/>}
     </div>
   );
 };
@@ -247,29 +277,10 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
 }
 
 const DablLoginForm: React.FC<Props> = ({onLogin}) => {
-  const query = useQuery();
-  const history = useHistory();
-  const location = window.location;
 
   const handleDablLogin = () => {
     window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }
-
-  useEffect(() => {
-    raiseParamsToHash();
-  }, [location]);
-
-  useEffect(() => {
-    const party = query.get("party");
-    const token = getTokenFromCookie();
-
-    if (!token || !party) {
-      return
-    }
-
-    onLogin({token, party, ledgerId});
-    history.push('/role');
-  }, [onLogin, query, history]);
 
   return (
     <Form size='large'>

@@ -18,6 +18,8 @@ export type QueryStream<T extends object = any, K = unknown> = {
   partyTemplateIds: string[];
   partyContracts: ContractInfo<T,K>[];
   streamErrors: any[] | undefined;
+  publicLoading: boolean;
+  partyLoading: boolean;
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
 }
 
@@ -68,8 +70,8 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     })
   }, [publicParty]);
 
-  const { contracts: partyContracts, errors: partyStreamErrors } = useDamlStreamQuery(partyTemplateIds, partyToken);
-  const { contracts: publicContracts, errors: publicStreamErrors } = useDamlStreamQuery(publicTemplateIds, publicToken);
+  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading } = useDamlStreamQuery(partyTemplateIds, partyToken);
+  const { contracts: publicContracts, errors: publicStreamErrors, loading: publicLoading } = useDamlStreamQuery(publicTemplateIds, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {
@@ -96,7 +98,17 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     partyContracts: [],
     streamErrors: [],
     subscribeTemplate,
+    publicLoading,
+    partyLoading
   });
+
+  useEffect(() => {
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        partyLoading,
+        publicLoading
+      }))
+  }, [partyLoading, publicLoading]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
@@ -129,6 +141,67 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
+export function useContractQueryTest<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
+  const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);
+
+  if (queryStream === undefined) {
+    throw new Error("useContractQuery must be called within a QueryStreamProvider");
+  }
+
+  const { templateId } = template;
+  const {
+    publicTemplateIds,
+    publicContracts,
+    partyTemplateIds,
+    partyContracts,
+    subscribeTemplate,
+    publicLoading,
+    partyLoading
+  } = queryStream;
+
+  const filtered = useMemo(() => {
+    if (!!asPublic) {
+      return publicContracts.filter(c => c.templateId === templateId) as ContractInfo<T,K>[]
+    } else {
+      return partyContracts.filter(c => c.templateId === templateId) as ContractInfo<T,K>[]
+    }
+  }, [asPublic, templateId, publicContracts, partyContracts]);
+
+  useEffect(() => {
+    if (asPublic === AS_PUBLIC) {
+      if (!publicTemplateIds.find(id => id === templateId)) {
+        subscribeTemplate(templateId, AS_PUBLIC);
+      }
+    }
+  }, [asPublic, templateId, publicTemplateIds, subscribeTemplate]);
+
+  useEffect(() => {
+    if (asPublic !== AS_PUBLIC) {
+      if (!partyTemplateIds.find(id => id === templateId)) {
+        subscribeTemplate(templateId);
+      }
+    }
+  }, [asPublic, templateId, partyTemplateIds, subscribeTemplate]);
+
+
+  return asPublic ? { filtered, loading: publicLoading } : { filtered, loading: partyLoading } ;
+}
+
+export function usePublicLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading;
+}
+
+export function usePartyLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.partyLoading;
+}
+
+export function useLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading || queryStream?.partyLoading
+}
+
 
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);

@@ -45,11 +45,19 @@ function isErrorMessage(event: object): event is StreamErrors {
 function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
     const [ contracts, setContracts ] = useState<ContractInfo<any>[]>([]);
+    const [ loading, setLoading ] = useState(true);
     const [ errors, setErrors ] = useState<StreamErrors>();
 
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
-            const data: { events: any[]; offset: string } = JSON.parse(message.data);
+            const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
+            if (data.offset === undefined) {
+                console.log("loading!!");
+            }
+
+            if (data.offset !== undefined) {
+                setLoading(false);
+            }
 
             if (isWarningMessage(data)) {
                 console.warn("Warning emitted from DAML websocket: ", data.warnings);
@@ -80,7 +88,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
               })
             }
         }
-    }, [contracts]);
+    }, [contracts, loading]);
 
     const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
         const ws = newDamlWebsocket(token);
@@ -129,7 +137,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
         }
     }, [token, websocket, messageHandlerScoped])
 
-    return { contracts, errors };
+    return { contracts, errors, loading };
 }
 
 export default useDamlStreamQuery;

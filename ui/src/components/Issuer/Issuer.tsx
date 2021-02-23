@@ -13,7 +13,7 @@ import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/Exc
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -33,6 +33,7 @@ import IssueDerivative from './IssueDerivative'
 import IssuedDerivative from './IssuedDerivative'
 import IssuedToken from './IssuedToken'
 import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;
@@ -43,6 +44,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const issuer = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
@@ -260,7 +262,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </div>
     )
 
-    return registeredIssuer.length === 0 ? inviteScreen : issuerScreen
+    const shouldLoad = loading || (registeredIssuer.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredIssuer.length !== 0 ? issuerScreen : inviteScreen
 };
 
 export default Issuer;

@@ -15,7 +15,7 @@ import {
 
 import { UserIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
@@ -29,6 +29,7 @@ import RoleSideNav from '../common/RoleSideNav'
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
+import LoadingScreen from '../common/LoadingScreen'
 
 type Props = {
     onLogout: () => void;
@@ -39,6 +40,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const relationshipParties = useContractQuery(CustodianRelationship)
         .map(relationship => relationship.contractData.party)
@@ -189,7 +191,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredCustodian.length === 0 ? inviteScreen : custodianScreen
+    const shouldLoad = loading || (registeredCustodian.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredCustodian.length !== 0 ? custodianScreen : inviteScreen
 }
 
 export default Custodian;
