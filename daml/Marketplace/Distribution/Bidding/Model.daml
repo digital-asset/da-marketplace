@@ -1,7 +1,12 @@
 module Marketplace.Distribution.Bidding.Model where
 
 import DA.Finance.Types (Account, Id)
-import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.List (head, last)
+import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement (SettlementInstruction(..))
+import Marketplace.Trading.AllocationAccountRule qualified as Allocation
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
 type T = Bid
 
@@ -31,6 +36,7 @@ template Bid
     provider : Party
     issuer : Party
     customer : Party
+    auctionId : Text
     assetId : Id
     details : Details
     tradingAccount : Account
@@ -43,3 +49,40 @@ template Bid
 
     key (assetId, customer) : (Id, Party)
     maintainer key._2
+
+    controller provider, issuer can
+      UpdateStatus : ContractId Bid
+        with
+          newStatus : Status
+        do
+          create this with status = newStatus
+
+      nonconsuming ProcessAllocation : (ContractId Bid, ContractId AssetDeposit)
+        with
+          quantity : Decimal
+          amount : Decimal
+          price : Decimal
+        do
+          -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
+          let newStatus = if details.quantity == quantity
+                            then FullAllocation with ..
+                            else PartialAllocation with ..
+          bidCid <- exercise self UpdateStatus with ..
+
+          bidDeposit <- fetch depositCid
+          bidDepositCid <- if bidDeposit.asset.quantity > amount
+                              then do
+                                splitDepositCids <- exercise depositCid AssetDeposit_Split with quantities = [amount]
+                                exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; depositCid = last splitDepositCids
+                                pure $ head splitDepositCids
+                              else pure depositCid
+
+          pure (bidCid, bidDepositCid)
+
+      nonconsuming GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
+        with
+          delivery : Settlement.SettlementDetails
+          payment : Settlement.SettlementDetails
+        do
+          create SettlementInstruction with buyer = customer; seller = issuer; ..
+

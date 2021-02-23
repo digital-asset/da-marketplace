@@ -15,7 +15,7 @@ import DA.Next.Map qualified as Map
 import DA.Text (splitOn, parseInt, unwords)
 import Marketplace.AssetDescription (AssetDescription)
 import DA.Optional (fromSomeNote)
-import Marketplace.Trading.AllocationAccountRule
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import DA.Finance.Utils (fetchAndArchive)
 
 template Service
@@ -33,11 +33,11 @@ template Service
       nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
         with
           accountId : Id
-          observers : Set Party
-          ctrls : Set Party
+          observers : [Party]
+          ctrls : [Party]
         do
           -- TODO: Check signatories in id - do we want to allow flexible trust models?
-          create OpenAccountRequest with ..
+          create OpenAccountRequest with observers = fromList observers; ctrls = fromList ctrls; ..
 
       nonconsuming RequestOpenAllocationAccount : ContractId OpenAllocationAccountRequest
         with
@@ -144,8 +144,13 @@ template Service
           safekeepingDepositCid: ContractId AssetDeposit
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
         do
-          exercise lifecycleRequestCid (Lifecycle' with investor = customer, ..)
-
+          exercise lifecycleRequestCid Process with investor = customer; ..
+       
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
 
 -- TODO: remove when @fixings@ param above is removed; or replace with GenMap
 instance MapKey Date where
@@ -168,25 +173,34 @@ template Offer
           create Service with ..
 
       Decline : ()
-        do
-          return ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
 
 template Request
   with
-    operator : Party
     customer : Party
     provider : Party
   where
-    signatory operator, customer
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template OpenAccountRequest
   with
@@ -270,7 +284,7 @@ template LifecycleRequest
     signatory operator, provider, customer
 
     -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
-    choice Lifecycle' : [ ContractId AssetDeposit ]
+    choice Process : [ ContractId AssetDeposit ]
       with
           investor: Party
           safekeepingDepositCid: ContractId AssetDeposit

@@ -16,13 +16,15 @@ import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Trading.Listing as Listing
 import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Distribution.Distributor as Distributor
+import qualified Marketplace.Regulator as Regulator
 
 data CommonContracts = CommonContracts
   with
     operator : Party
     custodian : Party
     exchange : Party
-    auctionAgent : Party
+    agent : Party
+    public : Party
     operatorServiceCid : ContractId Operator.Service
     custodianRoleCid : ContractId Custodian.Role
     exchangeRoleCid : ContractId Exchange.Role
@@ -55,7 +57,8 @@ onboardCommon = do
   operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   custodian <- allocatePartyWithHint "Custodian" $ PartyIdHint "Custodian"
   exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
-  auctionAgent <- allocatePartyWithHint "AuctionAgent" $ PartyIdHint "AuctionAgent"
+  agent <- allocatePartyWithHint "Agent" $ PartyIdHint "Agent"
+  public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
   operatorServiceCid <- submit operator do createCmd Operator.Service with ..
@@ -67,8 +70,19 @@ onboardCommon = do
   matchingServiceCid <- submit exchange do exerciseCmd matchingServiceOfferCid Matching.Accept
   settlementServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferSettlementService with provider = exchange
   settlementServiceCid <- submit exchange do exerciseCmd settlementServiceOfferCid Settlement.Accept
-  distributorRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = auctionAgent
-  distributorRoleCid <- submit auctionAgent do exerciseCmd distributorRoleOfferCid Distributor.Accept
+  distributorRoleOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = agent
+  distributorRoleCid <- submit agent do exerciseCmd distributorRoleOfferCid Distributor.Accept
+
+  -- Identities
+  regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = custodian
+  regulatorServiceCid <- submit custodian do exerciseCmd regulatorServiceOfferCid Regulator.Accept
+  identityVerificationRequestCid <- submit custodian do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "CusotidanLegalName"; location = "CustodianLocation"; observers = [public]
+  verifiedIdentity <- submit operator do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
+  regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = exchange
+  regulatorServiceCid <- submit exchange do exerciseCmd regulatorServiceOfferCid Regulator.Accept
+  identityVerificationRequestCid <- submit exchange do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "ExchangeLegalName"; location = "ExchangeLocation"; observers = [public]
+  verifiedIdentity <- submit operator do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
+
   pure CommonContracts with ..
 
 onboardCustomer : CommonContracts -> Text -> Asset -> Party -> Script CustomerContracts
@@ -89,13 +103,13 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
 
   -- Accounts
-  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = fromList [accountNominee]; ctrls = fromList [ custodian, customer ]
+  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = tradingAccountId; observers = [accountNominee]; ctrls = [ custodian, customer ]
   tradingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = tradingOpenAccountRequestCid
   allocationOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee = accountNominee
   allocationAccountRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = allocationOpenAccountRequestCid
-  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = fromList [accountNominee]; ctrls = fromList [customer]
+  awayOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = awayAccountId; observers = [accountNominee]; ctrls = [customer]
   awayAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = awayOpenAccountRequestCid
-  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = empty; ctrls = fromList [ custodian, customer ]
+  safekeepingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = safekeepingAccountId; observers = []; ctrls = [ custodian, customer ]
   safekeepingAssetSettlementRuleCid <- submit custodian do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = safekeepingOpenAccountRequestCid
 
   -- Trading and Listing services
@@ -103,8 +117,14 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with ..
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
-  issuanceServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with client = customer, ..
+  issuanceServiceOfferCid <- submit custodian do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
+
+  -- Identitiy
+  regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..
+  regulatorServiceCid <- submit customer do exerciseCmd regulatorServiceOfferCid Regulator.Accept
+  identityVerificationRequestCid <- submit customer do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with observers = [public]; legalName = party <> " Legal Name"; location = party <> " Location"
+  verifiedIdentity <- submit operator do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
 
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..

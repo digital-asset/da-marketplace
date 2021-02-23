@@ -1,6 +1,7 @@
 module Marketplace.Trading.Listing where
 
 import DA.Finance.Types
+import DA.Next.Set (Set, fromList)
 import Marketplace.Error qualified as Error
 
 type T = Listing
@@ -26,9 +27,11 @@ template Listing
     maximumTradableQuantity : Decimal
     providerId : Text
     status : Status
+    observers : Set Party
   where
     signatory operator, provider, customer
-
+    observer observers
+    
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
     key (operator, provider, listingId) : (Party, Party, Text)
     maintainer key._1
@@ -56,12 +59,13 @@ template Service
           quotedAssetPrecision : Int
           minimumTradableQuantity : Decimal
           maximumTradableQuantity : Decimal
+          observers : [Party]
         do
-          create CreateListingRequest with status = Active; ..
+          create CreateListingRequest with status = Active; observers = fromList observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
         with
-          listingId : Text
+          listingCid : ContractId Listing
         do
           create DisableListingRequest with ..
 
@@ -94,10 +98,15 @@ template Service
         do
           DisableListingRequest{..} <- fetch disableListingRequestCid
           archive disableListingRequestCid
-          (listingCid, listing) <- fetchByKey @Listing (operator, provider, listingId)
+          listing <- fetch listingCid
           archive listingCid
-
           create listing with status = Disabled
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
 
 template Offer
   with
@@ -113,25 +122,34 @@ template Offer
           create Service with ..
 
       Decline : ()
-        do
-          return ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
 
 template Request
   with
-    operator : Party
     customer : Party
     provider : Party
   where
-    signatory operator, customer
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template CreateListingRequest
   with
@@ -148,6 +166,7 @@ template CreateListingRequest
     minimumTradableQuantity : Decimal
     maximumTradableQuantity : Decimal
     status : Status
+    observers : Set Party
   where
     signatory operator, provider, customer
 
@@ -195,6 +214,6 @@ template DisableListingRequest
     operator : Party
     provider : Party
     customer : Party
-    listingId : Text
+    listingCid : ContractId Listing
   where
     signatory operator, provider, customer
