@@ -53,10 +53,10 @@ template AuctionObserver
   with
     provider : Party
     customer : Party
+    bidder : Party
     auctionId : Text
     asset : Asset
     quotedAssetId : Id
-    bidder : Party
   where
     signatory provider, customer, bidder
 
