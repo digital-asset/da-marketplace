@@ -4,6 +4,7 @@ import ContingentClaims.Claim (serialize, deserialize)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import DA.Next.Set (Set, fromList)
 import DA.Text (unwords)
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Claims (assetDescVers, binaryCallOption)
@@ -39,28 +40,29 @@ template Service
     controller customer can
       nonconsuming RequestOrigination: ContractId OriginationRequest
         with
-          assetId: Id
-          description: Text
-          issuer: Party
-          claims: Claims
-          safekeepingAccountId: Id
+          assetLabel : Text
+          description : Text
+          claims : Claims
+          safekeepingAccountId : Id
+          observers : [Party]
         do
-          create OriginationRequest with ..
+          create OriginationRequest with observers = fromList observers; ..
 
       nonconsuming RequestBinaryCallOptionOrigination: ContractId OriginationRequest
         with
-          assetId: Id
-          issuer: Party
-          safekeepingAccountId: Id
-          expiry: Date
-          strike: Decimal
-          underlyingId: Id
-          currencyId: Id
+          assetLabel : Text
+          safekeepingAccountId : Id
+          observers : [Party]
+          expiry : Date
+          strike : Decimal
+          underlyingId : Id
+          currencyId : Id
         do
           -- TODO: refactor into a more composable form and add to contingent-claims lib
           create OriginationRequest with
             claims = serialize $ binaryCallOption expiry strike underlyingId currencyId
             description = unwords [ underlyingId.label, show expiry, "Binary Call @", show strike ]
+            observers = fromList observers
             ..
 
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
@@ -89,8 +91,11 @@ template Service
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
+          let
+            assetId = Id with signatories = fromList [ provider, customer ]; label = assetLabel; version = 0
+            issuer = customer
           create AssetDescription with ..
-          sequence $ assetDescVers assetId description issuer safekeepingAccountId $ deserialize claims
+          sequence $ assetDescVers assetId description issuer safekeepingAccountId observers $ deserialize claims
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with
@@ -184,10 +189,13 @@ template ReduceIssuanceRequest
 
 template OriginationRequest
   with
-    assetId: Id
-    description: Text
-    issuer: Party
-    claims: Claims
-    safekeepingAccountId: Id
+    operator : Party
+    provider : Party
+    customer : Party
+    assetLabel : Text
+    description : Text
+    claims : Claims
+    safekeepingAccountId : Id
+    observers : Set Party
   where
-     signatory assetId.signatories
+     signatory operator, provider, customer

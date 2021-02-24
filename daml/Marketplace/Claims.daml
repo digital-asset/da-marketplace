@@ -8,6 +8,7 @@ import ContingentClaims.FinancialClaim (european)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
 import ContingentClaims.Observation qualified as O
+import DA.Next.Set (Set)
 import DA.Finance.Types (Id)
 import Marketplace.AssetDescription (AssetDescription(..))
 import Daml.Control.Recursion
@@ -15,12 +16,13 @@ import Daml.Control.Recursion
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
 
-assetDescVers: Id 
-             -> Text  
-             -> Party 
-             -> Id 
+assetDescVers: Id
+             -> Text
+             -> Party
+             -> Id
+             -> Set Party
              -> C -> [Update (ContractId AssetDescription)]
-assetDescVers assetId description issuer safekeepingAccountId = 
+assetDescVers assetId description issuer safekeepingAccountId observers =
   ana write . ana zipWithIndex . (assetId.version + 1, ) . para depthFst --TODO: use ghylo
     where
       depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
