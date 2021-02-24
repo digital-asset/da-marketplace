@@ -10,16 +10,16 @@ import DA.Foldable
 import DA.List (head)
 import DA.Next.Set (fromList, singleton)
 import Marketplace.AssetDescription (AssetDescription(..))
-import Marketplace.Custody qualified as Custody
+import qualified Marketplace.Custody as Custody
 import Marketplace.Distribution.Distributor qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Bidding.Request qualified as Bidding
+import Marketplace.Distribution.Bidding.Service qualified as Bidding
 import Marketplace.Issuance qualified as Issuance
 -- import Marketplace.Settlement qualified as Settle
-import Marketplace.Trading.Service qualified as TradingService
-import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Listing qualified as Listing
+import qualified Marketplace.Trading.Service as TradingService
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Listing as Listing
 
 demo : Script ()
 demo = do
@@ -113,20 +113,19 @@ auction = do
 
   -- Add our parties as bidders
   bidRequests@[aliceBidRequestCid, bobBidRequestCid, charlieBidRequestCid, daveBidRequestCid] <- forA parties \party -> do
-      issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestBid with submitter = issuer.customer; bidder = party.customer; ..
+      agent `submit` exerciseCmd party.biddingServiceCid Bidding.RequestBid with ..
 
   -- Create our bids (all except for Alice)
   now <- getTime
-  bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 100.0, now), (50.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
+  bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 100.0, now), (13.0, 50.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[bobBidCid, charlieBidCid, daveBidCId] <- forA (drop 1 $ zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidRequestCid Bidding.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
+          allowPublishing = False
           ..
 
   -- Add our lead bid to the Auction
-  issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
+  -- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
 
   -- -- Kick off the auction
   -- (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..

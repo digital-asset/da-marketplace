@@ -1,14 +1,7 @@
 module Marketplace.Distribution.Bidding.Model where
 
 import DA.Finance.Types (Account, Id)
-import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
-import DA.List (head, last)
-import Marketplace.Settlement qualified as Settlement
-import Marketplace.Settlement (SettlementInstruction(..))
-import Marketplace.Trading.AllocationAccountRule qualified as Allocation
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
-
-type T = Bid
+import DA.Finance.Asset (AssetDeposit)
 
 data Details = Details with
     price : Decimal
@@ -17,7 +10,7 @@ data Details = Details with
   deriving (Eq, Show)
 
 instance Ord Details where
-  compare x y = compare (x.price, x.quantity, Down x.time) (y.price, y.quantity, Down y.time)
+  compare x y = (x.price, x.quantity, Down x.time) `compare` (y.price, y.quantity, Down y.time)
 
 data Status
     = Pending
@@ -34,55 +27,26 @@ template Bid
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
+    issuer : Party
     auctionId : Text
     assetId : Id
     details : Details
+    allowPublishing : Bool
     tradingAccount : Account
     allocationAccount : Account
     depositCid : ContractId AssetDeposit
     status : Status
   where
-    signatory operator, provider, issuer, customer
+    signatory operator, provider, customer
     ensure details.quantity > 0.0
 
-    key (assetId, customer) : (Id, Party)
-    maintainer key._2
+    key (customer, auctionId) : (Party, Text)
+    maintainer key._1
 
-    controller provider, issuer can
+    controller provider can
       UpdateStatus : ContractId Bid
         with
           newStatus : Status
         do
           create this with status = newStatus
-
-      nonconsuming ProcessAllocation : (ContractId Bid, ContractId AssetDeposit)
-        with
-          quantity : Decimal
-          amount : Decimal
-          price : Decimal
-        do
-          -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
-          let newStatus = if details.quantity == quantity
-                            then FullAllocation with ..
-                            else PartialAllocation with ..
-          bidCid <- exercise self UpdateStatus with ..
-
-          bidDeposit <- fetch depositCid
-          bidDepositCid <- if bidDeposit.asset.quantity > amount
-                              then do
-                                splitDepositCids <- exercise depositCid AssetDeposit_Split with quantities = [amount]
-                                exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; depositCid = last splitDepositCids
-                                pure $ head splitDepositCids
-                              else pure depositCid
-
-          pure (bidCid, bidDepositCid)
-
-      nonconsuming GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
-        with
-          delivery : Settlement.SettlementDetails
-          payment : Settlement.SettlementDetails
-        do
-          create SettlementInstruction with buyer = customer; seller = issuer; ..
-

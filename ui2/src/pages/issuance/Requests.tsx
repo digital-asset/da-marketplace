@@ -18,7 +18,6 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const providerServices = services.filter(s => s.payload.provider === party);
   const createRequests = useStreamQueries(CreateIssuanceRequest).contracts;
   const reduceRequests = useStreamQueries(ReduceIssuanceRequest).contracts;
-
   const createIssuance = async (c : CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error

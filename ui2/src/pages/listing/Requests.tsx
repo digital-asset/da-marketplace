@@ -21,7 +21,6 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const disableRequests = useStreamQueries(DisableListingRequest).contracts;
   const listings = useStreamQueries(Listing).contracts;
   const deleteEntries = disableRequests.map(dr => ({ request: dr, listing: listings.find(l => l.contractId === dr.payload.listingCid)?.payload }));
-
   const createListing = async (c : CreateEvent<CreateListingRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error

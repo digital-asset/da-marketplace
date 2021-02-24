@@ -12,7 +12,6 @@ const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
   const classes = useStyles();
 
   const instruments = useStreamQueries(AssetDescription).contracts;
-
   return (
     <>
       <Grid container direction="column">
