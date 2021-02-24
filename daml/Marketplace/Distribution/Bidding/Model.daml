@@ -3,8 +3,6 @@ module Marketplace.Distribution.Bidding.Model where
 import DA.Finance.Types (Account, Id)
 import DA.Finance.Asset (AssetDeposit)
 
-type T = Bid
-
 data Details = Details with
     price : Decimal
     quantity : Decimal
@@ -34,7 +32,7 @@ template Bid
     auctionId : Text
     assetId : Id
     details : Details
-    publish : Bool
+    allowPublishing : Bool
     tradingAccount : Account
     allocationAccount : Account
     depositCid : ContractId AssetDeposit
@@ -45,3 +43,10 @@ template Bid
 
     key (customer, auctionId) : (Party, Text)
     maintainer key._1
+
+    controller provider can
+      UpdateStatus : ContractId Bid
+        with
+          newStatus : Status
+        do
+          create this with status = newStatus

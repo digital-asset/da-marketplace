@@ -1,8 +1,15 @@
 module Marketplace.Distribution.Bidding.Service where
 
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Account)
+import DA.Finance.Utils (fetchAndArchive)
+import DA.List (head, last)
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Request qualified as Bidding
 import Marketplace.Distribution.Auction.Model qualified as Auction
+import Marketplace.Settlement as Settlement (SettlementDetails, SettlementInstruction(..))
+import Marketplace.Trading.AllocationAccountRule qualified as Allocation
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
 type T = Service
 
@@ -16,21 +23,78 @@ template Service
   where
     signatory operator, provider, customer
 
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming SubmitBid : ContractId Bidding.Bid
+        with
+          bidRequestCid : ContractId Bidding.Request
+          details : Bidding.Details
+          depositCid : ContractId AssetDeposit
+          allowPublishing : Bool
+        do
+          -- TODO: Check for parallism of this choice
+          bidRequest <- fetchAndArchive bidRequestCid
+          deposit <- fetch depositCid
+          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= details.price * details.quantity)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == bidRequest.quotedAssetId.label)
+
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          create Bidding.Bid
+            with
+              status = Bidding.Pending
+              allowPublishing
+              assetId = bidRequest.asset.id
+              issuer = bidRequest.issuer
+              auctionId = bidRequest.auctionId
+              ..
+
     controller provider can
-      nonconsuming CreateBiddingRequest : (ContractId Bidding.T, ContractId Auction.AuctionObserver)
+      nonconsuming RequestBid : ContractId Bidding.Request
         with
           auctionCid : ContractId Auction.T
         do
           auction <- fetch auctionCid
-          auctionObserverCid <- create Auction.AuctionObserver with
-              bidder = customer
-              asset = auction.asset
+          create Bidding.Request
+            with
+              issuer = auction.customer
               auctionId = auction.auctionId
+              asset = auction.asset
               quotedAssetId = auction.quotedAssetId
               ..
-          bidRequestCid <- create Bidding.Request with auctionId = auction.auctionId; ..
 
-          return (bidRequestCid, auctionObserverCid)
+      nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.Bid
+          quantity : Decimal
+          amount : Decimal
+          price : Decimal
+        do
+          -- Fetch Bid -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor -> Update Bid Status
+          bid <- fetch bidCid
+          bidDeposit <- fetch bid.depositCid
+          bidDepositCid <- if bidDeposit.asset.quantity > amount
+                              then do
+                                splitDepositCids <- exercise bid.depositCid AssetDeposit_Split with quantities = [amount]
+                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
+                                pure $ head splitDepositCids
+                              else pure bid.depositCid
+
+          let newStatus = if bid.details.quantity == quantity
+                            then Bidding.FullAllocation with ..
+                            else Bidding.PartialAllocation with ..
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with ..
+          pure (newBidCid, bidDepositCid)
+
+    nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction
+      with
+        issuer : Party
+        delivery : Settlement.SettlementDetails
+        payment : Settlement.SettlementDetails
+      controller provider, issuer
+      do
+        create SettlementInstruction with buyer = customer; seller = issuer; ..
 
 template Offer
   with

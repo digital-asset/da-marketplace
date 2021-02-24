@@ -51,7 +51,7 @@ setup = do
 
   -- Add our parties as bidders
   bidRequests@[aliceBidRequestCid, bobBidRequestCid, charlieBidRequestCid, daveBidRequestCid] <- forA parties \party ->
-      fst <$> (agent `submit` exerciseCmd party.biddingServiceCid Bidding.CreateBiddingRequest with ..)
+      agent `submit` exerciseCmd party.biddingServiceCid Bidding.RequestBid with ..
 
   pure (parties, originalDeposits, issuer, agent, custodian, auctionCid, auctionServiceCid, bidRequests)
 
@@ -63,11 +63,9 @@ auctionAndBidsFullyAllocated = do
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 150.0, now), (13.0, 50.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidRequestCid Request.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
-          publishBid = False
+          allowPublishing = False
           ..
 
   -- Kick off the auction
@@ -103,11 +101,9 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (1.0, 300.0, now), (2.0, 200.0, now), (3.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidRequestCid Request.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
-          publishBid = False
+          allowPublishing = False
           ..
 
   -- Kick off the auction
@@ -145,11 +141,9 @@ auctionFullyAllocatedBidsParticallyAllocated = do
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 400.0, now), (12.0, 150.0, now), (11.0, 50.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidRequestCid Request.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
-          publishBid = False
+          allowPublishing = False
           ..
 
   -- Kick off the auction
@@ -187,11 +181,9 @@ auctionNoBidsAboveFloorPrice = do
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(1.0, 500.0, now), (2.0, 300.0, now), (3.0, 100.0, now), (4.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submit` exerciseCmd bidRequestCid Request.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
-          publishBid = False
+          allowPublishing = False
           ..
 
   -- Kick off the auction
@@ -211,11 +203,9 @@ depositsDontCoverBids = do
   now <- getTime
   bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10000.0, 500.0, now), (1000.0, 300.0, now), (1000.0, 100.0, now), (1000.0, 100.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
   bidCids@[aliceBidCid, bobBidCid, charlieBidCid, daveBidCId] <- forA (zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
-      party.customer `submitMustFail` exerciseCmd bidRequestCid Request.SubmitBid with
-          tradingAccount = party.tradingAccount
-          allocationAccount = party.allocationAccount
+      party.customer `submitMustFail` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
           depositCid = party.assetDepositCid
-          publishBid = False
+          allowPublishing = False
           ..
 
   pure ()
