@@ -61,7 +61,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
             <Grid container direction="column" spacing={2}>
               <Grid item xs={12}>
                 <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Payoff</Typography>
+                  <Typography variant="h5" className={classes.heading}>Instrument</Typography>
                   <div ref={el} style={{ height: "100%" }}/>
                 </Paper>
               </Grid>

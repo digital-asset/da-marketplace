@@ -11,7 +11,7 @@ import Apps from "@material-ui/icons/Apps";
 import classNames from "classnames";
 import { useParty } from "@daml/react";
 import useStyles from "./styles";
-import headerLogo from "../../images/companyLogo.svg";
+import headerLogo from "../../images/lambdaLogo.png";
 import { useUserDispatch, signOut } from "../../context/UserContext";
 import { getName } from "../../config";
 import { ArrowBack, Menu } from "@material-ui/icons";
@@ -42,7 +42,7 @@ function Header({ history, app } : RouteComponentProps & HeaderProps) {
         <Box alignContent="center">
           <Grid container direction="column" alignItems="center">
             <Grid item xs={12}>
-            <Typography variant="h1" className={classes.logotype}>Daml Market</Typography>
+            <Typography variant="h1" className={classes.logotype}>Digital Market</Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body1" style={{ color: "#666" }}>{app}</Typography>

@@ -20,7 +20,7 @@ export default function Apps({ history } : RouteComponentProps) {
       <Grid container direction="column">
         <Grid item xs={12}>
           <Grid container>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -35,7 +35,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -50,7 +50,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -65,7 +65,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -80,7 +80,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -95,7 +95,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -110,7 +110,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={4}>
+            <Grid item xs={3}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
