@@ -302,6 +302,7 @@ def main():
                     return commands
 
                 pair = market_pairs[execution['instrument']]
+                (buyer, seller) = determine_participants(maker, taker)
 
                 commands.append(create(MARKETPLACE.ClearedTrade, {
                     'ccp': ccp,
@@ -311,10 +312,10 @@ def main():
                     'instrument': pair['id'],
                     'pair': token_pair,
                     'trackingNumber': execution['trackingNumber'],
-                    'buyer': maker['exchParticipant'],
-                    'buyerOrderId': maker['orderId'],
-                    'seller': taker['exchParticipant'],
-                    'sellerOrderId': taker['orderId'],
+                    'buyer': buyer['exchParticipant'],
+                    'buyerOrderId': buyer['orderId'],
+                    'seller': seller['exchParticipant'],
+                    'sellerOrderId': seller['orderId'],
                     'matchId': execution['matchId'],
                     'executedQuantity': execution['executedQuantity'],
                     'executedPrice': execution['executedPrice']
@@ -360,6 +361,11 @@ def main():
 
     network.run_forever()
 
+def determine_participants(maker, taker):
+    if maker['isBid']:
+        return (maker, taker)
+    else:
+        return (taker, maker)
 
 def make_instrument(pair, cleared = False) -> str:
     label = f"{pair['_1']['label']}{pair['_2']['label']}"
