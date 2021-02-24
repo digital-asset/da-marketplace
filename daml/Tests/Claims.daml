@@ -1,0 +1,61 @@
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE UndecidableInstances #-} --needed to derive cofree Show,Eq
+
+module Tests.Claims where
+
+import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..))
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation (Observation)
+import DA.Assert ((===))
+import DA.Finance.Types (Id(..))
+import Daml.Control.Recursion
+import Daml.Script
+import Prelude hiding (enumerate, length)
+import Marketplace.Claims (enumerateFrom)
+
+type C = Claim Observation Date Id
+type F = ClaimF Observation Date Id
+
+deriving instance Show C
+deriving instance Eq C
+deriving instance (Show a, Show (f (Cofree f a))) => Show (Cofree f a)
+deriving instance (Eq a, Eq (f (Cofree f a))) => Eq (Cofree f a)
+deriving instance Show (F (Cofree F Int))
+deriving instance Eq (F (Cofree F Int))
+
+enumerateTest: Script ()
+enumerateTest = do
+  let [a,b,c] = Id mempty <$> ["a","b","c"] <*> [0]
+  enumerateFrom 0 Zero === Cofree 0 ZeroF
+  enumerateFrom 0 (Scale (O.pure 2.0) (One a)) === Cofree 0 (ScaleF (O.pure 2.0) (Cofree 1 (OneF a)))
+  enumerateFrom 0 (One a `And` Zero) === Cofree 0 (AndF (Cofree 1 (OneF a)) (Cofree 2 ZeroF))
+  enumerateFrom 0 (
+    Scale (O.pure 3.0)
+      ( And 
+        ( And 
+          ( Scale (O.pure 5.0) 
+            (One a)
+          )
+          (One b)
+        )
+        ( And 
+          Zero
+          (One c)
+        )
+      )
+    ) === 
+   ( Cofree 0 (ScaleF (O.pure 3.0)
+     ( Cofree 1 ( AndF 
+       ( Cofree 2 ( AndF 
+         ( Cofree 3 ( ScaleF (O.pure 5.0) 
+           ( Cofree 4 (OneF a) )
+         ) )
+         ( Cofree 5 (OneF b) )
+       ) )
+       ( Cofree 6 ( AndF 
+         ( Cofree 7 ZeroF )
+         ( Cofree 8 (OneF c) )
+       ) )
+     ) )
+   ) )
+
