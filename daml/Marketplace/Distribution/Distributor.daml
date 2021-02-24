@@ -1,6 +1,7 @@
 module Marketplace.Distribution.Distributor where
 
 import Marketplace.Distribution.Auction.Service qualified as Auction
+import Marketplace.Distribution.Bidding.Service qualified as Bidding
 
 template Role
   with
@@ -24,6 +25,18 @@ template Role
           auctionServiceCid : ContractId Auction.Service
         do
           archive auctionServiceCid
+
+      nonconsuming OfferBiddingService : ContractId Bidding.Offer
+        with
+          customer : Party
+        do
+          create Bidding.Offer with ..
+
+      nonconsuming TerminateBiddingService : ()
+        with
+          biddingServiceCid : ContractId Bidding.Service
+        do
+          archive biddingServiceCid
 
 template Offer
   with

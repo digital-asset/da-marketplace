@@ -2,12 +2,12 @@ module Marketplace.Distribution.Auction.Model where
 
 import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Distribution.Bidding.Model qualified as Bid
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
 
 type T = Auction
 
 data Allocation = Allocation with
-    bid : Bid.T
+    bid : Bidding.Bid
     quantity : Decimal
   deriving (Eq, Show)
 
@@ -46,5 +46,5 @@ template Auction
     signatory operator, provider, customer
     ensure asset.quantity > 0.0
 
-    key (provider, asset.id) : (Party, Id)
+    key (provider, auctionId) : (Party, Text)
     maintainer key._1

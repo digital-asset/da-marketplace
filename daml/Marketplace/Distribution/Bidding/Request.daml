@@ -1,10 +1,6 @@
 module Marketplace.Distribution.Bidding.Request where
 
-import DA.Finance.Asset (AssetDeposit)
-import DA.Finance.Types (Account, Asset)
-import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Trading.AllocationAccountRule qualified as Allocation
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
+import DA.Finance.Types (Asset, Id)
 
 type T = Request
 
@@ -12,32 +8,10 @@ template Request
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
+    issuer : Party
     auctionId : Text
     asset : Asset
+    quotedAssetId : Id
   where
-    signatory operator, provider, issuer
-
-    let assetId = asset.id
-
-    controller customer can
-      nonconsuming SubmitBid : ContractId Bidding.Bid
-        with
-          details : Bidding.Details
-          tradingAccount : Account
-          allocationAccount : Account
-          depositCid : ContractId AssetDeposit
-        do
-          -- TODO: Check for parallism of this choice
-          -- TODO: Check bid details match whats contained in the asset deposit
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
-          create Bidding.Bid with status = Bidding.Pending; ..
-
-      -- TBC : Remove for now to block bidders from withdrawing bids
-      -- nonconsuming WithdrawBid : ContractId AssetDeposit
-      --   with
-      --     bidCid : ContractId Bid
-      --   do
-      --     Bid{..} <- fetchAndArchive bidCid
-      --     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
+    signatory operator, provider, customer

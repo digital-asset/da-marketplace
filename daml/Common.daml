@@ -16,6 +16,7 @@ import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Trading.Listing as Listing
 import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Distribution.Distributor as Distributor
+import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import qualified Marketplace.Regulator as Regulator
 
 data CommonContracts = CommonContracts
@@ -37,8 +38,9 @@ data CustomerContracts = CustomerContracts
     customer : Party
     tradingServiceCid : ContractId Trading.Service
     listingServiceCid : ContractId Listing.Service
-    issuanceServiceCid: ContractId Issuance.Service
-    custodyServiceCid: ContractId Custody.Service
+    issuanceServiceCid  : ContractId Issuance.Service
+    custodyServiceCid : ContractId Custody.Service
+    biddingServiceCid : ContractId Bidding.Service
     allocationAccountRuleCid : ContractId AllocationAccountRule
     tradingAssetSettlementRuleCid : ContractId AssetSettlementRule
     allocationAccountId : Id
@@ -129,5 +131,9 @@ onboardCustomer CommonContracts{..} party asset accountNominee = do
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = tradingAccountId; ..
   assetDepositCid <- submit custodian do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
+
+  -- Bidding Service
+  biddingServiceOfferCid <- submit agent do exerciseCmd distributorRoleCid Distributor.OfferBiddingService with ..
+  biddingServiceCid <- submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept with ..
 
   pure $ CustomerContracts with ..
