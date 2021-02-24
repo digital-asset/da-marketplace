@@ -12,8 +12,7 @@ const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
   const classes = useStyles();
 
   const instruments = useStreamQueries(AssetDescription).contracts;
-  console.log(instruments);
-  
+
   return (
     <>
       <Grid container direction="column">
@@ -24,7 +23,7 @@ const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/registry/new")}>New Instrument</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/registry/instruments/new")}>New Instrument</Button>
                   </Grid>
                 </Grid>
               </Grid>

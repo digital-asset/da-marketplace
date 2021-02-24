@@ -26,7 +26,7 @@ export const render = (el, data) => {
 
   const svg = d3.select(el).append("svg")
     .attr("width", width)
-    .attr("height", height)
+    .attr("height", height + 10)
     .attr("viewBox", [0, -10, width, height])
     .style("user-select", "none");
 
@@ -40,7 +40,7 @@ export const render = (el, data) => {
     .attr("cursor", "pointer")
     .attr("pointer-events", "all");
 
-  const update = (source) => {
+  const update = (source, animate) => {
 
     const duration = 250;
     const nodes = root.descendants().reverse();
@@ -48,12 +48,12 @@ export const render = (el, data) => {
 
     tree(root);
 
-    let left = root;
-    let right = root;
-    root.eachBefore(node => {
-      if (node.x < left.x) left = node;
-      if (node.x > right.x) right = node;
-    });
+    // let left = root;
+    // let right = root;
+    // root.eachBefore(node => {
+    //   if (node.x < left.x) left = node;
+    //   if (node.x > right.x) right = node;
+    // });
 
     // const height = right.x - left.x;
 
@@ -66,12 +66,12 @@ export const render = (el, data) => {
       .data(nodes, d => d.id);
 
     const nodeEnter = node.enter().append("g")
-      .attr("transform", d => `translate(${source.x0},${source.y0})`)
-      .attr("fill-opacity", 0)
-      .attr("stroke-opacity", 0)
+      .attr("transform", d => animate ? `translate(${source.x0},${source.y0})` : `translate(${d.x},${d.y})`)
+      .attr("fill-opacity", animate ? 0 : 1)
+      .attr("stroke-opacity", animate ? 0 : 1)
       .on("click", (event, d) => {
         d.children = d.children ? null : d._children;
-        update(d);
+        update(d, true);
       });
 
     nodeEnter.append("rect")
@@ -90,13 +90,15 @@ export const render = (el, data) => {
       .style("text-anchor", "middle");
 
     // Transition nodes to their new position.
-    const nodeUpdate = node.merge(nodeEnter).transition(transition)
+    // const nodeUpdate =
+    node.merge(nodeEnter).transition(transition)
       .attr("transform", d => `translate(${d.x},${d.y})`)
       .attr("fill-opacity", 1)
       .attr("stroke-opacity", 1);
 
     // Transition exiting nodes to the parent's new position.
-    const nodeExit = node.exit().transition(transition).remove()
+    // const nodeExit =
+    node.exit().transition(transition).remove()
       .attr("transform", d => `translate(${source.x},${source.y})`)
       .attr("fill-opacity", 0)
       .attr("stroke-opacity", 0);
@@ -109,7 +111,7 @@ export const render = (el, data) => {
     const linkEnter = link.enter().append("path")
       .attr("d", d => {
         const o = { x: source.x0, y: source.y0 };
-        return diagonal({ source: o, target: o });
+        return diagonal(animate ? { source: o, target: o } : d);
       });
 
     // Transition links to their new position.
@@ -205,5 +207,5 @@ export const render = (el, data) => {
   };
 
   renderLegend();
-  update(root);
+  update(root, false);
 }

@@ -18,7 +18,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const providerServices = services.filter(s => s.payload.provider === party);
   const createRequests = useStreamQueries(CreateIssuanceRequest).contracts;
   const reduceRequests = useStreamQueries(ReduceIssuanceRequest).contracts;
-  
+
   const createIssuance = async (c : CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
@@ -55,15 +55,14 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Table size="small">
                 <TableHead>
                   <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}><b>Provider</b></TableCell>
-                    <TableCell key={1} className={classes.tableCell}><b>Client</b></TableCell>
-                    <TableCell key={2} className={classes.tableCell}><b>Role</b></TableCell>
-                    <TableCell key={3} className={classes.tableCell}><b>Issuance ID</b></TableCell>
-                    <TableCell key={4} className={classes.tableCell}><b>Account</b></TableCell>
-                    <TableCell key={5} className={classes.tableCell}><b>Asset</b></TableCell>
-                    <TableCell key={6} className={classes.tableCell}><b>Quantity</b></TableCell>
-                    <TableCell key={7} className={classes.tableCell}><b>Action</b></TableCell>
-                    <TableCell key={8} className={classes.tableCell}><b>Details</b></TableCell>
+                    <TableCell key={0} className={classes.tableCell}><b>Issuing Agent</b></TableCell>
+                    <TableCell key={1} className={classes.tableCell}><b>Issuer</b></TableCell>
+                    <TableCell key={2} className={classes.tableCell}><b>Issuance ID</b></TableCell>
+                    <TableCell key={3} className={classes.tableCell}><b>Account</b></TableCell>
+                    <TableCell key={4} className={classes.tableCell}><b>Asset</b></TableCell>
+                    <TableCell key={5} className={classes.tableCell}><b>Quantity</b></TableCell>
+                    <TableCell key={6} className={classes.tableCell}><b>Action</b></TableCell>
+                    <TableCell key={7} className={classes.tableCell}><b>Details</b></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -71,16 +70,15 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{party === c.payload.provider ? "Provider" : "Client"}</TableCell>
-                      <TableCell key={3} className={classes.tableCell}>{c.payload.issuanceId}</TableCell>
-                      <TableCell key={4} className={classes.tableCell}>{c.payload.accountId.label}</TableCell>
-                      <TableCell key={5} className={classes.tableCell}>{c.payload.assetId.label}</TableCell>
-                      <TableCell key={6} className={classes.tableCell}>{c.payload.quantity}</TableCell>
-                      <TableCell key={7} className={classes.tableCell}>
-                        {party === c.payload.provider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => createIssuance(c)}>Process</Button>}
+                      <TableCell key={2} className={classes.tableCell}>{c.payload.issuanceId}</TableCell>
+                      <TableCell key={3} className={classes.tableCell}>{c.payload.accountId.label}</TableCell>
+                      <TableCell key={4} className={classes.tableCell}>{c.payload.assetId.label}</TableCell>
+                      <TableCell key={5} className={classes.tableCell}>{c.payload.quantity}</TableCell>
+                      <TableCell key={6} className={classes.tableCell}>
+                        {party === c.payload.provider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => createIssuance(c)}>Issue</Button>}
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
-                      <TableCell key={8} className={classes.tableCell}>
+                      <TableCell key={7} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/issuance/createrequest/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
@@ -119,7 +117,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                       {/* <TableCell key={5} className={classes.tableCell}>{c.payload.assetId.label}</TableCell>
                       <TableCell key={6} className={classes.tableCell}>{c.payload.quotedAssetId.label}</TableCell> */}
                       <TableCell key={7} className={classes.tableCell}>
-                        {party === c.payload.provider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => deleteIssuance(c)}>Process</Button>}
+                        {party === c.payload.provider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => deleteIssuance(c)}>Deissue</Button>}
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={8} className={classes.tableCell}>
