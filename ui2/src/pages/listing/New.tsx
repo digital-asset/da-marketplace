@@ -5,7 +5,7 @@ import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 import { render } from "../../components/Claims/render";
-import { transformClaim } from "../../claims";
+import { transformClaim } from "../../components/Claims/util";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { RequestCreateListing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";

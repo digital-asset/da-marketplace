@@ -5,7 +5,7 @@ import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 import { render } from "../../components/Claims/render";
-import { transformClaim } from "../../claims";
+import { transformClaim } from "../../components/Claims/util";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
 import { Id } from "@daml.js/da-marketplace/lib/DA/Finance/Types/module";

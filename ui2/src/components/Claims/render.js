@@ -2,8 +2,8 @@ import * as d3 from "d3";
 
 export const render = (el, data) => {
 
-  const nodeWidth = 150;
-  const nodeHeight = 50;
+  const nodeWidth = 120;
+  const nodeHeight = 80;
 
   const tree = d3.tree().nodeSize([nodeWidth, nodeHeight]);//.size([width - 20, height - 20]);
   const diagonal = d3.linkVertical().x(d => d.x).y(d => d.y);
@@ -16,22 +16,30 @@ export const render = (el, data) => {
   }
 
   const root = d3.hierarchy(data);
-
   const width = el.offsetWidth;
   const height = root.height * nodeHeight + 20;
 
-  root.x0 = width;
+  root.x0 = 0;
   root.y0 = 0;
   root.descendants().forEach((d, i) => {
     d.id = i;
     d._children = d.children;
   });
 
-  const svg = d3.select(el).append("svg")
+  function zoom(event) {
+    svg.attr("transform", event.transform);
+  }
+
+  var zoomListener = d3.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
+
+  const baseSvg = d3.select(el).append("svg")
     .attr("width", width)
     .attr("height", height + 10)
     .attr("viewBox", [-width / 2, -10, width, height])
-    .style("user-select", "none");
+    .style("user-select", "none")
+    .call(zoomListener);
+  const svg = baseSvg
+    .append("g");
 
   const gLink = svg.append("g")
     .attr("fill", "none")
@@ -158,8 +166,8 @@ export const render = (el, data) => {
   };
 
   const renderLegend = () => {
-    const legend = svg.append("g")
-      .attr("transform", d => `translate(${width - 60},7)`);
+    const legend = baseSvg.append("g")
+      .attr("transform", d => `translate(${width / 2 - 60},7)`);
     legend.append("rect")
       .attr("x", -55)
       .attr("y", -15)
