@@ -50,7 +50,7 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
   const obsExpiry   : Observation<DamlDate, Id> = { tag: "DateConst", value: parseDate(expiry) };
   const obsEuropean : Observation<DamlDate, Id> = { tag: "DateEqu", value: { _1: obsToday, _2: obsExpiry } };
   const obsStrike   : Observation<DamlDate, Id> = { tag: "DecimalConst", value: strike };
-  const obsSpot     : Observation<DamlDate, Id> = { tag: "DecimalSpot", value: underlying };
+  const obsSpot     : Observation<DamlDate, Id> = { tag: "DecimalObs", value: underlying };
   const obsPayoff   : Observation<DamlDate, Id> = { tag: "DecimalLte", value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike } };
 
   const zero      : Claim<DamlDate, Id> = { tag: "Zero", value: {} };
