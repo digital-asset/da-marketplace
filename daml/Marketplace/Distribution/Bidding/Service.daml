@@ -6,7 +6,6 @@ import DA.Finance.Utils (fetchAndArchive)
 import DA.List (head, last)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Request qualified as Bidding
-import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Settlement as Settlement (SettlementDetails, SettlementInstruction(..))
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
