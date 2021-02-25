@@ -1,7 +1,7 @@
 module Marketplace.Distribution.Bidding.Service where
 
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
-import DA.Finance.Types (Account)
+import DA.Finance.Types (Asset, Account, Id)
 import DA.Finance.Utils (fetchAndArchive)
 import DA.List (head, last)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
@@ -30,19 +30,22 @@ template Service
       nonconsuming SubmitBid : ContractId Bidding.Bid
         with
           bidRequestCid : ContractId Bidding.Request
-          details : Bidding.Details
+          price : Decimal
+          quantity : Decimal
           depositCid : ContractId AssetDeposit
           allowPublishing : Bool
         do
           -- TODO: Check for parallism of this choice
           bidRequest <- fetchAndArchive bidRequestCid
           deposit <- fetch depositCid
-          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= details.price * details.quantity)
+          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
           assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == bidRequest.quotedAssetId.label)
 
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          time <- getTime
           create Bidding.Bid
             with
+              details = Bidding.Details with ..
               status = Bidding.Pending
               allowPublishing
               assetId = bidRequest.asset.id
@@ -53,16 +56,12 @@ template Service
     controller provider can
       nonconsuming RequestBid : ContractId Bidding.Request
         with
-          auctionCid : ContractId Auction.T
+          issuer : Party
+          auctionId : Text
+          asset : Asset
+          quotedAssetId : Id
         do
-          auction <- fetch auctionCid
-          create Bidding.Request
-            with
-              issuer = auction.customer
-              auctionId = auction.auctionId
-              asset = auction.asset
-              quotedAssetId = auction.quotedAssetId
-              ..
+          create Bidding.Request with ..
 
       nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with

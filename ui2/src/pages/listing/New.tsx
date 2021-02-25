@@ -110,7 +110,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
                       {assets.filter(c => c.payload.assetId.label !== quotedAssetLabel).map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
                     </Select>
                   </FormControl>
-                  <TextField key={6} className={classes.inputField}  fullWidth label="Traded Asset Precision" type="number" value={tradedAssetPrecision} onChange={e => setTradedAssetPrecision(e.target.value as string)} />
+                  <TextField className={classes.inputField}  fullWidth label="Traded Asset Precision" type="number" value={tradedAssetPrecision} onChange={e => setTradedAssetPrecision(e.target.value as string)} />
                   <FormControl className={classes.inputField} fullWidth>
                     <InputLabel>Quoted Asset</InputLabel>
                     <Select value={quotedAssetLabel} onChange={e => setQuotedAssetLabel(e.target.value as string)} MenuProps={menuProps}>

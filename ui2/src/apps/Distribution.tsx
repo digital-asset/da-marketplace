@@ -7,19 +7,36 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { useLayoutState } from "../context/LayoutContext";
 import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
-import { New } from "../pages/listing/New";
 import { BidRequests } from "../pages/distribution/BidRequests";
 import { Auctions } from "../pages/distribution/Auctions";
 import { Auction } from "../pages/distribution/Auction";
+import { New } from "../pages/distribution/New";
+import { useParty, useStreamQueries } from "@daml/react";
+import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
+import { Requests } from "../pages/distribution/Requests";
 
 const DistributionApp = () => {
   const classes = useStyles();
   const layoutState = useLayoutState();
 
+  const party = useParty();
+  const services = useStreamQueries(Service).contracts;
+  const providerServices = services.filter(c => c.payload.provider === party);
+  const customerServices = services.filter(c => c.payload.customer === party);
+  const isAgent = providerServices.length > 0;
+  const isIssuer = customerServices.length > 0;
+
   const entries : SidebarEntry[] = [];
   entries.push({ label: "New Auction", path: "/apps/distribution/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<BidRequests />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
+  if (isAgent) {
+    entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
+    entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+  } else if (isIssuer) {
+    entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
+    entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+  } else {
+    entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<BidRequests />), icon: (<PlayArrow/>), children: [] });
+  }
 
   return (
     <div className={classes.root}>
@@ -30,7 +47,7 @@ const DistributionApp = () => {
           <div className={classes.fakeToolbar} />
           <Switch>
             <Route key={"auction"} path={"/apps/distribution/auctions/:contractId"} component={Auction} />
-            {entries.map(e => 
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>

@@ -40,9 +40,9 @@ setup = do
 
   -- Create an Auction request and approve it
   let
+    auctionId = "MyAuction"
     quotedAssetId = Id with signatories = fromList [ agent, issuer.customer ]; label = "USD"; version = 0
   createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
-      auctionId = "MyAuction"
       asset = newDistributionAsset
       assetDepositCid = issuer.assetDepositCid
       floorPrice = 5.0
@@ -51,7 +51,7 @@ setup = do
 
   -- Add our parties as bidders
   bidRequests@[aliceBidRequestCid, bobBidRequestCid, charlieBidRequestCid, daveBidRequestCid] <- forA parties \party ->
-      agent `submit` exerciseCmd party.biddingServiceCid Bidding.RequestBid with ..
+      agent `submit` exerciseCmd party.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = newDistributionAsset; ..
 
   pure (parties, originalDeposits, issuer, agent, custodian, auctionCid, auctionServiceCid, bidRequests)
 

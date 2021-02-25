@@ -7,7 +7,7 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { useLayoutState } from "../context/LayoutContext";
 import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
-import { New } from "../pages/listing/New";
+import { New } from "../pages/distribution/New";
 import { Requests } from "../pages/listing/Requests";
 import { Listings } from "../pages/listing/Listings";
 
@@ -37,7 +37,7 @@ const ListingApp = () => {
             <Route key={"myquote"} path={"/apps/policyadmin/myquotes/:contractId"} component={MyQuote} />
             <Route key={"mypolicy"} path={"/apps/policyadmin/mypolicies/:contractId"} component={MyPolicy} />
             <Route key={"myinvoice"} path={"/apps/policyadmin/myinvoices/:contractId"} component={MyInvoice} /> */}
-            {entries.map(e => 
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>

@@ -1,18 +1,23 @@
 import React, { useState } from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, Typography } from "@material-ui/core";
-import { useStreamQueries } from "@daml/react";
+import { useLedger, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { Request } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Request/module";
+import { Request } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Request";
 import { CreateEvent } from "@daml/ledger";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
+import { Service, SubmitBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
+import { ContractId } from "@daml/types";
 
 const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
 
-  // const ledger = useLedger();
+  const ledger = useLedger();
+  const services = useStreamQueries(Service).contracts;
   const requests = useStreamQueries(Request).contracts;
+  const deposits = useStreamQueries(AssetDeposit).contracts;
 
   const defaultBidDialogProps : InputDialogProps<any> = {
     open: false,
@@ -26,11 +31,33 @@ const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
   };
   const [bidDialogProps, setBidDialogProps] = useState<InputDialogProps<any>>(defaultBidDialogProps);
 
-  const submitBid = (c : CreateEvent<Request>) => {
+  if (services.length === 0) return (<></>);
+  const service = services[0];
+
+  const rightsizeAsset = async (deposit : CreateEvent<AssetDeposit>, quantity : string) : Promise<ContractId<AssetDeposit>> => {
+    if (parseFloat(deposit.payload.asset.quantity) > parseFloat(quantity)) {
+      const [ [ splitDepositCid,], ] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, { quantities: [ quantity ] });
+      return splitDepositCid;
+    }
+    return deposit.contractId;
+  }
+
+  const submitBid = (r : CreateEvent<Request>) => {
     const onClose = async (state : any | null) => {
       setBidDialogProps({ ...defaultBidDialogProps, open: false });
       if (!state) return;
-      // await ledger.exercise(Request.SubmitBid, c.contractId, { price: state.price, quantity: state.quantity });
+      const volume = state.price * state.quantity;
+      const deposit = deposits.find(c => c.payload.asset.id.label === r.payload.quotedAssetId.label && parseFloat(c.payload.asset.quantity) >= volume);
+      if (!deposit) return;
+      const depositCid = await rightsizeAsset(deposit, volume.toString());
+      const arg : SubmitBid = {
+        bidRequestCid: r.contractId,
+        price: state.price.toString(),
+        quantity: state.quantity.toString(),
+        depositCid,
+        allowPublishing: false
+      };
+      await ledger.exercise(Service.SubmitBid, service.contractId, arg);
     };
     setBidDialogProps({ ...defaultBidDialogProps, open: true, onClose });
   };
