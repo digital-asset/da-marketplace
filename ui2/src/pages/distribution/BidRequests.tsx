@@ -4,12 +4,14 @@ import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, 
 import { useLedger, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { Request } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Request";
+import { Request } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { CreateEvent } from "@daml/ledger";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
 import { Service, SubmitBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
+import { Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 import { ContractId } from "@daml/types";
+import { getBidStatus, getBidAllocation } from "./Utils";
 
 const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -17,6 +19,7 @@ const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
   const ledger = useLedger();
   const services = useStreamQueries(Service).contracts;
   const requests = useStreamQueries(Request).contracts;
+  const bids = useStreamQueries(Bid).contracts;
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
   const defaultBidDialogProps : InputDialogProps<any> = {
@@ -104,6 +107,39 @@ const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
                       <TableCell key={5} className={classes.tableCell}>
                         <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => submitBid(c)}>Bid</Button>
                       </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Paper>
+          </Grid>
+          <Grid item xs={12}>
+            <Paper className={classes.paper}>
+              <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography variant="h2">Bids</Typography></Grid>
+              <Table size="small">
+                <TableHead>
+                  <TableRow className={classes.tableRow}>
+                    <TableCell key={0} className={classes.tableCell}><b>Auction ID</b></TableCell>
+                    <TableCell key={1} className={classes.tableCell}><b>Agent</b></TableCell>
+                    <TableCell key={2} className={classes.tableCell}><b>Issuer</b></TableCell>
+                    <TableCell key={3} className={classes.tableCell}><b>Asset</b></TableCell>
+                    <TableCell key={4} className={classes.tableCell}><b>Quantity</b></TableCell>
+                    <TableCell key={5} className={classes.tableCell}><b>Price</b></TableCell>
+                    <TableCell key={6} className={classes.tableCell}><b>Status</b></TableCell>
+                    <TableCell key={7} className={classes.tableCell}><b>Allocation</b></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {bids.map((c, i) => (
+                    <TableRow key={i} className={classes.tableRow}>
+                      <TableCell key={0} className={classes.tableCell}>{c.payload.auctionId}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.issuer)}</TableCell>
+                      <TableCell key={3} className={classes.tableCell}>{c.payload.assetId.label}</TableCell>
+                      <TableCell key={4} className={classes.tableCell}>{c.payload.details.quantity}</TableCell>
+                      <TableCell key={5} className={classes.tableCell}>{c.payload.details.price}</TableCell>
+                      <TableCell key={6} className={classes.tableCell}>{getBidStatus(c.payload.status)}</TableCell>
+                      <TableCell key={7} className={classes.tableCell}>{getBidAllocation(c.payload)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

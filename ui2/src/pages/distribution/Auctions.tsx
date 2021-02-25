@@ -7,6 +7,7 @@ import { useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
 import { Auction } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
+import { getAuctionStatus } from "./Utils";
 
 const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -49,7 +50,7 @@ const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                       <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
                       <TableCell key={2} className={classes.tableCell}>{c.payload.asset.quantity} {c.payload.asset.id.label}</TableCell>
                       <TableCell key={3} className={classes.tableCell}>{c.payload.floorPrice} {c.payload.quotedAssetId.label}</TableCell>
-                      <TableCell key={4} className={classes.tableCell}>{c.payload.status.tag}</TableCell>
+                      <TableCell key={4} className={classes.tableCell}>{getAuctionStatus(c.payload.status)}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/distribution/auctions/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>

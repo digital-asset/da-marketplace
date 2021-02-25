@@ -1,0 +1,29 @@
+-- Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module SettlementInstructionTrigger where
+
+import Daml.Trigger
+import DA.Foldable (forA_)
+import Marketplace.Settlement (SettlementInstruction, Settle(..))
+
+handleSettlementInstruction : Trigger ()
+handleSettlementInstruction = Trigger
+  { initialize = pure ()
+  , updateState = \_ -> pure ()
+  , rule = handleSettlementInstructionRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @SettlementInstruction ]
+  , heartbeat = None
+  }
+
+-- |Accept all 'SettlementInstruction'
+handleSettlementInstructionRule : Party -> TriggerA () ()
+handleSettlementInstructionRule party = do
+  debug "Running Settlement Instruction rule..."
+
+  -- Accept all 'SettlementInstructions'
+  settlementInstructions <- query @SettlementInstruction
+
+  forA_ settlementInstructions \(siCid, si) -> do
+    debug $ "Processing Settlement Instruction: " <> show si
+    emitCommands [exerciseCmd siCid Settle] [toAnyContractId siCid]
