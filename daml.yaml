@@ -1,7 +1,7 @@
 sdk-version: 1.10.0
 name: da-marketplace
 source: daml
-init-script: Demo:auction
+init-script: Demo:issuance
 parties:
   - Alice
   - Bob

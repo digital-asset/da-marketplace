@@ -5,7 +5,7 @@ import ContingentClaims.Claim.Serializable (Claim(Zero))
 import ContingentClaims.Claim qualified as C
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (cpb, couponDates, swap)
+import ContingentClaims.FinancialClaim (cpb, couponDates)
 import ContingentClaims.FinancialClaim qualified as C
 import Daml.Script
 import DA.Date (date, Month(..))
@@ -203,11 +203,11 @@ issuance = do
 
   -- Alice originates a bond
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
-      assetLabel = "NFLX 4 7/8 04/15/22"
-      description = "NFLX 4 7/8 04/15/22"
+      assetLabel = "NFLX 4 7/8 04/15/23"
+      description = "NFLX 4 7/8 04/15/23"
       safekeepingAccountId = alice.safekeepingAccountId
       observers = []
-      claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usdId (couponDates 2021 2022 [Jan .. Dec] 15)
+      claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usdId (couponDates 2021 2023 [Jan,Jul] 15)
   cpbDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cpbDesc <- queryContractId common.custodian cpbDescCid
 
@@ -216,20 +216,22 @@ issuance = do
       convertibleNote note principal ccy discount maturity interest cap underlying = 
         C.when (C.at maturity) (
           C.cond (O.observe underlying.label O.<= O.pure cap) (
-            swap
-              (C.scale (O.pure (principal * (1.0 + interest) * (1.0 / discount)) O./ O.observe underlying.label) (C.one underlying))
-              (C.one note)
+             C.scale (O.pure (principal * (1.0 + interest) / (1.0 - discount)) O./ O.observe underlying.label) (C.one underlying)
           )( C.scale (O.pure (principal * (1.0 + interest))) (C.one ccy)
           )
         )
 
-  -- Alice originates a convertible
+  -- Alice originates a convertible note
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
       assetLabel = "NFLX convertible 06/21/21"
       description = "NFLX convertible 06/21/21"
       safekeepingAccountId = alice.safekeepingAccountId
       observers = []
       claims = C.serialize $ convertibleNote nflxId 100_000.0 usdId 0.20 (date 2021 Jun 06) 0.04 550.0 nflxId
+  -- FIXME: the below appears to be failing for some inexplicable reason; accept the request in the UI manually!
+  -- cnDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  -- Some cnDesc <- queryContractId common.custodian cnDescCid
+
   pure ()
 
   
