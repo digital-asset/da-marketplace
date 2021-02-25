@@ -20,7 +20,7 @@ function Login(props : RouteComponentProps) {
       <Grid item xs={12} sm={12} md={6}>
         <div className={classes.logotypeContainer}>
           <img src={loginLogo} alt="logo" className={classes.logotypeImage} />
-          <Typography className={classes.logotypeText}>MARKETPLACE</Typography>
+          <Typography className={classes.logotypeText}>DIGITAL MARKET</Typography>
         </div>
       </Grid>
       <Grid item xs={12} sm={12} md={6}>

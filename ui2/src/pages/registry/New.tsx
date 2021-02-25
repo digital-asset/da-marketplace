@@ -1,41 +1,33 @@
 import React from "react";
-import { RouteComponentProps } from "react-router-dom";
+import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Card, CardActionArea, CardMedia, CardContent, Typography, Grid, Box } from "@material-ui/core";
 import { makeStyles, createStyles } from "@material-ui/styles";
-import networkImage from "./images/network.jpg";
-import custodyImage from "./images/custody.jpg";
-import registryImage from "./images/registry.png";
-import issuanceImage from "./images/issuance.jpg";
-import distributionImage from "./images/distribution.png";
-import listingImage from "./images/listing.jpg";
-import tradingImage from "./images/trading.jpg";
-import Header from "./components/Header/Header";
+import binaryOptionImage from "../../images/binary-option.png";
 
-export default function Apps({ history } : RouteComponentProps) {
+const NewComponent = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
 
   return (
     <>
-      <Header app="Portal" />
       <Grid container direction="column">
         <Grid item xs={12}>
           <Grid container>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/network/custody")}>
-                      <CardMedia className={classes.media} image={networkImage} title="Network" />
+                    <CardActionArea onClick={() => history.push("/apps/registry/instruments/new/binaryoption")}>
+                      <CardMedia className={classes.media} image={binaryOptionImage} title="Binary Option" />
                       <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Network</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your network and relationships</Typography>
+                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Binary Option</Typography>
+                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Create a binary option instrument</Typography>
                       </CardContent>
                     </CardActionArea>
                   </Box>
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            {/* <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -50,7 +42,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -65,7 +57,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -80,7 +72,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -95,7 +87,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -110,7 +102,7 @@ export default function Apps({ history } : RouteComponentProps) {
                 </Card>
               </Grid>
             </Grid>
-            <Grid item xs={3}>
+            <Grid item xs={4}>
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
@@ -124,7 +116,7 @@ export default function Apps({ history } : RouteComponentProps) {
                   </Box>
                 </Card>
               </Grid>
-            </Grid>
+            </Grid> */}
           </Grid>
         </Grid>
       </Grid>
@@ -147,3 +139,5 @@ const useStyles = makeStyles((theme : any) => createStyles({
     color: "white",
   },
 }));
+
+export const New = withRouter(NewComponent);

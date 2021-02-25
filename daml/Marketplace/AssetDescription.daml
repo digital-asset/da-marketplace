@@ -2,6 +2,7 @@ module Marketplace.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Id)
+import DA.Next.Set (Set)
 import ContingentClaims.Claim.Serializable (Claim)
 
 type T = AssetDescription
@@ -27,7 +28,9 @@ template AssetDescription
     -- ^ Number of shares/contracts already issued for trading
     -- issuePrice: (Decimal, Asset)
     -- ^ The price & currency of the *initial* offer.
+    observers : Set Party
   where
     signatory assetId.signatories <> safekeepingAccountId.signatories
+    observer observers
     key assetId : Id
     maintainer key.signatories

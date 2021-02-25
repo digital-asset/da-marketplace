@@ -76,6 +76,7 @@ export default makeStyles((theme : any) => createStyles({
     verticalAlign: "top",
   },
   paper: {
+    padding: 20,
     marginBottom: 20,
     backgroundColor: theme.palette.secondary.main
   },
@@ -110,6 +111,6 @@ export default makeStyles((theme : any) => createStyles({
           marginLeft: 0,
         },
       }
-    }    
+    }
   }
 }));

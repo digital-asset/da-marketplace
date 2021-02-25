@@ -44,10 +44,10 @@ const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteC
               <Table size="small">
                 <TableHead>
                   <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}><b>Provider</b></TableCell>
-                    <TableCell key={1} className={classes.tableCell}><b>Client</b></TableCell>
+                    <TableCell key={0} className={classes.tableCell}><b>Issuing Agent</b></TableCell>
+                    <TableCell key={1} className={classes.tableCell}><b>Issuer</b></TableCell>
                     <TableCell key={2} className={classes.tableCell}><b>Issuance ID</b></TableCell>
-                    <TableCell key={3} className={classes.tableCell}><b>Account</b></TableCell>
+                    <TableCell key={3} className={classes.tableCell}><b>Issuance Account</b></TableCell>
                     <TableCell key={4} className={classes.tableCell}><b>Asset</b></TableCell>
                     <TableCell key={5} className={classes.tableCell}><b>Quantity</b></TableCell>
                     <TableCell key={6} className={classes.tableCell}><b>Action</b></TableCell>
