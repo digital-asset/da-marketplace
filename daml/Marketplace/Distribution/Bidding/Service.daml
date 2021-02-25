@@ -5,12 +5,11 @@ import DA.Finance.Types (Asset, Account, Id)
 import DA.Finance.Utils (fetchAndArchive)
 import DA.List (head, last)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Bidding.Request qualified as Bidding
 import Marketplace.Settlement as Settlement (SettlementDetails, SettlementInstruction(..))
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
-type T = Service
+type S = Service
 
 template Service
   with
@@ -46,10 +45,10 @@ template Service
             with
               details = Bidding.Details with ..
               status = Bidding.Pending
-              allowPublishing
               assetId = bidRequest.asset.id
               issuer = bidRequest.issuer
               auctionId = bidRequest.auctionId
+              quotedAssetId = bidRequest.quotedAssetId
               ..
 
     controller provider can
