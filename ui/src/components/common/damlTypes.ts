@@ -3,12 +3,15 @@ import { CreateEvent } from '@daml/ledger'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     CentralCounterpartyCustomer,
+    Broker,
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
     Registry,
     Custodian,
     Clearing,
+    Investor,
+    Issuer,
     Notification,
     Token,
     Derivative
@@ -73,6 +76,12 @@ export function wrapTextMap(items: string[]) {
 
     return { textMap: textMapValue }
 }
+
+export type RelationshipRequestChoice =
+    typeof Investor.Investor.Investor_RequestCustodianRelationship |
+    typeof Issuer.Issuer.Issuer_RequestCustodianRelationship |
+    typeof Broker.Broker.Broker_RequestCustodianRelationship |
+    typeof Exchange.Exchange.Exchange_RequestCustodianRelationship;
 
 export type ContractInfo<T, K = unknown> = {
     templateId: string;

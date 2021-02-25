@@ -5,7 +5,10 @@ import { useLedger, useParty } from '@daml/react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import {
+    Broker as BrokerTemplate,
+    BrokerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
@@ -118,8 +121,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.BrokerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>

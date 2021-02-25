@@ -2,21 +2,19 @@ import React from 'react'
 
 import { Header } from 'semantic-ui-react'
 
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-
 import { getAbbreviation } from '../common/utils';
 
-import { CustodianRelationshipInfo } from './damlTypes'
+import { CustodianRelationshipInfo, RelationshipRequestChoice } from './damlTypes'
 
 import { useRegistryLookup } from './RegistryLookup'
 import RequestCustodianRelationship from './RequestCustodianRelationship'
 
 type Props = {
-    role: MarketRole;
+    relationshipRequestChoice: RelationshipRequestChoice;
     custodianRelationships: CustodianRelationshipInfo[];
 }
 
-const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) => {
+const MarketRelationships: React.FC<Props> = ({ relationshipRequestChoice, custodianRelationships }) => {
     const custodianMap = useRegistryLookup().custodianMap;
 
     const rows = custodianRelationships.map(relationship => {
@@ -42,7 +40,9 @@ const MarketRelationships: React.FC<Props> = ({ role, custodianRelationships }) 
     return (
         <div className='market-relationships'>
             <Header className='bold' as='h2'>Market Relationships</Header>
-            <RequestCustodianRelationship role={role} custodianRelationships={custodianRelationships}/>
+            <RequestCustodianRelationship
+                relationshipRequestChoice={relationshipRequestChoice}
+                custodianRelationships={custodianRelationships}/>
             {rows}
         </div>
     )
