@@ -8,7 +8,7 @@ import { render } from "../registry/render";
 import { transformClaim } from "../../claims";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
-import { Service, RequestCreateAuction } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
+import { Service, RequestCreateAuction, CreateAuctionRequest } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
 
@@ -35,6 +35,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const heldAssets = deposits.filter(c => c.payload.account.owner === party);
   const heldAssetLabels = heldAssets.map(c => c.payload.asset.id.label).filter((v, i, a) => a.indexOf(v) === i);
+  const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
 
   const canRequest = !!auctionedAssetLabel && !!auctionedAsset && !!quotedAssetLabel && !!quotedAsset && !!auctionId && !!quantity && !!floorPrice;
 
@@ -65,7 +66,11 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   }
 
   const requestCreateAuction = async () => {
-    const deposit = deposits.find(c => c.payload.asset.id.label === auctionedAssetLabel && parseFloat(c.payload.asset.quantity) >= parseFloat(quantity));
+    const deposit = deposits
+      .filter(c => auctionRequests.findIndex(a => a.payload.assetDepositCid === c.contractId) === -1)
+      .filter(c => c.payload.account !== service.payload.allocationAccount)
+      .filter(c => c.payload.asset.id.label === auctionedAssetLabel)
+      .find(c => parseFloat(c.payload.asset.quantity) >= parseFloat(quantity));
     if (!auctionedAsset || !quotedAsset || !deposit) return;
     const assetDepositCid = await rightsizeAsset(deposit, quantity);
     const request : RequestCreateAuction = {
