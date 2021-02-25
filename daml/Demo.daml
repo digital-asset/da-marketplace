@@ -2,8 +2,13 @@ module Demo where
 
 import Common
 import ContingentClaims.Claim.Serializable (Claim(Zero))
+import ContingentClaims.Claim qualified as C
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation qualified as O
+import ContingentClaims.FinancialClaim (cpb, couponDates)
+import ContingentClaims.FinancialClaim qualified as C
 import Daml.Script
-import DA.Date (date, Month(Mar))
+import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetCategorization(..), AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Foldable
@@ -164,15 +169,16 @@ issuance = do
   let
     usdId = Id with signatories = singleton common.custodian; label = "USD"; version = 0
     usdAsset = Asset with id = usdId, quantity = 100.0
-    underlyingId = Id with signatories = singleton common.custodian; label = "TSLA"; version = 0
-    underlyingAsset = Asset with id = underlyingId, quantity = 200.0
+    tslaId = Id with signatories = singleton common.custodian; label = "TSLA"; version = 0
+    nflxId = Id with signatories = singleton common.custodian; label = "NFLX"; version = 0
+    -- tsla = Asset with id = tslaId, quantity = 200.0
     safekeepingAccountId = Id with signatories = singleton common.custodian; label = "CustodianOwnAccount"; version = 0
 
   alice <- onboardCustomer common "Alice" usdAsset common.exchange -- this is weird - we should be first issuing asset
   bob <- onboardCustomer common "Bob" usdAsset common.exchange
 
   submit common.custodian do createCmd AssetDescription with assetId = usdId; description = "United States Dollar"; issuer = common.custodian; claims = Zero; safekeepingAccountId; observers = singleton common.public
-  submit common.custodian do createCmd AssetDescription with assetId = underlyingId; description = "Tesla, Inc. Common Stock"; issuer = common.custodian; claims = Zero; safekeepingAccountId; observers = singleton common.public
+  submit common.custodian do createCmd AssetDescription with assetId = tslaId; description = "Tesla, Inc. Common Stock"; issuer = common.custodian; claims = Zero; safekeepingAccountId; observers = singleton common.public
 
   -- Alice originates the option
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestBinaryCallOptionOrigination with
@@ -180,7 +186,7 @@ issuance = do
       safekeepingAccountId = alice.safekeepingAccountId
       observers = []
       expiry = date 2020 Mar 18
-      underlyingId = underlyingId
+      underlyingId = tslaId
       currencyId = usdId
       strike = 910.0
   optionDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
@@ -194,4 +200,38 @@ issuance = do
       assetId = optionDesc.assetId
       quantity = 1000.0
   (_issuanceCid, optionDepositCid) <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.CreateIssuance createReqCid
+
+  -- Alice originates a bond
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "NFLX 4 7/8 04/15/23"
+      description = "NFLX 4 7/8 04/15/23"
+      safekeepingAccountId = alice.safekeepingAccountId
+      observers = []
+      claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usdId (couponDates 2021 2023 [Jan,Jul] 15)
+  cpbDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  Some cpbDesc <- queryContractId common.custodian cpbDescCid
+
+  -- pedagogical example from https://ledgy.com/blog/examples-of-convertible-notes/
+  let convertibleNote : Id -> Decimal -> Id -> Decimal -> Date -> Decimal -> Decimal -> Id -> C.Claim O.Observation Date Id
+      convertibleNote note principal ccy discount maturity interest cap underlying = 
+        C.when (C.at maturity) (
+          C.cond (O.observe underlying.label O.<= O.pure cap) (
+             C.scale (O.pure (principal * (1.0 + interest) / (1.0 - discount)) O./ O.observe underlying.label) (C.one underlying)
+          )( C.scale (O.pure (principal * (1.0 + interest))) (C.one ccy)
+          )
+        )
+
+  -- Alice originates a convertible note
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "NFLX convertible 06/21/21"
+      description = "NFLX convertible 06/21/21"
+      safekeepingAccountId = alice.safekeepingAccountId
+      observers = []
+      claims = C.serialize $ convertibleNote nflxId 100_000.0 usdId 0.20 (date 2021 Jun 06) 0.04 550.0 nflxId
+  -- FIXME: the below appears to be failing for some inexplicable reason; accept the request in the UI manually!
+  -- cnDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  -- Some cnDesc <- queryContractId common.custodian cnDescCid
+
   pure ()
+
+  
