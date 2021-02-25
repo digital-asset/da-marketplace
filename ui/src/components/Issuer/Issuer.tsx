@@ -7,7 +7,10 @@ import { useLedger, useParty } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import {
+    Issuer as IssuerTemplate,
+    IssuerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
@@ -51,7 +54,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const registeredIssuer = useContractQuery(RegisteredIssuer);
     const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
-    const allTokens = useContractQuery(Token);
+    const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
     const allDerivatives = useContractQuery(Derivative);
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
@@ -176,7 +179,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 </Menu.Item>
                             ))}
                             <Menu.Item>
-                                <p className='p2'>Issued Derivaties:</p>
+                                <p className='p2'>Issued Derivatives:</p>
                             </Menu.Item>
                             {allDerivatives.map(derivative => (
                                 <Menu.Item
@@ -214,8 +217,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.IssuerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={IssuerTemplate.Issuer_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>

@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 
-import { Button, Modal, Form } from 'semantic-ui-react'
-
-import { IconClose } from '../../icons/Icons';
+import { Button, Modal, Form, DropdownProps } from 'semantic-ui-react'
 
 import FormErrorHandled from './FormErrorHandled'
 
 interface IProps {
+    onSubmit: (selectedParties: string[]) => void;
     onRequestClose: () => void;
     title: string;
     multiple?: boolean;
     emptyMessage?: string;
-    onSubmit: (selectedParties: any) => void;
     partyOptions: {
         text: string;
         value: string;
     }[]
+}
+
+function isStringArray(strArr: any): strArr is string[] {
+    if (Array.isArray(strArr)) {
+        return strArr.reduce((acc, elem) => {
+            return acc && typeof elem === 'string'
+        }, true);
+    } else {
+        return false
+    }
 }
 
 const AddRegisteredPartyModal = (props: IProps) => {
@@ -23,8 +31,12 @@ const AddRegisteredPartyModal = (props: IProps) => {
 
     const [ selectedParties, setSelectedParties ] = useState<string[]>([]);
 
-    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: any) => {
-        setSelectedParties(result.value)
+    const handleSelectNewParticipants = (event: React.SyntheticEvent, result: DropdownProps) => {
+        if (typeof result.value === 'string') {
+            setSelectedParties([...selectedParties, result.value])
+        } else if (isStringArray(result.value)) {
+            setSelectedParties(result.value);
+        }
     }
 
     const handleSubmit = async () => {
@@ -45,10 +57,10 @@ const AddRegisteredPartyModal = (props: IProps) => {
                     :
                     <FormErrorHandled onSubmit={handleSubmit}>
                         <Form.Select
-                            multiple={multiple}
                             className='issue-asset-form-field select-observer'
-                            disabled={partyOptions.length === 0}
                             placeholder='Select...'
+                            multiple={multiple}
+                            disabled={partyOptions.length === 0}
                             options={partyOptions}
                             onChange={handleSelectNewParticipants}/>
                         <Button
