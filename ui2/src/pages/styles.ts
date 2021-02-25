@@ -53,6 +53,12 @@ export default makeStyles((theme : any) => createStyles({
   inputField: {
     marginTop: 20
   },
+  width90: {
+    width: "90%"
+  },
+  marginLeft10: {
+    marginLeft: 10
+  },
   default: {
     fill: "#fff",
   },

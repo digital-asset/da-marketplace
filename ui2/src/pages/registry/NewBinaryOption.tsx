@@ -4,7 +4,7 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel } from "@material-ui/core";
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
-import { render } from "./render";
+import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../claims";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";
@@ -87,16 +87,6 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={4}>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Payoff</Typography>
-                  <div ref={el} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
           <Grid item xs={4}>
             <Grid container direction="column" spacing={2}>
               <Grid item xs={12}>
@@ -141,6 +131,16 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
                     </Select>
                   </FormControl>
                   <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestOrigination}>Request Origination</Button>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={8}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item xs={12}>
+                <Paper className={classnames(classes.fullWidth, classes.paper)}>
+                  <Typography variant="h5" className={classes.heading}>Payoff</Typography>
+                  <div ref={el} style={{ height: "100%" }}/>
                 </Paper>
               </Grid>
             </Grid>

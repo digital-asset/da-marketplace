@@ -1,20 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
 import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel } from "@material-ui/core";
+import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel, Box, IconButton } from "@material-ui/core";
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
-import { render } from "../registry/render";
+import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../claims";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();
 
   const el = useRef<HTMLDivElement>(null);
 
+  const [ showAsset, setShowAsset ] = useState(false);
   const [ assetLabel, setAssetLabel ] = useState("");
   const [ accountLabel, setAccountLabel ] = useState("");
   const [ issuanceId, setIssuanceId ] = useState("");
@@ -38,7 +40,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
     el.current.innerHTML = "";
     const data = transformClaim(asset.payload.claims, "root");
     render(el.current, data);
-  }, [el, asset]);
+  }, [el, asset, showAsset]);
 
   const service = customerServices[0];
   if (!service) return (<></>);
@@ -57,26 +59,21 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={4}>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Instrument</Typography>
-                  <div ref={el} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
           <Grid item xs={4}>
             <Grid container direction="column" spacing={2}>
               <Grid item xs={12}>
                 <Paper className={classnames(classes.fullWidth, classes.paper)}>
                   <Typography variant="h5" className={classes.heading}>Details</Typography>
                   <FormControl className={classes.inputField} fullWidth>
-                    <InputLabel>Asset</InputLabel>
-                    <Select value={assetLabel} onChange={e => setAssetLabel(e.target.value as string)} MenuProps={menuProps}>
-                      {assets.map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
-                    </Select>
+                    <Box className={classes.fullWidth}>
+                      <InputLabel>Asset</InputLabel>
+                      <Select className={classes.width90} value={assetLabel} onChange={e => setAssetLabel(e.target.value as string)} MenuProps={menuProps}>
+                        {assets.map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
+                      </Select>
+                      <IconButton className={classes.marginLeft10} color="primary" size="small" component="span" onClick={() => setShowAsset(!showAsset)}>
+                        {showAsset ? <VisibilityOff fontSize="small"/> : <Visibility fontSize="small"/>}
+                      </IconButton>
+                    </Box>
                   </FormControl>
                   <FormControl className={classes.inputField} fullWidth>
                     <InputLabel>Issuance Account</InputLabel>
@@ -89,6 +86,17 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
                   <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestIssuance}>Request Issuance</Button>
                 </Paper>
               </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={8}>
+            <Grid container direction="column" spacing={2}>
+              {showAsset && (
+                <Grid item xs={12}>
+                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
+                    <Typography variant="h5" className={classes.heading}>Instrument</Typography>
+                    <div ref={el} style={{ height: "100%" }}/>
+                  </Paper>
+                </Grid>)}
             </Grid>
           </Grid>
         </Grid>

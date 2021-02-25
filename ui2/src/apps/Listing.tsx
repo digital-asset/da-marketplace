@@ -7,7 +7,7 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { useLayoutState } from "../context/LayoutContext";
 import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
-import { New } from "../pages/distribution/New";
+import { New } from "../pages/listing/New";
 import { Requests } from "../pages/listing/Requests";
 import { Listings } from "../pages/listing/Listings";
 
