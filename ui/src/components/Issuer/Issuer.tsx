@@ -51,7 +51,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const registeredIssuer = useContractQuery(RegisteredIssuer);
     const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
-    const allTokens = useContractQuery(Token);
+    const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
     const allDerivatives = useContractQuery(Derivative);
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
@@ -176,7 +176,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 </Menu.Item>
                             ))}
                             <Menu.Item>
-                                <p className='p2'>Issued Derivaties:</p>
+                                <p className='p2'>Issued Derivatives:</p>
                             </Menu.Item>
                             {allDerivatives.map(derivative => (
                                 <Menu.Item

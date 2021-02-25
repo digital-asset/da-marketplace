@@ -13,7 +13,7 @@ import {
     Token,
     Derivative
 } from '@daml.js/da-marketplace/lib/Marketplace'
-import { ContractId } from '@daml/types';
+import { ContractId, List } from '@daml/types';
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -59,6 +59,7 @@ export function makeContractInfo<T extends object, K = unknown, I extends string
         key: event.key,
         templateId: event.templateId,
         contractId: event.contractId,
+        signatories: event.signatories,
         contractData: event.payload
     });
 }
@@ -77,6 +78,7 @@ export type ContractInfo<T, K = unknown> = {
     templateId: string;
     key: K;
     contractId: ContractId<T>;
+    signatories: List<string>;
     contractData: T;
 }
 
