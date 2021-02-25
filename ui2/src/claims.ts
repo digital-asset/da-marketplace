@@ -19,7 +19,7 @@ export const transformObservation = (obs : Observation<Date, boolean>, linkText 
       return { ...obs, linkText, type: "Observation", text: "<=", collapsedText: `${left2.text} == ${right2.text}`, children: [ left2, right2 ] };
     case "DecimalConst":
       return { ...obs, linkText, type: "Observation", text: obs.value, children: null };
-    case "DecimalSpot":
+    case "DecimalObs":
       return { ...obs, linkText, type: "Observation", text: `Price(${obs.value})`, children: null };
     default:
       throw new Error("Unknown observation tag: " + obs.tag);
