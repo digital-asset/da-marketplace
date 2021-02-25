@@ -15,10 +15,9 @@ import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
-import Marketplace.Distribution.Bidding.Request qualified as Request
 import Marketplace.Settlement qualified as Settle
 
-setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Request.T])
+setup : Script ([CustomerContracts], [AssetDeposit], CustomerContracts, Party, Party, ContractId Auction.T, ContractId Auction.S, [ContractId Bidding.R])
 setup = do
   cr@CommonContracts{..} <- onboardCommon
 
