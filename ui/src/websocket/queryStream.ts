@@ -6,7 +6,7 @@ import { Template } from '@daml/types'
 import { ContractInfo } from '../components/common/damlTypes'
 import { useDablParties } from '../components/common/common'
 import { computeCredentials, retrieveCredentials } from '../Credentials'
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config'
+import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId, dablHostname } from '../config'
 
 import useDamlStreamQuery, { StreamErrors } from './websocket'
 
@@ -193,8 +193,7 @@ export const getPublicAutomation = async (token?: string): Promise<PublicAutomat
       "Authorization": `Bearer ${token?.toString()}`,
       'Content-Type': 'application/json'
     }
-    // console.log(url);
-    const my_url = `https://${ledgerId}.projectdabl.com/.hub/v1/published`;
+    const my_url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
     const result: PublicAutomationAPIResult = await fetch(my_url, { method: 'GET', headers: publicHeaders})
       .then(response => response.json());
     automation = result;
