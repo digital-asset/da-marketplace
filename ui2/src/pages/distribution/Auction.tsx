@@ -38,8 +38,8 @@ export const Auction : React.FC<RouteComponentProps> = ({ history } : RouteCompo
 
   const closeAuction = async () => {
     const bidCids = bids.map(c => c.contractId);
-    const result = await ledger.exercise(AuctionService.ProcessAuction, auctionService.contractId, { auctionCid: auction.contractId, bidCids });
-    history.push("/apps/distribution/auctions/" + result[0]._1.replace("#", "_"))
+    const [ result, ] = await ledger.exercise(AuctionService.ProcessAuction, auctionService.contractId, { auctionCid: auction.contractId, bidCids });
+    history.push("/apps/distribution/auctions/" + result._1.replace("#", "_"))
   };
 
   const requestBid = async (biddingService : CreateEvent<BiddingService>) => {
