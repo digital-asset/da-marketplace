@@ -1,4 +1,4 @@
-sdk-version: 1.7.0
+sdk-version: 1.10.0
 name: da-marketplace-triggers
 source: daml
 parties:
