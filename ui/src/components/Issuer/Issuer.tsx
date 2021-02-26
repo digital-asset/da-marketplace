@@ -55,7 +55,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
-    const allDerivatives = useContractQuery(Derivative);
+    const allDerivatives = useContractQuery(Derivative).filter(d => d.signatories.includes(issuer));
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
