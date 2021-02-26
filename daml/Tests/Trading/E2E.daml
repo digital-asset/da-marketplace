@@ -1,121 +1,121 @@
 module Tests.Trading.E2E where
 
-import Daml.Script
-import Common
-import DA.Assert ((===))
-import DA.Next.Set
-import DA.List
-import DA.Optional
-import DA.Foldable
-import DA.Finance.Types (Id(..), Asset(..))
-import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Settlement qualified as Settlement
-import Marketplace.Trading.Service qualified as Trading
-import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Matching qualified as Matching
-import Marketplace.Trading.Listing qualified as Listing
+-- import Daml.Script
+-- import Common
+-- import DA.Assert ((===))
+-- import DA.Next.Set
+-- import DA.List
+-- import DA.Optional
+-- import DA.Foldable
+-- import DA.Finance.Types (Id(..), Asset(..))
+-- import DA.Finance.Asset (AssetDeposit)
+-- import Marketplace.Settlement qualified as Settlement
+-- import Marketplace.Trading.Service qualified as Trading
+-- import Marketplace.Trading.Order qualified as Order
+-- import Marketplace.Trading.Matching qualified as Matching
+-- import Marketplace.Trading.Listing qualified as Listing
 
-checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
-checkOrderStatusMatches = \orderCid party status -> do
-  order <- fromSome <$> queryContractId @Order.T party orderCid
-  order.status === status
-  pure ()
+-- checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
+-- checkOrderStatusMatches = \orderCid party status -> do
+--   order <- fromSome <$> queryContractId @Order.T party orderCid
+--   order.status === status
+--   pure ()
 
-tradingEndToEndTest : Script ()
-tradingEndToEndTest = do
-  cr@CommonContracts{..} <- onboardCommon
+-- tradingEndToEndTest : Script ()
+-- tradingEndToEndTest = do
+--   cr@CommonContracts{..} <- onboardCommon
 
-  -- Assets
-  let
-    shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
-    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
-    shareAsset = Asset with id = shareId; quantity = 200.0
-    cashAsset = Asset with id = cashId; quantity = 20000.0
+--   -- Assets
+--   let
+--     shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
+--     cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
+--     shareAsset = Asset with id = shareId; quantity = 200.0
+--     cashAsset = Asset with id = cashId; quantity = 20000.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset exchange
-  bob <- onboardCustomer cr "Bob" cashAsset exchange
+--   alice <- onboardCustomer cr "Alice" shareAsset exchange
+--   bob <- onboardCustomer cr "Bob" cashAsset exchange
 
-  -- List a Security to trade
-  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
-  let
-    listingId = "JPMUSD"
-    calendarId = "1261007448"
-    description = "JPMorgan Chase & Co."
-    tradedAssetId = shareId
-    quotedAssetId = cashId
-    tradedAssetPrecision = 2
-    quotedAssetPrecision = 2
-    minimumTradableQuantity = 1.0
-    maximumTradableQuantity = 1000000.0
-    providerId = "123"
-    observers = []
-  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
-  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+--   -- List a Security to trade
+--   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+--   let
+--     listingId = "JPMUSD"
+--     calendarId = "1261007448"
+--     description = "JPMorgan Chase & Co."
+--     tradedAssetId = shareId
+--     quotedAssetId = cashId
+--     tradedAssetPrecision = 2
+--     quotedAssetPrecision = 2
+--     minimumTradableQuantity = 1.0
+--     maximumTradableQuantity = 1000000.0
+--     providerId = "123"
+--     observers = []
+--   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+--   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  -- Create orders
-  let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
-  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
-    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = alice.assetDepositCid
-        details = Order.Details with
-            id = aliceOrderId
-            symbol = listingId
-            asset = shareAsset
-            side = Order.Sell
-            timeInForce = Order.GTC
-            orderType = Order.Limit with price = 100.0
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.New
+--   -- Create orders
+--   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
+--   (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+--     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+--         depositCid = alice.assetDepositCid
+--         details = Order.Details with
+--             id = aliceOrderId
+--             symbol = listingId
+--             asset = shareAsset
+--             side = Order.Sell
+--             timeInForce = Order.GTC
+--             orderType = Order.Limit with price = 100.0
+--   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
-  let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
-  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
-    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = bob.assetDepositCid
-        details = Order.Details with
-            id = bobOrderId
-            symbol = listingId
-            asset = shareAsset
-            side = Order.Buy
-            timeInForce = Order.GTC
-            orderType = Order.Limit with price = 100.0
-  checkOrderStatusMatches bobOrderCid bob.customer Order.New
+--   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
+--   (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+--     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+--         depositCid = bob.assetDepositCid
+--         details = Order.Details with
+--             id = bobOrderId
+--             symbol = listingId
+--             asset = shareAsset
+--             side = Order.Buy
+--             timeInForce = Order.GTC
+--             orderType = Order.Limit with price = 100.0
+--   checkOrderStatusMatches bobOrderCid bob.customer Order.New
 
-  -- Acknowledge Orders
-  exchange <- pure . fromSome $ partyFromText "Exchange"
+--   -- Acknowledge Orders
+--   exchange <- pure . fromSome $ partyFromText "Exchange"
 
-  aliceOrderCid <- exchange `submit` do
-    exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
-        createOrderRequestCid = aliceCreateOrderRequestCid
-        providerOrderId = "alice's exchange order id"
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+--   aliceOrderCid <- exchange `submit` do
+--     exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
+--         createOrderRequestCid = aliceCreateOrderRequestCid
+--         providerOrderId = "alice's exchange order id"
+--   checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
 
-  bobOrderCid <- exchange `submit` do
-    exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
-        createOrderRequestCid = bobCreateOrderRequestCid
-        providerOrderId = "bob's exchange order id"
-  checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
+--   bobOrderCid <- exchange `submit` do
+--     exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
+--         createOrderRequestCid = bobCreateOrderRequestCid
+--         providerOrderId = "bob's exchange order id"
+--   checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
 
-  -- Confirm order matches
-  let execution = Order.Execution with
-        matchId = "1"
-        makerOrderId = aliceOrderId.label
-        takerOrderId = bobOrderId.label
-        quantity = 200.0
-        price = 100.0
-        timestamp = "123456"
+--   -- Confirm order matches
+--   let execution = Order.Execution with
+--         matchId = "1"
+--         makerOrderId = aliceOrderId.label
+--         takerOrderId = bobOrderId.label
+--         quantity = 200.0
+--         price = 100.0
+--         timestamp = "123456"
 
-  settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+--   settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
 
-  aliceOrderCid <- fst . head <$> query @Order.T alice.customer
-  checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
-  bobOrderCid <- fst . head <$> query @Order.T bob.customer
-  checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
+--   aliceOrderCid <- fst . head <$> query @Order.T alice.customer
+--   checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
+--   bobOrderCid <- fst . head <$> query @Order.T bob.customer
+--   checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
 
-  -- Settle orders
-  assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
+--   -- Settle orders
+--   assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
 
-  custodian <- pure . fromSome $ partyFromText "Custodian"
-  forA_ assetDepositCids \depositCid -> do
-    deposit <- fromSome <$> queryContractId @AssetDeposit custodian depositCid
-    deposit.asset === if deposit.account.owner == alice.customer
-      then cashAsset
-      else shareAsset
+--   custodian <- pure . fromSome $ partyFromText "Custodian"
+--   forA_ assetDepositCids \depositCid -> do
+--     deposit <- fromSome <$> queryContractId @AssetDeposit custodian depositCid
+--     deposit.asset === if deposit.account.owner == alice.customer
+--       then cashAsset
+--       else shareAsset
