@@ -228,8 +228,8 @@ issuance = do
       safekeepingAccountId = alice.safekeepingAccountId
       observers = []
       claims = C.serialize $ convertibleNote nflxId 100_000.0 usdId 0.20 (date 2021 Jun 06) 0.04 550.0 nflxId
-  -- FIXME: the below appears to be failing for some inexplicable reason; accept the request in the UI manually!
-  -- cnDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  -- FIXME: the below pattern match is failing (returning empty list?)
+  _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
   -- Some cnDesc <- queryContractId common.custodian cnDescCid
 
   pure ()
