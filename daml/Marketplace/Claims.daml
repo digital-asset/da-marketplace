@@ -44,6 +44,7 @@ assetDescVers assetId description issuer safekeepingAccountId observers =
         in Cons (create AssetDescription with assetId = assetId', ..) vcs
       write [] = Nil
 
+-- Returns a tree with each node annotated with the # of nodes below it + 1
 count : F (Cofree F Int) -> Cofree F Int
 count ZeroF = Cofree 1 ZeroF
 count (OneF id) = Cofree 1 (OneF id)
@@ -54,6 +55,7 @@ count f@(AndF (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth
 count f@(OrF (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth') f
 count f@(CondF _ (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth') f
 
+-- Given a tree annotated with the number of nodes in each branch, index it, depth first.
 enum : (Int, Cofree F Int) -> CofreeF F Int (Int, Cofree F Int)
 enum (i, Cofree _ ZeroF) = CofreeF i ZeroF
 enum (i, Cofree _ (OneF id)) = CofreeF i (OneF id)
@@ -64,6 +66,7 @@ enum (i, Cofree _ (AndF f@(Cofree depth _) f')) = CofreeF i (AndF (succ i, f) (s
 enum (i, Cofree _ (OrF f@(Cofree depth _) f')) = CofreeF i (OrF (succ i, f) (succ (i + depth), f'))
 enum (i, Cofree _ (CondF p f@(Cofree depth _) f')) = CofreeF i (CondF p (succ i, f) (succ (i + depth), f'))
 
+-- Enumerate each node in the tree, starting from from 'zero'
 enumerateFrom : Int -> C -> Cofree F Int 
 enumerateFrom zero = ana enum . (zero, ) . cata count
 
