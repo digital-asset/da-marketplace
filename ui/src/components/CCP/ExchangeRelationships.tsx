@@ -34,12 +34,15 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
     const operator = useOperator();
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
-    const handleExchangeRelationshipRequest = async (party: string) => {
+    const handleExchangeRelationshipRequest = async (exchanges: string[]) => {
         const choice = CCP.CCP_RequestExchangeRelationship;
         const key = wrapDamlTuple([operator, ccp]);
-        const args = { exchange: party };
 
-        await ledger.exerciseByKey(choice, key, args);
+        await Promise.all(exchanges.map(exchange => {
+            return ledger.exerciseByKey(choice, key, {
+                exchange
+            })
+        }))
     }
 
     const registeredExchanges = useContractQuery(RegisteredExchange, AS_PUBLIC);
@@ -77,10 +80,10 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
                     <RequestFairValues exchanges={exchanges}/>
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
-                            title='Add Investor'
+                            multiple
+                            title='Add Exchange'
                             partyOptions={partyOptions}
                             onRequestClose={() => setShowAddRelationshipModal(false)}
-                            multiple={false}
                             emptyMessage='All registered investors have been added'
                             onSubmit={handleExchangeRelationshipRequest}/>
                     }

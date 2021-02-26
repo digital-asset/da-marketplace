@@ -6,7 +6,10 @@ import { useLedger, useParty } from '@daml/react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import {
+    Investor as InvestorTemplate,
+    InvestorInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
@@ -208,8 +211,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 }
                 sideNav={sideNav}
                 marketRelationships={
-                    <MarketRelationships role={MarketRole.InvestorRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
+                    <MarketRelationships
+                        relationshipRequestChoice={InvestorTemplate.Investor_RequestCustodianRelationship}
+                        custodianRelationships={allCustodianRelationships}/>}
                 onLogout={onLogout}/>
         </Route>
 

@@ -7,7 +7,10 @@ import { useLedger, useParty } from '@daml/react'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {
+    Exchange as ExchangeTemplate,
+    ExchangeInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
@@ -166,7 +169,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.ExchangeRole}
+                            <MarketRelationships
+                                relationshipRequestChoice={ExchangeTemplate.Exchange_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
