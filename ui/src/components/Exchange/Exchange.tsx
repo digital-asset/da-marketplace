@@ -11,9 +11,13 @@ import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exch
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
+
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -58,6 +62,16 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
 
     const notifications = useDismissibleNotifications();
+
+    const automation = usePublicAutomation();
+    const token = retrieveCredentials()?.token;
+
+    useEffect(() => {
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, automation);
+      }
+    }, [automation, token]);
+
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

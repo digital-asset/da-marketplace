@@ -12,7 +12,7 @@ import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
-import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
@@ -32,6 +32,9 @@ import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
 import InvestorOrders from './InvestorOrders'
+import {retrieveCredentials} from '../../Credentials'
+import {deployTrigger, MarketplaceTrigger, TRIGGER_HASH} from '../../automation'
+import {deploymentMode, DeploymentMode} from '../../config'
 
 type Props = {
     onLogout: () => void;
@@ -43,6 +46,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investor = useParty();
     const ledger = useLedger();
     const loading = usePartyLoading();
+
 
     const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [

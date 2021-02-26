@@ -9,7 +9,7 @@ import { DablPartiesInput, PartyDetails } from '@daml/hub-react'
 
 import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 
-import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePublicLoading, usePublicAutomation } from '../websocket/queryStream'
 import Credentials, { computeCredentials } from '../Credentials'
 import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
@@ -18,6 +18,8 @@ import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
 import LoadingScreen from './common/LoadingScreen'
+import SetupRequired from './SetupRequired'
+import {useDablParties} from './common/common'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -56,6 +58,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const query = useQuery();
   const history = useHistory();
   const location = useLocation();
+  const automations = usePublicAutomation();
 
   useEffect(() => {
     raiseParamsToHash();
@@ -83,21 +86,9 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
-  const setupRequiredTile = (
-    <Tile key='test' header={logoHeader}>
-      <div className='setup-required'>
-        <h3>Welcome to the Daml Open Marketplace!</h3>
-        <p>
-          It looks like you have not completed the necessary deployment steps to configure this app.
-          Please create an Operator role contract for the UserAdmin party, and deploy the necessary triggers.</p>
-        <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
-      </div>
-    </Tile>
-  )
-
   const tiles = appInfos.length !== 0
     ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
-    : [setupRequiredTile];
+    : [<SetupRequired automation={automations}/>];
 
   return (
     <div className='login-screen'>
@@ -141,6 +132,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
 const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ partyId, setPartyId ] = useState("");
   const [ jwt, setJwt ] = useState("");
+  const { parties, loading } = useDablParties();
 
   const history = useHistory();
 

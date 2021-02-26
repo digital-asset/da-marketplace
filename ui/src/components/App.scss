@@ -24,6 +24,7 @@
 
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
+@import './SetupRequired.scss';
 
 @import './Broker/Broker.scss';
 @import './Custodian/Custodian.scss';
@@ -66,6 +67,7 @@
         /* onboarding css */
         @include login-screen;
         @include role-selector;
+        @include setup-required;
 
         /* role css */
         @include investor;

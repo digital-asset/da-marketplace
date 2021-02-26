@@ -19,7 +19,11 @@ import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 import { UserIcon, PublicIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
+
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -95,6 +99,15 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
     const instruments = useContractQuery(MarketPair);
+
+    const automation = usePublicAutomation();
+    const token = retrieveCredentials()?.token;
+
+    useEffect(() => {
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, token, automation);
+      }
+    }, [automation, token]);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

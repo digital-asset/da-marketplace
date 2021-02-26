@@ -15,7 +15,11 @@ import {
 
 import { UserIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
+
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
 import { useOperator } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
@@ -83,6 +87,16 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const investors = custodianContract?.contractData.investors || [];
 
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
+
+    const automation = usePublicAutomation();
+    const token = retrieveCredentials()?.token;
+
+    useEffect(() => {
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, automation);
+      }
+    }, [automation, token]);
+
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

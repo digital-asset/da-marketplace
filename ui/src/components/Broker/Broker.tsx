@@ -9,8 +9,12 @@ import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -43,6 +47,15 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
+
+    const automation = usePublicAutomation();
+    const token = retrieveCredentials()?.token;
+
+    useEffect(() => {
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, automation);
+      }
+    }, [automation, token]);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
