@@ -48,6 +48,7 @@ tradingEndToEndTest = do
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
     providerId = "123"
+    observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 

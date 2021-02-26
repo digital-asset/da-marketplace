@@ -27,7 +27,7 @@ import DA.List
 --    - Listing request failure : "exchange `submit` (createCmd FailedInstrumentRequest with integrationParty = exchange, symbol = "JPM.N/USD", quoteCurrency = "", instrumentDescription = "", calendarId = "", pricePrecision = 0, quantityPrecision = 0, minQuantity = 0.0, maxQuantity = 0.0, status = "", message = "message", name = "name", code = "code")"
 
 getExistingParties : [Text] -> Script [Party]
-getExistingParties = \parties -> pure . fromSome $ mapA partyFromText parties
+getExistingParties parties = pure . fromSome $ mapA partyFromText parties
 
 submitInstrumentCreation : Script ()
 submitInstrumentCreation = do
@@ -49,6 +49,7 @@ submitInstrumentCreation = do
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
     providerId = "123"
+    observers = []
   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
   pure ()
@@ -140,6 +141,7 @@ newOrders = do
     minimumTradableQuantity = 1.0
     maximumTradableQuantity = 1000000.0
     providerId = "12345"
+    observers = []
   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
   -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
 

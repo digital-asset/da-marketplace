@@ -1,0 +1,237 @@
+module Demo where
+
+import Common
+import ContingentClaims.Claim.Serializable (Claim(Zero))
+import ContingentClaims.Claim qualified as C
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation qualified as O
+import ContingentClaims.FinancialClaim (cpb, couponDates)
+import ContingentClaims.FinancialClaim qualified as C
+import Daml.Script
+import DA.Date (date, Month(..))
+import DA.Finance.Asset (AssetCategorization(..), AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Types (Id(..), Asset(..))
+import DA.Foldable
+import DA.List (head)
+import DA.Next.Set (fromList, singleton)
+import Marketplace.AssetDescription (AssetDescription(..))
+import qualified Marketplace.Custody as Custody
+import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Auction.Service qualified as Auction
+-- import Marketplace.Distribution.Bidding.Model qualified as Bidding
+-- import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Issuance qualified as Issuance
+-- import Marketplace.Settlement qualified as Settle
+import qualified Marketplace.Trading.Service as TradingService
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Listing as Listing
+
+demo : Script ()
+demo = do
+  cr@CommonContracts{..} <- onboardCommon
+
+  -- Assets
+  let
+    shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
+    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
+    shareAsset = Asset with id = shareId; quantity = 2_000.0
+    cashAsset = Asset with id = cashId; quantity = 140_000.0
+    priceAsset = Asset with id = cashId; quantity = 100.0
+
+  submit custodian do createCmd AssetCategorization with id = shareId; assetType = "Stock"; assetClass = "Equity"; observers = fromList [public]
+  submit custodian do createCmd AssetCategorization with id = cashId; assetType = "Currency"; assetClass = "FX"; observers = fromList [public]
+
+  alice <- onboardCustomer cr "Alice" shareAsset exchange
+
+  creditAccountRequestCid <- submit alice.customer do exerciseCmd alice.custodyServiceCid Custody.RequestCreditAccount with accountId = alice.tradingAccountId; asset = cashAsset
+  cashDepositCid <- submit custodian do exerciseCmd alice.custodyServiceCid Custody.CreditAccount with ..
+
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    listingId = "JPMUSD"
+    providerId = "JPMUSD"
+    calendarId = "1"
+    description = "JPMorgan Chase & Co."
+    tradedAssetId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
+    quotedAssetId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1_000_000.0
+    observers = [public]
+  createListingRequestCid <- submit alice.customer do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- submit exchange do exerciseCmd listingServiceCid Listing.CreateListing with ..
+
+  let
+    symbol = listingId
+    limit price = Order.Limit with ..
+    submitOrder party label side asset orderType depositCid = do
+      let
+        signatories = fromList [ party ]
+        version = 0
+        id = Id with ..
+        timeInForce = Order.GTC
+        details = Order.Details with ..
+      submit party do exerciseByKeyCmd @TradingService.T (operator, exchange, party) TradingService.RequestCreateOrder with ..
+
+  aliceShareDepositCids    <- submit alice.customer    do exerciseCmd alice.assetDepositCid AssetDeposit_Split with quantities = [ 400.0, 400.0, 400.0, 400.0 ]
+  aliceCashDepositCids    <- submit alice.customer    do exerciseCmd cashDepositCid AssetDeposit_Split with quantities = [ 20_000.0, 24_000.0, 28_000.0, 32_000.0 ]
+
+  let
+    aliceBuyOrderIds   = [ "b1", "b2", "b3", "b4" ]
+    aliceSellOrderIds   = [ "s1", "s2", "s3", "s4" ]
+    aliceBuyPrices     = [ limit 50.0, limit 60.0, limit 70.0, limit 80.0 ]
+    aliceSellPrices   = [ limit 110.0, limit 120.0, limit 130.0, limit 140.0 ]
+    aliceBuyTriples    = zip3 aliceCashDepositCids aliceBuyPrices aliceBuyOrderIds
+    aliceSellTriples    = zip3 aliceShareDepositCids aliceSellPrices aliceSellOrderIds
+  forA_ aliceBuyTriples    (\(depositCid, orderType, orderId) -> submitOrder alice.customer orderId Order.Buy (shareAsset with quantity = 400.0) orderType depositCid)
+  forA_ aliceSellTriples    (\(depositCid, orderType, orderId) -> submitOrder alice.customer orderId Order.Sell (shareAsset with quantity = 400.0) orderType depositCid)
+
+auction : Script ()
+auction = do
+  cr@CommonContracts{..} <- onboardCommon
+
+  let
+    cashId = Id with signatories = fromList [ agent ]; label = "USD"; version = 0
+    cashAsset = Asset with id = cashId; quantity = 0.0
+    safekeepingAccountId = Id with signatories = singleton agent; label = "IssuanceAccount"; version = 0
+
+  parties@[alice, bob, charlie, dave] <- forA [("Alice", 10000.0), ("Bob", 5000.0), ("Charlie", 2000.0), ("Dave", 1000.0)] \(partyName, quantity) -> onboardCustomer cr partyName (cashAsset with quantity) agent
+  originalDeposits <- forA parties \party -> (snd . head) <$> query @AssetDeposit party.customer
+
+  let
+    auctionAssetId = Id with signatories = fromList [ agent ]; label = "DAHP"; version = 0
+    auctionAsset = Asset with id = auctionAssetId; quantity = 1000.0
+
+  submit agent do createCmd AssetDescription with assetId = auctionAssetId; description = "Digital Asset Holdings Preferred Shares"; issuer = custodian; claims = Zero; safekeepingAccountId; observers = singleton public
+  submit agent do createCmd AssetDescription with assetId = cashId; description = "United States Dollar"; issuer = custodian; claims = Zero; safekeepingAccountId; observers = singleton public
+
+  issuer <- onboardCustomer cr "Issuer" auctionAsset agent
+  auctionOfferCid <- agent `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with allocationAccount = issuer.allocationAccount; receivableAccount = issuer.awayAccount
+
+  -- let
+  --   quotedAssetId = Id with signatories = fromList [ agent, issuer.customer ]; label = "USD"; version = 0
+  -- createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
+  --     auctionId = "DAHP-Auction"
+  --     asset = auctionAsset
+  --     assetDepositCid = issuer.assetDepositCid
+  --     floorPrice = 5.0
+  --     ..
+  -- auctionCid <- agent `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
+
+  -- -- Add our parties as bidders
+  -- bidRequests@[aliceBidRequestCid, bobBidRequestCid, charlieBidRequestCid, daveBidRequestCid] <- forA parties \party -> do
+  --     agent `submit` exerciseCmd party.biddingServiceCid Bidding.RequestBid with ..
+
+  -- -- Create our bids (all except for Alice)
+  -- now <- getTime
+  -- bidDetails@[aliceBidDetails, bobBidDetails, charlieBidDetails, daveBidDetails] <- forA [(10.0, 500.0, now), (11.0, 300.0, now), (12.0, 100.0, now), (13.0, 50.0, now)] \(price, quantity, time) -> pure $ Bidding.Details with price; quantity; time
+  -- bidCids@[bobBidCid, charlieBidCid, daveBidCId] <- forA (drop 1 $ zip3 parties bidRequests bidDetails) \(party, bidRequestCid, details@Bidding.Details{..}) ->
+  --     party.customer `submit` exerciseCmd party.biddingServiceCid Bidding.SubmitBid with
+  --         depositCid = party.assetDepositCid
+  --         allowPublishing = False
+  --         ..
+
+  -- -- Add our lead bid to the Auction
+  -- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.PublishBid with submitter = issuer.customer; bidCid = head bidCids
+
+  -- -- Kick off the auction
+  -- (auctionCid, siCids) <- auctionAgent `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
+
+  -- -- Assertions
+  -- length siCids === 4
+  -- auction <- fromSome <$> queryContractId auctionAgent auctionCid
+  -- auction.status === Auction.FullyAllocated with finalPrice = 10.0
+  -- bids <- query @Bidding.T auctionAgent
+  -- all ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids === True
+
+  -- -- Settle
+  -- depositCids <- forA siCids \siCid -> auctionAgent `submit` exerciseCmd siCid Settle.Settle
+
+  -- -- Settlement Assertions
+  -- auction <- snd . head <$> query @Auction.Auction auctionAgent
+  -- issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.awayAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  -- assertAuctionMatchesPayments auction issuerPayments
+  -- F.forA_ bids \(_, bid) -> do
+  --   case bid.status of
+  --     Bidding.FullAllocation price -> do
+  --       assertAssetDeposits auction issuer originalDeposits price bid.details.quantity bid
+  --     _ -> pure ()
+
+  pure ()
+
+issuance : Script ()
+issuance = do
+  common <- onboardCommon
+
+  let
+    usdId = Id with signatories = singleton common.custodian; label = "USD"; version = 0
+    usdAsset = Asset with id = usdId, quantity = 100.0
+    tslaId = Id with signatories = singleton common.custodian; label = "TSLA"; version = 0
+    nflxId = Id with signatories = singleton common.custodian; label = "NFLX"; version = 0
+    -- tsla = Asset with id = tslaId, quantity = 200.0
+    safekeepingAccountId = Id with signatories = singleton common.custodian; label = "CustodianOwnAccount"; version = 0
+
+  alice <- onboardCustomer common "Alice" usdAsset common.exchange -- this is weird - we should be first issuing asset
+  bob <- onboardCustomer common "Bob" usdAsset common.exchange
+
+  submit common.custodian do createCmd AssetDescription with assetId = usdId; description = "United States Dollar"; issuer = common.custodian; claims = Zero; safekeepingAccountId; observers = singleton common.public
+  submit common.custodian do createCmd AssetDescription with assetId = tslaId; description = "Tesla, Inc. Common Stock"; issuer = common.custodian; claims = Zero; safekeepingAccountId; observers = singleton common.public
+
+  -- Alice originates the option
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestBinaryCallOptionOrigination with
+      assetLabel = "TSLA Mar21 910.0"
+      safekeepingAccountId = alice.safekeepingAccountId
+      observers = []
+      expiry = date 2020 Mar 18
+      underlyingId = tslaId
+      currencyId = usdId
+      strike = 910.0
+  optionDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  Some optionDesc <- queryContractId common.custodian optionDescCid
+
+  -- Alice issues the option
+  createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid
+    Issuance.RequestCreateIssuance with
+      issuanceId = "Myissuance"
+      accountId = Id (fromList [alice.customer, common.custodian]) alice.safekeepingAccountId.label 0
+      assetId = optionDesc.assetId
+      quantity = 1000.0
+  (_issuanceCid, optionDepositCid) <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.CreateIssuance createReqCid
+
+  -- Alice originates a bond
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "NFLX 4 7/8 04/15/23"
+      description = "NFLX 4 7/8 04/15/23"
+      safekeepingAccountId = alice.safekeepingAccountId
+      observers = []
+      claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usdId (couponDates 2021 2023 [Jan,Jul] 15)
+  cpbDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  Some cpbDesc <- queryContractId common.custodian cpbDescCid
+
+  -- pedagogical example from https://ledgy.com/blog/examples-of-convertible-notes/
+  let convertibleNote : Id -> Decimal -> Id -> Decimal -> Date -> Decimal -> Decimal -> Id -> C.Claim O.Observation Date Id
+      convertibleNote note principal ccy discount maturity interest cap underlying = 
+        C.when (C.at maturity) (
+          C.cond (O.observe underlying.label O.<= O.pure cap) (
+             C.scale (O.pure (principal * (1.0 + interest)) O./ (O.observe underlying.label O.* O.pure (1.0 - discount))) (C.one underlying)
+          )( C.scale (O.pure (principal * (1.0 + interest))) (C.one ccy)
+          )
+        )
+
+  -- Alice originates a convertible note
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "NFLX convertible 06/21/21"
+      description = "NFLX convertible 06/21/21"
+      safekeepingAccountId = alice.safekeepingAccountId
+      observers = []
+      claims = C.serialize $ convertibleNote nflxId 100_000.0 usdId 0.20 (date 2021 Jun 06) 0.04 550.0 nflxId
+  -- FIXME: the below pattern match is failing (returning empty list?)
+  _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  -- Some cnDesc <- queryContractId common.custodian cnDescCid
+
+  pure ()
+
+  

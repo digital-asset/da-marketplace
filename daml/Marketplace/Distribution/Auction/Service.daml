@@ -3,6 +3,7 @@
 module Marketplace.Distribution.Auction.Service where
 
 import DA.Action (foldlA)
+import DA.Either (partitionEithers)
 import DA.Foldable (forA_)
 import DA.List (sortOn, mapAccumL)
 import DA.Finance.Asset (AssetDeposit)
@@ -11,8 +12,7 @@ import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Settlement qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Model (Auction(..))
-import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, withdrawAllocation, updateBidStatus, generateSettlementInstruction)
-import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, updateBidStatus, withdrawAllocation, generateSettlementInstruction)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
@@ -24,65 +24,19 @@ template Service
     operator : Party
     provider : Party
     customer : Party
+    allocationAccount : Account
+    receivableAccount : Account
   where
     signatory operator, provider, customer
-
-    -- TODO: Move this to the Distributor role contract. Ie, make the offering independent of the Auction service
-    nonconsuming choice OfferBidder : ContractId Bidding.Offer
-      with
-        submitter : Party
-        auctionCid : ContractId Auction.T
-        bidder : Party
-      controller submitter
-      do
-        assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        Auction{..} <- fetch auctionCid
-        create Bidding.Offer with issuer = customer; customer = bidder; ..
-
-    nonconsuming choice RemoveBidderOffer : ()
-      with
-        submitter : Party
-        bidOfferCid : ContractId Bidding.Offer
-      controller submitter
-      do
-        assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        archive bidOfferCid
-
-    nonconsuming choice RemoveBidder : ()
-      with
-        submitter : Party
-        bidServiceCid : ContractId Bidding.S
-      controller submitter
-      do
-        assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        archive bidServiceCid
-
-    nonconsuming choice PublishBid : ContractId PublishedBid
-      with
-        submitter : Party
-        leadBidCid : ContractId Bidding.T
-      controller submitter
-      do
-        -- TODO: The bidder needs to agree to their bid being published
-        assertMsg ("Unauthorised Submitter - " <> show submitter) (submitter `elem` [provider, customer])
-        bid <- fetch leadBidCid
-        (_, auction) <- fetchByKey @Auction (bid.provider, bid.assetId)
-
-        let
-          allocationPercentage = bid.details.quantity / auction.asset.quantity
-          leadBidder = bid.customer
-        create PublishedBid with ..
 
     controller customer can
       nonconsuming RequestCreateAuction : ContractId CreateAuctionRequest
         with
-          leadBidder : Party
+          auctionId : Text
           asset : Asset
           quotedAssetId : Id
-          assetDepositCid : ContractId AssetDeposit
-          allocationAccount : Account
-          receivableAccount : Account
           floorPrice : Decimal
+          assetDepositCid : ContractId AssetDeposit
         do
           create CreateAuctionRequest with ..
 
@@ -112,7 +66,7 @@ template Service
       nonconsuming ProcessAuction : (ContractId Auction.T, [ContractId Settlement.SettlementInstruction])
         with
           auctionCid : ContractId Auction.T
-          bidCids : [ContractId Bidding.T]
+          bidCids : [ContractId Bidding.Bid]
         do
           auction@Auction{..} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
@@ -120,10 +74,10 @@ template Service
 
           -- Split bids on those above / below the floor price -> Sort valid bids descendingly -> Execute Auction -> Split auction result on allocated / unallocated (ie, zero allocation)
           let
-            (validBids, invalidBids) = splitList (\bid -> bid.details.price < floorPrice) bids
+            (invalidBids, validBids) = partitionEithers $ splitList (\bid -> bid.details.price >= floorPrice) bids
             sortedBids = sortOn (\bid -> Down bid.details) validBids
             ((remaining, finalPrice), allocations) = mapAccumL dutchAuction (asset.quantity, 0.0) sortedBids
-            (allocatedBids, unallocatedBids) = splitList (\allocation -> allocation.quantity == 0.0) allocations
+            (allocatedBids, unallocatedBids) = partitionEithers $ splitList (\allocation -> allocation.quantity == 0.0) allocations
 
           -- Return assets of all invalid and unallocated bids. Also update their bid status accordingly
           forA_ invalidBids $ withdrawAllocation *> updateBidStatus Bidding.Invalid
@@ -136,7 +90,7 @@ template Service
           -- Update Auction contract with the outcome of the auction processing
           let newStatus = if
                 | remaining == asset.quantity -> Auction.NoValidBids
-                | remaining > 0.0             -> Auction.ParticallyAllocated with ..
+                | remaining > 0.0             -> Auction.PartiallyAllocated with ..
                 | otherwise                   -> Auction.FullyAllocated with ..
           auctionCid <- archive auctionCid *> create auction with status = newStatus
 
@@ -152,6 +106,9 @@ template Offer
 
     controller customer can
       Accept : ContractId Service
+        with
+          allocationAccount : Account
+          receivableAccount : Account
         do
           create Service with ..
 
@@ -159,35 +116,44 @@ template Offer
         do
           return ()
 
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
 template Request
   with
-    operator : Party
-    customer : Party
     provider : Party
+    customer : Party
+    allocationAccount : Account
+    receivableAccount : Account
   where
-    signatory operator, customer
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
 
 template CreateAuctionRequest
   with
     operator : Party
     provider : Party
     customer : Party
-    leadBidder : Party
+    auctionId : Text
     asset : Asset
-    assetDepositCid : ContractId AssetDeposit
     quotedAssetId : Id
-    allocationAccount : Account
-    receivableAccount : Account
     floorPrice : Decimal
+    assetDepositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 
@@ -196,7 +162,7 @@ template PublishedBid
     operator : Party
     provider : Party
     customer : Party
-    leadBidder : Party
+    bidder : Party
     allocationPercentage : Decimal
   where
     signatory operator, provider, customer

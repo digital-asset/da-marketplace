@@ -14,11 +14,18 @@ template Role
     maintainer key._1
 
     controller provider can
+
       nonconsuming OfferTradingService : ContractId TradingService.Offer
         with
           customer : Party
         do
           create TradingService.Offer with ..
+
+      nonconsuming ApproveTradingServiceRequest : ContractId TradingService.T
+        with
+          tradingRequestCid : ContractId TradingService.Request
+        do
+          exercise tradingRequestCid TradingService.Approve with ..
 
       nonconsuming TerminateTradingService : ()
         with
@@ -31,6 +38,12 @@ template Role
           customer : Party
         do
           create Listing.Offer with ..
+
+      nonconsuming ApproveListingServiceRequest : ContractId Listing.Service
+        with
+          listingRequestCid : ContractId Listing.Request
+        do
+          exercise listingRequestCid Listing.Approve with ..
 
       nonconsuming TerminateListingService : ()
         with

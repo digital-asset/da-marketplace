@@ -84,7 +84,7 @@ template SettlementInstruction
     signatory operator, provider, buyer, seller
 
     controller provider can
-      nonconsuming Settle : [ContractId AssetDeposit]
+      Settle : [ContractId AssetDeposit]
         do
           forA [payment, delivery] (\settlementDetails -> do
             let

@@ -1,8 +1,9 @@
 module Marketplace.Distribution.Bidding.Model where
 
-import DA.Finance.Types (Account, Id)
+import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Asset (AssetDeposit)
 
+type R = Request
 type T = Bid
 
 data Details = Details with
@@ -12,7 +13,19 @@ data Details = Details with
   deriving (Eq, Show)
 
 instance Ord Details where
-  compare x y = compare (x.price, x.quantity, Down x.time) (y.price, y.quantity, Down y.time)
+  compare x y = (x.price, x.quantity, Down x.time) `compare` (y.price, y.quantity, Down y.time)
+
+template Request
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    issuer : Party
+    auctionId : Text
+    asset : Asset
+    quotedAssetId : Id
+  where
+    signatory operator, provider, customer
 
 data Status
     = Pending
@@ -29,17 +42,26 @@ template Bid
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
+    issuer : Party
+    auctionId : Text
     assetId : Id
     details : Details
+    quotedAssetId : Id
     tradingAccount : Account
     allocationAccount : Account
     depositCid : ContractId AssetDeposit
     status : Status
   where
-    signatory operator, provider, issuer, customer
+    signatory operator, provider, customer
     ensure details.quantity > 0.0
 
-    key (assetId, customer) : (Id, Party)
-    maintainer key._2
+    key (customer, auctionId) : (Party, Text)
+    maintainer key._1
+
+    controller provider can
+      UpdateStatus : ContractId Bid
+        with
+          newStatus : Status
+        do
+          create this with status = newStatus

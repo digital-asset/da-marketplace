@@ -1,12 +1,11 @@
 module Marketplace.Distribution.Bidding.Service where
 
-import DA.List (head, last)
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
-import DA.Finance.Types (Account, Asset, Id)
-import Marketplace.Settlement qualified as Settlement
-import Marketplace.Settlement (SettlementInstruction(..))
+import DA.Finance.Types (Asset, Account, Id)
+import DA.Finance.Utils (fetchAndArchive)
+import DA.List (head, last)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Distribution.Bidding.Model (Bid(..))
+import Marketplace.Settlement as Settlement (SettlementDetails, SettlementInstruction(..))
 import Marketplace.Trading.AllocationAccountRule qualified as Allocation
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
@@ -16,59 +15,61 @@ template Service
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
-    asset : Asset
+    tradingAccount : Account
+    allocationAccount : Account
   where
-    signatory operator, provider, issuer, customer
+    signatory operator, provider, customer
 
-    key (assetId, customer) : (Id, Party)
-    maintainer key._2
-
-    let assetId = asset.id
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
 
     controller customer can
-      nonconsuming SubmitBid : ContractId Bidding.T
+      nonconsuming SubmitBid : ContractId Bidding.Bid
         with
-          details : Bidding.Details
-          tradingAccount : Account
-          allocationAccount : Account
+          bidRequestCid : ContractId Bidding.Request
+          price : Decimal
+          quantity : Decimal
           depositCid : ContractId AssetDeposit
+          allowPublishing : Bool
         do
           -- TODO: Check for parallism of this choice
-          -- TODO: Check bid details match whats contained in the asset deposit
+          bidRequest <- fetchAndArchive bidRequestCid
+          deposit <- fetch depositCid
+          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == bidRequest.quotedAssetId.label)
+
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
-          create Bid with status = Bidding.Pending; ..
+          time <- getTime
+          create Bidding.Bid
+            with
+              details = Bidding.Details with ..
+              status = Bidding.Pending
+              assetId = bidRequest.asset.id
+              issuer = bidRequest.issuer
+              auctionId = bidRequest.auctionId
+              quotedAssetId = bidRequest.quotedAssetId
+              ..
 
-      -- TBC : Remove for now to block bidders from withdrawing bids
-      -- nonconsuming WithdrawBid : ContractId AssetDeposit
-      --   with
-      --     bidCid : ContractId Bid
-      --   do
-      --     Bid{..} <- fetchAndArchive bidCid
-      --     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
-
-    controller provider, issuer can
-      nonconsuming UpdateStatus : ContractId Bid
+    controller provider can
+      nonconsuming RequestBid : ContractId Bidding.Request
         with
-          newStatus : Bidding.Status
+          issuer : Party
+          auctionId : Text
+          asset : Asset
+          quotedAssetId : Id
         do
-          (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
-          archive bidCid *> create bid with status = newStatus
+          create Bidding.Request with ..
 
-      nonconsuming ProcessAllocation : (ContractId Bid, ContractId AssetDeposit)
+      nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with
+          bidCid : ContractId Bidding.Bid
           quantity : Decimal
           amount : Decimal
           price : Decimal
         do
-          -- Update Bid Status -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor
-          (bidCid, bid) <- fetchByKey @Bid (asset.id, customer)
-          let newStatus = if bid.details.quantity == quantity
-                            then Bidding.FullAllocation with ..
-                            else Bidding.PartialAllocation with ..
-          bidCid <- exercise self UpdateStatus with ..
-
+          -- Fetch Bid -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor -> Update Bid Status
+          bid <- fetch bidCid
           bidDeposit <- fetch bid.depositCid
           bidDepositCid <- if bidDeposit.asset.quantity > amount
                               then do
@@ -77,27 +78,34 @@ template Service
                                 pure $ head splitDepositCids
                               else pure bid.depositCid
 
-          pure (bidCid, bidDepositCid)
+          let newStatus = if bid.details.quantity == quantity
+                            then Bidding.FullAllocation with ..
+                            else Bidding.PartialAllocation with ..
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with ..
+          pure (newBidCid, bidDepositCid)
 
-      nonconsuming GenerateSettlementInstrution : ContractId Settlement.SettlementInstruction
-        with
-          delivery : Settlement.SettlementDetails
-          payment : Settlement.SettlementDetails
-        do
-          create SettlementInstruction with buyer = customer; seller = issuer; ..
+    nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction
+      with
+        issuer : Party
+        delivery : Settlement.SettlementDetails
+        payment : Settlement.SettlementDetails
+      controller provider, issuer
+      do
+        create SettlementInstruction with buyer = customer; seller = issuer; ..
 
 template Offer
   with
     operator : Party
     provider : Party
-    issuer : Party
     customer : Party
-    asset : Asset
   where
-    signatory operator, provider, issuer
+    signatory operator, provider
 
     controller customer can
       Accept : ContractId Service
+        with
+          tradingAccount : Account
+          allocationAccount : Account
         do
           create Service with ..
 
@@ -105,21 +113,30 @@ template Offer
         do
           return ()
 
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
 template Request
   with
-    operator : Party
-    customer : Party
     provider : Party
-    issuer : Party
-    asset : Asset
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
   where
-    signatory operator, customer, issuer
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
 
     controller provider can
-      Approve : ContractId Service
-        do
-          create Service with ..
-
       Reject : ()
-        do
-          return ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
