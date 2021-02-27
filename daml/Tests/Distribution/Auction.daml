@@ -68,7 +68,7 @@ setup = do
   issuer <- onboardCustomer providers "Issuer"
   issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount.id
   auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
 
   -- Create an Auction request and approve it
   let
@@ -121,7 +121,7 @@ auctionAndBidsFullyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction bank
-  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
   assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of
@@ -160,7 +160,7 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction bank
-  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
   assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of
@@ -196,7 +196,7 @@ auctionFullyAllocatedBidsParticallyAllocated = do
 
   -- Settlement Assertions
   auction <- snd . head <$> query @Auction.Auction bank
-  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure . snd $ unzip deposits
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
   assertAuctionMatchesPayments auction issuerPayments
   F.forA_ bids \(_, bid) -> do
     case bid.status of

@@ -20,18 +20,16 @@ demo = do
   providers@Providers{..} <- onboardProviders
   assets@Assets{..} <- onboardAssets providers
 
-  issuer      <- onboardCustomer providers "DigitalAsset"
-  alice       <- onboardCustomer providers "Eric"
-  bob         <- onboardCustomer providers "Yuval"
-  charlie     <- onboardCustomer providers "Georg"
-  -- dave        <- onboardCustomer providers "Dave"
+  issuer      <- onboardCustomer providers "Issuer"
+  alice       <- onboardCustomer providers "Alice"
+  bob         <- onboardCustomer providers "Bob"
+  charlie     <- onboardCustomer providers "Charlie"
   aliceUsd    <- depositAsset providers alice     (usd with quantity = 1_000_000.0) alice.mainAccount.id
   bobUsd      <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.mainAccount.id
   charlieUsd  <- depositAsset providers charlie   (usd with quantity = 1_000_000.0) charlie.mainAccount.id
-  -- daveUsd     <- depositAsset providers dave      (usd with quantity = 10000.0) dave.mainAccount.id
 
   auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
 
   issuance providers assets issuer
 

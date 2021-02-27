@@ -10,6 +10,7 @@ import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketpla
 import { Bid, Request } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module";
 import { CreateEvent } from "@daml/ledger";
 import { getAuctionStatus, getBidStatus, getBidAllocation } from "./Utils";
+import moment from "moment"
 
 export const Auction : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -97,7 +98,7 @@ export const Auction : React.FC<RouteComponentProps> = ({ history } : RouteCompo
                         <TableCell key={1} className={classes.tableCell}><b>Quantity</b></TableCell>
                         <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
                         <TableCell key={3} className={classes.tableCell}><b>Percentage</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Time</b></TableCell>
+                        <TableCell key={4} className={classes.tableCell}><b>Submitted at</b></TableCell>
                         <TableCell key={5} className={classes.tableCell}><b>Status</b></TableCell>
                         <TableCell key={6} className={classes.tableCell}><b>Allocation</b></TableCell>
                       </TableRow>
@@ -107,7 +108,7 @@ export const Auction : React.FC<RouteComponentProps> = ({ history } : RouteCompo
                           <TableCell key={1} className={classes.tableCell}>{c.payload.details.quantity}</TableCell>
                           <TableCell key={2} className={classes.tableCell}>{c.payload.details.price}</TableCell>
                           <TableCell key={3} className={classes.tableCell}>{(100.0 * parseFloat(c.payload.details.quantity) / parseFloat(auction.payload.asset.quantity)).toFixed(2)}%</TableCell>
-                          <TableCell key={4} className={classes.tableCell}>{c.payload.details.time}</TableCell>
+                          <TableCell key={4} className={classes.tableCell}>{moment(c.payload.details.time).format("LLL")}</TableCell>
                           <TableCell key={5} className={classes.tableCell}>{getBidStatus(c.payload.status)}</TableCell>
                           <TableCell key={6} className={classes.tableCell}>{getBidAllocation(c.payload)}</TableCell>
                         </TableRow>
