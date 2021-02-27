@@ -1,89 +1,90 @@
 module Tests.ExchangeTrade where
 
--- import Common
--- import Daml.Script
--- import DA.Finance.Types (Id(..), Asset(..))
--- import DA.Next.Set
--- import qualified Marketplace.Settlement as Settlement
--- import qualified Marketplace.Trading.Matching as Matching
--- import qualified Marketplace.Trading.Order as Order
--- import qualified Marketplace.Trading.Service as TradingService
--- import qualified Marketplace.Trading.Listing as Listing
--- import DA.List
+import Common
+import Daml.Script
+import DA.Finance.Types (Id(..))
+import DA.Next.Set
+import qualified Marketplace.Settlement as Settlement
+import qualified Marketplace.Trading.Matching as Matching
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Service as TradingService
+import qualified Marketplace.Trading.Listing as Listing
+import DA.List
 
--- setup : Script ()
--- setup = do
---   cr@CommonContracts{..} <- onboardCommon
+setup : Script ()
+setup = do
+  providers@Providers{..} <- onboardProviders
+  Assets{..} <- onboardAssets providers
 
---   -- Assets
---   let
---     shareId = Id with signatories = fromList [ custodian ]; label = "JPM"; version = 0
---     cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
---     shareAsset = Asset with id = shareId; quantity = 200.0
---     cashAsset = Asset with id = cashId; quantity = 20000.0
---     priceAsset = Asset with id = cashId; quantity = 100.0
+  -- Assets
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+    priceAsset = usd with quantity = 100.0
 
---   alice <- onboardCustomer cr "Alice" shareAsset exchange
---   bob <- onboardCustomer cr "Bob" cashAsset exchange
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
---   -- List a Security to trade
---   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
---   let
---     listingId = "JPM.N/USD"
---     calendarId = "1"
---     description = "JPMorgan Chase & Co."
---     tradedAssetId = Id with signatories = fromList [ alice.customer ]; label = "JPM.N"; version = 0
---     quotedAssetId = Id with signatories = fromList [ alice.customer ]; label = "USD"; version = 0
---     tradedAssetPrecision = 2
---     quotedAssetPrecision = 2
---     minimumTradableQuantity = 1.0
---     maximumTradableQuantity = 1000000.0
---     providerId = "12345"
---     observers = []
---   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
---   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    listingId = "TSLAUSD"
+    calendarId = "1"
+    description = "Tesla Inc."
+    tradedAssetId = shareAsset.id
+    quotedAssetId = cashAsset.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "12345"
+    observers = []
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
---   -- > Alice places a bid for JPM
---   (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
---     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
---       with
---         details = Order.Details with
---           id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
---           symbol = listingId
---           asset = shareAsset
---           orderType = Order.Limit with
---             price = 100.0
---           side = Order.Buy
---           timeInForce = Order.GTC
---         depositCid = alice.assetDepositCid
+  -- > Alice places a bid for shares
+  (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
+          symbol = listingId
+          asset = shareAsset
+          orderType = Order.Limit with
+            price = 100.0
+          side = Order.Buy
+          timeInForce = Order.GTC
+        depositCid = aliceDepositCid
 
---   -- > Bob places a new offer for JPM
---   (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
---     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
---       with
---         details = Order.Details with
---           id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
---           symbol = listingId
---           asset = shareAsset
---           orderType = Order.Limit with
---             price = 100.0
---           side = Order.Sell
---           timeInForce = Order.GTC
---         depositCid = bob.assetDepositCid
+  -- > Bob places a new offer for shares
+  (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
+          symbol = listingId
+          asset = shareAsset
+          orderType = Order.Limit with
+            price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+        depositCid = bobDepositCid
 
---   -- Exchange matches the two orders
---   settlementInstructionCid <- submit exchange do
---     exerciseCmd matchingServiceCid Matching.MatchOrders
---       with
---         execution = Order.Execution with
---           matchId = "789"
---           makerOrderId = "123"
---           takerOrderId = "456"
---           quantity = 200.0
---           price = 100.0
---           timestamp = ""
+  -- Exchange matches the two orders
+  settlementInstructionCid <- submit exchange do
+    exerciseCmd matchingServiceCid Matching.MatchOrders
+      with
+        execution = Order.Execution with
+          matchId = "789"
+          makerOrderId = "123"
+          takerOrderId = "456"
+          quantity = 200.0
+          price = 100.0
+          timestamp = ""
 
---   -- Exchange settles the instructed trade
---   submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
+  -- Exchange settles the instructed trade
+  submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
 
---   pure ()
+  pure ()

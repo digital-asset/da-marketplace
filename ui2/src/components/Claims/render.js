@@ -5,7 +5,7 @@ export const render = (el, data) => {
   const nodeWidth = 120;
   const nodeHeight = 80;
 
-  const tree = d3.tree().nodeSize([nodeWidth, nodeHeight]);//.size([width - 20, height - 20]);
+  const tree = d3.tree().nodeSize([nodeWidth, nodeHeight]).separation((a, b) => a.parent === b.parent ? 1 : 1.2);//.size([width - 20, height - 20]);
   const diagonal = d3.linkVertical().x(d => d.x).y(d => d.y);
   const color = d => {
     if (d.data.type === "Claim") {
@@ -35,7 +35,7 @@ export const render = (el, data) => {
   const baseSvg = d3.select(el).append("svg")
     .attr("width", width)
     .attr("height", height + 10)
-    .attr("viewBox", [-width / 2, -10, width, height])
+    .attr("viewBox", [-width / 3, -10, width, height])
     .style("user-select", "none")
     .call(zoomListener);
   const svg = baseSvg

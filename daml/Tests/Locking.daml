@@ -1,64 +1,66 @@
 module Tests.Locking where
 
--- import Daml.Script
--- import DA.Finance.Types (Id(..), Asset(..))
--- import DA.Next.Set
--- import DA.Optional
--- import Marketplace.Trading.Service qualified as Trading
--- import Marketplace.Trading.Order qualified as Order
--- import Marketplace.Trading.AllocationAccountRule (Transfer(..), Withdraw(..))
--- import DA.Finance.Asset.Settlement
--- import Common
+import Daml.Script
+import DA.Assert ((===))
+import DA.Finance.Types (Id(..))
+import DA.Next.Set
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Order qualified as Order
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule, Transfer(..), Withdraw(..))
+import DA.Finance.Asset.Settlement
+import Common
 
--- traderCannotMoveAllocatedAsset : Script ()
--- traderCannotMoveAllocatedAsset = do
---   cr@CommonContracts{..} <- onboardCommon
+traderCannotMoveAllocatedAsset : Script ()
+traderCannotMoveAllocatedAsset = do
+  providers@Providers{..} <- onboardProviders
+  Assets{..} <- onboardAssets providers
 
---   -- Assets
---   let
---     shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
---     cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
---     shareAsset = Asset with id = shareId; quantity = 200.0
---     cashAsset = Asset with id = cashId; quantity = 20000.0
---     priceAsset = Asset with id = cashId; quantity = 100.0
+  -- Assets
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+    priceAsset = usd with quantity = 100.0
 
---   alice <- onboardCustomer cr "Alice" shareAsset exchange
---   bob <- onboardCustomer cr "Bob" cashAsset exchange
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
---   -- Create orders
---   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
---   (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with depositCid = alice.assetDepositCid; details = Order.Details with id = aliceOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Order.Sell, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
+  -- Create orders
+  let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
+  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with depositCid = aliceDepositCid; details = Order.Details with id = aliceOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Sell, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
---   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
---   (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bob.assetDepositCid; details = Order.Details with id = bobOrderId, symbol = "JPM.N/USD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
+  let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
+  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bobDepositCid; details = Order.Details with id = bobOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
---   -- Account owners can't move asset pledged as order collateral
---   submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
---   submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
---   submitMustFail alice.customer do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
---   submitMustFail bob.customer do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  -- Account owners can't move asset pledged as order collateral
+  submitMustFail alice.customer do exerciseByKeyCmd @AllocationAccountRule alice.exchangeLockedAccount.id Transfer with depositCid = aliceDepositCid; transferTo = alice.mainAccount
+  submitMustFail bob.customer   do exerciseByKeyCmd @AllocationAccountRule bob.exchangeLockedAccount.id Transfer with depositCid = bobDepositCid; transferTo = bob.mainAccount
+  submitMustFail alice.customer do exerciseByKeyCmd @AllocationAccountRule alice.exchangeLockedAccount.id Withdraw with depositCid = aliceDepositCid; transferTo = alice.mainAccount
+  submitMustFail bob.customer   do exerciseByKeyCmd @AllocationAccountRule bob.exchangeLockedAccount.id Withdraw with depositCid = bobDepositCid; transferTo = bob.mainAccount
 
---   -- The exchange cannot move the asset pledged as order collateral on its own => even if it has control on the account owners trading account
---   exchange <- pure . fromSome $ partyFromText "Exchange"
---   submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_AddController with ctrl = exchange
---   submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_AddController with ctrl = exchange
+  -- The exchange cannot move the asset pledged as order collateral on its own => even if it has control on the account owners trading account
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.mainAccount.id AssetSettlement_AddController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.mainAccount.id AssetSettlement_AddController with ctrl = exchange
 
---   submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Transfer with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
---   submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Transfer with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
---   submitMustFail exchange do exerciseCmd alice.allocationAccountRuleCid Withdraw with depositCid = aliceAssetDepositCid; transferTo = alice.tradingAccount
---   submitMustFail exchange do exerciseCmd bob.allocationAccountRuleCid Withdraw with depositCid = bobAssetDepositCid; transferTo = bob.tradingAccount
+  submitMustFail exchange do exerciseByKeyCmd @AllocationAccountRule alice.exchangeLockedAccount.id Transfer with depositCid = aliceDepositCid; transferTo = alice.mainAccount
+  submitMustFail exchange do exerciseByKeyCmd @AllocationAccountRule bob.exchangeLockedAccount.id Transfer with depositCid = bobDepositCid; transferTo = bob.mainAccount
+  submitMustFail exchange do exerciseByKeyCmd @AllocationAccountRule alice.exchangeLockedAccount.id Withdraw with depositCid = aliceDepositCid; transferTo = alice.mainAccount
+  submitMustFail exchange do exerciseByKeyCmd @AllocationAccountRule bob.exchangeLockedAccount.id Withdraw with depositCid = bobDepositCid; transferTo = bob.mainAccount
 
---   submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
---   submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_RemoveController with ctrl = exchange
+  submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.mainAccount.id AssetSettlement_RemoveController with ctrl = exchange
+  submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.mainAccount.id AssetSettlement_RemoveController with ctrl = exchange
 
---   -- Cancel order
---   (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
---   (aliceOrderCid, aliceAssetDepositCid2) <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
---   (bobOrderCid, bobCancelOrderRequestCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCancelOrder with orderCid = bobOrderCid
---   (bobOrderCid, bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
+  -- Cancel order
+  (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
+  (aliceOrderCid, aliceAssetDepositCid2) <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
+  (bobOrderCid, bobCancelOrderRequestCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCancelOrder with orderCid = bobOrderCid
+  (bobOrderCid, bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
 
---   -- Transfer from trading account to away account
---   submit alice.customer do exerciseByKeyCmd @AssetSettlementRule alice.tradingAccountId AssetSettlement_Transfer with depositCid = aliceAssetDepositCid2; receiverAccountId = alice.awayAccountId
---   submit bob.customer do exerciseByKeyCmd @AssetSettlementRule bob.tradingAccountId AssetSettlement_Transfer with depositCid = bobAssetDepositCid2; receiverAccountId = bob.awayAccountId
+  -- Assert deposits are back in main account
+  Some aliceDeposit <- queryContractId alice.customer aliceAssetDepositCid2
+  Some bobDeposit <- queryContractId bob.customer bobAssetDepositCid2
+  aliceDeposit.account === alice.mainAccount
+  bobDeposit.account === bob.mainAccount
 
---   pure ()
+  pure ()

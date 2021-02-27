@@ -48,8 +48,8 @@ data Customer = Customer
     custodyServiceCid : ContractId Custody.Service
     biddingServiceCid : ContractId Bidding.Service
     mainAccount : Account
-    tradingAccount : Account
-    auctionAccount : Account
+    exchangeLockedAccount : Account
+    auctionLockedAccount : Account
 
 onboardProviders : Script Providers
 onboardProviders = do
@@ -90,26 +90,26 @@ onboardCustomer Providers{..} party = do
   let
     mainAccountId      = Id with signatories = fromList [ bank, customer ]; label = "MainAccount-" <> party; version = 0
     mainAccount        = Account with provider = bank; owner = customer; id = mainAccountId
-    tradingAccountId   = Id with signatories = fromList [ bank, customer ]; label = "TradingAccount-" <> party; version = 0
-    tradingAccount     = Account with provider = bank; owner = customer; id = tradingAccountId
-    auctionAccountId   = Id with signatories = fromList [ bank, customer ]; label = "AuctionAccount-" <> party; version = 0
-    auctionAccount     = Account with provider = bank; owner = customer; id = auctionAccountId
+    exchangeLockedAccountId   = Id with signatories = fromList [ bank, customer ]; label = "ExchangeLockedAccount-" <> party; version = 0
+    exchangeLockedAccount     = Account with provider = bank; owner = customer; id = exchangeLockedAccountId
+    auctionLockedAccountId   = Id with signatories = fromList [ bank, customer ]; label = "AuctionLockedAccount-" <> party; version = 0
+    auctionLockedAccount     = Account with provider = bank; owner = customer; id = auctionLockedAccountId
 
   -- Custody service
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
   custodyServiceCid <- submit customer do exerciseCmd custodyServiceOfferCid Custody.Accept
 
   -- Accounts
-  mainOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = mainAccountId; observers = [exchange, bank]; ctrls = [bank, customer]
-  mainAssetSettlementRuleCid <- submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = mainOpenAccountRequestCid
-  tradingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = tradingAccountId; observers = empty; nominee = exchange
-  tradingAssetSettlementRuleCid <- submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = tradingOpenAccountRequestCid
-  biddingOpenAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = auctionAccountId; observers = empty; nominee = bank
-  biddingAssetSettlementRuleCid <- submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = biddingOpenAccountRequestCid
+  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = mainAccountId; observers = [exchange, bank]; ctrls = [bank, customer]
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
+  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = exchangeLockedAccountId; observers = empty; nominee = exchange
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
+  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = auctionLockedAccountId; observers = empty; nominee = bank
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
 
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
-  tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = tradingAccount
+  tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = exchangeLockedAccount
   listingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferListingService with ..
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
   issuanceServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
@@ -123,7 +123,7 @@ onboardCustomer Providers{..} party = do
 
   -- Bidding Service
   biddingServiceOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferBiddingService with ..
-  biddingServiceCid <- submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept with tradingAccount = mainAccount; allocationAccount = auctionAccount
+  biddingServiceCid <- submit customer do exerciseCmd biddingServiceOfferCid Bidding.Accept with tradingAccount = mainAccount; allocationAccount = auctionLockedAccount
 
   pure $ Customer with ..
 
@@ -138,10 +138,13 @@ onboardAssets Providers{..} = do
     tsla = Asset with id = tslaId; quantity = 0.0
     nflxId = Id with signatories = singleton bank; label = "NFLX"; version = 0
     nflx = Asset with id = nflxId; quantity = 0.0
+    dUnitId = Id with signatories = singleton bank; label = "DAH-D"; version = 0
+    dUnit = Asset with id = nflxId; quantity = 0.0
 
   submit bank do createCmd AssetDescription with assetId = usdId; description = "United States Dollar"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = nflxId; description = "Netflix, Inc. Common Stock"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = tslaId; description = "Tesla, Inc. Common Stock"; issuer = bank; claims = Zero; ..
+  submit bank do createCmd AssetDescription with assetId = dUnitId; description = "Digital Asset Holdings D-Unit"; issuer = bank; claims = Zero; ..
 
   pure Assets with ..
 

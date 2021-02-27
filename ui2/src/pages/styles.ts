@@ -51,7 +51,7 @@ export default makeStyles((theme : any) => createStyles({
     marginTop: 50,
   },
   inputField: {
-    marginTop: 20
+    marginTop: 10
   },
   width90: {
     width: "90%"
