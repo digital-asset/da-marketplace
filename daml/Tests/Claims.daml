@@ -17,7 +17,6 @@ type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
 
 deriving instance Show C
-deriving instance Eq C
 deriving instance (Show a, Show (f (Cofree f a))) => Show (Cofree f a)
 deriving instance (Eq a, Eq (f (Cofree f a))) => Eq (Cofree f a)
 deriving instance Show (F (Cofree F Int))
@@ -31,28 +30,28 @@ enumerateTest = do
   enumerateFrom 0 (One a `And` Zero) === Cofree 0 (AndF (Cofree 1 (OneF a)) (Cofree 2 ZeroF))
   enumerateFrom 0 (
     Scale (O.pure 3.0)
-      ( And 
-        ( And 
-          ( Scale (O.pure 5.0) 
+      ( And
+        ( And
+          ( Scale (O.pure 5.0)
             (One a)
           )
           (One b)
         )
-        ( And 
+        ( And
           Zero
           (One c)
         )
       )
-    ) === 
+    ) ===
    ( Cofree 0 (ScaleF (O.pure 3.0)
-     ( Cofree 1 ( AndF 
-       ( Cofree 2 ( AndF 
-         ( Cofree 3 ( ScaleF (O.pure 5.0) 
+     ( Cofree 1 ( AndF
+       ( Cofree 2 ( AndF
+         ( Cofree 3 ( ScaleF (O.pure 5.0)
            ( Cofree 4 (OneF a) )
          ) )
          ( Cofree 5 (OneF b) )
        ) )
-       ( Cofree 6 ( AndF 
+       ( Cofree 6 ( AndF
          ( Cofree 7 ZeroF )
          ( Cofree 8 (OneF c) )
        ) )
