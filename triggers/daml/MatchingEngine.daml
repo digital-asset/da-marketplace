@@ -1,0 +1,125 @@
+-- Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module MatchingEngine where
+
+import DA.Action
+import DA.Foldable hiding (elem, null)
+import DA.List
+import DA.Optional
+import Daml.Trigger
+
+import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Service as Service
+import qualified Marketplace.Trading.Matching as Matching
+
+import Utils
+
+type CurrentOrderId = Int
+
+handleMatching : Trigger CurrentOrderId
+handleMatching = Trigger
+  { initialize = return 0
+  , updateState = \_ -> pure ()
+  , rule = handleMatchingRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Service.CreateOrderRequest
+                                              , registeredTemplate @Service.CancelOrderRequest
+                                              , registeredTemplate @Order.T ]
+  , heartbeat = None
+  }
+
+handleMatchingRule : Party -> TriggerA CurrentOrderId ()
+handleMatchingRule party = do
+  debug "Running matching rule..."
+
+  -- Acknowledge all 'Order.Request' and update current ID
+  orderRequests <- query @Service.CreateOrderRequest
+  forA_ orderRequests \(cid,_) -> do
+    currentOrderId <- get
+    emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show  currentOrderId
+    debug "Acknowledging order"
+    modify (+ 1)
+
+  -- Acknowledge all 'Order.CancelRequest'
+  orderCancelRequests <- query @Service.CancelOrderRequest
+  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid Service.AcknowledgeCancel
+                                     >> debug "Acknowledging order cancel"
+
+  -- Check for matches on all 'Order'
+  orders <- query @Order.T
+  forA_ orders (handleOrder party orders)
+
+-- |Check for crossing orders. If found, fill both orders. Matches by price.
+handleOrder : Party -> [ContractPair Order.T] -> ContractPair Order.T -> TriggerA CurrentOrderId ()
+handleOrder party orders op@(orderCid, order) = do
+  debug $ "Handling order: " <> show order
+
+  case order.status of
+    Order.PendingExecution -> processOrder op
+    Order.PartiallyExecuted -> processOrder op
+    _ -> pure ()
+
+  where
+    processOrder : ContractPair Order.T -> TriggerA CurrentOrderId ()
+    processOrder (orderCid, order) = do
+      let oppositelimitOrders = sortOn (\(_,x) -> case x.details.orderType of
+            Order.Limit price -> price
+            _ -> error "How can I get here?"
+            ) $ filter islimitOrder $ filter isOppositeOrder orders
+          oppositelimitOrders' = case order.details.side of
+            Order.Buy  -> oppositelimitOrders
+            Order.Sell -> reverse oppositelimitOrders
+          oppositeMarketOrders = sortOn (\(_, o) -> Down o.details.asset.quantity) $ filter (\(_, o) -> o.details.orderType == Order.Market) $ filter isOppositeOrder orders
+          crossing      = takeWhile (isCrossingLimitOrders (orderCid,order)) oppositelimitOrders'
+
+      case order.details.orderType of
+        Order.Market -> fill (orderCid, order) (head oppositelimitOrders')
+        Order.Limit price -> if (not $ null oppositeMarketOrders)
+          then fill (orderCid, order) (head oppositeMarketOrders)
+          else unless (null crossing) $ fill (orderCid, order) (head crossing)
+
+    isOppositeOrder : ContractPair Order.T -> Bool
+    isOppositeOrder (opoCid, opo) = opoCid /= orderCid
+                                 && opo.customer /= order.customer
+                                 && opo.details.side /= order.details.side
+                                 && opo.details.asset == order.details.asset
+
+
+    isCrossingLimitOrders : ContractPair Order.T -> ContractPair Order.T -> Bool
+    isCrossingLimitOrders (_, aggressive) (_, passive) = do
+      case (aggressive.details.orderType, passive.details.orderType) of
+        (Order.Limit price1, Order.Limit price2) ->
+          if aggressive.details.side == Order.Buy
+            then price1 >= price2
+            else price1 <= price2
+        _ -> error "What happened?"
+
+    islimitOrder : ContractPair Order.T -> Bool
+    islimitOrder (_, order) = case order.details.orderType of
+      Order.Limit _ -> True
+      _ -> False
+
+    fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA CurrentOrderId ()
+    fill (aggressiveCid, aggressive) (passiveCid, passive) = do
+
+      let price = case (aggressive.details.orderType, passive.details.orderType) of
+            (Order.Limit price, _) -> price
+            (_, Order.Limit price) -> price
+            (_, _) -> error "Shouldn't be here"
+          makerOrderId = fromSome aggressive.providerOrderId
+          takerOrderId = fromSome passive.providerOrderId
+          quantity = min passive.details.asset.quantity aggressive.details.asset.quantity
+
+      time <- getTime
+
+      let execution = Order.Execution with
+            matchId = "matchId"
+            makerOrderId
+            takerOrderId
+            quantity
+            price
+            timestamp = show time
+
+      emitCommands [exerciseByKeyCmd @Matching.Service aggressive.provider Matching.MatchOrders with execution = execution] []
+
+      return ()
