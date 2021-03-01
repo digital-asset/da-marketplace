@@ -1,0 +1,25 @@
+sdk-version: 1.10.0
+name: da-exberry-integration-test
+source: daml
+init-script: Demo:demo
+parties:
+  - Alice
+  - Bob
+  - Operator
+  - Custodian
+  - BtcIssuer
+  - UsdtIssuer
+  - Public
+  - Exchange
+  - Broker
+version: 0.1.8
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+data-dependencies:
+  - ../.daml/dist/da-marketplace-0.1.8.dar
+start-navigator: no
+sandbox-options:
+  - --wall-clock-time
+  - --ledgerid=da-marketplace-sandbox
