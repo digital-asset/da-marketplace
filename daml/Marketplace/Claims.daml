@@ -5,10 +5,12 @@ module Marketplace.Claims (
 ) where
 
 import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), serialize, cond, one)
+import ContingentClaims.Lifecycle qualified as Claim
 import ContingentClaims.FinancialClaim (european)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
 import ContingentClaims.Observation qualified as O
+import DA.List (dedupSort)
 import DA.Finance.Types (Id(..))
 import DA.Next.Set (Set)
 import Marketplace.AssetDescription (AssetDescription(..))
@@ -23,27 +25,27 @@ assetDescVers: Id
              -> Id
              -> Set Party
              -> C -> [Update (ContractId AssetDescription)]
-assetDescVers assetId description issuer safekeepingAccountId observers =
-  ana write . ana zipWithIndex . (assetId.version + 1, ) . para depthFst --TODO: use ghylo
+assetDescVers assetId description issuer safekeepingAccountId observers claims =
+  ana stepLifecycle (0, fixingDates, claims)
     where
-      depthFst : F (C, [C]) -> [C] --only @And@ and @Or@ are included
-      depthFst ZeroF = []
-      depthFst (OneF _) = []
-      depthFst (ScaleF _ (_, cs)) = cs
-      depthFst (WhenF _ (_, cs)) = cs
-      depthFst (GiveF (_, cs)) = cs
-      depthFst (AndF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
-      depthFst (OrF (c, cs) (c', cs')) = c :: cs ++ c' :: cs'
-      depthFst (CondF _ (_, cs) (_, cs')) = cs ++ cs'
-      zipWithIndex (_, []) = Nil
-      zipWithIndex (i, x :: xs) = Cons (i, x) (succ i, xs)
-      write : [(Int, C)] -> ListF (Update (ContractId AssetDescription)) [(Int, C)]
-      write ((version', claims') :: vcs) =
-        let assetId' = assetId with version = version'
-            claims = serialize claims'
-        in Cons (create AssetDescription with assetId = assetId', ..) vcs
-      write [] = Nil
-
+      fixingDates : [Date] = dedupSort . fixings $ claims
+      stepLifecycle : (Int, [Date], C) -> ListF (Update (ContractId AssetDescription)) (Int, [Date], C)
+      stepLifecycle (_, [], _) = Nil
+      stepLifecycle (version, fixing :: fs, claims') = Cons 
+        do
+          let runSpot = (error "assetDescVers: runSpot")
+              prune : Id -> Decimal -> Date -> Update C
+              prune id qty dt = Claim.pruneLeaf runSpot id qty claims' dt
+              goLeft = const
+           --FIXME multiple settlements on single date?
+          [claims] <- Claim.lifecycle prune runSpot goLeft claims' fixing
+          create AssetDescription 
+            with 
+              assetId = assetId with version
+              claims = serialize claims
+              ..
+       (succ version, fs, claims)
+       
 -- Returns a tree with each node annotated with the # of nodes below it + 1
 count : F (Cofree F Int) -> Cofree F Int
 count ZeroF = Cofree 1 ZeroF
@@ -67,9 +69,23 @@ enum (i, Cofree _ (OrF f@(Cofree depth _) f')) = CofreeF i (OrF (succ i, f) (suc
 enum (i, Cofree _ (CondF p f@(Cofree depth _) f')) = CofreeF i (CondF p (succ i, f) (succ (i + depth), f'))
 
 -- Enumerate each node in the tree, starting from from 'zero'
-enumerateFrom : Int -> C -> Cofree F Int 
+enumerateFrom : Int -> C -> Cofree F Int
 enumerateFrom zero = ana enum . (zero, ) . cata count
 
+fixings = cata fixings'
+
+--TODO should fail if dates will never be executed
+fixings' : F [Date] -> [Date]
+fixings' ZeroF = []
+fixings' (OneF _) = []
+fixings' (GiveF ts) = ts
+fixings' (ScaleF _ ts) = ts
+fixings' (WhenF p ts) = O.fixings p ++ ts
+fixings' (OrF ts ts') = ts ++ ts'
+fixings' (AndF ts ts') = ts ++ ts'
+fixings' (CondF _ ts ts') = ts ++ ts'
+
+-- TODO: 'european' creates a superfluous 'Or' node which doesn't really serve any purpose.
 binaryCallOption : Date -> Decimal -> Id -> Id -> C
 binaryCallOption expiry strike underlyingId currencyId =
   european expiry (binary strike underlyingId.label currencyId)
