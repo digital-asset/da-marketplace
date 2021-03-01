@@ -12,8 +12,8 @@ import Common
 
 traderCannotMoveAllocatedAsset : Script ()
 traderCannotMoveAllocatedAsset = do
-  providers@Providers{..} <- onboardProviders
-  Assets{..} <- onboardAssets providers
+  providers@Providers{exchange} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
   let

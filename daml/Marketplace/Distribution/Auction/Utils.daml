@@ -41,7 +41,7 @@ dutchAuction (remaining, _) bid@Bid{..} =
 -- | An accumulator function which processes generates the settlement instruction for both an issuer and a bidder based of the output of the dutch auction
 generateSettlementInstruction : (Optional (ContractId AssetDeposit), [ContractId Settlement.SettlementInstruction]) -> Auction.SettleAllocation -> Update (Optional (ContractId AssetDeposit), [ContractId Settlement.SettlementInstruction])
 generateSettlementInstruction (None, _) _ = error "Auction:generateSettlementInstruction - Issuers AssetDeposit has no remaining units to allocate"
-generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids) Auction.SettleAllocation{..} = do
+generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids) Auction.SettleAllocation{allocation, price, issuer, issuerReceivableAccount} = do
     let
       allocatedQuantity = allocation.quantity
       bid = allocation.bid
@@ -53,7 +53,7 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
 
     -- | Process bid side
     (bidCid, _) <- fetchByKey @Bidding.Bid (bid.customer, bid.auctionId)
-    (_, bidDepositCid) <- exerciseByKey @Bidding.Service serviceKey Bidding.ProcessAllocation with quantity = allocatedQuantity; amount = allocatedAmount; ..
+    (_, bidDepositCid) <- exerciseByKey @Bidding.Service serviceKey Bidding.ProcessAllocation with bidCid; quantity = allocatedQuantity; amount = allocatedAmount; price
     let
       buyer = bid.customer
       payment = Settlement.SettlementDetails with senderAccount = bid.allocationAccount; depositCid = bidDepositCid; receiverAccount = issuerReceivableAccount
@@ -75,5 +75,5 @@ generateSettlementInstruction (Some issuerDepositCid, settlementInstructionCids)
       delivery = Settlement.SettlementDetails with senderAccount = issuerDeposit.account; depositCid = allocatedDepositCid; receiverAccount = bid.tradingAccount
 
     -- | Create the Settlement Instruction to deliver the asset against the payment atomically
-    settlementInstructionCid <- exerciseByKey @Bidding.Service serviceKey Bidding.GenerateSettlementInstruction with ..
+    settlementInstructionCid <- exerciseByKey @Bidding.Service serviceKey Bidding.GenerateSettlementInstruction with issuer; delivery; payment
     pure (remainingDepositCidOpt, settlementInstructionCid :: settlementInstructionCids)

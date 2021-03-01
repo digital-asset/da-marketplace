@@ -41,13 +41,12 @@ template Service
 
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
           time <- getTime
-          create Bidding.Bid
-            with
-              details = Bidding.Details with ..
-              status = Bidding.Pending
-              assetId = bidRequest.asset.id
+          create Bidding.Bid with
               issuer = bidRequest.issuer
               auctionId = bidRequest.auctionId
+              assetId = bidRequest.asset.id
+              details = Bidding.Details with price; quantity; time
+              status = Bidding.Pending
               quotedAssetId = bidRequest.quotedAssetId
               ..
 
@@ -79,9 +78,10 @@ template Service
                               else pure bid.depositCid
 
           let newStatus = if bid.details.quantity == quantity
-                            then Bidding.FullAllocation with ..
-                            else Bidding.PartialAllocation with ..
-          newBidCid <- exercise bidCid Bidding.UpdateStatus with ..
+                            then Bidding.FullAllocation with price
+                            else Bidding.PartialAllocation with price; quantity
+
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
     nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction

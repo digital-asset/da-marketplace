@@ -5,6 +5,7 @@ import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.Confirmation qualified as Confirmation
+import Marketplace.Trading.Error (Error (..))
 import qualified Marketplace.Trading.AllocationAccountRule as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 
 type T = Service
@@ -78,7 +79,8 @@ template Service
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
-          orderCid <- create order with status = Order.Rejected with ..
+          let reason = Error with code = show errorCode; message = errorMessage
+          orderCid <- create order with status = Order.Rejected with reason
           depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
           return (orderCid, depositCid)
@@ -106,7 +108,8 @@ template Service
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
-          create order with status = Order.CancellationRejected with ..
+          let reason = Error with code = show errorCode; message = errorMessage
+          create order with status = Order.CancellationRejected with reason
 
     controller operator, provider can
       nonconsuming SignConfirmation : ContractId Confirmation.T

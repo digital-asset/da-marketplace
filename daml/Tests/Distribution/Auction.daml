@@ -38,8 +38,8 @@ data Fixture = Fixture with
 
 setup : Script Fixture
 setup = do
-  providers@Providers{..} <- onboardProviders
-  assets@Assets{..} <- onboardAssets providers
+  providers@Providers{bank; distributorRoleCid} <- onboardProviders
+  assets@Assets{usd} <- onboardAssets providers
 
   -- Create our Investors/Bidders
   let

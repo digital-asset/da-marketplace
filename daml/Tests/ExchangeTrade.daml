@@ -13,8 +13,8 @@ import DA.List
 
 setup : Script ()
 setup = do
-  providers@Providers{..} <- onboardProviders
-  Assets{..} <- onboardAssets providers
+  providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
   let

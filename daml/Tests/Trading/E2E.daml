@@ -22,8 +22,8 @@ checkOrderStatusMatches orderCid party status = do
 
 tradingEndToEndTest : Script ()
 tradingEndToEndTest = do
-  providers@Providers{..} <- onboardProviders
-  Assets{..} <- onboardAssets providers
+  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
 
   let
     shareAsset = tsla with quantity = 200.0

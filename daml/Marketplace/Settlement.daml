@@ -23,7 +23,7 @@ template Service
         with
           settlementInstructionCid : ContractId SettlementInstruction
         do
-          SettlementInstruction{..} <- fetchAndArchive settlementInstructionCid
+          SettlementInstruction{buyer; seller; payment; delivery} <- fetchAndArchive settlementInstructionCid
 
           forA [payment, delivery] (\settlementDetails -> do
             let

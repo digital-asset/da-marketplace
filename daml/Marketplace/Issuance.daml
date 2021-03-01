@@ -87,7 +87,7 @@ template Service
         with
           createOriginationCid: ContractId OriginationRequest
         do
-          OriginationRequest{..} <- fetch createOriginationCid
+          OriginationRequest{assetLabel; description; claims; safekeepingAccountId; observers} <- fetch createOriginationCid
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
@@ -101,10 +101,12 @@ template Service
         with
           createIssuanceRequestCid : ContractId CreateIssuanceRequest
         do
-          CreateIssuanceRequest{..} <- fetch createIssuanceRequestCid
-          Some _ <- lookupByKey @AssetDescription assetId
+          CreateIssuanceRequest{issuanceId; assetId; accountId; quantity} <- fetch createIssuanceRequestCid
           archive createIssuanceRequestCid
+
+          Some _ <- lookupByKey @AssetDescription assetId
           issuanceCid <- create Issuance with ..
+
           let asset = Asset with id = assetId; quantity
           depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
           pure (issuanceCid, depositCid)
@@ -113,12 +115,14 @@ template Service
         with
           reduceIssuanceRequestCid : ContractId ReduceIssuanceRequest
         do
-          ReduceIssuanceRequest{..} <- fetch reduceIssuanceRequestCid
+          ReduceIssuanceRequest{issuanceId; accountId; depositCid} <- fetch reduceIssuanceRequestCid
           archive reduceIssuanceRequestCid
+
           deposit <- fetch depositCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
           (issuanceCid, issuance) <- fetchByKey @Issuance (operator, provider, issuanceId)
           archive issuanceCid
+
           create issuance with quantity = issuance.quantity - deposit.asset.quantity
 
 template Offer

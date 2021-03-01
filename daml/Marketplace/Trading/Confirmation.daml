@@ -6,7 +6,7 @@ import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Next.Set (Set, insert)
 import Marketplace.Settlement qualified as Settlement
-import Marketplace.Trading.Listing (Listing)
+-- import Marketplace.Trading.Listing (Listing)
 import Marketplace.Trading.Order qualified as Order
 
 -- TODO: Try to turn this into a service
@@ -55,7 +55,7 @@ template Confirmation
           [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
 
           -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
-          paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
+          -- paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
 
           [payment, delivery] <- forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
             let
@@ -74,8 +74,7 @@ template Confirmation
               else pure order.depositCid
 
             create order with status, executions, remainingQuantity
-            pure Settlement.SettlementDetails with senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty; ..
+            pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
             )
 
           create Settlement.SettlementInstruction with ..
-          

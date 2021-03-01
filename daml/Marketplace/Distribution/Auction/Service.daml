@@ -41,7 +41,7 @@ template Service
           floorPrice : Decimal
           depositCid : ContractId AssetDeposit
         do
-          create CreateAuctionRequest with request = RequestCreateAuction with ..; ..
+          create CreateAuctionRequest with ..
 
       nonconsuming CancelAuctionRequest : ()
         with
@@ -54,11 +54,11 @@ template Service
         with
           createAuctionRequestCid : ContractId CreateAuctionRequest
         do
-          CreateAuctionRequest{request} <- fetchAndArchive createAuctionRequestCid
+          CreateAuctionRequest{auctionId; asset; quotedAssetId; floorPrice; depositCid} <- fetchAndArchive createAuctionRequestCid
 
           -- Deposit the asset into the allocation account so they cannot be transferred/withdrawn without the signatore of the Auctioneer
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with depositCid = request.depositCid
-          create Auction with status = Auction.Open; auctionId = request.auctionId; asset = request.asset, quotedAssetId = request.quotedAssetId; floorPrice = request.floorPrice; ..
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          create Auction with status = Auction.Open; ..
 
       nonconsuming RejectAuction : ()
         with
@@ -157,7 +157,11 @@ template CreateAuctionRequest
     operator : Party
     provider : Party
     customer : Party
-    request : RequestCreateAuction
+    auctionId : Text
+    asset : Asset
+    quotedAssetId : Id
+    floorPrice : Decimal
+    depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 
