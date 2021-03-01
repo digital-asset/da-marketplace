@@ -98,7 +98,7 @@ template Service
         do
           OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
 
-          let account = Account with provider = provider; owner = customer; id = accountId
+          let account = Account with provider; owner = customer; id = accountId
           create AllocationAccountRule with ..
 
       nonconsuming CloseAccount : ()
