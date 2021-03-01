@@ -76,7 +76,7 @@ setup = do
     quotedAssetId = Id with signatories = fromList [ bank, issuer.customer ]; label = "USD"; version = 0
   createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
       asset = auctionAsset
-      assetDepositCid = issuerAsset
+      depositCid = issuerAsset
       floorPrice = 5.0
       ..
   auctionCid <- bank `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
