@@ -63,6 +63,8 @@ template Service
           CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
 
+          -- TODO: Confirm what to do with this business ACK when received out of the expected order.
+          --  Should we set the providerOrderId but leave the status as is ? Should we check if this value is already set ? What to do if it's already set ? etc.
           case order.status of
             Order.New -> do
               archive orderCid

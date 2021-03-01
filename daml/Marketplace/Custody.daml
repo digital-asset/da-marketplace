@@ -56,22 +56,21 @@ template Service
       nonconsuming RequestCreditAccount : ContractId CreditAccountRequest
         with
           accountId : Id
-          asset : Asset
+          credit : AssetSettlement_Credit
         do
           create CreditAccountRequest with ..
 
       nonconsuming RequestDebitAccount : ContractId DebitAccountRequest
         with
           accountId : Id
-          depositCid : ContractId AssetDeposit
+          debit : AssetSettlement_Debit
         do
           create DebitAccountRequest with ..
 
       nonconsuming RequestTransferDeposit : ContractId TransferDepositRequest
         with
           accountId : Id
-          receiverAccountId : Id
-          depositCid : ContractId AssetDeposit
+          transfer : AssetSettlement_Transfer
         do
           create TransferDepositRequest with ..
 
@@ -89,7 +88,7 @@ template Service
         do
           OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
 
-          let account = Account with provider = provider; owner = customer; id = accountId
+          let account = Account with provider; owner = customer; id = accountId
           create AssetSettlementRule with ..
 
       nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
@@ -121,22 +120,22 @@ template Service
         with
           creditAccountRequestCid : ContractId CreditAccountRequest
         do
-          CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+          CreditAccountRequest{accountId, credit} <- fetchAndArchive creditAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId credit
 
       nonconsuming DebitAccount : Asset
         with
           debitAccountRequestCid : ContractId DebitAccountRequest
         do
-          DebitAccountRequest{accountId; depositCid} <- fetchAndArchive debitAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
+          DebitAccountRequest{accountId; debit} <- fetchAndArchive debitAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId debit
 
       nonconsuming TransferDeposit : ContractId AssetDeposit
         with
           transferDepositRequestCid : ContractId TransferDepositRequest
         do
-          TransferDepositRequest{accountId; receiverAccountId; depositCid} <- fetchAndArchive transferDepositRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
+          TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
+          exerciseByKey @AssetSettlementRule accountId transfer
 
       nonconsuming Lifecycle : [ContractId AssetDeposit]
         with
@@ -248,7 +247,7 @@ template CreditAccountRequest
     provider : Party
     customer : Party
     accountId : Id
-    asset : Asset
+    credit : AssetSettlement_Credit
   where
     signatory operator, provider, customer
 
@@ -258,7 +257,7 @@ template DebitAccountRequest
     provider : Party
     customer : Party
     accountId : Id
-    depositCid : ContractId AssetDeposit
+    debit : AssetSettlement_Debit
   where
     signatory operator, provider, customer
 
@@ -268,8 +267,7 @@ template TransferDepositRequest
     provider : Party
     customer : Party
     accountId : Id
-    receiverAccountId : Id
-    depositCid : ContractId AssetDeposit
+    transfer : AssetSettlement_Transfer
   where
     signatory operator, provider, customer
 

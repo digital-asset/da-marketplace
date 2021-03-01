@@ -4,6 +4,7 @@ import ContingentClaims.Claim.Serializable (Claim(Zero))
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
+import DA.Finance.Asset.Settlement (AssetSettlement_Credit(..))
 import DA.Next.Set
 import Marketplace.AssetDescription (AssetDescription(..))
 import qualified Marketplace.Operator as Operator
@@ -151,5 +152,5 @@ onboardAssets Providers{..} = do
 depositAsset : Providers -> Customer -> Asset -> Id -> Script (ContractId AssetDeposit)
 depositAsset Providers{..} Customer{..} asset accountId = do
   -- Assets
-  creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = accountId; ..
+  creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = accountId; credit = AssetSettlement_Credit with asset; ctrl = bank
   submit bank do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
