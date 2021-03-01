@@ -56,7 +56,7 @@ template Service
       nonconsuming RequestCreditAccount : ContractId CreditAccountRequest
         with
           accountId : Id
-          credit : AssetSettlement_Credit
+          asset : Asset
         do
           create CreditAccountRequest with ..
 
@@ -120,8 +120,8 @@ template Service
         with
           creditAccountRequestCid : ContractId CreditAccountRequest
         do
-          CreditAccountRequest{accountId, credit} <- fetchAndArchive creditAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId credit
+          CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
 
       nonconsuming DebitAccount : Asset
         with
@@ -247,7 +247,7 @@ template CreditAccountRequest
     provider : Party
     customer : Party
     accountId : Id
-    credit : AssetSettlement_Credit
+    asset : Asset
   where
     signatory operator, provider, customer
 
