@@ -79,15 +79,24 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
   }, [publicParty]);
 
   useEffect(() => {
-    getPublicAutomation(publicToken).then(publicAutomation => {
-      if (publicAutomation) {
-        setPublicAutomation(publicAutomation);
-        setQueryStream(queryStream => ({
-          ...queryStream,
-          publicAutomation
-        }));
-      }
-    })
+    function handleAutomation() {
+      getPublicAutomation(publicToken).then(publicAutomation => {
+        if (publicAutomation) {
+          setPublicAutomation(publicAutomation);
+          setQueryStream(queryStream => ({
+            ...queryStream,
+            publicAutomation
+          }));
+        }
+      })
+    }
+    handleAutomation();
+    //
+    // if (!publicAutomation) {
+    //   const interval = setInterval(() => handleAutomation(), 2000);
+    //   return () => clearInterval(interval);
+    // }
+
   }, [publicToken]);
 
 

@@ -22,7 +22,7 @@ import { retrieveCredentials } from '../../Credentials'
 import { deploymentMode, DeploymentMode } from '../../config'
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
-import { useOperator } from '../common/common'
+import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { getAbbreviation } from '../common/utils';
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -69,11 +69,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const automation = usePublicAutomation();
     const token = retrieveCredentials()?.token;
 
+    const publicParty = useDablParties().parties.publicParty;
     useEffect(() => {
-      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, automation);
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, automation, publicParty);
       }
-    }, [automation, token]);
+    }, [token]);
 
 
     const [ profile, setProfile ] = useState<Profile>({

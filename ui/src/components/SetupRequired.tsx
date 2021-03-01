@@ -15,7 +15,7 @@ type Props = {
 const SetupRequired: React.FC<Props> = ({automation}) => {
   const [ deploying, setDeploying ] = useState(false);
   const [ setupError, setSetupError ] = useState(false);
-  const [ adminJwt, setAdminJwt] = useState('');
+  const [ adminJwt, setAdminJwt ] = useState('');
   const { parties, loading } = useDablParties();
   const automations = usePublicAutomation();
 
@@ -71,29 +71,27 @@ const SetupRequired: React.FC<Props> = ({automation}) => {
           disabled={!adminJwt}
           content={<p className='dark bold'>Go!</p>}
           onClick={handleSetup}/>
-    </Form>
-  </>
-  )
+      </Form>
+    </>
+  );
   const showMessage = (
-  <>
-     <p>
-       It looks like you have not completed the necessary deployment steps to configure this app.
-       Please create an Operator role contract for the UserAdmin party, and deploy the operator trigger.</p>
-     <h4>Automatic setup</h4>
-     { automations?.length === 0 || !automations ? (
-       <div><p>Please make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.</p></div>
-     ) : setupError ? setupErrorScreen : setupForm }
-     <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
-   </>
- );
-  const body = deploying ? setupWaiting : showMessage;
-
+    <>
+      <p>
+        It looks like you have not completed the necessary deployment steps to configure this app.
+        Please create an Operator role contract for the UserAdmin party, and deploy the operator trigger.</p>
+      <h4>Automatic setup</h4>
+      { automations?.length === 0 || !automations ? (
+        <div><p>Please make the "da-marketplace-triggers" artifact deployable and then refresh this page to continue and to perform automatic setup.</p></div>
+      ) : setupError ? setupErrorScreen : setupForm }
+      <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
+    </>
+  );
 
   return (
     <Tile key='test' header={logoHeader}>
       <div className='setup-required'>
         <h3>Welcome to the Daml Open Marketplace!</h3>
-        {body}
+        { deploying ? setupWaiting : showMessage }
       </div>
     </Tile>
   );
