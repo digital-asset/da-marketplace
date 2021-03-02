@@ -8,13 +8,12 @@ import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_Add
 import DA.Finance.Asset (AssetDeposit(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
-import DA.Next.Map qualified as Map
+import DA.Map qualified as Map
 import Marketplace.Issuance (RequestBinaryCallOptionOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
 
 
-endToEnd: Script [ ContractId AssetDeposit ]
-endToEnd = do
+endToEnd = script do
   common <- onboardCommon
 
   let usdId = Id with
@@ -71,7 +70,7 @@ endToEnd = do
   -- Bob exercises the Option
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = optionDepositCid
-    postAssetVersion = 1 -- TODO: How do we get this in practice? From a UI?
+    choice = optionDesc.claims.obligation.lhs -- TODO: How do we get this in practice? From a UI?
   submit common.custodian $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
     safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
     lifecycleRequestCid = lifecycleReqCid

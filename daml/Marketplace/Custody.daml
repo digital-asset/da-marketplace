@@ -1,22 +1,23 @@
 module Marketplace.Custody where
 
+import ContingentClaims.Claim (Claim, deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as ContingentClaims
-import ContingentClaims.Claim (Claim, deserialize)
 import ContingentClaims.Observation (Observation)
 import DA.Date (toDateUTC, toGregorian, fromGregorian)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
-import DA.List (intersperse)
-import DA.Next.Set
-import DA.Next.Map (Map, MapKey)
--- TODO: remove and replace with GenMap
-import DA.Next.Map qualified as Map
-import DA.Text (splitOn, parseInt, unwords)
-import Marketplace.AssetDescription (AssetDescription)
-import DA.Optional (fromSomeNote)
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 import DA.Finance.Utils (fetchAndArchive)
+import DA.List (intersperse, last)
+import DA.Map (Map)
+import DA.Map qualified as Map
+import DA.Next.Set
+import DA.Optional (fromSomeNote)
+import DA.Text (splitOn, parseInt, unwords)
+import Marketplace.AssetDescription ()
+import Marketplace.AssetDescription (AssetDescription, Claims)
+import Marketplace.AssetDescription qualified as AssetDescription
+import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
 
 template Service
   with
@@ -78,7 +79,7 @@ template Service
       nonconsuming RequestLifecycle: ContractId LifecycleRequest
         with
           assetDepositCid: ContractId AssetDeposit
-          postAssetVersion: Int
+          choice: Claims
         do
           create LifecycleRequest with ..
 
@@ -151,13 +152,6 @@ template Service
         ctrl : Party
       controller ctrl
       do pure ()
-
--- TODO: remove when @fixings@ param above is removed; or replace with GenMap
-instance MapKey Date where
-  keyToText dt = case toGregorian dt of (y,m,d) -> unwords . intersperse "-" $ show <$> [y, fromEnum m, d]
-  keyFromText s = case mapA parseInt $ splitOn "-" s of
-                    Some [y, m, d] -> fromGregorian (y, toEnum m, d)
-                    _ -> error $ "invalid date input" <> s
 
 template Offer
   with
@@ -279,7 +273,7 @@ template LifecycleRequest
     provider : Party
     customer : Party
     assetDepositCid: ContractId AssetDeposit
-    postAssetVersion: Int
+    choice: Claims
   where
     signatory operator, provider, customer
 
@@ -294,8 +288,8 @@ template LifecycleRequest
           t <- toDateUTC <$> getTime
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
-          (_, description') <- fetchByKey @AssetDescription (assetDeposit.asset.id with version = postAssetVersion)
-          let payout: Id -> Decimal -> Date -> Update (ContractId AssetDeposit)
+          (_, versions) <- fetchByKey @AssetDescription.Versions (fromList . signatory $ assetDeposit, assetDeposit.asset.id.label)
+          let payout: Id -> Decimal -> Date -> Update (Claim Observation Date Id, ContractId AssetDeposit)
               payout asset qty dt = do
                 payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
                 exerciseByKey @AssetSettlementRule assetDeposit.account.id $
@@ -306,14 +300,17 @@ template LifecycleRequest
                     depositCid = payoutDepositCid)
                 exerciseByKey @AssetSettlementRule assetDeposit.account.id $
                   AssetSettlement_RemoveController description.issuer
-                return cid
+                postLifecycleClaim <- ContingentClaims.pruneLeaf undefined asset qty (deserialize description.claims) dt
+                return (postLifecycleClaim, cid)
               spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
-                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> Map.keyToText dt)
+                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
-              election _ _ = deserialize description'.claims -- will throw if the claims don't match
-          payoutCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
+              election _ _ = deserialize choice -- will throw if the claims don't match
+          versionsAndCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
+          let (postAssetVersions, payoutCids) = unzip versionsAndCids
+          let postAssetVersion = fromSomeNote "Invalid claim version" (Map.lookup (serialize . last $ postAssetVersions) versions.versions)
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return $ assetDepositCid' :: payoutCids

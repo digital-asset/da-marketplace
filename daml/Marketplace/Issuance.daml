@@ -6,7 +6,9 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
 import DA.Text (unwords)
+import Marketplace.AssetDescription ()
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
+import Marketplace.AssetDescription qualified as AssetDescription
 import Marketplace.Claims (assetDescVers, binaryCallOption)
 
 type T = Issuance
@@ -94,7 +96,8 @@ template Service
           let
             assetId = Id with signatories = fromList [ provider, customer ]; label = assetLabel; version = 0
             issuer = customer
-          sequence $ assetDescVers assetId description issuer safekeepingAccountId observers $ deserialize claims
+          (_versions, assetDescriptions) <- assetDescVers assetId description issuer safekeepingAccountId observers $ deserialize claims
+          return assetDescriptions
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with

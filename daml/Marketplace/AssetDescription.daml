@@ -2,11 +2,17 @@ module Marketplace.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Id)
-import DA.Next.Set (Set)
-import ContingentClaims.Claim.Serializable (Claim)
+import DA.Next.Set (Set, member)
+import DA.Map (Map)
+import ContingentClaims.Claim.Serializable (Claim(..))
+import ContingentClaims.Observation (Observation(..))
 
 type T = AssetDescription
 type Claims = Claim Date Id
+type Version = Int
+
+deriving instance Ord a => Ord (Observation Date a)
+deriving instance Ord (Claim Date Id)
 
 template AssetDescription
   with
@@ -34,3 +40,14 @@ template AssetDescription
     observer observers
     key assetId : Id
     maintainer key.signatories
+
+-- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
+template Versions
+  with
+    assetLabel: Text
+    descriptionSignatories: Set Party
+    versions: Map Claims Version
+  where
+    signatory descriptionSignatories
+    key (descriptionSignatories, assetLabel) : (Set Party, Text)
+    maintainer key._1
