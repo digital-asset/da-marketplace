@@ -56,9 +56,7 @@ handleOrder party orders op@(orderCid, order) = do
   case order.status of
     Order.PendingExecution -> processOrder op
     Order.PartiallyExecuted -> processOrder op
-    _ -> do
-      debug $ "Ignoring order in status: " <> show order.status
-      pure ()
+    _ ->  debug $ "Ignoring order in status: " <> show order.status
 
   where
     processOrder : ContractPair Order.T -> TriggerA CurrentOrderId ()
