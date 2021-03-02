@@ -4,9 +4,8 @@
 module MatchingEngine where
 
 import DA.Action
-import DA.Foldable hiding (elem, null)
+import DA.Foldable hiding (elem, null, length)
 import DA.List
-import DA.Optional
 import Daml.Trigger
 
 import qualified Marketplace.Trading.Order as Order
@@ -36,9 +35,9 @@ handleMatchingRule party = do
   orderRequests <- query @Service.CreateOrderRequest
   forA_ orderRequests \(cid,_) -> do
     currentOrderId <- get
-    emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show  currentOrderId
+    emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show currentOrderId
     debug "Acknowledging order"
-    modify (+ 1)
+    modify (+1)
 
   -- Acknowledge all 'Order.CancelRequest'
   orderCancelRequests <- query @Service.CancelOrderRequest
@@ -57,15 +56,16 @@ handleOrder party orders op@(orderCid, order) = do
   case order.status of
     Order.PendingExecution -> processOrder op
     Order.PartiallyExecuted -> processOrder op
-    _ -> pure ()
+    _ -> do
+      debug $ "Ignoring order in status: " <> show order.status
+      pure ()
 
   where
     processOrder : ContractPair Order.T -> TriggerA CurrentOrderId ()
     processOrder (orderCid, order) = do
       let oppositelimitOrders = sortOn (\(_,x) -> case x.details.orderType of
             Order.Limit price -> price
-            _ -> error "How can I get here?"
-            ) $ filter islimitOrder $ filter isOppositeOrder orders
+            _ -> error "How can I get here?") $ filter islimitOrder $ filter isOppositeOrder orders
           oppositelimitOrders' = case order.details.side of
             Order.Buy  -> oppositelimitOrders
             Order.Sell -> reverse oppositelimitOrders
@@ -73,7 +73,7 @@ handleOrder party orders op@(orderCid, order) = do
           crossing      = takeWhile (isCrossingLimitOrders (orderCid,order)) oppositelimitOrders'
 
       case order.details.orderType of
-        Order.Market -> fill (orderCid, order) (head oppositelimitOrders')
+        Order.Market -> unless (null oppositelimitOrders') $ fill (orderCid, order) (head oppositelimitOrders')
         Order.Limit price -> if (not $ null oppositeMarketOrders)
           then fill (orderCid, order) (head oppositeMarketOrders)
           else unless (null crossing) $ fill (orderCid, order) (head crossing)
@@ -82,17 +82,18 @@ handleOrder party orders op@(orderCid, order) = do
     isOppositeOrder (opoCid, opo) = opoCid /= orderCid
                                  && opo.customer /= order.customer
                                  && opo.details.side /= order.details.side
-                                 && opo.details.asset == order.details.asset
+                                 && opo.details.asset.id.label == order.details.asset.id.label
+                                 && opo.status `elem` [Order.PendingExecution, Order.PartiallyExecuted]
 
 
     isCrossingLimitOrders : ContractPair Order.T -> ContractPair Order.T -> Bool
     isCrossingLimitOrders (_, aggressive) (_, passive) = do
       case (aggressive.details.orderType, passive.details.orderType) of
-        (Order.Limit price1, Order.Limit price2) ->
+        (Order.Limit aggressivePrice, Order.Limit passivePrice) ->
           if aggressive.details.side == Order.Buy
-            then price1 >= price2
-            else price1 <= price2
-        _ -> error "What happened?"
+            then aggressivePrice >= passivePrice
+            else aggressivePrice <= passivePrice
+        _ -> False
 
     islimitOrder : ContractPair Order.T -> Bool
     islimitOrder (_, order) = case order.details.orderType of
@@ -101,25 +102,21 @@ handleOrder party orders op@(orderCid, order) = do
 
     fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA CurrentOrderId ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
+      debug $ "Matching order: " <> show aggressive.details.id.label <> " to : " <> show passive.details.id.label
 
       let price = case (aggressive.details.orderType, passive.details.orderType) of
-            (Order.Limit price, _) -> price
-            (_, Order.Limit price) -> price
-            (_, _) -> error "Shouldn't be here"
-          makerOrderId = fromSome aggressive.providerOrderId
-          takerOrderId = fromSome passive.providerOrderId
+            (Order.Limit price, Order.Market) -> price
+            (Order.Market, Order.Limit price) -> price
+            (Order.Limit aggressivePrice, Order.Limit passivePrice) -> if aggressive.details.side == Order.Buy then aggressivePrice else passivePrice
+            (_, _) -> error "Shouldn't be here - can't match two market orders together"
+          makerOrderId = passive.details.id.label
+          takerOrderId = aggressive.details.id.label
           quantity = min passive.details.asset.quantity aggressive.details.asset.quantity
 
       time <- getTime
 
-      let execution = Order.Execution with
-            matchId = "matchId"
-            makerOrderId
-            takerOrderId
-            quantity
-            price
-            timestamp = show time
+      let execution = Order.Execution with matchId = "matchId"; makerOrderId; takerOrderId; quantity; price; timestamp = show time
 
-      emitCommands [exerciseByKeyCmd @Matching.Service aggressive.provider Matching.MatchOrders with execution = execution] []
+      emitCommands [exerciseByKeyCmd @Matching.Service aggressive.provider Matching.MatchOrders with execution] [toAnyContractId aggressiveCid, toAnyContractId passiveCid]
 
       return ()
