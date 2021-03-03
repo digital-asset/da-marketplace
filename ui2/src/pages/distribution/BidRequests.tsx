@@ -29,6 +29,7 @@ const BidRequestsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
     fields: {
       price: { label: "Price", type: "number" },
       quantity: { label: "Quantity", type: "number" },
+      publish: { label: "Publish Bid", type: "checkbox" },
     },
     onClose: async function(state : any | null) {}
   };

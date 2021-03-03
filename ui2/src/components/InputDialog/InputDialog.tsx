@@ -9,6 +9,9 @@ import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from "@material-ui/core/FormControl";
 import MenuItem from "@material-ui/core/MenuItem";
+import Checkbox from "@material-ui/core/Checkbox";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+
 
 export interface RegularField {
   label : string
@@ -21,7 +24,12 @@ export interface SelectionField {
   items : string[]
 }
 
-export type Field = RegularField | SelectionField
+export interface CheckBoxField {
+  label : string
+  type : "checkbox"
+}
+
+export type Field = RegularField | SelectionField | CheckBoxField
 
 export interface InputDialogProps<T extends {[key: string]: any }> {
   open : boolean
@@ -46,6 +54,17 @@ export function InputDialog<T extends { [key : string] : any }>(props : InputDia
             {field.items.map(item => (<MenuItem key={item} value={item}>{item}</MenuItem>))}
           </Select>
         </FormControl>
+      )
+    } else if (field.type === "checkbox") {
+      return (
+        <FormControlLabel
+          label={field.label}
+          control={
+            <Checkbox
+              color="primary"
+              onChange={e => setState({ ...state, [fieldName]: e.target.value })}
+            />}
+        />
       )
     } else {
       return (
