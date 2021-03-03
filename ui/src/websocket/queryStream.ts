@@ -21,7 +21,6 @@ export type QueryStream<T extends object = any, K = unknown> = {
   publicLoading: boolean;
   partyLoading: boolean;
   publicToken?: string;
-  publicAutomation?: PublicAutomation[];
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
 }
 
@@ -56,7 +55,6 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   const [ partyToken, setPartyToken ] = useState<string>();
   const [ publicToken, setPublicToken ] = useState<string>();
-  const [ publicAutomation, setPublicAutomation ] = useState<PublicAutomation[]>();
 
   const [ streamErrors, setStreamErrors ] = useState<StreamErrors[]>();
 
@@ -77,27 +75,6 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
       }
     })
   }, [publicParty]);
-
-  useEffect(() => {
-    function handleAutomation() {
-      getPublicAutomation(publicToken).then(publicAutomation => {
-        if (publicAutomation) {
-          setPublicAutomation(publicAutomation);
-          setQueryStream(queryStream => ({
-            ...queryStream,
-            publicAutomation
-          }));
-        }
-      })
-    }
-    handleAutomation();
-    //
-    // if (!publicAutomation) {
-    //   const interval = setInterval(() => handleAutomation(), 2000);
-    //   return () => clearInterval(interval);
-    // }
-
-  }, [publicToken]);
 
 
   const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading } = useDamlStreamQuery(partyTemplateIds, partyToken);
@@ -130,8 +107,7 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     subscribeTemplate,
     publicLoading,
     partyLoading,
-    publicToken,
-    publicAutomation
+    publicToken
   });
 
   useEffect(() => {
@@ -214,13 +190,6 @@ export function usePublicToken() {
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
   return queryStream?.publicToken;
 }
-
-
-export function usePublicAutomation() {
-  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.publicAutomation;
-}
-
 
 export function usePublicLoading() {
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);

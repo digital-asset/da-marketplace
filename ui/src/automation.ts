@@ -34,74 +34,45 @@ export type PublicAutomation = {
 }
 
 type PublicAutomationAPIResult = PublicAutomation[] | undefined;
-//
-export const getPublicAutomation = async (token?: string): Promise<PublicAutomation[] | undefined> => {
+
+export const getPublicAutomation = async (publicParty?: string): Promise<PublicAutomation[] | undefined> => {
   let automation = undefined;
-  if (token) {
-    const publicHeaders = {
-      "Authorization": `Bearer ${token?.toString()}`,
-      'Content-Type': 'application/json'
-    }
-    const my_url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
-    const result: PublicAutomationAPIResult = await fetch(my_url, { method: 'GET', headers: publicHeaders})
-      .then(response => response.json());
-    automation = result;
-  }
+  if (!publicParty) { return automation }
+  await getPublicToken(publicParty)
+    .then(token => {
+      if (token) {
+        const publicHeaders = {
+          "Authorization": `Bearer ${token?.toString()}`,
+          'Content-Type': 'application/json'
+        }
+        const url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
+        const result: Promise<PublicAutomationAPIResult> = fetch(url, { method: 'GET', headers: publicHeaders})
+          .then(response => response.json());
+        automation = result;
+      }
+    });
   return automation;
 }
-// }
-// export const getPublicAutomation = async (token_no?: string, publicParty?: string): Promise<PublicAutomation[] | undefined> => {
-//   let automation = undefined;
-//   if (!publicParty) {
-//     console.log("public party none")
-//     return automation
-//   }
-//   await getPublicToken(publicParty).then(token => {
-//     return token;
-//   })
-//   .then(token => {
-//     if (token) {
-//       console.log(`token in getautomations: ${token}`);
-//       const publicHeaders = {
-//         "Authorization": `Bearer ${token?.toString()}`,
-//         'Content-Type': 'application/json'
-//       }
-//       const my_url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
-//       const result: Promise<PublicAutomationAPIResult> = fetch(my_url, { method: 'GET', headers: publicHeaders})
-//         .then(response => response.json());
-//       automation = result;
-//     }
-//   });
-//   return automation;
-//
-// }
 
-export const deployTrigger = async (artifactHash: string, trigger: MarketplaceTrigger, token: string, automations?: PublicAutomation[], publicParty?: string) => {
-  // console.log(`trying with token: ${token}`);
-  // getPublicAutomation(token).then(automations => {
-    console.log(`found automations`);
-    console.log(automations);
-    console.log(`using token: ${token}`);
+export const deployTrigger = async (artifactHash: string, trigger: MarketplaceTrigger, token: string, publicParty?: string) => {
+  await getPublicAutomation(publicParty).then(automations => {
     const artifact = automations?.find(a => a.artifactHash === artifactHash);
-    console.log(artifact);
-
     if (artifact) {
-      const publicHeaders = {
+      const headers = {
         "Authorization": `Bearer ${token?.toString()}`,
         'Content-Type': 'application/json'
       }
       const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/deploy`;
-      const result = fetch(deployUrl, {
+      fetch(deployUrl, {
         method: 'POST',
-        headers: publicHeaders,
+        headers: headers,
         body: JSON.stringify({
           artifactHash: artifact.artifactHash,
           owner: artifact.owner,
           name: trigger
         })}).then(response => response.json());
-      result.then(x => console.log(x));
     }
-  // })
+  });
 }
 
 export default deployTrigger

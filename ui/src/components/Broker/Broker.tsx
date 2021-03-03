@@ -17,9 +17,9 @@ import { deploymentMode, DeploymentMode } from '../../config'
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
-import { useOperator } from '../common/common'
+import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
@@ -51,14 +51,14 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
 
-    const automation = usePublicAutomation();
     const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
 
     useEffect(() => {
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, automation);
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
       }
-    }, [automation, token]);
+    }, [token]);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

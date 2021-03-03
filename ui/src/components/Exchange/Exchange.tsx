@@ -14,7 +14,7 @@ import {
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { AS_PUBLIC, useContractQuery, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 
@@ -66,13 +66,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
 
     const notifications = useDismissibleNotifications();
 
-    const automation = usePublicAutomation();
     const token = retrieveCredentials()?.token;
-
     const publicParty = useDablParties().parties.publicParty;
+
     useEffect(() => {
-      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, automation, publicParty);
+      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token && publicParty) {
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
       }
     }, [token]);
 

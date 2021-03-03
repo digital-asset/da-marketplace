@@ -1,30 +1,39 @@
-import React, {useState} from 'react'
-import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
-import { Tile, logoHeader } from './common/OnboardingTile'
-import { PublicAutomation, usePublicAutomation } from '../websocket/queryStream';
-import {Form, Button, Loader} from 'semantic-ui-react';
-import {useDablParties} from './common/common';
+import React, { useState, useEffect } from 'react'
 import Ledger from '@daml/ledger';
+import { Form, Button, Loader } from 'semantic-ui-react';
+
 import { Operator } from '@daml.js/da-marketplace/lib/Marketplace/Operator';
-import deployTrigger, {TRIGGER_HASH, MarketplaceTrigger} from '../automation';
+import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
+import { Tile, logoHeader } from './common/OnboardingTile'
+import { useDablParties } from './common/common';
 
-type Props = {
-  automation?: PublicAutomation[];
-}
-
-const SetupRequired: React.FC<Props> = ({automation}) => {
+const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);
   const [ setupError, setSetupError ] = useState(false);
   const [ adminJwt, setAdminJwt ] = useState('');
-  const { parties, loading } = useDablParties();
-  const automations = usePublicAutomation();
+  const { parties } = useDablParties();
+  const [ automations, setAutomations ] = useState<PublicAutomation[] | undefined>([]);
+  const publicParty = useDablParties().parties.publicParty;
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      getPublicAutomation(publicParty).then(autos => {
+        setAutomations(autos);
+        if (!!automations && automations.length > 0) {
+          clearInterval(timer);
+        }
+      });
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [publicParty]);
 
   const handleSetup = async (event: React.FormEvent) => {
     setDeploying(true);
     const ledger = new Ledger({token: adminJwt, httpBaseUrl})
     try {
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.OperatorTrigger, adminJwt, automations);
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.OperatorTrigger, adminJwt, publicParty);
       }
       const args = {
         operator: parties.userAdminParty,

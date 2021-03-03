@@ -15,13 +15,13 @@ import {
 
 import { UserIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC, usePartyLoading, usePublicAutomation } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
 
 import { retrieveCredentials } from '../../Credentials'
 import { deploymentMode, DeploymentMode } from '../../config'
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
-import { useOperator } from '../common/common'
+import { useOperator, useDablParties } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
@@ -88,14 +88,14 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
 
-    const automation = usePublicAutomation();
     const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
 
     useEffect(() => {
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, automation);
+        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
       }
-    }, [automation, token]);
+    }, [token]);
 
 
     const [ profile, setProfile ] = useState<Profile>({

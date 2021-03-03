@@ -9,7 +9,7 @@ import { DablPartiesInput, PartyDetails } from '@daml/hub-react'
 
 import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 
-import { useContractQuery, AS_PUBLIC, usePublicLoading, usePublicAutomation } from '../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../websocket/queryStream'
 import Credentials, { computeCredentials } from '../Credentials'
 import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
@@ -58,7 +58,6 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const query = useQuery();
   const history = useHistory();
   const location = useLocation();
-  const automations = usePublicAutomation();
 
   useEffect(() => {
     raiseParamsToHash();
@@ -88,7 +87,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
 
   const tiles = appInfos.length !== 0
     ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
-    : [<SetupRequired automation={automations}/>];
+    : [<SetupRequired/>];
 
   return (
     <div className='login-screen'>
