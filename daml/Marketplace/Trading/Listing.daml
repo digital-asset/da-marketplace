@@ -2,7 +2,7 @@ module Marketplace.Trading.Listing where
 
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
-import Marketplace.Error qualified as Error
+import Marketplace.Trading.Error qualified as Error
 
 type T = Listing
 
@@ -31,7 +31,7 @@ template Listing
   where
     signatory operator, provider, customer
     observer observers
-    
+
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
     key (operator, provider, listingId) : (Party, Party, Text)
     maintainer key._1

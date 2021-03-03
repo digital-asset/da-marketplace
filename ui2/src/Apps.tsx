@@ -55,10 +55,10 @@ export default function Apps({ history } : RouteComponentProps) {
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
                     <CardActionArea onClick={() => history.push("/apps/registry/instruments")}>
-                      <CardMedia className={classes.media} image={registryImage} title="Registry" />
+                      <CardMedia className={classes.media} image={registryImage} title="Origination" />
                       <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Registry</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Register new instruments</Typography>
+                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Origination</Typography>
+                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your originations</Typography>
                       </CardContent>
                     </CardActionArea>
                   </Box>
@@ -73,7 +73,7 @@ export default function Apps({ history } : RouteComponentProps) {
                       <CardMedia className={classes.media} image={issuanceImage} title="Issuance" />
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Issuance</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your asset issuance</Typography>
+                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your issuances</Typography>
                       </CardContent>
                     </CardActionArea>
                   </Box>

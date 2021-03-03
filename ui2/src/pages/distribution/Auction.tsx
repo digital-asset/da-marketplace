@@ -189,7 +189,7 @@ export const Auction : React.FC<RouteComponentProps> = ({ history } : RouteCompo
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {biddingProviderServices.map((c, i) => (
+                      {biddingProviderServices.filter(c => c.payload.customer !== auction.payload.customer).map((c, i) => (
                         <TableRow key={i} className={classes.tableRow}>
                           <TableCell key={0} className={classes.tableCell}>{c.payload.customer}</TableCell>
                           <TableCell key={1} className={classes.tableCell}>{getBidRequestStatus(c.payload.customer)}</TableCell>

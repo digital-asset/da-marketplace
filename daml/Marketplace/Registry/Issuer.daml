@@ -26,10 +26,8 @@ template Issuer
           newTitle : Text
           newIssuerID : Text
         do
-          create this with name = newName, location = newLocation, title = newTitle, issuerID = newIssuerID
+          create this with name = newName; location = newLocation; title = newTitle; issuerID = newIssuerID
 
     controller operator can
       Offboard : ()
         do return ()
-
-

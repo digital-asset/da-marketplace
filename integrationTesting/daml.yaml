@@ -1,5 +1,5 @@
 sdk-version: 1.10.0
-name: da-marketplace
+name: da-exberry-integration-test
 source: daml
 init-script: Demo:demo
 parties:
@@ -17,11 +17,9 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
+data-dependencies:
+  - ../.daml/dist/da-marketplace-0.1.8.dar
 start-navigator: no
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
-codegen:
-  js:
-    output-directory: daml.js
-    npm-scope: daml.js

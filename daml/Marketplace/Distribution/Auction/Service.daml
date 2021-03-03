@@ -39,7 +39,7 @@ template Service
           asset : Asset
           quotedAssetId : Id
           floorPrice : Decimal
-          assetDepositCid : ContractId AssetDeposit
+          depositCid : ContractId AssetDeposit
         do
           create CreateAuctionRequest with ..
 
@@ -54,10 +54,10 @@ template Service
         with
           createAuctionRequestCid : ContractId CreateAuctionRequest
         do
-          CreateAuctionRequest{..} <- fetchAndArchive createAuctionRequestCid
+          CreateAuctionRequest{auctionId; asset; quotedAssetId; floorPrice; depositCid} <- fetchAndArchive createAuctionRequestCid
 
           -- Deposit the asset into the allocation account so they cannot be transferred/withdrawn without the signatore of the Auctioneer
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with depositCid = assetDepositCid; ..
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
           create Auction with status = Auction.Open; ..
 
       nonconsuming RejectAuction : ()
@@ -71,10 +71,10 @@ template Service
           auctionCid : ContractId Auction.T
           bidCids : [ContractId Bidding.Bid]
         do
-          auction@Auction{..} <- fetch auctionCid
+          auction@Auction{floorPrice ,asset , depositCid, status} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
-          bids <- forA bidCids fetch
 
+          bids <- forA bidCids fetch
           -- Split bids on those above / below the floor price -> Sort valid bids descendingly -> Execute Auction -> Split auction result on allocated / unallocated (ie, zero allocation)
           let
             (invalidBids, validBids) = partitionEithers $ splitList (\bid -> bid.details.price >= floorPrice) bids
@@ -87,7 +87,7 @@ template Service
           forA_ ((.bid) `map` unallocatedBids) $ withdrawAllocation *> updateBidStatus Bidding.NoAllocation
 
           -- Generate Settlement instructions for allocated bids
-          let settleAllocations = (\allocation -> Auction.SettleAllocation with price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount; ..) <$> allocatedBids
+          let settleAllocations = (\allocation -> Auction.SettleAllocation with allocation; price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount) <$> allocatedBids
           (remainingDepositCidOpt, siCids) <- foldlA generateSettlementInstruction (Some depositCid, []) settleAllocations
 
           -- Transfer remaining deposit back to the Issuer's trading account
@@ -161,7 +161,7 @@ template CreateAuctionRequest
     asset : Asset
     quotedAssetId : Id
     floorPrice : Decimal
-    assetDepositCid : ContractId AssetDeposit
+    depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
 

@@ -1,4 +1,4 @@
-module Marketplace.Error where
+module Marketplace.Trading.Error where
 
 type T = Error
 

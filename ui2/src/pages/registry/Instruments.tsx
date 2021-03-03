@@ -11,7 +11,9 @@ import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetD
 const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
 
-  const instruments = useStreamQueries(AssetDescription).contracts;
+  const allInstruments = useStreamQueries(AssetDescription).contracts;
+  const instruments = allInstruments.filter(c => c.payload.assetId.version === "0");
+
   return (
     <>
       <Grid container direction="column">
