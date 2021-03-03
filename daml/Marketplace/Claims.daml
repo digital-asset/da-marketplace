@@ -5,19 +5,22 @@ module Marketplace.Claims (
 ) where
 
 import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), serialize, cond, one)
-import ContingentClaims.Lifecycle qualified as Claim
 import ContingentClaims.FinancialClaim (european)
+import ContingentClaims.Lifecycle qualified as Claim
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
 import ContingentClaims.Observation qualified as O
-import DA.List (dedupSort, head)
 import DA.Finance.Types (Id(..))
-import DA.Next.Set (Set)
-import DA.Next.Set qualified as Set
+import DA.Foldable (sum)
+import DA.List (dedupSort, head)
 import DA.Map qualified as Map
+import Daml.Control.Arrow ((&&&))
+import Daml.Control.Recursion
+import DA.Next.Set qualified as Set
+import DA.Next.Set (Set)
 import Marketplace.AssetDescription (AssetDescription(..), Claims, Version)
 import Marketplace.AssetDescription qualified as AssetDescription (Versions(..))
-import Daml.Control.Recursion
+import Prelude hiding (sum)
 
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
@@ -60,32 +63,44 @@ assetDescVers assetId description issuer safekeepingAccountId observers claims =
           [claims] <- Claim.lifecycle prune runSpot goLeft claims' fixing
           pure (serialize claims, version)
        (succ version, fs, claims)
-       
+ 
+-- Functor unzip
+funzip : Functor f => f (a, b) -> (f a, f b)
+funzip = fmap fst &&& fmap snd
+
+-- Annotate the tree bottom-up
+synthesize : (Functor f, Recursive b f) => (f attr -> attr) -> b -> Cofree f attr
+synthesize f = cata algebra where
+  -- alg : f (Cofree f a) -> Cofree f a
+  algebra = uncurry Cofree . (f . fmap (.attribute) &&& identity)
+
+-- Annotate the tree top-down
+inherit : (Functor f, Corecursive b f, Recursive b f) => (b -> attr -> attr) -> attr -> b -> Cofree f attr
+inherit g seed b = para algebra b seed where
+  -- f (b, attr -> Cofree f attr) -> attr -> Cofree f attr
+  algebra gbg attr = Cofree attr' f' where
+    (fb, ff) = funzip gbg
+    attr' = g (embed fb) attr
+    f' = fmap ($ attr') ff
+
 -- Returns a tree with each node annotated with the # of nodes below it + 1
-count : F (Cofree F Int) -> Cofree F Int
-count ZeroF = Cofree 1 ZeroF
-count (OneF id) = Cofree 1 (OneF id)
-count f@(WhenF _ (Cofree depth _)) = Cofree (succ depth) f
-count f@(ScaleF _ (Cofree depth _)) = Cofree (succ depth) f
-count f@(GiveF (Cofree depth _)) = Cofree (succ depth) f
-count f@(AndF (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth') f
-count f@(OrF (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth') f
-count f@(CondF _ (Cofree depth _) (Cofree depth' _)) = Cofree (succ $ depth + depth') f
+subTreeSize' : F Int -> Int
+subTreeSize' c = 1 + sum c
 
 -- Given a tree annotated with the number of nodes in each branch, index it, depth first.
-enum : (Int, Cofree F Int) -> CofreeF F Int (Int, Cofree F Int)
-enum (i, Cofree _ ZeroF) = CofreeF i ZeroF
-enum (i, Cofree _ (OneF id)) = CofreeF i (OneF id)
-enum (i, Cofree _ (WhenF p f)) = CofreeF i (WhenF p (succ i, f))
-enum (i, Cofree _ (ScaleF p f)) = CofreeF i (ScaleF p (succ i, f))
-enum (i, Cofree _ (GiveF f)) = CofreeF i (GiveF (succ i, f))
-enum (i, Cofree _ (AndF f@(Cofree depth _) f')) = CofreeF i (AndF (succ i, f) (succ (i + depth), f'))
-enum (i, Cofree _ (OrF f@(Cofree depth _) f')) = CofreeF i (OrF (succ i, f) (succ (i + depth), f'))
-enum (i, Cofree _ (CondF p f@(Cofree depth _) f')) = CofreeF i (CondF p (succ i, f) (succ (i + depth), f'))
+enum' : (Int, Cofree F Int) -> CofreeF F Int (Int, Cofree F Int)
+enum' (i, Cofree _ ZeroF) = CofreeF i ZeroF
+enum' (i, Cofree _ (OneF id)) = CofreeF i (OneF id)
+enum' (i, Cofree _ (WhenF p f)) = CofreeF i (WhenF p (succ i, f))
+enum' (i, Cofree _ (ScaleF p f)) = CofreeF i (ScaleF p (succ i, f))
+enum' (i, Cofree _ (GiveF f)) = CofreeF i (GiveF (succ i, f))
+enum' (i, Cofree _ (AndF f@(Cofree depth _) f')) = CofreeF i (AndF (succ i, f) (succ (i + depth), f'))
+enum' (i, Cofree _ (OrF f@(Cofree depth _) f')) = CofreeF i (OrF (succ i, f) (succ (i + depth), f'))
+enum' (i, Cofree _ (CondF p f@(Cofree depth _) f')) = CofreeF i (CondF p (succ i, f) (succ (i + depth), f'))
 
 -- Enumerate each node in the tree, starting from from 'zero'
 enumerateFrom : Int -> C -> Cofree F Int
-enumerateFrom zero = ana enum . (zero, ) . cata count
+enumerateFrom zero = ana enum' . (zero, ) . synthesize subTreeSize'
 
 fixings = cata fixings'
 
