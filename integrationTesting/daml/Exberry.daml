@@ -69,13 +69,13 @@ submitBuyOrder = do
     listingId = "JPMUSD"
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
-    bobOrderId = Id with signatories = fromList [ bob ]; label = "678"; version = 0
+    bobOrderId = Id with signatories = fromList [ bob ]; label = "1"; version = 0
     bobOrderDetails = O.Details with
       id = bobOrderId
       symbol = listingId
       asset = shareAsset
       side = O.Buy
-      orderType = O.Limit with price = 100.0
+      orderType = O.Limit with price = 200.0
       -- orderType = O.Market
       timeInForce = O.GTC
     tradingServicekey p = (operator, exchange, p)
@@ -100,7 +100,7 @@ submitSellOrder = do
     listingId = "JPMUSD"
     tradedAssetId = Id with signatories = fromList [ alice ]; label = "JPM.N"; version = 0
     shareAsset = Asset with id = tradedAssetId; quantity = 200.0
-    aliceOrderId = Id with signatories = fromList [ alice ]; label = "1224"; version = 0
+    aliceOrderId = Id with signatories = fromList [ alice ]; label = "2"; version = 0
     aliceOrderDetails = O.Details with
       id = aliceOrderId
       symbol = listingId
