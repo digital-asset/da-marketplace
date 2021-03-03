@@ -6,8 +6,8 @@ import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 import { getName } from "../../config";
-import { render } from "./render";
-import { transformClaim } from "../../claims";
+import { render } from "../../components/Claims/render";
+import { transformClaim } from "../../components/Claims/util";
 
 export const Instrument : React.FC<RouteComponentProps> = () => {
   const classes = useStyles();
@@ -35,16 +35,6 @@ export const Instrument : React.FC<RouteComponentProps> = () => {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={4}>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Claims</Typography>
-                  <div ref={el} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
           <Grid item xs={4}>
             <Grid container direction="column" spacing={2}>
               <Grid item xs={12}>
@@ -74,6 +64,16 @@ export const Instrument : React.FC<RouteComponentProps> = () => {
                       </TableRow>
                     </TableBody>
                   </Table>
+                </Paper>
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={8}>
+            <Grid container direction="column" spacing={2}>
+              <Grid item xs={12}>
+                <Paper className={classnames(classes.fullWidth, classes.paper)}>
+                  <Typography variant="h5" className={classes.heading}>Claims</Typography>
+                  <div ref={el} style={{ height: "100%" }}/>
                 </Paper>
               </Grid>
             </Grid>

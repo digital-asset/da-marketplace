@@ -63,15 +63,14 @@ template Service
       nonconsuming RequestDebitAccount : ContractId DebitAccountRequest
         with
           accountId : Id
-          depositCid : ContractId AssetDeposit
+          debit : AssetSettlement_Debit
         do
           create DebitAccountRequest with ..
 
       nonconsuming RequestTransferDeposit : ContractId TransferDepositRequest
         with
           accountId : Id
-          receiverAccountId : Id
-          depositCid : ContractId AssetDeposit
+          transfer : AssetSettlement_Transfer
         do
           create TransferDepositRequest with ..
 
@@ -87,18 +86,18 @@ template Service
         with
           openAccountRequestCid : ContractId OpenAccountRequest
         do
-          OpenAccountRequest{..} <- fetchAndArchive openAccountRequestCid
-          let
-            account = Account with provider = provider; owner = customer; id = accountId
+          OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
+
+          let account = Account with provider; owner = customer; id = accountId
           create AssetSettlementRule with ..
 
       nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
         with
           openAllocationAccountRequestCid : ContractId OpenAllocationAccountRequest
         do
-          OpenAllocationAccountRequest{..} <- fetchAndArchive openAllocationAccountRequestCid
-          let
-            account = Account with provider = provider; owner = customer; id = accountId
+          OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
+
+          let account = Account with provider; owner = customer; id = accountId
           create AllocationAccountRule with ..
 
       nonconsuming CloseAccount : ()
@@ -121,22 +120,22 @@ template Service
         with
           creditAccountRequestCid : ContractId CreditAccountRequest
         do
-          CreditAccountRequest{..} <- fetchAndArchive creditAccountRequestCid
+          CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
 
       nonconsuming DebitAccount : Asset
         with
           debitAccountRequestCid : ContractId DebitAccountRequest
         do
-          DebitAccountRequest{..} <- fetchAndArchive debitAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Debit with ..
+          DebitAccountRequest{accountId; debit} <- fetchAndArchive debitAccountRequestCid
+          exerciseByKey @AssetSettlementRule accountId debit
 
       nonconsuming TransferDeposit : ContractId AssetDeposit
         with
           transferDepositRequestCid : ContractId TransferDepositRequest
         do
-          TransferDepositRequest{..} <- fetchAndArchive transferDepositRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Transfer with ..
+          TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
+          exerciseByKey @AssetSettlementRule accountId transfer
 
       nonconsuming Lifecycle : [ContractId AssetDeposit]
         with
@@ -145,7 +144,7 @@ template Service
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
         do
           exercise lifecycleRequestCid Process with investor = customer; ..
-       
+
     choice Terminate : ()
       with
         ctrl : Party
@@ -258,7 +257,7 @@ template DebitAccountRequest
     provider : Party
     customer : Party
     accountId : Id
-    depositCid : ContractId AssetDeposit
+    debit : AssetSettlement_Debit
   where
     signatory operator, provider, customer
 
@@ -268,8 +267,7 @@ template TransferDepositRequest
     provider : Party
     customer : Party
     accountId : Id
-    receiverAccountId : Id
-    depositCid : ContractId AssetDeposit
+    transfer : AssetSettlement_Transfer
   where
     signatory operator, provider, customer
 

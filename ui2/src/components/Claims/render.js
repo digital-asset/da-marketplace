@@ -2,11 +2,10 @@ import * as d3 from "d3";
 
 export const render = (el, data) => {
 
-  const width = el.offsetWidth;
-  const height = 400;
+  const nodeWidth = 120;
+  const nodeHeight = 80;
 
-  const tree = d3.tree().size([width - 20, height - 20]);
-  // const renderLink = d3.linkVertical().x(d => d.x).y(d => d.y);
+  const tree = d3.tree().nodeSize([nodeWidth, nodeHeight]).separation((a, b) => a.parent === b.parent ? 1 : 1.2);//.size([width - 20, height - 20]);
   const diagonal = d3.linkVertical().x(d => d.x).y(d => d.y);
   const color = d => {
     if (d.data.type === "Claim") {
@@ -17,18 +16,30 @@ export const render = (el, data) => {
   }
 
   const root = d3.hierarchy(data);
-  root.x0 = width / 2;
+  const width = el.offsetWidth;
+  const height = root.height * nodeHeight + 20;
+
+  root.x0 = 0;
   root.y0 = 0;
   root.descendants().forEach((d, i) => {
     d.id = i;
     d._children = d.children;
   });
 
-  const svg = d3.select(el).append("svg")
+  function zoom(event) {
+    svg.attr("transform", event.transform);
+  }
+
+  var zoomListener = d3.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
+
+  const baseSvg = d3.select(el).append("svg")
     .attr("width", width)
     .attr("height", height + 10)
-    .attr("viewBox", [0, -10, width, height])
-    .style("user-select", "none");
+    .attr("viewBox", [-width / 3, -10, width, height])
+    .style("user-select", "none")
+    .call(zoomListener);
+  const svg = baseSvg
+    .append("g");
 
   const gLink = svg.append("g")
     .attr("fill", "none")
@@ -48,18 +59,9 @@ export const render = (el, data) => {
 
     tree(root);
 
-    // let left = root;
-    // let right = root;
-    // root.eachBefore(node => {
-    //   if (node.x < left.x) left = node;
-    //   if (node.x > right.x) right = node;
-    // });
-
-    // const height = right.x - left.x;
-
     const transition = svg.transition()
       .duration(duration)
-      .attr("viewBox", [0, -10, width, height])
+      .attr("viewBox", [-width / 2, -10, width, height])
       .tween("resize", window.ResizeObserver ? null : () => () => svg.dispatch("toggle"));
 
     const node = gNode.selectAll("g")
@@ -131,6 +133,7 @@ export const render = (el, data) => {
       d.y0 = d.y;
     });
 
+    // Link annotations
     // const link = svg.append("g")
     //     .attr("fill", "none")
     //     .attr("stroke", "black")
@@ -163,8 +166,8 @@ export const render = (el, data) => {
   };
 
   const renderLegend = () => {
-    const legend = svg.append("g")
-      .attr("transform", d => `translate(${width - 60},7)`);
+    const legend = baseSvg.append("g")
+      .attr("transform", d => `translate(${width / 2 - 60},7)`);
     legend.append("rect")
       .attr("x", -55)
       .attr("y", -15)

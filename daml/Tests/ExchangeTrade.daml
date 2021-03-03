@@ -2,7 +2,7 @@ module Tests.ExchangeTrade where
 
 import Common
 import Daml.Script
-import DA.Finance.Types (Id(..), Asset(..))
+import DA.Finance.Types (Id(..))
 import DA.Next.Set
 import qualified Marketplace.Settlement as Settlement
 import qualified Marketplace.Trading.Matching as Matching
@@ -13,27 +13,28 @@ import DA.List
 
 setup : Script ()
 setup = do
-  cr@CommonContracts{..} <- onboardCommon
+  providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
   let
-    shareId = Id with signatories = fromList [ custodian ]; label = "JPM"; version = 0
-    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
-    shareAsset = Asset with id = shareId; quantity = 200.0
-    cashAsset = Asset with id = cashId; quantity = 20000.0
-    priceAsset = Asset with id = cashId; quantity = 100.0
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+    priceAsset = usd with quantity = 100.0
 
-  alice <- onboardCustomer cr "Alice" shareAsset exchange
-  bob <- onboardCustomer cr "Bob" cashAsset exchange
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
-    listingId = "JPM.N/USD"
+    listingId = "TSLAUSD"
     calendarId = "1"
-    description = "JPMorgan Chase & Co."
-    tradedAssetId = Id with signatories = fromList [ alice.customer ]; label = "JPM.N"; version = 0
-    quotedAssetId = Id with signatories = fromList [ alice.customer ]; label = "USD"; version = 0
+    description = "Tesla Inc."
+    tradedAssetId = shareAsset.id
+    quotedAssetId = cashAsset.id
     tradedAssetPrecision = 2
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
@@ -43,7 +44,7 @@ setup = do
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  -- > Alice places a bid for JPM
+  -- > Alice places a bid for shares
   (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
@@ -55,9 +56,9 @@ setup = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        depositCid = alice.assetDepositCid
+        depositCid = aliceDepositCid
 
-  -- > Bob places a new offer for JPM
+  -- > Bob places a new offer for shares
   (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
@@ -69,7 +70,7 @@ setup = do
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bob.assetDepositCid
+        depositCid = bobDepositCid
 
   -- Exchange matches the two orders
   settlementInstructionCid <- submit exchange do

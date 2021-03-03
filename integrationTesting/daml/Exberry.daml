@@ -1,4 +1,4 @@
-module Tests.Trading.TradingIntegrationTest where
+module Exberry where
 
 import Daml.Script
 import DA.Optional

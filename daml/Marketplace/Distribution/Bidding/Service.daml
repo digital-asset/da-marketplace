@@ -83,9 +83,10 @@ template Service
                               else pure bid.depositCid
 
           let newStatus = if bid.details.quantity == quantity
-                            then Bidding.FullAllocation with ..
-                            else Bidding.PartialAllocation with ..
-          newBidCid <- exercise bidCid Bidding.UpdateStatus with ..
+                            then Bidding.FullAllocation with price
+                            else Bidding.PartialAllocation with price; quantity
+
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
     nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction

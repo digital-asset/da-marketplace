@@ -5,6 +5,7 @@ import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Order qualified as Order
 import Marketplace.Trading.Confirmation qualified as Confirmation
+import Marketplace.Trading.Error (Error (..))
 import qualified Marketplace.Trading.AllocationAccountRule as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 
 type T = Service
@@ -62,6 +63,8 @@ template Service
           CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
 
+          -- TODO: Confirm what to do with this business ACK when received out of the expected order.
+          --  Should we set the providerOrderId but leave the status as is ? Should we check if this value is already set ? What to do if it's already set ? etc.
           case order.status of
             Order.New -> do
               archive orderCid
@@ -78,7 +81,8 @@ template Service
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
-          orderCid <- create order with status = Order.Rejected with ..
+          let reason = Error with code = show errorCode; message = errorMessage
+          orderCid <- create order with status = Order.Rejected with reason
           depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
           return (orderCid, depositCid)
@@ -106,7 +110,8 @@ template Service
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
-          create order with status = Order.CancellationRejected with ..
+          let reason = Error with code = show errorCode; message = errorMessage
+          create order with status = Order.CancellationRejected with reason
 
     controller operator, provider can
       nonconsuming SignConfirmation : ContractId Confirmation.T

@@ -42,7 +42,7 @@ function Header({ history, app } : RouteComponentProps & HeaderProps) {
         <Box alignContent="center">
           <Grid container direction="column" alignItems="center">
             <Grid item xs={12}>
-            <Typography variant="h1" className={classes.logotype}>Digital Market</Typography>
+            <Typography variant="h1" className={classes.logotype}>Digital Market Infrastructure</Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body1" style={{ color: "#666" }}>{app}</Typography>
