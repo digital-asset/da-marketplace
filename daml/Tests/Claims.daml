@@ -10,8 +10,10 @@ import DA.Assert ((===))
 import DA.Finance.Types (Id(..))
 import Daml.Control.Recursion
 import Daml.Script
-import Prelude hiding (enumerate, length)
+import Prelude hiding (enumerate, length, sum)
 import Marketplace.Claims (enumerateFrom)
+import Daml.Control.Arrow ((&&&))
+import DA.Foldable (sum)
 
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
@@ -21,6 +23,31 @@ deriving instance (Show a, Show (f (Cofree f a))) => Show (Cofree f a)
 deriving instance (Eq a, Eq (f (Cofree f a))) => Eq (Cofree f a)
 deriving instance Show (F (Cofree F Int))
 deriving instance Eq (F (Cofree F Int))
+
+data Version = Version with ver: Int, numClaims: Int
+type Versioned f = Cofree f Version
+
+-- Functor unzip
+funzip : Functor f => f (a, b) -> (f a, f b)
+funzip = fmap fst &&& fmap snd
+
+-- Annotate the tree bottom-up
+synthesize : (Functor f, Recursive b f) => (f attr -> attr) -> b -> Cofree f attr
+synthesize f = cata algebra where
+  -- alg : f (Cofree f a) -> Cofree f a
+  algebra = uncurry Cofree . (f . fmap (.attribute) &&& identity)
+
+-- Annotate the tree top-down
+inherit : (Functor f, Corecursive b f, Recursive b f) => (b -> attr -> attr) -> attr -> b -> Cofree f attr
+inherit g seed b = para algebra b seed where
+  -- f (b, attr -> Cofree f attr) -> attr -> Cofree f attr
+  algebra gbg attr = Cofree attr' f' where
+    (fb, ff) = funzip gbg
+    attr' = g (embed fb) attr
+    f' = fmap ($ attr') ff
+
+subTreeSize' : F Int -> Int
+subTreeSize' c = 1 + sum c
 
 enumerateTest: Script ()
 enumerateTest = do
