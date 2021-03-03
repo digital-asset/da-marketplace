@@ -70,9 +70,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const publicParty = useDablParties().parties.publicParty;
 
     useEffect(() => {
-      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token && publicParty) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
-      }
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
+        }
     }, [token]);
 
 

@@ -104,9 +104,9 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const publicParty = useDablParties().parties.publicParty;
 
     useEffect(() => {
-      if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
-      }
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
+        }
     }, [token]);
 
     const [ profile, setProfile ] = useState<Profile>({

@@ -150,42 +150,6 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
 
-export type PublicAutomation = {
-  artifactHash: string;
-  ledgerId: string;
-  automationEntity: {
-    tag: string;
-    value: {
-      packageIds: [string];
-      entityName: string;
-      metadata: {},
-      sdkVersion: string;
-      triggerNames: [string];
-    }
-  }
-  deployers: [string];
-  createdAt: string;
-  owner: string
-  apiVersion: string;
-}
-
-type PublicAutomationAPIResult = PublicAutomation[] | undefined;
-
-export const getPublicAutomation = async (token?: string): Promise<PublicAutomation[] | undefined> => {
-  let automation = undefined;
-  if (token) {
-    const publicHeaders = {
-      "Authorization": `Bearer ${token?.toString()}`,
-      'Content-Type': 'application/json'
-    }
-    const my_url = `https://${ledgerId}.${dablHostname}/.hub/v1/published`;
-    const result: PublicAutomationAPIResult = await fetch(my_url, { method: 'GET', headers: publicHeaders})
-      .then(response => response.json());
-    automation = result;
-  }
-  return automation;
-}
-
 export function usePublicToken() {
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
   return queryStream?.publicToken;
