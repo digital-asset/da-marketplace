@@ -10,7 +10,7 @@ import { useDablParties } from './common/common';
 
 const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);
-  const [ setupError, setSetupError ] = useState(false);
+  const [ setupError, setSetupError ] = useState<string | undefined>(undefined);
   const [ adminJwt, setAdminJwt ] = useState('');
   const { parties } = useDablParties();
   const [ automations, setAutomations ] = useState<PublicAutomation[] | undefined>([]);
@@ -41,10 +41,8 @@ const SetupRequired  = () => {
       }
       await ledger.create(Operator, args);
     } catch(e) {
-      console.log("error exercising setup: " + e);
-      setSetupError(true);
+      setSetupError(e);
     }
-
   }
 
   const setupWaiting = (
@@ -57,13 +55,17 @@ const SetupRequired  = () => {
   )
 
   const setupErrorScreen = (
-    <h4>Something went wrong with the setup. Please setup manually.</h4>
+    <div>
+      <h4>Something went wrong with the setup. Please setup manually.</h4>
+      <p>Error: {setupError}</p>
+    </div>
   )
 
   const setupForm = (
     <>
       <p className='login-details dark'>If you would like to have the setup happen automatically,
-                                        please enter the JWT token for the UserAdmin party.</p>
+                                        please enter the JWT token found in the "Users" tab of the
+                                        Daml Hub for the UserAdmin party.</p>
       <Form size='large' className='login-form'>
           <Form.Input
             fluid
@@ -90,8 +92,8 @@ const SetupRequired  = () => {
         Please create an Operator role contract for the UserAdmin party, and deploy the operator trigger.</p>
       <h4>Automatic setup</h4>
       { automations?.length === 0 || !automations ? (
-        <div><p>Please make the "da-marketplace-triggers" artifact deployable and then refresh this page to continue and to perform automatic setup.</p></div>
-      ) : setupError ? setupErrorScreen : setupForm }
+        <div><p>Please make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.</p></div>
+      ) : !!setupError ? setupErrorScreen : setupForm }
       <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
     </>
   );
