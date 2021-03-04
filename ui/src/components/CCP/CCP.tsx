@@ -105,7 +105,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
 
     useEffect(() => {
         if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, token, publicParty);
         }
     }, [token]);
 
