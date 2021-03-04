@@ -7,6 +7,7 @@ import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
 import { Tile, logoHeader } from './common/OnboardingTile'
 import { useDablParties } from './common/common';
+import { parseError } from './common/errorTypes';
 
 const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);
@@ -17,6 +18,7 @@ const SetupRequired  = () => {
   const publicParty = useDablParties().parties.publicParty;
 
   useEffect(() => {
+    getPublicAutomation(publicParty).then(autos => { setAutomations(autos) });
     const timer = setInterval(() => {
       getPublicAutomation(publicParty).then(autos => {
         setAutomations(autos);
@@ -24,14 +26,14 @@ const SetupRequired  = () => {
           clearInterval(timer);
         }
       });
-    }, 3000);
+    }, 2000);
     return () => clearInterval(timer);
   }, [publicParty]);
 
   const handleSetup = async (event: React.FormEvent) => {
     setDeploying(true);
-    const ledger = new Ledger({token: adminJwt, httpBaseUrl})
     try {
+      const ledger = new Ledger({token: adminJwt, httpBaseUrl})
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
         deployTrigger(TRIGGER_HASH, MarketplaceTrigger.OperatorTrigger, adminJwt, publicParty);
       }
@@ -39,9 +41,11 @@ const SetupRequired  = () => {
         operator: parties.userAdminParty,
         public: parties.publicParty
       }
-      await ledger.create(Operator, args);
+      await ledger.create(Operator, args).catch(e => {
+        setSetupError(`${parseError(e)?.message}`);
+      });
     } catch(e) {
-      setSetupError(e);
+      setSetupError(`${parseError(e)?.message}`);
     }
   }
 
@@ -56,8 +60,8 @@ const SetupRequired  = () => {
 
   const setupErrorScreen = (
     <div>
-      <h4>Something went wrong with the setup. Please setup manually.</h4>
-      <p>Error: {setupError}</p>
+      <h4>Something went wrong with the setup. Please setup manually or refresh and try again.</h4>
+      <p>{setupError}</p>
     </div>
   )
 
@@ -88,12 +92,16 @@ const SetupRequired  = () => {
   const showMessage = (
     <>
       <p>
-        It looks like you have not completed the necessary deployment steps to configure this app.
-        Please create an Operator role contract for the UserAdmin party, and deploy the operator trigger.</p>
+        It looks like you have not completed the necessary deployment steps to configure this app.</p>
       <h4>Automatic setup</h4>
       { automations?.length === 0 || !automations ? (
-        <div><p>Please make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.</p></div>
-      ) : !!setupError ? setupErrorScreen : setupForm }
+        <div>
+          <p>
+            Please make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.
+            You can find this option by clicking on the trigger in the "Deployments" tab in the console, then clicking on "Settings."
+           </p>
+        </div>
+      ) : setupForm }
       <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
     </>
   );
@@ -102,7 +110,7 @@ const SetupRequired  = () => {
     <Tile key='test' header={logoHeader}>
       <div className='setup-required'>
         <h3>Welcome to the Daml Open Marketplace!</h3>
-        { deploying ? setupWaiting : showMessage }
+        { !!setupError ? setupErrorScreen : deploying ? setupWaiting : showMessage }
       </div>
     </Tile>
   );
