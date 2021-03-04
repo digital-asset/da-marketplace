@@ -14,7 +14,7 @@ parties:
   - Exchange
   - Broker
   - Ccp
-version: 0.1.14
+version: 0.1.15
 dependencies:
   - daml-prim
   - daml-stdlib

@@ -51,15 +51,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
 
-    const token = retrieveCredentials()?.token;
-    const publicParty = useDablParties().parties.publicParty;
-
-    useEffect(() => {
-        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
-        }
-    }, [token]);
-
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
@@ -86,7 +77,13 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
+        }
         const key = wrapDamlTuple([operator, broker]);
         const args = {
             name: profile.name.value,

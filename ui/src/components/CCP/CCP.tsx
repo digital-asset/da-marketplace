@@ -100,15 +100,6 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
     const instruments = useContractQuery(MarketPair);
 
-    const token = retrieveCredentials()?.token;
-    const publicParty = useDablParties().parties.publicParty;
-
-    useEffect(() => {
-        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, token, publicParty);
-        }
-    }, [token]);
-
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
@@ -135,7 +126,13 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, token, publicParty);
+        }
         if (inviteCustodian === '') {
             throw new Error('You must select a default custodian!');
         }
