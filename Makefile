@@ -202,7 +202,7 @@ $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui && yarn install
-	cd ui && yarn build
+	cd ui && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_build) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}')  yarn build
 	cd ui && zip -r da-marketplace-ui-$(ui_version).zip build
 	mv ui/da-marketplace-ui-$(ui_version).zip $@
 	rm -r ui/build

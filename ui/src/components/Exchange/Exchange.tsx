@@ -18,7 +18,11 @@ import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/qu
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 
-import { useOperator } from '../common/common'
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+
+import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { getAbbreviation } from '../common/utils';
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -61,6 +65,16 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
 
     const notifications = useDismissibleNotifications();
+
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
+    useEffect(() => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
+        }
+    }, [token]);
+
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),

@@ -47,6 +47,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const loading = usePartyLoading();
 
+
     const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
         ...useCCPCustomerNotifications(),
