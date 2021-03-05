@@ -164,13 +164,3 @@ template CreateAuctionRequest
     depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer
-
-template PublishedBid
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    bidder : Party
-    allocationPercentage : Decimal
-  where
-    signatory operator, provider, customer

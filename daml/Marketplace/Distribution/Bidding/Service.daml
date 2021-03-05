@@ -34,20 +34,17 @@ template Service
           allowPublishing : Bool
         do
           -- TODO: Check for parallism of this choice
-          bidRequest <- fetchAndArchive bidRequestCid
+          Bidding.Request{asset; issuer; auctionId; quotedAssetId} <- fetchAndArchive bidRequestCid
           deposit <- fetch depositCid
           assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
-          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == bidRequest.quotedAssetId.label)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == quotedAssetId.label)
 
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
           time <- getTime
           create Bidding.Bid with
-              issuer = bidRequest.issuer
-              auctionId = bidRequest.auctionId
-              assetId = bidRequest.asset.id
-              details = Bidding.Details with price; quantity; time
+              details = Bidding.Details with ..
               status = Bidding.Pending
-              quotedAssetId = bidRequest.quotedAssetId
+              assetId = asset.id
               ..
 
     controller provider can
@@ -59,6 +56,14 @@ template Service
           quotedAssetId : Id
         do
           create Bidding.Request with ..
+
+      nonconsuming PublishBid : ContractId Bidding.PublishedBid
+        with
+          auctionId : Text
+          price : Decimal
+          quantity : Decimal
+        do
+          create Bidding.PublishedBid with ..
 
       nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with

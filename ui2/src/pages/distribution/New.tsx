@@ -71,18 +71,18 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
 
   const requestCreateAuction = async () => {
     const deposit = deposits
-      .filter(c => auctionRequests.findIndex(a => a.payload.assetDepositCid === c.contractId) === -1)
+      .filter(c => auctionRequests.findIndex(a => a.payload.depositCid === c.contractId) === -1)
       .filter(c => c.payload.account !== service.payload.allocationAccount)
       .filter(c => c.payload.asset.id.label === auctionedAssetLabel)
       .find(c => parseFloat(c.payload.asset.quantity) >= parseFloat(quantity));
     if (!auctionedAsset || !quotedAsset || !deposit) return;
-    const assetDepositCid = await rightsizeAsset(deposit, quantity);
+    const depositCid = await rightsizeAsset(deposit, quantity);
     const request : RequestCreateAuction = {
       auctionId,
       asset: { id: deposit.payload.asset.id, quantity },
       quotedAssetId: quotedAsset.payload.assetId,
       floorPrice,
-      assetDepositCid,
+      depositCid,
     };
     await ledger.exercise(Service.RequestCreateAuction, service.contractId, request);
     history.push("/apps/distribution/requests");
