@@ -311,7 +311,7 @@ template LifecycleRequest
                 (Map.lookup label fixings >>= Map.lookup dt)
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
               election _ _ = deserialize description'.claims -- will throw if the claims don't match
-          payoutCids <- ContingentClaims.settle payout spot election (deserialize description.claims) t
+          payoutCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return $ assetDepositCid' :: payoutCids
