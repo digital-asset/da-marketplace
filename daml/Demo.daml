@@ -33,6 +33,27 @@ demo = do
 
   issuance providers assets issuer
 
+  let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
+        C.scale (O.pure principal)
+          . bermudan
+            ( irs
+                principal
+                (O.observe floatingRateId.label)
+                floatingRateId
+                fixedRate
+                fixedCcyId
+                fixingDates)
+          $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
+
+  -- issuer originates a swaption
+  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "GS bermudan swaption"
+      description = "GS bermudan swaption"
+      safekeepingAccountId = issuer.mainAccount.id
+      observers = []
+      claims = C.serialize $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 $ couponDates 2021 2022 [Jan, Jul] 15
+  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+
   pure ()
 
 issuance : Providers -> Assets -> Customer -> Script ()
@@ -90,25 +111,5 @@ issuance Providers{..} Assets{..} issuer = do
   _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   -- Some cnDesc <- queryContractId custodian cnDescCid
 
-  let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
-        C.scale (O.pure principal)
-          . bermudan
-            ( irs
-                principal
-                (O.observe floatingRateId.label)
-                floatingRateId
-                fixedRate
-                fixedCcyId
-                fixingDates)
-          $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
-
-  -- issuer originates a swaption
-  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
-      assetLabel = "GS bermudan swaption"
-      description = "GS bermudan swaption"
-      safekeepingAccountId = issuer.mainAccount.id
-      observers = []
-      claims = C.serialize $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 $ couponDates 2021 2022 [Jan, Jul] 15
-  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
 
   pure ()
