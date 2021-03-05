@@ -51,6 +51,7 @@ template Bid
     tradingAccount : Account
     allocationAccount : Account
     depositCid : ContractId AssetDeposit
+    allowPublishing : Bool
     status : Status
   where
     signatory operator, provider, customer
