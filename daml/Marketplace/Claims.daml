@@ -11,7 +11,7 @@ import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
 import ContingentClaims.Observation qualified as O
 import DA.Finance.Types (Id(..))
-import DA.Foldable (sum)
+import DA.Foldable (Foldable, sum)
 import DA.List (dedupSort, head)
 import DA.Map qualified as Map
 import Daml.Control.Arrow ((&&&))
@@ -84,7 +84,7 @@ inherit g seed b = para algebra b seed where
     f' = fmap ($ attr') ff
 
 -- Returns a tree with each node annotated with the # of nodes below it + 1
-subTreeSize' : F Int -> Int
+subTreeSize' : Foldable f => f Int -> Int
 subTreeSize' c = 1 + sum c
 
 -- Given a tree annotated with the number of nodes in each branch, index it, depth first.
