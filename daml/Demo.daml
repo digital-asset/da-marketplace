@@ -34,16 +34,15 @@ demo = do
   issuance providers assets issuer
 
   let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
-        C.scale (O.pure principal)
-          . bermudan
-            ( irs
-                principal
-                (O.observe floatingRateId.label)
-                floatingRateId
-                fixedRate
-                fixedCcyId
-                fixingDates)
-          $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
+        bermudan
+          ( irs
+              principal
+              (O.observe floatingRateId.label)
+              floatingRateId
+              fixedRate
+              fixedCcyId
+              fixingDates)
+        $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
 
   -- issuer originates a swaption
   origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
