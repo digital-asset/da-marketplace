@@ -12,7 +12,7 @@ import { Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Biddin
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 import { ContractId } from "@daml/types";
 import { getBidStatus, getBidAllocation } from "./Utils";
-import { KeyboardArrowDown, KeyboardArrowUp } from "@material-ui/icons";
+import { KeyboardArrowDown, KeyboardArrowRight, KeyboardArrowUp } from "@material-ui/icons";
 
 const BidRequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
@@ -89,7 +89,7 @@ const BidRequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteC
           </TableCell>
         </TableRow>
         <TableRow className={classes.tableRow}>
-          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3}/>
+          <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={3} />
           <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={4}>
             <Collapse in={open} timeout="auto" unmountOnExit>
               <Box margin={1}>
@@ -136,12 +136,27 @@ const BidRequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteC
                     <TableCell key={2} className={classes.tableCell}><b>Issuer</b></TableCell>
                     <TableCell key={3} className={classes.tableCell}><b>Asset</b></TableCell>
                     <TableCell key={4} className={classes.tableCell}><b>Quantity</b></TableCell>
-                    <TableCell key={5} className={classes.tableCell}><b>Action</b></TableCell>
-                    <TableCell key={6} className={classes.tableCell}/>
+                    <TableCell key={5} className={classes.tableCell}><b>Details</b></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {requests.map((c, i) => <AuctionRequestRow {...c} />)}
+                  {requests.map((c, i) =>
+                    <TableRow key={i} className={classes.tableRow}>
+                      <TableCell key={0} className={classes.tableCell}>{c.payload.auctionId}</TableCell>
+                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
+                      <TableCell key={2} className={classes.tableCell}>{getName(c.payload.issuer)}</TableCell>
+                      <TableCell key={3} className={classes.tableCell}>{c.payload.asset.id.label}</TableCell>
+                      <TableCell key={4} className={classes.tableCell}>{c.payload.asset.quantity}</TableCell>
+                      {/* <TableCell key={5} className={classes.tableCell}>
+                        <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => submitBid(c)}>Bid</Button>
+                      </TableCell> */}
+                      <TableCell key={5} className={classes.tableCell}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/distribution/request/" + c.contractId.replace("#", "_"))}>
+                          <KeyboardArrowRight fontSize="small" />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Paper>

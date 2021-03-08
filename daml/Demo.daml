@@ -42,7 +42,7 @@ issuance Providers{..} Assets{..} issuer = do
   origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestBinaryCallOptionOrigination with
       assetLabel = "TSLA Mar21 910.0"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       expiry = date 2020 Mar 18
       underlyingId = tsla.id
       currencyId = usd.id
@@ -64,7 +64,7 @@ issuance Providers{..} Assets{..} issuer = do
       assetLabel = "NFLX 4 7/8 04/15/23"
       description = "NFLX 4 7/8 04/15/23"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usd.id (couponDates 2021 2023 [Jan,Jul] 15)
   cpbDescCid :: _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cpbDesc <- queryContractId bank cpbDescCid
@@ -84,7 +84,7 @@ issuance Providers{..} Assets{..} issuer = do
       assetLabel = "NFLX-CONV-NOTE-2021-06-21"
       description = "Netflix Convertible Note 2021-06-21"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       claims = C.serialize $ convertibleNote nflx.id 100_000.0 usd.id 0.20 (date 2021 Jun 06) 0.04 550.0 nflx.id
   -- FIXME: the below appears to be failing for some inexplicable reason; accept the request in the UI manually!
   _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid

@@ -15,6 +15,7 @@ import { useParty, useStreamQueries } from "@daml/react";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { Requests } from "../pages/distribution/Requests";
 import { Assets } from "../pages/distribution/Assets";
+import { BidRequest } from "../pages/distribution/BidRequest";
 
 const DistributionApp = () => {
   const classes = useStyles();
@@ -49,8 +50,9 @@ const DistributionApp = () => {
           <div className={classes.fakeToolbar} />
           <Switch>
             <Route key={"auction"} path={"/apps/distribution/auctions/:contractId"} component={Auction} />
+            <Route key={"request"} path={"/apps/distribution/request/:contractId"} component={BidRequest} />
             {entries.map(e =>
-              <Route exact={true} key={e.label} path={e.path} render={e.render} />
+              <Route key={e.label} path={e.path} exact={true} render={e.render} />
             )}
           </Switch>
         </div>
