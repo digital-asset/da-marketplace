@@ -97,7 +97,7 @@ template Service
           let
             assetId = Id with signatories = fromList [ provider, customer ]; label = assetLabel; version = 0
             issuer = customer
-          create AssetDescription.Versions
+          create AssetDescription.Index
                    with
                      assetLabel
                      descriptionSignatories = assetId.signatories

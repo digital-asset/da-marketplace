@@ -287,7 +287,7 @@ template LifecycleRequest
           t <- toDateUTC <$> getTime
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
-          (versionsCid, versions) <- fetchByKey @AssetDescription.Versions (fromList . signatory $ description, assetDeposit.asset.id.label)
+          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
           let spot : Text -> Date -> Update Decimal
               spot label dt = pure $ fromSomeNote
                 ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
