@@ -189,7 +189,7 @@ issuance = do
       underlyingId = tslaId
       currencyId = usdId
       strike = 910.0
-  optionDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  optionDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
   Some optionDesc <- queryContractId common.custodian optionDescCid
 
   -- Alice issues the option
@@ -208,7 +208,7 @@ issuance = do
       safekeepingAccountId = alice.safekeepingAccountId
       observers = []
       claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usdId (couponDates 2021 2023 [Jan,Jul] 15)
-  cpbDescCid :: _ <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
+  cpbDescCid <- submit common.custodian $ exerciseCmd alice.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cpbDesc <- queryContractId common.custodian cpbDescCid
 
   -- pedagogical example from https://ledgy.com/blog/examples-of-convertible-notes/

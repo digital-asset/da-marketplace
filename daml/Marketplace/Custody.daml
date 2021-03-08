@@ -3,17 +3,16 @@ module Marketplace.Custody where
 import ContingentClaims.Claim (Claim, deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as ContingentClaims
 import ContingentClaims.Observation (Observation)
-import DA.Date (toDateUTC, toGregorian, fromGregorian)
+import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.List (intersperse, last)
+import DA.List (last)
 import DA.Map (Map)
 import DA.Map qualified as Map
 import DA.Next.Set
 import DA.Optional (fromSomeNote)
-import DA.Text (splitOn, parseInt, unwords)
 import Marketplace.AssetDescription ()
 import Marketplace.AssetDescription (AssetDescription, Claims)
 import Marketplace.AssetDescription qualified as AssetDescription
@@ -288,7 +287,7 @@ template LifecycleRequest
           t <- toDateUTC <$> getTime
           assetDeposit <- fetch assetDepositCid
           (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
-          (_, versions) <- fetchByKey @AssetDescription.Versions (fromList . signatory $ assetDeposit, assetDeposit.asset.id.label)
+          (versionsCid, versions) <- fetchByKey @AssetDescription.Versions (fromList . signatory $ assetDeposit, assetDeposit.asset.id.label)
           let payout: Id -> Decimal -> Date -> Update (Claim Observation Date Id, ContractId AssetDeposit)
               payout asset qty dt = do
                 payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
@@ -309,8 +308,8 @@ template LifecycleRequest
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
               election _ _ = deserialize choice -- will throw if the claims don't match
           versionsAndCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
-          let (postAssetVersions, payoutCids) = unzip versionsAndCids
-          let postAssetVersion = fromSomeNote "Invalid claim version" (Map.lookup (serialize . last $ postAssetVersions) versions.versions)
+          let (postAssetClaims, payoutCids) = unzip versionsAndCids
+          (_, postAssetVersion) <- exercise versionsCid $ AssetDescription.LookupOrInsert (serialize . last $ postAssetClaims)
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return $ assetDepositCid' :: payoutCids

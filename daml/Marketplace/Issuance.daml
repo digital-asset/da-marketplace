@@ -1,15 +1,16 @@
 module Marketplace.Issuance where
 
-import ContingentClaims.Claim (serialize, deserialize)
+import ContingentClaims.Claim (serialize)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+import DA.Map qualified as Map
 import DA.Next.Set (Set, fromList)
 import DA.Text (unwords)
 import Marketplace.AssetDescription ()
 import Marketplace.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.AssetDescription qualified as AssetDescription
-import Marketplace.Claims (assetDescVers, binaryCallOption)
+import Marketplace.Claims (binaryCallOption)
 
 type T = Issuance
 
@@ -85,19 +86,30 @@ template Service
           create ReduceIssuanceRequest with ..
 
     controller provider can
-      nonconsuming Originate: [ContractId AssetDescription]
+      nonconsuming Originate: ContractId AssetDescription
         with
           createOriginationCid: ContractId OriginationRequest
         do
-          OriginationRequest{..} <- fetch createOriginationCid
+          OriginationRequest{assetLabel, description, safekeepingAccountId, observers, claims} <- fetch createOriginationCid
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
           let
             assetId = Id with signatories = fromList [ provider, customer ]; label = assetLabel; version = 0
             issuer = customer
-          (_versions, assetDescriptions) <- assetDescVers assetId description issuer safekeepingAccountId observers $ deserialize claims
-          return assetDescriptions
+          create AssetDescription.Versions
+                   with
+                     assetLabel
+                     descriptionSignatories = assetId.signatories
+                     versions = Map.insert claims 0 Map.empty
+          create AssetDescription
+                   with
+                     assetId
+                     description
+                     issuer
+                     safekeepingAccountId
+                     observers
+                     claims
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with

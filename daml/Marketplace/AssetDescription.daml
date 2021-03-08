@@ -2,8 +2,9 @@ module Marketplace.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Id)
-import DA.Next.Set (Set, member)
-import DA.Map (Map)
+import DA.Next.Set (Set)
+import DA.Map (Map, size)
+import DA.Map qualified as Map
 import ContingentClaims.Claim.Serializable (Claim(..))
 import ContingentClaims.Observation (Observation(..))
 
@@ -51,3 +52,13 @@ template Versions
     signatory descriptionSignatories
     key (descriptionSignatories, assetLabel) : (Set Party, Text)
     maintainer key._1
+ 
+    controller descriptionSignatories can
+      LookupOrInsert : (ContractId Versions, Version) with claims : Claims 
+        do
+          case Map.lookup claims versions of
+             Some version -> return (self, version)
+             None -> do
+               let nextVersion = size versions
+               cid <- create this with versions = Map.insert claims nextVersion versions
+               return (cid, nextVersion)
