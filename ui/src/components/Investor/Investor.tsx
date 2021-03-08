@@ -77,7 +77,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: riData.location }
             })
         }
-        // eslint-disable-next-line
+    // eslint-disable-next-line
     }, [registeredInvestor]);
 
     const updateProfile = async () => {
@@ -87,7 +87,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             newLocation: profile.location.value
         };
         await ledger.exerciseByKey(RegisteredInvestor.RegisteredInvestor_UpdateProfile, key, args)
-            .catch(err => console.error(err));
+                    .catch(err => console.error(err));
     }
 
     const acceptInvite = async () => {
@@ -98,84 +98,84 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             isPublic: true
         };
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
-            .catch(err => console.error(err));
+                    .catch(err => console.error(err));
     }
 
     const sideNav = <RoleSideNav url={url}
-        name={registeredInvestor[0]?.contractData.name || investor}
-        items={[
-            {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-            {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
-        ]}>
-        <Menu.Menu className='sub-menu'>
-            <Menu.Item>
-                <p className='p2'>Marketplace:</p>
-            </Menu.Item>
+                        name={registeredInvestor[0]?.contractData.name || investor}
+                        items={[
+                            {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
+                            {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
+                        ]}>
+                        <Menu.Menu className='sub-menu'>
+                            <Menu.Item>
+                                <p className='p2'>Marketplace:</p>
+                            </Menu.Item>
 
-            { allExchanges.length > 0 ?
-                allExchanges.map(exchange => {
-                    const tokenPairs = exchange.contractData.tokenPairs.map(tokenPair => {
-                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+                            { allExchanges.length > 0 ?
+                                allExchanges.map(exchange => {
+                                    const tokenPairs = exchange.contractData.tokenPairs.map(tokenPair => {
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
-                        return <Menu.Item
-                            as={NavLink}
-                            exact
-                            to={{
-                                pathname: `${url}/trade/${base}-${quote}`,
-                                state: {
-                                    isCleared: false,
-                                    exchange: exchange.contractData,
-                                    tokenPair: unwrapDamlTuple(tokenPair)
-                                }
-                            }}
-                            className='sidemenu-item-normal'
-                            key={`${base}${quote}`}
-                        >
-                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
-                        </Menu.Item>
-                    })
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            exact
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}`,
+                                                state: {
+                                                    isCleared: false,
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={`${base}${quote}`}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                        </Menu.Item>
+                                    })
 
-                    const clearedMarkets = exchange.contractData.clearedMarkets.map(marketListing => {
-                        const listing = unwrapDamlTuple(marketListing);
-                        const tokenPair = typeof listing[0] !== 'string' && listing[0];
-                        const defaultCCP = typeof listing[1] === 'string' && listing[1];
+                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(marketListing => {
+                                        const listing = unwrapDamlTuple(marketListing);
+                                        const tokenPair = typeof listing[0] !== 'string' && listing[0];
+                                        const defaultCCP = typeof listing[1] === 'string' && listing[1];
 
-                        if (!tokenPair || !defaultCCP) {
-                            throw new Error("Expected token pair and default CCP")
-                        }
+                                        if (!tokenPair || !defaultCCP) {
+                                            throw new Error("Expected token pair and default CCP")
+                                        }
 
-                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
-                        return <Menu.Item
-                            as={NavLink}
-                            exact
-                            to={{
-                                pathname: `${url}/trade/${base}-${quote}/cleared`,
-                                state: {
-                                    defaultCCP,
-                                    isCleared: true,
-                                    exchange: exchange.contractData,
-                                    tokenPair: unwrapDamlTuple(tokenPair)
-                                }
-                            }}
-                            className='sidemenu-item-normal'
-                            key={`${base}${quote}CLR`}
-                        >
-                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
-                            <Label className='cleared-market-label'>Cleared</Label>
-                        </Menu.Item>
-                    })
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            exact
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}/cleared`,
+                                                state: {
+                                                    defaultCCP,
+                                                    isCleared: true,
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={`${base}${quote}CLR`}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                            <Label className='cleared-market-label'>Cleared</Label>
+                                        </Menu.Item>
+                                    })
 
-                    return [...tokenPairs, ...clearedMarkets]
-                }).flat()
-                :
-                <Menu.Item className='empty-item'>
-                    <p className='p2 dark'>
-                        <i>None yet. Join an Exchange to be added to available markets.</i>
-                    </p>
-                </Menu.Item>
-            }
-        </Menu.Menu>
+                                    return [...tokenPairs, ...clearedMarkets]
+                                }).flat()
+                                :
+                                <Menu.Item className='empty-item'>
+                                    <p className='p2 dark'>
+                                        <i>None yet. Join an Exchange to be added to available markets.</i>
+                                    </p>
+                                </Menu.Item>
+                            }
+                        </Menu.Menu>
     </RoleSideNav>
 
     const inviteScreen = (
