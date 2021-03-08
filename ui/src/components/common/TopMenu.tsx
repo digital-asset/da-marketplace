@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
-import { LogoutIcon } from '../../icons/Icons'
+import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
 
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
@@ -52,7 +52,15 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                                 )}
                             </OverflowMenu>
                         </Menu.Item>}
-                    <Menu.Item className={classNames('log-out-button', {'divider': !landingPage})}>
+                    <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
+                        <Button className='ghost smaller'>
+                            <div >
+                                <NotificationCenterIcon />
+                            </div>
+                            <div className='notifications-active'></div>
+                        </Button>
+                    </Menu.Item>
+                    <Menu.Item className={classNames('log-out-button', { 'divider': !landingPage })}>
                         <Button className='ghost smaller' onClick={onLogout}>
                             <div className='log-out'>
                                 <Header as='h3'>Log out</Header>

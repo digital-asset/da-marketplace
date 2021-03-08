@@ -6,6 +6,7 @@ import lock from './lock.svg'
 type IconProps = {
     size?: '24' | '32' | '48' | '64';
     color?: 'green' | 'blue';
+    strokeColor?: string;
 }
 
 export const ArrowRightIcon = () => (
@@ -198,10 +199,16 @@ export const EditIcon = () => (
     </svg>
   );
 
-
 export const IconCircledCheck = () => (
     <svg className='icon circled-check-icon fill-green'  viewBox="0 0 14 14">
       <circle cx="7" cy="7" r="6.5" fill="white" stroke="#4BE725"/>
       <path className='fill-green' d="M6.16873 10.4437C6.00449 10.4437 5.8465 10.3839 5.72243 10.2741L3 7.84354L3.89171 6.84472L6.10893 8.82361L10.2997 4L11.311 4.87921L6.67394 10.2134C6.55701 10.3491 6.3901 10.4303 6.21068 10.4419C6.19729 10.4428 6.18301 10.4437 6.16873 10.4437Z" fill="#3A62CA"/>
     </svg>
   )
+
+  export const NotificationCenterIcon: React.FC<IconProps> = ({ size, strokeColor }) => (
+    <svg className={`icon notification-center-icon icon-size-${size}`} width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M9 1.125C12.2619 1.125 14.9062 3.76948 14.9062 7.03141C14.9062 8.57957 14.9062 10.0787 14.9062 11.025C14.9062 13.725 16.875 14.625 16.875 14.625L1.125 14.625C1.125 14.625 3.09375 13.725 3.09375 11.025C3.09375 10.0787 3.09375 8.57957 3.09375 7.03142C3.09375 3.76948 5.73807 1.125 9 1.125V1.125Z" stroke={strokeColor ? strokeColor : "#22252A"} stroke-linejoin="round" />
+        <path d="M6.75 14.625C6.75 15.8676 7.75736 16.875 9 16.875C10.2426 16.875 11.25 15.8676 11.25 14.625" stroke={strokeColor ? strokeColor : "#22252A"} />
+    </svg>
+)
