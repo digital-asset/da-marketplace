@@ -2,6 +2,7 @@ module Marketplace.Trading.Order where
 
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..))
+import Marketplace.Trading.Error qualified as Error
 
 data Side
     = Buy
@@ -44,12 +45,10 @@ data Status
     | PartiallyExecuted
     | FullyExecuted
     | Rejected with
-        errorCode : Int
-        errorMessage : Text
+        reason : Error.T
     | PendingCancellation
     | CancellationRejected with
-        errorCode : Int
-        errorMessage : Text
+        reason : Error.T
     | Cancelled
   deriving (Eq, Show)
 

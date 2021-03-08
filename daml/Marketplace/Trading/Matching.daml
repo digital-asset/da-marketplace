@@ -27,13 +27,13 @@ template Service
             (buy, buyCid, sell, sellCid) = case makerOrder.details.side of
               Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
               Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
-            signConfirmation customer confirmationCid = exerciseByKey @TradingService.T (operator, provider, customer) TradingService.SignConfirmation with ..
+            signConfirmation customer confirmationCid = exerciseByKey @TradingService.T (operator, provider, customer) TradingService.SignConfirmation with confirmationCid
 
           confirmationCid <- create Confirmation.Confirmation with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; accounts = [], ..
             >>= signConfirmation buy.customer
             >>= signConfirmation sell.customer
 
-          exercise confirmationCid Confirmation.Process with ..
+          exercise confirmationCid Confirmation.Process with buyCid; sellCid
 
 template Offer
   with

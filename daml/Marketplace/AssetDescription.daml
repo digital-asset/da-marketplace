@@ -39,6 +39,7 @@ template AssetDescription
   where
     signatory assetId.signatories <> safekeepingAccountId.signatories
     observer observers
+
     key assetId : Id
     maintainer key.signatories
 

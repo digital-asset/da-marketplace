@@ -22,9 +22,8 @@ template Broker
           newName : Text
           newLocation : Text
         do
-          create this with name = newName, location = newLocation
+          create this with name = newName; location = newLocation
 
     controller operator can
       Offboard : ()
         do return ()
-

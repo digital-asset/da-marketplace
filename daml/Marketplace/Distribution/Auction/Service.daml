@@ -4,8 +4,10 @@ module Marketplace.Distribution.Auction.Service where
 
 import DA.Action (foldlA)
 import DA.Either (partitionEithers)
+import DA.Functor (($>))
 import DA.Foldable (forA_)
 import DA.List (sortOn, mapAccumL)
+import DA.Optional (whenSome)
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account, Asset, Id)
 import DA.Finance.Utils (fetchAndArchive)
@@ -24,6 +26,7 @@ template Service
     operator : Party
     provider : Party
     customer : Party
+    tradingAccount : Account
     allocationAccount : Account
     receivableAccount : Account
   where
@@ -36,7 +39,7 @@ template Service
           asset : Asset
           quotedAssetId : Id
           floorPrice : Decimal
-          assetDepositCid : ContractId AssetDeposit
+          depositCid : ContractId AssetDeposit
         do
           create CreateAuctionRequest with ..
 
@@ -51,10 +54,10 @@ template Service
         with
           createAuctionRequestCid : ContractId CreateAuctionRequest
         do
-          CreateAuctionRequest{..} <- fetchAndArchive createAuctionRequestCid
+          CreateAuctionRequest{auctionId; asset; quotedAssetId; floorPrice; depositCid} <- fetchAndArchive createAuctionRequestCid
 
           -- Deposit the asset into the allocation account so they cannot be transferred/withdrawn without the signatore of the Auctioneer
-          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with depositCid = assetDepositCid; ..
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
           create Auction with status = Auction.Open; ..
 
       nonconsuming RejectAuction : ()
@@ -68,10 +71,10 @@ template Service
           auctionCid : ContractId Auction.T
           bidCids : [ContractId Bidding.Bid]
         do
-          auction@Auction{..} <- fetch auctionCid
+          auction@Auction{floorPrice ,asset , depositCid, status} <- fetch auctionCid
           assertMsg "Auction already successfully processed" (status `elem` [Auction.Open, Auction.NoValidBids])
-          bids <- forA bidCids fetch
 
+          bids <- forA bidCids fetch
           -- Split bids on those above / below the floor price -> Sort valid bids descendingly -> Execute Auction -> Split auction result on allocated / unallocated (ie, zero allocation)
           let
             (invalidBids, validBids) = partitionEithers $ splitList (\bid -> bid.details.price >= floorPrice) bids
@@ -84,8 +87,11 @@ template Service
           forA_ ((.bid) `map` unallocatedBids) $ withdrawAllocation *> updateBidStatus Bidding.NoAllocation
 
           -- Generate Settlement instructions for allocated bids
-          let settleAllocations = (\allocation -> Auction.SettleAllocation with price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount; ..) <$> allocatedBids
-          (_, siCids) <- foldlA generateSettlementInstruction (Some depositCid, []) settleAllocations
+          let settleAllocations = (\allocation -> Auction.SettleAllocation with allocation; price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount) <$> allocatedBids
+          (remainingDepositCidOpt, siCids) <- foldlA generateSettlementInstruction (Some depositCid, []) settleAllocations
+
+          -- Transfer remaining deposit back to the Issuer's trading account
+          whenSome remainingDepositCidOpt \depositCid -> (exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with depositCid = depositCid; transferTo = tradingAccount) $> ()
 
           -- Update Auction contract with the outcome of the auction processing
           let newStatus = if
@@ -107,6 +113,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         with
+          tradingAccount : Account
           allocationAccount : Account
           receivableAccount : Account
         do
@@ -124,6 +131,7 @@ template Request
   with
     provider : Party
     customer : Party
+    tradingAccount : Account
     allocationAccount : Account
     receivableAccount : Account
   where
@@ -153,16 +161,6 @@ template CreateAuctionRequest
     asset : Asset
     quotedAssetId : Id
     floorPrice : Decimal
-    assetDepositCid : ContractId AssetDeposit
-  where
-    signatory operator, provider, customer
-
-template PublishedBid
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    bidder : Party
-    allocationPercentage : Decimal
+    depositCid : ContractId AssetDeposit
   where
     signatory operator, provider, customer

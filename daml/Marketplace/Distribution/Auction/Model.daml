@@ -12,8 +12,6 @@ data Allocation = Allocation with
   deriving (Eq, Show)
 
 data SettleAllocation = SettleAllocation with
-    operator : Party
-    provider : Party
     allocation : Allocation
     price : Decimal
     issuer : Party

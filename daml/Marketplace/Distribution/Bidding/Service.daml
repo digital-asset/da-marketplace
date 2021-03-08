@@ -34,21 +34,17 @@ template Service
           allowPublishing : Bool
         do
           -- TODO: Check for parallism of this choice
-          bidRequest <- fetchAndArchive bidRequestCid
+          Bidding.Request{asset; issuer; auctionId; quotedAssetId} <- fetchAndArchive bidRequestCid
           deposit <- fetch depositCid
           assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
-          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == bidRequest.quotedAssetId.label)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == quotedAssetId.label)
 
           depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
           time <- getTime
-          create Bidding.Bid
-            with
+          create Bidding.Bid with
               details = Bidding.Details with ..
               status = Bidding.Pending
-              assetId = bidRequest.asset.id
-              issuer = bidRequest.issuer
-              auctionId = bidRequest.auctionId
-              quotedAssetId = bidRequest.quotedAssetId
+              assetId = asset.id
               ..
 
     controller provider can
@@ -60,6 +56,14 @@ template Service
           quotedAssetId : Id
         do
           create Bidding.Request with ..
+
+      nonconsuming PublishBid : ContractId Bidding.PublishedBid
+        with
+          auctionId : Text
+          price : Decimal
+          quantity : Decimal
+        do
+          create Bidding.PublishedBid with ..
 
       nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with
@@ -79,9 +83,10 @@ template Service
                               else pure bid.depositCid
 
           let newStatus = if bid.details.quantity == quantity
-                            then Bidding.FullAllocation with ..
-                            else Bidding.PartialAllocation with ..
-          newBidCid <- exercise bidCid Bidding.UpdateStatus with ..
+                            then Bidding.FullAllocation with price
+                            else Bidding.PartialAllocation with price; quantity
+
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
     nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction

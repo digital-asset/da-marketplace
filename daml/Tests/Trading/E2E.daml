@@ -5,9 +5,8 @@ import Common
 import DA.Assert ((===))
 import DA.Next.Set
 import DA.List
-import DA.Optional
 import DA.Foldable
-import DA.Finance.Types (Id(..), Asset(..))
+import DA.Finance.Types (Id(..))
 import DA.Finance.Asset (AssetDeposit)
 import Marketplace.Settlement qualified as Settlement
 import Marketplace.Trading.Service qualified as Trading
@@ -16,33 +15,32 @@ import Marketplace.Trading.Matching qualified as Matching
 import Marketplace.Trading.Listing qualified as Listing
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
-checkOrderStatusMatches = \orderCid party status -> do
-  order <- fromSome <$> queryContractId @Order.T party orderCid
+checkOrderStatusMatches orderCid party status = do
+  Some order <- queryContractId @Order.T party orderCid
   order.status === status
   pure ()
 
 tradingEndToEndTest : Script ()
 tradingEndToEndTest = do
-  cr@CommonContracts{..} <- onboardCommon
+  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
 
-  -- Assets
   let
-    shareId = Id with signatories = fromList [ custodian ]; label = "JPM.N"; version = 0
-    cashId = Id with signatories = fromList [ custodian ]; label = "USD"; version = 0
-    shareAsset = Asset with id = shareId; quantity = 200.0
-    cashAsset = Asset with id = cashId; quantity = 20000.0
-
-  alice <- onboardCustomer cr "Alice" shareAsset exchange
-  bob <- onboardCustomer cr "Bob" cashAsset exchange
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
-    listingId = "JPMUSD"
+    listingId = "TSLAUSD"
     calendarId = "1261007448"
-    description = "JPMorgan Chase & Co."
-    tradedAssetId = shareId
-    quotedAssetId = cashId
+    description = "Tesla Inc."
+    tradedAssetId = tsla.id
+    quotedAssetId = usd.id
     tradedAssetPrecision = 2
     quotedAssetPrecision = 2
     minimumTradableQuantity = 1.0
@@ -56,11 +54,11 @@ tradingEndToEndTest = do
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
   (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = alice.assetDepositCid
+        depositCid = aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
             symbol = listingId
-            asset = shareAsset
+            asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
@@ -69,7 +67,7 @@ tradingEndToEndTest = do
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
   (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = bob.assetDepositCid
+        depositCid = bobDepositCid
         details = Order.Details with
             id = bobOrderId
             symbol = listingId
@@ -80,8 +78,6 @@ tradingEndToEndTest = do
   checkOrderStatusMatches bobOrderCid bob.customer Order.New
 
   -- Acknowledge Orders
-  exchange <- pure . fromSome $ partyFromText "Exchange"
-
   aliceOrderCid <- exchange `submit` do
     exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
         createOrderRequestCid = aliceCreateOrderRequestCid
@@ -113,9 +109,8 @@ tradingEndToEndTest = do
   -- Settle orders
   assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
 
-  custodian <- pure . fromSome $ partyFromText "Custodian"
   forA_ assetDepositCids \depositCid -> do
-    deposit <- fromSome <$> queryContractId @AssetDeposit custodian depositCid
+    Some deposit <- queryContractId @AssetDeposit bank depositCid
     deposit.asset === if deposit.account.owner == alice.customer
       then cashAsset
       else shareAsset

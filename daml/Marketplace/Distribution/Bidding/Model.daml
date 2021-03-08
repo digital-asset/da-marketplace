@@ -51,6 +51,7 @@ template Bid
     tradingAccount : Account
     allocationAccount : Account
     depositCid : ContractId AssetDeposit
+    allowPublishing : Bool
     status : Status
   where
     signatory operator, provider, customer
@@ -65,3 +66,14 @@ template Bid
           newStatus : Status
         do
           create this with status = newStatus
+
+template PublishedBid
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    auctionId : Text
+    price : Decimal
+    quantity : Decimal
+  where
+    signatory operator, provider, customer
