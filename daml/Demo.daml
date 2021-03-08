@@ -47,7 +47,7 @@ issuance Providers{..} Assets{..} issuer = do
       underlyingId = tsla.id
       currencyId = usd.id
       strike = 910.0
-  optionDescCid :: _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+  optionDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some optionDesc <- queryContractId bank optionDescCid
 
   -- Issuer issues the option
@@ -66,7 +66,7 @@ issuance Providers{..} Assets{..} issuer = do
       safekeepingAccountId = issuer.mainAccount.id
       observers = [public]
       claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usd.id (couponDates 2021 2023 [Jan,Jul] 15)
-  cpbDescCid :: _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+  cpbDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cpbDesc <- queryContractId bank cpbDescCid
 
   -- pedagogical example from https://ledgy.com/blog/examples-of-convertible-notes/
@@ -86,8 +86,7 @@ issuance Providers{..} Assets{..} issuer = do
       safekeepingAccountId = issuer.mainAccount.id
       observers = [public]
       claims = C.serialize $ convertibleNote nflx.id 100_000.0 usd.id 0.20 (date 2021 Jun 06) 0.04 550.0 nflx.id
-  -- FIXME: the below appears to be failing for some inexplicable reason; accept the request in the UI manually!
-  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
-  -- Some cnDesc <- queryContractId custodian cnDescCid
+  cnDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+  Some cnDesc <- queryContractId bank cnDescCid
 
   pure ()
