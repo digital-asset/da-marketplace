@@ -169,14 +169,14 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                                     return [...tokenPairs, ...clearedMarkets]
                                 }).flat()
                                 :
-                                <Menu.Item className='empty-item'>
-                                    <p className='p2 dark'>
-                                        <i>None yet. Join an Exchange to be added to available markets.</i>
-                                    </p>
-                                </Menu.Item>
-                            }
+                            <Menu.Item className='empty-item'>
+                                <p className='p2 dark'>
+                                    <i>None yet. Join an Exchange to be added to available markets.</i>
+                                </p>
+                            </Menu.Item>
+                        }
                         </Menu.Menu>
-    </RoleSideNav>
+                </RoleSideNav>
 
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
