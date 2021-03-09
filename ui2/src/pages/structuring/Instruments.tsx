@@ -24,7 +24,7 @@ const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/registry/instruments/new")}>New Instrument</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/structuring/instruments/new")}>New Instrument</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -53,7 +53,7 @@ const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : Rout
                       <TableCell key={3} className={classes.tableCell}>{c.payload.assetId.version}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.description}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/registry/instruments/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/structuring/instruments/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

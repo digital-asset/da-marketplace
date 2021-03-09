@@ -76,7 +76,7 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
       return;
     }
     await ledger.exercise(Service.RequestOrigination, service.contractId, { assetLabel: label, description, claims, safekeepingAccountId, observers: [ service.payload.provider, party ] });
-    history.push("/apps/registry/requests");
+    history.push("/apps/structuring/requests");
   };
 
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };
@@ -92,7 +92,7 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
               <Grid item xs={12}>
                 <Paper className={classnames(classes.fullWidth, classes.paper)}>
                   <Typography variant="h5" className={classes.heading}>Details</Typography>
-                    <ToggleButtonGroup className={classes.fullWidth} value={isCall} exclusive onChange={(_, v) => { if (v !== null) setIsCall(v); }}>
+                  <ToggleButtonGroup className={classes.fullWidth} value={isCall} exclusive onChange={(_, v) => { if (v !== null) setIsCall(v); }}>
                     <ToggleButton className={classes.fullWidth} value={true}>Call</ToggleButton>
                     <ToggleButton className={classes.fullWidth} value={false}>Put</ToggleButton>
                   </ToggleButtonGroup>

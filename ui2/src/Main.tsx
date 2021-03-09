@@ -12,7 +12,7 @@ import { Issuance } from "./apps/Issuance";
 import { Distribution } from "./apps/Distribution";
 import { Listing } from "./apps/Listing";
 import { Trading } from "./apps/Trading";
-import { Registry } from "./apps/Registry";
+import { Structuring } from "./apps/Structuring";
 
 type MainProps = {
   defaultPath: string
@@ -20,7 +20,7 @@ type MainProps = {
 
 export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
-  
+
   return (
     <DamlLedger party={user.party} token={user.token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
       <HashRouter>
@@ -29,7 +29,7 @@ export default function Main({ defaultPath }: MainProps) {
           <PrivateRoute exact path="/apps" component={Apps} />
           <PrivateRoute path="/apps/network" component={Network} />
           <PrivateRoute path="/apps/custody" component={Custody} />
-          <PrivateRoute path="/apps/registry" component={Registry} />
+          <PrivateRoute path="/apps/structuring" component={Structuring} />
           <PrivateRoute path="/apps/issuance" component={Issuance} />
           <PrivateRoute path="/apps/distribution" component={Distribution} />
           <PrivateRoute path="/apps/listing" component={Listing} />

@@ -54,7 +54,7 @@ export default function Apps({ history } : RouteComponentProps) {
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/registry/instruments")}>
+                    <CardActionArea onClick={() => history.push("/apps/structuring/instruments")}>
                       <CardMedia className={classes.media} image={registryImage} title="Origination" />
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Origination</Typography>

@@ -22,7 +22,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.Originate, service.contractId, { createOriginationCid: c.contractId });
-    history.push("/apps/registry/instruments");
+    history.push("/apps/structuring/instruments");
   }
 
   return (
@@ -35,7 +35,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/registry/instruments/new")}>New Instrument</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/structuring/instruments/new")}>New Instrument</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -69,7 +69,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={8} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/registry/requests/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/structuring/requests/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>
