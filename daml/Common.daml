@@ -15,7 +15,7 @@ import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Trading.Listing.Service as Listing
 import qualified Marketplace.Settlement.Service as Settlement
-import qualified Marketplace.Distribution.Distributor as Distributor
+import qualified Marketplace.Distribution.Role as Distributor
 import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import qualified Marketplace.Regulator.Service as Regulator
 

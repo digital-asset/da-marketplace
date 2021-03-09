@@ -1,4 +1,4 @@
-module Marketplace.Distribution.Distributor where
+module Marketplace.Distribution.Role where
 
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Service qualified as Bidding

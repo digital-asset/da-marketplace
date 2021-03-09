@@ -57,7 +57,7 @@ python-versions = "*"
 
 [[package]]
 name = "dazl"
-version = "7.3.5rc0"
+version = "7.3.5"
 description = "high-level Ledger API client for DAML ledgers"
 category = "main"
 optional = false
@@ -195,7 +195,7 @@ idna = ">=2.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "c1f65d2aa5cb35671442851a1b4ca85da75d559609c70d256d7e597fa953403e"
+content-hash = "aa614e51886815d30496671d2c2d16cd40fbae537702f12e92fee5c90647cb72"
 
 [metadata.files]
 aiohttp = [
@@ -254,8 +254,8 @@ chardet = [
     {file = "chardet-3.0.4.tar.gz", hash = "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"},
 ]
 dazl = [
-    {file = "dazl-7.3.5rc0-py3-none-any.whl", hash = "sha256:b25e1e93e533989985fd4db2b33b0711bd829b4897cb7b6be5c8d909565386da"},
-    {file = "dazl-7.3.5rc0.tar.gz", hash = "sha256:fefb58681c9d3db0a0b7e80cf274fadf5c3399dd6a2e5acd02bcbd88523ca720"},
+    {file = "dazl-7.3.5-py3-none-any.whl", hash = "sha256:68276c6de83ddb706c01179e8ad700df3392eb206980cb4657f3c8a6facc7cc8"},
+    {file = "dazl-7.3.5.tar.gz", hash = "sha256:a949d7f9ab591b205cc6c45594826f110c3bb1d8618fa39eb5c17ad5527206b5"},
 ]
 grpcio = [
     {file = "grpcio-1.36.1-cp27-cp27m-macosx_10_10_x86_64.whl", hash = "sha256:e3a83c5db16f95daac1d96cf3c9018d765579b5a29bb336758d793028e729921"},

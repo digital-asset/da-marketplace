@@ -2,7 +2,7 @@ module Marketplace.Operator.Service where
 
 import Marketplace.Regulator.Service qualified as Regulator
 import Marketplace.Custody.Role qualified as Custodian
-import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
