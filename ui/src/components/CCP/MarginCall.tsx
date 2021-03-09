@@ -66,6 +66,8 @@ const MarginCall: React.FC<Props> = ({ allCustomers }) => {
             optAccountId: null,
             currency: tokenId.label,
             targetAmount: targetAmount,
+            margin: "1000.0",
+            collateralValue: "1000.0",
             calculationId: time.toISOString()
         };
         const key = wrapDamlTuple([operator, ccp]);

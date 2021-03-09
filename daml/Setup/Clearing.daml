@@ -188,6 +188,8 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     accountId = usdTokenId
     currency = "USD"
     targetAmount = 1200.0
+    margin = 1000.0
+    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -203,6 +205,8 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     accountId = usdTokenId
     currency = "USD"
     targetAmount = 1000.0
+    margin = 1000.0
+    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -316,6 +320,8 @@ setupInvestorAccount wt lp usdTokenId custodianAmount clearingAmount marginAmoun
     accountId = usdTokenId
     currency = "USD"
     targetAmount = marginAmount
+    margin = 1000.0
+    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 

@@ -109,6 +109,8 @@ template CCP
           optAccountId : Optional Id
           currency : Text
           targetAmount : Decimal
+          margin : Decimal
+          collateralValue : Decimal
           calculationId : Text
         do
           -- reject any previous calculation

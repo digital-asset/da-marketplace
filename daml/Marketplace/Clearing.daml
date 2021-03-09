@@ -13,6 +13,8 @@ template MarginCalculation
     accountId : Id
     currency : Text
     targetAmount : Decimal
+    margin : Decimal
+    collateralValue : Decimal
     calculationTime : Time
     calculationId : Text
   where
@@ -30,7 +32,7 @@ template MarginCalculation
           create DismissibleNotification with
             sender = ccp, receiver = customer
             senderRole = Some CCPRole, text = note
-          create FulfilledMarginCalculation with ..
+          create FulfilledMarginCalculation with calculation = this, ..
 
       MarginCalculation_Reject : ContractId RejectedMarginCalculation
         with
@@ -43,17 +45,13 @@ template FulfilledMarginCalculation
   with
     ccp : Party
     customer : Party
-    accountId : Id
-    currency : Text
-    targetAmount : Decimal
-    calculationTime : Time
-    calculationId : Text
+    calculation : MarginCalculation
     note : Text
   where
     signatory ccp
     observer customer
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
 
@@ -155,3 +153,18 @@ template FulfilledMarkToMarketCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
+template MarkToMarketPositionAdjustment
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    instrument : Text
+    currency : Text
+    adjustmentAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+    observer customer
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
