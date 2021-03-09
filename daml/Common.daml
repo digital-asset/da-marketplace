@@ -24,6 +24,7 @@ data Assets = Assets
     usd : Asset
     tsla : Asset
     nflx : Asset
+    libor : Asset
 
 data Providers = Providers
   with
@@ -140,11 +141,15 @@ onboardAssets Providers{..} = do
     nflx = Asset with id = nflxId; quantity = 0.0
     dUnitId = Id with signatories = singleton bank; label = "DAH-D"; version = 0
     dUnit = Asset with id = nflxId; quantity = 0.0
+    liborId = Id with signatories = singleton bank; label = "LIBOR"; version = 0
+    libor = Asset with id = liborId; quantity = 0.0
+   
 
   submit bank do createCmd AssetDescription with assetId = usdId; description = "United States Dollar"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = nflxId; description = "Netflix, Inc. Common Stock"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = tslaId; description = "Tesla, Inc. Common Stock"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = dUnitId; description = "Digital Asset Holdings D-Unit"; issuer = bank; claims = Zero; ..
+  submit bank do createCmd AssetDescription with assetId = liborId; description = "LIBOR"; issuer = bank; claims = Zero; ..
 
   pure Assets with ..
 

@@ -4,7 +4,7 @@ import Common
 import ContingentClaims.Claim qualified as C
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (cpb, couponDates)
+import ContingentClaims.FinancialClaim (cpb, couponDates, bermudan, irs)
 import ContingentClaims.FinancialClaim qualified as C
 import Daml.Script
 import DA.Date (date, Month(..))
@@ -32,6 +32,26 @@ demo = do
   auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
 
   issuance providers assets issuer
+
+  let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
+        bermudan
+          ( irs
+              principal
+              (O.observe floatingRateId.label)
+              floatingRateId
+              fixedRate
+              fixedCcyId
+              fixingDates)
+        $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
+
+  -- issuer originates a swaption
+  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "GS bermudan swaption"
+      description = "GS bermudan swaption"
+      safekeepingAccountId = issuer.mainAccount.id
+      observers = []
+      claims = C.serialize $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 $ couponDates 2021 2022 [Jan, Jul] 15
+  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
 
   pure ()
 
@@ -88,5 +108,6 @@ issuance Providers{..} Assets{..} issuer = do
       claims = C.serialize $ convertibleNote nflx.id 100_000.0 usd.id 0.20 (date 2021 Jun 06) 0.04 550.0 nflx.id
   cnDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cnDesc <- queryContractId bank cnDescCid
+
 
   pure ()
