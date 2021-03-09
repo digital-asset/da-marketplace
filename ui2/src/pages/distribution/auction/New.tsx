@@ -2,16 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel, IconButton, Box } from "@material-ui/core";
-import useStyles from "../styles";
+import useStyles from "../../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
-import { render } from "../../components/Claims/render";
-import { transformClaim } from "../../components/Claims/util";
+import { transformClaim } from "../../../components/Claims/util";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
 import { Service, RequestCreateAuction, CreateAuctionRequest } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
+import { render } from "../../../components/Claims/render";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

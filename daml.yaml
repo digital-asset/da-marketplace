@@ -25,3 +25,6 @@ codegen:
   js:
     output-directory: daml.js
     npm-scope: daml.js
+build-options:
+  - --target=1.11
+  - --ghc-option=-Wno-deprecations

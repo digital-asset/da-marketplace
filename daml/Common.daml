@@ -116,7 +116,7 @@ onboardCustomer Providers{..} party = do
   issuanceServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
-  -- Identitiy
+  -- Identity
   regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..
   regulatorServiceCid <- submit customer do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid <- submit customer do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with observers = [public]; legalName = party <> " Legal Name"; location = party <> " Location"
