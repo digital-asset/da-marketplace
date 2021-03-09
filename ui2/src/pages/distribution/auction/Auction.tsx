@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, Button, Paper, TableHead } from "@material-ui/core";
@@ -7,11 +7,10 @@ import useStyles from "../../styles";
 import { Auction as AuctionContract, Status as AuctionStatus } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
-import { Auction as BiddingAuction, Bid, PublishedBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module";
+import { Auction as BiddingAuction, Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module";
 import { CreateEvent } from "@daml/ledger";
 import { getAuctionStatus, getBidStatus, getBidAllocation } from "../Utils";
 import { DateTime } from "luxon"
-import { InputDialogProps, CheckBoxField, InputDialog } from "../../../components/InputDialog/InputDialog";
 
 export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
@@ -23,6 +22,9 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
   const ledger = useLedger();
   const auctionServices = useStreamQueries(AuctionService).contracts;
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
+  const isAuctionProvider = auctionProviderServices.length > 0;
+  const auctionCustomerServices = auctionServices.filter(s => s.payload.customer === party);
+  const isAuctionCustomer = auctionCustomerServices.length > 0;
   const biddingServices = useStreamQueries(BiddingService).contracts;
   const biddingProviderServices = biddingServices.filter(s => s.payload.provider === party);
   const auctions = useStreamQueries(AuctionContract).contracts;
@@ -30,19 +32,9 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
 
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const allBids = useStreamQueries(Bid).contracts;
-  const publishedBids = useStreamQueries(PublishedBid).contracts;
 
-  const defaultPublishBidDialogProps: InputDialogProps<{ [key: string]: boolean }> = {
-    open: false,
-    title: "Publish Bid",
-    defaultValue: {},
-    fields: {},
-    onClose: async function (state: { [key: string]: boolean } | null) { }
-  }
-  const [publishBidDialogProps, setPublishBidDialogProps] = useState<InputDialogProps<{ [key: string]: boolean }>>(defaultPublishBidDialogProps);
-
-  if (!auction || auctionProviderServices.length === 0) return (<></>); // TODO: Return 404 not found
-  const auctionService = auctionProviderServices[0];
+  if (!auction || (!isAuctionProvider && !isAuctionCustomer)) return (<></>); // TODO: Return 404 not found
+  const auctionProviderService = auctionProviderServices[0];
 
   const biddingAuctions = allBiddingAuctions.filter(c => c.payload.auctionId === auction.payload.auctionId);
   const bids = allBids.filter(c => c.payload.auctionId === auction.payload.auctionId);
@@ -51,16 +43,17 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
 
   const closeAuction = async () => {
     const bidCids = bids.map(c => c.contractId);
-    const [result,] = await ledger.exercise(AuctionService.ProcessAuction, auctionService.contractId, { auctionCid: auction.contractId, bidCids });
+    const [result,] = await ledger.exercise(AuctionService.ProcessAuction, auctionProviderService.contractId, { auctionCid: auction.contractId, bidCids });
     history.push("/apps/distribution/auctions/" + result._1.replace("#", "_"))
   };
 
   const requestBid = async (biddingService: CreateEvent<BiddingService>) => {
+    const publishedBidCids = bids.filter(c => c.payload.allowPublishing).map(c => c.contractId);
     const issuer = auction.payload.customer;
     const auctionId = auction.payload.auctionId;
     const asset = auction.payload.asset;
     const quotedAssetId = auction.payload.quotedAssetId;
-    await ledger.exercise(BiddingService.RequestBid, biddingService.contractId, { issuer, auctionId, asset, quotedAssetId });
+    await ledger.exercise(BiddingService.RequestBid, biddingService.contractId, { issuer, auctionId, asset, quotedAssetId, publishedBidCids });
   };
 
   const getbiddingAuctionstatus = (investor: string) => {
@@ -91,52 +84,8 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
     }
   };
 
-  // TODO: Check if we should filter only on biddingAuctions ***
-  const publishToInvestors = (bid: CreateEvent<Bid>): CreateEvent<BiddingService>[] =>
-    biddingProviderServices
-      .filter(b => b.payload.customer !== bid.payload.customer)                                      // Remove the bidder
-      .filter(b => b.payload.customer !== auction.payload.customer)                                  // Remove the issuer
-      .filter(b => biddingAuctions.findIndex(a => a.payload.customer === b.payload.customer) !== -1) // Remove investors who aren't invited to the auction
-      .filter(b => publishedBids.findIndex(p => p.payload.customer === b.payload.customer
-        && p.payload.investor === bid.payload.customer
-        && p.payload.auctionId === auction.payload.auctionId) === -1)                                // Remove investors whom have already received this published bid
-
-  const publishBid = (bid: CreateEvent<Bid>) => {
-    const onClose = async (state: any | null) => {
-      setPublishBidDialogProps({ ...defaultPublishBidDialogProps, open: false });
-      const biddingService = biddingProviderServices.find(b => b.payload.customer === bid.payload.customer);
-      if (!state || !biddingService) return;
-
-      const auctionId = auction.payload.auctionId;
-      const investor = bid.payload.customer;
-      const quantity = bid.payload.details.quantity;
-      await Promise.all<any>(Object
-        .entries(state)
-        .filter(s => s[1] === true)
-        .reduce((acc, cur) => {
-          const partiesBiddingService = biddingProviderServices.find(b => b.payload.customer === cur[0]);
-          if (partiesBiddingService)
-            acc.push(ledger.exercise(BiddingService.PublishBid, partiesBiddingService.contractId, { auctionId, investor, quantity }))
-          return acc;
-        }, [] as Promise<any>[])
-      );
-    };
-
-    const investors = publishToInvestors(bid);
-    const investorFields: Record<any, CheckBoxField> = investors.reduce((acc, cur) => {
-      acc[cur.payload.customer] = { label: cur.payload.customer, type: "checkbox" };
-      return acc;
-    }, {} as Record<any, CheckBoxField>);
-    const defaultFields: { [key: string]: boolean } = investors.reduce((acc, cur) => {
-      acc[cur.payload.customer] = false;
-      return acc;
-    }, {} as { [key: string]: boolean });
-    setPublishBidDialogProps({ ...defaultPublishBidDialogProps, open: true, onClose, fields: investorFields, defaultValue: defaultFields });
-  };
-
   return (
     <>
-      <InputDialog {...publishBidDialogProps} />
       <Grid container direction="column" spacing={2}>
         <Grid item xs={12}>
           <Typography variant="h3" className={classes.heading}>{auction.payload.auctionId}</Typography>
@@ -156,9 +105,9 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
                           <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
                           <TableCell key={3} className={classes.tableCell}><b>Percentage</b></TableCell>
                           <TableCell key={4} className={classes.tableCell}><b>Submitted at</b></TableCell>
-                          <TableCell key={5} className={classes.tableCell}><b>Status</b></TableCell>
-                          <TableCell key={6} className={classes.tableCell}><b>Allocation</b></TableCell>
-                          <TableCell key={7} className={classes.tableCell}></TableCell>
+                          <TableCell key={5} className={classes.tableCell}><b>Visibility</b></TableCell>
+                          <TableCell key={6} className={classes.tableCell}><b>Status</b></TableCell>
+                          <TableCell key={7} className={classes.tableCell}><b>Allocation</b></TableCell>
                         </TableRow>
                         {bids.map((c, i) => (
                           <TableRow key={i + 1} className={classes.tableRow} hover={true}>
@@ -167,19 +116,9 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
                             <TableCell key={2} className={classes.tableCell}>{c.payload.details.price}</TableCell>
                             <TableCell key={3} className={classes.tableCell}>{(100.0 * parseFloat(c.payload.details.quantity) / parseFloat(auction.payload.asset.quantity)).toFixed(2)}%</TableCell>
                             <TableCell key={4} className={classes.tableCell}>{DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL)}</TableCell>
+                            <TableCell key={7} className={classes.tableCell}>{c.payload.allowPublishing ? "Public" : "Private"}</TableCell>
                             <TableCell key={5} className={classes.tableCell}>{getBidStatus(c.payload.status)}</TableCell>
                             <TableCell key={6} className={classes.tableCell}>{getBidAllocation(c.payload)}</TableCell>
-                            <TableCell key={7} className={classes.tableCell}>
-                              <Button
-                                color="primary"
-                                size="small"
-                                className={classes.choiceButton}
-                                variant="contained"
-                                disabled={auction.payload.status.tag !== "Open" || !c.payload.allowPublishing || publishToInvestors(c).length === 0}
-                                onClick={() => publishBid(c)}>
-                                Publish
-                                </Button>
-                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -263,7 +202,7 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
                             <TableCell key={0} className={classes.tableCell}>{c.payload.customer}</TableCell>
                             <TableCell key={1} className={classes.tableCell}>{getbiddingAuctionstatus(c.payload.customer)}</TableCell>
                             <TableCell key={2} className={classes.tableCell}>
-                              <Button color="primary" size="small" className={classes.choiceButton} variant="contained" disabled={getbiddingAuctionstatus(c.payload.customer) !== "No bid requested" || auction.payload.status.tag !== "Open"} onClick={() => requestBid(c)}>Request Bid</Button>
+                              {isAuctionProvider && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" disabled={getbiddingAuctionstatus(c.payload.customer) !== "No bid requested" || auction.payload.status.tag !== "Open"} onClick={() => requestBid(c)}>Request Bid</Button>}
                             </TableCell>
                           </TableRow>))}
                       </TableBody>
