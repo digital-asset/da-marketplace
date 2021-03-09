@@ -6,8 +6,11 @@ module Tests.Claims where
 import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..))
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
+import ContingentClaims.Lifecycle qualified as Lifecycle
+import ContingentClaims.FinancialClaim
 import DA.Assert ((===))
 import DA.Finance.Types (Id(..))
+import DA.Date (date, Month(..))
 import Daml.Control.Recursion
 import Daml.Script
 import Prelude hiding (enumerate, length)
@@ -22,9 +25,10 @@ deriving instance (Eq a, Eq (f (Cofree f a))) => Eq (Cofree f a)
 deriving instance Show (F (Cofree F Int))
 deriving instance Eq (F (Cofree F Int))
 
+[a,b,c] = Id mempty <$> ["a","b","c"] <*> [0]
+
 enumerateTest: Script ()
 enumerateTest = do
-  let [a,b,c] = Id mempty <$> ["a","b","c"] <*> [0]
   enumerateFrom 0 Zero === Cofree 0 ZeroF
   enumerateFrom 0 (Scale (O.pure 2.0) (One a)) === Cofree 0 (ScaleF (O.pure 2.0) (Cofree 1 (OneF a)))
   enumerateFrom 0 (One a `And` Zero) === Cofree 0 (AndF (Cofree 1 (OneF a)) (Cofree 2 ZeroF))
@@ -58,3 +62,13 @@ enumerateTest = do
      ) )
    ) )
 
+lifecyleBond = script do
+  let bond : C = cpb 100_000.0 0.03 a $ couponDates 2021 2021 [Jan .. Dec] 15
+      spot : Text -> Date -> Script Decimal
+      spot _ _ = pure 0.0
+      prune : Id -> Decimal -> Date -> Script (C -> Script C) 
+      prune asset qty dt = pure $ \claim -> Lifecycle.pruneLeaf spot asset qty claim dt
+      chooseLeft = const
+  [lifecycle'] <- Lifecycle.lifecycle prune spot chooseLeft bond (date 2021 Jan 15)
+  lifecycledBond <- lifecycle' bond
+  lifecycledBond === bond.rhs
