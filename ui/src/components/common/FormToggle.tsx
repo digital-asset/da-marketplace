@@ -31,7 +31,7 @@ const FormToggle: React.FC<Props> = ({
         <div className={className}>
             {enabled?
                 <>
-                    <p>{onLabel} </p>
+                    <p>{onLabel}</p>
                     <p><i>{onInfo}</i></p>
                 </>
             :

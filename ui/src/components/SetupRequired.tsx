@@ -97,8 +97,9 @@ const SetupRequired  = () => {
       { automations?.length === 0 || !automations ? (
         <div>
           <p>
-            Please make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.
-            You can find this option by clicking on the trigger in the "Deployments" tab in the console, then clicking on "Settings."
+            Please create a "UserAdmin" party and make the "da-marketplace-triggers" artifact deployable to continue and to perform automatic setup.<br/><br/>
+            You can create the party on the "Users" tab and find the deployable option by clicking on the trigger in the "Deployments"
+            tab in the console, then clicking on "Settings".
            </p>
         </div>
       ) : setupForm }

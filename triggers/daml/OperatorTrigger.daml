@@ -46,7 +46,9 @@ handleOperatorRule party = do
   unless (null operators) $ do
     let public = (snd . head $ operators).public
     appInfos <- query @PublicAppInfo
-    when (null appInfos) $ dedupCreate PublicAppInfo with operator = party, ..
+    when (null appInfos)
+      $ dedupCreate PublicAppInfo with operator = party, ..
+      >> debug "Setting up PublicAppInfo..."
 
     -- Acknowledge all active 'UserSession's
     userSessions <- query @UserSession
