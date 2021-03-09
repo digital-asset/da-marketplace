@@ -6,8 +6,9 @@ authors = ["Digital Asset"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-dazl = "^7.3.1"
+dazl = "7.3.5rc0"
 aiohttp = "^3.6.2"
+grpcio = "1.36.1"
 
 [tool.poetry.dev-dependencies]
 

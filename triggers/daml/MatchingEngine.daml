@@ -8,9 +8,9 @@ import DA.Foldable hiding (elem, null, length)
 import DA.List
 import Daml.Trigger
 
-import qualified Marketplace.Trading.Order as Order
+import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as Service
-import qualified Marketplace.Trading.Matching as Matching
+import qualified Marketplace.Trading.Matching.Service as Matching
 
 import Utils
 

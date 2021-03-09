@@ -5,7 +5,7 @@ module SettlementInstructionTrigger where
 
 import Daml.Trigger
 import DA.Foldable (forA_)
-import Marketplace.Settlement (SettlementInstruction, Settle(..))
+import Marketplace.Settlement.Model (SettlementInstruction, Settle(..))
 
 handleSettlementInstruction : Trigger ()
 handleSettlementInstruction = Trigger
@@ -24,6 +24,7 @@ handleSettlementInstructionRule party = do
   -- Accept all 'SettlementInstructions'
   settlementInstructions <- query @SettlementInstruction
 
+  -- TODO: Should call the settlement service instead
   forA_ settlementInstructions \(siCid, si) -> do
     debug $ "Processing Settlement Instruction: " <> show si
     emitCommands [exerciseCmd siCid Settle] [toAnyContractId siCid]
