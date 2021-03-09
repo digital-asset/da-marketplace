@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import useStyles from "../../styles";
 import classnames from "classnames";
-import { Auction as BiddingAuctionContract, Bid, PublishedBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
+import { Auction as BiddingAuctionContract, Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { useLedger, useStreamQueries } from "@daml/react";
 import { Grid, Paper, Typography, Table, TableHead, TableRow, TableCell, TableBody, TextField, Button, Checkbox, FormControlLabel, FormControl, IconButton } from "@material-ui/core";
-import { RouteComponentProps, useParams, withRouter } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
@@ -15,7 +15,7 @@ import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { getBidAllocation, getBidStatus } from "../Utils";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
 
-const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => {
+export const BiddingAuction = () => {
   const classes = useStyles();
   const ledger = useLedger();
   const { contractId } = useParams<any>();
@@ -25,7 +25,6 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
 
   const allBiddingAuctions = useStreamQueries(BiddingAuctionContract);
-  const allPublishedBids = useStreamQueries(PublishedBid);
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const services = useStreamQueries(Service).contracts;
   const bids = useStreamQueries(Bid);
@@ -36,7 +35,7 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
   const el1 = useRef<HTMLDivElement>(null);
   const el2 = useRef<HTMLDivElement>(null);
   const [showAuctionedAsset, setShowAuctionedAsset] = useState<boolean>(true);
-  const [showQuotedAsset, setShowQuotedAsset] = useState<boolean>(true);
+  const [showQuotedAsset, setShowQuotedAsset] = useState<boolean>(false);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === "0");
 
@@ -62,7 +61,6 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
   const service = services[0];
 
   const bid = bids.contracts.find(b => b.payload.auctionId === biddingAuction.payload.auctionId);
-  const publishedBids = allPublishedBids.contracts.filter(p => p.payload.auctionId === biddingAuction.payload.auctionId);
 
   const rightsizeAsset = async (deposit: CreateEvent<AssetDeposit>, quantity: string): Promise<ContractId<AssetDeposit>> => {
     if (parseFloat(deposit.payload.asset.quantity) > parseFloat(quantity)) {
@@ -138,7 +136,30 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
                 </Paper>
               </Grid>
               <Grid xs={12}>
-                {bid ?
+                <Paper className={classnames(classes.fullWidth, classes.paper)}>
+                  <Typography variant="h5" className={classes.heading}>Published Bids</Typography>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow key={0} className={classes.tableRow}>
+                        <TableCell key={1} className={classes.tableCell}>Investor</TableCell>
+                        <TableCell key={0} className={classes.tableCell} align="right">Quantity</TableCell>
+                        <TableCell key={2} className={classes.tableCell} align="right">Allocation %</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {biddingAuction.payload.publishedBids.map((c, i) =>
+                        <TableRow key={0} className={classes.tableRow}>
+                          <TableCell key={1} className={classes.tableCell}>{c.investor}</TableCell>
+                          <TableCell key={0} className={classes.tableCell} align="right">{c.quantity}</TableCell>
+                          <TableCell key={2} className={classes.tableCell} align="right">{(parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity) * 100).toFixed(2)}</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Paper>
+              </Grid>
+              <Grid xs={12}>
+                {!!bid &&
                   <Paper className={classnames(classes.fullWidth, classes.paper)}>
                     <Typography variant="h5" className={classes.heading}>Bid</Typography>
                     <Table size="small">
@@ -163,17 +184,17 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
                         }
                       </TableBody>
                     </Table>
-                  </Paper>
-                  :
+                  </Paper>}
+                {!bid &&
                   <Paper className={classnames(classes.fullWidth, classes.paper)}>
                     <Typography variant="h5" className={classes.heading}>Submit Bid</Typography>
                     <Table size="small">
                       <TableBody>
                         <TableRow key={0} className={classes.tableRow}>
-                          <TextField required autoFocus fullWidth type="number" label={biddingAuction.payload.asset.id.label} onChange={e => setQuantity(parseFloat(e.target.value))} />
+                          <TextField required autoFocus fullWidth type="number" label={"Quantity (" + biddingAuction.payload.asset.id.label + ")"} onChange={e => setQuantity(parseFloat(e.target.value))} />
                         </TableRow>
                         <TableRow key={1} className={classes.tableRow}>
-                          <TextField required fullWidth className={classes.inputField} type="number" label={biddingAuction.payload.quotedAssetId.label} onChange={e => setPrice(parseFloat(e.target.value))} />
+                          <TextField required fullWidth className={classes.inputField} type="number" label={"Price (" + biddingAuction.payload.quotedAssetId.label + ")"} onChange={e => setPrice(parseFloat(e.target.value))} />
                         </TableRow>
                         <TableRow key={2} className={classes.tableRow}>
                           <br />
@@ -186,31 +207,7 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
                         </TableRow>
                       </TableBody>
                     </Table>
-                  </Paper>
-                }
-              </Grid>
-              <Grid xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Published Bids</Typography>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={1} className={classes.tableCell}>Investor</TableCell>
-                        <TableCell key={0} className={classes.tableCell} align="right">Quantity</TableCell>
-                        <TableCell key={2} className={classes.tableCell} align="right">Allocation %</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {publishedBids.map((c, i) =>
-                        <TableRow key={0} className={classes.tableRow}>
-                          <TableCell key={1} className={classes.tableCell}>{c.payload.investor}</TableCell>
-                          <TableCell key={0} className={classes.tableCell} align="right">{c.payload.quantity}</TableCell>
-                          <TableCell key={2} className={classes.tableCell} align="right">{(parseFloat(c.payload.quantity) / parseFloat(biddingAuction.payload.asset.quantity) * 100).toFixed(2)}</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </Paper>
+                  </Paper>}
               </Grid>
             </Grid>
           </Grid>
@@ -236,6 +233,4 @@ const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => 
       </Grid>
     </Grid>
   );
-}
-
-export const BiddingAuction = withRouter(BiddingAuctionComponent);
+};

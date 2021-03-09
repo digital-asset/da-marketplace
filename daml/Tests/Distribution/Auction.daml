@@ -82,10 +82,10 @@ setup = do
   auctionCid <- bank `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 
   -- Add our parties as bidders
-  aliceAuctionCid    <- submit bank do exerciseCmd alice.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  bobAuctionCid      <- submit bank do exerciseCmd bob.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  charlieAuctionCid  <- submit bank do exerciseCmd charlie.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  daveAuctionCid     <- submit bank do exerciseCmd dave.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
+  aliceAuctionCid    <- submit bank do exerciseCmd alice.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  bobAuctionCid      <- submit bank do exerciseCmd bob.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  charlieAuctionCid  <- submit bank do exerciseCmd charlie.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  daveAuctionCid     <- submit bank do exerciseCmd dave.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
 
   pure Fixture with ..
 

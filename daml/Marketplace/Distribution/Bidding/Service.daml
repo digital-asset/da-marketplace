@@ -56,16 +56,14 @@ template Service
           auctionId : Text
           asset : Asset
           quotedAssetId : Id
+          publishedBidCids : [ContractId Bidding.Bid]
         do
+          publishedBids <- mapA (\bidCid -> do
+            bid <- fetch bidCid
+            assert $ bid.auctionId == auctionId
+            assert bid.allowPublishing
+            pure Bidding.PublishedBid with investor = bid.customer; auctionId = bid.auctionId; quantity = bid.details.quantity) publishedBidCids
           create Bidding.Auction with ..
-
-      nonconsuming PublishBid : ContractId Bidding.PublishedBid
-        with
-          auctionId : Text
-          investor : Party
-          quantity : Decimal
-        do
-          create Bidding.PublishedBid with ..
 
       nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with

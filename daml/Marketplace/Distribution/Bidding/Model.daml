@@ -12,6 +12,13 @@ data Details = Details with
     time : Time
   deriving (Eq, Show)
 
+data PublishedBid = PublishedBid
+  with
+    investor : Party
+    auctionId : Text
+    quantity : Decimal
+  deriving (Eq, Show)
+
 instance Ord Details where
   compare x y = (x.price, x.quantity, Down x.time) `compare` (y.price, y.quantity, Down y.time)
 
@@ -24,6 +31,7 @@ template Auction
     auctionId : Text
     asset : Asset
     quotedAssetId : Id
+    publishedBids: [PublishedBid]
   where
     signatory operator, provider, customer
 
@@ -66,14 +74,3 @@ template Bid
           newStatus : Status
         do
           create this with status = newStatus
-
-template PublishedBid
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    investor : Party
-    auctionId : Text
-    quantity : Decimal
-  where
-    signatory operator, provider, customer
