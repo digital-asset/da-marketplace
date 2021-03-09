@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import Ledger from '@daml/ledger';
 import { Form, Button, Loader } from 'semantic-ui-react';
 
+import { useWellKnownParties } from '@daml/hub-react/lib';
 import { Operator } from '@daml.js/da-marketplace/lib/Marketplace/Operator';
 import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
@@ -13,7 +14,7 @@ const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);
   const [ setupError, setSetupError ] = useState<string | undefined>(undefined);
   const [ adminJwt, setAdminJwt ] = useState('');
-  const { parties } = useDablParties();
+  const { parties } = useWellKnownParties();
   const [ automations, setAutomations ] = useState<PublicAutomation[] | undefined>([]);
   const publicParty = useDablParties().parties.publicParty;
 
@@ -32,6 +33,7 @@ const SetupRequired  = () => {
 
   const handleSetup = async (event: React.FormEvent) => {
     setDeploying(true);
+    if (!parties) { return }
     try {
       const ledger = new Ledger({token: adminJwt, httpBaseUrl})
       if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH) {
@@ -64,6 +66,11 @@ const SetupRequired  = () => {
       <p>{setupError}</p>
     </div>
   )
+
+  const userAdminRequired = (
+      <p className='login-details dark'>Please create the 'UserAdmin' party and refresh this page. You can create the party
+                                        on the "Users" tab of the console.</p>
+  );
 
   const setupForm = (
     <>
@@ -102,7 +109,7 @@ const SetupRequired  = () => {
             tab in the console, then clicking on "Settings".
            </p>
         </div>
-      ) : setupForm }
+      ) : !!parties ? setupForm : userAdminRequired }
       <h4>See <a className='dark' href='https://github.com/digital-asset/da-marketplace#add-the-operator-role-contract'>here</a> for more information.</h4>
     </>
   );
