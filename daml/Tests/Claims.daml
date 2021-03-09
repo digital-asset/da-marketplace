@@ -11,7 +11,7 @@ import DA.Finance.Types (Id(..))
 import Daml.Control.Recursion
 import Daml.Script
 import Prelude hiding (enumerate, length)
-import Marketplace.Claims (enumerateFrom)
+import Marketplace.Claims.Utils (enumerateFrom)
 
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id

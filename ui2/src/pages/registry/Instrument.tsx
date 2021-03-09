@@ -4,10 +4,10 @@ import { useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, Paper } from "@material-ui/core";
 import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 import { getName } from "../../config";
 import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
 
 export const Instrument : React.FC<RouteComponentProps> = () => {
   const classes = useStyles();

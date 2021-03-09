@@ -1,0 +1,15 @@
+module Marketplace.Regulator.Model where
+
+import DA.Next.Set (Set)
+
+template VerifiedIdentity
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    observers : Set Party
+    legalName : Text
+    location : Text
+  where
+    signatory operator, provider, customer
+    observer observers

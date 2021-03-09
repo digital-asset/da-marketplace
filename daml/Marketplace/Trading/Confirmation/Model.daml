@@ -1,13 +1,13 @@
-module Marketplace.Trading.Confirmation where
+module Marketplace.Trading.Confirmation.Model where
 
 import DA.List (head)
 import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Next.Set (Set, insert)
-import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement.Model qualified as Settlement
 -- import Marketplace.Trading.Listing (Listing)
-import Marketplace.Trading.Order qualified as Order
+import Marketplace.Trading.Model qualified as Order
 
 -- TODO: Try to turn this into a service
 

@@ -1,7 +1,7 @@
-module Marketplace.Trading.Exchange where
+module Marketplace.Trading.Role where
 
-import Marketplace.Trading.Listing qualified as Listing
-import Marketplace.Trading.Service qualified as TradingService
+import Marketplace.Trading.Listing.Service qualified as Listing
+import Marketplace.Trading.Service qualified as Trading
 
 template Role
   with
@@ -15,21 +15,21 @@ template Role
 
     controller provider can
 
-      nonconsuming OfferTradingService : ContractId TradingService.Offer
+      nonconsuming OfferTradingService : ContractId Trading.Offer
         with
           customer : Party
         do
-          create TradingService.Offer with ..
+          create Trading.Offer with ..
 
-      nonconsuming ApproveTradingServiceRequest : ContractId TradingService.T
+      nonconsuming ApproveTradingServiceRequest : ContractId Trading.T
         with
-          tradingRequestCid : ContractId TradingService.Request
+          tradingRequestCid : ContractId Trading.Request
         do
-          exercise tradingRequestCid TradingService.Approve with ..
+          exercise tradingRequestCid Trading.Approve with ..
 
       nonconsuming TerminateTradingService : ()
         with
-          tradingServiceCid : ContractId TradingService.T
+          tradingServiceCid : ContractId Trading.T
         do
           archive tradingServiceCid
 

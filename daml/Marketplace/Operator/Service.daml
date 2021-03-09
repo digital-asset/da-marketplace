@@ -1,11 +1,11 @@
-module Marketplace.Operator where
+module Marketplace.Operator.Service where
 
-import qualified Marketplace.Regulator as Regulator
-import qualified Marketplace.Custodian as Custodian
-import qualified Marketplace.Distribution.Distributor as Distributor
-import qualified Marketplace.Settlement as Settlement
-import qualified Marketplace.Trading.Exchange as Exchange
-import qualified Marketplace.Trading.Matching as Matching
+import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Custody.Role qualified as Custodian
+import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Role qualified as Exchange
+import Marketplace.Trading.Matching.Service qualified as Matching
 
 template Service
   with

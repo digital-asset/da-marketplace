@@ -6,7 +6,7 @@ import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
 
 const InstrumentsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

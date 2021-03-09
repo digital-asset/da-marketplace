@@ -1,4 +1,4 @@
-module Marketplace.Issuance where
+module Marketplace.Issuance.Service where
 
 import ContingentClaims.Claim (serialize)
 import DA.Finance.Asset
@@ -7,27 +7,10 @@ import DA.Finance.Types
 import DA.Map qualified as Map
 import DA.Next.Set (Set, fromList)
 import DA.Text (unwords)
-import Marketplace.AssetDescription ()
-import Marketplace.AssetDescription (AssetDescription(..), Claims)
-import Marketplace.AssetDescription qualified as AssetDescription
-import Marketplace.Claims (binaryCallOption)
-
-type T = Issuance
-
-template Issuance
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    issuanceId : Text
-    assetId : Id
-    accountId : Id
-    quantity : Decimal
-  where
-    signatory operator, provider, customer
-
-    key (operator, provider, issuanceId) : (Party, Party, Text)
-    maintainer key._1
+import Marketplace.Issuance.Model (Issuance(..))
+import Marketplace.Claims.AssetDescription (AssetDescription(..), Claims)
+import Marketplace.Claims.AssetDescription qualified as AssetDescription
+import Marketplace.Claims.Utils (binaryCallOption)
 
 template Service
   with

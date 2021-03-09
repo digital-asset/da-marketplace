@@ -10,7 +10,7 @@ import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { getName } from "../../config";
 import useStyles from "../styles";
-import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody";
+import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

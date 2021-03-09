@@ -3,10 +3,10 @@ module Marketplace.Trading.Service where
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
-import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Confirmation qualified as Confirmation
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Trading.Error (Error (..))
-import qualified Marketplace.Trading.AllocationAccountRule as AllocationAccountRule (T, Deposit(..), Withdraw(..))
+import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 
 type T = Service
 

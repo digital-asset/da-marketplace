@@ -7,7 +7,7 @@ import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody";
+import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
 
 const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {

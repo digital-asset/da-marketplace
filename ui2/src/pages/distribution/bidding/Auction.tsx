@@ -9,11 +9,11 @@ import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
 import { Service, SubmitBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription";
 import { transformClaim } from "../../../components/Claims/util";
 import { render } from "../../../components/Claims/render";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { getBidAllocation, getBidStatus } from "../Utils";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
 
 const BiddingAuctionComponent: React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

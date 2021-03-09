@@ -5,7 +5,7 @@ import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { CloseAccountRequest, OpenAccountRequest, Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody'
+import { CloseAccountRequest, OpenAccountRequest, Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service'
 import useStyles from "../styles";
 import { getName } from "../../config";
 
@@ -18,7 +18,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const providerServices = services.filter(s => s.payload.provider === party);
   const openRequests = useStreamQueries(OpenAccountRequest).contracts;
   const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
-  
+
   const openAccount = async (c : CreateEvent<OpenAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error

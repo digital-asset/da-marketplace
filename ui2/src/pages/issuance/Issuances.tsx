@@ -4,23 +4,14 @@ import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, 
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
-import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance'
 import useStyles from "../styles";
 import { getName } from "../../config";
+import { Issuance } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Model/module";
 
 const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
-  // const party = useParty();
-  // const ledger = useLedger();
 
-  // const services = useStreamQueries(Service).contracts;
-  // const service = services.find(s => s.payload.client === party);
   const issuances = useStreamQueries(Issuance).contracts;
-
-  // const requestDeissuance = async (c : CreateEvent<Issuance>) => {
-  //   if (!service) return; // TODO: Display error
-  //   await ledger.exercise(Service.RequestDeleteIssuance, service.contractId, { issuance});
-  // }
 
   return (
     <>

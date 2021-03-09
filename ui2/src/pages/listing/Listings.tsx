@@ -5,9 +5,10 @@ import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Service, Listing } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Listing'
 import useStyles from "../styles";
 import { getName } from "../../config";
+import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Service";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Model/module";
 
 const ListingsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

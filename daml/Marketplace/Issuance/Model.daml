@@ -1,0 +1,20 @@
+module Marketplace.Issuance.Model where
+
+import DA.Finance.Types (Id)
+
+type T = Issuance
+
+template Issuance
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    issuanceId : Text
+    assetId : Id
+    accountId : Id
+    quantity : Decimal
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, issuanceId) : (Party, Party, Text)
+    maintainer key._1

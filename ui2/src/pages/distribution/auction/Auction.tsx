@@ -158,7 +158,7 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
                           <TableCell key={4} className={classes.tableCell}><b>Submitted at</b></TableCell>
                           <TableCell key={5} className={classes.tableCell}><b>Status</b></TableCell>
                           <TableCell key={6} className={classes.tableCell}><b>Allocation</b></TableCell>
-                          <TableCell key={7} className={classes.tableCell}></TableCell>
+                          <TableCell key={7} className={classes.tableCell}/>
                         </TableRow>
                         {bids.map((c, i) => (
                           <TableRow key={i + 1} className={classes.tableRow} hover={true}>

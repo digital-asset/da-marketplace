@@ -10,7 +10,7 @@ import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
 import { Market } from "../pages/trading/Market";
 import { Markets } from "../pages/trading/Markets";
 import { useStreamQueries } from "@daml/react";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Model";
 
 const TradingApp = () => {
   const classes = useStyles();
@@ -30,7 +30,7 @@ const TradingApp = () => {
           <div className={classes.fakeToolbar} />
           <Switch>
             <Route key={"market"} path={"/apps/trading/markets/:contractId"} component={Market} />
-            {entries.map(e => 
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>

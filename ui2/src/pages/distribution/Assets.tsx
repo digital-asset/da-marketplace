@@ -4,8 +4,8 @@ import { Table, TableBody, TableCell, TableRow, TableHead, Grid, Paper, Typograp
 import { useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
-import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Trading/AllocationAccountRule/module";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
+import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
 
 const AssetsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const party = useParty();
