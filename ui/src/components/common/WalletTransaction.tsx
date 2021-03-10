@@ -126,21 +126,19 @@ const WalletTransaction = (props: {
     )
 
     async function onSubmit() {
+        if (!token || !custodianId) { return; }
         const key = wrapDamlTuple([operator, party]);
-
         setShowSuccessMessage(false)
-
-        let args = {}
 
         switch(transactionType) {
             case 'Deposit':
-                args = {
-                    tokenId: token?.contractData.id,
+                const depositArgs = {
+                    tokenId: token.contractData.id,
                     depositQuantity: quantity,
                     custodian: custodianId
                 };
 
-                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, args)
+                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, depositArgs)
                     .then(_ => history.goBack())
 
             case 'Withdraw':
@@ -151,12 +149,12 @@ const WalletTransaction = (props: {
                     throw new AppError("Invalid withdrawal amount", "Withdraw amount exceeds asset total");
                 }
 
-                args = {
+                const withdrawlArgs = {
                     depositCids: selectedAssetDeposits?.map(d => d.contractId),
                     withdrawalQuantity: quantity,
                 };
 
-                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, args)
+                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, withdrawlArgs)
                     .then(_ => history.goBack())
         }
     }

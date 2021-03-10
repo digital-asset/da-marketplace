@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { ContractId } from '@daml/types'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
@@ -192,7 +194,7 @@ const DepositRow: React.FC<DepositRowProps> = ({
 }
 
 type ProviderFormProps = {
-    depositCids: string[];
+    depositCids: ContractId<AssetDeposit>[];
     providers: IPartyInfo[];
     providerLabel?: string;
     totalQty: number;
