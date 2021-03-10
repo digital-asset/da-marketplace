@@ -40,8 +40,9 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
 
     const handleResetMarket = async (baseTokenId: Id, quoteTokenId: Id, cleared: boolean ) => {
         const key = wrapDamlTuple([operator, exchange]);
+        const pair = {_1: baseTokenId, _2: quoteTokenId};
         const args = {
-            pair: wrapDamlTuple([baseTokenId, quoteTokenId]),
+            pair,
             clearedMarket: cleared
         }
         await ledger.exerciseByKey(Exchange.Exchange_ResetMarket, key, args);
@@ -53,8 +54,9 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
         // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
         const [ base, quote ] = unwrapDamlTuple(pair);
-        const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
-        const reset = <Button netative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, false)}/>
+        const pairLabel = <>{base.label} / {quote.label}</>;
+        // const pairLabel = <div className='market-pair-label'>{base.label} <ExchangeIcon/> {quote.label}</div>;
+        const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, false)}/>
         return [pairLabel, '-', '-', '-', '-', reset];
     }) || [];
 
