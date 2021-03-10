@@ -3,8 +3,11 @@
 
 module MatchingEngine where
 
+import DA.Finance.Types
+
 import DA.Action
 import DA.Foldable hiding (elem, null)
+import DA.Next.Set (fromList)
 import DA.List
 import Daml.Trigger
 
@@ -21,6 +24,9 @@ handleMatching = Trigger
   , rule = handleMatchingRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @OrderRequest
                                               , registeredTemplate @OrderCancelRequest
+                                              , registeredTemplate @ClearedOrderRequest
+                                              , registeredTemplate @ClearedOrderCancelRequest
+                                              , registeredTemplate @ClearedOrder
                                               , registeredTemplate @Order ]
   , heartbeat = None
   }
@@ -28,6 +34,7 @@ handleMatching = Trigger
 handleMatchingRule : Party -> TriggerA CurrentOrderId ()
 handleMatchingRule party = do
   debug "Running matching rule..."
+  handleClearedOrders party
 
   -- Acknowledge all 'OrderRequest' and update current ID
   orderRequests <- query @OrderRequest
@@ -91,3 +98,91 @@ handleOrder party orders (orderCid, order) = do
           timeMatched = show time
 
       return ()
+
+handleClearedOrders : Party -> TriggerA CurrentOrderId ()
+handleClearedOrders party = do
+  debug "Running matching rule..."
+
+  -- Acknowledge all 'ClearedOrderRequest' and update current ID
+  orderRequests <- query @ClearedOrderRequest
+  forA_ orderRequests \(cid,_) -> do
+    currentClearedOrderId <- get
+    emitExerciseCmd cid ClearedOrderRequest_Ack with orderId = currentClearedOrderId
+    debug "Acknowledging order"
+    modify (+ 1)
+
+  -- Acknowledge all 'ClearedOrderCancelRequest'
+  orderCancelRequests <- query @ClearedOrderCancelRequest
+  forA_ orderCancelRequests \(cid,_) -> emitExerciseCmd cid ClearedOrderCancel_Ack
+                                     >> debug "Acknowledging order cancel"
+
+  -- Check for matches on all 'ClearedOrder'
+  orders <- query @ClearedOrder
+  forA_ orders (handleClearedOrder party orders)
+
+-- |Check for crossing orders. If found, fill both orders. Matches by price.
+handleClearedOrder : Party -> [ContractPair ClearedOrder] -> ContractPair ClearedOrder -> TriggerA CurrentOrderId ()
+handleClearedOrder party orders (orderCid, order) = do
+  debug $ "Handling order: " <> show order
+  let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeClearedOrder orders
+      oppositeBook' = if not order.isBid
+                      then reverse oppositeBook
+                      else oppositeBook
+      crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
+
+  unless (null crossing) $ fill (orderCid, order) (head crossing)
+
+  where
+    isOppositeClearedOrder : ContractPair ClearedOrder -> Bool
+    isOppositeClearedOrder (opoCid, opo) = opoCid /= orderCid
+                                 && opo.isBid == (not order.isBid)
+                                 && opo.pair == order.pair
+
+    isCrossing : ContractPair ClearedOrder -> ContractPair ClearedOrder -> Bool
+    isCrossing (_, aggressive) (_, passive)
+      | passive.exchParticipant == aggressive.exchParticipant = False
+      | aggressive.isBid = passive.price <= aggressive.price
+      | otherwise        = passive.price >= aggressive.price
+
+    fill : ContractPair ClearedOrder -> ContractPair ClearedOrder -> TriggerA CurrentOrderId ()
+    fill (aggressiveCid, aggressive) (passiveCid, passive) = do
+
+      let fillQty   = min passive.qty aggressive.qty
+          fillPrice = passive.price
+
+      time <- getTime
+
+      emitExerciseCmd aggressiveCid ClearedOrder_Fill with
+          fillQty, fillPrice
+
+      emitExerciseCmd passiveCid ClearedOrder_Fill with
+          fillQty, fillPrice
+
+      let instrumentLabel = order.pair._1.label <> order.pair._2.label <> "CLR"
+          instrumentId = Id with signatories = fromList [party], label = instrumentLabel, version = 0
+
+      let (buyer,seller) = determineParticipants aggressive passive
+
+      dedupCreate ClearedTrade with
+          ccp = order.ccp
+          instrument = instrumentId
+          exchange = party
+          eventId = 0
+          timeMatched = (show time)
+          pair = order.pair
+          trackingNumber = 0
+          buyer = buyer.exchParticipant
+          buyerOrderId = buyer.orderId
+          seller = seller.exchParticipant
+          sellerOrderId = seller.orderId
+          matchId = 0
+          executedQuantity = fillQty
+          executedPrice = fillPrice
+
+      return ()
+
+-- (Buyer,Seller)
+determineParticipants : ClearedOrder -> ClearedOrder -> (ClearedOrder, ClearedOrder)
+determineParticipants order1 order2
+  | order1.isBid = (order1,order2)
+  | otherwise    = (order2,order1)
