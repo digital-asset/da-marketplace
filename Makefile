@@ -7,10 +7,13 @@ TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
 
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
-exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
+# exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
+exberry_adapter_version := $(shell pipenv run python exberry_adapter/setup.py --version)
 trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
 ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
+
+PYTHON := pipenv run python
 
 state_dir := .dev
 daml_build_log = $(state_dir)/daml_build.log
@@ -137,7 +140,12 @@ stop_ccp:
 
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
-	cd exberry_adapter && poetry install && poetry build
+	# cd exberry_adapter && poetry install && poetry build
+	cd exberry_adapter && $(PYTHON) setup.py sdist
+	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
+	# mkdir -p $(@D)
+	# mv exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
+	# rm -r exberry_adapter/dist
 
 $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
 	cd exberry_adapter && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
@@ -197,7 +205,7 @@ $(ccp_bot): $(target_dir) $(ccp_bot_dir)
 	cp automation/ccp/dist/bot-$(ccp_bot_version).tar.gz $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
-	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
+	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
 
 $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
@@ -209,7 +217,7 @@ $(ui):
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(trigger) $(trigger_build) $(exberry_adapter_dir) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf $(state_dir) $(trigger) $(trigger_build) $(exberry_adapter_dir) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit exberry_adapter/dist
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
