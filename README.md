@@ -19,9 +19,9 @@ can be issued and exchanged.
 # Requirements
 To run the marketplace locally or to build to be deployed on DABL, the following requirements are necessary:
 1. DAML SDK (1.7)
-2. `python` (3.8)
+2. `python` (3.x)
 3. `yarn` (1.22.x)
-4. `poetry` (1.0.x)
+4. `pipenv` (2020.x.x)
 5. `make` (3.x)
 6. `yq` (3.x)
 
