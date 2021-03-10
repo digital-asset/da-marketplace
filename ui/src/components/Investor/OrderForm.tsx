@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Button, Form, Header} from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { ContractId } from '@daml/types'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
@@ -15,9 +17,9 @@ import { AppError } from '../common/errorTypes'
 import { useOperator } from '../common/common'
 import { preciseInputSteps } from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 import { OrderKind } from './InvestorTrade'
-import {useRegistryLookup} from '../common/RegistryLookup'
 
 type Props = {
     allowedToOrder: boolean;
@@ -52,7 +54,7 @@ const OrderForm: React.FC<Props> = ({
     const [ baseLabel, quoteLabel ] = tokenPair.map(t => t.label);
     const [ basePrecision, quotePrecision ] = assetPrecisions;
 
-    const validateDeposits = (deposits: DepositInfo[], amount: string): string[] => {
+    const validateDeposits = (deposits: DepositInfo[], amount: string): ContractId<AssetDeposit>[] => {
         const totalAvailableAmount = deposits.reduce(
             (sum, d) => sum + +d.contractData.asset.quantity, 0);
 
@@ -84,6 +86,7 @@ const OrderForm: React.FC<Props> = ({
     const { ccpMap } = useRegistryLookup();
     const placeOrder = async (kind: OrderKind, deposits: DepositInfo[], amount: string) => {
         const key = wrapDamlTuple([exchange, operator, investor]);
+        const pair = {_1: tokenPair[0], _2: tokenPair[1]};
 
         if (isCleared) {
             if (!defaultCCP) {
@@ -98,12 +101,11 @@ const OrderForm: React.FC<Props> = ({
             if (!inGoodStanding) {
                 throw new AppError('Insufficient permissions.', `You must be in good standing with ${ccpName} to place trades on this market.`)
             }
-
             const makeClearedArgs = {
                 price,
                 amount,
                 ccp: defaultCCP, // TODO: Allow user-selectable CCP
-                pair: wrapDamlTuple(tokenPair),
+                pair,
                 baseType: getType(tokenPair[0]),
                 quoteType: getType(tokenPair[1])
             }
@@ -117,12 +119,11 @@ const OrderForm: React.FC<Props> = ({
             }
         } else {
             const depositCids = validateDeposits(deposits, amount);
-
             const args = {
                 price,
                 amount,
                 depositCids,
-                pair: wrapDamlTuple(tokenPair)
+                pair
             }
 
             if (kind === OrderKind.BID) {

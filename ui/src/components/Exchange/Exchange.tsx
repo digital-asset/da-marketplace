@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
-import { Header } from 'semantic-ui-react'
+import { Header, Form } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -51,6 +51,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const loading = usePartyLoading();
     const investorMap = useRegistryLookup().investorMap;
 
+    const [ deployMatchingEngine, setDeployMatchingEngine ] = useState<boolean>(true);
     const registeredExchange = useContractQuery(RegisteredExchange);
     const invitation = useContractQuery(ExchangeInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
@@ -98,6 +99,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const acceptInvite = async () => {
         if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
             deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
+            if (deployMatchingEngine) {
+                deployTrigger(TRIGGER_HASH, MarketplaceTrigger.MatchingEngine, token, publicParty);
+            }
         }
         const key = wrapDamlTuple([operator, exchange]);
         const args = {
@@ -114,6 +118,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
+
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
@@ -122,7 +127,15 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
-                submitProfile={profile => setProfile(profile)}/>
+                submitProfile={profile => setProfile(profile)}>
+                { deploymentMode === DeploymentMode.PROD_DABL &&
+                    <Form.Checkbox
+                        defaultChecked
+                        label='Deploy matching engine (uncheck if you plan to use the Exberry Integration)'
+                        onChange={event => setDeployMatchingEngine(!deployMatchingEngine)}
+                    />
+                }
+                </ExchangeProfile>
         </InviteAcceptTile>
     );
 
