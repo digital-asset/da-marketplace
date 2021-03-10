@@ -28,6 +28,7 @@ class EXBERRY:
     Instrument = 'Exberry.Integration:Instrument'
     FailedInstrumentRequest = 'Exberry.Integration:FailedInstrumentRequest'
     ExecutionReport = 'Exberry.Integration:ExecutionReport'
+    MassCancelRequest = 'Exberry.Integration:MassCancelRequest'
 
 
 class MARKETPLACE:
@@ -39,6 +40,7 @@ class MARKETPLACE:
     ClearedOrder = 'Marketplace.Trading:ClearedOrder'
     ClearedTrade = 'Marketplace.Trading:ClearedTrade'
     Token = 'Marketplace.Token:Token'
+    ResetMarketRequest = 'Marketplace.Exchange:ResetMarketRequest'
     MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
@@ -71,6 +73,57 @@ def main():
             market_pairs[pair['id']['label']] = pair
 
         return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
+
+    @client.ledger_created(MARKETPLACE.ResetMarketRequest)
+    def handle_clear_market(event):
+        sid = get_sid()
+        pair = event.cdata['pair']
+        commands = []
+        instrument = ""
+        if event.cdata['clearedMarket']:
+            logging.info(f"resetting cleared market...")
+            orders = client.find_active(MARKETPLACE.ClearedOrder)
+            for (order_cid, order) in orders.items():
+                if order['pair'] == pair:
+                    commands.append(exercise(order_cid, "ClearedOrder_Cancel"))
+
+            cancel_requests = client.find_active(MARKETPLACE.ClearedOrderCancelRequest)
+            for (req_cid, req) in cancel_requests.items():
+                if req['order']['pair'] == pair:
+                    commands.append(exercise(req_cid, "ClearedOrderCancelRequest_Reject"))
+
+            order_requests = client.find_active(MARKETPLACE.ClearedOrderRequest)
+            for (req_cid, req) in order_requests.items():
+                if req['order']['pair'] == pair:
+                    commands.append(exercise(req_cid, "ClearedOrderRequest_Reject"))
+            instrument = make_instrument(pair, True)
+        else:
+            logging.info(f"resetting regular market...")
+            orders = client.find_active(MARKETPLACE.Order)
+            for (order_cid, order) in orders.items():
+                if order['pair'] == pair:
+                    commands.append(exercise(order_cid, "Order_Cancel"))
+
+            cancel_requests = client.find_active(MARKETPLACE.OrderCancelRequest)
+            for (req_cid, req) in cancel_requests.items():
+                if req['order']['pair'] == pair:
+                    commands.append(exercise(req_cid, "OrderCancelRequest_Reject"))
+
+            order_requests = client.find_active(MARKETPLACE.OrderRequest)
+            for (req_cid, req) in order_requests.items():
+                if req['order']['pair'] == pair:
+                    commands.append(exercise(req_cid, "OrderRequest_Reject"))
+            instrument = make_instrument(pair)
+        commands.append(create(EXBERRY.MassCancelRequest, {
+            'integrationParty': client.party,
+            'sid': sid,
+            'instrument': instrument
+        }))
+        commands.append(exercise(event.cid, "ResetMarketRequest_Ack"))
+
+        return commands
+
+
 
     @client.ledger_created(MARKETPLACE.ExberrySID)
     def handle_exberry_SID(event):

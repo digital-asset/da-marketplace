@@ -193,14 +193,14 @@ template Exchange
 
           exercise orderRequestCid OrderRequest_Ack with ..
 
-      nonconsuming Exchange_ClearMarket : ContractId ClearMarketRequest
+      nonconsuming Exchange_ResetMarket : ContractId ResetMarketRequest
         with
           pair : IdPair
           clearedMarket : Bool
         do
-          create ClearMarketRequest with ..
+          create ResetMarketRequest with ..
 
-template ClearMarketRequest
+template ResetMarketRequest
   with
     exchange : Party
     pair : IdPair
@@ -208,5 +208,5 @@ template ClearMarketRequest
   where
     signatory exchange
     controller exchange can
-      ClearMarketRequest_Ack : ()
+      ResetMarketRequest_Ack : ()
         do return ()

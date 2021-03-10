@@ -11,6 +11,7 @@ import DA.Next.Set (fromList)
 import DA.List
 import Daml.Trigger
 
+import Marketplace.Exchange
 import Marketplace.Trading
 
 import Utils
@@ -23,6 +24,7 @@ handleMatching = Trigger
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @OrderRequest
+                                              , registeredTemplate @ResetMarketRequest
                                               , registeredTemplate @OrderCancelRequest
                                               , registeredTemplate @ClearedOrderRequest
                                               , registeredTemplate @ClearedOrderCancelRequest
@@ -52,6 +54,46 @@ handleMatchingRule party = do
   -- Check for matches on all 'Order'
   orders <- query @Order
   forA_ orders (handleOrder party orders)
+
+  -- Handle all Clear Market Requests
+  resetMarketRequests <- query @ResetMarketRequest
+  forA_ resetMarketRequests (handleResetMarketRequest party)
+
+handleResetMarketRequest : Party -> ContractPair ResetMarketRequest -> TriggerA CurrentOrderId ()
+handleResetMarketRequest party (requestCid,ResetMarketRequest{..}) = do
+  if clearedMarket
+  then do
+    orders <- filter (\(_,o) -> o.pair == pair) <$> query @ClearedOrder
+    orderRequests <- filter (\(_,rq) -> rq.order.pair == pair) <$> query @ClearedOrderRequest
+    orderCancelRequests <- filter (\(_,rq) -> rq.order.pair == pair) <$> query @ClearedOrderCancelRequest
+
+    forA_ orders
+      $ \(oCid,o) -> emitExerciseCmd oCid ClearedOrder_Cancel
+
+    forA_ orderRequests
+      $ \(oCid,o) -> emitExerciseCmd oCid ClearedOrderRequest_Reject
+
+    -- Rejecting these since the orders should already be getting canceled by the above
+    forA_ orderCancelRequests
+      $ \(oCid,o) -> emitExerciseCmd oCid ClearedOrderCancel_Reject
+
+  else do
+    orders <- filter (\(_,o) -> o.pair == pair) <$> query @Order
+    orderRequests <- filter (\(_,rq) -> rq.order.pair == pair) <$> query @OrderRequest
+    orderCancelRequests <- filter (\(_,rq) -> rq.order.pair == pair) <$> query @OrderCancelRequest
+
+    forA_ orders
+      $ \(oCid,o) -> emitExerciseCmd oCid Order_Cancel
+
+    forA_ orderRequests
+      $ \(oCid,o) -> emitExerciseCmd oCid OrderRequest_Reject
+
+    -- Rejecting these since the orders should already be getting canceled by the above
+    forA_ orderCancelRequests
+      $ \(oCid,o) -> emitExerciseCmd oCid OrderCancel_Reject
+
+  void $ emitExerciseCmd requestCid ResetMarketRequest_Ack
+
 
 -- |Check for crossing orders. If found, fill both orders. Matches by price.
 handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA CurrentOrderId ()

@@ -1,12 +1,12 @@
 import React from 'react'
 import _ from 'lodash'
 
-import { useParty } from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
-import { unwrapDamlTuple } from '../common/damlTypes'
+import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import { useOperator } from '../common/common'
 import CardTable from '../common/CardTable'
 import PageSection from '../common/PageSection'
@@ -15,6 +15,8 @@ import { useContractQuery } from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
 import ManualFairValue from './ManualFairValue'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
+import {Button} from 'semantic-ui-react'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -22,6 +24,7 @@ type Props = {
 }
 
 const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
+    const ledger = useLedger();
     const exchange = useParty();
     const operator = useOperator();
 
@@ -35,14 +38,24 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         [operator, exchange]
     ));
 
-    const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value']
+    const handleResetMarket = async (baseTokenId: Id, quoteTokenId: Id, cleared: boolean ) => {
+        const key = wrapDamlTuple([operator, exchange]);
+        const args = {
+            pair: wrapDamlTuple([baseTokenId, quoteTokenId]),
+            clearedMarket: cleared
+        }
+        await ledger.exerciseByKey(Exchange.Exchange_ResetMarket, key, args);
+    }
+
+    const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value', 'Reset Market']
     const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
         // TODO: Show all fair values
         // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
         // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
-        return [pairLabel, '-', '-', '-', '-'];
+        const reset = <Button netative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, false)}/>
+        return [pairLabel, '-', '-', '-', '-', reset];
     }) || [];
 
     const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {
@@ -52,7 +65,8 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         }
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
-        return [pairLabel, '-', '-', '-'];
+        const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, true)}/>
+        return [pairLabel, '-', '-', '-', '-', reset];
     }) || [];
 
     return (

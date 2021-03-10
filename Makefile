@@ -127,7 +127,7 @@ $(ccp_pid): |$(state_dir) $(trigger_build)
 	(daml trigger --dar $(trigger_build) \
 	    --trigger-name CCPTrigger:handleCCP \
 	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Ccp > $(ccp_log) & echo "$$!" > $(ccp_pid))
+	    --ledger-party CCP > $(ccp_log) & echo "$$!" > $(ccp_pid))
 
 start_ccp: $(ccp_pid)
 
