@@ -3,10 +3,11 @@ import { Button, Card, Form, Header } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
 
+import { ContractId } from '@daml/types'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { Order, BrokerOrderRequest, BrokerOrder } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ContractId } from '@daml/types'
 
 import { ExchangeIcon, OrdersIcon } from '../../icons/Icons'
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
@@ -139,7 +140,7 @@ type BrokerOrderCardProps = {
 };
 
 const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
-    const [ depositCid, setDepositCid ] = useState<string>('');
+    const [ depositCid, setDepositCid ] = useState<ContractId<AssetDeposit> | undefined>(undefined);
     const broker = useParty();
     const ledger = useLedger();
 
@@ -160,9 +161,11 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
 
     const handleAcceptBrokerOrderFill = async () => {
         const key = wrapDamlTuple([props.cdata.broker, props.cdata.brokerOrderId])
+        if (!depositCid) { return; }
+
         const args = { depositCid }
         await ledger.exerciseByKey(BrokerOrder.BrokerOrder_Fill, key, args);
-        setDepositCid('');
+        setDepositCid(undefined);
     }
 
     const handleDepositChange = (event: React.SyntheticEvent, result: any) => {
@@ -184,7 +187,7 @@ const BrokerOrderCard: React.FC<BrokerOrderCardProps> = (props) => {
                         <div>{`@ ${price}`}</div>
                         <div>{`customer: ${customer}`}</div>
                         <div>{`id: ${props.cdata.brokerOrderId}`}</div>
-                        <div>{`deposit: ${depositCid.substr(depositCid.length - 8) || ''}`}</div>
+                        <div>{`deposit: ${depositCid?.substr(depositCid.length - 8) || ''}`}</div>
                     </div>
                     <div className='actions'>
                         <Form.Group>
