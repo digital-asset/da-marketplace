@@ -1,4 +1,4 @@
-module Marketplace.Claims.AssetDescription where
+module Marketplace.Issuance.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Id)

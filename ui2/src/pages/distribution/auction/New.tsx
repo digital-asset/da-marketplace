@@ -11,7 +11,7 @@ import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { render } from "../../../components/Claims/render";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

@@ -5,7 +5,7 @@ import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Next.Set
-import Marketplace.Claims.AssetDescription (AssetDescription(..))
+import Marketplace.Issuance.AssetDescription (AssetDescription(..))
 import qualified Marketplace.Operator.Service as Operator
 import qualified Marketplace.Custody.Role as Custodian
 import qualified Marketplace.Custody.Service as Custody

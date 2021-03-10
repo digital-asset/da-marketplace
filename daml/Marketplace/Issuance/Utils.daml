@@ -1,4 +1,4 @@
-module Marketplace.Claims.Utils (
+module Marketplace.Issuance.Utils (
     binaryCallOption
   , enumerateFrom
 ) where

@@ -8,7 +8,7 @@ import { transformClaim } from "../../components/Claims/util";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {

@@ -3,7 +3,7 @@ import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel } from "@material-ui/core";
 import useStyles from "../styles";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
 import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
 import { KeyboardDatePicker, MuiPickersUtilsProvider } from "@material-ui/pickers";

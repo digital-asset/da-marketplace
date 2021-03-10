@@ -13,7 +13,7 @@ import { transformClaim } from "../../../components/Claims/util";
 import { render } from "../../../components/Claims/render";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { getBidAllocation, getBidStatus } from "../Utils";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Claims/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
 
 export const BiddingAuction = () => {
   const classes = useStyles();

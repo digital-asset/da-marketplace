@@ -8,9 +8,9 @@ import DA.Map qualified as Map
 import DA.Next.Set (Set, fromList)
 import DA.Text (unwords)
 import Marketplace.Issuance.Model (Issuance(..))
-import Marketplace.Claims.AssetDescription (AssetDescription(..), Claims)
-import Marketplace.Claims.AssetDescription qualified as AssetDescription
-import Marketplace.Claims.Utils (binaryCallOption)
+import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
+import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Issuance.Utils (binaryCallOption)
 
 template Service
   with
