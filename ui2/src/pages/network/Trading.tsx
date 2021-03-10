@@ -9,9 +9,9 @@ import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace
 import useStyles from "../styles";
 import { getName, getTemplateId } from "../../config";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
-import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
-import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model/module";
-import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Role/module";
+import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
+import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model";
+import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Role";
 
 const TradingComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

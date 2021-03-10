@@ -5,12 +5,12 @@ import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Service/module'
+import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service'
 import useStyles from "../styles";
 import { getName, getTemplateId } from "../../config";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
-import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model/module";
-import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Role/module";
+import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model";
+import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Role";
 
 const ListingComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

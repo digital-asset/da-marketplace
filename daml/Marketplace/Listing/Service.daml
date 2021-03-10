@@ -1,9 +1,9 @@
-module Marketplace.Trading.Listing.Service where
+module Marketplace.Listing.Service where
 
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
 import Marketplace.Trading.Error qualified as Error
-import Marketplace.Trading.Listing.Model (Listing(..), Status(..))
+import Marketplace.Listing.Model (Listing(..), Status(..))
 
 template Service
   with

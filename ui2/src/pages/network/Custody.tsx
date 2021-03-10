@@ -8,9 +8,9 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName, getTemplateId } from "../../config";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
-import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model/module";
-import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Role/module";
-import { Offer, Service, Request } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
+import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regulator/Model";
+import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Role";
+import { Offer, Service, Request } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
 const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

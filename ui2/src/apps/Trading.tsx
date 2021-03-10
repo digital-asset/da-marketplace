@@ -10,7 +10,7 @@ import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
 import { Market } from "../pages/trading/Market";
 import { Markets } from "../pages/trading/Markets";
 import { useStreamQueries } from "@daml/react";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Model";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
 
 const TradingApp = () => {
   const classes = useStyles();

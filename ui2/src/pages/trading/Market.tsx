@@ -5,14 +5,14 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, TextField, Button, Slider, Paper } from "@material-ui/core";
 import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Model/module";
-import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Model/module";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
+import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Model";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service";
 import { withStyles } from "@material-ui/styles";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
-import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 
 const PercentageSlider = withStyles({
   root: {

@@ -3,9 +3,9 @@ import { withRouter, RouteComponentProps } from "react-router-dom";
 import { Table, TableBody, TableCell, TableRow, TableHead, Grid, Paper, Typography } from "@material-ui/core";
 import { useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
-import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
-import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
-import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
+import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
+import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount";
 
 const AssetsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const party = useParty();

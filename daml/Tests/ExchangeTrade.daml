@@ -8,7 +8,7 @@ import qualified Marketplace.Settlement.Model as Settlement
 import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as TradingService
-import qualified Marketplace.Trading.Listing.Service as Listing
+import qualified Marketplace.Listing.Service as Listing
 import DA.List
 
 setup : Script ()

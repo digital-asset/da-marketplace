@@ -5,11 +5,11 @@ import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps
 import useStyles from "../styles";
 import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
-import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement/module";
+import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
-import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

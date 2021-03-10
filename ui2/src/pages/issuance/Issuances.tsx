@@ -6,7 +6,7 @@ import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { Issuance } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Model/module";
+import { Issuance } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Model";
 
 const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

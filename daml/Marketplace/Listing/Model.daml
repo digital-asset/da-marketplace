@@ -1,4 +1,4 @@
-module Marketplace.Trading.Listing.Model where
+module Marketplace.Listing.Model where
 
 import DA.Finance.Types (Id)
 import DA.Next.Set (Set)

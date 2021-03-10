@@ -7,8 +7,8 @@ import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Visibility } from "@material-ui/icons";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
-import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Service";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

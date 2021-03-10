@@ -7,7 +7,7 @@ import useStyles from "../styles";
 import { getName } from "../../config";
 import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription/module";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 
 export const Instrument : React.FC<RouteComponentProps> = () => {
   const classes = useStyles();

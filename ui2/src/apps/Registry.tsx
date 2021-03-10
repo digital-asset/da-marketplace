@@ -7,12 +7,12 @@ import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 import { useLayoutState } from "../context/LayoutContext";
 import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
-import { Requests } from "../pages/registry/Requests";
-import { Instruments } from "../pages/registry/Instruments";
-import { Instrument } from "../pages/registry/Instrument";
-import { New } from "../pages/registry/New";
-import { NewBinaryOption } from "../pages/registry/NewBinaryOption";
-import { NewConvertibleNote } from "../pages/registry/NewConvertibleNote";
+import { Requests } from "../pages/origination/Requests";
+import { Instruments } from "../pages/origination/Instruments";
+import { Instrument } from "../pages/origination/Instrument";
+import { New } from "../pages/origination/New";
+import { NewBinaryOption } from "../pages/origination/NewBinaryOption";
+import { NewConvertibleNote } from "../pages/origination/NewConvertibleNote";
 
 const RegistryApp = () => {
   const classes = useStyles();

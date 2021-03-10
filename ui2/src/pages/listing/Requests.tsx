@@ -8,8 +8,8 @@ import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
-import { CreateListingRequest, DisableListingRequest, Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Service";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing/Model/module";
+import { CreateListingRequest, DisableListingRequest, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
 
 const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
