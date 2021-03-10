@@ -192,3 +192,21 @@ template Exchange
             $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
 
           exercise orderRequestCid OrderRequest_Ack with ..
+
+      nonconsuming Exchange_ClearMarket : ContractId ClearMarketRequest
+        with
+          pair : IdPair
+          clearedMarket : Bool
+        do
+          create ClearMarketRequest with ..
+
+template ClearMarketRequest
+  with
+    exchange : Party
+    pair : IdPair
+    clearedMarket : Bool
+  where
+    signatory exchange
+    controller exchange can
+      ClearMarketRequest_Ack : ()
+        do return ()
