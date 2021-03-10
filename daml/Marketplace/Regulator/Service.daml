@@ -1,18 +1,7 @@
-module Marketplace.Regulator where
+module Marketplace.Regulator.Service where
 
 import DA.Next.Set (Set, fromList)
-
-template VerifiedIdentity
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    observers : Set Party
-    legalName : Text
-    location : Text
-  where
-    signatory operator, provider, customer
-    observer observers
+import Marketplace.Regulator.Model (VerifiedIdentity(..))
 
 template Service
   with

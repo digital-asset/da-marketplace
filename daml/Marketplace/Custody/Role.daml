@@ -1,7 +1,7 @@
-module Marketplace.Custodian where
+module Marketplace.Custody.Role where
 
-import qualified Marketplace.Custody as Custody
-import qualified Marketplace.Issuance as Issuance
+import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Issuance.Service qualified as Issuance
 
 template Role
   with
@@ -14,7 +14,7 @@ template Role
     maintainer key._1
 
     controller provider can
-    
+
       nonconsuming OfferCustodyService : ContractId Custody.Offer
         with
           customer : Party

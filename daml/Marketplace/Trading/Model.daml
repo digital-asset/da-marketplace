@@ -1,4 +1,4 @@
-module Marketplace.Trading.Order where
+module Marketplace.Trading.Model where
 
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..))
@@ -79,4 +79,3 @@ template Order
 
     key (provider, details.id.label) : (Party, Text)
     maintainer key._1
-

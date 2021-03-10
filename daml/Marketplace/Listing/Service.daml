@@ -1,40 +1,9 @@
-module Marketplace.Trading.Listing where
+module Marketplace.Listing.Service where
 
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
 import Marketplace.Trading.Error qualified as Error
-
-type T = Listing
-
-data Status
-    = Active
-    | Disabled
-  deriving (Eq, Show)
-
-template Listing
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    listingId : Text
-    calendarId : Text
-    description : Text
-    tradedAssetId : Id
-    quotedAssetId : Id
-    tradedAssetPrecision : Int
-    quotedAssetPrecision : Int
-    minimumTradableQuantity : Decimal
-    maximumTradableQuantity : Decimal
-    providerId : Text
-    status : Status
-    observers : Set Party
-  where
-    signatory operator, provider, customer
-    observer observers
-
-    -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
-    key (operator, provider, listingId) : (Party, Party, Text)
-    maintainer key._1
+import Marketplace.Listing.Model (Listing(..), Status(..))
 
 template Service
   with

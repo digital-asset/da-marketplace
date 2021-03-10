@@ -10,12 +10,12 @@ import DA.Finance.Types
 import DA.Optional
 import Daml.Script
 import Common
-import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
-import Marketplace.Settlement qualified as Settle
+import Marketplace.Settlement.Model qualified as Settle
 
 data Fixture = Fixture with
   bank : Party

@@ -5,7 +5,7 @@ import { useLayoutState } from "../../context/LayoutContext";
 import useStyles from "../../pages/styles";
 import { useStreamQueries } from "@daml/react";
 import { getName } from "../../config";
-import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 
 export const BottomDrawer = () => {
   const classes = useStyles();

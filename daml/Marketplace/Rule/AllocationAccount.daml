@@ -1,4 +1,4 @@
-module Marketplace.Trading.AllocationAccountRule where
+module Marketplace.Rule.AllocationAccount where
 
 import DA.Record
 import DA.Next.Set (Set, insert)

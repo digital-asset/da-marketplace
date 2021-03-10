@@ -3,13 +3,12 @@ import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel, IconButton, Box } from "@material-ui/core";
 import useStyles from "../styles";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/AssetDescription/module";
 import { render } from "../../components/Claims/render";
 import { transformClaim } from "../../components/Claims/util";
-import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
 import { RouteComponentProps, withRouter } from "react-router-dom";
-import { RequestCreateListing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
 import { Visibility } from "@material-ui/icons";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
 
 const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const classes = useStyles();

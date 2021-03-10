@@ -23,3 +23,6 @@ start-navigator: no
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
+build-options:
+  - --target=1.11
+  - --ghc-option=-Wno-deprecations

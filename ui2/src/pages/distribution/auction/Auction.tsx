@@ -7,7 +7,7 @@ import useStyles from "../../styles";
 import { Auction as AuctionContract, Status as AuctionStatus } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
-import { Auction as BiddingAuction, Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module";
+import { Auction as BiddingAuction, Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { CreateEvent } from "@daml/ledger";
 import { getAuctionStatus, getBidStatus, getBidAllocation } from "../Utils";
 import { DateTime } from "luxon"

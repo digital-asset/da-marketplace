@@ -5,14 +5,14 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { Typography, Grid, Table, TableBody, TableCell, TableRow, TextField, Button, Slider, Paper } from "@material-ui/core";
 import { useParams, RouteComponentProps } from "react-router-dom";
 import useStyles from "../styles";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Listing";
-import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Order/module";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
+import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Model";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service";
 import { withStyles } from "@material-ui/styles";
 import { CreateEvent } from "@daml/ledger";
 import { ContractId } from "@daml/types";
-import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/module";
+import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 
 const PercentageSlider = withStyles({
   root: {
@@ -68,7 +68,7 @@ export const Market : React.FC<RouteComponentProps> = () => {
 
   const { contractId } = useParams<any>();
   const cid = contractId.replace("_", "#");
-  
+
   const party = useParty();
   const ledger = useLedger();
   const services = useStreamQueries(Service).contracts;
@@ -81,7 +81,7 @@ export const Market : React.FC<RouteComponentProps> = () => {
   const limits = orders.filter(c => c.payload.details.orderType.tag === "Limit")
   const bids = limits.filter(c => c.payload.details.side === Side.Buy).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
   const asks = limits.filter(c => c.payload.details.side === Side.Sell).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
-  
+
   if (!listing || clientServices.length === 0) return (<></>); // TODO: Return 404 not found
   const service = clientServices[0];
 

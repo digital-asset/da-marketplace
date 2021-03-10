@@ -1,4 +1,4 @@
-module Marketplace.Claims (
+module Marketplace.Issuance.Utils (
     binaryCallOption
   , enumerateFrom
 ) where
@@ -16,7 +16,7 @@ import Prelude hiding (sum)
 
 type C = Claim Observation Date Id
 type F = ClaimF Observation Date Id
- 
+
 -- Functor unzip
 funzip : Functor f => f (a, b) -> (f a, f b)
 funzip = fmap fst &&& fmap snd

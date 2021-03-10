@@ -1,4 +1,4 @@
-module Marketplace.Custody where
+module Marketplace.Custody.Service where
 
 import ContingentClaims.Claim (Claim, deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as ContingentClaims
@@ -13,10 +13,9 @@ import DA.Map (Map)
 import DA.Map qualified as Map
 import DA.Next.Set
 import DA.Optional (fromSomeNote)
-import Marketplace.AssetDescription ()
-import Marketplace.AssetDescription (AssetDescription, Claims)
-import Marketplace.AssetDescription qualified as AssetDescription
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
+import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
+import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 
 template Service
   with

@@ -5,9 +5,9 @@ import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Service, CreateIssuanceRequest, ReduceIssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance'
 import useStyles from "../styles";
 import { getName } from "../../config";
+import { Service, CreateIssuanceRequest, ReduceIssuanceRequest } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
 
 const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

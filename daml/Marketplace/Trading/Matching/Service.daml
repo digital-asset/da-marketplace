@@ -1,10 +1,10 @@
-module Marketplace.Trading.Matching where
+module Marketplace.Trading.Matching.Service where
 
 import DA.Next.Set (fromList)
-import Marketplace.Settlement qualified as Settlement
-import Marketplace.Trading.Order qualified as Order
+import Marketplace.Settlement.Model qualified as Settlement
+import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
-import Marketplace.Trading.Confirmation qualified as Confirmation
+import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 
 template Service
   with

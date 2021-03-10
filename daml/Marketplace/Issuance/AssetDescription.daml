@@ -1,4 +1,4 @@
-module Marketplace.AssetDescription where
+module Marketplace.Issuance.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Id)
@@ -53,7 +53,7 @@ template Index
     signatory descriptionSignatories
     key (descriptionSignatories, assetLabel) : (Set Party, Text)
     maintainer key._1
- 
+
     controller descriptionSignatories can
       LookupOrInsert : (ContractId Index, Version) with claims : Claims
         do

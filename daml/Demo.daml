@@ -10,9 +10,9 @@ import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Types (Id(..))
 import DA.Next.Set (fromList)
-import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
-import Marketplace.Issuance qualified as Issuance
+import Marketplace.Issuance.Service qualified as Issuance
 
 demo : Script ()
 demo = do
