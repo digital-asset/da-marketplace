@@ -7,10 +7,12 @@ TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
 
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
-exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
+exberry_adapter_version := $(shell cd exberry_adapter && pipenv run python setup.py --version)
 trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
 ui_version := $(shell node -p "require(\"./ui/package.json\").version")
 
+
+PYTHON := pipenv run python
 
 state_dir := .dev
 daml_build_log = $(state_dir)/daml_build.log
@@ -19,7 +21,7 @@ sandbox_log := $(state_dir)/sandbox.log
 
 trigger_build := triggers/.daml/dist/da-marketplace-triggers-$(trigger_version).dar
 
-exberry_adapter_dir := exberry_adapter/bot.egg-info
+exberry_adapter_dir := exberry_adapter/dist
 adapter_pid := $(state_dir)/adapter.pid
 adapter_log := $(state_dir)/adapter.log
 
@@ -137,7 +139,8 @@ stop_ccp:
 
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
-	cd exberry_adapter && poetry install && poetry build
+	cd exberry_adapter && $(PYTHON) setup.py sdist
+	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
 
 $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
 	cd exberry_adapter && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
@@ -197,9 +200,9 @@ $(ccp_bot): $(target_dir) $(ccp_bot_dir)
 	cp automation/ccp/dist/bot-$(ccp_bot_version).tar.gz $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
-	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
+	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
 
-$(ui):
+$(ui): $(exberry_adapter)
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui && yarn install
 	cd ui && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_build) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}')  yarn build
