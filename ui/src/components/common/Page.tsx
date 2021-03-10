@@ -11,6 +11,7 @@ type Props = {
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
+    notificationOn?: () => void;
     topMenuButtons?: ITopMenuButtonInfo[];
     landingPage?: boolean;
 }
@@ -22,6 +23,7 @@ const Page: React.FC<Props> = ({
     sideNav,
     notifications,
     onLogout,
+    notificationOn,
     topMenuButtons,
     activeMenuTitle,
     landingPage
@@ -36,6 +38,7 @@ const Page: React.FC<Props> = ({
             <Grid.Column className='page-body'>
                 <TopMenu
                     onLogout={onLogout}
+                    notificationOn={notificationOn}
                     title={menuTitle}
                     notifications={notifications}
                     topMenuButtons={topMenuButtons}

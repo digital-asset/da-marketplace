@@ -168,7 +168,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                                     return [...tokenPairs, ...clearedMarkets]
                                 }).flat()
-                                :
+                            :
                             <Menu.Item className='empty-item'>
                                 <p className='p2 dark'>
                                     <i>None yet. Join an Exchange to be added to available markets.</i>
@@ -238,7 +238,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/notifications`}>
             <NotificationCenter
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                notificationOn={() => console.log(path,url)}
+                />
         </Route>
 
     </Switch>

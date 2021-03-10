@@ -1,5 +1,5 @@
 import React from 'react'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useRouteMatch } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
 import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
@@ -18,12 +18,13 @@ type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
+    notificationOn?: () => void;
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
     landingPage?: boolean;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage }) => {
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, notificationOn, topMenuButtons, activeMenuTitle, landingPage }) => {
     const history = useHistory()
 
     return (
@@ -53,7 +54,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             </OverflowMenu>
                         </Menu.Item>}
                     <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
-                        <Button className='ghost smaller'>
+                        <Button className='ghost smaller' onClick={notificationOn}>
                             <div >
                                 <NotificationCenterIcon />
                             </div>
