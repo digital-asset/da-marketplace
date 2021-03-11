@@ -238,9 +238,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/notifications`}>
             <NotificationCenter
                 sideNav={sideNav}
-                onLogout={onLogout}
-                notificationOn={() => console.log(path,url)}
-                />
+                onLogout={onLogout}/>
         </Route>
 
     </Switch>

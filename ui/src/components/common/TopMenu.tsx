@@ -1,8 +1,12 @@
 import React from 'react'
-import { useHistory, useRouteMatch } from 'react-router-dom'
+import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
+import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
+import { roleRoute } from '../common/utils'
 
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
@@ -18,14 +22,17 @@ type Props = {
     title?: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
-    notificationOn?: () => void;
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
     landingPage?: boolean;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, notificationOn, topMenuButtons, activeMenuTitle, landingPage }) => {
-    const history = useHistory()
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage }) => {
+    const history = useHistory();
+    const userContracts = useContractQuery(User);
+    const currentRole = userContracts[0]?.contractData?.currentRole;
+
+    const baseUrl = roleRoute(currentRole);
 
     return (
         <div className='top-section'>
@@ -54,7 +61,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, notification
                             </OverflowMenu>
                         </Menu.Item>}
                     <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
-                        <Button className='ghost smaller' onClick={notificationOn}>
+                        <Button className='ghost smaller' onClick={() => history.push(`${baseUrl}/notifications`)}>
                             <div >
                                 <NotificationCenterIcon />
                             </div>
