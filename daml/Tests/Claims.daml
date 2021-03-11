@@ -3,9 +3,10 @@
 
 module Tests.Claims where
 
-import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..))
+import ContingentClaims.Claim hiding (C, F)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
+import ContingentClaims.Observation qualified as O
 import ContingentClaims.Lifecycle qualified as Lifecycle
 import ContingentClaims.FinancialClaim
 import DA.Assert ((===))
@@ -13,7 +14,7 @@ import DA.Finance.Types (Id(..))
 import DA.Date (date, Month(..))
 import Daml.Control.Recursion
 import Daml.Script
-import Prelude hiding (enumerate, length)
+import Prelude hiding (enumerate, length, or, and)
 import Marketplace.Claims (enumerateFrom)
 
 type C = Claim Observation Date Id
@@ -62,13 +63,26 @@ enumerateTest = do
      ) )
    ) )
 
-lifecyleBond = script do
+prune : (Text -> Date -> Script Decimal) -> Id -> Decimal -> Date -> Script (C -> Script C) 
+prune spot asset qty dt = pure $ \claim -> Lifecycle.pruneLeaf spot asset qty claim dt
+
+lifecycling = script do
   let bond : C = cpb 100_000.0 0.03 a $ couponDates 2021 2021 [Jan .. Dec] 15
       spot : Text -> Date -> Script Decimal
-      spot _ _ = pure 0.0
-      prune : Id -> Decimal -> Date -> Script (C -> Script C) 
-      prune asset qty dt = pure $ \claim -> Lifecycle.pruneLeaf spot asset qty claim dt
+      spot _ _ = pure (0.0 : Decimal)
       chooseLeft = const
-  [lifecycle'] <- Lifecycle.lifecycle prune spot chooseLeft bond (date 2021 Jan 15)
+  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft bond (date 2021 Jan 15)
   lifecycledBond <- lifecycle' bond
   lifecycledBond === bond.rhs
+
+  --FIXME how to make subtraction work naturally? Check `Numeric` source code?
+  let option : C = european (date 2021 Mar 9) $ Scale (O.observe "USD" O.+ ((O.-) (O.pure 42.0))) (One a)
+      spot _ _ = pure (43.4 : Decimal)
+  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft option (date 2021 Mar 9)
+  lifecycledOpt <- lifecycle' option
+  lifecycledOpt === Zero
+
+  let weirdNote : C = when (at $ date 2021 Mar 9) $ one a `or` one b
+  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft weirdNote (date 2021 Mar 9)
+  lifecycledNote <- lifecycle' weirdNote
+  lifecycledNote === Zero
