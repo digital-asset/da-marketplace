@@ -45,11 +45,22 @@ function isErrorMessage(event: object): event is StreamErrors {
 function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ websocket, setWebsocket ] = useState<WebSocket | null>(null);
     const [ contracts, setContracts ] = useState<ContractInfo<any>[]>([]);
+    const [ active, setActive ] = useState(false);
     const [ loading, setLoading ] = useState(true);
     const [ errors, setErrors ] = useState<StreamErrors>();
 
+    // let timer: NodeJS.Timeout = setInterval(() => clearInterval(timer), 1000);
+
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
+            console.log(message);
+            // clearInterval(timer);
+            // timer = setInterval(() => {
+            //     console.log('timer...');
+            //     setActive(false);
+            //     clearInterval(timer);
+            // },10000);
+            setActive(true);
             const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
 
             if (data.offset !== undefined) {
@@ -101,7 +112,9 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
         return (event: CloseEvent) => {
             // if this connection was closed unintentionally, reopen it
             if (event.code !== KEEP_CLOSED) {
-                openWebsocket(token, templateIds);
+                openWebsocket(token, templateIds).then(ws => {
+                    setWebsocket(ws);
+                });
             }
         }
     }, [openWebsocket])
@@ -120,7 +133,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                 setWebsocket(null);
             }
         }
-    }, [errors, token, templateIds, websocket, setWebsocket, openWebsocket])
+    }, [errors, token, templateIds, setWebsocket, openWebsocket])
 
     useEffect(() => {
         if (websocket && token) {
@@ -134,7 +147,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
         }
     }, [token, websocket, messageHandlerScoped])
 
-    return { contracts, errors, loading };
+    return { contracts, errors, loading, active };
 }
 
 export default useDamlStreamQuery;
