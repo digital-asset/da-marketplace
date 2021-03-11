@@ -1,6 +1,7 @@
 import React from "react";
-import { History } from 'history'; 
-import { dablLoginUrl, getParty, getToken } from "../config";
+import { History } from 'history';
+import { getName } from "../config";
+import Credentials, { clearCredentials, retrieveCredentials, storeCredentials } from "../Credentials";
 
 const UserStateContext = React.createContext<UserState>({ isAuthenticated: false, name: "", party: "", token: "" });
 const UserDispatchContext = React.createContext<React.Dispatch<any>>({} as React.Dispatch<any>);
@@ -27,16 +28,25 @@ function userReducer(state : UserState, action : any) {
 }
 
 const UserProvider : React.FC = ({ children }) => {
-  const name = localStorage.getItem("daml.name")
-  const party = localStorage.getItem("daml.party")
-  const token = localStorage.getItem("daml.token")
+  const credentials = retrieveCredentials();
 
-  var [state, dispatch] = React.useReducer(userReducer, {
-    isAuthenticated: !!token,
-    name: name || "",
-    party: party || "",
-    token: token || ""
-  });
+  var initialUserState: UserState = {
+    isAuthenticated: false,
+    name: "",
+    party: "",
+    token: ""
+  }
+
+  if (credentials) {
+    initialUserState = {
+      isAuthenticated: true,
+      name: getName(credentials),
+      party: credentials.party,
+      token: credentials.token
+    }
+  }
+
+  var [state, dispatch] = React.useReducer(userReducer, initialUserState);
 
   return (
     <UserStateContext.Provider value={state}>
@@ -68,43 +78,37 @@ function useUserDispatch() {
 
 async function loginUser(
     dispatch : React.Dispatch<any>,
-    name : string,
     history : History,
-    setIsLoading : React.Dispatch<React.SetStateAction<boolean>>,
-    setError : React.Dispatch<React.SetStateAction<boolean>>) {
-  setError(false);
-  setIsLoading(true);
+    credentials : Credentials) {
+  // setError(false);
+  // setIsLoading(true);
+  const { party, token } = credentials;
+  const name = getName(credentials);
 
   if (!!name) {
-    
-    var party = getParty(name);
-    var token = getToken(party);
-    localStorage.setItem("daml.name", name);
-    localStorage.setItem("daml.party", party);
-    localStorage.setItem("daml.token", token);
-
+    storeCredentials(credentials);
     dispatch({ type: "LOGIN_SUCCESS", name, party, token });
-    setError(false);
-    setIsLoading(false);
+    // setError(false);
+    // setIsLoading(false);
     history.push("/apps");
   } else {
     dispatch({ type: "LOGIN_FAILURE" });
-    setError(true);
-    setIsLoading(false);
+    // setError(true);
+    // setIsLoading(false);
   }
 }
 
-const loginDablUser = () => {
-  window.location.assign(`https://${dablLoginUrl}`);
-}
+// const loginDablUser = () => {
+//   window.location.assign(`https://${dablLoginUrl}`);
+// }
 
 function signOut(dispatch : React.Dispatch<any>, history : History) {
   // event.preventDefault();
-  localStorage.removeItem("daml.party");
-  localStorage.removeItem("daml.token");
-
+  // localStorage.removeItem("daml.party");
+  // localStorage.removeItem("daml.token");
+  clearCredentials();
   dispatch({ type: "SIGN_OUT_SUCCESS" });
   history.push("/login");
 }
 
-export { UserProvider, useUserState, useUserDispatch, loginUser, loginDablUser, signOut };
+export { UserProvider, useUserState, useUserDispatch, loginUser, signOut };

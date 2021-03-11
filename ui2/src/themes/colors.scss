@@ -1,0 +1,48 @@
+/** Creates color properties such as var(--cool-grey-50) */
+@mixin set-color-properties($color-name, $hue, $sat, $start-step) {
+  @for $i from $start-step through 100 {
+      @if $i % 10 == 0 {
+          --#{$color-name}-#{$i}: hsl(#{$hue}, #{$sat}, #{getHslLightness($i) + "%"});
+      }
+  }
+}
+
+@function getHslLightness($lightness) {
+  @if $lightness == 100 {
+      @return 98;
+  }
+  @return $lightness;
+}
+
+
+:root {
+  @include set-color-properties('cool-grey', 220, 24%, 10);
+  @include set-color-properties('green', 108, 80%, 40);
+  @include set-color-properties('blue', 224, 82%, 40);
+  @include set-color-properties('red', 349, 90%, 40);
+  @include set-color-properties('yellow', 62, 100%, 40);
+
+  --white: #FFFFFF;
+
+  // --white: #FFFFFF;
+  // --grey1: #FAFAFA;
+  // --grey2: #F0F0F0;
+  // --grey3: #F6F6F6;
+  // --grey4: #262626;
+
+  // --dabl-color: #3a62Ca;
+  // --lightblue: #F4F8FE;
+  // --lightblue2: #EFF3FF;
+  // --lightblue-border: #ECF0FC;
+  // --mediumblue: #E5EEFD;
+  // --bluegrey1: #A0ACC5;
+
+  // --textcolor: #303132;
+}
+
+$background-dark: var(--cool-grey-20);
+$background-light: var(--white);
+
+.dark {
+  color: var(--white);
+}

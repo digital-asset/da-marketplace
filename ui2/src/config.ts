@@ -1,35 +1,50 @@
-import * as jwt from "jsonwebtoken";
-import { parties } from "./parties";
-import { names } from "./names";
-import { tokens } from "./tokens";
+// Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// SPDX-License-Identifier: Apache-2.0
 
-export const isLocalDev = process.env.NODE_ENV === 'development';
+import { partyNameFromJwtToken } from "@daml/hub-react/lib";
+import { Credentials, isCredentials, retrieveCredentials } from "./Credentials";
+import { retrieveParties } from "./Parties";
 
-const host = window.location.host.split('.');
-const ledgerId = isLocalDev ? "da-marketplace-sandbox" : host[0];
-const apiUrl = host.slice(1);
-apiUrl.unshift('api');
-
-export const httpBaseUrl = isLocalDev ? undefined : ('https://' + apiUrl.join('.') + (window.location.port ? ':' + window.location.port : '') + '/data/' + ledgerId + '/');
-export const wsBaseUrl = isLocalDev ? 'ws://localhost:7575/' : undefined;
-
-const applicationId = "se2life";
-const createToken = (party : string) => jwt.sign({ "https://daml.com/ledger-api": { ledgerId, applicationId, admin: true, actAs: [party], readAs: [party, "Public"] } }, "secret");
-
-let loginUrl = host.slice(1)
-loginUrl.unshift('login')
-export const dablLoginUrl = loginUrl.join('.') + (window.location.port ? ':' + window.location.port : '') + '/auth/login?ledgerId=' + ledgerId;
-
-export function getParty(name : string) {
-  return isLocalDev ? name : (parties.get(name) || "");
+export enum DeploymentMode {
+  DEV,
+  PROD_DABL,
+  PROD_OTHER,
 }
 
-export function getName(party : string) {
-  return isLocalDev ? party : (names.get(party) || "");
-}
+export const dablHostname = window.location.hostname.split('.').slice(1).join('.');
 
-export function getToken(party : string) {
-  return isLocalDev ? createToken(party) : (tokens.get(party) || "");
+export const deploymentMode: DeploymentMode =
+  process.env.NODE_ENV === 'development'
+  ? DeploymentMode.DEV
+  : dablHostname.includes('projectdabl')
+  ? DeploymentMode.PROD_DABL
+  : DeploymentMode.PROD_OTHER;
+
+// Decide the ledger ID based on the deployment mode first,
+// then an environment variable, falling back on the sandbox ledger ID.
+export const ledgerId: string =
+  deploymentMode === DeploymentMode.PROD_DABL
+  ? window.location.hostname.split('.')[0]
+  : process.env.REACT_APP_LEDGER_ID
+  ?? 'da-marketplace-sandbox';
+
+export const httpBaseUrl =
+  deploymentMode === DeploymentMode.PROD_DABL
+  ? `https://api.${dablHostname}/data/${ledgerId}/`
+  : undefined;
+
+
+export const getName = (partyOrCreds : string | Credentials): string => {
+  if (isCredentials(partyOrCreds)) {
+    const creds = partyOrCreds;
+    return partyNameFromJwtToken(creds.token) || creds.party;
+  } else {
+    const party = partyOrCreds;
+    const importedParties = retrieveParties();
+    const details = importedParties?.find(p => p.party === party);
+
+    return details ? details.partyName : party;
+  }
 }
 
 export function getTemplateId(t : string) {
