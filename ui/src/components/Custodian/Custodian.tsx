@@ -15,15 +15,20 @@ import {
 
 import { UserIcon } from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
 
-import { useOperator } from '../common/common'
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+
+import { useOperator, useDablParties } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
 
 import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
@@ -39,6 +44,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const custodian = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const relationshipParties = useContractQuery(CustodianRelationship)
         .map(relationship => relationship.contractData.party)
@@ -108,7 +114,13 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
+        }
         const key = wrapDamlTuple([operator, custodian]);
         const args = {
             name: profile.name.value,
@@ -189,7 +201,8 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredCustodian.length === 0 ? inviteScreen : custodianScreen
+    const shouldLoad = loading || (registeredCustodian.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredCustodian.length !== 0 ? custodianScreen : inviteScreen
 }
 
 export default Custodian;

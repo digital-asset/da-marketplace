@@ -1,21 +1,28 @@
 import React, { useState, useEffect } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
-import { Header } from 'semantic-ui-react'
+import { Header, Form } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { ExchangeInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {
+    Exchange as ExchangeTemplate,
+    ExchangeInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { PublicIcon, UserIcon } from '../../icons/Icons'
 
-import { useOperator } from '../common/common'
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+
+import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { getAbbreviation } from '../common/utils';
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -26,6 +33,7 @@ import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
 
 import MarketPairs from './MarketPairs'
@@ -40,8 +48,10 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const exchange = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
     const investorMap = useRegistryLookup().investorMap;
 
+    const [ deployMatchingEngine, setDeployMatchingEngine ] = useState<boolean>(true);
     const registeredExchange = useContractQuery(RegisteredExchange);
     const invitation = useContractQuery(ExchangeInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
@@ -83,7 +93,16 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
+            if (deployMatchingEngine) {
+                deployTrigger(TRIGGER_HASH, MarketplaceTrigger.MatchingEngine, token, publicParty);
+            }
+        }
         const key = wrapDamlTuple([operator, exchange]);
         const args = {
             name: profile.name.value,
@@ -99,6 +118,7 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                     {to: `${url}/market-pairs`, label: 'Market Pairs', icon: <PublicIcon/>},
                                     {to: `${url}/participants`, label: 'Investors', icon: <UserIcon/>}
                                  ]}/>
+
     const inviteScreen = (
         <InviteAcceptTile role={MarketRole.ExchangeRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <ExchangeProfile
@@ -107,7 +127,15 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 role={MarketRole.ExchangeRole}
                 inviteAcceptTile
                 defaultProfile={profile}
-                submitProfile={profile => setProfile(profile)}/>
+                submitProfile={profile => setProfile(profile)}>
+                { deploymentMode === DeploymentMode.PROD_DABL &&
+                    <Form.Checkbox
+                        defaultChecked
+                        label='Deploy matching engine (uncheck if you plan to use the Exberry Integration)'
+                        onChange={event => setDeployMatchingEngine(!deployMatchingEngine)}
+                    />
+                }
+                </ExchangeProfile>
         </InviteAcceptTile>
     );
 
@@ -150,7 +178,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.ExchangeRole}
+                            <MarketRelationships
+                                relationshipRequestChoice={ExchangeTemplate.Exchange_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
@@ -180,7 +209,8 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
             </Switch>
         </div>
 
-    return registeredExchange.length === 0 ? inviteScreen : exchangeScreen
+    const shouldLoad = loading || (registeredExchange.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredExchange.length !== 0 ? exchangeScreen : inviteScreen
 }
 
 export default Exchange;

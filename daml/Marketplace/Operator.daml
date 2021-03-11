@@ -8,6 +8,15 @@ import Marketplace.Investor
 import Marketplace.Issuer
 
 
+template PublicAppInfo
+  with
+    operator : Party
+    public : Party
+  where
+    signatory operator
+    observer public
+
+
 template Operator
   with
     operator : Party

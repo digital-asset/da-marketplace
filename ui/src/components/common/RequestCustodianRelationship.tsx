@@ -2,17 +2,12 @@ import React, { useState } from 'react'
 
 import { useParty, useLedger } from '@daml/react'
 
-import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
-import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
 
-import { wrapDamlTuple, CustodianRelationshipInfo } from './damlTypes'
+import { wrapDamlTuple, CustodianRelationshipInfo, RelationshipRequestChoice } from './damlTypes'
 import { useOperator } from './common'
 
 import AddRelationshipTile from '../common/AddRelationshipTile'
@@ -20,11 +15,14 @@ import AddRelationshipTile from '../common/AddRelationshipTile'
 import AddRegisteredPartyModal from './AddRegisteredPartyModal'
 
 type Props = {
-    role: MarketRole;
+    relationshipRequestChoice: RelationshipRequestChoice;
     custodianRelationships: CustodianRelationshipInfo[];
 }
 
-const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelationships }) => {
+const RequestCustodianRelationship: React.FC<Props> = ({
+    relationshipRequestChoice,
+    custodianRelationships
+}) => {
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
     const ledger = useLedger();
@@ -39,27 +37,11 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
             !requestCustodians.includes(custodian.contractData.custodian) &&
             !relationshipCustodians.includes(custodian.contractData.custodian));
 
-    const requestCustodianRelationship = async (custodianId: string) => {
+    const requestCustodianRelationship = async (custodianIds: string[]) => {
         const key = wrapDamlTuple([operator, party]);
 
-        const args = { custodian: custodianId };
-
-        switch(role) {
-            case MarketRole.InvestorRole:
-                await ledger.exerciseByKey(Investor.Investor_RequestCustodianRelationship, key, args);
-                break;
-            case MarketRole.IssuerRole:
-                await ledger.exerciseByKey(Issuer.Issuer_RequestCustodianRelationship, key, args);
-                break;
-            case MarketRole.BrokerRole:
-                await ledger.exerciseByKey(Broker.Broker_RequestCustodianRelationship, key, args);
-                break;
-            case MarketRole.ExchangeRole:
-                await ledger.exerciseByKey(Exchange.Exchange_RequestCustodianRelationship, key, args);
-                break;
-            default:
-                throw new Error(`The role '${role}' can not request a custodian relationship.`);
-        }
+        await Promise.all(custodianIds.map(custodian =>
+            ledger.exerciseByKey(relationshipRequestChoice, key, { custodian })))
     }
 
     const partyOptions = registeredCustodians.map(d => {
@@ -78,10 +60,10 @@ const RequestCustodianRelationship: React.FC<Props> = ({ role, custodianRelation
                 label='Add Custodian'/>
             {showAddRelationshipModal &&
                 <AddRegisteredPartyModal
+                    multiple
                     title='Add Custodian'
                     partyOptions={partyOptions}
                     onRequestClose={() => setShowAddRelationshipModal(false)}
-                    multiple={false}
                     onSubmit={requestCustodianRelationship}/>
             }
         </>

@@ -6,6 +6,7 @@ module OperatorTrigger where
 import DA.Action
 import DA.Foldable hiding (elem, null)
 import qualified DA.Next.Set as Set
+import DA.List
 
 import Daml.Trigger
 
@@ -23,6 +24,7 @@ handleOperator = Trigger
   , updateState = \_ -> return ()
   , rule = handleOperatorRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator
+                                              , registeredTemplate @PublicAppInfo
                                               , registeredTemplate @UserSession
                                               , registeredTemplate @UserRoleChangeRequest
                                               , registeredTemplate @Token
@@ -40,29 +42,36 @@ handleOperator = Trigger
 handleOperatorRule : Party -> TriggerA () ()
 handleOperatorRule party = do
   debug "Running operator rule..."
+  operators <- query @Operator
+  unless (null operators) $ do
+    let public = (snd . head $ operators).public
+    appInfos <- query @PublicAppInfo
+    when (null appInfos)
+      $ dedupCreate PublicAppInfo with operator = party, ..
+      >> debug "Setting up PublicAppInfo..."
 
-  -- Acknowledge all active 'UserSession's
-  userSessions <- query @UserSession
-  forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
-                               >> debug ("Acknowledging user session: " <> show us)
+    -- Acknowledge all active 'UserSession's
+    userSessions <- query @UserSession
+    forA_ userSessions \(cid,us) -> emitCommands [exerciseCmd cid UserSession_Ack] [toAnyContractId cid]
+                                 >> debug ("Acknowledging user session: " <> show us)
 
-  -- Process user role change requests
-  userRoleRequests <- query @UserRoleChangeRequest
-  forA_ userRoleRequests \(cid,rr) -> emitCommands [exerciseCmd cid UserRoleChangeRequest_Approve] [toAnyContractId cid]
-                                   >> debug ("Acknowledging user role change request: " <> show rr)
+    -- Process user role change requests
+    userRoleRequests <- query @UserRoleChangeRequest
+    forA_ userRoleRequests \(cid,rr) -> emitCommands [exerciseCmd cid UserRoleChangeRequest_Approve] [toAnyContractId cid]
+                                     >> debug ("Acknowledging user role change request: " <> show rr)
 
-  -- Add all current parties to 'Token' observers if 'isPublic'
-  tokens      <- query @Token
-  derivatives <- query @Derivative
-  brokers     <- map ((.broker) . snd)    <$> query @RegisteredBroker
-  custodians  <- map ((.custodian) . snd) <$> query @RegisteredCustodian
-  exchanges   <- map ((.exchange) . snd)  <$> query @RegisteredExchange
-  investors   <- map ((.investor) . snd)  <$> query @RegisteredInvestor
-  ccps        <- map ((.ccp) . snd)       <$> query @RegisteredCCP
-  issuers     <- map ((.issuer) . snd)    <$> query @RegisteredIssuer
-  let parties = brokers <> custodians <> exchanges <> investors <> ccps <> issuers
-  forA_ tokens (handleToken party parties)
-  forA_ derivatives (handleDerivative party parties)
+    -- Add all current parties to 'Token' observers if 'isPublic'
+    tokens      <- query @Token
+    derivatives <- query @Derivative
+    brokers     <- map ((.broker) . snd)    <$> query @RegisteredBroker
+    custodians  <- map ((.custodian) . snd) <$> query @RegisteredCustodian
+    exchanges   <- map ((.exchange) . snd)  <$> query @RegisteredExchange
+    investors   <- map ((.investor) . snd)  <$> query @RegisteredInvestor
+    ccps        <- map ((.ccp) . snd)       <$> query @RegisteredCCP
+    issuers     <- map ((.issuer) . snd)    <$> query @RegisteredIssuer
+    let parties = brokers <> custodians <> exchanges <> investors <> ccps <> issuers
+    forA_ tokens (handleToken party parties)
+    forA_ derivatives (handleDerivative party parties)
 
 
 -- |Add all parties as observers to a 'Token'

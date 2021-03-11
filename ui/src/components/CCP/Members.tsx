@@ -40,12 +40,15 @@ const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
 
     const notifications = useCCPCustomerNotifications();
 
-    const handleCCPCustomerInviteSubmit = async (party: string) => {
+    const handleCCPCustomerInviteSubmit = async (members: string[]) => {
         const choice = CCP.CCP_InviteCustomer;
         const key = wrapDamlTuple([operator, ccp]);
-        const args = { ccpCustomer: party };
 
-        await ledger.exerciseByKey(choice, key, args);
+        await Promise.all(members.map(ccpCustomer => {
+            return ledger.exerciseByKey(choice, key, {
+                ccpCustomer
+            })
+        }))
     }
 
     const registeredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC);
@@ -98,10 +101,10 @@ const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
                     <MarkToMarketCalc allCustomers={members}/>
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
+                            multiple
                             title='Add Member'
                             partyOptions={partyOptions}
                             onRequestClose={() => setShowAddRelationshipModal(false)}
-                            multiple={false}
                             emptyMessage='All registered investors have been added'
                             onSubmit={handleCCPCustomerInviteSubmit}/>
                     }

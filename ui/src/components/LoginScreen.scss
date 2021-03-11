@@ -3,6 +3,13 @@
         height: 100%;
         background-color: var(--cool-grey-20);
         animation: fadeIn .5s;
+        .setup-required {
+            color: var(--white);
+            font-weight: normal;
+            a.dark {
+                color: var(--blue-80);
+            }
+        }
 
         .login-header {
             display: flex;

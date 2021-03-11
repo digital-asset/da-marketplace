@@ -6,6 +6,7 @@
 @import './common/InviteAcceptTile.scss';
 @import './common/LandingPage.scss';
 @import './common/Notification.scss';
+@import './common/LoadingScreen.scss';
 @import './common/OnboardingTile.scss';
 @import './common/OrderCard.scss';
 @import './common/OverflowMenu.scss';
@@ -23,6 +24,7 @@
 
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
+@import './SetupRequired.scss';
 
 @import './Broker/Broker.scss';
 @import './Custodian/Custodian.scss';
@@ -45,6 +47,7 @@
         @include holdings;
         @include invite-accept-tile;
         @include landing-page;
+        @include loading-screen;
         @include market-relationships;
         @include notification;
         @include onboarding-tile;
@@ -64,6 +67,7 @@
         /* onboarding css */
         @include login-screen;
         @include role-selector;
+        @include setup-required;
 
         /* role css */
         @include investor;

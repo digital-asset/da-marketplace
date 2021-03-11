@@ -5,15 +5,19 @@ import { Menu } from 'semantic-ui-react'
 import { useLedger, useParty } from '@daml/react'
 
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import {
+    Issuer as IssuerTemplate,
+    IssuerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { useRegistryLookup } from '../common/RegistryLookup'
@@ -24,6 +28,7 @@ import MarketRelationships from '../common/MarketRelationships'
 import FormErrorHandled from '../common/FormErrorHandled'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import PageSection from '../common/PageSection'
 import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
@@ -32,7 +37,6 @@ import IssueAsset from './IssueAsset'
 import IssueDerivative from './IssueDerivative'
 import IssuedDerivative from './IssuedDerivative'
 import IssuedToken from './IssuedToken'
-import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
 type Props = {
     onLogout: () => void;
@@ -43,14 +47,15 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const issuer = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
     const registeredIssuer = useContractQuery(RegisteredIssuer);
     const invitation = useContractQuery(IssuerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
-    const allTokens = useContractQuery(Token);
-    const allDerivatives = useContractQuery(Derivative);
+    const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
+    const allDerivatives = useContractQuery(Derivative).filter(d => d.signatories.includes(issuer));
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
@@ -174,7 +179,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 </Menu.Item>
                             ))}
                             <Menu.Item>
-                                <p className='p2'>Issued Derivaties:</p>
+                                <p className='p2'>Issued Derivatives:</p>
                             </Menu.Item>
                             {allDerivatives.map(derivative => (
                                 <Menu.Item
@@ -212,8 +217,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.IssuerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={IssuerTemplate.Issuer_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
@@ -260,7 +266,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         </div>
     )
 
-    return registeredIssuer.length === 0 ? inviteScreen : issuerScreen
+    const shouldLoad = loading || (registeredIssuer.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredIssuer.length !== 0 ? issuerScreen : inviteScreen
 };
 
 export default Issuer;

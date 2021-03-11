@@ -1,4 +1,4 @@
-import { convertPartiesJson, PartyDetails } from '@daml/dabl-react'
+import { convertPartiesJson, PartyDetails } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 

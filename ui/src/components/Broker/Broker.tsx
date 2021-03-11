@@ -5,14 +5,21 @@ import { useLedger, useParty } from '@daml/react'
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import {
+    Broker as BrokerTemplate,
+    BrokerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
-import { useOperator } from '../common/common'
+import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+
+import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
@@ -22,6 +29,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
@@ -35,6 +43,7 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const broker = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
     const registeredBroker = useContractQuery(RegisteredBroker);
     const invitation = useContractQuery(BrokerInvitation);
@@ -68,7 +77,13 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
+        }
         const key = wrapDamlTuple([operator, broker]);
         const args = {
             name: profile.name.value,
@@ -116,8 +131,9 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.BrokerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
@@ -140,7 +156,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </div>
 
 
-    return registeredBroker.length === 0 ? inviteScreen : brokerScreen
+    const shouldLoad = loading || (registeredBroker.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredBroker.length !== 0 ? brokerScreen : inviteScreen
 }
 
 export default Broker;

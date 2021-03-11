@@ -39,12 +39,12 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredIn
     const exchange = useParty();
     const operator = useOperator();
 
-    const handleExchParticipantInviteSubmit = async (party: string) => {
+    const handleExchParticipantInviteSubmit = async (investors: string[]) => {
         const choice = Exchange.Exchange_InviteParticipant;
         const key = wrapDamlTuple([operator, exchange]);
-        const args = { exchParticipant: party };
 
-        await ledger.exerciseByKey(choice, key, args);
+        // TO-DO: Modify choice to take in a list of parties directly. Got tricky with return types.
+        await ledger.exerciseByKey(choice, key, { exchParticipant: investors[0] });
     }
 
     const partyOptions = registeredInvestors.map(d => {
@@ -84,9 +84,9 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredIn
                     {showAddRelationshipModal &&
                         <AddRegisteredPartyModal
                             title='Add Investor'
+                            multiple={false} // Keep single select for now
                             partyOptions={partyOptions}
                             onRequestClose={() => setShowAddRelationshipModal(false)}
-                            multiple={false}
                             emptyMessage='All registered investors have been added'
                             onSubmit={handleExchParticipantInviteSubmit}/>
                     }

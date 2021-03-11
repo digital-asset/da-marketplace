@@ -3,17 +3,20 @@ import { CreateEvent } from '@daml/ledger'
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
     CentralCounterpartyCustomer,
+    Broker,
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
     Registry,
     Custodian,
     Clearing,
+    Investor,
+    Issuer,
     Notification,
     Token,
     Derivative
 } from '@daml.js/da-marketplace/lib/Marketplace'
-import { ContractId } from '@daml/types';
+import { ContractId, List } from '@daml/types';
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -59,6 +62,7 @@ export function makeContractInfo<T extends object, K = unknown, I extends string
         key: event.key,
         templateId: event.templateId,
         contractId: event.contractId,
+        signatories: event.signatories,
         contractData: event.payload
     });
 }
@@ -73,10 +77,17 @@ export function wrapTextMap(items: string[]) {
     return { textMap: textMapValue }
 }
 
+export type RelationshipRequestChoice =
+    typeof Investor.Investor.Investor_RequestCustodianRelationship |
+    typeof Issuer.Issuer.Issuer_RequestCustodianRelationship |
+    typeof Broker.Broker.Broker_RequestCustodianRelationship |
+    typeof Exchange.Exchange.Exchange_RequestCustodianRelationship;
+
 export type ContractInfo<T, K = unknown> = {
     templateId: string;
     key: K;
     contractId: ContractId<T>;
+    signatories: List<string>;
     contractData: T;
 }
 

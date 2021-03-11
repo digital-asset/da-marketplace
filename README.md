@@ -19,9 +19,9 @@ can be issued and exchanged.
 # Requirements
 To run the marketplace locally or to build to be deployed on DABL, the following requirements are necessary:
 1. DAML SDK (1.7)
-2. `python` (3.8)
+2. `python` (3.x)
 3. `yarn` (1.22.x)
-4. `poetry` (1.0.x)
+4. `pipenv` (2020.x.x)
 5. `make` (3.x)
 6. `yq` (3.x)
 
@@ -41,7 +41,7 @@ This can be done by rebuilding the project using `make clean && make package`.
 Alternatively, to only build the DAR file and regenerate the TypeScript bindings:
 ```
 daml build
-daml codegen js .daml/dist/da-marketplace-0.1.12.dar -o daml.js
+daml codegen js .daml/dist/da-marketplace-0.1.16.dar -o daml.js
 cd ui
 yarn install --force --frozen-lockfile
 ```
@@ -179,7 +179,10 @@ In the deployments tab, launch and configure each trigger with the following par
 | `ExchangeTrigger`  | `Exchange`      |
 | `MatchingEngine`   | `Exchange`      |
 | `CustodianTrigger` | `Custodian`     |
+| `CCPTrigger`       | `Ccp`           |
 | `BrokerTrigger`    | `Broker`        |
+
+Note that the `OperatorTrigger` running as the `UserAdmin` trigger is required to have the app run. If you are choosing to bootstrap your own data with different parties, the remaining triggers can be set up for each party performing those respective roles.
 
 After uploading, add the first configuration (the human readable name has no bearing on the functionality of the bot), and click launch:
 

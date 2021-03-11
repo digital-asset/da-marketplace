@@ -6,7 +6,7 @@ import { Template } from '@daml/types'
 import { ContractInfo } from '../components/common/damlTypes'
 import { useDablParties } from '../components/common/common'
 import { computeCredentials, retrieveCredentials } from '../Credentials'
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config'
+import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId, dablHostname } from '../config'
 
 import useDamlStreamQuery, { StreamErrors } from './websocket'
 
@@ -18,6 +18,9 @@ export type QueryStream<T extends object = any, K = unknown> = {
   partyTemplateIds: string[];
   partyContracts: ContractInfo<T,K>[];
   streamErrors: any[] | undefined;
+  publicLoading: boolean;
+  partyLoading: boolean;
+  publicToken?: string;
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
 }
 
@@ -27,7 +30,7 @@ type PublicTokenAPIResult = {
   access_token: string
 } | undefined;
 
-const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
+export const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
   let publicToken = undefined;
 
   if (deploymentMode === DeploymentMode.DEV) {
@@ -43,6 +46,7 @@ const getPublicToken = async (publicParty: string): Promise<string | undefined> 
 
   return publicToken;
 }
+
 
 const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) => {
   const { children } = props;
@@ -64,12 +68,17 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     getPublicToken(publicParty).then(token => {
       if (token) {
         setPublicToken(token);
+        setQueryStream(queryStream => ({
+          ...queryStream,
+          publicToken: token
+        }));
       }
     })
   }, [publicParty]);
 
-  const { contracts: partyContracts, errors: partyStreamErrors } = useDamlStreamQuery(partyTemplateIds, partyToken);
-  const { contracts: publicContracts, errors: publicStreamErrors } = useDamlStreamQuery(publicTemplateIds, publicToken);
+
+  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading } = useDamlStreamQuery(partyTemplateIds, partyToken);
+  const { contracts: publicContracts, errors: publicStreamErrors, loading: publicLoading } = useDamlStreamQuery(publicTemplateIds, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {
@@ -96,7 +105,18 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     partyContracts: [],
     streamErrors: [],
     subscribeTemplate,
+    publicLoading,
+    partyLoading,
+    publicToken
   });
+
+  useEffect(() => {
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        partyLoading,
+        publicLoading
+      }))
+  }, [partyLoading, publicLoading]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
@@ -129,6 +149,27 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 }
+
+export function usePublicToken() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicToken;
+}
+
+export function usePublicLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading;
+}
+
+export function usePartyLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.partyLoading;
+}
+
+export function useLoading() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.publicLoading || queryStream?.partyLoading
+}
+
 
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);

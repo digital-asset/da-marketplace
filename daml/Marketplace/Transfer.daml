@@ -1,5 +1,6 @@
 module Marketplace.Transfer where
 
+import Marketplace.Token
 import Marketplace.Utils
 
 import DA.Finance.Asset
@@ -27,6 +28,7 @@ template DepositTransferRequest
       DepositTransferRequest_Approve : ContractId AssetDeposit
         do
           deposit <- fetch depositCid
+          issuer <- signatory . snd <$> fetchByKey @Token deposit.asset.id
           let (sender, senderProvider) = getAccountOwnerProvider senderAccountId.label
               (receiver, receiverProvider) = getAccountOwnerProvider receiverAccountId.label
 
@@ -49,7 +51,7 @@ template DepositTransferRequest
             with receiverAccountId = receiverAccountId, ..
 
           newDeposit <- fetch newDepositCid
-          let newObservers = depositObservers <> newDeposit.observers
+          let newObservers = fromList issuer <> depositObservers <> newDeposit.observers
           newDepositCid' <- create newDeposit with observers = newObservers
           archive newDepositCid
 
