@@ -1,7 +1,9 @@
 import React from 'react'
+import { Button } from 'semantic-ui-react'
 import _ from 'lodash'
 
 import { useParty, useLedger } from '@daml/react'
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
@@ -15,8 +17,6 @@ import { useContractQuery } from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
 import ManualFairValue from './ManualFairValue'
-import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
-import {Button} from 'semantic-ui-react'
 
 type Props = {
     sideNav: React.ReactElement;
@@ -55,7 +55,6 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
         // const price = fairValues[0] ? fairValues[0].contractData.price : "No FV";
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} / {quote.label}</>;
-        // const pairLabel = <div className='market-pair-label'>{base.label} <ExchangeIcon/> {quote.label}</div>;
         const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, false)}/>
         return [pairLabel, '-', '-', '-', '-', reset];
     }) || [];
@@ -66,7 +65,7 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
             throw new Error(`Expected a tuple for cleared market pair, found a string: ${pair}.`)
         }
         const [ base, quote ] = unwrapDamlTuple(pair);
-        const pairLabel = <>{base.label} <ExchangeIcon/> {quote.label}</>;
+        const pairLabel = <>{base.label} / {quote.label}</>;
         const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, true)}/>
         return [pairLabel, '-', '-', '-', '-', reset];
     }) || [];
