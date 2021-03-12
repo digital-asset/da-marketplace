@@ -1,19 +1,17 @@
 module Marketplace.Custody where
 
 import ContingentClaims.Claim (Claim, deserialize, serialize)
-import ContingentClaims.Lifecycle qualified as ContingentClaims
+import ContingentClaims.Lifecycle qualified as Lifecycle
 import ContingentClaims.Observation (Observation)
 import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.List (last)
 import DA.Map (Map)
 import DA.Map qualified as Map
 import DA.Next.Set
 import DA.Optional (fromSomeNote)
-import Marketplace.AssetDescription ()
 import Marketplace.AssetDescription (AssetDescription, Claims)
 import Marketplace.AssetDescription qualified as AssetDescription
 import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
@@ -290,24 +288,21 @@ template LifecycleRequest
               spot label dt = pure $ fromSomeNote
                 ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
-              payout: Id -> Decimal -> Date -> Update (Claim Observation Date Id, ContractId AssetDeposit)
-              payout asset qty dt = do
-                payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
-                exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-                   AssetSettlement_AddController description.issuer
-                cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
-                  AssetSettlement_Transfer with
-                    receiverAccountId = assetDeposit.account.id
-                    depositCid = payoutDepositCid)
-                exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-                  AssetSettlement_RemoveController description.issuer
-                postLifecycleClaim <- ContingentClaims.pruneLeaf spot asset qty (deserialize description.claims) dt
-                return (postLifecycleClaim, cid)
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
               election _ _ = deserialize choice -- will throw if the claims don't match
-          versionsAndCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
-          let (postAssetClaims, payoutCids) = unzip versionsAndCids
-          (_, postAssetVersion) <- exercise versionsCid $ AssetDescription.LookupOrInsert (serialize . last $ postAssetClaims)
+          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
+          (_, postAssetVersion) <- exercise versionsCid . AssetDescription.LookupOrInsert $ serialize remaining
+          payoutCids <- forA pending \(qty, asset) -> do
+            payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
+            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
+               AssetSettlement_AddController description.issuer
+            cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
+              AssetSettlement_Transfer with
+                receiverAccountId = assetDeposit.account.id
+                depositCid = payoutDepositCid)
+            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
+              AssetSettlement_RemoveController description.issuer
+            pure cid
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return $ assetDepositCid' :: payoutCids

@@ -1,3 +1,4 @@
+-- TODO: this should all be moved into the "Contingent claims" library. There is nothing specific to the marketplace here.
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE UndecidableInstances #-} --needed to derive cofree Show,Eq
 
@@ -63,26 +64,25 @@ enumerateTest = do
      ) )
    ) )
 
-prune : (Text -> Date -> Script Decimal) -> Id -> Decimal -> Date -> Script (C -> Script C) 
-prune spot asset qty dt = pure $ \claim -> Lifecycle.pruneLeaf spot asset qty claim dt
-
 lifecycling = script do
-  let bond : C = cpb 100_000.0 0.03 a $ couponDates 2021 2021 [Jan .. Dec] 15
-      spot : Text -> Date -> Script Decimal
+  let bond : C = cpb 100_000.0 0.03 a $ couponDates 2021 2022 [Jan, Jun] 15
       spot _ _ = pure (0.0 : Decimal)
       chooseLeft = const
-  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft bond (date 2021 Jan 15)
-  lifecycledBond <- lifecycle' bond
-  lifecycledBond === bond.rhs
+  Lifecycle.Result{remaining, pending} <-
+    Lifecycle.lifecycle spot chooseLeft bond (date 2021 Jan 15)
+  remaining === bond.rhs
+  pending === pure (100_000.0 * 0.03, a)
 
   --FIXME how to make subtraction work naturally? Check `Numeric` source code?
   let option : C = european (date 2021 Mar 9) $ Scale (O.observe "USD" O.+ ((O.-) (O.pure 42.0))) (One a)
       spot _ _ = pure (43.4 : Decimal)
-  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft option (date 2021 Mar 9)
-  lifecycledOpt <- lifecycle' option
-  lifecycledOpt === Zero
+  Lifecycle.Result{remaining, pending} <-
+    Lifecycle.lifecycle spot chooseLeft option (date 2021 Mar 9)
+  remaining === Zero
+  pending === pure (43.3 - 42.0, a)
 
   let weirdNote : C = when (at $ date 2021 Mar 9) $ one a `or` one b
-  [lifecycle'] <- Lifecycle.lifecycle (prune spot) spot chooseLeft weirdNote (date 2021 Mar 9)
-  lifecycledNote <- lifecycle' weirdNote
-  lifecycledNote === Zero
+  Lifecycle.Result{remaining, pending} <-
+     Lifecycle.lifecycle spot chooseLeft weirdNote (date 2021 Mar 9)
+  remaining === Zero
+  pending === pure (1.0, a)
