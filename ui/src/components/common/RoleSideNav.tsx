@@ -27,8 +27,9 @@ const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
                     className='home-item'
                 >
                   <Header as='h1' className='dark'>
-                      @{name} | { active === false && <Loader active/> }
+                      @{name}
                   </Header>
+                  { !active && <Loader inverted active inline size='small'>Connecting...</Loader>}
                 </Menu.Item>
                 {items.map(i =>
                     <Menu.Item

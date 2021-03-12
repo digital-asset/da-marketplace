@@ -11,6 +11,9 @@ import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
 //     WebSocket spec defines as unreserved, and available for use by the application.
 const KEEP_CLOSED = 4001;
 
+// Number of retries allowed before waiting
+const RETRIES_ALLOWED = 2;
+
 const newDamlWebsocket = (token: string): WebSocket => {
   const url = new URL(httpBaseUrl || 'http://localhost:3000');
 
@@ -48,18 +51,18 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ active, setActive ] = useState(false);
     const [ loading, setLoading ] = useState(true);
     const [ errors, setErrors ] = useState<StreamErrors>();
-
-    // let timer: NodeJS.Timeout = setInterval(() => clearInterval(timer), 1000);
+    const [ timer, setTimer ] = useState<NodeJS.Timeout>(setInterval(() => clearInterval(timer), 1000));
+    const [ retries, setRetries ] = useState(0);
 
     const messageHandlerScoped = useCallback(() => {
         return (message: { data: string }) => {
-            console.log(message);
-            // clearInterval(timer);
-            // timer = setInterval(() => {
-            //     console.log('timer...');
-            //     setActive(false);
-            //     clearInterval(timer);
-            // },10000);
+            if (timer != null) {
+                clearInterval(timer);
+                setTimer(setInterval(() => {
+                    setActive(false);
+                    clearInterval(timer);
+                }, 10000));
+            }
             setActive(true);
             const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
 
@@ -110,14 +113,22 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
 
     const closeWebsocket = useCallback((token: string, templateIds: string[]) => {
         return (event: CloseEvent) => {
-            // if this connection was closed unintentionally, reopen it
+            // If this connection was closed unintentionally, set it to `null` to mark for the
+            // initialization effect hook to restart it.
             if (event.code !== KEEP_CLOSED) {
-                openWebsocket(token, templateIds).then(ws => {
-                    setWebsocket(ws);
-                });
+                setActive(false);
+                if (retries <= RETRIES_ALLOWED) {
+                    setRetries(retries + 1);
+                    setWebsocket(null);
+                } else {
+                    setTimeout(() => {
+                        setRetries(0);
+                        setWebsocket(null);
+                    }, 5000)
+                }
             }
         }
-    }, [openWebsocket])
+    }, [openWebsocket, retries])
 
     useEffect(() => {
         // initialize websocket
@@ -129,11 +140,12 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
 
         return () => {
             if (websocket) {
+                clearInterval(timer);
                 websocket.close(KEEP_CLOSED);
                 setWebsocket(null);
             }
         }
-    }, [errors, token, templateIds, setWebsocket, openWebsocket])
+    }, [errors, token, templateIds, websocket, setWebsocket, openWebsocket])
 
     useEffect(() => {
         if (websocket && token) {

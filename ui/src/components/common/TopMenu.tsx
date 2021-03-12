@@ -1,6 +1,6 @@
 import React from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Menu, Header } from 'semantic-ui-react'
+import { Button, Menu, Header, Loader } from 'semantic-ui-react'
 
 import { LogoutIcon } from '../../icons/Icons'
 
