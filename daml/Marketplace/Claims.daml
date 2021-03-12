@@ -1,77 +1,20 @@
 module Marketplace.Claims (
     binaryCallOption
-  , enumerateFrom
 ) where
 
-import ContingentClaims.Claim (Claim, Claim(..), ClaimF(..), cond, one)
+import ContingentClaims.Claim (Claim, Claim(..), cond, one)
 import ContingentClaims.FinancialClaim (european)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation (Observation)
 import ContingentClaims.Observation qualified as O
 import DA.Finance.Types (Id(..))
-import DA.Foldable (Foldable, sum)
-import Daml.Control.Arrow ((&&&))
-import Daml.Control.Recursion
 import Prelude hiding (sum)
 
 type C = Claim Observation Date Id
-type F = ClaimF Observation Date Id
- 
--- Functor unzip
-funzip : Functor f => f (a, b) -> (f a, f b)
-funzip = fmap fst &&& fmap snd
-
--- Annotate the tree bottom-up
-synthesize : (Functor f, Recursive b f) => (f attr -> attr) -> b -> Cofree f attr
-synthesize f = cata algebra where
-  -- alg : f (Cofree f a) -> Cofree f a
-  algebra = uncurry Cofree . (f . fmap (.attribute) &&& identity)
-
--- Annotate the tree top-down
-inherit : (Functor f, Corecursive b f, Recursive b f) => (b -> attr -> attr) -> attr -> b -> Cofree f attr
-inherit g seed b = para algebra b seed where
-  -- f (b, attr -> Cofree f attr) -> attr -> Cofree f attr
-  algebra gbg attr = Cofree attr' f' where
-    (fb, ff) = funzip gbg
-    attr' = g (embed fb) attr
-    f' = fmap ($ attr') ff
-
--- Returns a tree with each node annotated with the # of nodes below it + 1
-subTreeSize' : Foldable f => f Int -> Int
-subTreeSize' c = 1 + sum c
-
--- Given a tree annotated with the number of nodes in each branch, index it, depth first.
-enum' : (Int, Cofree F Int) -> CofreeF F Int (Int, Cofree F Int)
-enum' (i, Cofree _ ZeroF) = CofreeF i ZeroF
-enum' (i, Cofree _ (OneF id)) = CofreeF i (OneF id)
-enum' (i, Cofree _ (WhenF p f)) = CofreeF i (WhenF p (succ i, f))
-enum' (i, Cofree _ (ScaleF p f)) = CofreeF i (ScaleF p (succ i, f))
-enum' (i, Cofree _ (GiveF f)) = CofreeF i (GiveF (succ i, f))
-enum' (i, Cofree _ (AndF f@(Cofree depth _) f')) = CofreeF i (AndF (succ i, f) (succ (i + depth), f'))
-enum' (i, Cofree _ (OrF f@(Cofree depth _) f')) = CofreeF i (OrF (succ i, f) (succ (i + depth), f'))
-enum' (i, Cofree _ (CondF p f@(Cofree depth _) f')) = CofreeF i (CondF p (succ i, f) (succ (i + depth), f'))
-
--- Enumerate each node in the tree, starting from from 'zero'
-enumerateFrom : Int -> C -> Cofree F Int
-enumerateFrom zero = ana enum' . (zero, ) . synthesize subTreeSize'
-
-fixings : C -> [Date]
-fixings = cata fixings'
-
---TODO should fail if dates will never be executed
-fixings' : F [Date] -> [Date]
-fixings' ZeroF = []
-fixings' (OneF _) = []
-fixings' (GiveF ts) = ts
-fixings' (ScaleF _ ts) = ts
-fixings' (WhenF p ts) = O.fixings p ++ ts
-fixings' (OrF ts ts') = ts ++ ts'
-fixings' (AndF ts ts') = ts ++ ts'
-fixings' (CondF _ ts ts') = ts ++ ts'
 
 -- TODO: 'european' creates a superfluous 'Or' node which doesn't really serve any purpose.
 binaryCallOption : Date -> Decimal -> Id -> Id -> C
 binaryCallOption expiry strike underlyingId currencyId =
   european expiry (binary strike underlyingId.label currencyId)
-    where binary : Decimal -> Text -> Id -> Claim O.Observation Date Id
+    where binary : Decimal -> Text -> Id -> C
           binary strike spot ccy = cond (O.pure strike O.<= O.observe spot) (one currencyId) Zero
