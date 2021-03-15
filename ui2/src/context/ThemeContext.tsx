@@ -30,7 +30,7 @@ const reducer = (_: ThemeState, {darkMode}: DispatchAction) =>
 export const ThemeContextState = React.createContext<ThemeState>(setPaletteType('dark'));
 export const ThemeContextDispatch = React.createContext<React.Dispatch<DispatchAction>>({} as React.Dispatch<DispatchAction>);
 
-export const CustomThemeProvider: React.FC<Props> = ({lightTheme, darkTheme, children}) => {
+export const CustomThemeProvider: React.FC<Props> = ({ lightTheme, darkTheme, children }) => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const [state, dispatch] = useReducer(reducer, setPaletteType(prefersDarkMode ? 'dark' : 'light'));
 
