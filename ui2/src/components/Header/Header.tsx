@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -16,6 +16,8 @@ import { useUserDispatch, signOut } from "../../context/UserContext";
 import { getName } from "../../config";
 import { ArrowBack, Menu } from "@material-ui/icons";
 import { useLayoutState, useLayoutDispatch, toggleSidebar } from "../../context/LayoutContext";
+import Switch from "@material-ui/core/Switch";
+import { ThemeContextDispatch, ThemeContextState } from "../../context/ThemeContext";
 
 interface HeaderProps {
   app : string
@@ -28,6 +30,9 @@ function Header({ history, app } : RouteComponentProps & HeaderProps) {
   var layoutState = useLayoutState();
   var layoutDispatch = useLayoutDispatch();
   const userDispatch = useUserDispatch();
+
+  const themeState = useContext(ThemeContextState);
+  const themeDispatch = useContext(ThemeContextDispatch);
 
   return (
     <AppBar position="fixed" className={classes.appBar}>
@@ -53,9 +58,14 @@ function Header({ history, app } : RouteComponentProps & HeaderProps) {
         <Box className={classes.userBox} style={{ width: "120px" }}>
           <Grid container direction="column" alignItems="center">
             <Grid item xs={12}><Typography variant="caption">{getName(party)}</Typography></Grid>
-            {/* <Grid item xs={12}><Typography variant="caption">({role})</Typography></Grid> */}
           </Grid>
         </Box>
+        <Switch
+          classes={{ root: classes.switch }}
+          color="default"
+          checked={themeState.type === 'dark' ? true : false}
+          onClick={() => themeDispatch({darkMode : themeState.type === 'dark' ? false : true})}
+        />
         <IconButton className={classes.headerMenuButton} color="inherit" onClick={() => history.push("/apps")}>
           <Apps classes={{ root: classes.headerIcon }} />
         </IconButton>

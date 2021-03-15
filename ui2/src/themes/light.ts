@@ -1,4 +1,5 @@
 import tinycolor from "tinycolor2";
+import {PaletteType} from "@material-ui/core";
 
 const primary = "#203260"; //"#01a6c0"; //"#E5E6E7"
 const secondary = "#f2f2f2"; //"#203260"; //"#01a6c0"; //"#639";
@@ -9,8 +10,11 @@ const info = "#9013FE";
 const lightenRate = 7.5;
 const darkenRate = 15;
 
+const paletteType : PaletteType = "light";
+
 export default {
   palette: {
+    type : paletteType,
     primary: {
       main: primary,
       light: tinycolor(primary)
@@ -65,6 +69,7 @@ export default {
     background: {
       default: "#FFFFFF", //"#F6F7FF",
       light: "#eeeeee",
+      paper: "#fafafa"
     },
   },
   customShadows: {
