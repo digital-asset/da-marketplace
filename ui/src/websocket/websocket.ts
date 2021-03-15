@@ -14,6 +14,12 @@ const KEEP_CLOSED = 4001;
 // Number of retries allowed before waiting
 const RETRIES_ALLOWED = 2;
 
+// Time between retries
+const RETRY_TIME_INTERVAL = 5000;
+
+// Time between messages until websocket is considered inactive
+const TIME_UNTIL_INACTIVE = 10000;
+
 const newDamlWebsocket = (token: string): WebSocket => {
   const url = new URL(httpBaseUrl || 'http://localhost:3000');
 
@@ -51,7 +57,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
     const [ active, setActive ] = useState(false);
     const [ loading, setLoading ] = useState(true);
     const [ errors, setErrors ] = useState<StreamErrors>();
-    const [ timer, setTimer ] = useState<NodeJS.Timeout>(setInterval(() => clearInterval(timer), 1000));
+    const [ timer, setTimer ] = useState<ReturnType<typeof setInterval>>(setInterval(() => clearInterval(timer), 1000));
     const [ retries, setRetries ] = useState(0);
 
     const messageHandlerScoped = useCallback(() => {
@@ -61,7 +67,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                 setTimer(setInterval(() => {
                     setActive(false);
                     clearInterval(timer);
-                }, 10000));
+                }, TIME_UNTIL_INACTIVE));
             }
             setActive(true);
             const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
@@ -124,7 +130,7 @@ function useDamlStreamQuery(templateIds: string[], token?: string) {
                     setTimeout(() => {
                         setRetries(0);
                         setWebsocket(null);
-                    }, 5000)
+                    }, RETRY_TIME_INTERVAL)
                 }
             }
         }
