@@ -1,4 +1,5 @@
 @import "./IssuedToken.scss";
+@import "./IssueAsset.scss";
 
 @mixin issuer {
     .issuer {
@@ -6,5 +7,6 @@
         height: 100%;
 
         @include issued-token;
+        @include issue-asset;
     }
 }

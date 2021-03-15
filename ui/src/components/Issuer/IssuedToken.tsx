@@ -1,20 +1,31 @@
 import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { Header, Table, List, Button } from 'semantic-ui-react'
+import { useParams, useHistory } from 'react-router-dom'
+import { Header, List } from 'semantic-ui-react'
 
-import { useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {
+    RegisteredCustodian,
+    RegisteredIssuer,
+    RegisteredInvestor,
+    RegisteredExchange,
+    RegisteredBroker
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
 import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
 
-import { makeContractInfo, ContractInfo} from '../common/damlTypes'
+import { ContractInfo, wrapTextMap } from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-
-import AddParticipantModal from './AddParticipantModal'
+import { IPartyInfo } from '../common/utils'
+import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
+import StripedTable from '../common/StripedTable'
+import { useRegistryLookup } from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,
@@ -25,114 +36,140 @@ type DepositInfo = {
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    providers: IPartyInfo[],
+    investors: IPartyInfo[]
 }
 
-const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
+const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
-    const [ showAddParticipantModal, setShowAddParticipantModal ] = useState(false)
+    const [ showAddRegisteredPartyModal, setShowAddRegisteredPartyModal ] = useState(false)
+
     const { tokenId } = useParams<{tokenId: string}>()
 
-    const token = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from token: ", e);
-    }).contracts.map(makeContractInfo).find(c => c.contractId === decodeURIComponent(tokenId))
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
 
-    const isPublic = !!token?.contractData.isPublic
+    const history = useHistory()
+    const ledger = useLedger()
+    const party = useParty()
 
-    const tokenDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo).filter(deposit =>
+    const token = useContractQuery(Token).find(c => c.contractId === decodeURIComponent(tokenId))
+    const tokenDeposits = useContractQuery(AssetDeposit)
+    .filter(deposit =>
         deposit.contractData.asset.id.label === token?.contractData.id.label &&
         deposit.contractData.asset.id.version === token?.contractData.id.version
     );
 
+    const allRegisteredParties = [
+        useContractQuery(RegisteredCustodian, AS_PUBLIC)
+            .map(rc => ({ contractId: rc.contractId, contractData: rc.contractData.custodian })),
+        useContractQuery(RegisteredIssuer, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.issuer })),
+        useContractQuery(RegisteredInvestor, AS_PUBLIC)
+            .map(ri => ({ contractId: ri.contractId, contractData: ri.contractData.investor })),
+        useContractQuery(RegisteredExchange, AS_PUBLIC)
+            .map(re => ({ contractId: re.contractId, contractData: re.contractData.exchange })),
+        useContractQuery(RegisteredBroker, AS_PUBLIC)
+            .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
+        ].flat()
+
     const participants = Object.keys(token?.contractData.observers.textMap || [])
 
-    const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
+    const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
+        .map(d => {
+            return {
+                text: `${d.contractData}`,
+                value: d.contractData
+            }
+        })
 
+    const isPublic = !!token?.contractData.isPublic
+
+    const nettedTokenDeposits = netTokenDeposits(tokenDeposits)
     const totalAllocatedQuantity = nettedTokenDeposits.length > 0 ? nettedTokenDeposits.reduce((a, b) => +a + +b.quantity, 0) : 0
+
+    const StripedTableRows = nettedTokenDeposits.map(deposit =>
+        [deposit.investor, deposit.provider, deposit.quantity.toString(), `${((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%`])
+    const StripedTableHeaders = ['Investor', 'Provider', 'Amount', 'Percentage Owned']
+
+    const baseUrl = history.location.pathname.substring(0, history.location.pathname.lastIndexOf('/'))
 
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<Header as='h3'>{token?.contractData.id.label}</Header>}
+            menuTitle={<Header as='h2'>{token?.contractData.id.label}</Header>}
             onLogout={onLogout}>
-            <PageSection className='issued-token'>
-                <div className='token-subheading'>
-                    <p>{token?.contractData.description}</p>
-                    <div className='token-details'>
-                        {isPublic ? <p> <GlobeIcon/> Public </p> : <p> <LockIcon/> Private </p>}
-                        <p> Quantity Precision: {token?.contractData.quantityPrecision} </p>
+            <PageSection>
+                <div className='issued-token'>
+                    <div className='token-subheading'>
+                        <Header as='h3'>{token?.contractData.description}</Header>
+                        <div className='token-details'>
+                            {isPublic ? <Header as='h3'> <GlobeIcon/> Public </Header> : <Header as='h3'> <LockIcon/> Private </Header>}
+                            <Header as='h3'> Quantity Precision: {token?.contractData.quantityPrecision} </Header>
+                        </div>
                     </div>
-                </div>
-                {!isPublic &&
-                    <div className='participants-viewer'>
-                        <Button className='ghost smaller' onClick={() => setShowParticipants(!showParticipants)}>
-                            {showParticipants?
-                                <p> Hide Participants <IconChevronUp/></p>
-                                :
-                                <p> View/Add Participants <IconChevronDown/></p>
-                            }
-                        </Button>
-                        {showParticipants &&
-                            <>
-                            <div className='list-heading'>
-                                <p><b>Participants</b></p>
-                                <Button className='ghost smaller' onClick={() => setShowAddParticipantModal(true)}>
-                                    <AddPlusIcon/> <p>Add Participant</p>
-                                </Button>
-                            </div>
-                                <ul className='participants-list'>
-                                    {Array.from(participants).map(o =>
-                                        <li key={o}>
-                                            <List.Content>
-                                                <p>{o}</p>
-                                            </List.Content>
-                                        </li>
-                                    )}
-                                </ul>
-                            </>}
+                    {!isPublic &&
+                        <div className='participants-viewer'>
+                            <a className='a2' onClick={() => setShowParticipants(!showParticipants)}>
+                                {showParticipants?
+                                    <> Hide Participants <IconChevronUp/></>
+                                    :
+                                    <> View/Add Participants <IconChevronDown/></>
+                                }
+                            </a>
+                            {showParticipants &&
+                                <>
+                                <div className='list-heading'>
+                                    <p><b>Participants</b></p>
+                                    <a className='a2' onClick={() => setShowAddRegisteredPartyModal(true)}>
+                                        <AddPlusIcon/> Add Participant
+                                    </a>
+                                </div>
+                                    <ul className='participants-list'>
+                                        {Array.from(participants).map(o =>
+                                            <li key={o}>
+                                                <List.Content>
+                                                    <p>{o}</p>
+                                                </List.Content>
+                                            </li>
+                                        )}
+
+                                    </ul>
+                                </>}
+                        </div>
+                    }
+                    <Header as='h2'>Position Holdings</Header>
+                    <div className='position-holdings-data'>
+                        <StripedTable
+                            headings={StripedTableHeaders}
+                            rows={StripedTableRows}/>
+                        <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                     </div>
-                }
-                <Header as='h3'>Position Holdings</Header>
-                <div className='position-holdings-data'>
-                    <Table className='issuer-cap-table'>
-                        <Table.Header>
-                            <Table.Row>
-                                <Table.HeaderCell>Investor</Table.HeaderCell>
-                                <Table.HeaderCell>Provider</Table.HeaderCell>
-                                <Table.HeaderCell textAlign='right'>Amount</Table.HeaderCell>
-                                <Table.HeaderCell textAlign='right'>Percentage Owned</Table.HeaderCell>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {nettedTokenDeposits.length > 0 ?
-                                nettedTokenDeposits.map(deposit =>
-                                    <Table.Row>
-                                        <Table.Cell>{deposit.investor || '-'}</Table.Cell>
-                                        <Table.Cell>{deposit.provider || '-'}</Table.Cell>
-                                        <Table.Cell textAlign='right'>{deposit.quantity || '-'}</Table.Cell>
-                                        <Table.Cell textAlign='right'>{((deposit.quantity/totalAllocatedQuantity)*100).toFixed(1)}%</Table.Cell>
-                                    </Table.Row>
-                                )
-                            :
-                                <Table.Row className='empty-table' >
-                                    <Table.Cell textAlign={'center'} colSpan={4}>
-                                        <i>There are no position holdings for this token</i>
-                                    </Table.Cell>
-                                </Table.Row>
-                            }
-                        </Table.Body>
-                    </Table>
-                    <AllocationsChart nettedTokenDeposits={nettedTokenDeposits}/>
                 </div>
             </PageSection>
-            <AddParticipantModal
-                tokenId={token?.contractData.id}
-                onRequestClose={() => setShowAddParticipantModal(false)}
-                show={showAddParticipantModal}
-                currentParticipants={participants}/>
+            {showAddRegisteredPartyModal &&
+                <AddRegisteredPartyModal
+                    multiple
+                    onRequestClose={() => setShowAddRegisteredPartyModal(false)}
+                    onSubmit={(parties) => submitAddParticipant(parties)}
+                    title='Add Participants'
+                    partyOptions={partyOptions}/>}
         </Page>
     )
+
+    async function submitAddParticipant(selectedParties: string[]) {
+        const tokenId = token?.contractData.id
+
+        if (!token?.contractData.id) {
+            return
+        }
+
+        const newObservers = wrapTextMap([...participants, ...selectedParties])
+
+        await ledger.exerciseByKey(Token.Token_AddObservers, tokenId, { party, newObservers })
+            .then(resp => history.push(`${baseUrl}/${resp[0]}`))
+
+        setShowAddRegisteredPartyModal(false)
+    }
 
     function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
         let netTokenDeposits: DepositInfo[] = []
@@ -144,16 +181,23 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout }) => {
             if (token) {
                 return token.quantity += Number(asset.quantity)
             }
+            const investor = investorMap.get(account.owner)?.name || account.owner;
+            const provider =
+                custodianMap.get(account.provider)?.name ||
+                brokerMap.get(account.owner)?.name ||
+                exchangeMap.get(account.provider)?.name ||
+                account.provider;
 
-            return netTokenDeposits = [...netTokenDeposits, {investor: account.owner, provider: account.provider, quantity: Number(asset.quantity) }]
+            return netTokenDeposits = [...netTokenDeposits, {investor: investor, provider: provider, quantity: Number(asset.quantity) }]
         })
 
         return netTokenDeposits
     }
 }
 
-
-const AllocationsChart = (props: { nettedTokenDeposits: DepositInfo[] }) => {
+const AllocationsChart = (props: {
+    nettedTokenDeposits: DepositInfo[]
+}) => {
     if (props.nettedTokenDeposits.length === 0) {
         return null
     }

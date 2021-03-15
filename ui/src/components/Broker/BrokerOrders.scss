@@ -1,11 +1,9 @@
-.orderid-input {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-right: var(--spacing-s);
-    width: 80px;
-}
+@mixin broker-orders {
+    .broker-orders {
+        animation: fadeIn .5s;
 
-.orderid-input > .ui.form .field {
-    margin: 0px;
+        .order-section {
+            margin-bottom: $spacing-m;
+        }
+    }
 }

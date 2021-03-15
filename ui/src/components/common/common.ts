@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import { useWellKnownParties } from '@daml/dabl-react'
+import { useWellKnownParties } from '@daml/hub-react'
 import { deploymentMode, DeploymentMode } from '../../config'
 
 export const useOperator = () => {

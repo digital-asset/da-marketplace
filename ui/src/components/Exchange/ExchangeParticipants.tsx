@@ -1,51 +1,68 @@
-import React from 'react'
-import { Table } from 'semantic-ui-react'
+import React, { useState } from 'react'
 
-import { useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
+
+import { Header } from 'semantic-ui-react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
-import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { UserIcon } from '../../icons/Icons'
-import { ExchangeParticipantInfo, DepositInfo, makeContractInfo } from '../common/damlTypes'
+import { UserIcon, AddPlusIcon} from '../../icons/Icons'
+
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { wrapDamlTuple, ContractInfo } from '../common/damlTypes'
+import { useOperator } from '../common/common'
+import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
+import { depositSummary } from '../common/utils'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
-import InviteParticipant from './InviteParticipant'
-import { depositSummary } from '../common/utils'
-
-import './ExchangeParticipants.scss'
-
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    registeredInvestors: ContractInfo<RegisteredInvestor>[]
 }
 
-const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
-    const registeredInvestors = useStreamQueryAsPublic(RegisteredInvestor).contracts.map(makeContractInfo);
-    const exchangeParticipants = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts.map(makeContractInfo);
-    const currentInvitations = useStreamQueries(ExchangeParticipantInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipantInvitation: ", e);
-    }).contracts.map(makeContractInfo);
+const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredInvestors }) => {
+    const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
-    const investorOptions = registeredInvestors.filter(ri =>
-        !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
-        !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
+    const allDeposits = useContractQuery(AssetDeposit);
+    const exchangeParticipants = useContractQuery(ExchangeParticipant);
+    const activeOrders = useContractQuery(Order);
 
-    const rows = exchangeParticipants.map(participant =>
-        <ExchangeParticipantRow
-            key={participant.contractId}
-            deposits={allDeposits}
-            participant={participant}/>
-    );
+    const ledger = useLedger();
+    const exchange = useParty();
+    const operator = useOperator();
+
+    const handleExchParticipantInviteSubmit = async (investors: string[]) => {
+        const choice = Exchange.Exchange_InviteParticipant;
+        const key = wrapDamlTuple([operator, exchange]);
+
+        // TO-DO: Modify choice to take in a list of parties directly. Got tricky with return types.
+        await ledger.exerciseByKey(choice, key, { exchParticipant: investors[0] });
+    }
+
+    const partyOptions = registeredInvestors.map(d => {
+        return {
+            text: `${d.contractData.name}`,
+            value: d.contractData.investor
+        }
+    })
+
+    const rows = exchangeParticipants.map(participant => {
+        const { exchange, exchParticipant } = participant.contractData;
+
+        const activeOrderCount = activeOrders.filter(o => o.contractData.exchange === exchange && o.contractData.exchParticipant === exchParticipant).length
+
+        const investorDeposits = allDeposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
+
+        return [exchParticipant, activeOrderCount.toString(), '-', depositSummary(investorDeposits).join(',') || '-']
+    });
 
     return (
         <Page
@@ -55,39 +72,27 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection>
                 <div className='exchange-participants'>
-                    <InviteParticipant registeredInvestors={investorOptions}/>
+                    <div className='title'>
+                        <Header as='h2'>Exchange Participants</Header>
+                        <a className='a2' onClick={()=> setShowAddRelationshipModal(true)}>
+                            <AddPlusIcon/> Add Investor
+                        </a>
+                    </div>
                     <StripedTable
-                        className='active-participants'
-                        header={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
+                        headings={['Id', 'Active Orders', 'Volume Traded (USD)', 'Amount Committed']}
                         rows={rows}/>
+                    {showAddRelationshipModal &&
+                        <AddRegisteredPartyModal
+                            title='Add Investor'
+                            multiple={false} // Keep single select for now
+                            partyOptions={partyOptions}
+                            onRequestClose={() => setShowAddRelationshipModal(false)}
+                            emptyMessage='All registered investors have been added'
+                            onSubmit={handleExchParticipantInviteSubmit}/>
+                    }
                 </div>
             </PageSection>
         </Page>
-    )
-}
-
-type RowProps = {
-    deposits: DepositInfo[];
-    participant: ExchangeParticipantInfo;
-}
-
-const ExchangeParticipantRow: React.FC<RowProps> = ({ deposits, participant }) => {
-    const { exchange, exchParticipant } = participant.contractData;
-
-    const query = () => [({ exchange, exchParticipant })];
-    const activeOrders = useStreamQueries(Order, query, [exchange, exchParticipant], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.length;
-
-    const investorDeposits = deposits.filter(deposit => deposit.contractData.account.owner === exchParticipant);
-
-    return (
-        <Table.Row className='active-participants-row'>
-            <Table.Cell>{exchParticipant}</Table.Cell>
-            <Table.Cell>{activeOrders}</Table.Cell>
-            <Table.Cell>-</Table.Cell>
-            <Table.Cell>{depositSummary(investorDeposits) || '-'}</Table.Cell>
-        </Table.Row>
     )
 }
 

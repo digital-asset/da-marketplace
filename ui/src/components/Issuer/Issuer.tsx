@@ -1,31 +1,42 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-
 import { Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
-import { IssuerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import { RegisteredIssuer, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {
+    Issuer as IssuerTemplate,
+    IssuerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import { BrokerCustomer } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
 import { PublicIcon } from '../../icons/Icons'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
+import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
+import { useRegistryLookup } from '../common/RegistryLookup'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import { wrapDamlTuple, damlTupleToString} from '../common/damlTypes'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
 import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import PageSection from '../common/PageSection'
+import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
-import RoleSideNav from '../common/RoleSideNav';
 
 import IssueAsset from './IssueAsset'
+import IssueDerivative from './IssueDerivative'
+import IssuedDerivative from './IssuedDerivative'
 import IssuedToken from './IssuedToken'
-import FormErrorHandled from '../common/FormErrorHandled'
 
 type Props = {
     onLogout: () => void;
@@ -36,16 +47,59 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const issuer = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
-    const registeredIssuer = useStreamQueries(RegisteredIssuer, () => [], [], (e) => {
-        console.log("Unexpected close from registeredIssuer: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-        console.log("Unexpected close from Token: ", e);
-    }).contracts
+    const { custodianMap, exchangeMap, brokerMap, investorMap } = useRegistryLookup();
+
+    const registeredIssuer = useContractQuery(RegisteredIssuer);
+    const invitation = useContractQuery(IssuerInvitation);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
+    const allDerivatives = useContractQuery(Derivative).filter(d => d.signatories.includes(issuer));
+
+    const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
+        .map(investor => {
+            const party = investor.contractData.investor;
+            const name = investorMap.get(damlTupleToString(investor.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Investor`
+            }
+        })
+
+    const brokerProviders = useContractQuery(BrokerCustomer)
+        .map(broker => {
+            const party = broker.contractData.broker;
+            const name = brokerMap.get(damlTupleToString(broker.key))?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Broker`
+            }
+        })
+
+    const exchangeProviders = useContractQuery(ExchangeParticipant)
+        .map(exchParticipant => {
+            const party = exchParticipant.contractData.exchange;
+            const name = exchangeMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Exchange`
+            }
+        });
+
+    const allProviders = [
+        ...allCustodianRelationships.map(relationship => {
+            const party = relationship.contractData.custodian;
+            const name = custodianMap.get(party)?.name;
+            return {
+                party,
+                label: `${name ? `${name} (${party})` : party} | Custodian`
+            }
+        }),
+        ...exchangeProviders,
+        ...brokerProviders,
+    ];
+
     const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
@@ -56,8 +110,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredIssuer.contracts[0]) {
-            const riData = registeredIssuer.contracts[0].payload;
+        if (registeredIssuer[0]) {
+            const riData = registeredIssuer[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location },
@@ -76,7 +130,7 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
             newTitle: profile.title.value,
             newIssuerID: profile.issuerID.value
         };
-        await ledger.exerciseByKey(RegisteredIssuer.UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredIssuer.RegisteredIssuer_UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 
@@ -96,18 +150,19 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.IssuerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <IssuerProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
+                role={MarketRole.IssuerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
     const sideNav = <RoleSideNav url={url}
-                        name={registeredIssuer.contracts[0]?.payload.name || issuer}
+                        name={registeredIssuer[0]?.contractData.name || issuer}
                         items={[
-                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>}
+                            {to: `${url}/issue-asset`, label: 'Issue Asset', icon: <PublicIcon/>},
+                            {to: `${url}/issue-derivative`, label: 'Issue Derivative', icon: <PublicIcon/>}
                         ]}>
                         <Menu.Menu className='sub-menu'>
                             <Menu.Item>
@@ -120,7 +175,20 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                     to={`${url}/issued-token/${encodeURIComponent(token.contractId)}`}
                                     key={token.contractId}
                                 >
-                                    <p>{token.payload.id.label}</p>
+                                    <p>{token.contractData.id.label}</p>
+                                </Menu.Item>
+                            ))}
+                            <Menu.Item>
+                                <p className='p2'>Issued Derivatives:</p>
+                            </Menu.Item>
+                            {allDerivatives.map(derivative => (
+                                <Menu.Item
+                                    className='sidemenu-item-normal'
+                                    as={NavLink}
+                                    to={`${url}/issued-derivative/${encodeURIComponent(derivative.contractId)}`}
+                                    key={derivative.contractId}
+                                >
+                                    <p>{derivative.contractData.id.label}</p>
                                 </Menu.Item>
                             ))}
                         </Menu.Menu>
@@ -135,13 +203,23 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <IssuerProfile
                                     content='Save'
+                                    role={MarketRole.IssuerRole}
+                                    profileLinks= {
+                                        allTokens.map(token => {
+                                            return {
+                                                to: `${url}/issued-token/${encodeURIComponent(token.contractId)}`,
+                                                title: token.contractData.id.label,
+                                                subtitle: token.contractData.description}
+                                        })
+                                    }
                                     defaultProfile={profile}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.IssuerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={IssuerTemplate.Issuer_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
@@ -160,15 +238,36 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 </Route>
 
                 <Route path={`${path}/issued-token/:tokenId`}>
-                    <IssuedToken sideNav={sideNav} onLogout={onLogout}/>
+                    <IssuedToken
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        providers={allProviders}
+                        investors={allRegisteredInvestors}/>
                 </Route>
+
+                <Route path={`${path}/issue-derivative`}>
+                    <Page
+                        menuTitle={<><PublicIcon size='24'/> Issue Derivative</>}
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                    >
+                        <PageSection>
+                            <IssueDerivative/>
+                        </PageSection>
+                    </Page>
+                </Route>
+                <Route path={`${path}/issued-derivative/:derivativeId`}>
+                    <IssuedDerivative
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+
             </Switch>
         </div>
     )
 
-    return registeredIssuer.loading
-        ? loadingScreen
-        : registeredIssuer.contracts.length === 0 ? inviteScreen : issuerScreen
+    const shouldLoad = loading || (registeredIssuer.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredIssuer.length !== 0 ? issuerScreen : inviteScreen
 };
 
 export default Issuer;

@@ -4,8 +4,6 @@ import { OrderKind } from './InvestorTrade'
 
 import { StringKeyedObject } from '../common/utils'
 
-import './OrderLadder.scss'
-
 type OrderCellProp = {
     value?: number;
 }

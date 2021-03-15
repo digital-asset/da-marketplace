@@ -1,7 +1,5 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-import './App.scss';
-
 import React from 'react'
 import {
   HashRouter as Router,
@@ -11,14 +9,13 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { PublicLedger, WellKnownPartiesProvider } from '@daml/dabl-react'
+import { WellKnownPartiesProvider } from '@daml/hub-react'
 
-import Credentials, { computeCredentials, storeCredentials, retrieveCredentials } from '../Credentials'
+import QueryStreamProvider from '../websocket/queryStream'
+import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
 import { httpBaseUrl } from '../config'
 
 import { RegistryLookupProvider } from './common/RegistryLookup'
-import { useDablParties } from './common/common'
-import OnboardingTile from './common/OnboardingTile'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
@@ -40,7 +37,11 @@ const App: React.FC = () => {
       <Router>
         <Switch>
           <Route exact path='/'>
-            <LoginScreen onLogin={handleCredentials}/>
+            <WellKnownPartiesProvider>
+                <QueryStreamProvider>
+                  <LoginScreen onLogin={handleCredentials}/>
+                </QueryStreamProvider>
+            </WellKnownPartiesProvider>
           </Route>
 
           <Route path='/role' render={() => {
@@ -52,11 +53,11 @@ const App: React.FC = () => {
                   httpBaseUrl={httpBaseUrl}
                 >
                   <WellKnownPartiesProvider>
-                    <PublicProvider>
-                      <RegistryLookupProvider>
-                        <MainScreen onLogout={() => handleCredentials(undefined)}/>
-                      </RegistryLookupProvider>
-                    </PublicProvider>
+                      <QueryStreamProvider>
+                        <RegistryLookupProvider>
+                          <MainScreen onLogout={() => handleCredentials(undefined)}/>
+                        </RegistryLookupProvider>
+                      </QueryStreamProvider>
                   </WellKnownPartiesProvider>
               </DamlLedger>
               : <Redirect to='/'/>
@@ -69,20 +70,5 @@ const App: React.FC = () => {
   )
 }
 // APP_END
-
-const PublicProvider: React.FC = ({ children }) => {
-  const { parties, loading } = useDablParties();
-  const { party, ledgerId, token } = computeCredentials(parties.publicParty);
-
-  return loading ? <OnboardingTile>Loading...</OnboardingTile> : (
-    <PublicLedger
-      ledgerId={ledgerId}
-      publicParty={party}
-      defaultToken={token}
-      httpBaseUrl={httpBaseUrl}
-    >
-      { children }
-    </PublicLedger>
-  )
-}
+//
 export default App;
