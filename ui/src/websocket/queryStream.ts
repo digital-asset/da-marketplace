@@ -22,6 +22,7 @@ export type QueryStream<T extends object = any, K = unknown> = {
   partyLoading: boolean;
   publicToken?: string;
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
+  connectionActive: boolean;
 }
 
 export const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
@@ -76,8 +77,8 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     })
   }, [publicParty]);
 
-
-  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading } = useDamlStreamQuery(partyTemplateIds, partyToken);
+  const { contracts: partyContracts, errors: partyStreamErrors, loading: partyLoading, active: connectionActive }
+    = useDamlStreamQuery(partyTemplateIds, partyToken);
   const { contracts: publicContracts, errors: publicStreamErrors, loading: publicLoading } = useDamlStreamQuery(publicTemplateIds, publicToken);
 
   useEffect(() => {
@@ -107,7 +108,8 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     subscribeTemplate,
     publicLoading,
     partyLoading,
-    publicToken
+    publicToken,
+    connectionActive
   });
 
   useEffect(() => {
@@ -117,6 +119,14 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
         publicLoading
       }))
   }, [partyLoading, publicLoading]);
+
+  useEffect(() => {
+      console.log(`active changed: ${connectionActive}`);
+      setQueryStream(queryStream => ({
+        ...queryStream,
+        connectionActive
+      }))
+  }, [connectionActive]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
@@ -168,6 +178,11 @@ export function usePartyLoading() {
 export function useLoading() {
   const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
   return queryStream?.publicLoading || queryStream?.partyLoading
+}
+
+export function useConnectionActive() {
+  const queryStream: QueryStream<any> | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.connectionActive;
 }
 
 
