@@ -1,5 +1,27 @@
 @use 'themes/colors';
 @use 'components/Tile/TilePage';
+@use 'pages/login/Login';
+@use '../../ui/src/overrides/overrides';
+@use '../../ui/src/overrides/button';
+
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
+
+@include overrides.overrides();
+
+@font-face {
+  font-family: "BrownStd-Regular";
+  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Light";
+  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+}
+
+@font-face {
+  font-family: "BrownStd-Bold";
+  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
+}
 
 html {
   height: 100%;
@@ -14,5 +36,6 @@ html {
     }
 
     @include TilePage.tile-page();
+    @include Login.login-screen();
   }
 }

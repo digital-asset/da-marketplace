@@ -1,3 +1,5 @@
+@use '../../themes/variables' as v;
+
 @mixin login-screen {
   .login-screen {
       height: 100%;
@@ -16,7 +18,7 @@
           flex-direction: row;
           align-items: baseline;
           justify-content: center;
-          margin: $spacing-s 0;
+          margin: v.$spacing-s 0;
 
           h1.ui.header {
               color: var(--white);
