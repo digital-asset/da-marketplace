@@ -192,3 +192,21 @@ template Exchange
             $ (pair `elem` tokenPairs) || (pair `elem` binOptions)
 
           exercise orderRequestCid OrderRequest_Ack with ..
+
+      nonconsuming Exchange_ResetMarket : ContractId ResetMarketRequest
+        with
+          pair : IdPair
+          clearedMarket : Bool
+        do
+          create ResetMarketRequest with ..
+
+template ResetMarketRequest
+  with
+    exchange : Party
+    pair : IdPair
+    clearedMarket : Bool
+  where
+    signatory exchange
+    controller exchange can
+      ResetMarketRequest_Ack : ()
+        do return ()
