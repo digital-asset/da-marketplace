@@ -5,11 +5,11 @@ import {PaletteType} from "@material-ui/core";
 import useMediaQuery from "@material-ui/core/useMediaQuery";
 
 type ThemeState = {
-  type: PaletteType
+  type: PaletteType;
 };
 
 type DispatchAction = {
-  darkMode: boolean
+  darkMode: boolean;
 };
 
 type Props = {
@@ -42,7 +42,7 @@ export const CustomThemeProvider: React.FC<Props> = ({ lightTheme, darkTheme, ch
     const currentTheme = state.type === 'dark' ? darkTheme : lightTheme;
 
     return createMuiTheme({ ...currentTheme });
-  }, [state, lightTheme, darkTheme])
+  }, [state, lightTheme, darkTheme]);
 
   return (
     <ThemeContextState.Provider value={state}>
