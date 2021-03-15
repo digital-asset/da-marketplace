@@ -87,7 +87,8 @@ export default makeStyles((theme : any) => createStyles({
   paper: {
     padding: 20,
     marginBottom: 20,
-    backgroundColor: theme.palette.secondary.main
+    // backgroundColor: theme.palette.background.default
+    backgroundColor: theme.palette.background.paper
   },
   paperHeading: {
     paddingTop: 20,

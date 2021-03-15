@@ -11,6 +11,7 @@ const darkenRate = 15;
 
 export default {
   palette: {
+    type : "light",
     primary: {
       main: primary,
       light: tinycolor(primary)
@@ -65,6 +66,7 @@ export default {
     background: {
       default: "#FFFFFF", //"#F6F7FF",
       light: "#eeeeee",
+      paper: "#fafafa"
     },
   },
   customShadows: {

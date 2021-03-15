@@ -6,7 +6,7 @@ import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
 import Marketplace.Trading.Model qualified as O
 import Marketplace.Trading.Service qualified as S
-import Marketplace.Trading.Listing.Service qualified as L
+import Marketplace.Listing.Service qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
 
@@ -51,7 +51,7 @@ submitInstrumentCreation = do
     providerId = "123"
     observers = []
   createListingRequestCid <- alice `submit` do exerciseCmd listingServiceCid L.RequestCreateListing with ..
-  listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
+  -- listingCid <- exchange `submit` do exerciseCmd listingServiceCid L.CreateListing with ..
   pure ()
 
 submitBuyOrder : Script ()

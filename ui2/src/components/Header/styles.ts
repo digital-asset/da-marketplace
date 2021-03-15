@@ -118,5 +118,8 @@ export default makeStyles((theme : any) => createStyles({
     backgroundColor: theme.palette.primary.main,
     padding: 5,
     borderRadius: 5,
+  },
+  switch: {
+    marginLeft: theme.spacing(2)
   }
 }));
