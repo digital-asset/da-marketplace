@@ -1,0 +1,55 @@
+module Marketplace.Settlement.Service where
+
+import DA.Finance.Asset (AssetDeposit)
+import Marketplace.Settlement.Model (SettlementInstruction(..), Settle(..))
+
+type T = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator, provider
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+      nonconsuming SettleInstruction : [ContractId AssetDeposit]
+        with
+          settlementInstructionCid : ContractId SettlementInstruction
+        do
+          exercise settlementInstructionCid Settle
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()

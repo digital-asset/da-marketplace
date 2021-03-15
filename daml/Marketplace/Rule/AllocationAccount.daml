@@ -1,0 +1,106 @@
+module Marketplace.Rule.AllocationAccount where
+
+import DA.Record
+import DA.Next.Set (Set, insert)
+import DA.Finance.Utils (fetchAndArchive)
+import DA.Finance.Types (Account, Id, Asset)
+import DA.Finance.Asset (AssetDeposit(..))
+import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_Credit(..), AssetSettlement_Debit(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..))
+
+type T = AllocationAccountRule
+
+template AllocationAccountRule
+  with
+    operator : Party
+    provider : Party
+    account : Account
+    nominee : Party
+    observers : Set Party
+  where
+    signatory operator, provider, account.owner
+    observer insert nominee observers
+    ensure nominee /= account.owner
+
+    key account.id : Id
+    maintainer key.signatories
+
+    let
+      debit : ContractId AssetDeposit -> Update Asset
+      debit = \depositCid -> do
+        deposit <- fetchAndArchive depositCid
+        assertMsg "Deposit account owner does not match" $ deposit.account.owner == account.owner
+        pure deposit.asset
+      debitAccount : ContractId AssetDeposit -> Update Asset
+      debitAccount = \depositCid -> do
+        deposit <- fetch depositCid
+        exerciseByKey @AssetSettlementRule deposit.account.id AssetSettlement_Debit with ..
+      credit : Asset -> Update (ContractId AssetDeposit)
+      credit = \asset -> create AssetDeposit with ..
+      creditAccount : Account -> Asset -> Update (ContractId AssetDeposit)
+      creditAccount = \account asset -> exerciseByKey @AssetSettlementRule account.id AssetSettlement_Credit with ctrl = nominee, ..
+
+    controller nominee, account.owner can
+      nonconsuming Transfer : ContractId AssetDeposit
+        with
+          transferTo : Account
+          depositCid : ContractId AssetDeposit
+        do
+          debit depositCid >>= creditAccount transferTo
+
+      nonconsuming Deposit : ContractId AssetDeposit
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          debitAccount depositCid >>= credit
+
+      nonconsuming Withdraw : ContractId AssetDeposit
+        with
+          transferTo : Account
+          depositCid : ContractId AssetDeposit
+        do
+          assertMsg "Cannot deallocate to target account" $ account.owner == transferTo.owner && account /= transferTo
+          let
+            addNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = nominee
+            removeNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = nominee
+
+          addNominee *> (debit depositCid >>= creditAccount transferTo) <* removeNominee
+
+    controller nominee can
+      nonconsuming ApproveWithdrawal : ContractId AssetDeposit
+        with
+          unallocateCid : ContractId WithdrawalRequest
+        do
+          WithdrawalRequest{..} <- fetch unallocateCid
+          archive unallocateCid
+
+          exercise self Withdraw with ..
+
+      nonconsuming RejectWithdrawal : ()
+        with
+          withdrawalRequestCid : ContractId WithdrawalRequest
+        do
+          archive withdrawalRequestCid
+
+    controller account.owner can
+      nonconsuming RequestWithdrawal : ContractId WithdrawalRequest
+        with
+          transferTo : Account
+          depositCid : ContractId AssetDeposit
+        do
+          create WithdrawalRequest with ..
+
+      nonconsuming CancelWithdrawalRequest : ()
+        with
+          withdrawalRequestCid : ContractId WithdrawalRequest
+        do
+          archive withdrawalRequestCid
+
+template WithdrawalRequest
+  with
+    operator : Party
+    provider : Party
+    account : Account
+    transferTo : Account
+    depositCid : ContractId AssetDeposit
+  where
+    signatory operator, provider, account.owner

@@ -4,9 +4,9 @@ import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, 
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Listing'
 import useStyles from "../styles";
 import { getName } from "../../config";
+import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
 
 const MarketsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();

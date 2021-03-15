@@ -1,0 +1,71 @@
+module Marketplace.Distribution.Role where
+
+import Marketplace.Distribution.Auction.Service qualified as Auction
+import Marketplace.Distribution.Bidding.Service qualified as Bidding
+
+template Role
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator, provider
+
+    key (operator, provider) :  (Party, Party)
+    maintainer key._1
+
+    controller provider can
+      nonconsuming OfferAuctionService : ContractId Auction.Offer
+        with
+          customer : Party
+        do
+          create Auction.Offer with ..
+
+      nonconsuming TerminateAuctionService : ()
+        with
+          auctionServiceCid : ContractId Auction.Service
+        do
+          archive auctionServiceCid
+
+      nonconsuming OfferBiddingService : ContractId Bidding.Offer
+        with
+          customer : Party
+        do
+          create Bidding.Offer with ..
+
+      nonconsuming TerminateBiddingService : ()
+        with
+          biddingServiceCid : ContractId Bidding.Service
+        do
+          archive biddingServiceCid
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : ContractId Role
+        do
+          create Role with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : ContractId Role
+        do
+          create Role with ..
+
+      Reject : ()
+        do
+          return ()

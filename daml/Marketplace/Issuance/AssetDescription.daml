@@ -1,0 +1,65 @@
+module Marketplace.Issuance.AssetDescription where
+-- Consider merging into DA.Finance.Types.Asset
+
+import DA.Finance.Types (Id)
+import DA.Next.Set (Set)
+import DA.Map (Map, size)
+import DA.Map qualified as Map
+import ContingentClaims.Claim.Serializable (Claim(..))
+import ContingentClaims.Observation (Observation(..))
+
+type T = AssetDescription
+type Claims = Claim Date Id
+type Version = Int
+
+deriving instance Ord a => Ord (Observation Date a)
+deriving instance Ord (Claim Date Id)
+
+template AssetDescription
+  with
+    assetId: Id
+    -- ^ This is the master record for the asset, and has embedded it's unique identifier
+    description: Text
+    -- ^ Short description of the asset, mainly for display purposes
+    issuer: Party
+    -- ^ The counterparty for any @claims@
+    claims: Claims
+    -- ^ Rights and obligations of the holder (and issuer)
+    safekeepingAccountId: Id
+    -- ^ Source account used for issuing the security and any subsequent corporate actions, e.g. paying out a coupon.
+    -- terms: Text
+    -- ^ Any further contract terms not captured in @claims@; typically a URI.
+    -- authorized: Decimal
+    -- ^ Number of shares/contracts authorized for issuance
+    -- issued: Decimal
+    -- ^ Number of shares/contracts already issued for trading
+    -- issuePrice: (Decimal, Asset)
+    -- ^ The price & currency of the *initial* offer.
+    observers : Set Party
+  where
+    signatory assetId.signatories <> safekeepingAccountId.signatories
+    observer observers
+
+    key assetId : Id
+    maintainer key.signatories
+
+-- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
+template Index
+  with
+    assetLabel: Text
+    descriptionSignatories: Set Party
+    versions: Map Claims Version
+  where
+    signatory descriptionSignatories
+    key (descriptionSignatories, assetLabel) : (Set Party, Text)
+    maintainer key._1
+
+    controller descriptionSignatories can
+      LookupOrInsert : (ContractId Index, Version) with claims : Claims
+        do
+          case Map.lookup claims versions of
+             Some version -> return (self, version)
+             None -> do
+               let nextVersion = size versions
+               cid <- create this with versions = Map.insert claims nextVersion versions
+               return (cid, nextVersion)

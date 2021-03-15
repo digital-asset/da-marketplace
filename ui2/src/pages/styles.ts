@@ -56,6 +56,9 @@ export default makeStyles((theme : any) => createStyles({
   width90: {
     width: "90%"
   },
+  width50: {
+    width: "50%"
+  },
   marginLeft10: {
     marginLeft: 10
   },

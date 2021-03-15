@@ -1,0 +1,55 @@
+module Marketplace.Operator.Service where
+
+import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Custody.Role qualified as Custodian
+import Marketplace.Distribution.Role qualified as Distributor
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Role qualified as Exchange
+import Marketplace.Trading.Matching.Service qualified as Matching
+
+template Service
+  with
+    operator : Party
+  where
+    signatory operator
+
+    key operator : Party
+    maintainer key
+
+    controller operator can
+      nonconsuming OfferCustodianRole : ContractId Custodian.Offer
+        with
+          provider : Party
+        do
+          create Custodian.Offer with ..
+
+      nonconsuming OfferExchangeRole : ContractId Exchange.Offer
+        with
+          provider : Party
+        do
+          create Exchange.Offer with ..
+
+      nonconsuming OfferRegulatorService : ContractId Regulator.Offer
+        with
+          provider : Party
+          customer : Party
+        do
+          create Regulator.Offer with ..
+
+      nonconsuming OfferMatchingService : ContractId Matching.Offer
+        with
+          provider : Party
+        do
+          create Matching.Offer with ..
+
+      nonconsuming OfferSettlementService : ContractId Settlement.Offer
+        with
+          provider : Party
+        do
+          create Settlement.Offer with ..
+
+      nonconsuming OfferDistributorRole : ContractId Distributor.Offer
+        with
+          provider : Party
+        do
+          create Distributor.Offer with ..

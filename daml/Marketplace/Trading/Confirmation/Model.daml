@@ -1,0 +1,80 @@
+module Marketplace.Trading.Confirmation.Model where
+
+import DA.List (head)
+import DA.Finance.Asset (AssetDeposit_Split(..))
+import DA.Finance.Types (Account(..))
+import DA.Finance.Utils (fetchAndArchive)
+import DA.Next.Set (Set, insert)
+import Marketplace.Settlement.Model qualified as Settlement
+-- import Marketplace.Trading.Listing (Listing)
+import Marketplace.Trading.Model qualified as Order
+
+-- TODO: Try to turn this into a service
+
+data CustomerAccounts = CustomerAccounts with
+    customer : Party
+    allocationAccount : Account
+    tradingAccount : Account
+  deriving (Eq, Show)
+
+getAccount : [CustomerAccounts] -> (CustomerAccounts -> Account) -> Party -> Account
+getAccount accounts accountType customer = accountType . head $ filter (\account -> account.customer == customer) accounts
+
+type T = Confirmation
+
+template Confirmation
+  with
+    operator : Party
+    provider : Party
+    buyer : Party
+    seller : Party
+    accounts : [CustomerAccounts]
+    execution : Order.Execution
+    signed : Set Party
+  where
+    signatory signed
+
+    choice Sign : ContractId Confirmation
+      with
+        ctrl : Party
+        allocationAccount : Account
+        tradingAccount : Account
+      controller ctrl
+      do
+        assert (ctrl == buyer || ctrl == seller)
+        create this with
+          signed = insert ctrl signed
+          accounts = (CustomerAccounts with customer = ctrl; ..) :: accounts
+
+    controller provider can
+      Process : ContractId Settlement.SettlementInstruction
+        with
+          buyCid : ContractId Order.T
+          sellCid : ContractId Order.T
+        do
+          [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
+
+          -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
+          -- paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
+
+          [payment, delivery] <- forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
+            let
+              isPartialFill = execution.quantity < order.remainingQuantity
+              status = if isPartialFill then Order.PartiallyExecuted else Order.FullyExecuted
+              executions = execution :: order.executions
+              remainingQuantity = order.remainingQuantity - execution.quantity
+              quantities = [case order.details.side of
+                Order.Buy  -> execution.quantity * execution.price
+                Order.Sell -> execution.quantity]
+              getAllocationAccount = getAccount accounts (.allocationAccount)
+              getTradingAccount    = getAccount accounts (.tradingAccount)
+
+            depositCid <- if isPartialFill
+              then head <$> exercise order.depositCid AssetDeposit_Split with ..
+              else pure order.depositCid
+
+            create order with status, executions, remainingQuantity
+            pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
+            )
+
+          create Settlement.SettlementInstruction with ..

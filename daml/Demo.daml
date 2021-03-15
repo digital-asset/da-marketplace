@@ -4,15 +4,15 @@ import Common
 import ContingentClaims.Claim qualified as C
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (cpb, couponDates)
+import ContingentClaims.FinancialClaim (cpb, couponDates, bermudan, irs)
 import ContingentClaims.FinancialClaim qualified as C
 import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Types (Id(..))
 import DA.Next.Set (fromList)
-import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
-import Marketplace.Issuance qualified as Issuance
+import Marketplace.Issuance.Service qualified as Issuance
 
 demo : Script ()
 demo = do
@@ -33,6 +33,26 @@ demo = do
 
   issuance providers assets issuer
 
+  let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
+        bermudan
+          ( irs
+              principal
+              (O.observe floatingRateId.label)
+              floatingRateId
+              fixedRate
+              fixedCcyId
+              fixingDates)
+        $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
+
+  -- issuer originates a swaption
+  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
+      assetLabel = "GS bermudan swaption"
+      description = "GS bermudan swaption"
+      safekeepingAccountId = issuer.mainAccount.id
+      observers = []
+      claims = C.serialize $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 $ couponDates 2021 2022 [Jan, Jul] 15
+  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+
   pure ()
 
 issuance : Providers -> Assets -> Customer -> Script ()
@@ -42,7 +62,7 @@ issuance Providers{..} Assets{..} issuer = do
   origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestBinaryCallOptionOrigination with
       assetLabel = "TSLA Mar21 910.0"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       expiry = date 2020 Mar 18
       underlyingId = tsla.id
       currencyId = usd.id
@@ -64,7 +84,7 @@ issuance Providers{..} Assets{..} issuer = do
       assetLabel = "NFLX 4 7/8 04/15/23"
       description = "NFLX 4 7/8 04/15/23"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usd.id (couponDates 2021 2023 [Jan,Jul] 15)
   cpbDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cpbDesc <- queryContractId bank cpbDescCid
@@ -84,9 +104,10 @@ issuance Providers{..} Assets{..} issuer = do
       assetLabel = "NFLX-CONV-NOTE-2021-06-21"
       description = "Netflix Convertible Note 2021-06-21"
       safekeepingAccountId = issuer.mainAccount.id
-      observers = []
+      observers = [public]
       claims = C.serialize $ convertibleNote nflx.id 100_000.0 usd.id 0.20 (date 2021 Jun 06) 0.04 550.0 nflx.id
   cnDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
   Some cnDesc <- queryContractId bank cnDescCid
+
 
   pure ()

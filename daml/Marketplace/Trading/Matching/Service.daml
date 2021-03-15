@@ -1,0 +1,68 @@
+module Marketplace.Trading.Matching.Service where
+
+import DA.Next.Set (fromList)
+import Marketplace.Settlement.Model qualified as Settlement
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Service qualified as TradingService
+import Marketplace.Trading.Confirmation.Model qualified as Confirmation
+
+template Service
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator, provider
+
+    key provider : Party
+    maintainer key
+
+    controller provider can
+      nonconsuming MatchOrders : ContractId Settlement.SettlementInstruction
+        with
+          execution : Order.Execution
+        do
+          [(makerOrderCid, makerOrder), (takerOrderCid, takerOrder)] <- forA [execution.makerOrderId, execution.takerOrderId] (\orderId -> fetchByKey @Order.T (provider, orderId))
+
+          let
+            (buy, buyCid, sell, sellCid) = case makerOrder.details.side of
+              Order.Buy  -> (makerOrder, makerOrderCid, takerOrder, takerOrderCid)
+              Order.Sell -> (takerOrder, takerOrderCid, makerOrder, makerOrderCid)
+            signConfirmation customer confirmationCid = exerciseByKey @TradingService.T (operator, provider, customer) TradingService.SignConfirmation with confirmationCid
+
+          confirmationCid <- create Confirmation.Confirmation with signed = fromList [operator, provider]; buyer = buy.customer; seller = sell.customer; accounts = [], ..
+            >>= signConfirmation buy.customer
+            >>= signConfirmation sell.customer
+
+          exercise confirmationCid Confirmation.Process with buyCid; sellCid
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : ContractId Service
+        do
+          create Service with ..
+
+      Reject : ()
+        do
+          return ()

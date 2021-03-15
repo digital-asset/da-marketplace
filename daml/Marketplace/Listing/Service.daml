@@ -1,0 +1,188 @@
+module Marketplace.Listing.Service where
+
+import DA.Finance.Types
+import DA.Next.Set (Set, fromList)
+import Marketplace.Trading.Error qualified as Error
+import Marketplace.Listing.Model (Listing(..), Status(..))
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming RequestCreateListing : ContractId CreateListingRequest
+        with
+          listingId : Text
+          calendarId : Text
+          description : Text
+          tradedAssetId : Id
+          quotedAssetId : Id
+          tradedAssetPrecision : Int
+          quotedAssetPrecision : Int
+          minimumTradableQuantity : Decimal
+          maximumTradableQuantity : Decimal
+          observers : [Party]
+        do
+          create CreateListingRequest with status = Active; observers = fromList observers; ..
+
+      nonconsuming RequestDisableListing : ContractId DisableListingRequest
+        with
+          listingCid : ContractId Listing
+        do
+          create DisableListingRequest with ..
+
+    controller provider can
+      nonconsuming CreateListing : ContractId Listing
+        with
+          createListingRequestCid : ContractId CreateListingRequest
+          providerId : Text
+        do
+          CreateListingRequest{..} <- fetch createListingRequestCid
+          archive createListingRequestCid
+          create Listing with ..
+
+      nonconsuming ListingFailure : ContractId FailedListingCreation
+        with
+          createListingRequestCid : ContractId CreateListingRequest
+          message : Text
+          name : Text
+          code : Text
+        do
+          CreateListingRequest{..} <- fetch createListingRequestCid
+          archive createListingRequestCid
+
+          let error = Error.Error with message = name <> " : " <> message, ..
+          create FailedListingCreation with ..
+
+      nonconsuming DisableListing : ContractId Listing
+        with
+          disableListingRequestCid : ContractId DisableListingRequest
+        do
+          DisableListingRequest{..} <- fetch disableListingRequestCid
+          archive disableListingRequestCid
+          listing <- fetch listingCid
+          archive listingCid
+          create listing with status = Disabled
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          create Service with ..
+
+      Decline : ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
+
+template CreateListingRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    listingId : Text
+    calendarId : Text
+    description : Text
+    tradedAssetId : Id
+    quotedAssetId : Id
+    tradedAssetPrecision : Int
+    quotedAssetPrecision : Int
+    minimumTradableQuantity : Decimal
+    maximumTradableQuantity : Decimal
+    status : Status
+    observers : Set Party
+  where
+    signatory operator, provider, customer
+
+    key (provider, listingId) : (Party, Text)
+    maintainer key._1
+
+    let serviceKey = (operator, provider, customer)
+
+    controller provider can
+      nonconsuming ListingRequestSuccess : ContractId Listing
+        with
+          providerId : Text
+        do
+          exerciseByKey @Service serviceKey CreateListing with createListingRequestCid = self, ..
+
+      nonconsuming ListingRequestFailure : ContractId FailedListingCreation
+        with
+          message : Text
+          name : Text
+          code : Text
+        do
+          exerciseByKey @Service serviceKey ListingFailure with createListingRequestCid = self, ..
+
+template FailedListingCreation
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    error : Error.T
+    listingId : Text
+    calendarId : Text
+    description : Text
+    tradedAssetId : Id
+    quotedAssetId : Id
+    tradedAssetPrecision : Int
+    quotedAssetPrecision : Int
+    minimumTradableQuantity : Decimal
+    maximumTradableQuantity : Decimal
+    status : Status
+  where
+    signatory operator, provider, customer
+
+template DisableListingRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    listingCid : ContractId Listing
+  where
+    signatory operator, provider, customer

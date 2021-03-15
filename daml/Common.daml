@@ -5,25 +5,26 @@ import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Next.Set
-import Marketplace.AssetDescription (AssetDescription(..))
-import qualified Marketplace.Operator as Operator
-import qualified Marketplace.Custodian as Custodian
-import qualified Marketplace.Custody as Custody
-import qualified Marketplace.Issuance as Issuance
-import qualified Marketplace.Trading.Exchange as Exchange
-import qualified Marketplace.Trading.Matching as Matching
+import Marketplace.Issuance.AssetDescription (AssetDescription(..))
+import qualified Marketplace.Operator.Service as Operator
+import qualified Marketplace.Custody.Role as Custodian
+import qualified Marketplace.Custody.Service as Custody
+import qualified Marketplace.Issuance.Service as Issuance
+import qualified Marketplace.Trading.Role as Exchange
+import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Service as Trading
-import qualified Marketplace.Trading.Listing as Listing
-import qualified Marketplace.Settlement as Settlement
-import qualified Marketplace.Distribution.Distributor as Distributor
+import qualified Marketplace.Listing.Service as Listing
+import qualified Marketplace.Settlement.Service as Settlement
+import qualified Marketplace.Distribution.Role as Distributor
 import qualified Marketplace.Distribution.Bidding.Service as Bidding
-import qualified Marketplace.Regulator as Regulator
+import qualified Marketplace.Regulator.Service as Regulator
 
 data Assets = Assets
   with
     usd : Asset
     tsla : Asset
     nflx : Asset
+    libor : Asset
 
 data Providers = Providers
   with
@@ -115,7 +116,7 @@ onboardCustomer Providers{..} party = do
   issuanceServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
 
-  -- Identitiy
+  -- Identity
   regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..
   regulatorServiceCid <- submit customer do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid <- submit customer do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with observers = [public]; legalName = party <> " Legal Name"; location = party <> " Location"
@@ -140,11 +141,15 @@ onboardAssets Providers{..} = do
     nflx = Asset with id = nflxId; quantity = 0.0
     dUnitId = Id with signatories = singleton bank; label = "DAH-D"; version = 0
     dUnit = Asset with id = nflxId; quantity = 0.0
+    liborId = Id with signatories = singleton bank; label = "LIBOR"; version = 0
+    libor = Asset with id = liborId; quantity = 0.0
+
 
   submit bank do createCmd AssetDescription with assetId = usdId; description = "United States Dollar"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = nflxId; description = "Netflix, Inc. Common Stock"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = tslaId; description = "Tesla, Inc. Common Stock"; issuer = bank; claims = Zero; ..
   submit bank do createCmd AssetDescription with assetId = dUnitId; description = "Digital Asset Holdings D-Unit"; issuer = bank; claims = Zero; ..
+  submit bank do createCmd AssetDescription with assetId = liborId; description = "LIBOR"; issuer = bank; claims = Zero; ..
 
   pure Assets with ..
 

@@ -2,12 +2,11 @@ module Marketplace.Distribution.Bidding.Service where
 
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Asset, Account, Id)
-import DA.Finance.Utils (fetchAndArchive)
 import DA.List (head, last)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
-import Marketplace.Settlement as Settlement (SettlementDetails, SettlementInstruction(..))
-import Marketplace.Trading.AllocationAccountRule qualified as Allocation
-import Marketplace.Trading.AllocationAccountRule (AllocationAccountRule(..))
+import Marketplace.Settlement.Model as Settlement (SettlementDetails, SettlementInstruction(..))
+import Marketplace.Rule.AllocationAccount qualified as Allocation
+import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 
 type S = Service
 
@@ -27,14 +26,17 @@ template Service
     controller customer can
       nonconsuming SubmitBid : ContractId Bidding.Bid
         with
-          bidRequestCid : ContractId Bidding.Request
+          auctionCid : ContractId Bidding.Auction
           price : Decimal
           quantity : Decimal
           depositCid : ContractId AssetDeposit
           allowPublishing : Bool
         do
           -- TODO: Check for parallism of this choice
-          Bidding.Request{asset; issuer; auctionId; quotedAssetId} <- fetchAndArchive bidRequestCid
+          Bidding.Auction{asset; issuer; auctionId; quotedAssetId} <- fetch auctionCid
+          hasBid <- visibleByKey @Bidding.Bid (customer, auctionId)
+          assertMsg ("Bid already exists") (not hasBid)
+
           deposit <- fetch depositCid
           assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
           assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == quotedAssetId.label)
@@ -48,22 +50,20 @@ template Service
               ..
 
     controller provider can
-      nonconsuming RequestBid : ContractId Bidding.Request
+      nonconsuming RequestBid : ContractId Bidding.Auction
         with
           issuer : Party
           auctionId : Text
           asset : Asset
           quotedAssetId : Id
+          publishedBidCids : [ContractId Bidding.Bid]
         do
-          create Bidding.Request with ..
-
-      nonconsuming PublishBid : ContractId Bidding.PublishedBid
-        with
-          auctionId : Text
-          price : Decimal
-          quantity : Decimal
-        do
-          create Bidding.PublishedBid with ..
+          publishedBids <- mapA (\bidCid -> do
+            bid <- fetch bidCid
+            assert $ bid.auctionId == auctionId
+            assert bid.allowPublishing
+            pure Bidding.PublishedBid with investor = bid.customer; auctionId = bid.auctionId; quantity = bid.details.quantity) publishedBidCids
+          create Bidding.Auction with ..
 
       nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
         with

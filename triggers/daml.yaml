@@ -21,3 +21,6 @@ data-dependencies:
   - ../.daml/dist/da-marketplace-0.1.8.dar
 sandbox-options:
   - --wall-clock-time
+build-options:
+  - --target=1.11
+  - --ghc-option=-Wno-deprecations

@@ -8,8 +8,8 @@ import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_Add
 import Daml.Script
 import DA.Next.Set qualified as Set
 import DA.Map qualified as Map
-import Marketplace.Issuance (RequestBinaryCallOptionOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
-import Marketplace.Custody (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
+import Marketplace.Issuance.Service (RequestBinaryCallOptionOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
+import Marketplace.Custody.Service (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
 
 endToEnd = script do
   providers <- onboardProviders

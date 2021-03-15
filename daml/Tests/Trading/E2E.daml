@@ -8,11 +8,11 @@ import DA.List
 import DA.Foldable
 import DA.Finance.Types (Id(..))
 import DA.Finance.Asset (AssetDeposit)
-import Marketplace.Settlement qualified as Settlement
+import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Service qualified as Trading
-import Marketplace.Trading.Order qualified as Order
-import Marketplace.Trading.Matching qualified as Matching
-import Marketplace.Trading.Listing qualified as Listing
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Listing.Service qualified as Listing
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches orderCid party status = do

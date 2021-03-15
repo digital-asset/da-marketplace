@@ -4,9 +4,9 @@ import Daml.Script
 import DA.Optional
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Next.Set (fromList)
-import Marketplace.Trading.Order qualified as O
+import Marketplace.Trading.Model qualified as O
 import Marketplace.Trading.Service qualified as S
-import Marketplace.Trading.Listing qualified as L
+import Marketplace.Trading.Listing.Service qualified as L
 import DA.Finance.Asset (AssetDeposit)
 import DA.List
 
@@ -14,7 +14,7 @@ import DA.List
 -- 1/ "daml start" from root of da-marketplace
 -- 2/ "daml deploy --host=localhost --port=6865" from root of daml-dit-integration-exberry
 -- 3/ "poetry build && DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py" from exberry_adapter folder in da-marketplace
--- 4/ "daml script --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Tests.Trading.TradingIntegrationTest:<function_name> --ledger-host localhost --ledger-port 6865" from root of da-marketplace
+-- 4/ "daml script --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Exberry:<function_name> --ledger-host localhost --ledger-port 6865" from /integrationTesting/
 -- 5/ "daml repl --ledger-host=localhost --ledger-port=6865 .daml/dist/da-marketplace-0.1.8.dar ../daml-dit-integration-exberry/.daml/dist/dabl-integration-exberry-1.0.0.dar --import da-marketplace --import dabl-integration-exberry" from root of da-marketplace
 --  a/ To get an existing party - Run in repl "import DA.Optional" followed by "exchange <- pure . fromSome $ partyFromText "Exchange""
 --  b/ To execute a command to simulate the Integration bot (substituting values as necessary)

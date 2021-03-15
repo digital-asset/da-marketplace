@@ -10,12 +10,12 @@ import DA.Finance.Types
 import DA.Optional
 import Daml.Script
 import Common
-import Marketplace.Distribution.Distributor qualified as Distributor
+import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
-import Marketplace.Settlement qualified as Settle
+import Marketplace.Settlement.Model qualified as Settle
 
 data Fixture = Fixture with
   bank : Party
@@ -28,10 +28,10 @@ data Fixture = Fixture with
   bobDepositCid : ContractId AssetDeposit
   charlieDepositCid : ContractId AssetDeposit
   daveDepositCid : ContractId AssetDeposit
-  aliceBidRequestCid : ContractId Bidding.R
-  bobBidRequestCid : ContractId Bidding.R
-  charlieBidRequestCid : ContractId Bidding.R
-  daveBidRequestCid : ContractId Bidding.R
+  aliceAuctionCid : ContractId Bidding.A
+  bobAuctionCid : ContractId Bidding.A
+  charlieAuctionCid : ContractId Bidding.A
+  daveAuctionCid : ContractId Bidding.A
   auctionServiceCid : ContractId Auction.Service
   auctionCid : ContractId Auction.T
   originalDeposits : [AssetDeposit]
@@ -82,15 +82,15 @@ setup = do
   auctionCid <- bank `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
 
   -- Add our parties as bidders
-  aliceBidRequestCid    <- submit bank do exerciseCmd alice.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  bobBidRequestCid      <- submit bank do exerciseCmd bob.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  charlieBidRequestCid  <- submit bank do exerciseCmd charlie.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
-  daveBidRequestCid     <- submit bank do exerciseCmd dave.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId
+  aliceAuctionCid    <- submit bank do exerciseCmd alice.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  bobAuctionCid      <- submit bank do exerciseCmd bob.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  charlieAuctionCid  <- submit bank do exerciseCmd charlie.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  daveAuctionCid     <- submit bank do exerciseCmd dave.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
 
   pure Fixture with ..
 
-submitBid : Customer -> ContractId Bidding.R -> ContractId AssetDeposit -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
-submitBid party bidRequestCid depositCid price quantity = do
+submitBid : Customer -> ContractId Bidding.A -> ContractId AssetDeposit -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
+submitBid party auctionCid depositCid price quantity = do
   let allowPublishing = False
   time <- getTime
   submit party.customer do exerciseCmd party.biddingServiceCid Bidding.SubmitBid with ..
@@ -100,10 +100,10 @@ auctionAndBidsFullyAllocated = do
   Fixture{..} <- setup
 
   -- Create our bids
-  aliceBidCid   <- submitBid alice aliceBidRequestCid aliceDepositCid 10.0 500.0
-  bobBidCid     <- submitBid bob bobBidRequestCid bobDepositCid 11.0 300.0
-  charlieBidCid <- submitBid charlie charlieBidRequestCid charlieDepositCid 12.0 150.0
-  daveBidCid    <- submitBid dave daveBidRequestCid daveDepositCid 13.0 50.0
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 11.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 12.0 150.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 13.0 50.0
 
   -- Kick off the auction
   let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
@@ -136,10 +136,10 @@ auctionParticallyAllocatedOneBidFullyAllocated = do
   Fixture{..} <- setup
 
   -- Create our bids
-  aliceBidCid   <- submitBid alice aliceBidRequestCid aliceDepositCid 10.0 500.0
-  bobBidCid     <- submitBid bob bobBidRequestCid bobDepositCid 1.0 300.0
-  charlieBidCid <- submitBid charlie charlieBidRequestCid charlieDepositCid 2.0 200.0
-  daveBidCid    <- submitBid dave daveBidRequestCid daveDepositCid 3.0 100.0
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 1.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 2.0 200.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 3.0 100.0
 
   -- Kick off the auction
   let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
@@ -174,10 +174,10 @@ auctionFullyAllocatedBidsParticallyAllocated = do
   Fixture{..} <- setup
 
   -- Create our bids
-  aliceBidCid   <- submitBid alice aliceBidRequestCid aliceDepositCid 10.0 500.0
-  bobBidCid     <- submitBid bob bobBidRequestCid bobDepositCid 11.0 400.0
-  charlieBidCid <- submitBid charlie charlieBidRequestCid charlieDepositCid 12.0 150.0
-  daveBidCid    <- submitBid dave daveBidRequestCid daveDepositCid 11.0 50.0
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 11.0 400.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 12.0 150.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 11.0 50.0
 
   -- Kick off the auction
   let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
@@ -212,10 +212,10 @@ auctionNoBidsAboveFloorPrice = do
   Fixture{..} <- setup
 
   -- Create our bids
-  aliceBidCid   <- submitBid alice aliceBidRequestCid aliceDepositCid 1.0 500.0
-  bobBidCid     <- submitBid bob bobBidRequestCid bobDepositCid 2.0 300.0
-  charlieBidCid <- submitBid charlie charlieBidRequestCid charlieDepositCid 3.0 100.0
-  daveBidCid    <- submitBid dave daveBidRequestCid daveDepositCid 4.0 100.0
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 1.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 2.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 3.0 100.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 4.0 100.0
 
   -- Kick off the auction
   let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
@@ -234,10 +234,10 @@ depositsDontCoverBids = do
 
   let allowPublishing = False
   time <- getTime
-  submitMustFail alice.customer   do exerciseCmd alice.biddingServiceCid Bidding.SubmitBid with bidRequestCid = aliceBidRequestCid; depositCid = aliceDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail bob.customer     do exerciseCmd bob.biddingServiceCid Bidding.SubmitBid with bidRequestCid = bobBidRequestCid; depositCid = bobDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail charlie.customer do exerciseCmd charlie.biddingServiceCid Bidding.SubmitBid with bidRequestCid = charlieBidRequestCid; depositCid = charlieDepositCid; price = 10000.0; quantity = 500.0; ..
-  submitMustFail dave.customer    do exerciseCmd dave.biddingServiceCid Bidding.SubmitBid with bidRequestCid = daveBidRequestCid; depositCid = daveDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail alice.customer   do exerciseCmd alice.biddingServiceCid Bidding.SubmitBid with auctionCid = aliceAuctionCid; depositCid = aliceDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail bob.customer     do exerciseCmd bob.biddingServiceCid Bidding.SubmitBid with auctionCid = bobAuctionCid; depositCid = bobDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail charlie.customer do exerciseCmd charlie.biddingServiceCid Bidding.SubmitBid with auctionCid = charlieAuctionCid; depositCid = charlieDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail dave.customer    do exerciseCmd dave.biddingServiceCid Bidding.SubmitBid with auctionCid = daveAuctionCid; depositCid = daveDepositCid; price = 10000.0; quantity = 500.0; ..
 
   pure ()
 

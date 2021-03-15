@@ -25,9 +25,9 @@ class EXBERRY:
 class MARKETPLACE:
     CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
     CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
-    Order = 'Marketplace.Trading.Order:Order'
-    CreateListingRequest = 'Marketplace.Trading.Listing:CreateListingRequest'
-    MatchingService = 'Marketplace.Trading.Matching:Service'
+    Order = 'Marketplace.Trading.Model:Order'
+    CreateListingRequest = 'Marketplace.Listing.Service:CreateListingRequest'
+    MatchingService = 'Marketplace.Trading.Matching.Service:Service'
 
 
 def main():
