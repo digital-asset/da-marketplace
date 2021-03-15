@@ -1,9 +1,8 @@
 import React from 'react'
 import { Grid, Menu } from 'semantic-ui-react'
+import classNames from 'classnames'
 
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
-
-import './Page.scss'
 
 type Props = {
     className?: string;
@@ -13,6 +12,7 @@ type Props = {
     notifications?: React.ReactElement[];
     onLogout: () => void;
     topMenuButtons?: ITopMenuButtonInfo[];
+    landingPage?: boolean;
 }
 
 const Page: React.FC<Props> = ({
@@ -23,10 +23,11 @@ const Page: React.FC<Props> = ({
     notifications,
     onLogout,
     topMenuButtons,
-    activeMenuTitle
+    activeMenuTitle,
+    landingPage
 }) => {
     return (
-        <Grid className={'page-content ' + className}>
+        <Grid className={classNames('page-content', className)}>
             <Grid.Column className="page-sidemenu">
                 <Menu secondary vertical>
                     { sideNav }
@@ -38,7 +39,8 @@ const Page: React.FC<Props> = ({
                     title={menuTitle}
                     notifications={notifications}
                     topMenuButtons={topMenuButtons}
-                    activeMenuTitle={activeMenuTitle}/>
+                    activeMenuTitle={activeMenuTitle}
+                    landingPage={landingPage}/>
                 { children }
             </Grid.Column>
         </Grid>

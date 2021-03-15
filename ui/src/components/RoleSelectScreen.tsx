@@ -1,15 +1,15 @@
 import React, { useState} from 'react'
 import { useHistory } from 'react-router-dom'
-import { Button, Card, Header} from 'semantic-ui-react'
+import { Button, Card } from 'semantic-ui-react'
 
-import { useParty, useStreamQueries, useLedger } from '@daml/react'
-import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/UserSession'
+import { useParty, useLedger } from '@daml/react'
+import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import OnboardingTile from './common/OnboardingTile'
-import { ArrowRightIcon } from '../icons/Icons'
+import { useContractQuery } from '../websocket/queryStream'
 
-import './RoleSelectScreen.scss'
+import OnboardingTile from './common/OnboardingTile'
+import { roleRoute } from './common/utils'
 
 type RoleSelectProps = {
     loading: boolean;
@@ -25,7 +25,7 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ loading, disabled, caption, rol
             loading={loading}
             icon='right arrow blue'
             labelPosition='right'
-            content={<Header as='h4'> { caption } </Header> }
+            content={<p className='bold'> { caption } </p> }
             onClick={roleSelectClick}
         />
     </Card>
@@ -43,9 +43,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
     const user = useParty();
     const ledger = useLedger();
-    const { contracts: userSessions } = useStreamQueries(UserSession, () => [], [], (e) => {
-        console.log("Unexpected close from userSession: ", e);
-    });
+    const userSessions = useContractQuery(UserSession);
 
     const handleRoleClick = async (role: MarketRole) => {
         setRole(role);
@@ -58,15 +56,15 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
 
         setLoading(false);
         setRole(undefined);
-        history.push(`/role/${role.slice(0, -4).toLowerCase()}`);
+        history.push(roleRoute(role));
     }
 
     return (
-        <>
+        <div className='role-selector'>
             <OnboardingTile>
-                <p className='dark'>What would you like to do?</p>
+                <p className='dark bold'>What would you like to do?</p>
                 <RoleSelect
-                    caption='I want to chat & invest'
+                    caption='Invest'
                     loading={loading && role === MarketRole.InvestorRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.InvestorRole)}/>
 
@@ -76,21 +74,26 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
                     roleSelectClick={() => handleRoleClick(MarketRole.IssuerRole)}/>
 
                 <RoleSelect
-                    caption='Exchange'
+                    caption='List markets and match orders'
                     loading={loading && role === MarketRole.ExchangeRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.ExchangeRole)}/>
 
                 <RoleSelect
-                    caption='Broker'
+                    caption='Intermediate access to markets'
                     loading={loading && role === MarketRole.BrokerRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.BrokerRole)}/>
 
                 <RoleSelect
-                    caption='Bank'
+                    caption='Safekeep assets'
                     loading={loading && role === MarketRole.CustodianRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.CustodianRole)}/>
+
+                <RoleSelect
+                    caption='Clear trades'
+                    loading={loading && role === MarketRole.CCPRole}
+                    roleSelectClick={() => handleRoleClick(MarketRole.CCPRole)}/>
             </OnboardingTile>
-        </>
+        </div>
     );
 }
 

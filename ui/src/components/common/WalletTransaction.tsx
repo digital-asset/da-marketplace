@@ -1,38 +1,37 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button } from 'semantic-ui-react'
+import { Form, Button, Header } from 'semantic-ui-react'
 
 import { useHistory } from 'react-router-dom';
 
-import { useParty, useLedger, useStreamQueries } from '@daml/react'
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
+import { useParty, useLedger } from '@daml/react'
 
-import { WalletIcon } from '../../icons/Icons'
+import { WalletIcon, IconClose} from '../../icons/Icons'
 
 import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
 
-import Page from '../common/Page'
-import PageSection from '../common/PageSection'
-import { useOperator } from './common'
-import { makeContractInfo, wrapDamlTuple, ContractInfo, DepositInfo } from '../common/damlTypes'
-import { DepositProvider } from '../common/Holdings';
-
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
+import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
+
+import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+
+import { useOperator } from './common'
+import { AppError } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
-import FormErrorHandled from './FormErrorHandled';
-import { AppError } from './errorTypes';
+import PageSection from './PageSection'
+import Page from './Page'
 
 const WalletTransaction = (props: {
     transactionType: 'Withdraw' | 'Deposit';
     sideNav: React.ReactElement;
     onLogout: () => void;
     deposits?: DepositInfo[];
-    providers?: DepositProvider[];
 }) => {
-    const { transactionType, sideNav, onLogout, deposits, providers } = props;
+    const { transactionType, sideNav, onLogout, deposits } = props;
 
     const [ custodianId, setCustodianId ] = useState<string>();
     const [ quantity, setQuantity ] = useState<string>('');
@@ -52,12 +51,8 @@ const WalletTransaction = (props: {
     const ledger = useLedger();
     const history = useHistory();
 
-    const registeredCustodians = useStreamQueryAsPublic(RegisteredCustodian).contracts
-        .map(makeContractInfo)
-
-    const allTokens = useStreamQueries(Token, () => [], [], (e) => {
-            console.log("Unexpected close from Token: ", e);
-        }).contracts.map(makeContractInfo)
+    const registeredCustodians = useContractQuery(RegisteredCustodian, AS_PUBLIC);
+    const allTokens = useContractQuery(Token);
 
     const { step, placeholder } = preciseInputSteps(Number(token?.contractData.quantityPrecision));
 
@@ -97,7 +92,7 @@ const WalletTransaction = (props: {
                     <Form.Input
                         type='number'
                         step={step}
-                        label={<p className='p2'>Amount</p>}
+                        label={<p>Amount</p>}
                         placeholder={placeholder}
                         disabled={!token}
                         onChange={handleSetDepositQuantity}/>
@@ -115,12 +110,15 @@ const WalletTransaction = (props: {
             >
             <PageSection>
                 <div className='wallet-transaction'>
-                    <h2>{transactionType} Funds</h2>
+                    <Header as='h2'>{transactionType} Funds</Header>
                     <FormErrorHandled onSubmit={onSubmit}>
                         {body}
-                        <Button className='ghost' type='submit'>
-                            Submit
-                        </Button>
+                        <div className='actions'>
+                            <Button className='ghost' type='submit'>
+                                Submit
+                            </Button>
+                            <a className='a2' onClick={() => history.goBack()}><IconClose/> Cancel</a>
+                        </div>
                     </FormErrorHandled>
                 </div>
             </PageSection>
@@ -128,21 +126,19 @@ const WalletTransaction = (props: {
     )
 
     async function onSubmit() {
+        if (!token || !custodianId) { return; }
         const key = wrapDamlTuple([operator, party]);
-
         setShowSuccessMessage(false)
-
-        let args = {}
 
         switch(transactionType) {
             case 'Deposit':
-                args = {
-                    tokenId: token?.contractData.id,
+                const depositArgs = {
+                    tokenId: token.contractData.id,
                     depositQuantity: quantity,
                     custodian: custodianId
                 };
 
-                return await ledger.exerciseByKey(Investor.RequestDeposit, key, args)
+                return await ledger.exerciseByKey(Investor.Investor_RequestDeposit, key, depositArgs)
                     .then(_ => history.goBack())
 
             case 'Withdraw':
@@ -153,12 +149,12 @@ const WalletTransaction = (props: {
                     throw new AppError("Invalid withdrawal amount", "Withdraw amount exceeds asset total");
                 }
 
-                args = {
+                const withdrawlArgs = {
                     depositCids: selectedAssetDeposits?.map(d => d.contractId),
                     withdrawalQuantity: quantity,
                 };
 
-                return await ledger.exerciseByKey(Investor.RequestWithdrawl, key, args)
+                return await ledger.exerciseByKey(Investor.Investor_RequestWithdrawl, key, withdrawlArgs)
                     .then(_ => history.goBack())
         }
     }

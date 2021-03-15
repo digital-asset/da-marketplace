@@ -26,12 +26,6 @@ export class AppError extends Error {
     }
 }
 
-export class InvalidPartiesJSONError extends AppError {
-    constructor(message: string) {
-        super("Invalid parties.json file", message);
-    }
-}
-
 export type ErrorMessage = {
     header: string;
     message: string | string[];

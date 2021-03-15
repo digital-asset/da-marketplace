@@ -4,8 +4,6 @@ import { unwrapDamlTuple } from '../common/damlTypes'
 import { BrokerTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.scss'
-
 export type BrokerTradeCardProps = {
     brokerTrade: BrokerTrade;
 }
@@ -18,16 +16,17 @@ const BrokerTradeCard: React.FC<BrokerTradeCardProps> = ({ children, brokerTrade
 
     return (
         <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
+            <Card fluid className='order-card'>
+                <div className='order-info'>
                     <div><ExchangeIcon/> {label}</div>
                     <div>{ amount }</div>
                     <div>{`@ ${price}`}</div>
                     <div>{`Broker Order ID: ${brokerTrade.brokerOrderId}`}</div>
-                </Card>
-
-                { children }
-            </div>
+                </div>
+                <div className='actions'>
+                    { children }
+                </div>
+            </Card>
         </div>
     )
 }

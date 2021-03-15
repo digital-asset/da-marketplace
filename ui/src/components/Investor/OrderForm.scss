@@ -4,6 +4,8 @@
         padding: $spacing-m;
         color: #fff;
         width: 100%;
+        animation: fadeIn .5s;
+
 
         .field {
             display: flex;
@@ -55,9 +57,6 @@
                 display: flex;
                 justify-content: center;
                 align-items: center;
-
-                color: var(--textcolor);
-                font-size: 20px;
 
                 &.buy {
                     background-color: var(--green-60);

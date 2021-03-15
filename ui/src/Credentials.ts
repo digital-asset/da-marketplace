@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple'
-import { expiredToken } from '@daml/dabl-react'
+import { expiredToken } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 

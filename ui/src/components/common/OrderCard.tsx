@@ -1,16 +1,17 @@
 import React from 'react'
-import { Card } from 'semantic-ui-react'
+import { Card, Label } from 'semantic-ui-react'
+
+import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
 import { unwrapDamlTuple } from '../common/damlTypes'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
 import { ExchangeIcon } from '../../icons/Icons'
 
-import './OrderCard.scss'
-
 export type OrderProps = {
-    order: Order;
+    order: Order | ClearedOrder;
+    cleared?: boolean;
 }
 
-const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
+const OrderCard: React.FC<OrderProps> = ({ children, cleared, order }) => {
     const [base, quote] = unwrapDamlTuple(order.pair).map(t => t.label);
     const label = order.isBid ? `Buy ${base}/${quote}` : `Sell ${base}/${quote}`;
     const price = `${order.price} ${quote}`;
@@ -18,17 +19,19 @@ const OrderCard: React.FC<OrderProps> = ({ children, order }) => {
 
     return (
         <div className='order-card-container'>
-            <div className='order-card'>
-                <Card fluid className='order-info'>
-                    <div><ExchangeIcon/>
-                    {label}
-                    </div>
-                    <div>{ amount }</div>
-                    <div>{`@ ${price}`}</div>
-                </Card>
-
-                { children }
-            </div>
+            <Card fluid className='order-card'>
+                <div className='order-info'>
+                    <p className='order-icon'><ExchangeIcon/>
+                        { cleared && <Label>Cleared</Label> }
+                        { label }
+                    </p>
+                    <p>{ amount }</p>
+                    <p>{`@ ${price}`}</p>
+                </div>
+                <div className='actions'>
+                    { children }
+                </div>
+            </Card>
         </div>
     )
 }

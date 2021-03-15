@@ -2,16 +2,21 @@ import { CreateEvent } from '@daml/ledger'
 
 import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
+    CentralCounterpartyCustomer,
+    Broker,
     BrokerCustomer,
     ExchangeParticipant,
     Exchange,
+    Registry,
     Custodian,
+    Clearing,
+    Investor,
+    Issuer,
     Notification,
-    Token
+    Token,
+    Derivative
 } from '@daml.js/da-marketplace/lib/Marketplace'
-import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
-import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
-import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
+import { ContractId, List } from '@daml/types';
 
 type DamlTuple<T> = {
     [key: string]: T;
@@ -52,8 +57,14 @@ export function getAccountProvider(accountLabel: string): string | undefined {
     return accountLabel.split('@')[1].replace(/'/g, '');
 }
 
-export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T> {
-    return ({contractId: event.contractId, contractData: event.payload});
+export function makeContractInfo<T extends object, K = unknown, I extends string = string,>(event: CreateEvent<T,K,I>) : ContractInfo<T, K> {
+    return ({
+        key: event.key,
+        templateId: event.templateId,
+        contractId: event.contractId,
+        signatories: event.signatories,
+        contractData: event.payload
+    });
 }
 
 export function wrapTextMap(items: string[]) {
@@ -66,22 +77,88 @@ export function wrapTextMap(items: string[]) {
     return { textMap: textMapValue }
 }
 
-export type ContractInfo<T> = {
-    contractId: string;
+export type RelationshipRequestChoice =
+    typeof Investor.Investor.Investor_RequestCustodianRelationship |
+    typeof Issuer.Issuer.Issuer_RequestCustodianRelationship |
+    typeof Broker.Broker.Broker_RequestCustodianRelationship |
+    typeof Exchange.Exchange.Exchange_RequestCustodianRelationship;
+
+export type ContractInfo<T, K = unknown> = {
+    templateId: string;
+    key: K;
+    contractId: ContractId<T>;
+    signatories: List<string>;
     contractData: T;
 }
 
+export type BrokerCustomerInfo = ContractInfo<
+    BrokerCustomer.BrokerCustomer,
+    BrokerCustomer.BrokerCustomer.Key>;
+
+export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.BrokerCustomerInvitation>;
+
+export type CCPCustomerInfo = ContractInfo<
+    CentralCounterpartyCustomer.CCPCustomer,
+    CentralCounterpartyCustomer.CCPCustomer.Key>;
+
+export type CCPCustomerInviteInfo = ContractInfo<CentralCounterpartyCustomer.CCPCustomerInvitation>;
+
+export type CustodianInfo = ContractInfo<
+    Custodian.Custodian,
+    Custodian.Custodian.Key>;
+
+export type CustodianRelationshipInfo = ContractInfo<
+    Custodian.CustodianRelationship,
+    Custodian.CustodianRelationship.Key>;
+
+export type CustodianRelationshipRequestInfo = ContractInfo<
+    Custodian.CustodianRelationshipRequest,
+    Custodian.CustodianRelationshipRequest.Key>;
+
 export type DepositInfo = ContractInfo<Asset.AssetDeposit>;
-export type TokenInfo = ContractInfo<Token.Token>;
-export type BrokerCustomerInviteInfo = ContractInfo<BrokerCustomer.Invitation>;
-export type BrokerCustomerInfo = ContractInfo<BrokerCustomer.BrokerCustomer>;
-export type ExchangeInfo = ContractInfo<Exchange.Exchange>;
-export type ExchangeParticipantInfo = ContractInfo<ExchangeParticipant.ExchangeParticipant>;
+
+export type DismissibleNotificationInfo = ContractInfo<Notification.DismissibleNotification>;
+
+export type ExchangeInfo = ContractInfo<
+    Exchange.Exchange,
+    Exchange.Exchange.Key>;
+
+export type MarketPairInfo = ContractInfo<
+    Token.MarketPair,
+    Token.MarketPair.Key>;
+
+export type ExchangeParticipantInfo = ContractInfo<
+    ExchangeParticipant.ExchangeParticipant,
+    ExchangeParticipant.ExchangeParticipant.Key>;
+
 export type ExchParticipantInviteInfo = ContractInfo<ExchangeParticipant.ExchangeParticipantInvitation>;
-export type CustodianInfo = ContractInfo<Custodian.Custodian>;
-export type CustodianRelationshipInfo = ContractInfo<Custodian.CustodianRelationship>;
-export type CustodianRelationshipRequestInfo = ContractInfo<Custodian.CustodianRelationshipRequest>;
-export type RegisteredCustodianInfo = ContractInfo<RegisteredCustodian>;
-export type RegisteredExchangeInfo = ContractInfo<RegisteredExchange>;
-export type RegisteredInvestorInfo = ContractInfo<RegisteredInvestor>;
-export type DismissibleNotificationInfo = ContractInfo<Notification.Dismissible>;
+
+export type RejectedMarginCalculationInfo = ContractInfo<
+    Clearing.RejectedMarginCalculation,
+    Clearing.RejectedMarginCalculation.Key>;
+
+export type RejectedMarkToMarketCalculationInfo = ContractInfo<
+    Clearing.RejectedMarkToMarketCalculation,
+    Clearing.RejectedMarkToMarketCalculation.Key>;
+
+export type ManualFairValueCalculationInfo = ContractInfo<Derivative.ManualFairValueCalculation>;
+
+export type RegisteredCustodianInfo = ContractInfo<
+    Registry.RegisteredCustodian,
+    Registry.RegisteredCustodian.Key>;
+
+export type RegisteredExchangeInfo = ContractInfo<
+    Registry.RegisteredExchange,
+    Registry.RegisteredExchange.Key>;
+
+export type RegisteredInvestorInfo = ContractInfo<
+    Registry.RegisteredInvestor,
+    Registry.RegisteredInvestor.Key>;
+
+export type TokenInfo = ContractInfo<
+    Token.Token,
+    Token.Token.Key>;
+
+export type DerivativeInfo = ContractInfo<
+    Derivative.Derivative,
+    Derivative.Derivative.Key>;
