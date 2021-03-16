@@ -23,21 +23,6 @@
   @include set-color-properties('yellow', 62, 100%, 40);
 
   --white: #FFFFFF;
-
-  // --white: #FFFFFF;
-  // --grey1: #FAFAFA;
-  // --grey2: #F0F0F0;
-  // --grey3: #F6F6F6;
-  // --grey4: #262626;
-
-  // --dabl-color: #3a62Ca;
-  // --lightblue: #F4F8FE;
-  // --lightblue2: #EFF3FF;
-  // --lightblue-border: #ECF0FC;
-  // --mediumblue: #E5EEFD;
-  // --bluegrey1: #A0ACC5;
-
-  // --textcolor: #303132;
 }
 
 $background-dark: var(--cool-grey-20);

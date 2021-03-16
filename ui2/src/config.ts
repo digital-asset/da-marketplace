@@ -1,8 +1,8 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { partyNameFromJwtToken } from "@daml/hub-react/lib";
-import { Credentials, isCredentials, retrieveCredentials } from "./Credentials";
+import { partyNameFromJwtToken } from "@daml/hub-react";
+import { Credentials, isCredentials } from "./Credentials";
 import { retrieveParties } from "./Parties";
 
 export enum DeploymentMode {

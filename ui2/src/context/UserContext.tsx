@@ -98,14 +98,7 @@ async function loginUser(
   }
 }
 
-// const loginDablUser = () => {
-//   window.location.assign(`https://${dablLoginUrl}`);
-// }
-
 function signOut(dispatch : React.Dispatch<any>, history : History) {
-  // event.preventDefault();
-  // localStorage.removeItem("daml.party");
-  // localStorage.removeItem("daml.token");
   clearCredentials();
   dispatch({ type: "SIGN_OUT_SUCCESS" });
   history.push("/login");

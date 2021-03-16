@@ -9,7 +9,6 @@ import { DablPartiesInput, PartyDetails } from '@daml/hub-react'
 
 // import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 
-import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../../context/QueryStreamContext'
 import Credentials, { computeCredentials } from '../../Credentials'
 import { retrieveParties, storeParties } from '../../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../../config'
@@ -17,13 +16,10 @@ import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../../co
 import Tile, { logoHeader} from '../../components/Tile/Tile'
 import TilePage from '../../components/Tile/TilePage'
 
-// import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
 import { AppError } from '../error/errorTypes'
 import FormErrorHandled from '../../components/Form/FormErrorHandled'
 import { loginUser, useUserDispatch } from '../../context/UserContext'
-// import LoadingScreen from './common/LoadingScreen'
 // import SetupRequired from './SetupRequired'
-// import {useDablParties} from './common/common'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -49,8 +45,6 @@ function getTokenFromCookie(): string {
   return tokenCookiePair.slice(tokenCookiePair.indexOf('=') + 1);
 }
 
-const LoadingScreen = () => <div>Loading!!</div>
-
 type Props = {
   onLogin: (credentials: Credentials) => void;
 }
@@ -59,7 +53,6 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
-  const isLoading = usePublicLoading();
   // const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC);
   const query = useQuery();
   const history = useHistory();
@@ -80,8 +73,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     }
 
     loginUser(userDispatch, history, {token, party, ledgerId});
-    // history.push('/role');
-  }, [onLogin, query, history]);
+  }, [onLogin, query, history, userDispatch]);
 
   const localTiles = [
     <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
@@ -100,7 +92,7 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
 
   return (
     <div className='login-screen'>
-      {false ? <LoadingScreen/> : <TilePage tiles={tiles}/>}
+      <TilePage tiles={tiles}/>
     </div>
   );
 };
@@ -115,8 +107,6 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
     const credentials = computeCredentials(username);
 
     loginUser(userDispatch, history, credentials);
-    // onLogin(credentials);
-    // history.push('/role');
   }
 
   return (
@@ -143,7 +133,6 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
 const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ partyId, setPartyId ] = useState("");
   const [ jwt, setJwt ] = useState("");
-  // const { parties, loading } = useDablParties();
 
   const history = useHistory();
   const userDispatch = useUserDispatch();
@@ -271,8 +260,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   )
 }
 
-const DablLoginForm: React.FC<Props> = ({onLogin}) => {
-
+const DablLoginForm: React.FC<Props> = () => {
   const handleDablLogin = () => {
     window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }

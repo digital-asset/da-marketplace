@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple'
-import { expiredToken, partyNameFromJwtToken } from '@daml/hub-react'
+import { expiredToken } from '@daml/hub-react'
 
-import { DeploymentMode, deploymentMode, ledgerId } from './config'
+import { ledgerId } from './config'
 
 export const APPLICATION_ID: string = 'da-marketplace';
 
@@ -28,15 +28,15 @@ export function isCredentials(credentials: any): credentials is Credentials {
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
 export function storeCredentials(credentials?: Credentials): void {
-  localStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
+  sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
 }
 
 export function clearCredentials(): void {
-  localStorage.removeItem(CREDENTIALS_STORAGE_KEY);
+  sessionStorage.removeItem(CREDENTIALS_STORAGE_KEY);
 }
 
 export function retrieveCredentials(): Credentials | undefined {
-  const credentialsJson = localStorage.getItem(CREDENTIALS_STORAGE_KEY);
+  const credentialsJson = sessionStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
   if (!credentialsJson) {
     return undefined;
