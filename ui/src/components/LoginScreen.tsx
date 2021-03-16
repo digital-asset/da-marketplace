@@ -20,6 +20,7 @@ import FormErrorHandled from './common/FormErrorHandled'
 import LoadingScreen from './common/LoadingScreen'
 import SetupRequired from './SetupRequired'
 import {useDablParties} from './common/common'
+import QuickSetup from './QuickSetup'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -116,6 +117,8 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
         value={username}
         onChange={e => setUsername(e.currentTarget.value)}
       />
+      {/* <QuickSetup parties={[]}/> */}
+
       <Button
         className='ghost dark'
         fluid
@@ -176,6 +179,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
 const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ selectedPartyId, setSelectedPartyId ] = useState('');
   const [ parties, setParties] = useState<PartyDetails[]>();
+  const [ showQuickSetup, setShowQuickSetup ] = useState<boolean>(false);
 
   const history = useHistory();
 
@@ -193,8 +197,12 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     }
   }, []);
 
-  const handleLogin = async () => {
-    const partyDetails = parties?.find(p => p.party === selectedPartyId);
+  const handleLogin = async (party?: PartyDetails) => {
+    let partyDetails = parties?.find(p => p.party === selectedPartyId);
+
+    if (party) {
+        partyDetails = party
+    }
 
     if (partyDetails) {
       const { ledgerId, party, token } = partyDetails;
@@ -243,6 +251,13 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
                 value={selectedPartyId}
                 onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
             </Form.Group>
+            {/* {parties &&
+              <p className='login-details dark'>
+                <div onClick={() => setShowQuickSetup(!showQuickSetup)} className='ghost dark' >
+                  Quick Setup
+                </div>
+              </p>
+            } */}
             <Button
               fluid
               submit
@@ -255,6 +270,12 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
           </>
         )}
       </FormErrorHandled>
+      {parties &&
+        <QuickSetup
+          parties={parties}
+          onLogin={onLogin}
+        />
+      }
     </>
   )
 }
