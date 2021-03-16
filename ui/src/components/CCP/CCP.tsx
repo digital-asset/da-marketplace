@@ -27,7 +27,6 @@ import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automatio
 
 import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CCPProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -39,10 +38,11 @@ import DerivativeList from '../common/DerivativeList'
 import InstrumentList from '../common/InstrumentList'
 
 import IssuedDerivative from '../Issuer/IssuedDerivative'
-import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
+import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
 import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
+import NotificationCenter from '../common/NotificationCenter'
 
 type Props = {
     onLogout: () => void;
@@ -96,7 +96,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
+    const notifications = useRelationshipRequestNotifications();
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
     const instruments = useContractQuery(MarketPair);
 
@@ -258,6 +258,11 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                 </Route>
                 <Route path={`${path}/issued-derivative/:derivativeId`}>
                     <IssuedDerivative
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>

@@ -21,7 +21,6 @@ import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/qu
 
 import { useOperator } from '../common/common'
 import { useRegistryLookup } from '../common/RegistryLookup'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { wrapDamlTuple, damlTupleToString} from '../common/damlTypes'
 import IssuerProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
@@ -32,6 +31,7 @@ import LoadingScreen from '../common/LoadingScreen'
 import PageSection from '../common/PageSection'
 import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
+import NotificationCenter from '../common/NotificationCenter'
 
 import IssueAsset from './IssueAsset'
 import IssueDerivative from './IssueDerivative'
@@ -99,8 +99,6 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
         ...exchangeProviders,
         ...brokerProviders,
     ];
-
-    const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -221,7 +219,6 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 relationshipRequestChoice={IssuerTemplate.Issuer_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
-                        notifications={notifications}
                         onLogout={onLogout}/>
                 </Route>
 
@@ -258,6 +255,11 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 </Route>
                 <Route path={`${path}/issued-derivative/:derivativeId`}>
                     <IssuedDerivative
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
                         sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>

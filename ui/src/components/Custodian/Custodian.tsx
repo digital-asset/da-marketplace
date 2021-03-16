@@ -23,15 +23,15 @@ import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automatio
 
 import { useOperator, useDablParties } from '../common/common'
 import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CustodianProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
+import NotificationCenter from '../common/NotificationCenter'
 
-import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
+import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
 
@@ -86,7 +86,7 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
 
     const investors = custodianContract?.contractData.investors || [];
 
-    const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
+    const notifications = useRelationshipRequestNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -196,6 +196,11 @@ const Custodian: React.FC<Props> = ({ onLogout }) => {
                     <ClientHoldings
                         sideNav={sideNav}
                         clients={allBeneficiaries}
+                        onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
                         onLogout={onLogout}/>
                 </Route>
             </Switch>

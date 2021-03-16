@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
@@ -31,9 +31,20 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
     const history = useHistory();
     const userContracts = useContractQuery(User);
     const currentRole = userContracts[0]?.contractData?.currentRole;
+    const [dismissNotificationsAlert, setDismissNotificationsAlert] = useState(true);
 
     const baseUrl = roleRoute(currentRole);
 
+    useEffect(() => {
+        setDismissNotificationsAlert(false);
+      }, [notifications]);
+
+    const handleNotifications = () => {
+        history.push(`${baseUrl}/notifications`);
+        setDismissNotificationsAlert(true);
+    }
+
+    console.log(dismissNotificationsAlert);
     return (
         <div className='top-section'>
             <Menu className='top-menu'>
@@ -61,11 +72,11 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             </OverflowMenu>
                         </Menu.Item>}
                     <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
-                        <Button className='ghost smaller' onClick={() => history.push(`${baseUrl}/notifications`)}>
+                        <Button className='ghost smaller' onClick={handleNotifications}>
                             <div >
                                 <NotificationCenterIcon />
                             </div>
-                            <div className='notifications-active'></div>
+                            <div className={dismissNotificationsAlert ? '' : 'notifications-active'}></div>
                         </Button>
                     </Menu.Item>
                     <Menu.Item className={classNames('log-out-button', { 'divider': !landingPage })}>

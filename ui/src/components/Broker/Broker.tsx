@@ -21,7 +21,6 @@ import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 
 import MarketRelationships from '../common/MarketRelationships'
@@ -31,6 +30,7 @@ import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
+import NotificationCenter from '../common/NotificationCenter'
 
 import BrokerOrders from './BrokerOrders'
 
@@ -49,7 +49,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const invitation = useContractQuery(BrokerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allDeposits = useContractQuery(AssetDeposit);
-    const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -135,7 +134,6 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                 relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
-                        notifications={notifications}
                         onLogout={onLogout}/>
                 </Route>
 
@@ -152,6 +150,13 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                         deposits={allDeposits}
                         onLogout={onLogout}/>
                 </Route>
+
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
+                </Route>
+
             </Switch>
         </div>
 

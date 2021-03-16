@@ -8,9 +8,9 @@ import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
 import { useContractQuery } from '../../websocket/queryStream'
 
-import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
+import { CustodianRelationshipRequestInfo } from './damlTypes'
+import { useRegistryLookup } from './RegistryLookup'
+import AcceptRejectNotification from './AcceptRejectNotification'
 
 type RelationshipRequestNotificationProps = {
     request: CustodianRelationshipRequestInfo;

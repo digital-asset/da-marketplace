@@ -76,6 +76,7 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
         default:
             name = <b>@{sender}</b>;
     }
+    console.log(notification);
     return (
         <NotificationComponent>
             <Header as='h3'>Notification from {name}: {notification.contractData.text}</Header>

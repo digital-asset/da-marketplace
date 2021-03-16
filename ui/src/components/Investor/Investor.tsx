@@ -19,7 +19,6 @@ import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -48,14 +47,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const loading = usePartyLoading();
 
-
-    const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
         ...useCCPCustomerNotifications(),
         ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
-        ...dismissibleNotifications
     ];
 
     const registeredInvestor = useContractQuery(RegisteredInvestor);

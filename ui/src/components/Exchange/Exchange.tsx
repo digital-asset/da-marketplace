@@ -26,7 +26,6 @@ import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { getAbbreviation } from '../common/utils';
 import { useRegistryLookup } from '../common/RegistryLookup'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
 import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
@@ -35,6 +34,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
+import NotificationCenter from '../common/NotificationCenter'
 
 import MarketPairs from './MarketPairs'
 import ExchangeParticipants from './ExchangeParticipants'
@@ -64,8 +64,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
     const investorOptions = registeredInvestors.filter(ri =>
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
-
-    const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -183,7 +181,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
-                        notifications={notifications}
                         onLogout={onLogout}/>
                 </Route>
 
@@ -205,6 +202,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                         derivatives={derivatives}/>
+                </Route>
+
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
+                        onLogout={onLogout}/>
                 </Route>
             </Switch>
         </div>
