@@ -1,0 +1,125 @@
+@use '../../themes/colors' as c;
+@use '../../themes/variables' as v;
+
+@mixin tile {
+  .tile {
+    background-color: var(--cool-grey-10);
+    padding: v.$spacing-l;
+    border-radius: 2px;
+    margin-bottom: 2px;
+    max-width: 550px;
+    text-align: left;
+
+    .tile-header {
+        margin-bottom: v.$spacing-m;
+
+        .logo-header {
+            display: flex;
+            justify-content: center;
+            font-family: "BrownStd-Light";
+            font-style: normal;
+            font-weight: normal;
+            font-size: 34px;
+            line-height: 32px;
+            margin: 0;
+            color: var(--white);
+        }
+    }
+
+    .subtitle {
+        color: var(--white);
+        font-size: 16px;
+    }
+
+    .tile-content {
+        text-align: left;
+
+        form .field input {
+            background-color: var(--cool-grey-30);
+            color: var(--white);
+        }
+
+        form .field .dropdown {
+            background-color: var(--cool-grey-30);
+            color: var(--white);
+        }
+
+        .username-login {
+            margin: v.$spacing-m;
+            .ui.input {
+                width: 100%;
+            }
+        }
+
+        form button, .login-form button {
+            text-align: left;
+            min-height: 42px;
+            display: flex;
+
+            &.dabl-login-button {
+                display: unset;
+                height: 70px;
+                font-size: 16px;
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-30);
+                border-radius: 4px;
+
+                &:hover {
+                    transform: scale(1.02);
+                }
+            }
+        }
+
+        .login-details {
+            line-height: 26px;
+        }
+
+        .login-form {
+            padding: v.$spacing-s 0;
+
+            .field.upload-file-input {
+                display: flex;
+            }
+
+            .field > .ui.input {
+                display: flex;
+                align-self: flex-end;
+                width: 100%;
+            }
+
+            .dropdown, .dropdown .menu {
+                background-color: var(--cool-grey-30);
+                color: var(--white);
+                .text {
+                    color: var(--white);
+                }
+            }
+
+            .custom-file-upload {
+                height: 44px;
+                width: 100%;
+                margin: 0;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                align-self: flex-end;
+                border-radius: 2px;
+                background-color: var(--cool-grey-30);
+
+                > input[type="file"] {
+                    display: none;
+                }
+
+                i.white.icon {
+                    color: var(--white)
+                }
+
+                .icon {
+                    margin-right: v.$spacing-s;
+                }
+            }
+        }
+    }
+  }
+}
