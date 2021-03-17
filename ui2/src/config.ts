@@ -33,6 +33,7 @@ export const httpBaseUrl =
   ? `https://api.${dablHostname}/data/${ledgerId}/`
   : undefined;
 
+export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : undefined;
 
 export const getName = (partyOrCreds : string | Credentials): string => {
   if (isCredentials(partyOrCreds)) {
