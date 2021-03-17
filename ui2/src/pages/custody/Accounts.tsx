@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
 import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, Typography } from "@material-ui/core";
 import { IconButton } from "@material-ui/core";
@@ -9,6 +9,10 @@ import useStyles from "../styles";
 import { getName } from "../../config";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
+import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
+import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import { Id } from "@daml.js/da-marketplace/lib/DA/Finance/Types";
+
 
 const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -16,9 +20,11 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
   const ledger = useLedger();
 
   const services = useStreamQueries(Service).contracts;
+  const accounts = useStreamQueries(AssetSettlementRule).contracts;
+  const assets = useStreamQueries(AssetDescription).contracts;
 
   const clientServices = services.filter(s => s.payload.customer === party);
-  const accounts = useStreamQueries(AssetSettlementRule).contracts;
+  const assetNames = assets.map(a => a.payload.description);
 
   const requestCloseAccount = async (c : CreateEvent<AssetSettlementRule>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
@@ -27,8 +33,42 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
     history.push("/apps/custody/requests")
   }
 
+  const defaultCreditRequestDialogProps : InputDialogProps<any> = {
+    open: false,
+    title: "Credit Account Request",
+    defaultValue: { account: "", asset: "", quantity: 0 },
+    fields: {
+      account : {label: "Account", type: "selection", items: [] },
+      asset: { label: "Asset", type: "selection", items: assetNames },
+      quantity : { label: "Quantity", type: "number" }
+      },
+    onClose: async function(state : any | null) {}
+  };
+  const [creditDialogProps, setCreditDialogProps] = useState<InputDialogProps<any>>(defaultCreditRequestDialogProps);
+
+  const requestCredit = (accountId : Id) => {
+    const onClose = async (state : any | null) => {
+      setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
+      const asset = assets.find(i => i.payload.description === state.asset);
+      const account = accounts.find(a => a.payload.account.id.label === state.account);
+      if (!asset || !account) return;
+      const service = clientServices.find(s => s.payload.provider === account.payload.account.provider);
+      if (!service) return;
+
+      await ledger.exercise(Service.RequestCreditAccount, service.contractId , { accountId: account.payload.account.id, asset: {id: asset.payload.assetId, quantity: state.quantity} });
+    };
+    setCreditDialogProps({
+      ...defaultCreditRequestDialogProps,
+      defaultValue: {...defaultCreditRequestDialogProps.fields, account: accountId.label},
+      fields: { ...defaultCreditRequestDialogProps.fields, account : {label: "Account", type: "selection", items: [accountId.label] } },
+      open: true,
+      onClose
+    });
+  };
+
   return (
     <>
+      <InputDialog { ...creditDialogProps } />
       <Grid container direction="column">
         <Grid container direction="row">
           <Grid item xs={12}>
@@ -37,7 +77,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/custody/account/new")}>New Account</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/custody/accounts/new")}>New Account</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -54,7 +94,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                     <TableCell key={2} className={classes.tableCell}><b>Owner</b></TableCell>
                     <TableCell key={3} className={classes.tableCell}><b>Role</b></TableCell>
                     <TableCell key={4} className={classes.tableCell}><b>Controllers</b></TableCell>
-                    <TableCell key={5} className={classes.tableCell}><b>Action</b></TableCell>
+                    <TableCell key={5} className={classes.tableCell}><b>Requests</b></TableCell>
                     <TableCell key={6} className={classes.tableCell}><b>Details</b></TableCell>
                   </TableRow>
                 </TableHead>
@@ -67,7 +107,12 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                       <TableCell key={3} className={classes.tableCell}>{party === c.payload.account.provider ? "Provider" : "Client"}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{Object.keys(c.payload.ctrls.textMap).join(", ")}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        {party === c.payload.account.owner && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => requestCloseAccount(c)}>Close</Button>}
+                        {party === c.payload.account.owner &&
+                        <>
+                          <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => requestCredit(c.payload.account.id)}>Credit</Button>
+                          <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => requestCloseAccount(c)}>Close</Button>
+                        </>
+                        }
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/custody/account/" + c.contractId.replace("#", "_"))}>

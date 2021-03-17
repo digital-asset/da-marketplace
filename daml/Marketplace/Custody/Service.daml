@@ -1,21 +1,14 @@
 module Marketplace.Custody.Service where
 
-import ContingentClaims.Claim (Claim, deserialize, serialize)
-import ContingentClaims.Lifecycle qualified as ContingentClaims
-import ContingentClaims.Observation (Observation)
-import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
-import DA.List (last)
 import DA.Map (Map)
-import DA.Map qualified as Map
 import DA.Next.Set
-import DA.Optional (fromSomeNote)
-import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
-import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
+import Marketplace.Custody.Model qualified as Custody
 
 template Service
   with
@@ -29,79 +22,79 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestOpenAccount : ContractId OpenAccountRequest
+      nonconsuming RequestOpenAccount : ContractId Custody.OpenAccountRequest
         with
           accountId : Id
           observers : [Party]
           ctrls : [Party]
         do
           -- TODO: Check signatories in id - do we want to allow flexible trust models?
-          create OpenAccountRequest with observers = fromList observers; ctrls = fromList ctrls; ..
+          create Custody.OpenAccountRequest with observers = fromList observers; ctrls = fromList ctrls; ..
 
-      nonconsuming RequestOpenAllocationAccount : ContractId OpenAllocationAccountRequest
+      nonconsuming RequestOpenAllocationAccount : ContractId Custody.OpenAllocationAccountRequest
         with
           accountId : Id
           observers : Set Party
           nominee : Party
         do
-          create OpenAllocationAccountRequest with ..
+          create Custody.OpenAllocationAccountRequest with ..
 
-      nonconsuming RequestCloseAccount : ContractId CloseAccountRequest
+      nonconsuming RequestCloseAccount : ContractId Custody.CloseAccountRequest
         with
           accountId : Id
         do
-          create CloseAccountRequest with ..
+          create Custody.CloseAccountRequest with ..
 
-      nonconsuming RequestCreditAccount : ContractId CreditAccountRequest
+      nonconsuming RequestCreditAccount : ContractId Custody.CreditAccountRequest
         with
           accountId : Id
           asset : Asset
         do
-          create CreditAccountRequest with ..
+          create Custody.CreditAccountRequest with ..
 
-      nonconsuming RequestDebitAccount : ContractId DebitAccountRequest
+      nonconsuming RequestDebitAccount : ContractId Custody.DebitAccountRequest
         with
           accountId : Id
           debit : AssetSettlement_Debit
         do
-          create DebitAccountRequest with ..
+          create Custody.DebitAccountRequest with ..
 
-      nonconsuming RequestTransferDeposit : ContractId TransferDepositRequest
+      nonconsuming RequestTransferDeposit : ContractId Custody.TransferDepositRequest
         with
           accountId : Id
           transfer : AssetSettlement_Transfer
         do
-          create TransferDepositRequest with ..
+          create Custody.TransferDepositRequest with ..
 
-      nonconsuming RequestLifecycle: ContractId LifecycleRequest
+      nonconsuming RequestLifecycle: ContractId Custody.LifecycleRequest
         with
           assetDepositCid: ContractId AssetDeposit
           choice: Claims
         do
-          create LifecycleRequest with ..
+          create Custody.LifecycleRequest with ..
 
     controller provider can
       nonconsuming OpenAccount : ContractId AssetSettlementRule
         with
-          openAccountRequestCid : ContractId OpenAccountRequest
+          openAccountRequestCid : ContractId Custody.OpenAccountRequest
         do
-          OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
+          Custody.OpenAccountRequest{accountId; observers; ctrls} <- fetchAndArchive openAccountRequestCid
 
           let account = Account with provider; owner = customer; id = accountId
           create AssetSettlementRule with ..
 
       nonconsuming OpenAllocationAccount : ContractId AllocationAccountRule
         with
-          openAllocationAccountRequestCid : ContractId OpenAllocationAccountRequest
+          openAllocationAccountRequestCid : ContractId Custody.OpenAllocationAccountRequest
         do
-          OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
+          Custody.OpenAllocationAccountRequest{nominee; accountId; observers} <- fetchAndArchive openAllocationAccountRequestCid
 
           let account = Account with provider; owner = customer; id = accountId
           create AllocationAccountRule with ..
 
       nonconsuming CloseAccount : ()
         with
-          closeAccountRequestCid : ContractId CloseAccountRequest
+          closeAccountRequestCid : ContractId Custody.CloseAccountRequest
         do
           closeAccountRequest <- fetchAndArchive closeAccountRequestCid
           (assetSettlementRuleCid, _) <- fetchByKey @AssetSettlementRule closeAccountRequest.accountId
@@ -109,7 +102,7 @@ template Service
 
       nonconsuming CloseAllocationAccount : ()
         with
-          closeAllocationAccountRequestCid : ContractId CloseAllocationAccountRequest
+          closeAllocationAccountRequestCid : ContractId Custody.CloseAllocationAccountRequest
         do
           closeAccountRequest <- fetchAndArchive closeAllocationAccountRequestCid
           (allocationAccountRuleCid, _) <- fetchByKey @AllocationAccountRule closeAccountRequest.accountId
@@ -117,32 +110,32 @@ template Service
 
       nonconsuming CreditAccount : ContractId AssetDeposit
         with
-          creditAccountRequestCid : ContractId CreditAccountRequest
+          creditAccountRequestCid : ContractId Custody.CreditAccountRequest
         do
-          CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
+          Custody.CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
 
       nonconsuming DebitAccount : Asset
         with
-          debitAccountRequestCid : ContractId DebitAccountRequest
+          debitAccountRequestCid : ContractId Custody.DebitAccountRequest
         do
-          DebitAccountRequest{accountId; debit} <- fetchAndArchive debitAccountRequestCid
+          Custody.DebitAccountRequest{accountId; debit} <- fetchAndArchive debitAccountRequestCid
           exerciseByKey @AssetSettlementRule accountId debit
 
       nonconsuming TransferDeposit : ContractId AssetDeposit
         with
-          transferDepositRequestCid : ContractId TransferDepositRequest
+          transferDepositRequestCid : ContractId Custody.TransferDepositRequest
         do
-          TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
+          Custody.TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
           exerciseByKey @AssetSettlementRule accountId transfer
 
       nonconsuming Lifecycle : [ContractId AssetDeposit]
         with
-          lifecycleRequestCid : ContractId LifecycleRequest
+          lifecycleRequestCid : ContractId Custody.LifecycleRequest
           safekeepingDepositCid: ContractId AssetDeposit
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
         do
-          exercise lifecycleRequestCid Process with investor = customer; ..
+          exercise lifecycleRequestCid Custody.Process with investor = customer; ..
 
     choice Terminate : ()
       with
@@ -192,121 +185,3 @@ template Request
       controller operator, provider
       do
         create Service with ..
-
-template OpenAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    observers : Set Party
-    ctrls : Set Party
-  where
-    signatory operator, provider, customer
-
-template OpenAllocationAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    nominee : Party
-    accountId : Id
-    observers : Set Party
-  where
-    signatory operator, provider, customer
-
-template CloseAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-  where
-    signatory operator, provider, customer
-
-template CloseAllocationAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-  where
-    signatory operator, provider, customer
-
-template CreditAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    asset : Asset
-  where
-    signatory operator, provider, customer
-
-template DebitAccountRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    debit : AssetSettlement_Debit
-  where
-    signatory operator, provider, customer
-
-template TransferDepositRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    accountId : Id
-    transfer : AssetSettlement_Transfer
-  where
-    signatory operator, provider, customer
-
-template LifecycleRequest
-  with
-    operator : Party
-    provider : Party
-    customer : Party
-    assetDepositCid: ContractId AssetDeposit
-    choice: Claims
-  where
-    signatory operator, provider, customer
-
-    -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
-    choice Process : [ ContractId AssetDeposit ]
-      with
-          investor: Party
-          safekeepingDepositCid: ContractId AssetDeposit
-          fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
-      controller investor
-        do
-          t <- toDateUTC <$> getTime
-          assetDeposit <- fetch assetDepositCid
-          (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
-          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
-          let spot : Text -> Date -> Update Decimal
-              spot label dt = pure $ fromSomeNote
-                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
-                (Map.lookup label fixings >>= Map.lookup dt)
-              payout: Id -> Decimal -> Date -> Update (Claim Observation Date Id, ContractId AssetDeposit)
-              payout asset qty dt = do
-                payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
-                exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-                   AssetSettlement_AddController description.issuer
-                cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
-                  AssetSettlement_Transfer with
-                    receiverAccountId = assetDeposit.account.id
-                    depositCid = payoutDepositCid)
-                exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-                  AssetSettlement_RemoveController description.issuer
-                postLifecycleClaim <- ContingentClaims.pruneLeaf spot asset qty (deserialize description.claims) dt
-                return (postLifecycleClaim, cid)
-              election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
-              election _ _ = deserialize choice -- will throw if the claims don't match
-          versionsAndCids <- ContingentClaims.lifecycle payout spot election (deserialize description.claims) t
-          let (postAssetClaims, payoutCids) = unzip versionsAndCids
-          (_, postAssetVersion) <- exercise versionsCid $ AssetDescription.LookupOrInsert (serialize . last $ postAssetClaims)
-          assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
-          archive assetDepositCid
-          return $ assetDepositCid' :: payoutCids
