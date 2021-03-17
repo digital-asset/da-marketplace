@@ -11,6 +11,7 @@ import { New } from "../pages/custody/New";
 import { Requests } from "../pages/custody/Requests";
 import { Accounts } from "../pages/custody/Accounts";
 import { BottomDrawer } from "../components/BottomDrawer/BottomDrawer";
+import { Account } from "../pages/custody/Account";
 
 const CustodyApp = () => {
   const classes = useStyles();
@@ -38,7 +39,8 @@ const CustodyApp = () => {
             <Route key={"myquote"} path={"/apps/policyadmin/myquotes/:contractId"} component={MyQuote} />
             <Route key={"mypolicy"} path={"/apps/policyadmin/mypolicies/:contractId"} component={MyPolicy} />
             <Route key={"myinvoice"} path={"/apps/policyadmin/myinvoices/:contractId"} component={MyInvoice} /> */}
-            {entries.map(e => 
+            <Route key={"account"} path={"/apps/custody/account/:contractId"} component={Account} />
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>
