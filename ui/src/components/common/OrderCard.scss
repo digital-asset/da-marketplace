@@ -1,45 +1,73 @@
-.order-card > .ui.card.order-info {
-    background: none;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    margin: 0;
-}
+@mixin order-card {
+    .order-card {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        margin: $spacing-s 0px;
+        background: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        box-sizing: border-box;
+        border-radius: 4px;
+        flex-wrap: wrap;
+        width: 100%;
+        height: 46px;
 
-.order-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center; 
-    padding: var(--spacing-s);
-    margin: var(--spacing-s) 0px;
-    background: var(--grey1);
-    border: 2px solid var(--grey2);
-    box-sizing: border-box;
-    border-radius: 2px;
-}
+        &.ui.card {
+            border: none;
+        }
 
-.order-info .exchange-icon {
-    width: 16px;
-    height: 16px;
-    margin-right: var(--spacing-s);
-    margin-left: var(--spacing-s);
-}
+        .order-info {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 70%;
 
-.order-info div:first-child {
-    display: flex;
-    align-items: center;
-}
+            .order-icon {
+                display: flex;
+                align-items: center;
 
+                .label {
+                    margin-right: $spacing-xs;
+                }
 
-@media screen and (max-width: 800px) {
-    .order-card > .ui.card.order-info {
-        flex-direction: column;
-        align-content: flex-start;
-    }
+                .exchange-icon {
+                    width: 16px;
+                    height: 16px;
+                    margin-right: $spacing-s;
+                    margin-left: $spacing-s;
+                }
+            }
 
-    .order-card > .ui.card.order-info > div:not(:last-child){
-        padding-bottom: var(--spacing-s);
+            p:first-child {
+                display: flex;
+                align-items: center;
+            }
+
+        }
+
+        .actions {
+            margin-left: auto;
+            justify-content: flex-end;
+            margin-right: $spacing-s;
+
+            .fields {
+                margin: 0;
+            }
+        }
+
+        @media screen and (max-width: 800px) {
+            height: unset;
+            .order-info {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: $spacing-s;
+
+                .exchange-icon {
+                    margin-left:0px;
+                }
+            }
+        }
     }
 }

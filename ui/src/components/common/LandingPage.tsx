@@ -1,11 +1,8 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
 
 import Page from './Page'
 import PageSection from './PageSection'
 import WelcomeHeader from './WelcomeHeader'
-
-import "./LandingPage.scss"
 
 type Props = {
     profile?: React.ReactElement;
@@ -27,16 +24,15 @@ const LandingPage: React.FC<Props> = ({
         onLogout={onLogout}
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
+        landingPage={true}
     >
         <PageSection>
             <div className='landing-page'>
-                <div className='landing-page-column profile'>
-                    <Header as='h3'>Profile</Header>
+                <div className='landing-page-column'>
                     { profile }
                 </div>
 
-                <div className='landing-page-column market-relationships'>
-                    <Header as='h3'>Market Relationships</Header>
+                <div className='landing-page-column'>
                     { marketRelationships }
                 </div>
             </div>

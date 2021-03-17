@@ -10,22 +10,22 @@ type DropdownOption = {
     value: string;
 }
 
-type Props<T> = {
+type Props<T,K> = {
     allowAdditions?: boolean;
     className?: string;
     clearable?: boolean;
-    contracts: ContractInfo<T>[];
+    contracts: ContractInfo<T,K>[];
     label?: string;
     placeholder?: string;
     search?: boolean;
     selection?: boolean;
     value?: string;
-    getOptionText: (contractInfo: ContractInfo<T>) => string;
+    getOptionText: (contractInfo: ContractInfo<T,K>) => string;
     setAddition?: (value: string) => void;
-    setContract: (contract: ContractInfo<T>) => void;
+    setContract: (contract: ContractInfo<T,K>) => void;
 }
 
-function ContractSelect <T>({
+function ContractSelect <T,K>({
     allowAdditions,
     className,
     clearable,
@@ -38,7 +38,7 @@ function ContractSelect <T>({
     getOptionText,
     setAddition,
     setContract
-}: Props<T>) {
+}: Props<T,K>) {
     const [ cid, setCid ] = useState<string>();
     const [ options, setOptions ] = useState<DropdownOption[]>([]);
     const searchQuery = search ? options.find(opt => opt.key === cid)?.text : undefined;
@@ -90,7 +90,7 @@ function ContractSelect <T>({
                 allowAdditions={allowAdditions}
                 className={className}
                 clearable={clearable}
-                label={<p className='p2'>{label}</p>}
+                label={<p>{label}</p>}
                 options={options}
                 placeholder={placeholder}
                 search={search}

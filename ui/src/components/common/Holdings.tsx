@@ -2,42 +2,61 @@ import React, { useState } from 'react'
 import { Button, Header, Form } from 'semantic-ui-react'
 
 import { useParty, useLedger } from '@daml/react'
+import { ContractId } from '@daml/types'
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { IconClose } from '../../icons/Icons'
 import { DepositInfo, wrapDamlTuple, getAccountProvider } from './damlTypes'
-import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray } from './utils'
+import { groupDepositsByAsset, groupDepositsByProvider, sumDepositArray, getPartyLabel, IPartyInfo } from './utils'
 import { useOperator } from './common'
-import FormErrorHandled from './FormErrorHandled'
-
-import OverflowMenu, { OverflowMenuEntry } from '../common/OverflowMenu';
-
-import "./Holdings.scss"
 import { AppError } from './errorTypes'
+import FormErrorHandled from './FormErrorHandled'
+import { useCCPCustomerNotifications } from '../Investor/CCPCustomerNotifications'
+import { useDismissibleNotifications } from './DismissibleNotifications'
 
-export type DepositProvider = {
-    party: string;
-    label: string;
-}
+import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
 type Props = {
     deposits: DepositInfo[];
-    providers: DepositProvider[];
+    clearingDeposits: DepositInfo[];
+    marginDeposits: DepositInfo[];
+    providers: IPartyInfo[];
     role: MarketRole;
 }
 
-const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
+const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits, providers, role }) => {
+    const marginDepositsGrouped = groupDepositsByProvider(marginDeposits);
+    const clearingDepositsGrouped = groupDepositsByProvider(clearingDeposits);
     const depositsGrouped = groupDepositsByProvider(deposits);
+    const ccpCustomerNotifications = useCCPCustomerNotifications();
+    const ccpProviders = useContractQuery(CCPCustomer).map(c => {return c.contractData.ccp});
+    const ccpDismissibleNotifications = useDismissibleNotifications()
+        .filter(dn => {
+            console.log(dn);
+            return ccpProviders.includes(dn.props.notification.contractData.sender);
+        });
 
     const assetSections = Object.entries(depositsGrouped)
         .map(([providerLabel, depositsForProvider]) => {
             const assetDeposits = groupDepositsByAsset(depositsForProvider);
+            const { label, party }  = getPartyLabel(providerLabel, providers)
 
             return (
-                <div className='asset-section' key={providerLabel}>
-                    { getProviderLabel(providerLabel, providers) }
+                <div className='asset-sections' key={providerLabel}>
+                    <div className='provider-info'>
+                        <p className='bold'>
+                            {label}
+                        </p>
+                        <p className='p2'>
+                            {party}
+                        </p>
+                     </div>
                     { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
                         <DepositRow
                             key={assetLabel}
@@ -50,25 +69,83 @@ const Holdings: React.FC<Props> = ({ deposits, providers, role }) => {
             )
         })
 
+    const clearingSections = Object.entries(clearingDepositsGrouped)
+        .map(([providerLabel, depositsForProvider]) => {
+            const assetDeposits = groupDepositsByAsset(depositsForProvider);
+            const { label, party }  = getPartyLabel(providerLabel, providers)
+
+            return (
+                <div className='asset-sections' key={providerLabel}>
+                    <div className='provider-info'>
+                        <p className='bold'>
+                            {label}
+                        </p>
+                        <p className='p2'>
+                            {party}
+                        </p>
+                     </div>
+                    { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
+                        <DepositRow
+                            key={assetLabel}
+                            assetLabel={assetLabel}
+                            role={role}
+                            deposits={deposits}
+                            providers={providers}/>
+                    )) }
+                </div>
+            )
+        })
+
+    const marginSections = Object.entries(marginDepositsGrouped)
+        .map(([providerLabel, depositsForProvider]) => {
+            const assetDeposits = groupDepositsByAsset(depositsForProvider);
+
+            return (
+                <div className='asset-sections' key={providerLabel}>
+                    { Object.entries(assetDeposits).map(([assetLabel, deposits]) => (
+                        <MarginRow
+                            key={assetLabel}
+                            assetLabel={assetLabel}
+                            deposits={deposits}/>
+                    )) }
+                </div>
+            )
+        })
+
     return (
         <div className='holdings'>
-            <Header as='h3'>Holdings</Header>
+            <Header as='h2'>Holdings</Header>
             { assetSections.length === 0 ?
                 <i>none</i> : assetSections }
+            <Header as='h2'>Clearing Accounts</Header>
+            { ccpCustomerNotifications }
+            { ccpDismissibleNotifications }
+            { clearingSections.length === 0 ?
+                <i>none</i> : clearingSections }
+            <Header as='h3'>Margin Account</Header>
+            { marginSections.length === 0 ?
+                <i>none</i> : marginSections }
         </div>
     )
 }
 
-export function getProviderLabel(providerLabel: string, providers: DepositProvider[]) {
-    const providerInfo = providers.find(p => p.party === providerLabel)
+type MarginRowProps = {
+    assetLabel: string;
+    deposits: DepositInfo[];
+}
+
+const MarginRow: React.FC<MarginRowProps> = ({
+    assetLabel,
+    deposits,
+}) => {
+    const totalQty = sumDepositArray(deposits);
+
     return (
-        <div className='provider-info'>
-            <Header as='h5'>
-                {providerInfo?.label.substring(providerInfo.label.lastIndexOf('|')+1)}
-            </Header>
-            <p className='p2'>
-                {providerInfo?.party}
-            </p>
+        <div className='deposit-row'>
+            <div className='deposit-info'>
+                <Header as='h3' className='bold'>{assetLabel}</Header>
+                <Header as='h3' >{totalQty}</Header>
+            </div>
         </div>
     )
 }
@@ -76,11 +153,9 @@ export function getProviderLabel(providerLabel: string, providers: DepositProvid
 type DepositRowProps = {
     assetLabel: string;
     deposits: DepositInfo[];
-    providers: DepositProvider[];
+    providers: IPartyInfo[];
     role: MarketRole;
 }
-
-type FormSelectorOptions = 'provider'
 
 const DepositRow: React.FC<DepositRowProps> = ({
     assetLabel,
@@ -88,23 +163,26 @@ const DepositRow: React.FC<DepositRowProps> = ({
     providers,
     role
 }) => {
-    const [ selectedForm, setSelectedForm ] = useState<FormSelectorOptions>()
+    const [ showForm, setShowForm ] = useState<boolean>(false)
     const totalQty = sumDepositArray(deposits);
     const providerLabel = deposits.find(_ => true)?.contractData.account.id.label;
 
     return (
         <div className='deposit-row'>
             <div className='deposit-info'>
-                <h3>{assetLabel}</h3>
-                <h3>{totalQty}</h3>
+                <Header as='h3' className='bold'>{assetLabel}</Header>
+                <Header as='h3' >{totalQty}</Header>
+                <Button className='ghost' onClick={() => setShowForm(!showForm)}>
+                    Allocate to Different Provider
+                </Button>
                 <OverflowMenu>
-                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setSelectedForm('provider')}/>
+                    <OverflowMenuEntry label='Allocate to Different Provider' onClick={() => setShowForm(!showForm)}/>
                 </OverflowMenu>
             </div>
             <div className='selected-form'>
-                {selectedForm === 'provider' &&
+                {showForm &&
                     <ProviderForm
-                        onRequestClose={() => setSelectedForm(undefined)}
+                        onRequestClose={() => setShowForm(false)}
                         depositCids={deposits.map(d => d.contractId)}
                         totalQty={totalQty}
                         providers={providers}
@@ -116,8 +194,8 @@ const DepositRow: React.FC<DepositRowProps> = ({
 }
 
 type ProviderFormProps = {
-    depositCids: string[];
-    providers: DepositProvider[];
+    depositCids: ContractId<AssetDeposit>[];
+    providers: IPartyInfo[];
     providerLabel?: string;
     totalQty: number;
     role: MarketRole;
@@ -170,10 +248,10 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
 
         switch(role) {
             case MarketRole.InvestorRole:
-                await ledger.exerciseByKey(Investor.AllocateToProvider, key, args);
+                await ledger.exerciseByKey(Investor.Investor_AllocateToProvider, key, args);
                 break;
             case MarketRole.BrokerRole:
-                await ledger.exerciseByKey(Broker.AllocateToProvider, key, args);
+                await ledger.exerciseByKey(Broker.Broker_AllocateToProvider, key, args);
                 break;
             default:
                 throw new AppError("Invalid role selected", `The ${role} role can not allocate deposits.`)
@@ -184,7 +262,7 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
     return (
         <>
             <div className='selected-form-heading'>
-               <p>Allocate to a Different Provider</p>
+               <Header as='h3'>Allocate to a Different Provider</Header>
                 <Button
                     className='close-button'
                     onClick={onRequestClose}>
@@ -192,26 +270,24 @@ const ProviderForm: React.FC<ProviderFormProps> = ({
                 </Button>
             </div>
             <FormErrorHandled onSubmit={allocateToProvider}>
-                <Form.Group className='stacked-form-group' >
-                    <Form.Select
-                        clearable
-                        label='Select Provider'
-                        value={provider}
-                        placeholder='Select...'
-                        options={providerOptions}
-                        onChange={handleProviderChange}/>
+                <Form.Select
+                    clearable
+                    label={<p>Select Provider</p>}
+                    value={provider}
+                    placeholder='Select...'
+                    options={providerOptions}
+                    onChange={handleProviderChange}/>
 
-                    <Form.Input
-                        clearable
-                        label='Allocation Amount'
-                        value={amount}
-                        onChange={handleAmountChange}/>
+                <Form.Input
+                    clearable
+                    label={<p>Allocation Amount</p>}
+                    value={amount}
+                    onChange={handleAmountChange}/>
 
-                    <Button
-                        secondary
-                        disabled={provider === ''}
-                        content='Submit'/>
-                </Form.Group>
+                <Button
+                    className='ghost'
+                    disabled={provider === ''}
+                    content='Submit'/>
             </FormErrorHandled>
         </>
     )

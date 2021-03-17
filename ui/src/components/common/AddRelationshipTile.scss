@@ -1,0 +1,24 @@
+@mixin add-relationship-tile {
+    .add-relationship-tile {
+        display: flex;
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        border-radius: 2px;
+        width: 100%;
+        color: var(--text-color);
+        flex-direction: row;
+        align-items: center;
+        margin: 0 0 $spacing-s 0;
+        padding: $spacing-m  $spacing-l;
+
+        .icon.add-plus {
+            margin-right: $spacing-s;
+            height: 20px;
+        }
+
+        i.disabled {
+            margin-left: auto;
+            font-weight: normal;
+        }
+    }
+}

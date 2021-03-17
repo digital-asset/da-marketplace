@@ -14,13 +14,13 @@ type Props = {
 const BrokerCustomers: React.FC<Props> = ({ brokerCustomers, registeredInvestors }) => {
     const investorMap = useRegistryLookup().investorMap;
     const rows = brokerCustomers.map(customer => {
-        const brokerCustomer = customer.contractData.customer;
+        const brokerCustomer = customer.contractData.brokerCustomer;
         const name = investorMap.get(brokerCustomer)?.name || brokerCustomer;
         return <p key={brokerCustomer}>{name}</p>
     });
     return (
         <>
-            <Header as='h3'>Customers</Header>
+            <Header as='h2'>Customers</Header>
             {rows}
             <InviteBrokerCustomer registeredInvestors={registeredInvestors}/>
         </>

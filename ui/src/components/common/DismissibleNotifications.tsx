@@ -1,15 +1,18 @@
-import React, { useEffect } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import React from 'react'
+import { Button, Form, Header } from 'semantic-ui-react'
 
-import { IconClose } from '../../icons/Icons';
-
-import { useLedger,  useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
 import { ContractId } from '@daml/types'
+
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
-    Dismissible as DismissibleNotificationTemplate
+    DismissibleNotification as DismissibleNotificationTemplate
 } from '@daml.js/da-marketplace/lib/Marketplace/Notification'
-import { makeContractInfo, DismissibleNotificationInfo } from './damlTypes'
+
+import { IconClose } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
+import { DismissibleNotificationInfo } from './damlTypes'
 import { useRegistryLookup } from './RegistryLookup'
 import NotificationComponent from './Notification'
 import FormErrorHandled from './FormErrorHandled'
@@ -22,17 +25,14 @@ type DismissibleNotificationProps = {
 export const useDismissibleNotifications = () => {
     const ledger = useLedger();
     const party = useParty();
-    const relationshipRequestNotifications = useStreamQueries(DismissibleNotificationTemplate, () => [], [], (e) => {
-        console.log("Unexpected close from dismissibleNotification: ", e);
-    })
-        .contracts
-        .filter(notification => notification.payload.receiver === party)
+    const relationshipRequestNotifications = useContractQuery(DismissibleNotificationTemplate)
+        .filter(notification => notification.contractData.receiver === party)
         .map(notification => <DismissibleNotification key={notification.contractId}
-            notification={makeContractInfo(notification)}
+            notification={notification}
             notificationDismiss={async () => await dismissNotification(notification.contractId)}/>);
 
     const dismissNotification = async (cid: ContractId<DismissibleNotificationTemplate>) => {
-        const choice = DismissibleNotificationTemplate.Dismiss;
+        const choice = DismissibleNotificationTemplate.DismissibleNotification_Dismiss;
         await ledger.exercise(choice, cid, {});
     }
 
@@ -48,11 +48,11 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
     const senderRole = notification.contractData.senderRole;
     let name;
 
-    useEffect(() => {
-        setTimeout(() => {
-            notificationDismiss();
-        }, 5000);
-    })
+    // useEffect(() => {
+    //     setTimeout(() => {
+    //         notificationDismiss();
+    //     }, 5000);
+    // })
 
     switch(senderRole) {
         case MarketRole.InvestorRole:
@@ -70,12 +70,15 @@ const DismissibleNotification: React.FC<DismissibleNotificationProps> = ({
         case MarketRole.CustodianRole:
             name = <>Custodian <b>@{lookup.custodianMap.get(sender)?.name || sender}</b></>;
             break;
+        case MarketRole.CCPRole:
+            name = <>CCP <b>@{lookup.ccpMap.get(sender)?.name || sender}</b></>;
+            break;
         default:
             name = <b>@{sender}</b>;
     }
     return (
         <NotificationComponent>
-            <p>Notification from {name}: {notification.contractData.text}</p>
+            <Header as='h3'>Notification from {name}: {notification.contractData.text}</Header>
             <FormErrorHandled onSubmit={notificationDismiss}>
                 <Form.Group className='inline-form-group'>
                     <Button

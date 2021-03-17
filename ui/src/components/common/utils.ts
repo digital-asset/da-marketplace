@@ -1,12 +1,21 @@
 import { useEffect, useRef } from 'react'
 
-import { DepositInfo } from './damlTypes'
+import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { DepositInfo } from './damlTypes'
 
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 
-export const indefiniteArticle = (word: string): string => {
+export const formatIndefiniteArticle = (word: string): string => {
     return vowels.includes(word[0].toLowerCase()) ? `an ${word}` : `a ${word}`;
+}
+
+export const roleLabel = (role: MarketRole): string => {
+    return role.slice(0, -4);
+}
+
+export const roleRoute = (role: MarketRole): string => {
+    return `/role/${roleLabel(role).toLowerCase()}`
 }
 
 export type StringKeyedObject<T> = {
@@ -44,13 +53,12 @@ export const sumDeposits = (deposits: DepositInfo[]): StringKeyedObject<number> 
         }), {} as StringKeyedObject<number>)
 }
 
-export const depositSummary = (deposits: DepositInfo[]): string => {
+export const depositSummary = (deposits: DepositInfo[]): string[] => {
     const depositSums = sumDeposits(deposits);
 
     return Object
         .entries(depositSums)
         .map(([label, total]) => `${label}: ${total}`)
-        .join(", ");
 }
 
 export function countDecimals(value: number) {
@@ -118,4 +126,22 @@ export function useDismissableElement<T extends HTMLElement, C extends HTMLEleme
     }, [ onRequestClose ]);
 
     return { refDismissable, refControl };
+}
+
+export type IPartyInfo = {
+    party: string;
+    label: string;
+}
+
+export function getPartyLabel(partyId: string, parties: IPartyInfo[]) {
+    const partyInfo = parties.find(p => p.party === partyId)
+    return { party: partyInfo?.party || partyId , label: partyInfo?.label.substring(0, partyInfo.label.lastIndexOf('|')) || partyId}
+}
+
+export function getAbbreviation(phrase: string) {
+    const wordsToExclude =  ["and", "or", "of", "to", "the"]
+    return phrase.split(' ')
+                 .filter(item => !wordsToExclude.includes(item))
+                 .map(item => item.charAt(0)).join('')
+                 .substring(0,3)
 }

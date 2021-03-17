@@ -1,32 +1,32 @@
-@media screen and (max-width: 1000px) {
-    .custodian-clients .ui.form > .fields.inline-form-group {
+
+@mixin create-deposit {
+    .create-deposit {
+        display: flex;
         flex-direction: column;
-        align-items: flex-start;
-    }
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        padding: $spacing-m;
+        margin-left: $spacing-m;
+        border-radius: 2px;
+        height: fit-content;
+        animation: fadeIn .5s;
 
+        h2 {
+            margin-bottom: $spacing-m;
+        }
 
-    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
-        padding:  var(--spacing-s) 0 var(--spacing-s) 0.5em;
-    }
+        .beneficiary-select .selection.dropdown {
+            width: 100%;
+        }
 
-}
+        .inline-form-group {
+            margin-bottom: $spacing-m;
+        }
 
-.create-deposit {
-    background-color: var(--grey3);
-    padding: var(--spacing-s);
-}
-
-.custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
-    margin-left: 0.5em;
-}
-
-@media screen and (max-width: 1000px) {
-    .custodian-clients .ui.form > .fields.inline-form-group .create-deposit-quantity {
-        margin-left: 0px;
-        margin-bottom: var(--spacing-s);
-    }
-
-    .custodian-clients .ui.form > .fields.inline-form-group .contract-select-container {
-        padding-left: 0;
+        @media screen and (max-width: 1100px) {
+            width: 100%;
+            margin: $spacing-m 0 0 0;
+        }
     }
 }
+

@@ -1,0 +1,80 @@
+@mixin ui-button {
+  &.button {
+    display: flex;
+    color: var(--textcolor);
+    border-radius: 2px;
+
+    &.basic.basic-button-fill {
+      background-color: var(--white) !important;
+    }
+
+    &.ghost {
+      color: var(--textcolor);
+      background: var(--white);
+      align-items: center;
+      border: 1px solid var(--green-50);
+      border-radius: 2px;
+      font-weight: 400;
+
+      &:hover {
+        background-color: var(--lightblue);
+        cursor: pointer;
+      }
+
+      &.smaller {
+        padding: 6px 3px;
+        color: var(--blue-50);
+        background: none;
+        border: none;
+      }
+
+      &.dark {
+        border: 1px solid var(--blue-80);
+        background-color: transparent;
+        color: var(--white);
+        font-weight: normal;
+
+        &:hover {
+          background-color: var(--cool-grey-20);
+        }
+      }
+
+      &.secondary {
+        background-color: transparent;
+        border-color: var(--cool-grey-70);
+      }
+
+      &.warning {
+        border-color: var(--red-50);
+      }
+
+      &.darken {
+        background-color: var(--cool-grey-90);
+        border-color: var(--cool-grey-90);
+        color: var(--cool-grey-40);
+
+        .icon.public-icon path{
+          fill: var(--cool-grey-40);
+        }
+
+        &:hover {
+          background-color: transparent;
+        }
+      }
+
+      &.checked {
+        position: relative;
+      }
+    }
+
+    i.right.arrow.icon {
+      background-color: transparent;
+      font-weight: initial;
+      height: 100%;
+
+      &.blue {
+        color: var(--blue-50);
+      }
+    }
+  }
+}

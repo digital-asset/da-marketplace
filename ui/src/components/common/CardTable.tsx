@@ -1,20 +1,20 @@
 import React from 'react'
-import { Table } from 'semantic-ui-react'
-
-import "./CardTable.scss"
+import { Table, Header } from 'semantic-ui-react'
 
 type CellItem = string | React.ReactElement;
 
 type Props = {
     className?: string;
-    header?: CellItem[];
+    header: CellItem[];
     rows: CellItem[][];
+    title?: string;
 }
 
-const CardTable: React.FC<Props> = ({ className, header, rows }) => {
+const CardTable: React.FC<Props> = ({ className, header, rows, title }) => {
     return (
         <div className={`${className} card-table`}>
             {/* Split the header into its own table because `border-spacing` would affect the header if included in the body table */}
+            <Header as='h2'>{title || 'Market Pairs'}</Header>
 
             { header && (
                 <Table fixed className='card-table-header-table'>
@@ -34,7 +34,9 @@ const CardTable: React.FC<Props> = ({ className, header, rows }) => {
                 { rows.map((row, rowIndex) => (
                     <Table.Row key={rowIndex} className='card-table-row'>
                         { row.map((cell, cellIndex) => (
-                            <Table.Cell key={cellIndex} className='card-table-cell'>{cell}</Table.Cell>
+                            <Table.Cell key={cellIndex} className='card-table-cell'>
+                               <b className='label'>{header[cellIndex]}: </b> {cell}
+                            </Table.Cell>
                         )) }
                     </Table.Row>
                 ))}

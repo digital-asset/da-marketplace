@@ -7,7 +7,7 @@
 
 @mixin icons {
     .icon {
-        height: var(--spacing-s);
+        height: 16px;
 
         @include icon-size(24);
         @include icon-size(32);
@@ -46,8 +46,19 @@
             margin-right: $spacing-xs !important;
         }
 
-        path.fill-blue {
+        &.fill-blue , path.fill-blue{
             fill: var(--blue-50);
+        }
+
+        &.fill-green , path.fill-green{
+            fill: var(--green-50);
+        }
+
+        &.circled-check-icon {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            z-index: 2;
         }
     }
 }

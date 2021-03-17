@@ -1,0 +1,13 @@
+@import './CreateMarket.scss';
+@import './ManualFairValue.scss';
+@import './ExchangeParticipants.scss';
+
+@mixin exchange {
+    .exchange {
+        @include create-market;
+        @include exchange-participants;
+        @include manual-fair-value;
+
+        height: 100%;
+    }
+}

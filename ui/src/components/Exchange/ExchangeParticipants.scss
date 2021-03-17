@@ -1,8 +1,28 @@
+@mixin exchange-participants {
+    .exchange-participants {
+        height: 100%;
 
-.exchange-participants > .ui.form .fields {
-    margin: unset;
-}
+        .title {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: baseline;
+            padding-bottom: $spacing-s;
 
-.exchange-participants > .ui.form .fields > .invite-investor {
-    margin-left: var(--spacing-s);
+            h2 {
+                margin-right: $spacing-l;
+            }
+
+            a {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                padding: $spacing-s 0;
+
+                .icon {
+                    margin-right: $spacing-xs;
+                }
+            }
+        }
+    }
 }

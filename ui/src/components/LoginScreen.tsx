@@ -3,15 +3,23 @@
 
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
-import { Button, Form, Header, Icon, Popup } from 'semantic-ui-react'
+import { Button, Form, Icon } from 'semantic-ui-react'
 
+import { DablPartiesInput, PartyDetails } from '@daml/hub-react'
+
+import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
+
+import { useContractQuery, AS_PUBLIC, usePublicLoading } from '../websocket/queryStream'
 import Credentials, { computeCredentials } from '../Credentials'
-import { Parties, retrieveParties, storeParties } from '../Parties'
+import { retrieveParties, storeParties } from '../Parties'
 import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../config'
 
 import OnboardingTile, { Tile, logoHeader } from './common/OnboardingTile'
-import { AppError, InvalidPartiesJSONError } from './common/errorTypes'
+import { AppError } from './common/errorTypes'
 import FormErrorHandled from './common/FormErrorHandled'
+import LoadingScreen from './common/LoadingScreen'
+import SetupRequired from './SetupRequired'
+import {useDablParties} from './common/common'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -45,6 +53,28 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({onLogin}) => {
+  const isLoading = usePublicLoading();
+  const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC);
+  const query = useQuery();
+  const history = useHistory();
+  const location = useLocation();
+
+  useEffect(() => {
+    raiseParamsToHash();
+  }, [location]);
+
+  useEffect(() => {
+    const party = query.get("party");
+    const token = getTokenFromCookie();
+
+    if (!token || !party) {
+      return
+    }
+
+    onLogin({token, party, ledgerId});
+    history.push('/role');
+  }, [onLogin, query, history]);
+
   const localTiles = [
     <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
@@ -55,8 +85,14 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
     <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
+  const tiles = appInfos.length !== 0
+    ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
+    : [<SetupRequired/>];
+
   return (
-    <OnboardingTile tiles={deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles}/>
+    <div className='login-screen'>
+      {isLoading ? <LoadingScreen/> : <OnboardingTile tiles={tiles}/>}
+    </div>
   );
 };
 
@@ -86,7 +122,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
         icon='right arrow'
         labelPosition='right'
         disabled={!username}
-        content='Log in'
+        content={<p className='dark bold'>Log in</p>}
         onClick={handleLogin}/>
     </Form>
   )
@@ -95,6 +131,7 @@ const LocalLoginForm: React.FC<Props> = ({onLogin}) => {
 const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ partyId, setPartyId ] = useState("");
   const [ jwt, setJwt ] = useState("");
+  const { parties, loading } = useDablParties();
 
   const history = useHistory();
 
@@ -129,7 +166,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
           icon='right arrow'
           labelPosition='right'
           disabled={!jwt || !partyId}
-          content='Submit'
+          content={<p className='dark bold'>Submit</p>}
           onClick={handleDablTokenLogin}/>
     </Form>
   </>
@@ -138,7 +175,7 @@ const JWTLoginForm: React.FC<Props> = ({onLogin}) => {
 
 const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ selectedPartyId, setSelectedPartyId ] = useState('');
-  const [ parties, setParties] = useState<Parties>();
+  const [ parties, setParties] = useState<PartyDetails[]>();
 
   const history = useHistory();
 
@@ -152,7 +189,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     const parties = retrieveParties();
     if (parties) {
       setParties(parties);
-      setSelectedPartyId(parties.find(_ => true)?.party || '');
+      setSelectedPartyId(parties[0]?.party || '');
     }
   }, []);
 
@@ -168,21 +205,15 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     }
   }
 
-  const handleFileUpload = async (contents: string) => {
-    try {
-      storeParties(JSON.parse(contents));
-      const parties = retrieveParties();
+  const handleLoad = async (parties: PartyDetails[]) => {
+    setParties(parties);
+    setSelectedPartyId(parties[0]?.party || '');
+    storeParties(parties);
+  }
 
-      if (parties) {
-        setParties(parties);
-        setSelectedPartyId(parties.find(_ => true)?.party || '');
-      }
-    } catch (err) {
-      if (err instanceof InvalidPartiesJSONError) {
-        throw err;
-      } else {
-        throw new InvalidPartiesJSONError("Not a JSON file or wrongly formatted JSON.")
-      }
+  const handleError = (error: string): () => Promise<void> => {
+    return async () => {
+      throw new AppError("Invalid Parties.json", error);
     }
   }
 
@@ -195,34 +226,22 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
         { loadAndCatch => (
           <>
             <Form.Group widths='equal'>
+              <Form.Input className='upload-file-input'>
+                <label className="custom-file-upload button ui">
+                  <DablPartiesInput
+                    ledgerId={ledgerId}
+                    onError={error => loadAndCatch(handleError(error))}
+                    onLoad={handleLoad}/>
+                  <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
+                </label>
+              </Form.Input>
               <Form.Select
                 selection
-                label={<p className='dark'>Party Name</p>}
+                disabled={!parties}
                 placeholder='Choose a party'
                 options={options}
                 value={selectedPartyId}
                 onChange={(_, d) => typeof d.value === 'string' && setSelectedPartyId(d.value)}/>
-
-              <Form.Input className='upload-file-input'>
-                <label className="custom-file-upload button ui">
-                  <input type='file' value='' onChange={e => {
-                    const reader = new FileReader();
-
-                    reader.onload = function(event) {
-                      loadAndCatch(async () => {
-                        if (event.target && typeof event.target.result === 'string') {
-                          await handleFileUpload(event.target.result);
-                        }
-                      })
-                    };
-
-                    if (e.target && e.target.files) {
-                      reader.readAsText(e.target.files[0]);
-                    }
-                  }}/>
-                  <Icon name='file' className='white'/><p className='dark'>Load Parties</p>
-                </label>
-              </Form.Input>
             </Form.Group>
             <Button
               fluid
@@ -231,8 +250,8 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
               labelPosition='right'
               disabled={!parties?.find(p => p.party === selectedPartyId)}
               className='ghost dark'
-              content='Log in'/>
-            {/* FORM_END */}
+              content={<p className='dark bold'>Log in</p>}/>
+              {/* FORM_END */}
           </>
         )}
       </FormErrorHandled>
@@ -241,29 +260,10 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
 }
 
 const DablLoginForm: React.FC<Props> = ({onLogin}) => {
-  const query = useQuery();
-  const history = useHistory();
-  const location = window.location;
 
   const handleDablLogin = () => {
     window.location.assign(`https://login.${dablHostname}/auth/login?ledgerId=${ledgerId}`);
   }
-
-  useEffect(() => {
-    raiseParamsToHash();
-  }, [location]);
-
-  useEffect(() => {
-    const party = query.get("party");
-    const token = getTokenFromCookie();
-
-    if (!token || !party) {
-      return
-    }
-
-    onLogin({token, party, ledgerId});
-    history.push('/role');
-  }, [onLogin, query, history]);
 
   return (
     <Form size='large'>
@@ -272,7 +272,7 @@ const DablLoginForm: React.FC<Props> = ({onLogin}) => {
         icon='right arrow blue'
         labelPosition='right'
         className='dabl-login-button'
-        content='Log in with DABL'
+        content={<p className='bold'>Log in with DABL</p>}
         onClick={handleDablLogin}/>
     </Form>
   )

@@ -1,12 +1,14 @@
 import React from 'react'
 
-import { useLedger, useStreamQueries } from '@daml/react'
+import { useLedger } from '@daml/react'
 import { ContractId } from '@daml/types'
-import { Invitation as BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
-import AcceptRejectNotification from '../common/AcceptRejectNotification'
-import { BrokerCustomerInviteInfo, makeContractInfo } from '../common/damlTypes'
+import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+
+import { BrokerCustomerInviteInfo } from '../common/damlTypes'
 import { useRegistryLookup } from '../common/RegistryLookup'
+import { useContractQuery } from '../../websocket/queryStream'
+import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type BrokerCustomerInviteProps = {
     invite: BrokerCustomerInviteInfo;
@@ -16,22 +18,19 @@ type BrokerCustomerInviteProps = {
 
 export const useBrokerCustomerInviteNotifications = () => {
     const ledger = useLedger();
-    const brokerCustomerInviteNotifications = useStreamQueries(BrokerCustomerInvitation, () => [], [], (e) => {
-        console.log("Unexpected close from brokerCustomerInvitation: ", e);
-    })
-        .contracts
+    const brokerCustomerInviteNotifications = useContractQuery(BrokerCustomerInvitation)
         .map(invite => <BrokerCustomerInvite key={invite.contractId}
-            invite={makeContractInfo(invite)}
+            invite={invite}
             invitationAccept={async () => await acceptBrokerCustomerInvite(invite.contractId)}
             invitationReject={async () => await rejectBrokerCustomerInvite(invite.contractId)}/>);
 
     const acceptBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
-        const choice = BrokerCustomerInvitation.Accept;
+        const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Accept;
         await ledger.exercise(choice, cid, {});
     }
 
     const rejectBrokerCustomerInvite = async (cid: ContractId<BrokerCustomerInvitation>) => {
-        const choice = BrokerCustomerInvitation.Reject;
+        const choice = BrokerCustomerInvitation.BrokerCustomerInvitation_Reject;
         await ledger.exercise(choice, cid, {});
     }
 

@@ -1,0 +1,16 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.2.0 #orb version
+
+jobs:
+  build:
+    executor:
+      name: node/default
+    steps:
+      - run:
+          command: echo "Hello"
+
+workflows:
+  build:
+    jobs:
+      - build
