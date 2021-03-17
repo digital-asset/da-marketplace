@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
 import { OpenMarketplaceLogo } from '../../icons/Icons'
@@ -5,11 +6,12 @@ import { OpenMarketplaceLogo } from '../../icons/Icons'
 type TileProps = {
     header?: React.ReactElement;
     subtitle?: string;
+    className?: string;
 }
 
-export const Tile: React.FC<TileProps> = ({ children, subtitle, header }) => {
+export const Tile: React.FC<TileProps> = ({ children, subtitle, header, className }) => {
     return (
-        <div className='onboarding-tile'>
+        <div className={`onboarding-tile ${className}`}>
             { !!header && <div className='tile-header'>{header}</div> }
             { !!subtitle && <p className='subtitle'>{subtitle}</p> }
             <div className='onboarding-tile-content'>

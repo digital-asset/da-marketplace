@@ -73,7 +73,7 @@ const RoleSelectForm: React.FC<{role: MarketRole}> = ({role}) => {
         const key = wrapDamlTuple([operator, user]);
         const args = { newRole: selectedRole };
 
-        await ledger.exerciseByKey(choice, key, args);
+        // await ledger.exerciseByKey(choice, key, args);
 
         history.push(roleRoute(selectedRole));
     }

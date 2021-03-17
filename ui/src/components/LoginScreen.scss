@@ -23,5 +23,17 @@
                 font-weight: normal;
             }
         }
+
+        .quick-setup {
+            background-color: red;
+            background-color: var(--cool-grey-10);
+            padding: $spacing-l;
+
+            max-width: unset !important;
+
+            table td {
+                overflow: visible;
+            }
+        }
     }
 }
