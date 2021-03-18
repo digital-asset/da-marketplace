@@ -1,7 +1,5 @@
 import React from "react";
-import { RouteComponentProps } from "react-router-dom";
-import { Card, CardActionArea, CardMedia, CardContent, Typography, Grid, Box } from "@material-ui/core";
-import { makeStyles, createStyles } from "@material-ui/styles";
+import { Link } from "react-router-dom";
 import networkImage from "./images/network.jpg";
 import custodyImage from "./images/custody.jpg";
 import registryImage from "./images/registry.png";
@@ -9,141 +7,77 @@ import issuanceImage from "./images/issuance.jpg";
 import distributionImage from "./images/distribution.png";
 import listingImage from "./images/listing.jpg";
 import tradingImage from "./images/trading.jpg";
-import Header from "./components/Header/Header";
+import LandingPage from "./pages/page/LandingPage";
+import Tile from "./components/Tile/Tile";
 
-export default function Apps({ history } : RouteComponentProps) {
-  const classes = useStyles();
-
-  return (
-    <>
-      <Header app="Portal" />
-      <Grid container direction="column">
-        <Grid item xs={12}>
-          <Grid container>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/network/custody")}>
-                      <CardMedia className={classes.media} image={networkImage} title="Network" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Network</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your network and relationships</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/custody/accounts")}>
-                      <CardMedia className={classes.media} image={custodyImage} title="Custody" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Custody</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your custodial services</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/registry/instruments")}>
-                      <CardMedia className={classes.media} image={registryImage} title="Origination" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Origination</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your originations</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/issuance/issuances")}>
-                      <CardMedia className={classes.media} image={issuanceImage} title="Issuance" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Issuance</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your issuances</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/distribution/auctions")}>
-                      <CardMedia className={classes.media} image={distributionImage} title="Distribution" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Distribution</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your primary distributions</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/listing/listings")}>
-                      <CardMedia className={classes.media} image={listingImage} title="Listing" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Listing</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your exchange listings</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-            <Grid item xs={3}>
-              <Grid container justify="center">
-                <Card className={classes.root}>
-                  <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/trading/markets")}>
-                      <CardMedia className={classes.media} image={tradingImage} title="Trading" />
-                      <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Trading</Typography>
-                        <Typography variant="body2" color="textSecondary" component="p" className={classes.cardText}>Manage your trading activities</Typography>
-                      </CardContent>
-                    </CardActionArea>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-    </>
-  );
+type ServiceTileProps = {
+  name: string,
+  description: string,
+  image: string,
+  url: string
 }
 
-const useStyles = makeStyles((theme : any) => createStyles({
-  root: {
-    minWidth: 350,
-    maxWidth: 350,
-    marginTop: 200,
-    backgroundColor: theme.palette.primary.main, //"#00565f",
-  },
-  media: {
-    height: 140,
-    backgroundColor: "white",
-  },
-  cardText: {
-    color: "white",
-  },
-}));
+const ServiceTile: React.FC<ServiceTileProps> = ({ name, description, image, url }) => {
+  return (
+    <Tile className='service-tile'>
+      <Link to={url}>
+        <img src={image} alt={name}></img>
+        <div className='text'>
+          <h4>{name}</h4>
+          <p>{description}</p>
+        </div>
+      </Link>
+    </Tile>
+  )
+}
+
+export default function Apps() {
+  return (
+    <LandingPage className='apps'>
+      <h1>Services</h1>
+      <div className='services'>
+        <ServiceTile
+          name='Network'
+          description='Manage your network and relationships'
+          url='/apps/network/custody'
+          image={networkImage}/>
+
+        <ServiceTile
+          name='Custody'
+          description='Manage your custodial services'
+          url='/apps/custody/accounts'
+          image={custodyImage}/>
+
+        <ServiceTile
+          name='Origination'
+          description='Manage your originations'
+          url='/apps/registry/instruments'
+          image={registryImage}/>
+
+        <ServiceTile
+          name='Issuance'
+          description='Manage your issuances'
+          url='/apps/issuance/issuances'
+          image={issuanceImage}/>
+
+        <ServiceTile
+          name='Distribution'
+          description='Manage your primary distributions'
+          url='/apps/distribution/auctions'
+          image={distributionImage}/>
+
+        <ServiceTile
+          name='Listing'
+          description='Manage your exchange listings'
+          url='/apps/listing/listings'
+          image={listingImage}/>
+
+        <ServiceTile
+          name='Trading'
+          description='Manage your trading activities'
+          url='/apps/trading/markets'
+          image={tradingImage}/>
+      </div>
+    </LandingPage>
+  );
+}

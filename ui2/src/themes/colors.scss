@@ -23,9 +23,10 @@
   @include set-color-properties('yellow', 62, 100%, 40);
 
   --white: #FFFFFF;
+  --textcolor: var(--cool-grey-10);
 }
 
-$background-dark: var(--cool-grey-20);
+$background-dark: var(--cool-grey-10);
 $background-light: var(--white);
 
 .dark {

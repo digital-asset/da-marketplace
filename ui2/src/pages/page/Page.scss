@@ -1,0 +1,93 @@
+@use './TopMenu';
+@use '../../themes/variables' as *;
+
+@mixin page {
+  .page-content {
+    @include TopMenu.top-menu();
+  }
+
+  .ui.grid.page-content {
+      display: flex;
+      height: 100%;
+  }
+
+  .ui.grid > .column.page-body {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      flex: 1;
+      padding: 0;
+
+  }
+
+  .ui.grid > .column.page-body .narrow-width-menu {
+      display: none;
+  }
+
+  .ui.grid > .column.page-sidemenu {
+      padding: 0;
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-self: flex-start;
+      background-color: var(--cool-grey-10);
+      top: 0;
+      position: sticky;
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu {
+      margin: 0;
+      width: 100%;
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .sub-menu {
+      border-top: 2px solid var(--cool-grey-20);
+      border-bottom: 2px solid var(--cool-grey-20);
+
+      .empty-item {
+          padding-top: 0px;
+      }
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: $spacing-m;
+      margin: 0;
+
+      p, h3 {
+          color: var(--white)
+      }
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .item.active {
+      background-color: var(--cool-grey-20);
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu a.item:hover {
+      background-color: var(--cool-grey-20);
+  }
+  .column.page-sidemenu > .ui.secondary.menu .item.home-item {
+      padding: $spacing-l $spacing-m;
+      height: 75px;
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      color: var(--white)
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p > .icon {
+      margin-right: $spacing-s;;
+      width: 16px;
+      height: 16px;
+  }
+
+  .column.page-sidemenu > .ui.secondary.menu .item.sidemenu-item-normal > p > .orders-icon {
+      width: 18px;
+      height: 19px;
+  }
+}
