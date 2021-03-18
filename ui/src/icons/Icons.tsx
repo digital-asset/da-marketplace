@@ -18,6 +18,13 @@ export const ArrowRightIcon = () => (
     </svg>
 )
 
+export const ArrowLeftIcon = () => (
+    <svg className='icon arrow-left-icon' width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 7.99992L2 7.99992" stroke="#174DE8" stroke-linecap="round"/>
+        <path d="M6 4L2 8L6 12" stroke="#174DE8" stroke-linecap="round"/>
+    </svg>
+)
+
 export const GlobeIcon = () => (
     <svg className="icon globe-icon" viewBox="0 0 16 16">
       <path className="fill-blue" d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999

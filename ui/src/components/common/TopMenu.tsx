@@ -1,12 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
-import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
-import { useContractQuery } from '../../websocket/queryStream'
-
 import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
-import { roleRoute } from '../common/utils'
 
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
@@ -25,26 +21,27 @@ type Props = {
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
     landingPage?: boolean;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage }) => {
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage, showNotificationAlert, handleNotificationAlert }) => {
     const history = useHistory();
-    const userContracts = useContractQuery(User);
-    const currentRole = userContracts[0]?.contractData?.currentRole;
-    const [dismissNotificationsAlert, setDismissNotificationsAlert] = useState(true);
+    // const userContracts = useContractQuery(User);
+    // const currentRole = userContracts[0]?.contractData?.currentRole;
 
-    const baseUrl = roleRoute(currentRole);
+    // const baseUrl = currentRole ? roleRoute(currentRole) : '';
 
-    useEffect(() => {
-        setDismissNotificationsAlert(false);
-      }, [notifications]);
+    // useEffect(() => {
+    //     console.log('hey');
+    //     setShowNotificationsAlert(true);
+    //   }, [allNotifications]);
 
-    const handleNotifications = () => {
-        history.push(`${baseUrl}/notifications`);
-        setDismissNotificationsAlert(true);
-    }
+    // const handleNotifications = () => {
+    //     history.push(`${baseUrl}/notifications`);
+    //     setShowNotificationsAlert(false);
+    // }
 
-    console.log(dismissNotificationsAlert);
     return (
         <div className='top-section'>
             <Menu className='top-menu'>
@@ -72,11 +69,11 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             </OverflowMenu>
                         </Menu.Item>}
                     <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
-                        <Button className='ghost smaller' onClick={handleNotifications}>
+                        <Button className='ghost smaller' onClick={handleNotificationAlert}>
                             <div >
                                 <NotificationCenterIcon />
                             </div>
-                            <div className={dismissNotificationsAlert ? '' : 'notifications-active'}></div>
+                            <div className={showNotificationAlert ? 'notifications-active' : ''}></div>
                         </Button>
                     </Menu.Item>
                     <Menu.Item className={classNames('log-out-button', { 'divider': !landingPage })}>

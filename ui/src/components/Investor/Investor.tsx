@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
 import { Label, Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -42,6 +42,7 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
+    const history = useHistory();
     const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
@@ -64,6 +65,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         'name': createField('', 'Name', 'Your full legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
     });
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
 
     useEffect(() => {
         if (registeredInvestor[0]) {
@@ -95,6 +97,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         };
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
                     .catch(err => console.error(err));
+    }
+
+    const handleNotificationAlert = () => {
+        console.log('clicked');
+        history.push(`${path}/notifications`);
+        setShowNotificationAlert(false);
     }
 
     const sideNav = <RoleSideNav url={url}
@@ -208,7 +216,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     <MarketRelationships
                         relationshipRequestChoice={InvestorTemplate.Investor_RequestCustodianRelationship}
                         custodianRelationships={allCustodianRelationships}/>}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/wallet`}>
@@ -234,7 +244,9 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <Route path={`${path}/notifications`}>
             <NotificationCenter
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
     </Switch>

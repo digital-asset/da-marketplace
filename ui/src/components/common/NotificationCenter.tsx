@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { useHistory } from 'react-router-dom'
 
 import Page from '../common/Page'
 import PageSection from './PageSection'
@@ -9,14 +10,17 @@ import { useCCPCustomerInviteNotifications } from '../Investor/CCPInviteNotifica
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import { useExchangeInviteNotifications } from '../Investor/ExchangeInviteNotifications'
 
-import { NotificationCenterIcon } from '../../icons/Icons'
+import { NotificationCenterIcon, ArrowLeftIcon } from '../../icons/Icons'
 
 type Props = {
   sideNav: React.ReactElement;
   onLogout: () => void;
+  prevPath?: string;
+  showNotificationAlert?: boolean;
+  handleNotificationAlert?: () => void;
 }
 
-const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout }) => {
+export const useAllNotifications = () => {
   const notifications = [
     ...useRelationshipRequestNotifications(),
     ...useCCPCustomerNotifications(),
@@ -26,14 +30,29 @@ const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout }) => {
     ...useDismissibleNotifications()
   ];
 
+  return notifications;
+}
+
+const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout, prevPath, showNotificationAlert, handleNotificationAlert }) => {
+  const history = useHistory();
+  const notifications = useAllNotifications();
+
   return (
     <Page
       sideNav={sideNav}
       menuTitle={<><NotificationCenterIcon size='24' strokeColor='#B4F5A3' /> Notifications</>}
       onLogout={onLogout}
+      showNotificationAlert={showNotificationAlert}
+      handleNotificationAlert={handleNotificationAlert}
     >
-      <PageSection>
-        {notifications}
+      <PageSection className='notification-center'>
+        <div className='return-link'>
+          <ArrowLeftIcon/>
+          <a className='a2' onClick={() => history.goBack()}> {`Return to ${prevPath}`}</a>
+        </div>
+        <div className='notification-center-notification'>
+          {notifications}
+        </div>
       </PageSection>
     </Page>
   )

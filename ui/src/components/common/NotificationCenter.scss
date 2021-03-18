@@ -1,0 +1,24 @@
+@mixin notification-center {
+  .return-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: 20px;
+
+    a {
+      color: black;
+      margin-left: 5px;
+    }
+  }
+  .notification-center-notification {
+    .notification {
+      .message {
+        background-color: white;
+
+        .header {
+          color: black;
+        }
+      }
+    }
+  }
+}
