@@ -65,7 +65,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
-        'location': createField('', 'Location', 'Your current location', 'text')
+        'location':  createField('', 'Location', 'Your current location', 'text')
     });
 
     useEffect(() => {

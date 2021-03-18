@@ -74,4 +74,26 @@ export const deployTrigger = async (artifactHash: string, trigger: MarketplaceTr
   });
 }
 
+export const checkForExistingTrigger = async (artifactHash: string, publicParty?: string) => {
+  await getPublicAutomation(publicParty).then(automations => {
+    const artifact = automations?.find(a => a.artifactHash === artifactHash);
+    console.log(artifact)
+    // if (artifact) {
+    //   const headers = {
+    //     "Authorization": `Bearer ${token?.toString()}`,
+    //     'Content-Type': 'application/json'
+    //   }
+    //   const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/deploy`;
+    //   fetch(deployUrl, {
+    //     method: 'POST',
+    //     headers: headers,
+    //     body: JSON.stringify({
+    //       artifactHash: artifact.artifactHash,
+    //       owner: artifact.owner,
+    //       name: trigger
+    //     })}).then(response => response.json());
+    // }
+  });
+}
+
 export default deployTrigger
