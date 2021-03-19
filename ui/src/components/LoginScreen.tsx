@@ -145,7 +145,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 
   const tiles =
     appInfos.length !== 0
-      ? deploymentMode != DeploymentMode.PROD_DABL
+      ? deploymentMode === DeploymentMode.PROD_DABL
         ? showQuickSetup
           ? quickSetup
           : dablTiles

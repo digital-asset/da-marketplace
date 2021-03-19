@@ -134,6 +134,7 @@ const QuickSetup = (props: {
   async function onLoginStart(
     data: IPartyLoginData
   ): Promise<IPartyLoginData | undefined> {
+    console.log('LOGGIN IN', data.name)
     const { ledgerId, party, token } = data;
     onLogin({ ledgerId, party, token });
     return data;
@@ -145,7 +146,7 @@ const QuickSetup = (props: {
     if (currentPartyId) {
       const keyArray = Array.from(partyLoginData.keys());
       const nextPartyId = keyArray[keyArray.indexOf(currentPartyId) + 1];
-      console.log("logout and login next party");
+      console.log("logout");
       loginNextParty(nextPartyId);
     }
   }
@@ -166,8 +167,6 @@ const QuickSetup = (props: {
   function handleNewPartyLoginData(data: IPartyLoginData) {
     let newData = new Map(partyLoginData);
     newData.set(data.party, data);
-    //console.log("new party data for:", data.name);
-
     setPartyLoginData(newData);
   }
 };
@@ -202,15 +201,6 @@ const LoginPartyRow = (props: {
       updateAllPartiesLoginData(rowLoginData);
     }
   }, [rowLoginData]);
-
-  useEffect(() => {
-    if (party.party === currentPartyId) {
-      // console.log("starting login for ", partyLoggingIn?.name);
-      console.log("ONBOARDING PARTY: ", party.partyName);
-      // onLoginComplete();
-      // onLoginStart(rowLoginData);
-    }
-  }, [currentPartyId]);
 
   return (
     <Table.Row>
@@ -271,7 +261,7 @@ const LoginPartyRow = (props: {
             }
           />
         ) : (
-          deploymentMode != DeploymentMode.PROD_DABL &&
+          deploymentMode === DeploymentMode.PROD_DABL &&
           rowLoginData.role === MarketRole.ExchangeRole && (
             <Form.Checkbox
               className="red"
