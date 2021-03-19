@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { useHistory } from "react-router-dom";
 
-import { Table, Form, Button } from "semantic-ui-react";
+import { Table, Form, Button, Popup } from "semantic-ui-react";
 
 import DamlLedger, { useLedger } from "@daml/react";
 import Ledger from "@daml/ledger";
@@ -14,21 +14,24 @@ import { IssuerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Issuer
 import { BrokerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Broker";
 import { ExchangeInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Exchange";
 import { CustodianInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Custodian";
-import { CCPInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-
+import { CCPInvitation } from "@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty";
 
 import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils";
 
-import { useOperator } from "../components/common/common";
+import { useOperator, useDablParties } from "../components/common/common";
 import { wrapDamlTuple } from "../components/common/damlTypes";
 import { halfSecondPromise } from "../components/common/utils";
 
 import Credentials from "../Credentials";
 
-import { httpBaseUrl } from "../config";
+import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
 import { padStart } from "lodash";
 
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, checkForExistingTrigger } from '../../src/automation'
+import deployTrigger, {
+  TRIGGER_HASH,
+  MarketplaceTrigger,
+  checkForExistingTrigger,
+} from "../../src/automation";
 
 interface IPartyLoginData extends PartyDetails {
   role: string;
@@ -36,6 +39,7 @@ interface IPartyLoginData extends PartyDetails {
   location: string;
   title?: string;
   issuerId?: string;
+  deployMatchingEngine?: boolean;
 }
 
 const MARKETROLES = [
@@ -44,7 +48,6 @@ const MARKETROLES = [
   "ExchangeRole",
   "InvestorRole",
   "BrokerRole",
-  "CCPRole",
 ];
 
 enum loginStatusEnum {
@@ -68,18 +71,14 @@ const QuickSetup = (props: {
   onRequestClose: () => void;
 }) => {
   const { parties, onLogin, onRequestClose } = props;
-  console.log(TRIGGER_HASH)
-  // checkForExistingTrigger(TRIGGER_HASH)
+
   const [partyLoginData, setPartyLoginData] = useState<
     Map<string, IPartyLoginData>
   >(new Map());
 
-  const partyLoginDataIterator = partyLoginData.entries();
-  const loginRetries = 3;
-
-  const [partyLoggingIn, setPartyLoggingIn] = useState<
-    IPartyLoginData | undefined
-  >(undefined);
+  const [currentPartyId, setCurrentPartyId] = useState<string | undefined>(
+    undefined
+  );
 
   return (
     <div className="quick-setup">
@@ -88,20 +87,25 @@ const QuickSetup = (props: {
         className="ghost dark"
         onClick={() => onRequestClose()}
       />
-      <p className="login-details dark">
-        Select the roles you wish to onboard each party as:
-      </p>
-      <Table fixed>
+      <p className="login-details dark">Quick Setup</p>
+      <Table>
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell width={8}>Party</Table.HeaderCell>
-            <Table.HeaderCell width={8}>Role</Table.HeaderCell>
-            <Table.HeaderCell width={8}>Name</Table.HeaderCell>
-            <Table.HeaderCell width={8}>Location</Table.HeaderCell>
-            {/* <Table.HeaderCell width={8}>Title</Table.HeaderCell>
-            <Table.HeaderCell width={8}>Id</Table.HeaderCell> */}
-
-            <Table.HeaderCell width={10}>Status</Table.HeaderCell>
+            <Table.HeaderCell className="hint-cell">
+              Party
+              <Popup
+                basic
+                size="tiny"
+                content="CCP must be manually onboarded after you've onboarded a default
+                custodian"
+                trigger={<Button size="tiny" icon="info" />}
+              />
+            </Table.HeaderCell>
+            <Table.HeaderCell>Role</Table.HeaderCell>
+            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>Location</Table.HeaderCell>
+            <Table.HeaderCell>Other</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
@@ -110,16 +114,17 @@ const QuickSetup = (props: {
               key={party.party}
               party={party}
               updateAllPartiesLoginData={handleNewPartyLoginData}
-              onLoginStart={() => onLoginStart(3)}
-              onLoginComplete={() => onLoginComplete()}
-              partyLoggingIn={partyLoggingIn}
+              onLoginStart={onLoginStart}
+              onLoginComplete={onLoginComplete}
+              currentPartyId={currentPartyId}
             />
           ))}
         </Table.Body>
       </Table>
       <Button
-        disabled={partyLoginData.size === 0 || !!partyLoggingIn}
-        onClick={() => loginNextParty()}
+        className="right floated ghost dark"
+        disabled={partyLoginData.size === 0 || !!currentPartyId}
+        onClick={() => loginNextParty(Array.from(partyLoginData.keys())[0])}
       >
         Go!
       </Button>
@@ -127,92 +132,97 @@ const QuickSetup = (props: {
   );
 
   async function onLoginStart(
-    retries: number
+    data: IPartyLoginData
   ): Promise<IPartyLoginData | undefined> {
-    if (partyLoggingIn) {
-      const { ledgerId, party, token } = partyLoggingIn;
-      onLogin({ ledgerId, party, token });
-      return partyLoggingIn;
-    } else {
-      if (retries > 0) {
-        await halfSecondPromise();
-        return onLoginStart(retries - 1);
-      }
-    }
+    const { ledgerId, party, token } = data;
+    onLogin({ ledgerId, party, token });
+    return data;
   }
 
   function onLoginComplete() {
-    return new Promise(() => {
-      onLogin(undefined);
-    }).finally(() => loginNextParty());
+    onLogin(undefined);
+
+    if (currentPartyId) {
+      const keyArray = Array.from(partyLoginData.keys());
+      const nextPartyId = keyArray[keyArray.indexOf(currentPartyId) + 1];
+      console.log("logout and login next party");
+      loginNextParty(nextPartyId);
+    }
   }
 
-  function loginNextParty() {
-    return new Promise(() => {
-      const newValue = partyLoginDataIterator.next().value as [
-        string,
-        IPartyLoginData
-      ];
-      setPartyLoggingIn(newValue[1]);
-    });
+  function loginNextParty(nextPartyId: string) {
+    const newOnboardingParty = partyLoginData.get(nextPartyId);
+    if (!!newOnboardingParty) {
+      console.log("NEW PARTY LOGIN FLOW:", newOnboardingParty.name);
+      onLoginStart(newOnboardingParty).finally(() =>
+        setCurrentPartyId(nextPartyId)
+      );
+    } else {
+      console.log("ALL DONE");
+      return;
+    }
   }
 
   function handleNewPartyLoginData(data: IPartyLoginData) {
     let newData = new Map(partyLoginData);
     newData.set(data.party, data);
+    //console.log("new party data for:", data.name);
+
     setPartyLoginData(newData);
   }
 };
 
 const LoginPartyRow = (props: {
   party: PartyDetails;
-  partyLoggingIn?: IPartyLoginData;
-  onLoginStart: () => void;
+  currentPartyId?: string;
+  onLoginStart: (data: IPartyLoginData) => void;
   onLoginComplete: () => void;
   updateAllPartiesLoginData: (data: IPartyLoginData) => void;
 }) => {
   const {
     party,
-    partyLoggingIn,
+    currentPartyId,
     updateAllPartiesLoginData,
     onLoginStart,
     onLoginComplete,
   } = props;
 
-  const [
-    currentPartyLoginData,
-    setCurrentPartyLoginData,
-  ] = useState<IPartyLoginData>({
+  const [rowLoginData, setRowLoginData] = useState<IPartyLoginData>({
     ...party,
     role: "",
     name: party.partyName,
     location: "NYC",
+    deployMatchingEngine: true,
   });
 
-  const hasSelectedRole = currentPartyLoginData.role !== "";
-  const isLoggingIn = party.party === partyLoggingIn?.party;
+  const hasSelectedRole = rowLoginData.role !== "";
 
   useEffect(() => {
     if (hasSelectedRole) {
-      updateAllPartiesLoginData(currentPartyLoginData);
+      updateAllPartiesLoginData(rowLoginData);
     }
-  }, [currentPartyLoginData]);
+  }, [rowLoginData]);
 
   useEffect(() => {
-    if (isLoggingIn) {
-      onLoginStart();
+    if (party.party === currentPartyId) {
+      // console.log("starting login for ", partyLoggingIn?.name);
+      console.log("ONBOARDING PARTY: ", party.partyName);
+      // onLoginComplete();
+      // onLoginStart(rowLoginData);
     }
-  }, [partyLoggingIn]);
+  }, [currentPartyId]);
 
   return (
     <Table.Row>
-      <Table.Cell>{party.partyName}</Table.Cell>
+      <Table.Cell>
+        <p className="dark">{party.partyName}</p>
+      </Table.Cell>
       <Table.Cell>
         <Form.Select
           placeholder="Select..."
           onChange={(_, data: any) =>
-            setCurrentPartyLoginData({
-              ...currentPartyLoginData,
+            setRowLoginData({
+              ...rowLoginData,
               role: data.value,
             })
           }
@@ -223,12 +233,12 @@ const LoginPartyRow = (props: {
       </Table.Cell>
       <Table.Cell>
         <Form.Input
-          value={currentPartyLoginData.name}
+          value={rowLoginData.name}
           placeholder="name"
           disabled={!hasSelectedRole}
           onChange={(e) =>
-            setCurrentPartyLoginData({
-              ...currentPartyLoginData,
+            setRowLoginData({
+              ...rowLoginData,
               name: e.currentTarget.value,
             })
           }
@@ -236,28 +246,65 @@ const LoginPartyRow = (props: {
       </Table.Cell>
       <Table.Cell>
         <Form.Input
-          value={currentPartyLoginData.location}
+          value={rowLoginData.location}
           placeholder="location"
           disabled={!hasSelectedRole}
           onChange={(e) =>
-            setCurrentPartyLoginData({
-              ...currentPartyLoginData,
+            setRowLoginData({
+              ...rowLoginData,
               location: e.currentTarget.value,
             })
           }
         />
       </Table.Cell>
       <Table.Cell>
-        {isLoggingIn && partyLoggingIn && (
+        {rowLoginData.role === MarketRole.IssuerRole ? (
+          <Form.Input
+            value={rowLoginData.issuerId}
+            placeholder="issuer Id"
+            disabled={!hasSelectedRole}
+            onChange={(e) =>
+              setRowLoginData({
+                ...rowLoginData,
+                issuerId: e.currentTarget.value,
+              })
+            }
+          />
+        ) : (
+          deploymentMode != DeploymentMode.PROD_DABL &&
+          rowLoginData.role === MarketRole.ExchangeRole && (
+            <Form.Checkbox
+              className="red"
+              defaultChecked
+              label={
+                <label>
+                  <p className="dark p2">
+                    Deploy matching engine {<br />} (uncheck if you plan to use
+                    the Exberry Integration)
+                  </p>
+                </label>
+              }
+              onChange={(event) =>
+                setRowLoginData({
+                  ...rowLoginData,
+                  deployMatchingEngine: !rowLoginData.deployMatchingEngine,
+                })
+              }
+            />
+          )
+        )}
+      </Table.Cell>
+      <Table.Cell>
+        {currentPartyId && party.party === currentPartyId && (
           <DamlLedger
             reconnectThreshold={0}
-            token={partyLoggingIn.token}
-            party={partyLoggingIn.party}
+            token={rowLoginData.token}
+            party={rowLoginData.party}
             httpBaseUrl={httpBaseUrl}
           >
             <WellKnownPartiesProvider>
               <SinglePartyOnboard
-                data={partyLoggingIn}
+                data={rowLoginData}
                 onLoginComplete={onLoginComplete}
               />
             </WellKnownPartiesProvider>
@@ -270,7 +317,7 @@ const LoginPartyRow = (props: {
 
 const SinglePartyOnboard = (props: {
   data: IPartyLoginData;
-  onLoginComplete: () => void;
+  onLoginComplete: (data: IPartyLoginData) => void;
 }) => {
   const { data, onLoginComplete } = props;
   const operator = useOperator();
@@ -279,52 +326,74 @@ const SinglePartyOnboard = (props: {
     loginStatusEnum.LOGGING_IN
   );
   const ledger = useLedger();
-  const hi =  onboardParty()
-  if (!!onboardParty) {
-    hangleLoginComplete(true)
-  } else {
-    hangleLoginComplete(false)
-  }
-  // onboardParty()
-  //   .then(() => hangleLoginComplete(true))
-  //   .catch(() => hangleLoginComplete(false));
+  const publicParty = useDablParties().parties.publicParty;
+  useEffect(() => {
+    onboardParty()
+      .finally(() => hangleLoginComplete(true))
+      .catch(() => hangleLoginComplete(false));
+  },[]);
 
-  return <div>{loginStatus}</div>;
+  return (
+    <div>
+      <p className="dark">{loginStatus}</p>
+    </div>
+  );
 
   function hangleLoginComplete(success: boolean) {
     if (success) {
+      console.log("setting login done ", data.name);
+
       setLoginStatus(loginStatusEnum.DONE);
     } else {
+      console.log("login failed for ", data.name);
+
       setLoginStatus(loginStatusEnum.LOGIN_FAILED);
     }
-    onLoginComplete();
+    onLoginComplete(data);
   }
 
-  function onboardParty() {
-    switch (data.role) {
-      case MarketRole.InvestorRole:
-        setLoginStatus(loginStatusEnum.ONBOARDING_INVESTOR);
-        return onboardInvestor(operator, ledger, data);
-
-      case MarketRole.IssuerRole:
-        setLoginStatus(loginStatusEnum.ONBOARDING_ISSUER);
-        return onboardIssuer(operator, ledger, data);
-      case MarketRole.BrokerRole:
-        setLoginStatus(loginStatusEnum.ONBOARDING_BROKER);
-        return onboardBroker(operator, ledger, data);
-
-      case MarketRole.ExchangeRole:
-        setLoginStatus(loginStatusEnum.ONBOARDING_EXCHANGE);
-        return onboardExchange(operator, ledger, data);
-
-      // case MarketRole.CustodianRole:
-      //   setLoginStatus(loginStatusEnum.ONBOARDING_CUSTODIAN);
-      //   return onboardCustodian(operator, ledger, data);
-
-      // case MarketRole.CCPRole:
-      //   setLoginStatus(loginStatusEnum.ONBOARDING_CCP);
-      //   return onboardCCP(operator, ledger, data);
+  function onboardParty(): Promise<void> {
+    if (data.role === MarketRole.InvestorRole) {
+      setLoginStatus(loginStatusEnum.ONBOARDING_INVESTOR);
+      onboardInvestor(operator, ledger, data);
+    } else if (data.role === MarketRole.IssuerRole) {
+      setLoginStatus(loginStatusEnum.ONBOARDING_ISSUER);
+      return onboardIssuer(operator, ledger, data);
+    } else if (data.role === MarketRole.BrokerRole) {
+      setLoginStatus(loginStatusEnum.ONBOARDING_BROKER);
+      return onboardBroker(operator, ledger, data, publicParty);
+    } else if (data.role === MarketRole.ExchangeRole) {
+      setLoginStatus(loginStatusEnum.ONBOARDING_EXCHANGE);
+      return onboardExchange(operator, ledger, data, publicParty);
     }
+
+    return onboardCustodian(operator, ledger, data, publicParty);
+
+    // switch (data.role) {
+    //   case MarketRole.InvestorRole:
+    //     setLoginStatus(loginStatusEnum.ONBOARDING_INVESTOR);
+    //     onboardInvestor(operator, ledger, data);
+
+    //   case MarketRole.IssuerRole:
+    //     setLoginStatus(loginStatusEnum.ONBOARDING_ISSUER);
+    //     return onboardIssuer(operator, ledger, data);
+
+    //   case MarketRole.BrokerRole:
+    //     setLoginStatus(loginStatusEnum.ONBOARDING_BROKER);
+    //     return onboardBroker(operator, ledger, data, publicParty);
+
+    //   case MarketRole.ExchangeRole:
+    //     setLoginStatus(loginStatusEnum.ONBOARDING_EXCHANGE);
+    //     return onboardExchange(operator, ledger, data, publicParty);
+
+    //   case MarketRole.CustodianRole:
+    //     setLoginStatus(loginStatusEnum.ONBOARDING_CUSTODIAN);
+    //     return onboardCustodian(operator, ledger, data, publicParty);
+
+    //   default:
+    //     setLoginStatus(loginStatusEnum.LOGIN_FAILED);
+    //     return undefined;
+    //}
   }
 };
 
@@ -333,13 +402,14 @@ async function onboardInvestor(
   ledger: Ledger,
   data: IPartyLoginData
 ) {
-  const key = wrapDamlTuple([operator, data.party]);
-
+  const key = { _1: operator, _2: data.party };
   const args = {
     name: data.name,
     location: data.location,
     isPublic: true,
   };
+  console.log("onboarding investor ", data.name);
+
   await ledger
     .exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
     .catch((err) => console.error(err));
@@ -350,13 +420,16 @@ async function onboardIssuer(
   ledger: Ledger,
   data: IPartyLoginData
 ) {
-  const key = wrapDamlTuple([operator, data.party]);
+  const key = { _1: operator, _2: data.party };
   const args = {
     name: data.name,
     location: data.location,
     title: data.title || "NONE",
     issuerID: data.issuerId || "NONE",
   };
+
+  console.log("onboarding issuer ", data.name);
+
   await ledger
     .exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args)
     .catch((err) => console.error(err));
@@ -365,12 +438,24 @@ async function onboardIssuer(
 async function onboardBroker(
   operator: string,
   ledger: Ledger,
-  data: IPartyLoginData
+  data: IPartyLoginData,
+  publicParty: string
 ) {
-  //   if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-  //     deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
-  // }
-  const key = wrapDamlTuple([operator, data.party]);
+  console.log("onboarding boker ", data.name);
+
+  if (
+    deploymentMode == DeploymentMode.PROD_DABL &&
+    TRIGGER_HASH &&
+    data.token
+  ) {
+    deployTrigger(
+      TRIGGER_HASH,
+      MarketplaceTrigger.BrokerTrigger,
+      data.token,
+      publicParty
+    );
+  }
+  const key = { _1: operator, _2: data.party };
   const args = {
     name: data.name,
     location: data.location,
@@ -383,15 +468,32 @@ async function onboardBroker(
 async function onboardExchange(
   operator: string,
   ledger: Ledger,
-  data: IPartyLoginData
+  data: IPartyLoginData,
+  publicParty: string
 ) {
-  //   if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-  //     deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, token, publicParty);
-  //     if (deployMatchingEngine) {
-  //         deployTrigger(TRIGGER_HASH, MarketplaceTrigger.MatchingEngine, token, publicParty);
-  //     }
-  // }
-  const key = wrapDamlTuple([operator, data.party]);
+  console.log("onboarding exchange ", data.name);
+
+  if (
+    deploymentMode == DeploymentMode.PROD_DABL &&
+    TRIGGER_HASH &&
+    data.token
+  ) {
+    deployTrigger(
+      TRIGGER_HASH,
+      MarketplaceTrigger.ExchangeTrigger,
+      data.token,
+      publicParty
+    );
+    if (!!data.deployMatchingEngine) {
+      deployTrigger(
+        TRIGGER_HASH,
+        MarketplaceTrigger.MatchingEngine,
+        data.token,
+        publicParty
+      );
+    }
+  }
+  const key = { _1: operator, _2: data.party };
   const args = {
     name: data.name,
     location: data.location,
@@ -401,43 +503,33 @@ async function onboardExchange(
     .catch((err) => console.error(err));
 }
 
-// async function onboardCustodian(
-//   operator: string,
-//   ledger: Ledger,
-//   data: IPartyLoginData
-// ) {
-//   //   if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-//   //     deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, token, publicParty);
-//   // }
-//   const key = wrapDamlTuple([operator, data.party]);
-//   const args = {
-//     name: data.name,
-//     location: data.location,
-//   };
-//   await ledger
-//     .exerciseByKey(CustodianInvitation.CustodianInvitation_Accept, key, args)
-//     .catch((err) => console.error(err));
-// }
+async function onboardCustodian(
+  operator: string,
+  ledger: Ledger,
+  data: IPartyLoginData,
+  publicParty: string
+) {
+  console.log("onboarding custodian ", data.name);
 
-// async function onboardCCP(
-//   operator: string,
-//   ledger: Ledger,
-//   data: IPartyLoginData
-// ) {
-//   //   if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
-//   //     deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, token, publicParty);
-//   // }
-//   // if (inviteCustodian === '') {
-//   //     throw new Error('You must select a default custodian!');
-//   // }
-//   const key = wrapDamlTuple([operator, data.party]);
-//   const args = {
-//     name: data.name,
-//     location: data.location,
-//     custodian: inviteCustodian,
-//   };
-//   await ledger
-//     .exerciseByKey(CCPInvitation.CCPInvitation_Accept, key, args)
-//     .catch((err) => console.error(err));
-// }
+  if (
+    deploymentMode == DeploymentMode.PROD_DABL &&
+    TRIGGER_HASH &&
+    data.token
+  ) {
+    deployTrigger(
+      TRIGGER_HASH,
+      MarketplaceTrigger.CustodianTrigger,
+      data.token,
+      publicParty
+    );
+  }
+  const key = { _1: operator, _2: data.party };
+  const args = {
+    name: data.name,
+    location: data.location,
+  };
+  await ledger
+    .exerciseByKey(CustodianInvitation.CustodianInvitation_Accept, key, args)
+    .catch((err) => console.error(err));
+}
 export default QuickSetup;

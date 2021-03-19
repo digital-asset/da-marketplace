@@ -125,7 +125,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     </Tile>,
   ];
 
-  if (uploadedParties) {
+  if (uploadedParties.length != 0) {
     dablTiles.splice(
       2,
       0,

@@ -32,12 +32,6 @@ const App: React.FC = () => {
     storeCredentials(credentials);
   }
 
-  //test
-  useEffect(() => {
-    console.log('new creds:', credentials)
-  }, [credentials])
-  console.log('creds:', credentials)
-
   return (
     <div className='app'>
       <Router>

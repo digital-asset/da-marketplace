@@ -20,7 +20,7 @@ import { PublicIcon, UserIcon } from '../../icons/Icons'
 
 import { retrieveCredentials } from '../../Credentials'
 import { deploymentMode, DeploymentMode } from '../../config'
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, checkForExistingTrigger} from '../../automation'
 
 import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
@@ -112,6 +112,10 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
+    console.log(TRIGGER_HASH)
+    if (TRIGGER_HASH) {
+        checkForExistingTrigger(TRIGGER_HASH)
+    }
     const sideNav = <RoleSideNav url={url}
                                  name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[

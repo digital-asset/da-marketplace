@@ -1,8 +1,13 @@
+@import './QuickSetup.scss';
+
 @mixin login-screen {
     .login-screen {
         height: 100%;
         background-color: var(--cool-grey-20);
         animation: fadeIn .5s;
+
+        @include quick-setup;
+
         .setup-required {
             color: var(--white);
             font-weight: normal;
@@ -21,18 +26,6 @@
             h1.ui.header {
                 color: var(--white);
                 font-weight: normal;
-            }
-        }
-
-        .quick-setup {
-            background-color: red;
-            background-color: var(--cool-grey-10);
-            padding: $spacing-l;
-
-            max-width: unset !important;
-
-            table td {
-                overflow: visible;
             }
         }
     }

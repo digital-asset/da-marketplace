@@ -1,0 +1,29 @@
+@mixin quick-setup {
+    .quick-setup {
+        background-color: var(--cool-grey-10);
+        padding: $spacing-l;
+        max-width: unset !important;
+
+        table {
+            background-color: var(--cool-grey-30);
+            thead {
+                tr {
+                    .hint-cell {
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+
+                        button {
+                            align-items: center;
+                            margin-left: $spacing-s;
+                            padding: 10px 2px;
+                        }
+                    }
+                }
+            }
+            td {
+                overflow: visible;
+            }
+        }
+    }
+}
