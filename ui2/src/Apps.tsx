@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+
 import networkImage from "./images/network.jpg";
 import custodyImage from "./images/custody.jpg";
 import registryImage from "./images/registry.png";
@@ -7,8 +8,10 @@ import issuanceImage from "./images/issuance.jpg";
 import distributionImage from "./images/distribution.png";
 import listingImage from "./images/listing.jpg";
 import tradingImage from "./images/trading.jpg";
-import LandingPage from "./pages/page/LandingPage";
+
 import Tile from "./components/Tile/Tile";
+import Page from "./pages/page/Page";
+import WelcomeHeader from "./pages/page/WelcomeHeader";
 
 type ServiceTileProps = {
   name: string,
@@ -33,7 +36,7 @@ const ServiceTile: React.FC<ServiceTileProps> = ({ name, description, image, url
 
 export default function Apps() {
   return (
-    <LandingPage className='apps'>
+    <Page className='apps' menuTitle={<WelcomeHeader/>}>
       <h1>Services</h1>
       <div className='services'>
         <ServiceTile
@@ -78,6 +81,6 @@ export default function Apps() {
           url='/apps/trading/markets'
           image={tradingImage}/>
       </div>
-    </LandingPage>
+    </Page>
   );
 }

@@ -1,7 +1,7 @@
 @use 'themes/colors';
 @use 'components/Tile/TilePage';
 @use 'pages/login/Login';
-@use 'pages/page/LandingPage';
+@use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use './icons/icons.scss';
 @use './Apps.scss';
@@ -167,12 +167,11 @@ html {
         @include overrides.overrides();
         @include WelcomeHeader.welcome-header();
         @include icons.icons();
+        @include TilePage.tile-page();
         @include Apps.apps();
+        @include Page.page();
+        @include Login.login-screen();
       }
     }
-
-    @include TilePage.tile-page();
-    @include LandingPage.landing-page();
-    @include Login.login-screen();
   }
 }

@@ -62,6 +62,12 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
   }
 
   return (
+    <div>
+      <h1>{getStepTitle(activeStep)}</h1>
+    </div>
+  )
+
+  return (
     <Box display="flex" flexDirection="column" className={classes.mobileScreen}>
       <Typography variant="h3" className={classes.heading}>{getStepTitle(activeStep)}</Typography>
       <Box flexGrow={1}>
