@@ -7,26 +7,23 @@ import { NavLink } from 'react-router-dom'
 import { useParty } from '@daml/react'
 import PageSection from './PageSection'
 import WelcomeHeader from './WelcomeHeader'
+import { SidebarEntry } from '../../components/Sidebar/SidebarEntry'
 
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
   activeMenuTitle?: boolean;
-  sideBarItems?: { label: string, path: string }[];
-  notifications?: React.ReactElement[];
+  sideBarItems?: SidebarEntry[];
   topMenuButtons?: ITopMenuButtonInfo[];
-  landingPage?: boolean;
 }
 
 const Page: React.FC<Props> = ({
   children,
   className,
   menuTitle,
-  notifications,
   topMenuButtons,
   activeMenuTitle,
   sideBarItems,
-  landingPage
 }) => {
   const user = useParty();
 
@@ -57,10 +54,8 @@ const Page: React.FC<Props> = ({
       <Grid.Column className='page-body'>
         <TopMenu
           title={!!menuTitle ? menuTitle : <WelcomeHeader/>}
-          notifications={notifications}
-          topMenuButtons={topMenuButtons}
-          activeMenuTitle={activeMenuTitle}
-          landingPage={landingPage}/>
+          buttons={topMenuButtons}
+          activeMenuTitle={activeMenuTitle}/>
 
         <PageSection className={className}>
           { children }

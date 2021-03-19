@@ -10,20 +10,19 @@ import classNames from 'classnames'
 import { signOut, useUserDispatch } from '../../context/UserContext'
 
 export type ITopMenuButtonInfo = {
+    disabled?: boolean,
     label: string,
-    onClick: () => void,
-    disabled?: boolean;
+    onClick: () => void
 }
 
 type Props = {
     title?: React.ReactElement;
-    notifications?: React.ReactElement[];
     activeMenuTitle?: boolean;
-    topMenuButtons?: ITopMenuButtonInfo[];
-    landingPage?: boolean;
+    buttons?: ITopMenuButtonInfo[];
+    buttonDivider?: boolean;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, topMenuButtons, activeMenuTitle, landingPage }) => {
+const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, buttonDivider }) => {
     const history = useHistory();
     const userDispatch = useUserDispatch();
 
@@ -38,22 +37,22 @@ const TopMenu: React.FC<Props> = ({ title, notifications, topMenuButtons, active
                     </Menu.Item>
                 </Menu.Menu>
                 <Menu.Menu position='right'>
-                    {topMenuButtons?.map(b =>
+                    {buttons?.map(b =>
                         <Menu.Item className='menu-button'>
                             <Button className='ghost' onClick={b.onClick} disabled={b.disabled}>
                                 <Header as='h3'>{b.label}</Header>
                             </Button>
                         </Menu.Item>
                     )}
-                    {topMenuButtons &&
+                    {buttons &&
                         <Menu.Item className='overflow-menu-item'>
                             <OverflowMenu>
-                                {topMenuButtons?.map(b =>
+                                {buttons?.map(b =>
                                     <OverflowMenuEntry key={b.label} label={b.label} onClick={b.onClick}/>
                                 )}
                             </OverflowMenu>
                         </Menu.Item>}
-                    <Menu.Item className={classNames('log-out-button', {'divider': !landingPage})}>
+                    <Menu.Item className={classNames('log-out-button', {'divider': buttonDivider !== false})}>
                         <Button className='ghost smaller' onClick={() => signOut(userDispatch, history)}>
                             <div className='log-out'>
                                 <Header as='h3'>Log out</Header>
@@ -64,9 +63,9 @@ const TopMenu: React.FC<Props> = ({ title, notifications, topMenuButtons, active
                 </Menu.Menu>
             </Menu>
 
-            <div className='notifications'>
+            {/* <div className='notifications'>
                 { notifications }
-            </div>
+            </div> */}
         </div>
     )
 }
