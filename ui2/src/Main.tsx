@@ -27,7 +27,7 @@ export default function Main({ defaultPath }: MainProps) {
       <HashRouter>
         <Switch>
           <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
-          <PrivateRoute exact path="/apps" component={ App } />
+          <PrivateRoute path="/app" component={ App } />
           {/* <PrivateRoute path="/apps/network" component={Network} />
           <PrivateRoute path="/apps/custody" component={Custody} />
           <PrivateRoute path="/apps/registry" component={Registry} />
