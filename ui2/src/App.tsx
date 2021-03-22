@@ -37,6 +37,7 @@ import { Markets, Markets as MarketNetwork } from "./pages/trading/Markets";
 import { Custody as CustodyNetwork } from "./pages/network/Custody";
 import { Trading as TradingNetwork } from "./pages/network/Trading";
 import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
+import Page from "./pages/page/Page";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -122,16 +123,14 @@ const AppComponent = () => {
   };
 
   return (
-    <div className={classes.root}>
-      <>
-        <Header app="" />
-        { servicesLoading ?
+    <Page sideBarItems={entriesToDisplay}>
+       { servicesLoading ?
           <div className={classes.progress}>
             <CircularProgress color={"secondary"} />
           </div>
           :
           <>
-            <Sidebar entries={entriesToDisplay} />
+            {/* <Sidebar entries={entriesToDisplay} /> */}
             <div className={classnames(classes.content, { [classes.contentShift]: layoutState.isSidebarOpened })}>
               <div className={classes.fakeToolbar} />
               <Switch>
@@ -144,8 +143,31 @@ const AppComponent = () => {
             </div>
           </>
         }
-      </>
-    </div>
+    </Page>
+    // <div className={classes.root}>
+    //   <>
+    //     <Header app="" />
+    //     { servicesLoading ?
+    //       <div className={classes.progress}>
+    //         <CircularProgress color={"secondary"} />
+    //       </div>
+    //       :
+    //       <>
+    //         <Sidebar entries={entriesToDisplay} />
+    //         <div className={classnames(classes.content, { [classes.contentShift]: layoutState.isSidebarOpened })}>
+    //           <div className={classes.fakeToolbar} />
+    //           <Switch>
+    //             <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
+    //             <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
+    //             <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
+    //             <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
+    //             { routeEntries(entriesToDisplay) }
+    //           </Switch>
+    //         </div>
+    //       </>
+    //     }
+    //   </>
+    // </div>
   );
 }
 
