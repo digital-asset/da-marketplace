@@ -7,12 +7,17 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import { useLedger, useParty, useStreamQueries } from "@daml/react";
+import { useLedger, useParty, useStreamQueries} from "@daml/react";
 import { getName } from "../../config";
 import useStyles from "../styles";
 import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
+import { CreateEvent } from "@daml/ledger";
 
-const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, services }) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
@@ -21,7 +26,6 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const [state, setState] = React.useState<any>({ label: "" });
   const maxSteps = 2;
 
-  const services = useStreamQueries(Service).contracts
   const clientServices = services.filter(s => s.payload.customer === party);
 
   if (clientServices.length === 0) return (<></>);
@@ -35,7 +39,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
       ctrls: [ service.payload.provider, service.payload.customer ]
     };
     await ledger.exercise(Service.RequestOpenAccount, service.contractId, request);
-    history.push("/apps/custody/requests");
+    history.push("/app/custody/requests");
   }
 
   const handleNext = () => {

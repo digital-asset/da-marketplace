@@ -3,9 +3,10 @@ import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import ErrorComponent from "./pages/error/Error";
 import { useUserState, useUserDispatch } from "./context/UserContext";
 import Login from "./pages/login/Login";
-import Apps from "./Apps";
+// import Apps from "./Apps";
 import DamlLedger from "@daml/react";
 import { httpBaseUrl, wsBaseUrl } from "./config";
+import {App} from "./App";
 import { Network } from "./apps/Network";
 import { Custody } from "./apps/Custody";
 import { Issuance } from "./apps/Issuance";
@@ -20,20 +21,20 @@ type MainProps = {
 
 export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
-  
+
   return (
     <DamlLedger party={user.party} token={user.token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
       <HashRouter>
         <Switch>
           <Route exact path="/" component={RootRoute} />
-          <PrivateRoute exact path="/apps" component={Apps} />
-          <PrivateRoute path="/apps/network" component={Network} />
-          <PrivateRoute path="/apps/custody" component={Custody} />
-          <PrivateRoute path="/apps/registry" component={Registry} />
-          <PrivateRoute path="/apps/issuance" component={Issuance} />
-          <PrivateRoute path="/apps/distribution" component={Distribution} />
-          <PrivateRoute path="/apps/listing" component={Listing} />
-          <PrivateRoute path="/apps/trading" component={Trading} />
+          <PrivateRoute path="/app" component={ App } />
+          {/*<PrivateRoute path="/apps/network" component={Network} />*/}
+          {/*<PrivateRoute path="/app/custody" component={Custody} />*/}
+          {/*<PrivateRoute path="/apps/registry" component={Registry} />*/}
+          {/*<PrivateRoute path="/apps/issuance" component={Issuance} />*/}
+          {/*<PrivateRoute path="/apps/distribution" component={Distribution} />*/}
+          {/*<PrivateRoute path="/apps/listing" component={Listing} />*/}
+          {/*<PrivateRoute path="/apps/trading" component={Trading} />*/}
           <PublicRoute path="/login" component={Login} />
           <Route component={ErrorComponent} />
         </Switch>

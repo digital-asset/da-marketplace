@@ -66,7 +66,7 @@ function Header({ history, app } : RouteComponentProps & HeaderProps) {
           checked={themeState.type === 'dark' ? true : false}
           onClick={() => themeDispatch({darkMode : themeState.type === 'dark' ? false : true})}
         />
-        <IconButton className={classes.headerMenuButton} color="inherit" onClick={() => history.push("/apps")}>
+        <IconButton className={classes.headerMenuButton} color="inherit" onClick={() => history.push("/app")}>
           <Apps classes={{ root: classes.headerIcon }} />
         </IconButton>
         <IconButton className={classes.headerMenuButton} color="inherit" onClick={() => signOut(userDispatch, history)}>

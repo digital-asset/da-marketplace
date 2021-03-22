@@ -15,7 +15,11 @@ import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { getBidAllocation, getBidStatus } from "../Utils";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 
-export const BiddingAuction = () => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+export const BiddingAuction : React.FC<Props> = ({ services } : Props) => {
   const classes = useStyles();
   const ledger = useLedger();
   const { contractId } = useParams<any>();
@@ -26,7 +30,6 @@ export const BiddingAuction = () => {
 
   const allBiddingAuctions = useStreamQueries(BiddingAuctionContract);
   const deposits = useStreamQueries(AssetDeposit).contracts;
-  const services = useStreamQueries(Service).contracts;
   const bids = useStreamQueries(Bid);
 
   const biddingAuction = allBiddingAuctions.contracts.find(b => b.contractId === contractId);

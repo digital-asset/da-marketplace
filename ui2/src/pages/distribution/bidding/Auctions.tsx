@@ -41,7 +41,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({ history }: Ro
                     <TableCell key={3} className={classes.tableCell}>{c.payload.asset.id.label}</TableCell>
                     <TableCell key={4} className={classes.tableCell}>{c.payload.asset.quantity}</TableCell>
                     <TableCell key={5} className={classes.tableCell}>
-                      <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/distribution/auction/" + c.contractId.replace("#", "_"))}>
+                      <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/distribution/auction/" + c.contractId.replace("#", "_"))}>
                         <KeyboardArrowRight fontSize="small" />
                       </IconButton>
                     </TableCell>

@@ -9,20 +9,23 @@ import useStyles from "../../styles";
 import { CreateAuctionRequest, Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { getName } from "../../../config";
 
-const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const RequestsComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
   const requests = useStreamQueries(CreateAuctionRequest).contracts;
-  const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
 
   const createAuction = async (c : CreateEvent<CreateAuctionRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.CreateAuction, service.contractId, { createAuctionRequestCid: c.contractId });
-    history.push("/apps/distribution/auctions");
+    history.push("/app/distribution/auctions");
   }
 
   return (
@@ -35,7 +38,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/distribution/new")}>New Auction</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/distribution/new")}>New Auction</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -71,7 +74,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/distribution/requests/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/distribution/requests/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

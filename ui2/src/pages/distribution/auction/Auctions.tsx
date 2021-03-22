@@ -23,7 +23,7 @@ const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/distribution/new")}>New Auction</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/distribution/new")}>New Auction</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -52,7 +52,7 @@ const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                       <TableCell key={3} className={classes.tableCell}>{c.payload.floorPrice} {c.payload.quotedAssetId.label}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{getAuctionStatus(c.payload.status)}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/distribution/auctions/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/distribution/auctions/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

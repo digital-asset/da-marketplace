@@ -1,0 +1,64 @@
+@mixin icon-size($size) {
+  &.icon-size-#{$size} {
+      height: #{$size + 'px'};
+      width: #{$size + 'px'};
+  }
+}
+
+@mixin icons {
+  .icon {
+      height: 16px;
+
+      @include icon-size(24);
+      @include icon-size(32);
+      @include icon-size(48);
+      @include icon-size(64);
+
+      &.arrow-right-icon > path {
+          fill-rule: evenodd;
+          clip-rule: evenodd;
+          fill: var(--textcolor);
+      }
+
+      &.candlestick-icon {
+          line, rect {
+              fill: var(--white);
+              stroke: var(--white);
+          }
+      }
+
+      &.circle-icon {
+          border-radius: 50px/50px;
+          border: solid 1px var(--textcolor);
+          width: 16px;
+          height: 16px;
+          margin-right: $spacing-xs;
+      }
+
+      &.chevron-up {
+          transform: scaleY(-1);
+          padding-left: $spacing-xs;
+          margin-right: $spacing-xs !important;
+      }
+
+      &.chevron-down {
+          padding-left: $spacing-xs;
+          margin-right: $spacing-xs !important;
+      }
+
+      &.fill-blue , path.fill-blue{
+          fill: var(--blue-50);
+      }
+
+      &.fill-green , path.fill-green{
+          fill: var(--green-50);
+      }
+
+      &.circled-check-icon {
+          position: absolute;
+          top: -8px;
+          right: -10px;
+          z-index: 2;
+      }
+  }
+}
