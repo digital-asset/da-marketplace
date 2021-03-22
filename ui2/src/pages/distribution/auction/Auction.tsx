@@ -12,7 +12,12 @@ import { CreateEvent } from "@daml/ledger";
 import { getAuctionStatus, getBidStatus, getBidAllocation } from "../Utils";
 import { DateTime } from "luxon"
 
-export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
+type Props = {
+  auctionServices : Readonly<CreateEvent<AuctionService, any, any>[]>,
+  biddingServices : Readonly<CreateEvent<BiddingService, any, any>[]>
+}
+
+export const Auction: React.FC<RouteComponentProps & Props> = ({ history, auctionServices, biddingServices }: RouteComponentProps & Props) => {
   const classes = useStyles();
 
   const { contractId } = useParams<any>();
@@ -20,12 +25,10 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
 
   const party = useParty();
   const ledger = useLedger();
-  const auctionServices = useStreamQueries(AuctionService).contracts;
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
   const isAuctionProvider = auctionProviderServices.length > 0;
   const auctionCustomerServices = auctionServices.filter(s => s.payload.customer === party);
   const isAuctionCustomer = auctionCustomerServices.length > 0;
-  const biddingServices = useStreamQueries(BiddingService).contracts;
   const biddingProviderServices = biddingServices.filter(s => s.payload.provider === party);
   const auctions = useStreamQueries(AuctionContract).contracts;
   const auction = auctions.find(c => c.contractId === cid);
@@ -44,7 +47,7 @@ export const Auction: React.FC<RouteComponentProps> = ({ history }: RouteCompone
   const closeAuction = async () => {
     const bidCids = bids.map(c => c.contractId);
     const [result,] = await ledger.exercise(AuctionService.ProcessAuction, auctionProviderService.contractId, { auctionCid: auction.contractId, bidCids });
-    history.push("/apps/distribution/auctions/" + result._1.replace("#", "_"))
+    history.push("/app/distribution/auctions/" + result._1.replace("#", "_"))
   };
 
   const requestBid = async (biddingService: CreateEvent<BiddingService>) => {

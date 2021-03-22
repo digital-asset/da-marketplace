@@ -18,9 +18,9 @@ const CustodyApp = () => {
   const layoutState = useLayoutState();
 
   const entries : SidebarEntry[] = [];
-  entries.push({ label: "New Account", path: "/apps/custody/accounts/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Accounts", path: "/apps/custody/accounts", render: () => (<Accounts />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Requests", path: "/apps/custody/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "New Account", path: "/apps/custody/accounts/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Accounts", path: "/apps/custody/accounts", render: () => (<Accounts />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Requests", path: "/apps/custody/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
 
   return (
     <div className={classes.root}>
@@ -39,10 +39,10 @@ const CustodyApp = () => {
             <Route key={"myquote"} path={"/apps/policyadmin/myquotes/:contractId"} component={MyQuote} />
             <Route key={"mypolicy"} path={"/apps/policyadmin/mypolicies/:contractId"} component={MyPolicy} />
             <Route key={"myinvoice"} path={"/apps/policyadmin/myinvoices/:contractId"} component={MyInvoice} /> */}
-            <Route key={"account"} path={"/apps/custody/account/:contractId"} component={Account} />
-            {entries.map(e =>
-              <Route exact={true} key={e.label} path={e.path} render={e.render} />
-            )}
+            {/*<Route key={"account"} path={"/apps/custody/account/:contractId"} component={Account} />*/}
+            {/*{entries.map(e =>*/}
+            {/*  <Route exact={true} key={e.label} path={e.path} render={e.render} />*/}
+            {/*)}*/}
           </Switch>
           <BottomDrawer />
         </div>

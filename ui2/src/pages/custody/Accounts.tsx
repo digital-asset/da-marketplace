@@ -13,13 +13,15 @@ import { InputDialog, InputDialogProps } from "../../components/InputDialog/Inpu
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { Id } from "@daml.js/da-marketplace/lib/DA/Finance/Types";
 
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
 
-const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+const AccountsComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
-  const services = useStreamQueries(Service).contracts;
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
   const assets = useStreamQueries(AssetDescription).contracts;
 
@@ -30,7 +32,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, { accountId: c.payload.account.id });
-    history.push("/apps/custody/requests")
+    history.push("/app/custody/requests")
   }
 
   const defaultCreditRequestDialogProps : InputDialogProps<any> = {
@@ -77,7 +79,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/custody/accounts/new")}>New Account</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/custody/accounts/new")}>New Account</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -115,7 +117,7 @@ const AccountsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         }
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/custody/account/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/custody/account/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

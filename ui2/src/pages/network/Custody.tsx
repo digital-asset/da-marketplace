@@ -12,7 +12,11 @@ import { VerifiedIdentity } from "@daml.js/da-marketplace/lib/Marketplace/Regula
 import { Role } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Role";
 import { Offer, Service, Request } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const CustodyComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
@@ -22,7 +26,6 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
-  const services = useStreamQueries(Service).contracts;
   const requests = useStreamQueries(Request).contracts;
   const offers = useStreamQueries(Offer).contracts;
 
@@ -139,7 +142,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                         <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => terminateService(c)}>Terminate</Button>
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/custody/service/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/network/custody/service/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>
@@ -177,7 +180,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                         {c.payload.provider === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => approveRequest(c)}>Approve</Button>}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/custody/request/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/network/custody/request/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>
@@ -215,7 +218,7 @@ const CustodyComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                         {c.payload.customer === party && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => acceptOffer(c)}>Accept</Button>}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/custody/offer/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/network/custody/offer/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

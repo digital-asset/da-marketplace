@@ -10,14 +10,17 @@ import { getName } from "../../config";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
 import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
 
-const ListingsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>,
+  listings : Readonly<CreateEvent<Listing, any, any>[]>
+};
+
+const ListingsComponent : React.FC<RouteComponentProps & Props> = ({ history, services, listings } : RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
-  const services = useStreamQueries(Service).contracts;
   const service = services.find(s => s.payload.customer === party);
-  const listings = useStreamQueries(Listing).contracts;
 
   const requestDisableDelisting = async (c : CreateEvent<Listing>) => {
     if (!service) return; // TODO: Display error
@@ -34,7 +37,7 @@ const ListingsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/listing/new")}>New Listing</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/listing/new")}>New Listing</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -73,7 +76,7 @@ const ListingsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         {party === c.payload.customer && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => requestDisableDelisting(c)}>Disable</Button>}
                       </TableCell>
                       <TableCell key={9} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/listing/listings/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/listing/listings/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

@@ -16,7 +16,7 @@ ReactDOM.render(
     <UserProvider>
       <CustomThemeProvider lightTheme={Themes.light} darkTheme={Themes.dark}>
         <CssBaseline />
-        <Main defaultPath="/apps" />
+        <Main defaultPath="/app" />
       </CustomThemeProvider>
     </UserProvider>
   </LayoutProvider>,

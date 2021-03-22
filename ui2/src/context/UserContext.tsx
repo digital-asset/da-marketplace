@@ -90,7 +90,7 @@ async function loginUser(
     dispatch({ type: "LOGIN_SUCCESS", name, party, token });
     // setError(false);
     // setIsLoading(false);
-    history.push("/apps");
+    history.push("/app");
   } else {
     dispatch({ type: "LOGIN_FAILURE" });
     // setError(true);

@@ -23,7 +23,7 @@ const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteC
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/issuance/new")}>New Issuance</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/issuance/new")}>New Issuance</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -58,7 +58,7 @@ const IssuancesComponent : React.FC<RouteComponentProps> = ({ history } : RouteC
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => requestDelisting(c)}>Delist</Button>} */}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/issuance/issuances/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/issuance/issuances/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

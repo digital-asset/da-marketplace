@@ -17,7 +17,7 @@ const NewComponent = ({ history } : RouteComponentProps) => {
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/registry/instruments/new/binaryoption")}>
+                    <CardActionArea onClick={() => history.push("/app/registry/instruments/new/binaryoption")}>
                       <CardMedia className={classes.media} image={binaryOptionImage} title="Binary Option" />
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Binary Option</Typography>
@@ -32,7 +32,7 @@ const NewComponent = ({ history } : RouteComponentProps) => {
               <Grid container justify="center">
                 <Card className={classes.root}>
                   <Box border={2} borderColor="primary.main">
-                    <CardActionArea onClick={() => history.push("/apps/registry/instruments/new/convertiblenote")}>
+                    <CardActionArea onClick={() => history.push("/app/registry/instruments/new/convertiblenote")}>
                       <CardMedia className={classes.media} image={convertibleNoteImage} title="Convertible Note" />
                       <CardContent>
                         <Typography gutterBottom variant="h5" component="h2" className={classes.cardText}>Convertible Note</Typography>

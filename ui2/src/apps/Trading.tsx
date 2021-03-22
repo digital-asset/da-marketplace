@@ -19,7 +19,7 @@ const TradingApp = () => {
   const listings = useStreamQueries(Listing).contracts;
   const marketEntries = listings.map(c => ({ label: c.payload.listingId, path: "/apps/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<></>), icon: (<PlayArrow/>), children: [] }));
   const entries : SidebarEntry[] = [];
-  entries.push({ label: "Markets", path: "/apps/trading/markets", render: () => (<Markets />), icon: (<PlayArrow/>), children: marketEntries });
+  // entries.push({ label: "Markets", path: "/apps/trading/markets", render: () => (<Markets />), icon: (<PlayArrow/>), children: marketEntries });
 
   return (
     <div className={classes.root}>

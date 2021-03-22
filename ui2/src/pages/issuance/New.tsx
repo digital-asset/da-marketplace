@@ -10,8 +10,13 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
+import {CreateEvent} from "@daml/ledger";
 
-const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
   const classes = useStyles();
 
   const el = useRef<HTMLDivElement>(null);
@@ -24,7 +29,6 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
 
   const ledger = useLedger();
   const party = useParty();
-  const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.issuer === party && c.payload.assetId.version === "0");
@@ -48,7 +52,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
   const requestIssuance = async () => {
     if (!asset || !account) return;
     await ledger.exercise(Service.RequestCreateIssuance, service.contractId, { issuanceId, accountId: account.id, assetId: asset.payload.assetId, quantity });
-    history.push("/apps/issuance/requests");
+    history.push("/app/issuance/requests");
   }
 
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };
