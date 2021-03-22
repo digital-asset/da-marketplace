@@ -115,10 +115,7 @@ const AppComponent = () => {
   const entriesToDisplay = entries.filter(e => e.displayEntry()).flatMap(e => e.sidebar);
 
   const routeEntries = (sidebarEntries : SidebarEntry[]) : React.ReactElement[] => {
-    const childRoutes = sidebarEntries
-      .map(e => e.children)
-      .map(c => routeEntries(c))
-      .flat()
+    const childRoutes = sidebarEntries.map(e => routeEntries(e.children)).flat();
     const routes = sidebarEntries.map(e => <Route exact={true} key={e.label} path={e.path} render={e.render} />);
 
     return routes.concat(childRoutes);
