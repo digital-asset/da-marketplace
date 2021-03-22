@@ -1,0 +1,66 @@
+module Tests.Utils where
+
+import ContingentClaims.Claim (Claim, Claim(Zero), when, scale, cond, give, one, and, or)
+import ContingentClaims.Observable qualified as O
+import ContingentClaims.Observation qualified as O
+import ContingentClaims.FinancialClaim (at, cpb, european, irs, bermudan)
+import DA.Finance.Types (Id(..))
+import Prelude hiding (and, or)
+
+type C = Claim O.Observation Date Id
+
+payment : Id -> Decimal -> C
+payment ccy qty =
+  scale (O.pure qty) (one ccy)
+
+delivery : Id -> Decimal -> C
+delivery asset qty =
+  give $ scale (O.pure qty) (one asset)
+
+futurePayment : Id -> Decimal -> Date -> C
+futurePayment ccy qty d =
+  when (at d) $ payment ccy qty
+
+futureDelivery : Id -> Decimal -> Date -> C
+futureDelivery asset qty d =
+  when (at d) $ delivery asset qty
+
+dvp : Id -> Decimal -> Id -> Decimal -> C
+dvp asset assetQty ccy ccyQty =
+  and (delivery asset assetQty) (payment ccy ccyQty)
+
+futureDvp : Id -> Decimal -> Id -> Decimal -> Date -> C
+futureDvp asset assetQty ccy ccyQty d =
+  when (at d) $ dvp asset assetQty ccy ccyQty
+
+bond : Id -> Decimal -> Decimal -> [Date] -> C
+bond ccy notional coupon dates =
+  cpb notional (notional * coupon) ccy dates
+
+callOptionPhysical : Id -> Decimal -> Id -> Decimal -> Date -> C
+callOptionPhysical asset assetQty ccy ccyQty d =
+  european d $ dvp asset assetQty ccy ccyQty
+
+binaryCallOption : Id -> Id -> Decimal -> Date -> C
+binaryCallOption underlying ccy strike expiry =
+  when (at expiry) $ or (cond (O.pure strike O.<= O.observe underlying.label) (one ccy) Zero) Zero
+
+koPutWarrant : Decimal -> Decimal -> Id -> Id -> C
+koPutWarrant barrier strike underlying ccy  =
+  cond (O.observe underlying.label O.<= O.pure barrier) (or (scale (O.pure strike O.+ (O.observe underlying.label)) (one ccy)) (Zero)) Zero
+
+bermudanSwaption : Id -> Decimal -> Id -> Decimal -> [Date] -> [Date] -> C
+bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates exerciseDates =
+  let
+    floatObs = O.observe floatingRateId.label
+    swap = irs principal floatObs floatingRateId fixedRate fixedCcyId fixingDates
+  in bermudan swap exerciseDates
+
+-- Modeled after https://ledgy.com/blog/examples-of-convertible-notes/
+convertibleNote : Id -> Id -> Decimal -> Decimal -> Date -> Decimal -> Decimal -> C
+convertibleNote underlying ccy principal discount maturity interest cap =
+  let
+    conversionCondition = O.observe underlying.label O.<= O.pure cap
+    conversionPayout = scale (O.pure (principal * (1.0 + interest)) O./ (O.observe underlying.label O.* O.pure (1.0 - discount))) (one underlying)
+    principalPayout = scale (O.pure (principal * (1.0 + interest))) (one ccy)
+  in when (at maturity) $ cond conversionCondition conversionPayout principalPayout

@@ -2,14 +2,16 @@ module Tests.BinaryOption where
 -- ^ This module tests the full lifecycle of a binary option
 
 import Common (onboardProviders, onboardCustomer)
-import DA.Date (date, datetime, Month(Mar))
+import ContingentClaims.Claim (serialize)
+import DA.Date (date, datetime, Month(Mar, Oct))
 import DA.Finance.Types (Id(..), Asset(..))
 import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..), AssetSettlement_Transfer(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
 import DA.Map qualified as Map
-import Marketplace.Issuance.Service (RequestBinaryCallOptionOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
+import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
+import Tests.Utils (binaryCallOption)
 
 endToEnd = script do
   providers <- onboardProviders
@@ -29,16 +31,14 @@ endToEnd = script do
   bob <- onboardCustomer providers "Bob"
 
   -- Alice originates the option
-  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestBinaryCallOptionOrigination with
+  let boClaims = binaryCallOption underlyingId usdId 700.0 (date 2022 Oct 22)
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = "TSLA Mar21 910.0"
+      description = "Tesla Binary Option"
       safekeepingAccountId = alice.mainAccount.id
-      expiry = date 2020 Mar 18
-      underlyingId = underlyingId
-      currencyId = usdId
-      strike = 910.0
+      claims = serialize boClaims
       observers = []
-  optionDescCid <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
-  Some optionDesc <- queryContractId providers.bank optionDescCid
+  (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 
   -- Alice issues the option
   createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid
