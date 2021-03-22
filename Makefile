@@ -9,7 +9,7 @@ NAME=${BASENAME}-${VERSION}
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
 exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
 trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
-ui_version := $(shell node -p "require(\"./ui/package.json\").version")
+ui_version := $(shell node -p "require(\"./ui2/package.json\").version")
 
 
 state_dir := .dev
@@ -181,18 +181,18 @@ $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 
 $(ui):
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
-	cd ui && yarn install
-	cd ui && yarn build
-	cd ui && zip -r da-marketplace-ui-$(ui_version).zip build
-	mv ui/da-marketplace-ui-$(ui_version).zip $@
-	rm -r ui/build
+	cd ui2 && yarn install
+	cd ui2 && yarn build
+	cd ui2 && zip -r da-marketplace-ui-$(ui_version).zip build
+	mv ui2/da-marketplace-ui-$(ui_version).zip $@
+	rm -r ui2/build
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf $(state_dir) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit .daml
 
 clean-ui:
-	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
+	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock ui2/node_modules ui2/build ui2/yarn.lock
 
 verify-artifacts:
 	for filename in $(SUBDEPLOYMENTS) ; do \
