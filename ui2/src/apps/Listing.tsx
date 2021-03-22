@@ -16,9 +16,9 @@ const ListingApp = () => {
   const layoutState = useLayoutState();
 
   const entries : SidebarEntry[] = [];
-  entries.push({ label: "New Listing", path: "/apps/listing/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Requests", path: "/apps/listing/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Listings", path: "/apps/listing/listings", render: () => (<Listings />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "New Listing", path: "/apps/listing/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Requests", path: "/apps/listing/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Listings", path: "/apps/listing/listings", render: () => (<Listings />), icon: (<PlayArrow/>), children: [] });
 
   return (
     <div className={classes.root}>

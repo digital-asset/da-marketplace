@@ -84,7 +84,7 @@ const NewConvertibleNoteComponent = ({ history } : RouteComponentProps) => {
       return;
     }
     await ledger.exercise(Service.RequestOrigination, service.contractId, { assetLabel: label, description, claims, safekeepingAccountId, observers: [ service.payload.provider, party ] });
-    history.push("/apps/registry/requests");
+    history.push("/app/registry/requests");
   };
 
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };

@@ -3,14 +3,17 @@ import { withRouter, RouteComponentProps } from "react-router-dom";
 import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, Typography } from "@material-ui/core";
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
-import { useStreamQueries } from "@daml/react";
 import useStyles from "../styles";
 import { getName } from "../../config";
 import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
+import {CreateEvent} from "@daml/ledger";
 
-const MarketsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+type Props = {
+  listings : Readonly<CreateEvent<Listing, any, any>[]>
+}
+
+const MarketsComponent : React.FC<RouteComponentProps & Props> = ({ history, listings } : RouteComponentProps & Props) => {
   const classes = useStyles();
-  const listings = useStreamQueries(Listing).contracts;
 
   return (
     <>
@@ -22,7 +25,7 @@ const MarketsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/listing/new")}>New Market</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/listing/new")}>New Market</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -51,7 +54,7 @@ const MarketsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCom
                       <TableCell key={3} className={classes.tableCell}>{c.payload.tradedAssetId.label}</TableCell>
                       <TableCell key={4} className={classes.tableCell}>{c.payload.quotedAssetId.label}</TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/trading/markets/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/trading/markets/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

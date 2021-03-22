@@ -29,7 +29,7 @@ const OverviewComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
             <TableCell key={1} className={classes.tableCell}>{getName(e.payload.provider)}</TableCell>
             <TableCell key={2} className={classes.tableCell}>{getName(e.payload.customer)}</TableCell>
             <TableCell key={6} className={classes.tableCell}>
-              <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/network/services/" + e.contractId.replace("#", "_"))}>
+              <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/network/services/" + e.contractId.replace("#", "_"))}>
                 <KeyboardArrowRight fontSize="small"/>
               </IconButton>
             </TableCell>

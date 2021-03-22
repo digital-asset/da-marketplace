@@ -28,7 +28,11 @@ const PercentageSlider = withStyles({
   },
 })(Slider);
 
-export const Market : React.FC<RouteComponentProps> = () => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+export const Market : React.FC<Props> = ({ services } : Props) => {
   const classes = useStyles();
 
   const [ isBuy, setIsBuy ] = useState(true);
@@ -71,7 +75,6 @@ export const Market : React.FC<RouteComponentProps> = () => {
 
   const party = useParty();
   const ledger = useLedger();
-  const services = useStreamQueries(Service).contracts;
   const clientServices = services.filter(s => s.payload.customer === party);
   const listings = useStreamQueries(Listing).contracts;
   const listing = listings.find(c => c.contractId === cid);

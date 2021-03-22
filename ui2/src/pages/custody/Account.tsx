@@ -10,7 +10,11 @@ import { CreateEvent } from "@daml/ledger";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { InputDialog, InputDialogProps } from "../../components/InputDialog/InputDialog";
 
-const AccountComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const AccountComponent: React.FC<RouteComponentProps & Props> = ({ history, services }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
@@ -18,7 +22,6 @@ const AccountComponent: React.FC<RouteComponentProps> = ({ history }: RouteCompo
 
   const cid = contractId.replace("_", "#");
 
-  const services = useStreamQueries(Service).contracts;
   const accounts = useStreamQueries(AssetSettlementRule);
   const deposits = useStreamQueries(AssetDeposit);
 
@@ -48,7 +51,7 @@ const AccountComponent: React.FC<RouteComponentProps> = ({ history }: RouteCompo
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.RequestDebitAccount, service.contractId, { accountId: c.payload.account.id, debit: { depositCid: c.contractId } });
-    history.push("/apps/custody/requests")
+    history.push("/app/custody/requests")
   }
 
   const relatedAccounts = accounts

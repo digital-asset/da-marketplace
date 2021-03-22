@@ -16,8 +16,8 @@ const IssuanceApp = () => {
   const layoutState = useLayoutState();
 
   const entries : SidebarEntry[] = [];
-  entries.push({ label: "New Issuance", path: "/apps/issuance/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Requests", path: "/apps/issuance/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "New Issuance", path: "/apps/issuance/new", render: () => (<New />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Requests", path: "/apps/issuance/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
   entries.push({ label: "Issuances", path: "/apps/issuance/issuances", render: () => (<Issuances />), icon: (<PlayArrow/>), children: [] });
 
   return (
@@ -28,7 +28,7 @@ const IssuanceApp = () => {
         <div className={classnames(classes.content, { [classes.contentShift]: layoutState.isSidebarOpened })}>
           <div className={classes.fakeToolbar} />
           <Switch>
-            {entries.map(e => 
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>

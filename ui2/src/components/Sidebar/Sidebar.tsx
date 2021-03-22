@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
-import { withRouter, RouteComponentProps } from "react-router-dom";
+import React, {useEffect, useState} from "react";
+import {RouteComponentProps, withRouter} from "react-router-dom";
 import classNames from "classnames";
 import Drawer from "@material-ui/core/Drawer";
 import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import { Box, Theme } from "@material-ui/core";
+import {Box, Divider, Theme} from "@material-ui/core";
 import ArrowBack from "@material-ui/icons/ArrowBack";
-import { useTheme } from "@material-ui/styles";
-import { useLayoutState, useLayoutDispatch, toggleSidebar } from "../../context/LayoutContext";
-import SidebarLink from "./components/SidebarLink/SidebarLink";
-import { SidebarEntry } from "./SidebarEntry";
+import {useTheme} from "@material-ui/styles";
+import {toggleSidebar, useLayoutDispatch, useLayoutState} from "../../context/LayoutContext";
+import {SidebarEntry} from "./SidebarEntry";
 import useStyles from "./styles";
 import headerLogo from "../../images/companyLogo.svg";
+import SidebarLink from "./components/SidebarLink/SidebarLink";
 
 type SidebarProps = {
   entries : SidebarEntry[]

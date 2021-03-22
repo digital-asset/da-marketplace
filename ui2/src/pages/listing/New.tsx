@@ -9,8 +9,13 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { Visibility } from "@material-ui/icons";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
+import {CreateEvent} from "@daml/ledger";
 
-const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, services }) => {
   const classes = useStyles();
 
   const el1 = useRef<HTMLDivElement>(null);
@@ -31,7 +36,6 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
 
   const ledger = useLedger();
   const party = useParty();
-  const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === "0");
@@ -75,7 +79,7 @@ const NewComponent : React.FC<RouteComponentProps> = ({ history }) => {
       observers : [ "Public" ] // TODO: Use real public party
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
-    history.push("/apps/listing/requests");
+    history.push("/app/listing/requests");
   }
 
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };

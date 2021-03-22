@@ -9,12 +9,15 @@ import useStyles from "../styles";
 import { getName } from "../../config";
 import { Service, CreateIssuanceRequest, ReduceIssuanceRequest } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
 
-const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const RequestsComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
-  const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
   const createRequests = useStreamQueries(CreateIssuanceRequest).contracts;
   const reduceRequests = useStreamQueries(ReduceIssuanceRequest).contracts;
@@ -22,14 +25,14 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.CreateIssuance, service.contractId, { createIssuanceRequestCid: c.contractId });
-    history.push("/apps/issuance/issuances");
+    history.push("/app/issuance/issuances");
   }
 
   const deleteIssuance = async (c : CreateEvent<ReduceIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.ReduceIssuance, service.contractId, { reduceIssuanceRequestCid: c.contractId });
-    history.push("/apps/issuance/issuances");
+    history.push("/app/issuance/issuances");
   }
 
   return (
@@ -42,7 +45,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/issuance/new")}>New Issuance</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/issuance/new")}>New Issuance</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -78,7 +81,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/issuance/createrequest/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/issuance/createrequest/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>
@@ -120,7 +123,7 @@ const RequestsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={8} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/issuance/deleterequest/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/issuance/deleterequest/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small"/>
                         </IconButton>
                       </TableCell>

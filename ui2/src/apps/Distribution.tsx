@@ -32,11 +32,11 @@ const DistributionApp = () => {
   entries.push({ label: "Assets", path: "/apps/distribution/assets", render: () => (<Assets />), icon: (<PlayArrow/>), children: [] });
   if (isAgent) {
     entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
-    entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+    // entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
   } else if (isIssuer) {
-    entries.push({ label: "New Auction", path: "/apps/distribution/new"     , render: () => (<New />)     , icon: (<PlayArrow/>), children: [] });
+    // entries.push({ label: "New Auction", path: "/apps/distribution/new"     , render: () => (<New />)     , icon: (<PlayArrow/>), children: [] });
     entries.push({ label: "Auctions"   , path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
-    entries.push({ label: "Requests"   , path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
+    // entries.push({ label: "Requests"   , path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });
   } else {
     entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<BiddingAuctions />), icon: (<PlayArrow/>), children: [] });
   }

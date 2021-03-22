@@ -5,19 +5,22 @@ import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { CreateEvent } from "@daml/ledger";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service'
 import { CloseAccountRequest, DebitAccountRequest, OpenAccountRequest, TransferDepositRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model'
 import useStyles from "../styles";
 import { getName } from "../../config";
 import { CreditAccountRequest } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
+import {Service} from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 
-const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
+type Props = {
+  services : Readonly<CreateEvent<Service, any, any>[]>
+}
+
+const RequestsComponent: React.FC<RouteComponentProps & Props> = ({ history, services }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
-  const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
   const openRequests = useStreamQueries(OpenAccountRequest).contracts;
   const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
@@ -30,35 +33,35 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.OpenAccount, service.contractId, { openAccountRequestCid: c.contractId });
-    history.push("/apps/custody/accounts");
+    history.push("/app/custody/accounts");
   }
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.CloseAccount, service.contractId, { closeAccountRequestCid: c.contractId });
-    history.push("/apps/custody/accounts");
+    history.push("/app/custody/accounts");
   }
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.CreditAccount, service.contractId, { creditAccountRequestCid: c.contractId });
-    history.push("/apps/custody/accounts");
+    history.push("/app/custody/accounts");
   }
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.DebitAccount, service.contractId, { debitAccountRequestCid: c.contractId });
-    history.push("/apps/custody/accounts");
+    history.push("/app/custody/accounts");
   }
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
     await ledger.exercise(Service.TransferDeposit, service.contractId, { transferDepositRequestCid: c.contractId });
-    history.push("/apps/custody/accounts");
+    history.push("/app/custody/accounts");
   }
 
   const getDebitDepositDetail = (c: CreateEvent<DebitAccountRequest>, extract : (deposit: AssetDeposit) => string): string => {
@@ -83,7 +86,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/apps/custody/accounts/new")}>New Account</Button>
+                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/custody/accounts/new")}>New Account</Button>
                   </Grid>
                 </Grid>
               </Grid>
@@ -125,7 +128,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
                         <IconButton color="primary" size="small" component="span"
-                          onClick={() => history.push("/apps/custody/openrequest/" + c.contractId.replace("#", "_"))}>
+                          onClick={() => history.push("/app/custody/openrequest/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small" />
                         </IconButton>
                       </TableCell>
@@ -161,7 +164,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
                         {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/apps/custody/account/" + c.contractId.replace("#", "_"))}>
+                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/custody/account/" + c.contractId.replace("#", "_"))}>
                           <KeyboardArrowRight fontSize="small" />
                         </IconButton>
                       </TableCell>

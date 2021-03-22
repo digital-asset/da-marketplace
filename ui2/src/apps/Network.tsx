@@ -17,9 +17,9 @@ const NetworkApp = () => {
 
   const entries : SidebarEntry[] = [];
   // entries.push({ label: "Overview", path: "/apps/network/overview", render: () => (<Overview />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Custody", path: "/apps/network/custody", render: () => (<Custody />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Trading", path: "/apps/network/trading", render: () => (<Trading />), icon: (<PlayArrow/>), children: [] });
-  entries.push({ label: "Listing", path: "/apps/network/listing", render: () => (<Listing />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Custody", path: "/apps/network/custody", render: () => (<Custody />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Trading", path: "/apps/network/trading", render: () => (<Trading />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Listing", path: "/apps/network/listing", render: () => (<Listing />), icon: (<PlayArrow/>), children: [] });
 
   return (
     <div className={classes.root}>
@@ -38,7 +38,7 @@ const NetworkApp = () => {
             <Route key={"myquote"} path={"/apps/policyadmin/myquotes/:contractId"} component={MyQuote} />
             <Route key={"mypolicy"} path={"/apps/policyadmin/mypolicies/:contractId"} component={MyPolicy} />
             <Route key={"myinvoice"} path={"/apps/policyadmin/myinvoices/:contractId"} component={MyInvoice} /> */}
-            {entries.map(e => 
+            {entries.map(e =>
               <Route exact={true} key={e.label} path={e.path} render={e.render} />
             )}
           </Switch>
