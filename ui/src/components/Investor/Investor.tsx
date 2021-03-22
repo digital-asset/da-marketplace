@@ -27,7 +27,7 @@ import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
-import NotificationCenter from '../common/NotificationCenter'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
 import { useCCPCustomerInviteNotifications } from './CCPInviteNotifications'
@@ -48,7 +48,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const loading = usePartyLoading();
 
-    const notifications = [
+    const InvestorNotifications = [
         ...useCCPCustomerNotifications(),
         ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
@@ -65,7 +65,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         'name': createField('', 'Name', 'Your full legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
     });
+
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
     const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+    const notifications = useAllNotifications();
 
     useEffect(() => {
         if (registeredInvestor[0]) {
@@ -77,6 +80,13 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         }
     // eslint-disable-next-line
     }, [registeredInvestor]);
+
+    useEffect(() => {
+        if (notifications !== allNotifications) {
+            setShowNotificationAlert(true);
+            setAllNotifications([...notifications])
+        }
+    }, []);
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, investor]);
@@ -100,7 +110,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     }
 
     const handleNotificationAlert = () => {
-        console.log('clicked');
         history.push(`${path}/notifications`);
         setShowNotificationAlert(false);
     }
@@ -197,7 +206,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investorScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
-                notifications={notifications}
+                notifications={InvestorNotifications}
                 profile={
                     <FormErrorHandled onSubmit={updateProfile}>
                         <InvestorProfile

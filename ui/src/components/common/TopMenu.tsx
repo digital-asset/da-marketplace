@@ -33,7 +33,6 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
     // const baseUrl = currentRole ? roleRoute(currentRole) : '';
 
     // useEffect(() => {
-    //     console.log('hey');
     //     setShowNotificationsAlert(true);
     //   }, [allNotifications]);
 
