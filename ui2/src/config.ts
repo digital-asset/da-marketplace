@@ -35,6 +35,8 @@ export const httpBaseUrl =
 
 export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost:7575/' : undefined;
 
+export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
+
 export const getName = (partyOrCreds : string | Credentials): string => {
   if (isCredentials(partyOrCreds)) {
     const creds = partyOrCreds;

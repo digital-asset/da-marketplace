@@ -11,6 +11,7 @@ import { Auction as BiddingAuction, Bid } from "@daml.js/da-marketplace/lib/Mark
 import { CreateEvent } from "@daml/ledger";
 import { getAuctionStatus, getBidStatus, getBidAllocation } from "../Utils";
 import { DateTime } from "luxon"
+import { publicParty } from "../../../config";
 
 type Props = {
   auctionServices : Readonly<CreateEvent<AuctionService, any, any>[]>,
@@ -119,7 +120,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({ history, auctio
                             <TableCell key={2} className={classes.tableCell}>{c.payload.details.price}</TableCell>
                             <TableCell key={3} className={classes.tableCell}>{(100.0 * parseFloat(c.payload.details.quantity) / parseFloat(auction.payload.asset.quantity)).toFixed(2)}%</TableCell>
                             <TableCell key={4} className={classes.tableCell}>{DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL)}</TableCell>
-                            <TableCell key={7} className={classes.tableCell}>{c.payload.allowPublishing ? "Public" : "Private"}</TableCell>
+                            <TableCell key={7} className={classes.tableCell}>{c.payload.allowPublishing ? publicParty : "Private"}</TableCell>
                             <TableCell key={5} className={classes.tableCell}>{getBidStatus(c.payload.status)}</TableCell>
                             <TableCell key={6} className={classes.tableCell}>{getBidAllocation(c.payload)}</TableCell>
                           </TableRow>

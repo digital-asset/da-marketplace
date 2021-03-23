@@ -85,6 +85,8 @@ async function loginUser(
   const { party, token } = credentials;
   const name = getName(credentials);
 
+  console.log("Logging in user!: ", party, token, name);
+
   if (!!name) {
     storeCredentials(credentials);
     dispatch({ type: "LOGIN_SUCCESS", name, party, token });

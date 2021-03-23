@@ -10,6 +10,7 @@ import { Visibility } from "@material-ui/icons";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { RequestCreateListing, Service } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service";
 import {CreateEvent} from "@daml/ledger";
+import { publicParty } from "../../config";
 
 type Props = {
   services : Readonly<CreateEvent<Service, any, any>[]>
@@ -76,7 +77,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
       quotedAssetPrecision,
       minimumTradableQuantity,
       maximumTradableQuantity,
-      observers : [ "Public" ] // TODO: Use real public party
+      observers : [ publicParty ]
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
     history.push("/app/listing/requests");
