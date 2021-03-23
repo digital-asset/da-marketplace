@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.Entitlement where
 
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Types

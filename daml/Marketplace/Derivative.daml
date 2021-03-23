@@ -4,7 +4,7 @@ import DA.Finance.Types
 
 import Marketplace.Utils
 
-import DA.Next.Set
+import DA.Set
 
 
 data SecType = CMDTYSWAP | FRA | FUT | FWD | IRS | MLEG | OPT | SWAPTION

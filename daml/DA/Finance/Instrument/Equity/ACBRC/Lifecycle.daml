@@ -5,7 +5,7 @@ module DA.Finance.Instrument.Equity.ACBRC.Lifecycle where
 
 import DA.Assert
 import DA.List
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Asset.Lifecycle
 import DA.Finance.Instrument.Equity.ACBRC

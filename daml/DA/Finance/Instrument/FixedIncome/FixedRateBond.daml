@@ -3,7 +3,7 @@
 
 module DA.Finance.Instrument.FixedIncome.FixedRateBond where
 
-import DA.Next.Set
+import DA.Set
 import DA.Finance.Types
 
 template FixedRateBond

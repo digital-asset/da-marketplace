@@ -8,7 +8,7 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import DA.List hiding (delete)
-import DA.Next.Set
+import DA.Set
 
 
 template DepositTransferRequest

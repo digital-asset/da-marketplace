@@ -1,6 +1,6 @@
 module DA.Finance.Tutorial where
 
-import DA.Next.Set
+import DA.Set
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types

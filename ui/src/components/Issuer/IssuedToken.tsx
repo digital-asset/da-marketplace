@@ -72,7 +72,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
             .map(rb => ({ contractId: rb.contractId, contractData: rb.contractData.broker }))
         ].flat()
 
-    const participants = Object.keys(token?.contractData.observers.textMap || [])
+    const participants = Object.keys(token?.contractData.observers || [])
 
     const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
         .map(d => {

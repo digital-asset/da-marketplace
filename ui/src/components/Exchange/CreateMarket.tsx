@@ -132,7 +132,7 @@ const CreateMarket: React.FC<{}> = () => {
                 throw new Error('Minimum quantity is greater than maximum quantity.');
             }
 
-            const key = wrapDamlTuple([operator, exchange]);
+            const key = { _1: operator, _2: exchange }; // wrapDamlTuple([operator, exchange]);
             const args = {
                 minQuantity,
                 maxQuantity,

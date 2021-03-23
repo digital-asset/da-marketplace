@@ -74,7 +74,7 @@ export function wrapTextMap(items: string[]) {
         textMapValue[key] = {}
     });
 
-    return { textMap: textMapValue }
+    return { map: textMapValue }
 }
 
 export type RelationshipRequestChoice =

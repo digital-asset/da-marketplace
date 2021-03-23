@@ -29,7 +29,7 @@ import DA.Time
 import DA.Foldable (forA_)
 import DA.Optional
 
-import DA.Next.Set
+import DA.Set
 
 data LedgerParties = LedgerParties with
   userAdmin : Party -- ^DABL uses 'UserAdmin' for 'Operator'

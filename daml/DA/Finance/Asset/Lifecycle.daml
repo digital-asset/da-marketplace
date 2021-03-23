@@ -2,7 +2,7 @@ module DA.Finance.Asset.Lifecycle where
 
 import DA.Assert
 import DA.Foldable (mapA_)
-import DA.Next.Set as Set
+import DA.Set as Set
 
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement

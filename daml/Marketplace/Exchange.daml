@@ -14,7 +14,7 @@ import DA.Finance.Types
 import DA.Optional
 
 import DA.List
-import DA.Next.Set hiding (delete)
+import DA.Set hiding (delete)
 
 template ExchangeInvitation
   with

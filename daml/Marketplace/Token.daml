@@ -5,7 +5,7 @@ import Marketplace.Utils
 
 import DA.Finance.Types
 
-import DA.Next.Set
+import DA.Set
 
 
 -- | Reference data describing a token.

@@ -18,7 +18,7 @@ import DA.Finance.Types
 
 import Setup
 
-import DA.Next.Set
+import DA.Set
 
 setupTransfer : Script ()
 setupTransfer = allocateParties >>= doSetupTransfer

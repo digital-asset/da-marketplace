@@ -3,7 +3,7 @@
 
 module DA.Finance.Types where
 
-import DA.Next.Set as Set
+import DA.Set as Set
 import DA.Text
 import Prelude hiding (id)
 

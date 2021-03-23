@@ -54,7 +54,7 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
 
 
     const isPublic = !!derivative?.contractData.isPublic
-    const participants = Object.keys(derivative?.contractData.observers.textMap || [])
+    const participants = Object.keys(derivative?.contractData.observers || [])
 
     const partyOptions = allRegisteredParties.filter(d => !Array.from(participants || []).includes(d.contractData))
         .map(d => {
@@ -135,7 +135,8 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
             return
         }
 
-        const newObservers = wrapTextMap([...participants, ...selectedParties])
+        const newObservers = wrapTextMap([...participants, ...selectedParties]);
+            // new Set<string>([...barticipants, ...selectedParties])
 
         await ledger.exerciseByKey(Token.Token_AddObservers, derivativeId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))

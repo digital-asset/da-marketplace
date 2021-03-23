@@ -5,7 +5,7 @@ module DA.Finance.Asset where
 
 import DA.Action
 import DA.Assert
-import DA.Next.Set
+import DA.Set
 
 import DA.Finance.Types
 import DA.Finance.Utils
