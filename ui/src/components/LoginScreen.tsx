@@ -9,7 +9,7 @@ import { DablPartiesInput, PartyDetails } from "@daml/hub-react";
 
 import { PublicAppInfo } from "@daml.js/da-marketplace/lib/Marketplace/Operator";
 
-import {
+import QueryStreamProvider, {
   useContractQuery,
   AS_PUBLIC,
   usePublicLoading,
@@ -138,14 +138,18 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   }
 
   const quickSetup = [
-    // <Tile className='quick-setup'>
-      <QuickSetup onLogin={onLogin} parties={uploadedParties} onRequestClose={() => setShowQuickSetup(false)}/>
-    // </Tile>,
+    <QueryStreamProvider>
+     <QuickSetup
+        onLogin={onLogin}
+        parties={uploadedParties}
+        onRequestClose={() => setShowQuickSetup(false)}
+      />
+    </QueryStreamProvider>
   ];
 
   const tiles =
     appInfos.length !== 0
-      ? deploymentMode === DeploymentMode.PROD_DABL
+      ? deploymentMode != DeploymentMode.PROD_DABL // change back
         ? showQuickSetup
           ? quickSetup
           : dablTiles

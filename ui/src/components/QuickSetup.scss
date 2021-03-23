@@ -23,7 +23,11 @@
             }
             td {
                 overflow: visible;
+                min-width: 200px;
             }
+        }
+        button.ghost.go {
+            margin-left: auto;
         }
     }
 }
