@@ -51,8 +51,8 @@ export const transformClaim = (claim : Claim<Date, Id>, linkText : string) : any
       return { ...claim, linkText, type: "Claim", children: [ transformObservation(claim.value.predicate, "condition"), transformClaim(claim.value.obligation, "then") ] };
     case "Scale":
       return { ...claim, linkText, type: "Claim", children: [ transformObservation(claim.value.k, "factor"), transformClaim(claim.value.obligation, "then") ] };
-//  case "Give": //FIXME: this causes the switch to fail for some weird reason
-//    return { ...claim, linkText, type: "Claim", children: [ transformClaim(claim.value, "claim") ] };
+    case "Give":
+      return { ...claim, linkText, type: "Claim", children: [ transformClaim(claim.value, "claim") ] };
     case "Or":
       return { ...claim, linkText, type: "Claim", children: [ transformClaim(claim.value.lhs, "left"), transformClaim(claim.value.rhs, "right") ] };
     case "And":
@@ -63,8 +63,6 @@ export const transformClaim = (claim : Claim<Date, Id>, linkText : string) : any
       return { ...claim, linkText, type: "Claim", children: null };
     case "One":
       return { ...claim, linkText, type: "Claim", text: "1 " + claim.value.label, children: null };
-    default:
-      throw new Error("Unknown claim tag: " + claim.tag);
   }
 };
 

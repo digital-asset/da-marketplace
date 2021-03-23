@@ -1,18 +1,17 @@
 module Demo where
 
 import Common
-import ContingentClaims.Claim qualified as C
-import ContingentClaims.Observable qualified as O
-import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (cpb, couponDates, bermudan, irs)
-import ContingentClaims.FinancialClaim qualified as C
+import ContingentClaims.Claim (Claim(Zero), serialize)
+import ContingentClaims.FinancialClaim (couponDates)
 import Daml.Script
 import DA.Date (date, Month(..))
-import DA.Finance.Types (Id(..))
-import DA.Next.Set (fromList)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Asset.Settlement
+import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Issuance.Service qualified as Issuance
+import Tests.Utils
 
 demo : Script ()
 demo = do
@@ -28,86 +27,60 @@ demo = do
   bobUsd      <- depositAsset providers bob       (usd with quantity = 1_000_000.0) bob.mainAccount.id
   charlieUsd  <- depositAsset providers charlie   (usd with quantity = 1_000_000.0) charlie.mainAccount.id
 
-  auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
-  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+  auctionOfferCid <- submit bank do exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
+  auctionServiceCid <- submit issuer.customer do exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
 
-  issuance providers assets issuer
-
-  let bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates =
-        bermudan
-          ( irs
-              principal
-              (O.observe floatingRateId.label)
-              floatingRateId
-              fixedRate
-              fixedCcyId
-              fixingDates)
-        $ date 2021 <$> [Feb,Mar,Apr] <*> [1]
-
-  -- issuer originates a swaption
-  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
-      assetLabel = "GS bermudan swaption"
-      description = "GS bermudan swaption"
-      safekeepingAccountId = issuer.mainAccount.id
-      observers = []
-      claims = C.serialize $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 $ couponDates 2021 2022 [Jan, Jul] 15
-  _ <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
+  examples providers assets issuer
 
   pure ()
 
-issuance : Providers -> Assets -> Customer -> Script ()
-issuance Providers{..} Assets{..} issuer = do
+examples : Providers -> Assets -> Customer -> Script ()
+examples Providers{..} Assets{..} issuer = do
 
-  -- Issuer originates the option
-  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestBinaryCallOptionOrigination with
-      assetLabel = "TSLA Mar21 910.0"
-      safekeepingAccountId = issuer.mainAccount.id
-      observers = [public]
-      expiry = date 2020 Mar 18
-      underlyingId = tsla.id
-      currencyId = usd.id
-      strike = 910.0
-  optionDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
-  Some optionDesc <- queryContractId bank optionDescCid
+  let
+    safekeepingAccountId = issuer.mainAccount.id
+    accountId = issuer.mainAccount.id
+    observers = [public]
 
-  -- Issuer issues the option
-  createReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid
-    Issuance.RequestCreateIssuance with
-      issuanceId = "Myissuance"
-      accountId = Id (fromList [bank, issuer.customer]) issuer.mainAccount.id.label 0
-      assetId = optionDesc.assetId
-      quantity = 1000.0
-  (_issuanceCid, optionDepositCid) <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.CreateIssuance createReqCid
+    originate assetLabel description claims = do
+      createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
+      submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
 
-  -- Issuer originates a bond
-  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
-      assetLabel = "NFLX 4 7/8 04/15/23"
-      description = "NFLX 4 7/8 04/15/23"
-      safekeepingAccountId = issuer.mainAccount.id
-      observers = [public]
-      claims =  C.serialize $ cpb 1000.0 (4.0 + 7.0/8.0) usd.id (couponDates 2021 2023 [Jan,Jul] 15)
-  cpbDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
-  Some cpbDesc <- queryContractId bank cpbDescCid
+    issue issuanceId assetId quantity = do
+      createIssuanceRequestCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestCreateIssuance with ..
+      submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.CreateIssuance with ..
 
-  -- pedagogical example from https://ledgy.com/blog/examples-of-convertible-notes/
-  let convertibleNote : Id -> Decimal -> Id -> Decimal -> Date -> Decimal -> Decimal -> Id -> C.Claim O.Observation Date Id
-      convertibleNote note principal ccy discount maturity interest cap underlying =
-        C.when (C.at maturity) (
-          C.cond (O.observe underlying.label O.<= O.pure cap) (
-             C.scale (O.pure (principal * (1.0 + interest)) O./ (O.observe underlying.label O.* O.pure (1.0 - discount))) (C.one underlying)
-          )( C.scale (O.pure (principal * (1.0 + interest))) (C.one ccy)
-          )
-        )
+    transfer : Customer -> Customer -> ContractId AssetDeposit -> Decimal -> Script (ContractId AssetDeposit, Optional (ContractId AssetDeposit))
+    transfer from to depositCid quantity = do
+      Some deposit <- queryContractId bank depositCid
+      if deposit.asset.quantity > quantity then do
+        [ exactDepositCid, remainderDepositCid ] <- submit from.customer do exerciseCmd depositCid AssetDeposit_Split with quantities = [ quantity ]
+        submit (to.customer) do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_AddController with ctrl = from.customer
+        transferRequestCid <- submit from.customer do exerciseCmd from.custodyServiceCid Custody.RequestTransferDeposit with accountId = from.mainAccount.id, transfer = AssetSettlement_Transfer with receiverAccountId = to.mainAccount.id, depositCid = exactDepositCid
+        transferredDepositCid <- submit bank do exerciseCmd from.custodyServiceCid $ Custody.TransferDeposit transferRequestCid
+        submit to.customer do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_RemoveController with ctrl = from.customer
+        pure (transferredDepositCid, Some remainderDepositCid)
+      else do
+        submit (to.customer) do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_AddController with ctrl = from.customer
+        transferRequestCid <- submit from.customer do exerciseCmd from.custodyServiceCid Custody.RequestTransferDeposit with accountId = from.mainAccount.id, transfer = AssetSettlement_Transfer with receiverAccountId = to.mainAccount.id, depositCid
+        transferredDepositCid <- submit bank do exerciseCmd from.custodyServiceCid $ Custody.TransferDeposit transferRequestCid
+        submit to.customer do exerciseByKeyCmd @AssetSettlementRule to.mainAccount.id AssetSettlement_RemoveController with ctrl = from.customer
+        pure (transferredDepositCid, None)
 
-  -- Issuer originates a convertible note
-  origReqCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with
-      assetLabel = "NFLX-CONV-NOTE-2021-06-21"
-      description = "Netflix Convertible Note 2021-06-21"
-      safekeepingAccountId = issuer.mainAccount.id
-      observers = [public]
-      claims = C.serialize $ convertibleNote nflx.id 100_000.0 usd.id 0.20 (date 2021 Jun 06) 0.04 550.0 nflx.id
-  cnDescCid <- submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.Originate origReqCid
-  Some cnDesc <- queryContractId bank cnDescCid
-
+  -- Origination
+  (_, usd)    <- originate "USD" "United States Dollar" Zero
+  (_, eur)    <- originate "EUR" "Euro" Zero
+  (_, tsla)   <- originate "TSLA" "Tesla, Inc." Zero
+  (_, dax)    <- originate "DAX" "DAX Index" Zero
+  (_, pmt)    <- originate "PMT-USD" "Payment Example" $ payment usd.assetId 10_000.0
+  (_, del)    <- originate "DEL-TSLA" "Delivery Example" $ delivery tsla.assetId 20.0
+  (_, dvp)    <- originate "DVP-TSLA-USD" "DvP Example" $ dvp tsla.assetId 20.0 usd.assetId 10_000.0
+  (_, fwd)    <- originate "FWD-TSLA-USD-20221022" "Forward Example" $ futureDvp tsla.assetId 20.0 usd.assetId 10_000.0 (date 2022 Oct 22)
+  (_, bnd)    <- originate "BOND-USD-4.875" "Forward Example" $ bond usd.assetId 1000000.0 0.04875 $ couponDates 2021 2023 [Jan,Jul] 15
+  (_, opt)    <- originate "OPT-TSLA-USD-20221022" "Call Option Example" $ callOptionPhysical tsla.assetId 20.0 usd.assetId 10_000.0 (date 2022 Oct 22)
+  (_, bopt)   <- originate "BIN-TSLA-USD-20221022" "Binary Option Example" $ binaryCallOption tsla.assetId usd.assetId 700.0 (date 2022 Oct 22)
+  (_, wrnt)   <- originate "WRNT-KO-PUT-DAX" "Open-end Knock-out Put Warrant Example" $ koPutWarrant 10110.0 10110.0 dax.assetId eur.assetId
+  (_, swpt)   <- originate "SWPT-BERMUDAN-LIBOR" "Bermudan Swaption Example" $ bermudanSwaption libor.id 0.015 usd.assetId 500_000.0 (couponDates 2021 2022 [Jan, Jul] 15) (date 2021 <$> [Feb,Mar,Apr] <*> [1])
+  (_, conv)   <- originate "CONV-TSLA-20221022" "Convertible Note Example" $ convertibleNote nflx.id usd.assetId 100_000.0 0.20 (date 2021 Jun 06) 0.04 550.0
 
   pure ()
