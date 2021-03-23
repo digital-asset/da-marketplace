@@ -1,0 +1,106 @@
+@use './TopMenu';
+@use './PageSection';
+@use '../../themes/variables' as *;
+
+@mixin page {
+  .page {
+    @include TopMenu.top-menu();
+    @include PageSection.page-section();
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    padding: 0;
+
+    &.ui.grid {
+      display: flex;
+      height: 100%;
+    }
+
+    > .page-sidemenu {
+      &.column {
+        padding: 0;
+        width: 250px;
+        display: flex;
+        flex-direction: column;
+        align-self: flex-start;
+        background-color: var(--cool-grey-10);
+        top: 0;
+        position: sticky;
+
+        > .ui.secondary.menu {
+          margin: 0;
+          width: 100%;
+
+          .sub-menu {
+            border-top: 2px solid var(--cool-grey-20);
+            border-bottom: 2px solid var(--cool-grey-20);
+
+            .empty-item {
+                padding-top: 0px;
+            }
+          }
+
+          .item {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: $spacing-m;
+            margin: 0;
+
+            p, h3 {
+                color: var(--white)
+            }
+
+            &.active {
+              background-color: var(--cool-grey-20);
+            }
+
+            &:hover {
+              background-color: var(--cool-grey-20);
+            }
+
+            &.home-item {
+              padding: $spacing-l $spacing-m;
+              height: 75px;
+            }
+
+            &.sidemenu-item-normal > p {
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              color: var(--white);
+
+              > .orders-icon {
+                width: 18px;
+                height: 19px;
+              }
+
+              > .icon {
+                margin-right: $spacing-s;;
+                width: 16px;
+                height: 16px;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    > .page-body {
+      &.column {
+        display: flex;
+        flex-direction: column;
+        width: calc(100% - 250px);
+        flex: 1;
+        padding: 0;
+
+        .narrow-width-menu {
+          display: none;
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { CssBaseline } from "@material-ui/core";
 
 import Themes from "./themes";
 import Main from "./Main";
@@ -15,8 +14,9 @@ ReactDOM.render(
   <LayoutProvider>
     <UserProvider>
       <CustomThemeProvider lightTheme={Themes.light} darkTheme={Themes.dark}>
-        <CssBaseline />
-        <Main defaultPath="/app" />
+        <div className='app'>
+          <Main defaultPath="/app" />
+        </div>
       </CustomThemeProvider>
     </UserProvider>
   </LayoutProvider>,

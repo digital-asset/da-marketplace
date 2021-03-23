@@ -1,3 +1,5 @@
+@use '../themes/variables.scss' as *;
+
 @mixin icon-size($size) {
   &.icon-size-#{$size} {
       height: #{$size + 'px'};

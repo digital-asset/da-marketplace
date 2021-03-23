@@ -1,0 +1,43 @@
+@use './themes/variables.scss' as *;
+
+@mixin apps {
+  .apps {
+    flex-direction: column;
+
+    .services {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .service-tile {
+      margin-right: $spacing-m;
+      margin-bottom: $spacing-m;
+      max-width: 200px;
+
+      a {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        color: var(--text-color);
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+
+        &:hover {
+          background-color: var(--blue-100);
+        }
+
+        img {
+          width: 100%;
+          height: 100px;
+          object-fit: cover;
+        }
+
+        .text {
+          padding: $spacing-m;
+          color: var(--text-color);
+          border-top: 1px solid var(--cool-grey-90);
+        }
+      }
+    }
+  }
+}

@@ -1,11 +1,6 @@
 import React from "react";
 import { Route, Switch, withRouter } from "react-router-dom";
-import classnames from "classnames";
 import { PlayArrow } from "@material-ui/icons";
-import useStyles from "./styles";
-import Header from "../components/Header/Header";
-import Sidebar from "../components/Sidebar/Sidebar";
-import { useLayoutState } from "../context/LayoutContext";
 import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
 import { BiddingAuctions } from "../pages/distribution/bidding/Auctions";
 import { Auctions } from "../pages/distribution/auction/Auctions";
@@ -16,11 +11,9 @@ import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Au
 import { Requests } from "../pages/distribution/auction/Requests";
 import { Assets } from "../pages/distribution/Assets";
 import { BiddingAuction } from "../pages/distribution/bidding/Auction";
+import Page from "../pages/page/Page";
 
 const DistributionApp = () => {
-  const classes = useStyles();
-  const layoutState = useLayoutState();
-
   const party = useParty();
   const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(c => c.payload.provider === party);
@@ -42,23 +35,16 @@ const DistributionApp = () => {
   }
 
   return (
-    <div className={classes.root}>
-      <>
-        <Header app="Distribution Portal" />
-        <Sidebar entries={entries} />
-        <div className={classnames(classes.content, { [classes.contentShift]: layoutState.isSidebarOpened })}>
-          <div className={classes.fakeToolbar} />
-          <Switch>
-            <Route key={"auction"} path={"/apps/distribution/auctions/:contractId"} component={Auction} />
-            <Route key={"request"} path={"/apps/distribution/auction/:contractId"} component={BiddingAuction} />
-            {entries.map(e =>
-              <Route key={e.label} path={e.path} exact={true} render={e.render} />
-            )}
-          </Switch>
-        </div>
-      </>
-    </div>
-  );
+    <Page sideBarItems={entries} menuTitle={<h1>Distribution Portal</h1>}>
+      <Switch>
+        <Route key={"auction"} path={"/apps/distribution/auctions/:contractId"} component={Auction} />
+        <Route key={"request"} path={"/apps/distribution/auction/:contractId"} component={BiddingAuction} />
+        {entries.map(e =>
+          <Route key={e.label} path={e.path} exact={true} render={e.render} />
+        )}
+      </Switch>
+    </Page>
+  )
 }
 
 export const Distribution = withRouter(DistributionApp);

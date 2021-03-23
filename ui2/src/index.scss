@@ -1,12 +1,14 @@
 @use 'themes/colors';
 @use 'components/Tile/TilePage';
 @use 'pages/login/Login';
+@use 'pages/page/Page';
+@use 'pages/page/WelcomeHeader';
+@use './icons/icons.scss';
+@use './Apps.scss';
 @use '../../ui/src/overrides/overrides';
 @use '../../ui/src/overrides/button';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
-
-@include overrides.overrides();
 
 @font-face {
   font-family: "BrownStd-Regular";
@@ -26,6 +28,130 @@
 html {
   height: 100%;
 
+  code {
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+      monospace;
+  }
+
+  h1.ui.header {
+    font-family: "BrownStd-Light";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+    line-height: 19px;
+    color: var(--textcolor);
+    margin: 0px;
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-family: "BrownStd-Bold";
+    }
+  }
+
+  h2.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 20px;
+    line-height: 27px;
+    margin: 0px;
+    color: var(--textcolor);
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-weight: 600;
+    }
+  }
+
+  h3.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+    margin: 0px;
+    color: var(--textcolor);
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.bold {
+      font-weight: 600;
+    }
+  }
+
+  h4.ui.header {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 19px;
+    color: var(--textcolor);
+  }
+
+  p {
+    font-family: "Open sans";
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 19px;
+    margin: 0px;
+    color: var(--grey-10);
+
+    &.bold {
+      font-weight: 600;
+    }
+
+    &.dark {
+      color: var(--white);
+    }
+
+    &.p2 {
+      font-size: 12px;
+      line-height: 16px;
+      color: var(--textcolor);
+
+      &.dark {
+        color: var(--white);
+      }
+
+      &.bold {
+        font-weight: 600;
+      }
+    }
+  }
+
+  a {
+    color: var(--blue-50);
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 22px;
+
+    &.bold {
+      font-weight: 600;
+    }
+
+    &.a2 {
+      font-size: 14px;
+      line-height: 19px;
+
+      &.bold {
+        font-weight: 600;
+      }
+    }
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
   body {
     margin: 0;
     height: 100%;
@@ -33,9 +159,19 @@ html {
 
     #root {
       height: 100%;
-    }
 
-    @include TilePage.tile-page();
-    @include Login.login-screen();
+      .app {
+        width: 100vw;
+        height: 100vh;
+
+        @include overrides.overrides();
+        @include WelcomeHeader.welcome-header();
+        @include icons.icons();
+        @include TilePage.tile-page();
+        @include Apps.apps();
+        @include Page.page();
+        @include Login.login-screen();
+      }
+    }
   }
 }

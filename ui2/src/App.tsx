@@ -1,16 +1,11 @@
 import React from "react";
-import { makeStyles, createStyles } from "@material-ui/styles";
 import { Route, Switch, withRouter } from "react-router-dom";
-import classnames from "classnames";
 import { PlayArrow } from "@material-ui/icons";
-import Sidebar from "./components/Sidebar/Sidebar";
-import { useLayoutState } from "./context/LayoutContext";
 import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
 import { Accounts as CustodyAccounts } from "./pages/custody/Accounts";
 import { Account } from "./pages/custody/Account";
-import Header from "./components/Header/Header";
 import { useStreamQueries } from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module";
@@ -37,6 +32,7 @@ import { Markets, Markets as MarketNetwork } from "./pages/trading/Markets";
 import { Custody as CustodyNetwork } from "./pages/network/Custody";
 import { Trading as TradingNetwork } from "./pages/network/Trading";
 import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
+import Page from "./pages/page/Page";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -44,9 +40,6 @@ type Entry = {
 };
 
 const AppComponent = () => {
-  const classes = useStyles();
-  const layoutState = useLayoutState();
-
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
@@ -122,62 +115,24 @@ const AppComponent = () => {
   };
 
   return (
-    <div className={classes.root}>
-      <>
-        <Header app="" />
-        { servicesLoading ?
-          <div className={classes.progress}>
+    <Page sideBarItems={entriesToDisplay}>
+       { servicesLoading ?
+          <div>
             <CircularProgress color={"secondary"} />
           </div>
           :
-          <>
-            <Sidebar entries={entriesToDisplay} />
-            <div className={classnames(classes.content, { [classes.contentShift]: layoutState.isSidebarOpened })}>
-              <div className={classes.fakeToolbar} />
-              <Switch>
-                <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
-                <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
-                <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
-                <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
-                { routeEntries(entriesToDisplay) }
-              </Switch>
-            </div>
-          </>
+          <div>
+            <Switch>
+              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
+              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
+              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
+              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
+              { routeEntries(entriesToDisplay) }
+            </Switch>
+          </div>
         }
-      </>
-    </div>
+    </Page>
   );
 }
-
-const useStyles = makeStyles((theme: any) => createStyles({
-  root: {
-    display: "flex",
-    maxWidth: "100vw",
-    overflowX: "hidden",
-  },
-  content: {
-    flexGrow: 1,
-    paddingLeft: theme.spacing(3),
-    paddingRight: theme.spacing(3),
-    paddingTop: theme.spacing(3),
-    width: `calc(100vw - 240px)`,
-    minHeight: "100vh",
-  },
-  contentShift: {
-    width: `calc(100vw - ${240 + theme.spacing(6)}px)`,
-    transition: theme.transitions.create(["width", "margin"], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  },
-  fakeToolbar: {
-    ...theme.mixins.toolbar,
-  },
-  progress: {
-    display: 'flex',
-    paddingLeft: `calc(100vw / 2)`,
-    paddingTop: `calc(100vh / 2)`,
-  }
-}));
 
 export const App = withRouter(AppComponent);

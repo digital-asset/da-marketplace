@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import ErrorComponent from "./pages/error/Error";
-import { useUserState, useUserDispatch } from "./context/UserContext";
+import { useUserState } from "./context/UserContext";
 import Login from "./pages/login/Login";
 // import Apps from "./Apps";
 import DamlLedger from "@daml/react";
@@ -26,37 +26,21 @@ export default function Main({ defaultPath }: MainProps) {
     <DamlLedger party={user.party} token={user.token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
       <HashRouter>
         <Switch>
-          <Route exact path="/" component={RootRoute} />
+          <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
           <PrivateRoute path="/app" component={ App } />
-          {/*<PrivateRoute path="/apps/network" component={Network} />*/}
-          {/*<PrivateRoute path="/app/custody" component={Custody} />*/}
-          {/*<PrivateRoute path="/apps/registry" component={Registry} />*/}
-          {/*<PrivateRoute path="/apps/issuance" component={Issuance} />*/}
-          {/*<PrivateRoute path="/apps/distribution" component={Distribution} />*/}
-          {/*<PrivateRoute path="/apps/listing" component={Listing} />*/}
-          {/*<PrivateRoute path="/apps/trading" component={Trading} />*/}
+          {/* <PrivateRoute path="/apps/network" component={Network} />
+          <PrivateRoute path="/apps/custody" component={Custody} />
+          <PrivateRoute path="/apps/registry" component={Registry} />
+          <PrivateRoute path="/apps/issuance" component={Issuance} />
+          <PrivateRoute path="/apps/distribution" component={Distribution} />
+          <PrivateRoute path="/apps/listing" component={Listing} />
+          <PrivateRoute path="/apps/trading" component={Trading} /> */}
           <PublicRoute path="/login" component={Login} />
           <Route component={ErrorComponent} />
         </Switch>
       </HashRouter>
     </DamlLedger>
   );
-
-  function RootRoute() {
-    var userDispatch = useUserDispatch();
-    useEffect(() => {
-      const url = new URL(window.location.toString());
-      const token = url.searchParams.get('token');
-      const party = url.searchParams.get('party');
-      if (token === null || party === null) return;
-      localStorage.setItem("daml.name", party);
-      localStorage.setItem("daml.party", party);
-      localStorage.setItem("daml.token", token);
-      userDispatch({ type: "LOGIN_SUCCESS", name: party, party, token });
-    })
-
-    return (<Redirect to={defaultPath} />)
-  }
 
   function PrivateRoute({ component, ...rest }: any) {
     return (
