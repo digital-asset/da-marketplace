@@ -191,6 +191,8 @@ const QueryStreamProvider = <T extends object>(
 
   const token = retrieveCredentials()?.token
   useEffect(() => {
+    console.log(token)
+    setPartyToken(token)
     setQueryStream((queryStream) => ({
       ...queryStream,
       partyToken: token
