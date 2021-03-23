@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 module Setup.Clearing where
 
 import Daml.Script

@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 module Marketplace.Utils where
 
 import DA.Finance.Asset

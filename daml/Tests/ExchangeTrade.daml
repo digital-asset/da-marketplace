@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 module Tests.ExchangeTrade where
 
 import Daml.Script

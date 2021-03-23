@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 module DA.Finance.Instrument.Equity.ACBRC where
 
 import DA.Next.Set

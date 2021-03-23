@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-deprecations #-}
 module Setup where
 
 import Daml.Script
