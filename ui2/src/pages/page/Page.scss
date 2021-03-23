@@ -93,7 +93,7 @@
       &.column {
         display: flex;
         flex-direction: column;
-        width: 100%;
+        width: calc(100% - 250px);
         flex: 1;
         padding: 0;
 

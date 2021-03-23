@@ -34,7 +34,7 @@ const Page: React.FC<Props> = ({
             <Menu.Menu>
               <Menu.Item
                   as={NavLink}
-                  to='/apps/'
+                  to='/app/'
                   exact
                   className='home-item'
               >
