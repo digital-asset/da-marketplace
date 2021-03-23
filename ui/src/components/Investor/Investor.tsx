@@ -42,7 +42,6 @@ type Props = {
 
 const Investor: React.FC<Props> = ({ onLogout }) => {
     const { path, url } = useRouteMatch();
-    const history = useHistory();
     const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
@@ -66,8 +65,10 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         'location': createField('', 'Location', 'Your current location', 'text')
     });
 
+    const history = useHistory();
     const [allNotifications, setAllNotifications] = useState<object[]>([]);
     const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
     const notifications = useAllNotifications();
 
     useEffect(() => {
@@ -78,15 +79,21 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: riData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredInvestor]);
 
     useEffect(() => {
-        if (notifications !== allNotifications) {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
             setShowNotificationAlert(true);
-            setAllNotifications([...notifications])
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
         }
-    }, []);
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        history.push(`${path}/notifications`, { from: history.location});
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, investor]);
@@ -107,11 +114,6 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         };
         await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
                     .catch(err => console.error(err));
-    }
-
-    const handleNotificationAlert = () => {
-        history.push(`${path}/notifications`);
-        setShowNotificationAlert(false);
     }
 
     const sideNav = <RoleSideNav url={url}
@@ -234,20 +236,26 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             <Wallet
                 role={MarketRole.InvestorRole}
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/orders`}>
             <InvestorOrders
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/trade/:base-:quote`}>
             <InvestorTrade
                 deposits={allDeposits}
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/notifications`}>

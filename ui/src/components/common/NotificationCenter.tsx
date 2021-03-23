@@ -37,6 +37,8 @@ const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout, prevPath, show
   const history = useHistory();
   const notifications = useAllNotifications();
 
+  console.log(history);
+
   return (
     <Page
       sideNav={sideNav}

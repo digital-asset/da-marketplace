@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 import { Header, Form } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -34,7 +34,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
-import NotificationCenter from '../common/NotificationCenter'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import MarketPairs from './MarketPairs'
 import ExchangeParticipants from './ExchangeParticipants'
@@ -70,6 +70,12 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         'location': createField('', 'Location', 'Your current location', 'text')
     });
 
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
+
     useEffect(() => {
         if (registeredExchange[0]) {
             const reData = registeredExchange[0].contractData;
@@ -78,8 +84,21 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: reData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredExchange]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        history.push(`${path}/notifications`);
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, exchange]);
@@ -181,20 +200,26 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/market-pairs`}>
                     <MarketPairs
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/participants`}>
                     <ExchangeParticipants
                         sideNav={sideNav}
                         onLogout={onLogout}
-                        registeredInvestors={investorOptions}/>
+                        registeredInvestors={investorOptions}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/derivatives`}>
@@ -207,7 +232,9 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 <Route path={`${path}/notifications`}>
                     <NotificationCenter
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
             </Switch>
         </div>

@@ -24,12 +24,14 @@ const Wallet = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
     role: MarketRole;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }) => {
     const history = useHistory()
     const { path, url } = useRouteMatch();
     const { brokerMap, custodianMap, exchangeMap, ccpMap } = useRegistryLookup();
 
-    const { sideNav, onLogout, role } = props
+    const { sideNav, onLogout, role, showNotificationAlert, handleNotificationAlert } = props
 
     const allDeposits = useContractQuery(AssetDeposit);
 
@@ -119,6 +121,8 @@ const Wallet = (props: {
                     menuTitle={<><WalletIcon size='24'/>Wallet</>}
                     onLogout={onLogout}
                     topMenuButtons={topMenuButtons}
+                    showNotificationAlert={showNotificationAlert}
+                    handleNotificationAlert={handleNotificationAlert}
                     >
                     <PageSection>
                         <div className='wallet'>
@@ -137,13 +141,17 @@ const Wallet = (props: {
                     sideNav={sideNav}
                     onLogout={onLogout}
                     deposits={nonMarginDeposits}
-                    transactionType='Withdraw'/>
+                    transactionType='Withdraw'
+                    showNotificationAlert={showNotificationAlert}
+                    handleNotificationAlert={handleNotificationAlert}/>
             </Route>
             <Route path={`${path}/deposit`}>
                 <WalletTransaction
                     sideNav={sideNav}
                     onLogout={onLogout}
-                    transactionType='Deposit'/>
+                    transactionType='Deposit'
+                    showNotificationAlert={showNotificationAlert}
+                    handleNotificationAlert={handleNotificationAlert}/>
             </Route>
         </Switch>
     )

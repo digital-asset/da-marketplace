@@ -27,19 +27,6 @@ type Props = {
 
 const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage, showNotificationAlert, handleNotificationAlert }) => {
     const history = useHistory();
-    // const userContracts = useContractQuery(User);
-    // const currentRole = userContracts[0]?.contractData?.currentRole;
-
-    // const baseUrl = currentRole ? roleRoute(currentRole) : '';
-
-    // useEffect(() => {
-    //     setShowNotificationsAlert(true);
-    //   }, [allNotifications]);
-
-    // const handleNotifications = () => {
-    //     history.push(`${baseUrl}/notifications`);
-    //     setShowNotificationsAlert(false);
-    // }
 
     return (
         <div className='top-section'>
@@ -92,6 +79,5 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
         </div>
     )
 }
-
 
 export default TopMenu

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -30,7 +30,7 @@ import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
-import NotificationCenter from '../common/NotificationCenter'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import BrokerOrders from './BrokerOrders'
 
@@ -55,6 +55,12 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         'location': createField('', 'Location', 'Your current location', 'text')
     });
 
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
+
     useEffect(() => {
         if (registeredBroker[0]) {
             const rbData = registeredBroker[0].contractData;
@@ -63,8 +69,21 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: rbData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredBroker]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        history.push(`${path}/notifications`);
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, broker]);
@@ -134,27 +153,35 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                 relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/wallet`}>
                     <Wallet
                         role={MarketRole.BrokerRole}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/orders`}>
                     <BrokerOrders
                         sideNav={sideNav}
                         deposits={allDeposits}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/notifications`}>
                     <NotificationCenter
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
             </Switch>

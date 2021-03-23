@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
 import { Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -31,7 +31,7 @@ import LoadingScreen from '../common/LoadingScreen'
 import PageSection from '../common/PageSection'
 import RoleSideNav from '../common/RoleSideNav'
 import Page from '../common/Page'
-import NotificationCenter from '../common/NotificationCenter'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import IssueAsset from './IssueAsset'
 import IssueDerivative from './IssueDerivative'
@@ -56,6 +56,12 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allTokens = useContractQuery(Token).filter(t => t.signatories.includes(issuer));
     const allDerivatives = useContractQuery(Derivative).filter(d => d.signatories.includes(issuer));
+
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
 
     const allRegisteredInvestors = useContractQuery(RegisteredInvestor, AS_PUBLIC)
         .map(investor => {
@@ -117,8 +123,21 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 issuerID: { ...profile.issuerID, value: riData.issuerID }
             })
         }
-    // eslint-disable-next-line
     }, [registeredIssuer]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        history.push(`${path}/notifications`);
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, issuer]);
@@ -219,7 +238,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                                 relationshipRequestChoice={IssuerTemplate.Issuer_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/issue-asset`}>
@@ -227,6 +248,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         menuTitle={<><PublicIcon size='24'/> Issue Asset</>}
                         sideNav={sideNav}
                         onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}
                     >
                         <PageSection>
                             <IssueAsset/>
@@ -239,7 +262,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                         providers={allProviders}
-                        investors={allRegisteredInvestors}/>
+                        investors={allRegisteredInvestors}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/issue-derivative`}>
@@ -247,6 +272,8 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                         menuTitle={<><PublicIcon size='24'/> Issue Derivative</>}
                         sideNav={sideNav}
                         onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}
                     >
                         <PageSection>
                             <IssueDerivative/>
@@ -261,7 +288,9 @@ const Issuer: React.FC<Props> = ({ onLogout }) => {
                 <Route path={`${path}/notifications`}>
                     <NotificationCenter
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
             </Switch>
