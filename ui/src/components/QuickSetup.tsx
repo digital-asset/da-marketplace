@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { Table, Form, Button, Popup } from "semantic-ui-react";
+import { Table, Form, Button, Popup, Loader } from "semantic-ui-react";
 
 import DamlLedger, { useLedger, useParty } from "@daml/react";
 import Ledger from "@daml/ledger";
@@ -18,10 +18,6 @@ import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils";
 import QueryStreamProvider, {
   useContractQuery,
-  AS_PUBLIC,
-  usePartyToken,
-  QueryStreamContext,
-  useSetPartyToken,
 } from "../websocket/queryStream";
 
 import { useOperator, useDablParties } from "../components/common/common";
@@ -35,6 +31,7 @@ import deployTrigger, {
   MarketplaceTrigger,
 } from "../../src/automation";
 import { halfSecondPromise } from "./common/utils";
+import { IProfileLinkItem } from "./common/Profile";
 
 interface IPartyLoginData extends PartyDetails {
   role?: MarketRole;
@@ -83,22 +80,7 @@ const QuickSetup = (props: {
     Map<string, IPartyLoginData>
   >(new Map());
 
-  const [loginStatus, setLoginStatus] = useState<Map<string, loginStatusEnum>>(
-    new Map()
-  );
-
-  // const setPartyToken = useSetPartyToken();
-  const queryStreamPartyToken = usePartyToken();
-
-  const publicParty = useDablParties().parties.publicParty;
-  const operator = useDablParties().parties.userAdminParty;
-
-  const userSessions = useContractQuery(UserSession);
-  const custodianInvites = useContractQuery(CustodianInvitation);
-  const issuerInvites = useContractQuery(IssuerInvitation);
-  const investorInvites = useContractQuery(InvestorInvitation);
-  const exchangeInvites = useContractQuery(ExchangeInvitation);
-  const brokerInvites = useContractQuery(BrokerInvitation);
+  const [ currentPartyLoggingIn, setCurrentPartyLoggingIn ] = useState<string>()
 
   return (
     <div className="quick-setup">
@@ -108,225 +90,15 @@ const QuickSetup = (props: {
         onClick={() => onRequestClose()}
       />
       <p className="login-details dark">Quick Setup</p>
-      <Table>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell className="hint-cell">
-              Party
-              <Popup
-                basic
-                size="tiny"
-                content="CCP must be manually onboarded after you've onboarded a default
-                  custodian"
-                trigger={<Button size="tiny" icon="info" />}
-              />
-            </Table.HeaderCell>
-            <Table.HeaderCell>Role</Table.HeaderCell>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Location</Table.HeaderCell>
-            <Table.HeaderCell>Other</Table.HeaderCell>
-            <Table.HeaderCell>Status</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {parties.map((party) => (
-            <LoginPartyRow
-              key={party.party}
-              party={party}
-              updateAllPartiesLoginData={handleNewPartyLoginData}
-              loginStatus={loginStatus.get(party.party)}
-            />
-          ))}
-        </Table.Body>
-      </Table>
-      <Button
-        className="go ghost dark"
-        disabled={partyLoginData.size === 0}
-        onClick={() => loginParty(getNextParty())}
-      >
-        Go!
-      </Button>
+      <QueryStreamProvider setToken={currentPartyLoggingIn}>
+        <SetupTable parties={parties} partyLoginData={partyLoginData} setPartyLoginData={setPartyLoginData} onLogin={hangleNewLogin}/>
+      </QueryStreamProvider>
     </div>
   );
 
-  async function loginParty(partyData?: IPartyLoginData) {
-    if (!partyData) {
-      throw Error("No party data");
-      return;
-    }
-    console.log(partyData);
-    const { ledgerId, party, token, role } = partyData;
-
-    if (!role) {
-      throw Error("no role");
-      return;
-    }
-
-    handleNewLoginStatus(party, loginStatusEnum.LOGGING_IN);
-
-    onLogin({ ledgerId, party, token });
-    // if (!setPartyToken) {
-    //   throw Error("cant set party token");
-    //   return;
-    // }
-
-    // setPartyToken(token);
-
-    await confirmCredentials(3, token)
-      .then(async () => {
-        const newLedger = new Ledger({ token, httpBaseUrl });
-
-        // await createUserSession(newLedger, party, operator, role)
-        //   .then(async (resp) => {
-        //     console.log("got user session", resp);
-
-        //     await onboardParty(newLedger, partyData, role, 30)
-        //       .then(() => handleNewLoginStatus(party, loginStatusEnum.DONE))
-
-        //       .catch((err) => {
-        //         console.log(err);
-        //         handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED);
-        //       });
-        //   })
-        //   .catch((err) => {
-        //     console.log(err);
-        //     handleNewLoginStatus( party, loginStatusEnum.LOGIN_FAILED_NO_USERSESSION);
-        //   })
-        //   .finally(() => onLoginComplete(party))
-      })
-      .catch((err) => {
-        console.log(err);
-        handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED_NO_CREDS);
-      })
-      .finally(() => onLoginComplete(party));
-  }
-
-  function onLoginComplete(partyId: string) {
-    console.log("logout");
-    handleNewLoginStatus(partyId, loginStatusEnum.DONE);
-
-    const nextParty = getNextParty(partyId);
-    if (nextParty) {
-      loginParty(nextParty);
-    } else {
-      console.log("DONE");
-    }
-  }
-
-  function getNextParty(partyId?: string): IPartyLoginData | undefined {
-    const partyIds: string[] = Array.from(partyLoginData.keys());
-    if (partyId) {
-      const nextPartyId = partyIds[partyIds.indexOf(partyId) + 1];
-      return partyLoginData.get(nextPartyId);
-    }
-    return partyLoginData.get(partyIds[0]);
-  }
-
-  async function confirmCredentials(
-    retries: number,
-    token: string
-  ): Promise<Credentials> {
-    const creds = await retrieveCredentials();
-
-    if (creds && creds.token === token && token === queryStreamPartyToken) {
-      console.log("got new creds");
-      return creds;
-    }
-
-    if (retries > 0) {
-      console.log("waiting for creds");
-      await halfSecondPromise();
-      return confirmCredentials(retries - 1, token);
-    }
-
-    throw new Error("Could not find credentials");
-  }
-
-  function handleNewLoginStatus(partyId: string, newStatus: loginStatusEnum) {
-    let newMap = new Map(loginStatus);
-    newMap.set(partyId, newStatus);
-    setLoginStatus(newMap);
-  }
-
-  function handleNewPartyLoginData(data: IPartyLoginData) {
-    let newData = new Map(partyLoginData);
-    newData.set(data.party, data);
-    setPartyLoginData(newData);
-  }
-
-  async function createUserSession(
-    ledger: Ledger,
-    user: string,
-    operator: string,
-    role: MarketRole
-  ) {
-    const currentUserSession = userSessions.find(
-      (c) => c.contractData.user === user
-    );
-
-    if (currentUserSession) {
-      console.log("found old user session ");
-      return currentUserSession;
-    }
-
-    console.log("creating user session ");
-    return await ledger.create(UserSession, { user, role, operator });
-  }
-
-  async function onboardParty(
-    ledger: Ledger,
-    data: IPartyLoginData,
-    role: MarketRole,
-    retries: number
-  ): Promise<void> {
-    handleNewLoginStatus(data.party, loginStatusEnum.ONBOARDING);
-    switch (role) {
-      case MarketRole.InvestorRole:
-        console.log("invites", investorInvites);
-        if (!!investorInvites[0]) {
-          console.log("got invite, onboarding investor");
-          return await onboardInvestor(operator, ledger, data);
-        } else {
-          break;
-        }
-      case MarketRole.IssuerRole:
-        if (!!issuerInvites[0]) {
-          console.log("got invite, onboarding issuer issuer");
-          return await onboardIssuer(operator, ledger, data);
-        } else {
-          break;
-        }
-      case MarketRole.BrokerRole:
-        if (!!brokerInvites[0]) {
-          console.log("got invite, onboarding broker b");
-          return await onboardBroker(operator, ledger, data, publicParty);
-        } else {
-          break;
-        }
-      case MarketRole.ExchangeRole:
-        if (!!exchangeInvites[0]) {
-          console.log("got invite, onboarding exchange");
-          return await onboardExchange(operator, ledger, data, publicParty);
-        } else {
-          break;
-        }
-      case MarketRole.CustodianRole:
-        if (!!custodianInvites[0]) {
-          console.log("got invite, onboarding custodian");
-          return await onboardCustodian(operator, ledger, data, publicParty);
-        } else {
-          break;
-        }
-    }
-
-    if (retries > 0) {
-      console.log("retrying");
-
-      await halfSecondPromise();
-      return onboardParty(ledger, data, role, retries - 1);
-    } else {
-      throw Error("Could not onboard party");
-    }
+  function hangleNewLogin(creds?: Credentials) {
+    onLogin(creds)
+    setCurrentPartyLoggingIn(creds?.token)
   }
 };
 
@@ -436,10 +208,247 @@ const LoginPartyRow = (props: {
         )}
       </Table.Cell>
       <Table.Cell>
-        <p className="dark p2">{loginStatus ? loginStatus : "none"}</p>
+        <p className="dark p2">{loginStatus && loginStatus}</p>
       </Table.Cell>
     </Table.Row>
   );
+};
+
+const SetupTable = (props: {
+  parties: PartyDetails[],
+  partyLoginData: Map<string, IPartyLoginData>,
+  setPartyLoginData: (newMap: Map<string, IPartyLoginData>) => void,
+  onLogin: (credentials?: Credentials) => void;
+}) => {
+  const { parties, partyLoginData, setPartyLoginData, onLogin }  = props;
+
+  const [loginStatus, setLoginStatus] = useState<Map<string, loginStatusEnum>>(new Map());
+
+  const publicParty = useDablParties().parties.publicParty;
+  const operator = useDablParties().parties.userAdminParty;
+
+  const userSessions = useContractQuery(UserSession);
+  const custodianInvites = useContractQuery(CustodianInvitation);
+  const issuerInvites = useContractQuery(IssuerInvitation);
+  const investorInvites = useContractQuery(InvestorInvitation);
+  const exchangeInvites = useContractQuery(ExchangeInvitation);
+  const brokerInvites = useContractQuery(BrokerInvitation);
+
+  return (
+    <>
+      <Table>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell className="hint-cell">
+              Party
+              <Popup
+                basic
+                size="tiny"
+                content="CCP must be manually onboarded after you've onboarded a default
+              custodian"
+                trigger={<Button size="tiny" icon="info" />}
+              />
+            </Table.HeaderCell>
+            <Table.HeaderCell>Role</Table.HeaderCell>
+            <Table.HeaderCell>Name</Table.HeaderCell>
+            <Table.HeaderCell>Location</Table.HeaderCell>
+            <Table.HeaderCell>Other</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {parties.map((party) => (
+            <LoginPartyRow
+              key={party.party}
+              party={party}
+              updateAllPartiesLoginData={handleNewPartyLoginData}
+              loginStatus={loginStatus.get(party.party)}
+            />
+          ))}
+        </Table.Body>
+      </Table>
+      <Button
+        className="go ghost dark"
+        disabled={partyLoginData.size === 0}
+        onClick={() => loginParty(getNextParty())}
+      >
+        Go!
+      </Button>
+    </>
+  );
+
+
+  async function confirmCredentials(
+    retries: number,
+    token: string
+  ): Promise<Credentials> {
+    const creds = await retrieveCredentials();
+
+    if (creds && creds.token === token) {
+      console.log("got new creds");
+      await halfSecondPromise();
+      return creds;
+    }
+
+    if (retries > 0) {
+      console.log("waiting for creds");
+      await halfSecondPromise();
+      return confirmCredentials(retries - 1, token);
+    }
+
+    throw new Error("Could not find credentials");
+  }
+
+  function handleNewPartyLoginData(data: IPartyLoginData) {
+    let newData = new Map(partyLoginData);
+    newData.set(data.party, data);
+    setPartyLoginData(newData);
+  }
+
+  async function createUserSession(
+    ledger: Ledger,
+    user: string,
+    operator: string,
+    role: MarketRole
+  ) {
+    if (userSessions.length > 1) {
+      console.log("found old user session ");
+      return;
+    }
+
+    console.log("creating user session ");
+    return await ledger.create(UserSession, { user, role, operator });
+  }
+
+  function handleNewLoginStatus(partyId: string, newStatus: loginStatusEnum) {
+    let newMap = new Map(loginStatus);
+    newMap.set(partyId, newStatus);
+    setLoginStatus(newMap);
+  }
+
+  async function loginParty(partyData?: IPartyLoginData) {
+    if (!partyData) {
+      return undefined;
+    }
+    const { ledgerId, party, token, role } = partyData;
+
+    if (!role) {
+      return undefined;
+    }
+
+    handleNewLoginStatus(party, loginStatusEnum.LOGGING_IN);
+
+    onLogin({ ledgerId, party, token });
+
+    confirmCredentials(3, token)
+      .then(async () => {
+        const newLedger = new Ledger({ token, httpBaseUrl });
+
+        await createUserSession(newLedger, party, operator, role)
+          .then(async (resp) => {
+            console.log("got user session", resp);
+
+            await onboardParty(newLedger, partyData, role, 10)
+              .then(() => handleNewLoginStatus(party, loginStatusEnum.DONE))
+
+              .catch((err) => {
+                console.log(err);
+                handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED);
+              });
+          })
+          .catch((err) => {
+            console.log(err);
+            handleNewLoginStatus(
+              party,
+              loginStatusEnum.LOGIN_FAILED_NO_USERSESSION
+            );
+          });
+      })
+      .catch((err) => {
+        console.log(err);
+        handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED_NO_CREDS);
+      })
+      .finally(() => onLoginComplete(party));
+  }
+
+  function getNextParty(partyId?: string): IPartyLoginData | undefined {
+    const partyIds: string[] = Array.from(partyLoginData.keys());
+    if (partyId) {
+      const nextPartyId = partyIds[partyIds.indexOf(partyId) + 1];
+      return partyLoginData.get(nextPartyId);
+    }
+    return partyLoginData.get(partyIds[0]);
+  }
+
+  function onLoginComplete(partyId: string) {
+    console.log("logout");
+    handleNewLoginStatus(partyId, loginStatusEnum.DONE);
+
+    const nextParty = getNextParty(partyId);
+    if (nextParty) {
+      loginParty(nextParty);
+    } else {
+      setPartyLoginData(new Map());
+      setLoginStatus(new Map());
+      console.log("DONE");
+    }
+  }
+
+  async function onboardParty(
+    ledger: Ledger,
+    data: IPartyLoginData,
+    role: MarketRole,
+    retries: number
+  ): Promise<void> {
+    handleNewLoginStatus(data.party, loginStatusEnum.ONBOARDING);
+    switch (role) {
+      case MarketRole.InvestorRole:
+        console.log("invites", investorInvites);
+        if (!!investorInvites[0]) {
+          console.log("got invite, onboarding investor");
+          return await onboardInvestor(operator, ledger, data);
+        } else {
+          break;
+        }
+      case MarketRole.IssuerRole:
+        if (!!issuerInvites[0]) {
+          console.log("got invite, onboarding issuer issuer");
+          return await onboardIssuer(operator, ledger, data);
+        } else {
+          break;
+        }
+      case MarketRole.BrokerRole:
+        if (!!brokerInvites[0]) {
+          console.log("got invite, onboarding broker b");
+          return await onboardBroker(operator, ledger, data, publicParty);
+        } else {
+          break;
+        }
+      case MarketRole.ExchangeRole:
+        if (!!exchangeInvites[0]) {
+          console.log("got invite, onboarding exchange");
+          return await onboardExchange(operator, ledger, data, publicParty);
+        } else {
+          break;
+        }
+      case MarketRole.CustodianRole:
+        if (!!custodianInvites[0]) {
+          console.log("got invite, onboarding custodian");
+          return await onboardCustodian(operator, ledger, data, publicParty);
+        } else {
+          break;
+        }
+    }
+
+    if (retries > 0) {
+      console.log("retrying");
+
+      await halfSecondPromise();
+      return onboardParty(ledger, data, role, retries - 1);
+    } else {
+      throw Error("Could not onboard party");
+    }
+  }
 };
 
 async function onboardInvestor(

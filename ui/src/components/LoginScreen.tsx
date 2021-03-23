@@ -138,18 +138,16 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   }
 
   const quickSetup = [
-    <QueryStreamProvider>
      <QuickSetup
         onLogin={onLogin}
         parties={uploadedParties}
         onRequestClose={() => setShowQuickSetup(false)}
       />
-    </QueryStreamProvider>
   ];
 
   const tiles =
     appInfos.length !== 0
-      ? deploymentMode != DeploymentMode.PROD_DABL // change back
+      ? deploymentMode === DeploymentMode.PROD_DABL // change back
         ? showQuickSetup
           ? quickSetup
           : dablTiles

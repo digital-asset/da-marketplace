@@ -7,6 +7,10 @@
         table {
             background-color: var(--cool-grey-30);
             thead {
+                th {
+                    background-color: var(--cool-grey-30);
+                    color: white;
+                }
                 tr {
                     .hint-cell {
                         display: flex;
@@ -16,7 +20,7 @@
                         button {
                             align-items: center;
                             margin-left: $spacing-s;
-                            padding: 10px 2px;
+                            padding: 8px 2px;
                         }
                     }
                 }
