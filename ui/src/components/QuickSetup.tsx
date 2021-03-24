@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-import { Table, Form, Button, Popup, Loader } from "semantic-ui-react";
+import { Form, Button, Grid, Loader } from "semantic-ui-react";
 
-import DamlLedger, { useLedger, useParty } from "@daml/react";
 import Ledger from "@daml/ledger";
 
-import { WellKnownPartiesProvider, PartyDetails } from "@daml/hub-react";
-import { useWellKnownParties } from "@daml/hub-react/lib";
+import { PartyDetails } from "@daml/hub-react";
 
 import { InvestorInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Investor";
 import { IssuerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Issuer";
@@ -20,7 +18,7 @@ import QueryStreamProvider, {
   useContractQuery,
 } from "../websocket/queryStream";
 
-import { useOperator, useDablParties } from "../components/common/common";
+import { useDablParties } from "../components/common/common";
 
 import Credentials, { retrieveCredentials } from "../Credentials";
 
@@ -31,7 +29,6 @@ import deployTrigger, {
   MarketplaceTrigger,
 } from "../../src/automation";
 import { halfSecondPromise } from "./common/utils";
-import { IProfileLinkItem } from "./common/Profile";
 
 interface IPartyLoginData extends PartyDetails {
   role?: MarketRole;
@@ -50,179 +47,125 @@ const MARKETROLES = [
   "BrokerRole",
 ];
 
-enum loginStatusEnum {
-  LOGGING_IN = "Logging in",
-  LOGIN_FAILED = "Log in failed",
-  LOGIN_FAILED_NO_CREDS = "Log in failed: no creds",
-  LOGIN_FAILED_NO_ROLE = "Log in failed: no role",
-  LOGIN_FAILED_NO_USERSESSION = "Log in failed: no user session",
-  ASSIGNING_ROLE = "Assigning role",
-  ASSIGNING_ROLE_FAILED = "Assigning role failed",
-  DONE = "DONE",
-  READY_TO_LOGIN = "ready to log in",
-  ONBOARDING = "onboarding",
-  ONBOARDING_ISSUER = "onboarding issuer",
-  ONBOARDING_BROKER = "onboarding broker",
-  ONBOARDING_EXCHANGE = "onboarding exchange",
-  ONBOARDING_CUSTODIAN = "onboarding custodian",
-  ONBOARDING_CCP = "onboarding CCP",
-  WAITING_FOR_OPERATOR_INVITE = "waiting for operator invite",
-}
-
 const QuickSetup = (props: {
   parties: PartyDetails[];
   onLogin: (credentials?: Credentials) => void;
   onRequestClose: () => void;
 }) => {
   const { parties, onLogin, onRequestClose } = props;
+  const [loggedInRoles, setLoggedInRoles] = useState<IPartyLoginData[]>([]);
+  const [selectedParty, setSelectedParty] = useState<PartyDetails>();
+  const [selectedRole, setSelectedRole] = useState<MarketRole>();
+  const partyOptions = parties.map((party) => {
+    return { text: party.partyName, value: party.party };
+  });
 
-  const [partyLoginData, setPartyLoginData] = useState<
-    Map<string, IPartyLoginData>
-  >(new Map());
+  const roleOptions = MARKETROLES.map((role) => {
+    return { text: role, value: role };
+  });
 
-  const [ currentPartyLoggingIn, setCurrentPartyLoggingIn ] = useState<string>()
+  console.log(loggedInRoles)
 
   return (
     <div className="quick-setup">
       <Button
         icon="left arrow"
-        className="ghost dark"
+        className="back-button ghost dark"
         onClick={() => onRequestClose()}
       />
       <p className="login-details dark">Quick Setup</p>
-      <QueryStreamProvider setToken={currentPartyLoggingIn}>
-        <SetupTable parties={parties} partyLoginData={partyLoginData} setPartyLoginData={setPartyLoginData} onLogin={hangleNewLogin}/>
-      </QueryStreamProvider>
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={8}>
+            <Form.Select
+              label={
+                <p className="dark">
+                  Party
+                  {/* <Popup
+                        basic
+                        size="tiny"
+                        content="CCP must be manually onboarded after you've onboarded a default
+              custodian"
+                        trigger={<Button size="tiny" icon="info" />}
+                      /> */}
+                </p>
+              }
+              value={
+                selectedParty
+                  ? partyOptions.find((p) => selectedParty.party === p.value)
+                      ?.value
+                  : ""
+              }
+              placeholder="Select..."
+              onChange={(_, data: any) =>
+                handleChangeParty(parties.find((p) => p.party === data.value))
+              }
+              options={partyOptions}
+            />
+          </Grid.Column>
+          <Grid.Column width={8}>
+            <Form.Select
+              value={
+                selectedRole
+                  ? roleOptions.find((p) => selectedRole === p.value)?.value
+                  : ""
+              }
+              label={<p className="dark">Role</p>}
+              placeholder="Select..."
+              onChange={(_, data: any) => setSelectedRole(data.value)}
+              options={roleOptions}
+            />
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+      <Button
+       diabled={!selectedParty && !selectedRole}>
+        
+      </Button>
+      {selectedParty && selectedRole && (
+        <QueryStreamProvider setToken={selectedParty.token}>
+          <SetupForm
+            selectedParty={selectedParty}
+            selectedRole={selectedRole}
+            onLogin={onLogin}
+            clearPartyRoleSelect={clearPartyRoleSelect}
+            saveLoggedInRole={handleNewLoggedInRole}
+          />
+        </QueryStreamProvider>
+      )}
     </div>
   );
 
-  function hangleNewLogin(creds?: Credentials) {
-    onLogin(creds)
-    setCurrentPartyLoggingIn(creds?.token)
+  function handleChangeParty(newParty?: PartyDetails) {
+    if (!!selectedParty && !!selectedRole) {
+      setSelectedRole(undefined)
+    }
+    setSelectedParty(newParty)
+  }
+
+  function handleNewLoggedInRole(data: IPartyLoginData) {
+    setLoggedInRoles([...loggedInRoles, data])
+  }
+
+  function clearPartyRoleSelect() {
+    setSelectedParty(undefined);
+    setSelectedRole(undefined);
   }
 };
 
-const LoginPartyRow = (props: {
-  party: PartyDetails;
-  loginStatus?: loginStatusEnum;
-  updateAllPartiesLoginData: (data: IPartyLoginData) => void;
-}) => {
-  const { party, loginStatus, updateAllPartiesLoginData } = props;
-
-  const [rowLoginData, setRowLoginData] = useState<IPartyLoginData>({
-    ...party,
-    role: undefined,
-    name: party.partyName,
-    location: "NYC",
-    deployMatchingEngine: true,
-  });
-
-  const hasSelectedRole = !!rowLoginData.role;
-
-  useEffect(() => {
-    if (hasSelectedRole) {
-      updateAllPartiesLoginData(rowLoginData);
-    }
-  }, [rowLoginData]);
-
-  return (
-    <Table.Row>
-      <Table.Cell>
-        <p className="dark">{party.partyName}</p>
-      </Table.Cell>
-      <Table.Cell>
-        <Form.Select
-          placeholder="Select..."
-          onChange={(_, data: any) =>
-            setRowLoginData({
-              ...rowLoginData,
-              role: data.value,
-            })
-          }
-          options={MARKETROLES.map((role) => {
-            return { text: role, value: role };
-          })}
-        />
-      </Table.Cell>
-      <Table.Cell>
-        <Form.Input
-          value={rowLoginData.name}
-          placeholder="name"
-          disabled={!hasSelectedRole}
-          onChange={(e) =>
-            setRowLoginData({
-              ...rowLoginData,
-              name: e.currentTarget.value,
-            })
-          }
-        />
-      </Table.Cell>
-      <Table.Cell>
-        <Form.Input
-          value={rowLoginData.location}
-          placeholder="location"
-          disabled={!hasSelectedRole}
-          onChange={(e) =>
-            setRowLoginData({
-              ...rowLoginData,
-              location: e.currentTarget.value,
-            })
-          }
-        />
-      </Table.Cell>
-      <Table.Cell>
-        {rowLoginData.role === MarketRole.IssuerRole ? (
-          <Form.Input
-            value={rowLoginData.issuerId}
-            placeholder="issuer Id"
-            disabled={!hasSelectedRole}
-            onChange={(e) =>
-              setRowLoginData({
-                ...rowLoginData,
-                issuerId: e.currentTarget.value,
-              })
-            }
-          />
-        ) : (
-          deploymentMode === DeploymentMode.PROD_DABL &&
-          rowLoginData.role === MarketRole.ExchangeRole && (
-            <Form.Checkbox
-              className="red"
-              defaultChecked
-              label={
-                <label>
-                  <p className="dark p2">
-                    Deploy matching engine {<br />} (uncheck if you plan to use
-                    the Exberry Integration)
-                  </p>
-                </label>
-              }
-              onChange={(event) =>
-                setRowLoginData({
-                  ...rowLoginData,
-                  deployMatchingEngine: !rowLoginData.deployMatchingEngine,
-                })
-              }
-            />
-          )
-        )}
-      </Table.Cell>
-      <Table.Cell>
-        <p className="dark p2">{loginStatus && loginStatus}</p>
-      </Table.Cell>
-    </Table.Row>
-  );
-};
-
-const SetupTable = (props: {
-  parties: PartyDetails[],
-  partyLoginData: Map<string, IPartyLoginData>,
-  setPartyLoginData: (newMap: Map<string, IPartyLoginData>) => void,
+const SetupForm = (props: {
+  selectedParty: PartyDetails;
+  selectedRole: MarketRole;
   onLogin: (credentials?: Credentials) => void;
+  clearPartyRoleSelect: () => void;
+  saveLoggedInRole: (data: IPartyLoginData) => void
 }) => {
-  const { parties, partyLoginData, setPartyLoginData, onLogin }  = props;
+  const { selectedParty, selectedRole, onLogin, clearPartyRoleSelect, saveLoggedInRole} = props;
 
-  const [loginStatus, setLoginStatus] = useState<Map<string, loginStatusEnum>>(new Map());
+  const [loginStatus, setLoginStatus] = useState<string>();
+
+  const [partyLoginData, setPartyLoginData] = useState<IPartyLoginData>();
+  const [partyLoggingIn, setPartyLoggingIn] = useState<boolean>(false);
 
   const publicParty = useDablParties().parties.publicParty;
   const operator = useDablParties().parties.userAdminParty;
@@ -234,54 +177,128 @@ const SetupTable = (props: {
   const exchangeInvites = useContractQuery(ExchangeInvitation);
   const brokerInvites = useContractQuery(BrokerInvitation);
 
+  useEffect(() => {
+    setPartyLoginData({
+      ...selectedParty,
+      role: selectedRole,
+      name: selectedParty.partyName,
+      location: "NYC",
+      deployMatchingEngine: true,
+    });
+  }, [selectedParty, selectedRole]);
+
+  const hasSelectedRole = !!partyLoginData?.role;
+
+  if (!partyLoginData) {
+    return null;
+  }
+
+  if (partyLoggingIn) {
+    return (
+      <p className="dark login-status">
+        <Loader active indeterminate inverted size="small">{loginStatus ? loginStatus : 'Loading..'}</Loader>
+      </p>
+    );
+  }
+
   return (
     <>
-      <Table>
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell className="hint-cell">
-              Party
-              <Popup
-                basic
-                size="tiny"
-                content="CCP must be manually onboarded after you've onboarded a default
-              custodian"
-                trigger={<Button size="tiny" icon="info" />}
-              />
-            </Table.HeaderCell>
-            <Table.HeaderCell>Role</Table.HeaderCell>
-            <Table.HeaderCell>Name</Table.HeaderCell>
-            <Table.HeaderCell>Location</Table.HeaderCell>
-            <Table.HeaderCell>Other</Table.HeaderCell>
-            <Table.HeaderCell>Status</Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          {parties.map((party) => (
-            <LoginPartyRow
-              key={party.party}
-              party={party}
-              updateAllPartiesLoginData={handleNewPartyLoginData}
-              loginStatus={loginStatus.get(party.party)}
+      <p className="dark login-details">
+        Please fill in some information about this role:
+      </p>
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={8}>
+            <Form.Input
+              label={<p className="dark">Name</p>}
+              value={partyLoginData.name}
+              placeholder="name"
+              disabled={!hasSelectedRole}
+              onChange={(e) =>
+                setPartyLoginData({
+                  ...partyLoginData,
+                  name: e.currentTarget.value,
+                })
+              }
             />
-          ))}
-        </Table.Body>
-      </Table>
+          </Grid.Column>
+          <Grid.Column width={8}>
+            <Form.Input
+              label={<p className="dark">Location</p>}
+              value={partyLoginData.location}
+              placeholder="location"
+              disabled={!hasSelectedRole}
+              onChange={(e) =>
+                setPartyLoginData({
+                  ...partyLoginData,
+                  location: e.currentTarget.value,
+                })
+              }
+            />
+          </Grid.Column>
+        </Grid.Row>
+
+        <Grid.Row>
+          {partyLoginData.role === MarketRole.IssuerRole ? (
+            <Grid.Column width={8}>
+              <Form.Input
+                label={<p className="dark">Issuer Id</p>}
+                value={partyLoginData.issuerId}
+                placeholder="issuer Id"
+                disabled={!hasSelectedRole}
+                onChange={(e) =>
+                  setPartyLoginData({
+                    ...partyLoginData,
+                    issuerId: e.currentTarget.value,
+                  })
+                }
+              />
+            </Grid.Column>
+          ) : (
+            deploymentMode === DeploymentMode.PROD_DABL &&
+            partyLoginData.role === MarketRole.ExchangeRole && (
+              <Grid.Column width={8}>
+                <Form.Checkbox
+                  className="red"
+                  defaultChecked
+                  label={
+                    <p className="dark p2">
+                      Deploy matching engine {<br />} (uncheck if you plan to
+                      use the Exberry Integration)
+                    </p>
+                  }
+                  onChange={(event) =>
+                    setPartyLoginData({
+                      ...partyLoginData,
+                      deployMatchingEngine: !partyLoginData.deployMatchingEngine,
+                    })
+                  }
+                />
+              </Grid.Column>
+            )
+          )}
+        </Grid.Row>
+      </Grid>
       <Button
         className="go ghost dark"
-        disabled={partyLoginData.size === 0}
-        onClick={() => loginParty(getNextParty())}
+        disabled={!partyLoginData}
+        onClick={() => loginParty()}
       >
         Go!
       </Button>
     </>
   );
 
+  async function handleSetLoginStatus(status: string) {
+    await halfSecondPromise();
+    setLoginStatus(status);
+  }
 
   async function confirmCredentials(
     retries: number,
     token: string
   ): Promise<Credentials> {
+    handleSetLoginStatus("confirming party credentials");
     const creds = await retrieveCredentials();
 
     if (creds && creds.token === token) {
@@ -299,12 +316,6 @@ const SetupTable = (props: {
     throw new Error("Could not find credentials");
   }
 
-  function handleNewPartyLoginData(data: IPartyLoginData) {
-    let newData = new Map(partyLoginData);
-    newData.set(data.party, data);
-    setPartyLoginData(newData);
-  }
-
   async function createUserSession(
     ledger: Ledger,
     user: string,
@@ -320,78 +331,61 @@ const SetupTable = (props: {
     return await ledger.create(UserSession, { user, role, operator });
   }
 
-  function handleNewLoginStatus(partyId: string, newStatus: loginStatusEnum) {
-    let newMap = new Map(loginStatus);
-    newMap.set(partyId, newStatus);
-    setLoginStatus(newMap);
-  }
-
-  async function loginParty(partyData?: IPartyLoginData) {
-    if (!partyData) {
+  async function loginParty() {
+    if (!partyLoginData) {
       return undefined;
     }
-    const { ledgerId, party, token, role } = partyData;
+
+    const { ledgerId, party, token, role } = partyLoginData;
 
     if (!role) {
       return undefined;
     }
-
-    handleNewLoginStatus(party, loginStatusEnum.LOGGING_IN);
+    setPartyLoggingIn(true);
+    handleSetLoginStatus("logging in");
 
     onLogin({ ledgerId, party, token });
 
     confirmCredentials(3, token)
       .then(async () => {
         const newLedger = new Ledger({ token, httpBaseUrl });
+        handleSetLoginStatus("creating ledger context");
 
         await createUserSession(newLedger, party, operator, role)
           .then(async (resp) => {
+            handleSetLoginStatus("creating user session");
+
             console.log("got user session", resp);
 
-            await onboardParty(newLedger, partyData, role, 10)
-              .then(() => handleNewLoginStatus(party, loginStatusEnum.DONE))
+            await onboardParty(newLedger, partyLoginData, role, 10)
+              .then(() => {
+                saveLoggedInRole(partyLoginData)
+                handleSetLoginStatus("done")
+              })
 
               .catch((err) => {
                 console.log(err);
-                handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED);
+                handleSetLoginStatus("login failed");
               });
           })
           .catch((err) => {
             console.log(err);
-            handleNewLoginStatus(
-              party,
-              loginStatusEnum.LOGIN_FAILED_NO_USERSESSION
-            );
+            handleSetLoginStatus("login failed, couldnt find user session");
           });
       })
       .catch((err) => {
         console.log(err);
-        handleNewLoginStatus(party, loginStatusEnum.LOGIN_FAILED_NO_CREDS);
+        handleSetLoginStatus("login failed, coulnt get credentials");
       })
       .finally(() => onLoginComplete(party));
   }
 
-  function getNextParty(partyId?: string): IPartyLoginData | undefined {
-    const partyIds: string[] = Array.from(partyLoginData.keys());
-    if (partyId) {
-      const nextPartyId = partyIds[partyIds.indexOf(partyId) + 1];
-      return partyLoginData.get(nextPartyId);
-    }
-    return partyLoginData.get(partyIds[0]);
-  }
-
   function onLoginComplete(partyId: string) {
     console.log("logout");
-    handleNewLoginStatus(partyId, loginStatusEnum.DONE);
-
-    const nextParty = getNextParty(partyId);
-    if (nextParty) {
-      loginParty(nextParty);
-    } else {
-      setPartyLoginData(new Map());
-      setLoginStatus(new Map());
-      console.log("DONE");
-    }
+    handleSetLoginStatus("done");
+    setPartyLoginData(undefined);
+    clearPartyRoleSelect();
+    setPartyLoggingIn(false);
   }
 
   async function onboardParty(
@@ -400,11 +394,12 @@ const SetupTable = (props: {
     role: MarketRole,
     retries: number
   ): Promise<void> {
-    handleNewLoginStatus(data.party, loginStatusEnum.ONBOARDING);
+    handleSetLoginStatus(`onboarding ${data.role}`);
     switch (role) {
       case MarketRole.InvestorRole:
-        console.log("invites", investorInvites);
         if (!!investorInvites[0]) {
+          handleSetLoginStatus("recieved invite, onboarding investor");
+
           console.log("got invite, onboarding investor");
           return await onboardInvestor(operator, ledger, data);
         } else {
@@ -412,6 +407,8 @@ const SetupTable = (props: {
         }
       case MarketRole.IssuerRole:
         if (!!issuerInvites[0]) {
+          handleSetLoginStatus("recieved invite, onboarding issuer");
+
           console.log("got invite, onboarding issuer issuer");
           return await onboardIssuer(operator, ledger, data);
         } else {
@@ -419,6 +416,8 @@ const SetupTable = (props: {
         }
       case MarketRole.BrokerRole:
         if (!!brokerInvites[0]) {
+          handleSetLoginStatus("recieved invite, onboarding broker");
+
           console.log("got invite, onboarding broker b");
           return await onboardBroker(operator, ledger, data, publicParty);
         } else {
@@ -426,6 +425,8 @@ const SetupTable = (props: {
         }
       case MarketRole.ExchangeRole:
         if (!!exchangeInvites[0]) {
+          handleSetLoginStatus("recieved invite, onboarding exchange");
+
           console.log("got invite, onboarding exchange");
           return await onboardExchange(operator, ledger, data, publicParty);
         } else {
@@ -433,6 +434,8 @@ const SetupTable = (props: {
         }
       case MarketRole.CustodianRole:
         if (!!custodianInvites[0]) {
+          handleSetLoginStatus("recieved invite, onboarding custodian");
+
           console.log("got invite, onboarding custodian");
           return await onboardCustodian(operator, ledger, data, publicParty);
         } else {
@@ -446,6 +449,7 @@ const SetupTable = (props: {
       await halfSecondPromise();
       return onboardParty(ledger, data, role, retries - 1);
     } else {
+      onLogin()
       throw Error("Could not onboard party");
     }
   }

@@ -2,36 +2,49 @@
     .quick-setup {
         background-color: var(--cool-grey-10);
         padding: $spacing-l;
-        max-width: unset !important;
+        display: flex;
+        flex-direction: column;
+        min-width: 550px;
+        min-height: 310px;
 
-        table {
-            background-color: var(--cool-grey-30);
-            thead {
-                th {
-                    background-color: var(--cool-grey-30);
-                    color: white;
-                }
-                tr {
-                    .hint-cell {
-                        display: flex;
-                        flex-direction: row;
-                        align-items: center;
+        p {
+            padding-bottom: $spacing-xs;
 
-                        button {
-                            align-items: center;
-                            margin-left: $spacing-s;
-                            padding: 8px 2px;
-                        }
-                    }
-                }
-            }
-            td {
-                overflow: visible;
-                min-width: 200px;
+            &.login-details {
+                padding: $spacing-m 0;
             }
         }
+
+        .login-status {
+            padding: $spacing-l;
+
+            .ui.loader {
+                position: static;
+                transform: translateX(-0%) translateY(-0%);
+            }
+        }
+
+        button.back-button {
+            margin-right: auto;
+        }
+
         button.ghost.go {
             margin-left: auto;
+        }
+
+        .ui.grid {
+            display: flex;
+            flex-direction: column;
+
+            .field {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+
+                .ui.input > input {
+                    width: 198px;
+                }
+            }
         }
     }
 }
