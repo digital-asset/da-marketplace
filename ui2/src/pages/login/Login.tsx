@@ -25,7 +25,7 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-function raiseParamsToHash() {
+function raiseParamsToHash(loginRoute: string) {
   const url = new URL(window.location.href);
 
   // When DABL login redirects back to app, hoist the query into the hash route.
@@ -35,8 +35,8 @@ function raiseParamsToHash() {
   // ledgerid.projectdabl.com/?party=party&token=token/#/
   // into
   // ledgerid.projectdabl.com/#/?party=party&token=token
-  if (url.search !== '' && url.hash === '#/') {
-    window.location.href = `${url.origin}${url.pathname}#/${url.search}`;
+  if (url.search !== '' && url.hash === `#/${loginRoute}`) {
+    window.location.href = `${url.origin}${url.pathname}#/${loginRoute}${url.search}`;
   }
 }
 
@@ -61,12 +61,12 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   const userDispatch = useUserDispatch();
 
   useEffect(() => {
-    raiseParamsToHash();
+    raiseParamsToHash('login');
   }, [location]);
 
   useEffect(() => {
     const party = query.get("party");
-    const token = getTokenFromCookie();
+    const token = query.get("token");
 
     if (!token || !party) {
       return
@@ -179,6 +179,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
   const [ parties, setParties] = useState<PartyDetails[]>();
 
   const history = useHistory();
+  const userDispatch = useUserDispatch();
 
   const options = parties?.map(party => ({
     key: party.party,
@@ -198,9 +199,7 @@ const PartiesLoginForm: React.FC<Props> = ({onLogin}) => {
     const partyDetails = parties?.find(p => p.party === selectedPartyId);
 
     if (partyDetails) {
-      const { ledgerId, party, token } = partyDetails;
-      onLogin({ ledgerId, party, token });
-      history.push('/role');
+      loginUser(userDispatch, history, partyDetails);
     } else {
       throw new AppError("Failed to Login", "No parties.json or party selected");
     }

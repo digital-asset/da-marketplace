@@ -7,8 +7,8 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import KeyboardArrowLeft from "@material-ui/icons/KeyboardArrowLeft";
 import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
-import { useLedger, useParty, useStreamQueries} from "@daml/react";
-import { getName } from "../../config";
+import { useLedger, useParty, useStreamQueries } from "@daml/react";
+import { getName, publicParty } from "../../config";
 import useStyles from "../styles";
 import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { CreateEvent } from "@daml/ledger";
@@ -35,7 +35,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
     setCanRequest(false);
     const request : RequestOpenAccount = {
       accountId: { signatories: { textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} } }, label: state.label, version: "0" },
-      observers: [ "Public" ], // TODO: Use real public party
+      observers: [ publicParty ],
       ctrls: [ service.payload.provider, service.payload.customer ]
     };
     await ledger.exercise(Service.RequestOpenAccount, service.contractId, request);
