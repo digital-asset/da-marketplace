@@ -33,7 +33,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
   const party = useParty();
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets//.filter(c => c.payload.issuer === party && c.payload.assetId.version === "0");
+  const assets = allAssets.filter(c => c.payload.issuer === party && c.payload.assetId.version === "0");
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);

@@ -6,7 +6,7 @@ const PaginationControls = (props: {
   onPageChange: (activePage: number) => void
 }) => (
   <Pagination
-    className='paginataion-controls'
+    className='pagination-controls'
     boundaryRange={0}
     defaultActivePage={1}
     ellipsisItem={null}
