@@ -13,12 +13,14 @@ type TileProps = {
   className?: string;
   header?: React.ReactElement;
   key?: string | number;
+  dark?: boolean;
+  thinGap?: boolean;
   subtitle?: string;
 }
 
-export const Tile: React.FC<TileProps> = ({ children, className, subtitle, header }) => {
+export const Tile: React.FC<TileProps> = ({ children, className, dark, thinGap, subtitle, header }) => {
   return (
-    <div className={classNames('tile', className)}>
+    <div className={classNames('tile', className, { dark, 'thin-gap': thinGap })}>
       { !!header && <div className='tile-header'>{header}</div> }
       { !!subtitle && <p className='subtitle'>{subtitle}</p> }
       <div className='tile-content'>

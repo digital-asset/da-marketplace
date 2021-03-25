@@ -76,13 +76,13 @@ const LoginScreen: React.FC<Props> = ({onLogin}) => {
   }, [onLogin, query, history, userDispatch]);
 
   const localTiles = [
-    <Tile key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
+    <Tile dark thinGap key='login' header={logoHeader}><LocalLoginForm onLogin={onLogin}/></Tile>
   ];
 
   const dablTiles = [
-    <Tile key='login' header={logoHeader}><DablLoginForm onLogin={onLogin}/></Tile>,
-    <Tile key='parties'><PartiesLoginForm onLogin={onLogin}/></Tile>,
-    <Tile key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
+    <Tile dark thinGap key='login' header={logoHeader}><DablLoginForm onLogin={onLogin}/></Tile>,
+    <Tile dark thinGap key='parties'><PartiesLoginForm onLogin={onLogin}/></Tile>,
+    <Tile dark thinGap key='jwt'><JWTLoginForm onLogin={onLogin}/></Tile>
   ];
 
   // const tiles = appInfos.length !== 0

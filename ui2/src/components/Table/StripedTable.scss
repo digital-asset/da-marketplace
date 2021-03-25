@@ -1,0 +1,65 @@
+@use './PaginationControls';
+
+@mixin striped-table {
+  .striped-table {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      align-items: flex-start;
+      animation: fadeIn .5s;
+
+      @include PaginationControls.pagination-controls();
+
+      table {
+          border-collapse: collapse;
+          border: none;
+          margin: 0px;
+
+          th {
+              border: none;
+              background-color: var(--cool-grey-100);
+          }
+
+          tr td {
+              border-top: 0px !important;
+
+              .label {
+                  display: none;
+              }
+          }
+
+          tbody {
+              background-color: var(--white);
+              border: 1px solid var(--cool-grey-90);
+          }
+
+          tr:nth-child(odd) {
+              background-color: var(--blue-100);
+          }
+      }
+
+
+      @media screen and (max-width: 769px) {
+          table {
+              border-bottom: none;
+
+              thead {
+                  display: none !important;
+              }
+
+              tr {
+                  background-color: var(--cool-grey-100);
+
+                  td {
+                      font-weight: normal;
+                      text-align: left;
+
+                      .label {
+                          display: inline-flex;
+                      }
+                  }
+              }
+          }
+      }
+  }
+}

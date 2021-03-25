@@ -1,5 +1,7 @@
 @use 'themes/colors';
 @use 'components/Tile/TilePage';
+@use 'components/Tile/Tile';
+@use 'components/Table/StripedTable';
 @use 'pages/login/Login';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
@@ -167,7 +169,9 @@ html {
         @include overrides.overrides();
         @include WelcomeHeader.welcome-header();
         @include icons.icons();
+        @include Tile.tile();
         @include TilePage.tile-page();
+        @include StripedTable.striped-table();
         @include Apps.apps();
         @include Page.page();
         @include Login.login-screen();
