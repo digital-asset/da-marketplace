@@ -1,0 +1,71 @@
+module Marketplace.Clearing.Service where
+
+import DA.Finance.Types
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    clearingAccount : Account
+    marginAccount : Account   -- should this be locked?
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+          clearingAccount : Account
+          marginAccount : Account
+        do
+          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
+          create Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+    clearingAccount : Account
+    marginAccount : Account
+  where
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
