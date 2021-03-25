@@ -88,10 +88,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         } else if (allNotifications.length > notifications.length) {
             setAllNotifications(notifications);
         }
+        if (notifications.length === 0) setShowNotificationAlert(false);
     }, [notifications]);
 
     const handleNotificationAlert = () => {
-        history.push(`${path}/notifications`, { from: history.location});
+        const currentLocation = history.location.pathname;
+        history.push({ pathname: `${path}/notifications`, state: currentLocation });
         setShowNotificationAlert(false);
     }
 

@@ -18,6 +18,10 @@
         .header {
           color: black;
         }
+
+        .ui.button.ghost.warning {
+          border-color: solid var(--cool-grey-10);
+        }
       }
     }
   }
