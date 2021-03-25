@@ -86,7 +86,7 @@ const AccountComponent: React.FC<RouteComponentProps & Props> = ({ history, serv
       <InputDialog {...transferDialogProps} />
       <Grid container direction="column">
         <Grid item xs={12}>
-          <Typography variant="h3" className={classes.heading}>Account - {account.payload.account.id.label}</Typography>
+          <Typography variant="h2" className={classes.heading}>Account - {account.payload.account.id.label}</Typography>
         </Grid>
         <Grid item xs={12}>
           <Grid container spacing={4}>

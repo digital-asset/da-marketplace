@@ -1,7 +1,7 @@
 @use './themes/variables.scss' as *;
 
-@mixin apps {
-  .apps {
+@mixin app {
+  .app {
     flex-direction: column;
 
     .services {

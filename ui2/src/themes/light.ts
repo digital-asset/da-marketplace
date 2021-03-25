@@ -67,7 +67,7 @@ export default {
       hint: "#393939",
     },
     background: {
-      default: "#FFFFFF", //"#F6F7FF",
+      default: "#ffffff", //"#F6F7FF",
       light: "#eeeeee",
       paper: "#fafafa"
     },

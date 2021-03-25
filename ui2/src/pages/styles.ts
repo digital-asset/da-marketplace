@@ -45,7 +45,15 @@ export default makeStyles((theme : any) => createStyles({
     paddingTop: 0,
     paddingBottom: 0,
     marginRight: 5,
-    color: "white"
+    // color: "white",
+    color: theme.palette.text.primary,
+    // borderWidth: "1px",
+    // borderStyle: "solid",
+    borderColor: "#009900",
+    background : theme.palette.background.default,
+    // "&:hover, &:focus": {
+    //   backgroundColor: theme.palette.background.light,
+    // },
   },
   newButton: {
     marginTop: 50,
@@ -87,7 +95,7 @@ export default makeStyles((theme : any) => createStyles({
   paper: {
     padding: 20,
     marginBottom: 20,
-    backgroundColor: theme.palette.background.paper
+    backgroundColor: theme.palette.background.default
   },
   paperHeading: {
     paddingTop: 20,

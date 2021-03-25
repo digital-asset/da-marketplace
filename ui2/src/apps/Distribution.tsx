@@ -9,7 +9,7 @@ import { New } from "../pages/distribution/auction/New";
 import { useParty, useStreamQueries } from "@daml/react";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { Requests } from "../pages/distribution/auction/Requests";
-import { Assets } from "../pages/distribution/Assets";
+import { Assets } from "../pages/custody/Assets";
 import { BiddingAuction } from "../pages/distribution/bidding/Auction";
 import Page from "../pages/page/Page";
 
@@ -22,7 +22,7 @@ const DistributionApp = () => {
   const isIssuer = customerServices.length > 0;
 
   const entries : SidebarEntry[] = [];
-  entries.push({ label: "Assets", path: "/apps/distribution/assets", render: () => (<Assets />), icon: (<PlayArrow/>), children: [] });
+  // entries.push({ label: "Assets", path: "/apps/distribution/assets", render: () => (<Assets />), icon: (<PlayArrow/>), children: [] });
   if (isAgent) {
     entries.push({ label: "Auctions", path: "/apps/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow/>), children: [] });
     // entries.push({ label: "Requests", path: "/apps/distribution/requests", render: () => (<Requests />), icon: (<PlayArrow/>), children: [] });

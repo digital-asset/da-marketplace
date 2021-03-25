@@ -4,9 +4,11 @@
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use './icons/icons.scss';
-@use './Apps.scss';
+@use './App.scss';
 @use '../../ui/src/overrides/overrides';
-@use '../../ui/src/overrides/button';
+//@use '../../ui/src/overrides/button';
+@use 'themes/button';
+@use 'pages/custody/Assets';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
@@ -168,9 +170,11 @@ html {
         @include WelcomeHeader.welcome-header();
         @include icons.icons();
         @include TilePage.tile-page();
-        @include Apps.apps();
+        @include App.app();
         @include Page.page();
         @include Login.login-screen();
+        @include button.ui-button();
+        @include Assets.assets;
       }
     }
   }
