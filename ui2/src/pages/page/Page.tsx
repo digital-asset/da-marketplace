@@ -43,8 +43,14 @@ const Page: React.FC<Props> = ({
 
             <Menu.Menu>
               { sideBarItems?.map(item => (
-                <Menu.Item exact as={NavLink} to={item.path} className='sidemenu-item-normal'>
-                  <p>{item.icon} {item.label}</p>
+                <Menu.Item
+                  exact
+                  key={item.label+item.path}
+                  as={NavLink}
+                  to={item.path}
+                  className='sidemenu-item-normal'
+                >
+                  <p>{item.icon}{item.label}</p>
                 </Menu.Item>
               )) }
             </Menu.Menu>

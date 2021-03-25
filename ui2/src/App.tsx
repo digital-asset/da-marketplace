@@ -19,6 +19,9 @@ import { Requests as AuctionRequests } from "./pages/distribution/auction/Reques
 import { Assets } from "./pages/custody/Assets";
 import { New as DistributionNew } from "./pages/distribution/auction/New";
 import { BiddingAuction } from "./pages/distribution/bidding/Auction";
+import { Instruments } from "./pages/origination/Instruments";
+import { New as InstrumentsNew } from "./pages/origination/New";
+import { Requests as InstrumentsRequests } from "./pages/origination/Requests";
 import { Issuances } from "./pages/issuance/Issuances";
 import { New as IssuanceNew } from "./pages/issuance/New";
 import { Requests as IssuanceRequests } from "./pages/issuance/Requests";
@@ -33,6 +36,8 @@ import { Custody as CustodyNetwork } from "./pages/network/Custody";
 import { Trading as TradingNetwork } from "./pages/network/Trading";
 import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
 import Page from "./pages/page/Page";
+import { PublicIcon } from "./icons/icons";
+import { Instrument } from "./pages/origination/Instrument";
 import {WalletIcon} from "./icons/icons";
 import _ from "lodash";
 
@@ -99,9 +104,13 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => issuanceService.length > 0,
     sidebar: [
-      { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PlayArrow />), children: [] },
-      { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PlayArrow />), children: [] }
+      { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), children: [] },
+      { label: "New Instruments", path: "/app/instrument/new", render: () => (<InstrumentsNew />), icon: (<PublicIcon />), children: [] },
+      { label: "Instrument Requests", path: "/app/instrument/requests", render: () => (<InstrumentsRequests />), icon: (<PublicIcon />), children: [] },
+
+      { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), children: [] },
+      { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PublicIcon />), children: [] },
+      { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
     ]
   });
   entries.push({
@@ -148,6 +157,11 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
+              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
+              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
+              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
+              <Route key={"instruments"} path={"/app/registry/instruments/:contractId"} component={Instrument}/>
+              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />

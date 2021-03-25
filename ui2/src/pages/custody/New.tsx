@@ -4,6 +4,7 @@ import { FormControl, Grid, InputLabel, MenuItem, Paper, Select, Table, TableBod
 import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
+import { getName, publicParty } from "../../config";
 import useStyles from "../styles";
 import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { Party } from "@daml/types";
@@ -30,7 +31,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     if (!service) return;
     const request: RequestOpenAccount = {
       accountId: { signatories: { textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} } }, label: accountName, version: "0" },
-      observers: ["Public"], // TODO: Use real public party
+      observers: [ publicParty ],
       ctrls: [service.payload.provider, service.payload.customer]
     };
     await ledger.exercise(Service.RequestOpenAccount, service.contractId, request);

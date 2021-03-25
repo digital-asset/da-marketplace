@@ -4,7 +4,7 @@
 import { encode } from 'jwt-simple'
 import { expiredToken } from '@daml/hub-react'
 
-import { ledgerId } from './config'
+import { ledgerId, publicParty } from './config'
 
 export const APPLICATION_ID: string = 'da-marketplace';
 
@@ -60,7 +60,7 @@ function computeToken(party: string): string {
       "ledgerId": ledgerId,
       "applicationId": APPLICATION_ID,
       "actAs": [party],
-      "readAs": [party, "Public"]
+      "readAs": [party, publicParty]
     }
   };
   return encode(payload, SECRET_KEY, 'HS256');
