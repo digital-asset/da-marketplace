@@ -54,8 +54,6 @@ const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
     }
   }, [isPublic]);
 
-  console.log("observers is: ", observers);
-
   useEffect(() => {
     if (!el.current) return;
     el.current.innerHTML = "";
@@ -67,7 +65,6 @@ const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
   if (!service) return (<></>);
 
   const requestOrigination = async () => {
-    console.log("accounts is: ", accounts, account, accounts.find(a => service.payload.provider));
     const safekeepingAccountId = accounts.find(a => a.provider === service.payload.provider && a.id.label === account)?.id;
     if (!safekeepingAccountId) {
       console.log(`Couldn't find account from provider ${service.payload.provider} with label ${account}`);
@@ -117,7 +114,6 @@ const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
                 placeholder='Select Safekeeping Account...'
                 options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
                 onChange={(event: React.SyntheticEvent, result: any) => {
-                  console.log(result, typeof result.value);
                   setAccount(result.value)
               }}/>
 

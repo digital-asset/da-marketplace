@@ -88,7 +88,7 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
       <h2>New Basic Instrument</h2>
       <Tile header={<h5>Details</h5>}>
         <FormErrorHandled onSubmit={requestOrigination}>
-          <Button.Group onChange={() => console.log("hey")}>
+          <Button.Group>
             <Button active={isCall} onClick={() => setIsCall(true)}>Call</Button>
             <Button.Or/>
             <Button active={!isCall} onClick={() => setIsCall(false)}>Put</Button>

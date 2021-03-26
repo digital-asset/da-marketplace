@@ -31,7 +31,6 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
 
   const ledger = useLedger();
   const party = useParty();
-  console.log("Ok here's what we got: ", services, party);
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.issuer === party && c.payload.assetId.version === "0");
