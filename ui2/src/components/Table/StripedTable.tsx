@@ -53,7 +53,7 @@ const StripedTable = (props: {
                         )
                     :
                         <Table.Row className='empty-table' >
-                            <Table.Cell textAlign={'center'} colSpan={4}>
+                            <Table.Cell textAlign={'center'} colSpan={headings.length}>
                                 <i>{emptyLabel || 'none'}</i>
                             </Table.Cell>
                         </Table.Row>

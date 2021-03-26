@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel } from "@material-ui/core";
+import { Typography, Grid, Paper, Select, MenuItem, TextField, Button as MUIButton, MenuProps, FormControl, InputLabel } from "@material-ui/core";
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { render } from "../../components/Claims/render";
@@ -16,6 +16,9 @@ import DateFnsUtils from "@date-io/date-fns";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import Tile from "../../components/Tile/Tile";
+import FormErrorHandled from "../../components/Form/FormErrorHandled";
+import { Button } from 'semantic-ui-react';
 
 const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -82,6 +85,17 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };
   return (
     <Grid container direction="column" spacing={2}>
+      <h2>New Basic Instrument</h2>
+      <Tile header={<h5>Details</h5>}>
+        <FormErrorHandled onSubmit={requestOrigination}>
+          <Button.Group onChange={() => console.log("hey")}>
+            <Button active={isCall} onClick={() => setIsCall(true)}>Call</Button>
+            <Button.Or/>
+            <Button active={!isCall} onClick={() => setIsCall(false)}>Put</Button>
+          </Button.Group>
+        </FormErrorHandled>
+      </Tile>
+
       <Grid item xs={12}>
         <Typography variant="h3" className={classes.heading}>New Binary Option</Typography>
       </Grid>
@@ -130,7 +144,7 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
                       {accounts.filter(a => a.provider === service.payload.provider).map((c, i) => (<MenuItem key={i} value={c.id.label}>{c.id.label}</MenuItem>))}
                     </Select>
                   </FormControl>
-                  <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestOrigination}>Request Origination</Button>
+                  <MUIButton className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestOrigination}>Request Origination</MUIButton>
                 </Paper>
               </Grid>
             </Grid>

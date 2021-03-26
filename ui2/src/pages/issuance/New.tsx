@@ -31,6 +31,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
 
   const ledger = useLedger();
   const party = useParty();
+  console.log("Ok here's what we got: ", services, party);
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.issuer === party && c.payload.assetId.version === "0");
@@ -49,7 +50,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
   }, [el, asset, showAsset]);
 
   const service = customerServices[0];
-  if (!service) return (<></>);
+  if (!service) return (<div><h2>Party "{party}" can not request new issuances.</h2></div>);
 
   const requestIssuance = async () => {
     if (!asset || !account) return;

@@ -39,6 +39,9 @@ import { PublicIcon } from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
 import {WalletIcon} from "./icons/icons";
 import _ from "lodash";
+import { NewConvertibleNote } from "./pages/origination/NewConvertibleNote";
+import { NewBinaryOption } from "./pages/origination/NewBinaryOption";
+import { NewZeroClaim } from "./pages/origination/NewZeroClaim";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -157,6 +160,14 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
+              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
+              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
+              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
+              <Route exact key={"instruments"} path={"/app/registry/instruments/:contractId"} component={Instrument}/>
+              <Route key={"newzeroclaim"} path={"/app/registry/instruments/new/basic"} component={NewZeroClaim} />
+              <Route key={"newconvertiblenote"} path={"/app/registry/instruments/new/convertiblenote"} component={NewConvertibleNote} />
+              <Route key={"newbinaryoption"} path={"/app/registry/instruments/new/binaryoption"} component={NewBinaryOption} />
+              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />
