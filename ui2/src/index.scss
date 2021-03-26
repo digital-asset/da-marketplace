@@ -10,6 +10,8 @@
 @use '../../ui/src/overrides/overrides';
 @use 'themes/button';
 @use 'pages/custody/Assets';
+@use 'pages/custody/Account';
+@use 'pages/custody/New';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
@@ -176,8 +178,9 @@ html {
         @include App.app();
         @include Page.page();
         @include Login.login-screen();
-        @include button.ui-button();
-        @include Assets.assets;
+        @include Assets.assets();
+        @include Account.account();
+        @include New.new-account();
       }
     }
   }

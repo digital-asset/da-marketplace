@@ -1,88 +1,19 @@
 @use '../../themes/variables' as *;
 
 @mixin assets {
-    .assets {
-        animation: fadeIn .5s;
+  .assets {
+    animation: fadeIn .5s;
 
-        .provider-info {
-            display: flex;
-            align-items: baseline;
-
-            .p2 {
-                margin-left: $spacing-s;
-            }
-        }
-
-        .asset-sections {
-            margin-top: $spacing-m;
-        }
-
-        .deposit-row {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: $spacing-s;
-            margin: $spacing-s 0px;
-            background: var(--white);
-            border: 2px solid var(--grey2);
-            box-sizing: border-box;
-            border-radius: 2px;
-            height: fit-content;
-            width: 100%;
-
-            .overflow-menu {
-                display: none;
-            }
-
-            .deposit-row-body {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .deposit-info {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: baseline;
-                margin: 0;
-
-                button.ghost {
-                    margin-left: auto;
-                }
-
-                h3.bold {
-                    margin-right: $spacing-s;
-                }
-            }
-
-            .selected-form {
-                display: flex;
-                flex-direction: column;
-
-                .selected-form-heading {
-                    display: flex;
-                    flex-direction: row;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: $spacing-s 0;
-                    margin-top: $spacing-s;
-                }
-            }
-        }
-
-        @media screen and (max-width: 850px) {
-            .deposit-row {
-                .overflow-menu {
-                    display: flex;
-                    margin-left: auto;
-                }
-
-                button.ghost {
-                    display: none;
-                }
-            }
-        }
+    h2 {
+      margin-bottom: $spacing-m;
     }
+
+    table {
+      margin-bottom: $spacing-m;
+    }
+
+    .button.ghost {
+      margin-right: $spacing-s;
+    }
+  }
 }

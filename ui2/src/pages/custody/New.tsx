@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { FormControl, Grid, InputLabel, MenuItem, Paper, Select, Table, TableBody, TableRow, TextField } from "@material-ui/core";
 import Typography from "@material-ui/core/Typography";
-import Button from "@material-ui/core/Button";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { getName, publicParty } from "../../config";
 import useStyles from "../styles";
@@ -11,6 +10,10 @@ import { Party } from "@daml/types";
 import classnames from "classnames";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
 import { ServicePageProps } from "../common";
+import FormErrorHandled from "../../components/Form/FormErrorHandled";
+import {Button, Form, Header} from "semantic-ui-react";
+import {DropdownItemProps} from "semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem";
+import {IconClose} from "../../icons/icons";
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services }: RouteComponentProps & ServicePageProps<Service>) => {
   const classes = useStyles();
@@ -23,7 +26,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [provider, setProvider] = useState<Party>();
   const [accountName, setAccountName] = useState<string>("");
 
-  const canRequest = !!operator && !!provider && !!accountName
+  const canRequest = !!operator
+    && !!provider
+    && !!accountName
     && accounts.find(a => a.payload.account.provider === provider && a.payload.account.owner === party && a.payload.account.id.label === accountName) === undefined
 
   const requestAccount = async () => {
@@ -38,49 +43,62 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     history.push("/app/custody/requests");
   }
 
+  const operators : DropdownItemProps[] = services.map((c, i) => (
+    { key: i, text: c.payload.operator, value: c.payload.operator }
+  ));
+
+  const providerByOperator = (operator: string) : DropdownItemProps[] => services
+    .filter(s => s.payload.operator === operator)
+    .map((c, i) => (
+      { key: i, text: c.payload.provider, value: c.payload.provider }
+  ));
+
   return (
-    <Grid item xs={4}>
-      <Paper className={classes.paper}>
-        <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography variant="h2">New Account Request</Typography></Grid>
-        <Table size="small">
-          <TableBody>
-            <TableRow key={0} className={classes.tableRow}>
-              <FormControl className={classes.inputField} fullWidth>
-                <InputLabel>Operator</InputLabel>
-                <Select className={classes.fullWidth} value={operator} onChange={e => setOperator(e.target.value as Party)} >
-                  {services.map((c, i) => (<MenuItem key={i} value={c.payload.operator}>{c.payload.operator}</MenuItem>))}
-                </Select>
-              </FormControl>
-            </TableRow>
-            <TableRow key={1} className={classes.tableRow}>
-              <FormControl className={classes.inputField} fullWidth>
-                <InputLabel>Provider</InputLabel>
-                <Select className={classes.fullWidth} value={provider} disabled={!operator} onChange={e => setProvider(e.target.value as Party)} >
-                  {services.filter(s => s.payload.operator === operator).map((c, i) => (<MenuItem key={i} value={c.payload.provider}>{c.payload.provider}</MenuItem>))}
-                </Select>
-              </FormControl>
-            </TableRow>
-            <TableRow key={2} className={classes.tableRow}>
-              <FormControl className={classes.inputField} fullWidth>
-                <InputLabel>Customer</InputLabel>
-                <Select className={classes.fullWidth} value={party} disabled={true} >
-                  {services.map((c, i) => (<MenuItem key={i} value={c.payload.customer}>{c.payload.customer}</MenuItem>))}
-                </Select>
-              </FormControl>
-            </TableRow>
-            <TableRow key={3} className={classes.tableRow}>
-              <TextField className={classes.inputField} fullWidth label="Account name" type="text" onChange={e => setAccountName(e.target.value as string)} />
-            </TableRow>
-            <TableRow key={4} className={classes.tableRow}>
-              <TextField className={classes.inputField} fullWidth label="Version" type="text" value={0} disabled={true} />
-            </TableRow>
-            <TableRow key={5} className={classes.tableRow}>
-              <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={() => requestAccount()} >Request Account</Button>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </Paper>
-    </Grid>
+    <div className='new-account'>
+      <Header as='h2'>New Account Request</Header>
+      <FormErrorHandled onSubmit={() => requestAccount()} >
+        <Form.Select
+          label='Operator'
+          placeholder='Select...'
+          required
+          options={operators}
+          onChange={(_, change) => setOperator(change.value as Party)}
+        />
+        <Form.Select
+          label='Provider'
+          placeholder='Select...'
+          disabled={!operator}
+          required
+          options={operator ? providerByOperator(operator) : []}
+          onChange={(_, change) => setProvider(change.value as Party)}
+        />
+        <Form.Input
+          label='Customer'
+          placeholder={party}
+          readOnly
+        />
+        <Form.Input
+          label='Account Name'
+          placeholder='Provide an Account Name'
+          required
+          onChange={(_, change) => setAccountName(change.value as string)}
+        />
+        <Form.Input
+          label='Version'
+          placeholder='0'
+          readOnly
+          onChange={(_, change) => setAccountName(change.value as string)}
+        />
+        <div className='submit'>
+          <Button
+            type='submit'
+            className='ghost'
+            disabled={!canRequest}
+            content='Submit'/>
+          <a className='a2' onClick={() => history.goBack()}><IconClose/> Cancel</a>
+        </div>
+      </FormErrorHandled>
+    </div>
   );
 };
 

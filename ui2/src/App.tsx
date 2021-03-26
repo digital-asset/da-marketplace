@@ -62,13 +62,13 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => custodyService.length > 0,
     sidebar: [
-      { label: "Wallet", path: "/app/custody/assets", render: () => (<Assets services={custodyService} />), icon: (<WalletIcon />), children: [] },
-      // { label: "Accounts", path: "/app/custody/accounts", render: () => (<CustodyAccounts services={custodyService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Account Requests", path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />), icon: (<PlayArrow />), children: [] }
+      { label: "Wallet", path: "/app/custody/assets", render: () => (<Assets services={custodyService} />), icon: (<WalletIcon />), children: [] }
+      // { label: "Account Requests", path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
       { path: "/app/custody/accounts/new", render: () => (<CustodyNew services={custodyService} />) },
-      { path: "/app/custody/account/:contractId", render: () => (<Account services={custodyService} />) }
+      { path: "/app/custody/account/:contractId", render: () => (<Account services={custodyService} />) },
+      { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
     ]
   });
   entries.push({
@@ -107,10 +107,12 @@ const AppComponent = () => {
       { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), children: [] },
       { label: "New Instruments", path: "/app/instrument/new", render: () => (<InstrumentsNew />), icon: (<PublicIcon />), children: [] },
       { label: "Instrument Requests", path: "/app/instrument/requests", render: () => (<InstrumentsRequests />), icon: (<PublicIcon />), children: [] },
-
       { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), children: [] },
       { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PublicIcon />), children: [] },
       { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/registry/instruments/:contractId", component: Instrument }
     ]
   });
   entries.push({
@@ -157,11 +159,6 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
-              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
-              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
-              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
-              <Route key={"instruments"} path={"/app/registry/instruments/:contractId"} component={Instrument}/>
-              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />
