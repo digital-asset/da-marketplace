@@ -4,7 +4,6 @@ import { PlayArrow } from "@material-ui/icons";
 import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
-import { Accounts as CustodyAccounts } from "./pages/custody/Accounts";
 import { Account } from "./pages/custody/Account";
 import { useStreamQueries } from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
@@ -63,7 +62,6 @@ const AppComponent = () => {
     displayEntry: () => custodyService.length > 0,
     sidebar: [
       { label: "Wallet", path: "/app/custody/assets", render: () => (<Assets services={custodyService} />), icon: (<WalletIcon />), children: [] }
-      // { label: "Account Requests", path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
       { path: "/app/custody/accounts/new", render: () => (<CustodyNew services={custodyService} />) },
