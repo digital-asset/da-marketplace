@@ -52,7 +52,7 @@ const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout, showNotificati
       const tempLocation = sessionStorage.getItem('prevLocation');
       const tempPrevPath = sessionStorage.getItem('prevPath');
       if (tempLocation) setPrevLocation(tempLocation);
-      if(tempPrevPath) setPrevPath(tempPrevPath);
+      if (tempPrevPath) setPrevPath(tempPrevPath);
     }
   });
 
