@@ -498,8 +498,7 @@ const InviteAccept = (props: {
 
             onboardParty(role, partyLoginData, ledger, publicParty, operator)
                 .then(_ => {
-                    handleSetLoginStatus("Done")
-                    clearPartyRoleSelect(`${roleLabel(role)} onboarded successfully`)
+                    clearPartyRoleSelect(`Successfully assigned ${party.partyName} the role of ${roleLabel(role)}`)
                 })
                 .catch(_ => {
                     handleSetLoginStatus(`Error: could not onboard ${roleLabel(role)}`)
