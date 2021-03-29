@@ -44,13 +44,13 @@ const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout, showNotificati
     const tempLocation = historyState?.split('/');
     const tempPath = historyState;
     if (historyState) {
-      localStorage.setItem('prevLocation', tempLocation[tempLocation.length - 1]);
-      localStorage.setItem('prevPath', tempPath);
+      sessionStorage.setItem('prevLocation', tempLocation[tempLocation.length - 1]);
+      sessionStorage.setItem('prevPath', tempPath);
       setPrevLocation(tempLocation[tempLocation.length - 1]);
       setPrevPath(tempPath);
     } else {
-      const tempLocation = localStorage.getItem('prevLocation');
-      const tempPrevPath = localStorage.getItem('prevPath');
+      const tempLocation = sessionStorage.getItem('prevLocation');
+      const tempPrevPath = sessionStorage.getItem('prevPath');
       if (tempLocation) setPrevLocation(tempLocation);
       if(tempPrevPath) setPrevPath(tempPrevPath);
     }
@@ -71,10 +71,12 @@ const NotificationCenter: React.FC<Props> = ({ sideNav, onLogout, showNotificati
       <PageSection className='notification-center'>
         <div className='return-link'>
           <ArrowLeftIcon/>
-          <a className='a2' onClick={handleGoBack}> {`Return to ${prevLocation}`}</a>
+          <a className='a2' onClick={handleGoBack}>
+            {`Return to ${prevLocation?.split('-').map(e => e.charAt(0).toUpperCase() + e.slice(1)).join(' ')}`}
+          </a>
         </div>
         <div className='notification-center-notification'>
-          {notifications}
+          {notifications.length > 0 ? notifications : 'No Notifications'}
         </div>
       </PageSection>
     </Page>

@@ -59,7 +59,7 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                             <div >
                                 <NotificationCenterIcon />
                             </div>
-                            <div className={showNotificationAlert ? 'notifications-active' : ''}></div>
+                            <div className={classNames({ 'notifications-active': showNotificationAlert})}></div>
                         </Button>
                     </Menu.Item>
                     <Menu.Item className={classNames('log-out-button', { 'divider': !landingPage })}>

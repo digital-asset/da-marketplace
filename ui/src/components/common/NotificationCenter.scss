@@ -3,20 +3,20 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-m);
 
     a {
-      color: black;
-      margin-left: 5px;
+      color: var(--textcolor);
+      margin-left: var(--spacing-xs);
     }
   }
   .notification-center-notification {
     .notification {
       .message {
-        background-color: white;
+        background-color: var(--white);
 
         .header {
-          color: black;
+          color: var(--textcolor);
         }
 
         .ui.button.ghost.warning {
