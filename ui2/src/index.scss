@@ -1,20 +1,20 @@
 @use 'themes/colors';
+@use 'themes/button';
+@use 'themes/overrides';
+
 @use 'components/Tile/TilePage';
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
 @use 'pages/login/Login';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
-@use 'themes/button';
 @use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
-@use 'overrides/overrides';
-@use 'overrides/button';
 
 @use './icons/icons';
-@use './Apps';
+@use './App';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
