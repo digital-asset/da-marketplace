@@ -26,11 +26,7 @@ import SetupRequired from "./SetupRequired"
 import { useDablParties } from "./common/common"
 import {
     HashRouter as Router,
-    Route,
     useRouteMatch,
-    Redirect,
-    Switch,
-    Link,
 } from "react-router-dom"
 
 function useQuery() {
@@ -126,7 +122,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 
     const tiles =
         appInfos.length !== 0
-            ? deploymentMode === DeploymentMode.PROD_DABL // change back
+            ? deploymentMode === DeploymentMode.PROD_DABL
                 ? dablTiles
                 : localTiles
             : [<SetupRequired />]

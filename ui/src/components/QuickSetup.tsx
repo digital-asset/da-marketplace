@@ -58,6 +58,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     const [parties, setParties] = useState<PartyDetails[]>()
     const [selectedParty, setSelectedParty] = useState<PartyDetails>()
     const [selectedRole, setSelectedRole] = useState<MarketRole>()
+    const [successMessage, setSuccessMessage] = useState<string>()
 
     useEffect(() => {
         const parties = retrieveParties()
@@ -77,7 +78,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
     const partySelect = (
         <Form.Select
-            label={<p className='dark'>Party</p>}
+            label={<p className='dark select-label'>Party</p>}
             value={
                 selectedParty ? partyOptions.find(p => selectedParty.party === p.value)?.value : ""
             }
@@ -93,7 +94,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         <Form.Select
             disabled={!selectedParty}
             value={selectedRole ? roleOptions.find(p => selectedRole === p.value)?.value : ""}
-            label={<p className='dark'>Role</p>}
+            label={<p className='dark select-label'>Role</p>}
             placeholder='Select...'
             onChange={(_, data: any) => setSelectedRole(data.value)}
             options={roleOptions}
@@ -108,46 +109,43 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                     className='back-button ghost dark'
                     onClick={() => history.push("/")}
                 />
-                <div className='quick-setup-body'>
-                    <div className='select-form'>
-                        <p className='login-details dark'>Quick Setup</p>
-                        <Grid>
-                            <Grid.Row>
-                                <Grid.Column width={8}>{partySelect}</Grid.Column>
-                                <Grid.Column width={8}>{roleSelect}</Grid.Column>
-                            </Grid.Row>
-                        </Grid>
-                        {credentials && selectedRole && selectedParty ? (
-                            <DamlLedger
-                                reconnectThreshold={0}
-                                token={credentials.token}
-                                party={credentials.party}
-                                httpBaseUrl={httpBaseUrl}>
-                                <WellKnownPartiesProvider>
-                                    <QueryStreamProvider>
-                                        <RegistryLookupProvider>
-                                            <RoleSetup
-                                                selectedParty={selectedParty}
-                                                selectedRole={selectedRole}
-                                                clearPartyRoleSelect={clearPartyRoleSelect}
-                                            />
-                                        </RegistryLookupProvider>
-                                    </QueryStreamProvider>
-                                </WellKnownPartiesProvider>
-                            </DamlLedger>
-                        ) : (
-                            <Button
-                                fluid
-                                icon='right arrow'
-                                labelPosition='right'
-                                disabled={!selectedParty || !selectedRole}
-                                className='ghost dark submit-button'
-                                onClick={() => submitCredentials()}
-                                content={<p className='dark bold'>Log in</p>}
-                            />
-                        )}
-                    </div>
-                </div>
+                <p className='login-details dark'>Quick Setup</p>
+                <Grid>
+                    <Grid.Row>
+                        <Grid.Column width={8}>{partySelect}</Grid.Column>
+                        <Grid.Column width={8}>{roleSelect}</Grid.Column>
+                    </Grid.Row>
+                </Grid>
+                {credentials && selectedRole && selectedParty ? (
+                    <DamlLedger
+                        reconnectThreshold={0}
+                        token={credentials.token}
+                        party={credentials.party}
+                        httpBaseUrl={httpBaseUrl}>
+                        <WellKnownPartiesProvider>
+                            <QueryStreamProvider>
+                                <RegistryLookupProvider>
+                                    <RoleSetup
+                                        selectedParty={selectedParty}
+                                        selectedRole={selectedRole}
+                                        clearPartyRoleSelect={clearPartyRoleSelect}
+                                    />
+                                </RegistryLookupProvider>
+                            </QueryStreamProvider>
+                        </WellKnownPartiesProvider>
+                    </DamlLedger>
+                ) : (
+                    <Button
+                        fluid
+                        icon='right arrow'
+                        labelPosition='right'
+                        disabled={!selectedParty || !selectedRole}
+                        className='ghost dark submit-button'
+                        onClick={() => submitCredentials()}
+                        content={<p className='dark bold'>Log in</p>}
+                    />
+                )}
+                {!!successMessage && <p className='dark'>{successMessage}</p>}
             </div>
         </div>
     )
@@ -166,7 +164,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         if (creds) {
             setCredentials(creds)
         } else {
-            clearPartyRoleSelect()
+            clearPartyRoleSelect("Error: invalid credentials")
         }
     }
 
@@ -177,10 +175,12 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         setSelectedParty(newParty)
         setSelectedRole(undefined)
         setCredentials(undefined)
+        setSuccessMessage(undefined)
         onLogin(undefined)
     }
 
-    function clearPartyRoleSelect() {
+    function clearPartyRoleSelect(message?: string) {
+        setSuccessMessage(message)
         setSelectedParty(undefined)
         setSelectedRole(undefined)
         setCredentials(undefined)
@@ -208,7 +208,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 const RoleSetup = (props: {
     selectedParty: PartyDetails
     selectedRole: MarketRole
-    clearPartyRoleSelect: () => void
+    clearPartyRoleSelect: (message: string) => void
 }) => {
     const { selectedParty, selectedRole, clearPartyRoleSelect } = props
 
@@ -234,6 +234,15 @@ const RoleSetup = (props: {
     useEffect(() => {
         const role = userContracts[0]?.contractData?.currentRole
         if (role != selectedRole) {
+            const changeRole = async () => {
+                const key = { _1: operator, _2: user }
+                const args = { newRole: selectedRole }
+
+                await ledger
+                    .exerciseByKey(User.User_RequestRoleChange, key, args)
+                    .then(_ => setCurrentRole(selectedRole))
+            }
+
             changeRole()
         } else {
             setCurrentRole(role)
@@ -254,7 +263,6 @@ const RoleSetup = (props: {
                 {selectedParty.partyName} is already assigned the role of {roleLabel(selectedRole)}.
             </p>
         )
-
     } else if (currentRole) {
         if (currentRole === selectedRole) {
             return (
@@ -296,26 +304,25 @@ const RoleSetup = (props: {
         const key = { _1: operator, _2: user }
         const args = { newRole: selectedRole }
 
-        await ledger
+        return await ledger
             .exerciseByKey(User.User_RequestRoleChange, key, args)
             .then(_ => {
-                setCurrentRole(selectedRole)
+                return selectedRole
             })
             .catch(_ => {
-                setCurrentRole(undefined)
+                return undefined
             })
     }
 }
 
 async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
-    return await ledger
-        .create(UserSession, { user, role, operator })
+    return await ledger.create(UserSession, { user, role, operator })
 }
 
 const InviteAccept = (props: {
     party: PartyDetails
     role: MarketRole
-    clearPartyRoleSelect: (data: IPartyLoginData) => void
+    clearPartyRoleSelect: (message: string) => void
 }) => {
     const { party, role, clearPartyRoleSelect } = props
 
@@ -492,7 +499,7 @@ const InviteAccept = (props: {
             onboardParty(role, partyLoginData, ledger, publicParty, operator)
                 .then(_ => {
                     handleSetLoginStatus("Done")
-                    clearPartyRoleSelect(partyLoginData)
+                    clearPartyRoleSelect(`${roleLabel(role)} onboarded successfully`)
                 })
                 .catch(_ => {
                     handleSetLoginStatus(`Error: could not onboard ${roleLabel(role)}`)

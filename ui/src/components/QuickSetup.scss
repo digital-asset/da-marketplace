@@ -11,67 +11,23 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            max-width: 500px;
+            min-height: 230px;
+            background-color: var(--cool-grey-10);
+            padding: $spacing-m;
 
-            p {
+            p.select-label{
                 padding-bottom: $spacing-xs;
-
-                &.login-details {
-                    padding: $spacing-s 0;
-                }
             }
 
-            .quick-setup-body {
-                display: flex;
-                flex-direction: row;
-                justify-content: space-evenly;
-                margin-top: $spacing-m;
-            }
-
-            .select-form {
-                background-color: var(--cool-grey-10);
-                padding: $spacing-m;
-                margin-right: $spacing-m;
-                min-height: 230px;
-                max-width: 500px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-
-            .logged-in-parties-table-tile {
-                background-color: var(--cool-grey-10);
-                min-height: 230px;
-
-                .logged-in-parties-table {
-                    background-color: var(--cool-grey-10);
-                    color: var(--white);
-                    width: 500px;
-                    border-collapse: collapse;
-                    padding-left: $spacing-s;
-                }
-
-                .ui.table {
-                    thead {
-                        border-bottom: 2px solid var(--cool-grey-20);
-                    }
-                    td {
-                        padding-left: $spacing-m;
-                    }
-                }
-            }
-
-            .add-role .confirm-action-buttons {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-evenly;
+            p.login-details {
+                padding: $spacing-s 0;
             }
 
             button.submit-button {
+                margin: $spacing-s;
                 text-align: left;
-                min-height: 42px;
-                display: flex
+                height: auto;
             }
 
             .login-status {
