@@ -1,113 +1,106 @@
 @mixin quick-setup {
     .quick-setup {
-        background-color: var(--cool-grey-20);
         display: flex;
         align-items: center;
         justify-content: center;
         width: 100%;
         height: 100%;
+        background-color: var(--cool-grey-20);
 
         .quick-setup-tile {
             display: flex;
             flex-direction: column;
             align-items: center;
 
-        p {
-            padding-bottom: $spacing-xs;
+            p {
+                padding-bottom: $spacing-xs;
 
-            &.login-details {
-                padding: $spacing-s 0;
+                &.login-details {
+                    padding: $spacing-s 0;
+                }
             }
-        }
 
-        .select-form {
-            background-color: var(--cool-grey-10);
-            padding: $spacing-m;
-            margin-right: $spacing-m;
-            min-height: 230px;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .logged-in-parties-table-tile {
-            background-color: var(--cool-grey-10);
-            min-height: 230px;
-        }
-
-        .logged-in-parties-table {
-            background-color: var(--cool-grey-10);
-            color: var(--white);
-            width: 500px;
-            border-collapse: collapse;
-            padding-left: $spacing-s;
-        }
-
-        .ui.table {
-            thead {
-                border-bottom: 2px solid var(--cool-grey-20);
+            .quick-setup-body {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-evenly;
+                margin-top: $spacing-m;
             }
-            td {
-                padding-left: $spacing-m;
-            }
-        }
 
-        .quick-setup-body {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-evenly;
-            margin-top: $spacing-m;
-        }
-
-        .change-role {
-            .role-change-warning {
-                color: var(--white);
-                margin-bottom: $spacing-m;
+            .select-form {
+                background-color: var(--cool-grey-10);
+                padding: $spacing-m;
+                margin-right: $spacing-m;
+                min-height: 230px;
+                max-width: 500px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
             }
-            .confirm-action-buttons {
+
+            .logged-in-parties-table-tile {
+                background-color: var(--cool-grey-10);
+                min-height: 230px;
+
+                .logged-in-parties-table {
+                    background-color: var(--cool-grey-10);
+                    color: var(--white);
+                    width: 500px;
+                    border-collapse: collapse;
+                    padding-left: $spacing-s;
+                }
+
+                .ui.table {
+                    thead {
+                        border-bottom: 2px solid var(--cool-grey-20);
+                    }
+                    td {
+                        padding-left: $spacing-m;
+                    }
+                }
+            }
+
+            .add-role .confirm-action-buttons {
                 display: flex;
                 flex-direction: row;
                 align-items: center;
                 justify-content: space-evenly;
             }
-        }
 
-        button.go-button {
-            text-align: left;
-            min-height: 42px;
-            display: flex
-        }
-
-        .login-status {
-            padding: $spacing-l;
-
-            .ui.loader {
-                position: static;
-                transform: translateX(-0%) translateY(-0%);
+            button.submit-button {
+                text-align: left;
+                min-height: 42px;
+                display: flex
             }
-        }
 
-        button.back-button {
-            margin-right: auto;
-        }
+            .login-status {
+                padding: $spacing-l;
 
-        .ui.grid {
-            display: flex;
-            flex-direction: column;
+                .ui.loader {
+                    position: static;
+                    transform: translateX(-0%) translateY(-0%);
+                }
+            }
 
-            .field {
+            button.back-button {
+                margin-right: auto;
+            }
+
+            .ui.grid {
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
 
-                .ui.input > input {
-                    width: 198px;
+                .field {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+
+                    .ui.input > input {
+                        width: 198px;
+                    }
                 }
             }
         }
     }
-        }
-
 }

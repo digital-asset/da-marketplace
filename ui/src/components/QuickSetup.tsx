@@ -5,7 +5,6 @@ import { useHistory } from "react-router-dom"
 import DamlLedger, { useLedger, useParty } from "@daml/react"
 
 import Ledger from "@daml/ledger"
-import { useWellKnownParties } from "@daml/hub-react/lib"
 
 import { PartyDetails, WellKnownPartiesProvider } from "@daml/hub-react"
 import { retrieveParties } from "../Parties"
@@ -15,21 +14,13 @@ import { CustodianInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Cus
 import { ExchangeInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Exchange"
 import { InvestorInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Investor"
 import { IssuerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Issuer"
-import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
-import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
-import { RegistryLookupProvider, RegistryLookup } from "./common/RegistryLookup"
-import { IconInformation } from "../icons/Icons"
-import {
-    RegisteredExchange,
-    RegisteredCustodian,
-    RegisteredBroker,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredCCP,
-} from "@daml.js/da-marketplace/lib/Marketplace/Registry"
 
+import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
+
+import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 import { User } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 
+import { RegistryLookupProvider, useRegistryLookup } from "./common/RegistryLookup"
 import { halfSecondPromise } from "./common/utils"
 import { roleLabel } from "./common/utils"
 
@@ -46,10 +37,9 @@ import Credentials, { retrieveCredentials } from "../Credentials"
 import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config"
 
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from "../../src/automation"
-import { useRegistryLookup } from "./common/RegistryLookup"
 
 interface IPartyLoginData extends PartyDetails {
-    roles: MarketRole[]
+    role: MarketRole
     name: string
     location: string
     title?: string
@@ -57,18 +47,17 @@ interface IPartyLoginData extends PartyDetails {
     deployMatchingEngine?: boolean
 }
 
-// get everything from the operator to see who has signed in
 const MARKETROLES = ["CustodianRole", "IssuerRole", "ExchangeRole", "InvestorRole", "BrokerRole"]
 
 const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => {
     const { onLogin } = props
+
     const history = useHistory()
 
+    const [credentials, setCredentials] = useState<Credentials | undefined>()
     const [parties, setParties] = useState<PartyDetails[]>()
-    const [loggedInPartyData, setLoggedInPartyData] = useState<IPartyLoginData[]>([])
     const [selectedParty, setSelectedParty] = useState<PartyDetails>()
     const [selectedRole, setSelectedRole] = useState<MarketRole>()
-    const [credentials, setCredentials] = useState<Credentials | undefined>()
 
     useEffect(() => {
         const parties = retrieveParties()
@@ -140,8 +129,6 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                                             <RoleSetup
                                                 selectedParty={selectedParty}
                                                 selectedRole={selectedRole}
-                                                loggedInPartyData={loggedInPartyData}
-                                                saveLoggedInParty={handleNewLoggedInParty}
                                                 clearPartyRoleSelect={clearPartyRoleSelect}
                                             />
                                         </RegistryLookupProvider>
@@ -154,14 +141,12 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                                 icon='right arrow'
                                 labelPosition='right'
                                 disabled={!selectedParty || !selectedRole}
-                                className='ghost dark go-button'
+                                className='ghost dark submit-button'
                                 onClick={() => submitCredentials()}
-                                content={<p className='dark bold'>Go</p>}
+                                content={<p className='dark bold'>Log in</p>}
                             />
                         )}
                     </div>
-
-                    <LoggedInPartiesTable data={loggedInPartyData} />
                 </div>
             </div>
         </div>
@@ -179,8 +164,9 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         const creds = await confirmCredentials(3, token)
 
         if (creds) {
-            console.log("confirmed credentials, showing DamlLedger")
             setCredentials(creds)
+        } else {
+            clearPartyRoleSelect()
         }
     }
 
@@ -190,18 +176,20 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         }
         setSelectedParty(newParty)
         setSelectedRole(undefined)
-        onLogin(undefined)
         setCredentials(undefined)
+        onLogin(undefined)
     }
 
     function clearPartyRoleSelect() {
-        console.log("clearing roles")
         setSelectedParty(undefined)
         setSelectedRole(undefined)
         setCredentials(undefined)
     }
 
-    async function confirmCredentials(retries: number, token: string): Promise<Credentials> {
+    async function confirmCredentials(
+        retries: number,
+        token: string
+    ): Promise<Credentials | undefined> {
         const creds = retrieveCredentials()
 
         if (creds && creds.token === token) {
@@ -213,98 +201,46 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
             return confirmCredentials(retries - 1, token)
         }
 
-        throw new Error("Could not find credentials")
+        return undefined
     }
-
-    function handleNewLoggedInParty(data: IPartyLoginData) {
-        const currentData = loggedInPartyData.find(d => d.party === data.party)
-
-        if (currentData) {
-            let newLoggedInPartyData = loggedInPartyData
-            newLoggedInPartyData.splice(loggedInPartyData.indexOf(currentData), 1, data)
-            setLoggedInPartyData(newLoggedInPartyData)
-        } else {
-            setLoggedInPartyData([...loggedInPartyData, data])
-        }
-    }
-}
-
-const LoggedInPartiesTable = (props: { data?: IPartyLoginData[] }) => {
-    const { data } = props
-
-    return (
-        <div className='logged-in-parties-table-tile'>
-            <Table basic className='logged-in-parties-table'>
-                <Table.Header>
-                    <Table.Row>
-                        <Table.Cell>Party</Table.Cell>
-                        <Table.Cell>Role</Table.Cell>
-                        <Table.Cell>Name</Table.Cell>
-                        <Table.Cell>Location</Table.Cell>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {!data || data.length == 0 ? (
-                        <Table.Row>
-                            <Table.Cell colspan={4} textAlign='center'>
-                                <i>Start logging in parties to view registry data.</i>
-                            </Table.Cell>
-                        </Table.Row>
-                    ) : (
-                        data.map(p => (
-                            <Table.Row>
-                                <Table.Cell>{p.name}</Table.Cell>
-                                <Table.Cell>{p.roles.map(r => roleLabel(r)).join(", ")}</Table.Cell>
-                                <Table.Cell>{p.name}</Table.Cell>
-                                <Table.Cell>{p.location}</Table.Cell>
-                            </Table.Row>
-                        ))
-                    )}
-                </Table.Body>
-            </Table>
-        </div>
-    )
 }
 
 const RoleSetup = (props: {
     selectedParty: PartyDetails
     selectedRole: MarketRole
-    loggedInPartyData: IPartyLoginData[]
-    saveLoggedInParty: (data: IPartyLoginData) => void
     clearPartyRoleSelect: () => void
 }) => {
+    const { selectedParty, selectedRole, clearPartyRoleSelect } = props
+
     const user = useParty()
     const ledger = useLedger()
     const wsLoading = useLoading()
-
-    const userSessions = useContractQuery(UserSession)
-    const userContracts = useContractQuery(User)
-    const [currentRoleChanged, setCurrentRoleChanged] = useState(false)
+    const operator = useOperator()
     const registry = useRegistryLookup()
-
-    const currentRole = userContracts[0]?.contractData?.currentRole
 
     const { loading, error } = useDablParties()
 
-    const operator = useOperator()
+    const userSessions = useContractQuery(UserSession)
+    const userContracts = useContractQuery(User)
 
-    const {
-        selectedParty,
-        selectedRole,
-        saveLoggedInParty,
-        loggedInPartyData,
-        clearPartyRoleSelect,
-    } = props
-
-    console.log("websocket loading", wsLoading)
-    console.log("parties loading", loading)
+    const [currentRole, setCurrentRole] = useState<MarketRole>()
 
     useEffect(() => {
-        if (!wsLoading && !loading && userSessions.length === 0) {
+        if (!wsLoading && !loading && userSessions.length === 0 && userContracts.length === 0) {
             console.log("creating user session")
             handleCreateUserSession()
         }
     }, [loading, wsLoading])
+
+    useEffect(() => {
+        const role = userContracts[0]?.contractData?.currentRole
+        if (role != selectedRole) {
+            changeRole()
+        } else {
+            console.log("SETTING CURRENT ROLE ", role)
+            setCurrentRole(role)
+        }
+    }, [userContracts, selectedRole])
 
     async function handleCreateUserSession() {
         console.log("waiting.. ")
@@ -316,242 +252,106 @@ const RoleSetup = (props: {
         }
     }
 
-    useEffect(() => {
-        if (!!currentRole) {
-            console.log("current role changed", currentRole)
-        }
-    }, [currentRole])
-
     if (loading || wsLoading) {
         return <p className='dark'>Loading contracts and parties...</p>
     }
 
     if (error) {
-        return <p className='dark'>{error}</p>
+        return <p className='dark'>Error: {error}</p>
     }
 
-    if (currentRole) {
+    if (findRegisteredParty()) {
+        return (
+            <p className='dark'>
+                {selectedParty.partyName} is already assigned the role of {roleLabel(selectedRole)}.
+            </p>
+        )
+
+    } else if (currentRole) {
+        // if user contract
         if (currentRole === selectedRole) {
-            const registeredPartyRole = checkRegistry()
-            if (registeredPartyRole) {
-                return (
-                    <p className='dark'>
-                        {selectedParty.partyName} is already assigned the role of{" "}
-                        {roleLabel(selectedRole)}.
-                    </p>
-                )
-            }
+            // if the selected role == user contract role and not already registerd...
             return (
                 <InviteAccept
                     party={selectedParty}
                     role={selectedRole}
-                    saveLoggedInParty={saveLoggedInParty}
                     clearPartyRoleSelect={clearPartyRoleSelect}
-                />
-            )
-        } else if (!currentRoleChanged) {
-            return (
-                <AddRole
-                    role={selectedRole}
-                    loggedInPartyData={loggedInPartyData}
-                    saveLoggedInParty={saveLoggedInParty}
-                    clearPartyRoleSelect={clearPartyRoleSelect}
-                    setCurrentRoleChanged={setCurrentRoleChanged}
                 />
             )
         }
     }
 
-    return <p className='dark'>Loading current role...</p>
+    return <p className='dark'>Loading role contract...</p>
 
-    function checkRegistry() {
+    function findRegisteredParty() {
         const party = selectedParty.party
         switch (selectedRole) {
             case MarketRole.InvestorRole:
+                console.log("found investor")
+
                 return !!registry.investorMap.get(party)
 
             case MarketRole.IssuerRole:
+                console.log("found issuer")
+
                 return !!registry.issuerMap.get(party)
 
             case MarketRole.BrokerRole:
+                console.log("found broker")
+
                 return !!registry.brokerMap.get(party)
 
             case MarketRole.ExchangeRole:
+                console.log("found exchange")
+
                 return !!registry.exchangeMap.get(party)
 
             case MarketRole.CustodianRole:
+                console.log("found custodian")
+
                 return !!registry.custodianMap.get(party)
 
             default:
                 return false
         }
     }
-}
 
-const AddRole = (props: {
-    role: MarketRole
-    clearPartyRoleSelect: () => void
-    loggedInPartyData: IPartyLoginData[]
-    saveLoggedInParty: (data: IPartyLoginData) => void
-    setCurrentRoleChanged: (bool: boolean) => void
-}) => {
-    const {
-        role,
-        loggedInPartyData,
-        saveLoggedInParty,
-        clearPartyRoleSelect,
-        setCurrentRoleChanged,
-    } = props
-
-    // const [currentData, setCurrentData] = useState(loggedInPartyData.find(d => d.party === user))
-    // const [showAddData, setShowAddData] = useState(false)
-
-    const ledger = useLedger()
-    const user = useParty()
-
-    const { parties } = useDablParties()
-
-    const operator = parties.userAdminParty
-    const publicParty = parties.userAdminParty
-
-    const args = { newRole: role }
-    const currentData = loggedInPartyData.find(d => d.party === user)
-
-    const assignRole = async () => {
+    async function changeRole() {
         const key = { _1: operator, _2: user }
+        const args = { newRole: selectedRole }
+
         await ledger
             .exerciseByKey(User.User_RequestRoleChange, key, args)
             .then(_ => {
-                setCurrentRoleChanged(true)
-                if (!!currentData) {
-                    const newLoginData: IPartyLoginData = {
-                        ...currentData,
-                        roles: [...currentData.roles, role],
-                    }
-                    onboardParty(role, newLoginData, ledger, publicParty, operator)
-                        .then(_ => {
-                            saveLoggedInParty(newLoginData)
-                            clearPartyRoleSelect()
-                        })
-                        .catch(err => {
-                            console.log("EERROORRR onboarding")
-                            console.log(err)
-                        })
-                }
+                setCurrentRole(selectedRole)
+                console.log("role changed")
             })
-            .catch(err => console.log(err))
+            .catch(_ => {
+                setCurrentRole(undefined)
+                console.log("ERROR CHANGING ROLE")
+            })
     }
+}
 
-    // function handleClick() {
-    //     if (role === MarketRole.IssuerRole && (!currentData?.issuerId || !currentData?.title)) {
-    //         setShowAddData(true)
-    //     }
-    //     if (role === MarketRole.ExchangeRole && deploymentMode === DeploymentMode.PROD_DABL) {
-    //         setShowAddData(true)
-    //     } else {
-    //         assignRole()
-    //     }
-    // }
-
-    return (
-        <div className='change-role'>
-            {/* {showAddData ? (
-                <>
-                    <p className='dark'>
-                        Wait! This role needs a bit more information to be onboarded.
-                    </p>
-                    {role === MarketRole.IssuerRole ? (
-                        <Grid>
-                            <Grid.Row>
-                                <Grid.Column width={8}>
-                                    <Form.Input
-                                        label={<p className='dark'>Title</p>}
-                                        value={currentData?.title}
-                                        placeholder='title'
-                                        onChange={e => currentData &&
-                                            setCurrentData({
-                                                ...currentData,
-                                                title: e.currentTarget.value,
-                                            })
-                                        }
-                                    />
-                                </Grid.Column>
-                                <Grid.Column width={8}>
-                                    <Form.Input
-                                        label={<p className='dark'>Issuer Id</p>}
-                                        value={currentData?.issuerId}
-                                        placeholder='issuer Id'
-                                        onChange={e => currentData &&
-                                            setCurrentData({
-                                                ...currentData,
-                                                issuerId: e.currentTarget.value,
-                                            })
-                                        }
-                                    />
-                                </Grid.Column>
-                            </Grid.Row>
-                            <Button
-                                disabled={!currentData?.issuerId || !currentData?.title}
-                                onClick={() => assignRole()}>
-                                assign role
-                            </Button>
-                        </Grid>
-                    ) : (
-                        deploymentMode === DeploymentMode.PROD_DABL &&
-                        role === MarketRole.ExchangeRole && (
-                            <>
-                                <Form.Checkbox
-                                    defaultChecked
-                                    label={
-                                        <label>
-                                            <p className='dark p2'>
-                                                Deploy matching engine {<br />} (uncheck if you plan
-                                                to use the Exberry Integration)
-                                            </p>
-                                        </label>
-                                    }
-                                    onChange={event => currentData &&
-                                        setCurrentData({
-                                            ...currentData,
-                                            deployMatchingEngine: !currentData?.deployMatchingEngine,
-                                        })
-                                    }
-                                />
-                                <Button onClick={() => assignRole()}>assign role</Button>
-                            </>
-                        )
-                    )}
-                </>
-            ) : ( */}
-                <>
-                    <p className='dark login-details'>
-                        You have already assigned a role to {currentData?.name}, would you like to
-                        assign an additional role?
-                    </p>
-                    <div className='confirm-action-buttons'>
-                        <Button className='ghost dark' onClick={() => assignRole()}>
-                            Yes, add {roleLabel(role)} role
-                        </Button>
-                        <Button className='ghost dark' onClick={() => clearPartyRoleSelect()}>
-                            No, dont add this role
-                        </Button>
-                    </div>
-                </>
-            {/* )} */}
-        </div>
-    )
+async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
+    return await ledger
+        .create(UserSession, { user, role, operator })
+        .then(async () => {
+            console.log("successfully crearted user session")
+        })
+        .catch(_ => {
+            console.log("failed to create user session")
+        })
 }
 
 const InviteAccept = (props: {
     party: PartyDetails
     role: MarketRole
-    saveLoggedInParty: (data: IPartyLoginData) => void
-    clearPartyRoleSelect: () => void
+    clearPartyRoleSelect: (data: IPartyLoginData) => void
 }) => {
-    const { party, role, saveLoggedInParty, clearPartyRoleSelect } = props
+    const { party, role, clearPartyRoleSelect } = props
 
     const ledger = useLedger()
-    const wsPartyLoading = usePartyLoading()
     const publicParty = useDablParties().parties.publicParty
     const operator = useDablParties().parties.userAdminParty
 
@@ -566,13 +366,11 @@ const InviteAccept = (props: {
 
     const [partyLoginData, setPartyLoginData] = useState<IPartyLoginData>({
         ...party,
-        roles: [role],
+        role: role,
         name: party.partyName,
         location: "NYC",
         deployMatchingEngine: true,
     })
-
-    console.log("ws party loading:", wsPartyLoading)
 
     if (partyLoggingIn) {
         return (
@@ -622,7 +420,7 @@ const InviteAccept = (props: {
                     </Grid.Column>
                 </Grid.Row>
 
-                {getCurrentRole(partyLoginData) === MarketRole.IssuerRole ? (
+                {partyLoginData.role === MarketRole.IssuerRole ? (
                     <Grid.Row>
                         <Grid.Column width={8}>
                             <Form.Input
@@ -653,7 +451,7 @@ const InviteAccept = (props: {
                     </Grid.Row>
                 ) : (
                     deploymentMode === DeploymentMode.PROD_DABL &&
-                    getCurrentRole(partyLoginData) === MarketRole.ExchangeRole && (
+                    partyLoginData.role === MarketRole.ExchangeRole && (
                         <Grid.Row>
                             <Grid.Column width={8}>
                                 <Form.Checkbox
@@ -683,9 +481,9 @@ const InviteAccept = (props: {
                 icon='right arrow'
                 labelPosition='right'
                 disabled={!partyLoginData}
-                className='ghost dark go-button'
-                onClick={() => loginParty()}
-                content={<p className='dark bold'>Log in</p>}
+                className='ghost dark submit-button'
+                onClick={() => setupRole()}
+                content={<p className='dark bold'>Set up role</p>}
             />
         </>
     )
@@ -711,37 +509,26 @@ const InviteAccept = (props: {
     }
 
     async function handleSetLoginStatus(status: string) {
-        console.log(status)
         await halfSecondPromise()
         setLoginStatus(status)
     }
 
-    // the last role in the list is the current role
-    function getCurrentRole(data: IPartyLoginData) {
-        return data.roles.reverse()[0]
-    }
-
-    async function loginParty() {
+    async function setupRole() {
         setPartyLoggingIn(true)
 
-        const roleInvite = getRoleInvitation(role, 3)
-
-        if (!roleInvite) {
-            console.log("no invite")
-            handleSetLoginStatus("error no invite")
+        if (!getRoleInvitation(role, 3)) {
+            handleSetLoginStatus(`Error: could not find ${roleLabel(role)}Invitation contract`)
             setPartyLoggingIn(false)
         } else {
-            handleSetLoginStatus(`onboarding ${role}`)
+            handleSetLoginStatus(`Onboarding ${roleLabel(role)}...`)
 
             onboardParty(role, partyLoginData, ledger, publicParty, operator)
                 .then(_ => {
-                    saveLoggedInParty(partyLoginData)
-                    handleSetLoginStatus("done")
-                    clearPartyRoleSelect()
+                    handleSetLoginStatus("Done")
+                    clearPartyRoleSelect(partyLoginData)
                 })
-                .catch(err => {
-                    console.log(err)
-                    handleSetLoginStatus("login failed")
+                .catch(_ => {
+                    handleSetLoginStatus(`Error: could not onboard ${roleLabel(role)}`)
                 })
         }
     }
@@ -749,144 +536,90 @@ const InviteAccept = (props: {
 
 async function onboardParty(
     role: MarketRole,
-    partyLoginData: IPartyLoginData,
+    data: IPartyLoginData,
     ledger: Ledger,
     publicParty: string,
     operator: string
 ) {
-    console.log("onboarding ", role)
+    const key = { _1: operator, _2: data.party }
+    let args = {
+        name: data.name,
+        location: data.location,
+    }
+
     switch (role) {
-        case MarketRole.InvestorRole:
-            onboardInvestor(operator, ledger, partyLoginData)
-            break
-
-        case MarketRole.IssuerRole:
-            onboardIssuer(operator, ledger, partyLoginData)
-            break
-
         case MarketRole.BrokerRole:
-            onboardBroker(operator, ledger, partyLoginData, publicParty)
+            if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
+                deployTrigger(
+                    TRIGGER_HASH,
+                    MarketplaceTrigger.BrokerTrigger,
+                    data.token,
+                    publicParty
+                )
+            }
+
+            await ledger
+                .exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
+                .catch(err => console.error(err))
             break
 
         case MarketRole.ExchangeRole:
-            onboardExchange(operator, ledger, partyLoginData, publicParty)
+            if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
+                deployTrigger(
+                    TRIGGER_HASH,
+                    MarketplaceTrigger.ExchangeTrigger,
+                    data.token,
+                    publicParty
+                )
+                if (!!data.deployMatchingEngine) {
+                    deployTrigger(
+                        TRIGGER_HASH,
+                        MarketplaceTrigger.MatchingEngine,
+                        data.token,
+                        publicParty
+                    )
+                }
+            }
+
+            await ledger
+                .exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args)
+                .catch(err => console.error(err))
             break
 
         case MarketRole.CustodianRole:
-            onboardCustodian(operator, ledger, partyLoginData, publicParty)
+            if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
+                deployTrigger(
+                    TRIGGER_HASH,
+                    MarketplaceTrigger.CustodianTrigger,
+                    data.token,
+                    publicParty
+                )
+            }
+
+            await ledger
+                .exerciseByKey(CustodianInvitation.CustodianInvitation_Accept, key, args)
+                .catch(err => console.error(err))
+            break
+
+        case MarketRole.InvestorRole:
+            await ledger
+                .exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, {
+                    ...args,
+                    isPublic: true,
+                })
+                .catch(err => console.error(err))
+            break
+
+        case MarketRole.IssuerRole:
+            await ledger
+                .exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, {
+                    ...args,
+                    title: data.title || "",
+                    issuerID: data.issuerId || "",
+                })
+                .catch(err => console.error(err))
             break
     }
-}
-
-async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
-    return await ledger
-        .create(UserSession, { user, role, operator })
-        .then(async () => {
-            console.log("successfully crearted user session")
-        })
-        .catch(_ => {
-            console.log("failed to create user session")
-        })
-}
-
-async function onboardInvestor(operator: string, ledger: Ledger, data: IPartyLoginData) {
-    const key = { _1: operator, _2: data.party }
-    const args = {
-        name: data.name,
-        location: data.location,
-        isPublic: true,
-    }
-    console.log("onboarding investor ", data.name)
-
-    await ledger
-        .exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
-        .catch(err => console.error(err))
-}
-
-async function onboardIssuer(operator: string, ledger: Ledger, data: IPartyLoginData) {
-
-    const key = { _1: operator, _2: data.party }
-    const args = {
-        name: data.name,
-        location: data.location,
-        title: data.title || 'title',
-        issuerID: data.issuerId || 'id',
-    }
-
-    console.log("onboarding issuer ", data.name)
-
-    await ledger
-        .exerciseByKey(IssuerInvitation.IssuerInvitation_Accept, key, args)
-        .catch(err => console.error(err))
-}
-
-async function onboardBroker(
-    operator: string,
-    ledger: Ledger,
-    data: IPartyLoginData,
-    publicParty: string
-) {
-    console.log("onboarding boker ", data.name)
-
-    if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, data.token, publicParty)
-    }
-    const key = { _1: operator, _2: data.party }
-    const args = {
-        name: data.name,
-        location: data.location,
-    }
-
-    await ledger
-        .exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
-        .catch(err => console.error(err))
-}
-
-async function onboardExchange(
-    operator: string,
-    ledger: Ledger,
-    data: IPartyLoginData,
-    publicParty: string
-) {
-    console.log("onboarding exchange ", data.name)
-
-    if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.ExchangeTrigger, data.token, publicParty)
-        if (!!data.deployMatchingEngine) {
-            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.MatchingEngine, data.token, publicParty)
-        }
-    }
-    const key = { _1: operator, _2: data.party }
-    const args = {
-        name: data.name,
-        location: data.location,
-    }
-
-    await ledger
-        .exerciseByKey(ExchangeInvitation.ExchangeInvitation_Accept, key, args)
-        .catch(err => console.error(err))
-}
-
-async function onboardCustodian(
-    operator: string,
-    ledger: Ledger,
-    data: IPartyLoginData,
-    publicParty: string
-) {
-    console.log("onboarding custodian ", data.name)
-
-    if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
-        deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CustodianTrigger, data.token, publicParty)
-    }
-    const key = { _1: operator, _2: data.party }
-    const args = {
-        name: data.name,
-        location: data.location,
-    }
-
-    await ledger
-        .exerciseByKey(CustodianInvitation.CustodianInvitation_Accept, key, args)
-        .catch(err => console.error(err))
 }
 
 export default QuickSetup
