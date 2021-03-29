@@ -112,8 +112,6 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                     .catch(err => console.error(err));
     }
 
-    console.log(TRIGGER_HASH)
-
     const sideNav = <RoleSideNav url={url}
                                  name={registeredExchange[0]?.contractData.name || exchange}
                                  items={[

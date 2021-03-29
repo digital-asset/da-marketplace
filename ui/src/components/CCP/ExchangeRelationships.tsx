@@ -134,7 +134,7 @@ export const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges})
         const currentTime = date.toISOString();
         if (!currency) {
             throw new Error('Currency not selected');
-        } 
+        }
 
         const args = {
             exchange: exchange,

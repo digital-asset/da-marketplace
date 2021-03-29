@@ -1,6 +1,6 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
-import React, { useEffect } from 'react'
+import React from 'react'
 import {
   HashRouter as Router,
   Route,
@@ -28,7 +28,7 @@ import QuickSetup from './QuickSetup'
 const App: React.FC = () => {
   const [credentials, setCredentials] = React.useState<Credentials | undefined>(retrieveCredentials());
 
-  const handleCredentials = (credentials?: Credentials) => {
+const handleCredentials = (credentials?: Credentials) => {
     setCredentials(credentials);
     storeCredentials(credentials);
   }
