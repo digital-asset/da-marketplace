@@ -142,7 +142,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                         disabled={!selectedParty || !selectedRole}
                         className='ghost dark submit-button'
                         onClick={() => submitCredentials()}
-                        content={<p className='dark bold'>Log in</p>}
+                        content={<p className='dark bold'>Go!</p>}
                     />
                 )}
                 {!!successMessage && <p className='dark'>{successMessage}</p>}
@@ -458,7 +458,7 @@ const InviteAccept = (props: {
                 disabled={!partyLoginData}
                 className='ghost dark submit-button'
                 onClick={() => setupRole()}
-                content={<p className='dark bold'>Set up role</p>}
+                content={<p className='dark bold'>Submit role</p>}
             />
         </>
     )
