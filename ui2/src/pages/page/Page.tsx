@@ -1,7 +1,6 @@
 import React from 'react'
 import { Grid, Header, Menu } from 'semantic-ui-react'
 import classNames from 'classnames'
-
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
 import { NavLink } from 'react-router-dom'
 import { useParty } from '@daml/react'

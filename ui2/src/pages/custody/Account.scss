@@ -1,0 +1,51 @@
+@use '../../themes/variables' as *;
+
+@mixin account {
+  .account {
+    animation: fadeIn .5s;
+
+    h2 {
+      margin-bottom: $spacing-m;
+    }
+
+    .button.ghost {
+      margin-right: $spacing-s;
+    }
+
+    .action-row {
+      display: flex;
+      flex-direction: row;
+      justify-content: normal;
+    }
+
+    .account-overview {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: space-between;
+
+      .details {
+        height: fit-content;
+        width: 33%;
+      }
+
+      .holdings {
+        height: fit-content;
+        width: 66%;
+        margin-left: $spacing-s;
+      }
+
+      .action-row {
+        justify-content: flex-end;
+      }
+
+      table {
+        th {
+          background-color: var(--white);
+        }
+      }
+    }
+
+  }
+}

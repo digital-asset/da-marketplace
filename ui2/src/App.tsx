@@ -1,10 +1,9 @@
 import React from "react";
-import { Route, Switch, withRouter } from "react-router-dom";
+import { Route, Switch, withRouter, RouteProps } from "react-router-dom";
 import { PlayArrow } from "@material-ui/icons";
 import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
-import { Accounts as CustodyAccounts } from "./pages/custody/Accounts";
 import { Account } from "./pages/custody/Account";
 import { useStreamQueries } from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
@@ -16,7 +15,7 @@ import { Service as TradingService } from "@daml.js/da-marketplace/lib/Marketpla
 import { CircularProgress } from "@material-ui/core";
 import { Auctions } from "./pages/distribution/auction/Auctions";
 import { Requests as AuctionRequests } from "./pages/distribution/auction/Requests";
-import { Assets } from "./pages/distribution/Assets";
+import { Assets } from "./pages/custody/Assets";
 import { New as DistributionNew } from "./pages/distribution/auction/New";
 import { BiddingAuction } from "./pages/distribution/bidding/Auction";
 import { Instruments } from "./pages/origination/Instruments";
@@ -38,10 +37,13 @@ import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
 import Page from "./pages/page/Page";
 import { PublicIcon } from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
+import {WalletIcon} from "./icons/icons";
+import _ from "lodash";
 
 type Entry = {
   displayEntry: () => boolean,
-  sidebar: SidebarEntry[]
+  sidebar: SidebarEntry[],
+  additionalRoutes?: RouteProps[]
 };
 
 const AppComponent = () => {
@@ -57,9 +59,19 @@ const AppComponent = () => {
 
   const entries: Entry[] = [];
   entries.push({
+    displayEntry: () => custodyService.length > 0,
+    sidebar: [
+      { label: "Wallet", path: "/app/custody/assets", render: () => (<Assets services={custodyService} />), icon: (<WalletIcon />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/custody/accounts/new", render: () => (<CustodyNew services={custodyService} />) },
+      { path: "/app/custody/account/:contractId", render: () => (<Account services={custodyService} />) },
+      { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
+    ]
+  });
+  entries.push({
     displayEntry: () => true,
     sidebar: [
-      { label: "Wallets", path: "/app/distribution/assets", render: () => (<Assets />), icon: (<PlayArrow />), children: [] },
       {
         label: "Network", path: "/app/network/custody", render: () => (<CustodyNetwork services={custodyService} />), icon: (<PlayArrow />), children: [
           { label: "Custody", path: "/app/network/custody", render: () => (<CustodyNetwork services={custodyService} />), icon: (<PlayArrow />), children: [] },
@@ -69,52 +81,65 @@ const AppComponent = () => {
       }]
   });
   entries.push({
-    displayEntry: () => custodyService.length > 0,
-    sidebar: [
-      { label: "New Account", path: "/app/custody/accounts/new", render: () => (<CustodyNew services={custodyService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Accounts", path: "/app/custody/accounts", render: () => (<CustodyAccounts services={custodyService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Account Requests", path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />), icon: (<PlayArrow />), children: [] }
-    ]
-  });
-  entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
       { label: "New Auction", path: "/app/distribution/new", render: () => (<DistributionNew services={auctionService} />), icon: (<PlayArrow />), children: [] },
       { label: "Auction Requests", path: "/app/distribution/requests", render: () => (<AuctionRequests services={auctionService} />), icon: (<PlayArrow />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />}
     ]
   });
-  entries.push({ displayEntry: () => biddingService.length > 0, sidebar: [{ label: "My Auctions", path: "/app/distribution/auctions", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }] });
+  entries.push({ displayEntry: () => biddingService.length > 0,
+    sidebar: [
+      { label: "My Auctions", path: "/app/distribution/auctions", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/distribution/auction/:contractId", render: () => <BiddingAuction services={biddingService} />}
+    ]
+  });
   entries.push({
     displayEntry: () => issuanceService.length > 0,
     sidebar: [
       { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), children: [] },
       { label: "New Instruments", path: "/app/instrument/new", render: () => (<InstrumentsNew />), icon: (<PublicIcon />), children: [] },
       { label: "Instrument Requests", path: "/app/instrument/requests", render: () => (<InstrumentsRequests />), icon: (<PublicIcon />), children: [] },
-
       { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), children: [] },
       { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PublicIcon />), children: [] },
       { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/registry/instruments/:contractId", component: Instrument }
     ]
   });
   entries.push({
     displayEntry: () => listingService.length > 0,
     sidebar: [
       { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] },
-      { label: "New Listings", path: "/app/listing/new", render: () => (<ListingNew services={listingService} />), icon: (<PlayArrow />), children: [] }
+      { label: "New Listings", path: "/app/listing/new", render: () => (<ListingNew services={listingService} />), icon: (<PlayArrow />), children: [] },
+      { label: "Listing Requests", path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] }
     ]
   });
-  entries.push({ displayEntry: () => listingService.length > 0, sidebar: [{ label: "Listing Requests", path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] }] });
   entries.push({
     displayEntry: () => tradingService.length > 0,
     sidebar: [
       {
         label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<PlayArrow />),
         children: listings.map(c => ({ label: c.payload.listingId, path: "/app/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<></>), icon: (<PlayArrow />), children: [] }))
-      }]
+      }],
+    additionalRoutes: [
+      { path: "/app/trading/markets/:contractId", render: () => <Market services={tradingService} /> }
+    ]
   });
 
-  const entriesToDisplay = entries.filter(e => e.displayEntry()).flatMap(e => e.sidebar);
+  const entriesToDisplay = entries
+    .filter(e => e.displayEntry())
+    .flatMap(e => e.sidebar);
+  const additionRouting : RouteProps[] = _.compact(entries
+    .filter(e => e.displayEntry())
+    .flatMap(e => e.additionalRoutes)
+  );
 
   const routeEntries = (sidebarEntries : SidebarEntry[]) : React.ReactElement[] => {
     const childRoutes = sidebarEntries.map(e => routeEntries(e.children)).flat();
@@ -132,12 +157,10 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
-              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
-              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
-              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
-              <Route key={"instruments"} path={"/app/registry/instruments/:contractId"} component={Instrument}/>
-              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
               { routeEntries(entriesToDisplay) }
+              { additionRouting.map(routeProps =>
+                <Route {...routeProps} />
+              )}
             </Switch>
           </div>
         }
