@@ -227,8 +227,7 @@ const RoleSetup = (props: {
 
     useEffect(() => {
         if (!wsLoading && !loading && userSessions.length === 0 && userContracts.length === 0) {
-            console.log("creating user session")
-            handleCreateUserSession()
+            createUserSession(ledger, user, selectedRole, operator)
         }
     }, [loading, wsLoading])
 
@@ -237,20 +236,9 @@ const RoleSetup = (props: {
         if (role != selectedRole) {
             changeRole()
         } else {
-            console.log("SETTING CURRENT ROLE ", role)
             setCurrentRole(role)
         }
     }, [userContracts, selectedRole])
-
-    async function handleCreateUserSession() {
-        console.log("waiting.. ")
-        await halfSecondPromise
-        if (userSessions.length === 0) {
-            createUserSession(ledger, user, selectedRole, operator)
-        } else {
-            console.log("Nevermind. ")
-        }
-    }
 
     if (loading || wsLoading) {
         return <p className='dark'>Loading contracts and parties...</p>
@@ -268,9 +256,7 @@ const RoleSetup = (props: {
         )
 
     } else if (currentRole) {
-        // if user contract
         if (currentRole === selectedRole) {
-            // if the selected role == user contract role and not already registerd...
             return (
                 <InviteAccept
                     party={selectedParty}
@@ -287,28 +273,18 @@ const RoleSetup = (props: {
         const party = selectedParty.party
         switch (selectedRole) {
             case MarketRole.InvestorRole:
-                console.log("found investor")
-
                 return !!registry.investorMap.get(party)
 
             case MarketRole.IssuerRole:
-                console.log("found issuer")
-
                 return !!registry.issuerMap.get(party)
 
             case MarketRole.BrokerRole:
-                console.log("found broker")
-
                 return !!registry.brokerMap.get(party)
 
             case MarketRole.ExchangeRole:
-                console.log("found exchange")
-
                 return !!registry.exchangeMap.get(party)
 
             case MarketRole.CustodianRole:
-                console.log("found custodian")
-
                 return !!registry.custodianMap.get(party)
 
             default:
@@ -324,11 +300,9 @@ const RoleSetup = (props: {
             .exerciseByKey(User.User_RequestRoleChange, key, args)
             .then(_ => {
                 setCurrentRole(selectedRole)
-                console.log("role changed")
             })
             .catch(_ => {
                 setCurrentRole(undefined)
-                console.log("ERROR CHANGING ROLE")
             })
     }
 }
@@ -336,12 +310,6 @@ const RoleSetup = (props: {
 async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
     return await ledger
         .create(UserSession, { user, role, operator })
-        .then(async () => {
-            console.log("successfully crearted user session")
-        })
-        .catch(_ => {
-            console.log("failed to create user session")
-        })
 }
 
 const InviteAccept = (props: {
@@ -501,7 +469,6 @@ const InviteAccept = (props: {
             return !!custodianInvites[0]
         } else {
             if (retries > 0) {
-                console.log("retrying role invite")
                 getRoleInvitation(role, retries - 1)
             }
             return false
