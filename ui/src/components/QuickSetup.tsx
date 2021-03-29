@@ -24,11 +24,7 @@ import { RegistryLookupProvider, useRegistryLookup } from "./common/RegistryLook
 import { halfSecondPromise } from "./common/utils"
 import { roleLabel } from "./common/utils"
 
-import QueryStreamProvider, {
-    useContractQuery,
-    usePartyLoading,
-    useLoading,
-} from "../websocket/queryStream"
+import QueryStreamProvider, { useContractQuery, useLoading } from "../websocket/queryStream"
 
 import { useDablParties, useOperator } from "../components/common/common"
 
@@ -46,8 +42,6 @@ interface IPartyLoginData extends PartyDetails {
     issuerId?: string
     deployMatchingEngine?: boolean
 }
-
-const MARKETROLES = ["CustodianRole", "IssuerRole", "ExchangeRole", "InvestorRole", "BrokerRole"]
 
 const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => {
     const { onLogin } = props
@@ -72,7 +66,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
             return { text: party.partyName, value: party.party }
         }) || []
 
-    const roleOptions = MARKETROLES.map(role => {
+    const roleOptions = MarketRole.keys.map(role => {
         return { text: role, value: role }
     })
 
@@ -299,20 +293,6 @@ const RoleSetup = (props: {
                 return false
         }
     }
-
-    async function changeRole() {
-        const key = { _1: operator, _2: user }
-        const args = { newRole: selectedRole }
-
-        return await ledger
-            .exerciseByKey(User.User_RequestRoleChange, key, args)
-            .then(_ => {
-                return selectedRole
-            })
-            .catch(_ => {
-                return undefined
-            })
-    }
 }
 
 async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
@@ -498,7 +478,9 @@ const InviteAccept = (props: {
 
             onboardParty(role, partyLoginData, ledger, publicParty, operator)
                 .then(_ => {
-                    clearPartyRoleSelect(`Successfully assigned ${party.partyName} the role of ${roleLabel(role)}`)
+                    clearPartyRoleSelect(
+                        `Successfully assigned ${party.partyName} the role of ${roleLabel(role)}`
+                    )
                 })
                 .catch(_ => {
                     handleSetLoginStatus(`Error: could not onboard ${roleLabel(role)}`)
