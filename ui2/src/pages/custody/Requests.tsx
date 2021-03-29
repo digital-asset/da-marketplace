@@ -80,18 +80,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({ history, ser
     <>
       <Grid container direction="column">
         <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography variant="h2">Actions</Typography></Grid>
-              <Grid container direction="row" justify="center">
-                <Grid item xs={12}>
-                  <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/custody/accounts/new")}>New Account</Button>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
           {openRequests.length > 0 && <Grid item xs={12}>
             <Paper className={classes.paper}>
               <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography

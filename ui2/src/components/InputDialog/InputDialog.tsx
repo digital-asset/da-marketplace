@@ -1,9 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Dialog from "@material-ui/core/Dialog";
-import DialogTitle from "@material-ui/core/DialogTitle";
-import DialogContent from "@material-ui/core/DialogContent";
-import DialogActions from "@material-ui/core/DialogActions";
-import Button from "@material-ui/core/Button";
 import TextField from "@material-ui/core/TextField";
 import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -11,6 +6,7 @@ import FormControl from "@material-ui/core/FormControl";
 import MenuItem from "@material-ui/core/MenuItem";
 import Checkbox from "@material-ui/core/Checkbox";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import {Button, Form, Label, Modal} from "semantic-ui-react";
 
 export interface RegularField {
   label: string
@@ -48,44 +44,30 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   function fieldsToInput([fieldName, field]: [string, Field], index: number): JSX.Element {
     if (field.type === "selection") {
       return (
-        <FormControl key={index} fullWidth>
-          <InputLabel required>{field.label}</InputLabel>
-          <Select
-            value={state[fieldName]}
-            defaultValue={""}
-            onChange={e => setState({ ...state, [fieldName]: e.target.value })}>
-            {field.items.map(item => (<MenuItem key={item} value={item}>{item}</MenuItem>))}
-          </Select>
-        </FormControl>
+          <Form.Select
+            key={index}
+            label={field.label}
+            onChange={(_, change) => setState({ ...state, [fieldName]: change.value })}
+            options={ field.items.map(item => ({ key: item, value: item, text: item })) }
+            value={ state[fieldName] }
+          />
       )
     } else if (field.type === "checkbox") {
       return (
-        <FormControl key={index} fullWidth>
-          <FormControlLabel
+          <Form.Checkbox
             key={index}
             label={field.label}
-            control={
-              <Checkbox
-                color="primary"
-                onChange={e => setState({ ...state, [fieldName]: e.target.checked })}
-              />}
+            onChange={(_, change) => setState({ ...state, [fieldName]: change.checked })}
           />
-        </FormControl>
       )
     } else {
       return (
-        <TextField
-          required
-          autoFocus
-          fullWidth
+        <Form.Input
           key={index}
+          required
           label={field.label}
           type={field.type}
-          onChange={e => setState({ ...state, [fieldName]: e.target.value })}
-          InputLabelProps={{
-            shrink: true,
-            required: true,
-          }}
+          onChange={(_, change) => setState({ ...state, [fieldName]: change.value })}
           placeholder={(field.type === "date") ? "YYYY-MM-DD" : ""}
         />
       )
@@ -94,13 +76,17 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   const fieldsAsArray: [string, Field][] = Object.entries(props.fields);
 
   return (
-    <Dialog open={props.open} onClose={() => props.onClose(null)} maxWidth="sm" fullWidth>
-      <DialogTitle>{props.title}</DialogTitle>
-      <DialogContent>{fieldsAsArray.map((value, index) => fieldsToInput(value, index))}</DialogContent>
-      <DialogActions>
-        <Button onClick={() => props.onClose(state)} color="primary">Confirm</Button>
-        <Button onClick={() => props.onClose(null)} color="primary">Cancel</Button>
-      </DialogActions>
-    </Dialog>
+    <Modal open={props.open} size="small" onClose={() => props.onClose(null)}>
+      <Modal.Header as='h3'>{props.title}</Modal.Header>
+      <Modal.Content>
+        <Form>
+          {fieldsAsArray.map((value, index) => fieldsToInput(value, index))}
+        </Form>
+      </Modal.Content>
+      <Modal.Actions>
+          <Button className='ghost' onClick={() => props.onClose(state)}>Confirm</Button>
+          <Button className='ghost' onClick={() => props.onClose(null)}>Cancel</Button>
+      </Modal.Actions>
+    </Modal>
   );
 }
