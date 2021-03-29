@@ -28,7 +28,7 @@ import QuickSetup from './QuickSetup'
 const App: React.FC = () => {
   const [credentials, setCredentials] = React.useState<Credentials | undefined>(retrieveCredentials());
 
-const handleCredentials = (credentials?: Credentials) => {
+  const handleCredentials = (credentials?: Credentials) => {
     setCredentials(credentials);
     storeCredentials(credentials);
   }
