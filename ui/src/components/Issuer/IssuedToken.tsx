@@ -171,6 +171,7 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
         setShowAddRegisteredPartyModal(false)
     }
 
+
     function netTokenDeposits(tokenDeposits: ContractInfo<AssetDeposit>[]) {
         let netTokenDeposits: DepositInfo[] = []
 

@@ -49,8 +49,8 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
 }
 
 
-const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any> & {setToken?: string}) => {
-  const { children, setToken } = props;
+const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) => {
+  const { children } = props;
   const [ publicTemplateIds, setPublicTemplateIds ] = useState<string[]>([]);
   const [ partyTemplateIds, setPartyTemplateIds ] = useState<string[]>([]);
 
@@ -61,15 +61,10 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any> & {
 
   useEffect(() => {
     const token = retrieveCredentials()?.token;
-    setPartyToken(token);
-  }, []);
-
-  useEffect(() => {
-    console.log('setting token:', setToken)
-    if (setToken) {
-      setPartyToken(setToken)
+    if (token) {
+      setPartyToken(token);
     }
-  }, [setToken])
+  }, []);
 
   const publicParty = useDablParties().parties.publicParty;
   useEffect(() => {
@@ -195,7 +190,6 @@ export function useConnectionActive() {
 
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);
-
   if (queryStream === undefined) {
     throw new Error("useContractQuery must be called within a QueryStreamProvider");
   }

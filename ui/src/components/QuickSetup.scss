@@ -1,18 +1,83 @@
 @mixin quick-setup {
     .quick-setup {
-        background-color: var(--cool-grey-10);
-        padding: $spacing-l;
+        background-color: var(--cool-grey-20);
         display: flex;
-        flex-direction: column;
-        min-width: 550px;
-        min-height: 310px;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+
+        .quick-setup-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
 
         p {
             padding-bottom: $spacing-xs;
 
             &.login-details {
-                padding: $spacing-m 0;
+                padding: $spacing-s 0;
             }
+        }
+
+        .select-form {
+            background-color: var(--cool-grey-10);
+            padding: $spacing-m;
+            margin-right: $spacing-m;
+            min-height: 230px;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .logged-in-parties-table-tile {
+            background-color: var(--cool-grey-10);
+            min-height: 230px;
+        }
+
+        .logged-in-parties-table {
+            background-color: var(--cool-grey-10);
+            color: var(--white);
+            width: 500px;
+            border-collapse: collapse;
+            padding-left: $spacing-s;
+        }
+
+        .ui.table {
+            thead {
+                border-bottom: 2px solid var(--cool-grey-20);
+            }
+            td {
+                padding-left: $spacing-m;
+            }
+        }
+
+        .quick-setup-body {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            margin-top: $spacing-m;
+        }
+
+        .change-role {
+            .role-change-warning {
+                color: var(--white);
+                margin-bottom: $spacing-m;
+            }
+            .confirm-action-buttons {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-evenly;
+            }
+        }
+
+        button.go-button {
+            text-align: left;
+            min-height: 42px;
+            display: flex
         }
 
         .login-status {
@@ -26,10 +91,6 @@
 
         button.back-button {
             margin-right: auto;
-        }
-
-        button.ghost.go {
-            margin-left: auto;
         }
 
         .ui.grid {
@@ -47,4 +108,6 @@
             }
         }
     }
+        }
+
 }

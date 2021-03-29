@@ -64,7 +64,7 @@ const RoleSelectScreen: React.FC<Props> = ({ operator, onLogout }) => {
             <OnboardingTile>
                 <p className='dark bold'>What would you like to do?</p>
                 <RoleSelect
-                    caption='Invest'
+            caption='Invest'
                     loading={loading && role === MarketRole.InvestorRole}
                     roleSelectClick={() => handleRoleClick(MarketRole.InvestorRole)}/>
 

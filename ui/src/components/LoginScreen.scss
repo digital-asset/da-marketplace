@@ -6,8 +6,6 @@
         background-color: var(--cool-grey-20);
         animation: fadeIn .5s;
 
-        @include quick-setup;
-
         .setup-required {
             color: var(--white);
             font-weight: normal;
