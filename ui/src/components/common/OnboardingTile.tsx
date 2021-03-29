@@ -6,12 +6,11 @@ import { OpenMarketplaceLogo } from '../../icons/Icons'
 type TileProps = {
     header?: React.ReactElement;
     subtitle?: string;
-    className?: string;
 }
 
-export const Tile: React.FC<TileProps> = ({ children, subtitle, header, className }) => {
+export const Tile: React.FC<TileProps> = ({ children, subtitle, header }) => {
     return (
-        <div className={`onboarding-tile ${className}`}>
+        <div className={'onboarding-tile'}>
             { !!header && <div className='tile-header'>{header}</div> }
             { !!subtitle && <p className='subtitle'>{subtitle}</p> }
             <div className='onboarding-tile-content'>
