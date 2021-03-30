@@ -12,6 +12,7 @@
 @use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
+@use 'pages/distribution/auction/Auction';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
@@ -181,6 +182,7 @@ html {
         @include Assets.assets();
         @include Account.account();
         @include New.new-account();
+        @include Auction.auction();
       }
     }
   }

@@ -84,11 +84,11 @@ const AppComponent = () => {
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
-      { label: "New Auction", path: "/app/distribution/new", render: () => (<DistributionNew services={auctionService} />), icon: (<PlayArrow />), children: [] },
       { label: "Auction Requests", path: "/app/distribution/requests", render: () => (<AuctionRequests services={auctionService} />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
-      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />}
+      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />},
+      { path: "/app/distribution/new", render: () => <DistributionNew services={auctionService} />}
     ]
   });
   entries.push({ displayEntry: () => biddingService.length > 0,

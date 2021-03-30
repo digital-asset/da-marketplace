@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { getName, publicParty } from "../../config";
-import useStyles from "../styles";
 import { RequestOpenAccount, Service } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service";
 import { Party } from "@daml/types";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
@@ -13,7 +12,6 @@ import {DropdownItemProps} from "semantic-ui-react/dist/commonjs/modules/Dropdow
 import {IconClose} from "../../icons/icons";
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services }: RouteComponentProps & ServicePageProps<Service>) => {
-  const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
