@@ -38,7 +38,6 @@ import Credentials, { retrieveCredentials } from "../Credentials"
 import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config"
 
 import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from "../../src/automation"
-import { result } from "lodash"
 
 interface IPartyLoginData extends PartyDetails {
     role: MarketRole
