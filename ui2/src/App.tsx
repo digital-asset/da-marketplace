@@ -113,6 +113,7 @@ const AppComponent = () => {
       { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
     ],
     additionalRoutes : [
+      { path: "/app/instrument/requests/:contractId", component: InstrumentsRequests },
       { path: "/app/registry/instruments/:contractId", component: Instrument }
     ]
   });

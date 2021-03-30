@@ -1,7 +1,9 @@
 @use './NewBaseInstrument';
+@use './NewBinaryOption';
 
 @mixin origination-new {
   @include NewBaseInstrument.new-base-instrument();
+  @include NewBinaryOption.new-binary-option();
 
   .origination-new {
     display: flex;

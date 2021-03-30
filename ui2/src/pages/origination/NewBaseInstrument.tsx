@@ -88,7 +88,7 @@ const NewBaseInstrumentComponent = ({ history } : RouteComponentProps) => {
 
   return (
     <div className='new-base-instrument'>
-      <h2>New Basic Instrument</h2>
+      <h2>New Base Instrument</h2>
       <Tile header={<h5>Details</h5>}>
         <FormErrorHandled onSubmit={requestOrigination}>
           <div className='issue-asset-fields'>
@@ -99,7 +99,7 @@ const NewBaseInstrumentComponent = ({ history } : RouteComponentProps) => {
                     value={label}
                     className='issue-asset-form-field'
                     onChange={e => setLabel(e.currentTarget.value)}/>
-                </div>
+            </div>
 
             <div className='asset-row'>
                 <Form.TextArea
