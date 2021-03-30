@@ -68,6 +68,7 @@
         @include login-screen;
         @include role-selector;
         @include setup-required;
+        @include quick-setup;
 
         /* role css */
         @include investor;

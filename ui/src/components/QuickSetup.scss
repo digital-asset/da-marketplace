@@ -1,0 +1,62 @@
+@mixin quick-setup {
+    .quick-setup {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        background-color: var(--cool-grey-20);
+
+        .quick-setup-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 500px;
+            min-height: 230px;
+            background-color: var(--cool-grey-10);
+            padding: $spacing-m;
+
+            p.select-label{
+                padding-bottom: $spacing-xs;
+            }
+
+            p.login-details {
+                padding: $spacing-s 0;
+            }
+
+            button.submit-button {
+                margin: $spacing-s;
+                text-align: left;
+                height: auto;
+            }
+
+            .login-status {
+                padding: $spacing-l;
+
+                .ui.loader {
+                    position: static;
+                    transform: translateX(-0%) translateY(-0%);
+                }
+            }
+
+            button.back-button {
+                margin-right: auto;
+            }
+
+            .ui.grid {
+                display: flex;
+                flex-direction: column;
+
+                .field {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+
+                    .ui.input > input {
+                        width: 198px;
+                    }
+                }
+            }
+        }
+    }
+}
