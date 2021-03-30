@@ -4,12 +4,19 @@ import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/picker
 import DateFnsUtils from '@date-io/date-fns';
 
 type Props = {
+  label?: string;
+  placeholder?: string;
   value: string | Date | undefined | null;
   onChange: (e: any) => void;
 }
 
-const CalendarInput: React.FC<Props> = ({ value, onChange }) => {
-  return <Form.Input fluid className='calendar-input'>
+const CalendarInput: React.FC<Props> = ({ value, label, placeholder, onChange }) => (
+  <Form.Input
+    fluid
+    className='calendar-input'
+    label={label}
+    placeholder={placeholder}
+  >
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
       <KeyboardDatePicker
         fullWidth
@@ -17,12 +24,17 @@ const CalendarInput: React.FC<Props> = ({ value, onChange }) => {
         variant="inline"
         format="yyyy-MM-dd"
         margin="normal"
-        label="Expiry Date"
+        label=""
+        placeholder={placeholder}
+        PopoverProps={{
+          anchorOrigin: { horizontal: "right", vertical: "top" },
+          transformOrigin: { horizontal: "right", vertical: "top" }
+        }}
         defaultValue=""
         value={value}
         onChange={onChange} />
     </MuiPickersUtilsProvider>
   </Form.Input>
-};
+);
 
 export default CalendarInput;
