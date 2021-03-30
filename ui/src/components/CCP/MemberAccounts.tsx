@@ -23,9 +23,11 @@ type Props = {
         party: string;
         label: string;
     }[];
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members }) => {
+const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members, showNotificationAlert, handleNotificationAlert }) => {
     const { investorId } = useParams<{investorId: string}>()
 
     const notifications = useCCPCustomerNotifications(investorId);
@@ -53,7 +55,10 @@ const MemberAccounts: React.FC<Props> = ({ sideNav, onLogout, members }) => {
         <Page
             sideNav={sideNav}
             menuTitle={<Header as='h1'>{client?.label.substring(0, client.label.lastIndexOf('|'))}</Header>}
-            onLogout={onLogout}>
+            onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
+        >
             <PageSection className='members'>
                 <div className='member-list'>
                     {notifications.length > 0 && <Header as='h2'>Notifications</Header>}

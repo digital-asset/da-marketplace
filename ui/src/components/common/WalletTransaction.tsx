@@ -30,8 +30,10 @@ const WalletTransaction = (props: {
     sideNav: React.ReactElement;
     onLogout: () => void;
     deposits?: DepositInfo[];
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }) => {
-    const { transactionType, sideNav, onLogout, deposits } = props;
+    const { transactionType, sideNav, onLogout, deposits, showNotificationAlert, handleNotificationAlert } = props;
 
     const [ custodianId, setCustodianId ] = useState<string>();
     const [ quantity, setQuantity ] = useState<string>('');
@@ -107,7 +109,9 @@ const WalletTransaction = (props: {
             sideNav={sideNav}
             menuTitle={<><WalletIcon/>Wallet</>}
             onLogout={onLogout}
-            >
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
+        >
             <PageSection>
                 <div className='wallet-transaction'>
                     <Header as='h2'>{transactionType} Funds</Header>

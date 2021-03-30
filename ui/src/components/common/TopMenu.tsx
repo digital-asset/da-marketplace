@@ -2,7 +2,7 @@ import React from 'react'
 import { useHistory } from 'react-router-dom'
 import { Button, Menu, Header } from 'semantic-ui-react'
 
-import { LogoutIcon } from '../../icons/Icons'
+import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
 
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
 
@@ -21,10 +21,12 @@ type Props = {
     activeMenuTitle?: boolean;
     topMenuButtons?: ITopMenuButtonInfo[];
     landingPage?: boolean;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage }) => {
-    const history = useHistory()
+const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButtons, activeMenuTitle, landingPage, showNotificationAlert, handleNotificationAlert }) => {
+    const history = useHistory();
 
     return (
         <div className='top-section'>
@@ -52,7 +54,15 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
                                 )}
                             </OverflowMenu>
                         </Menu.Item>}
-                    <Menu.Item className={classNames('log-out-button', {'divider': !landingPage})}>
+                    <Menu.Item className={classNames('notification-center-button', { 'divider': !landingPage })}>
+                        <Button className='ghost smaller' onClick={handleNotificationAlert}>
+                            <div >
+                                <NotificationCenterIcon />
+                            </div>
+                            <div className={classNames({ 'notifications-active': showNotificationAlert})}></div>
+                        </Button>
+                    </Menu.Item>
+                    <Menu.Item className={classNames('log-out-button', { 'divider': !landingPage })}>
                         <Button className='ghost smaller' onClick={onLogout}>
                             <div className='log-out'>
                                 <Header as='h3'>Log out</Header>
@@ -69,6 +79,5 @@ const TopMenu: React.FC<Props> = ({ title, notifications, onLogout, topMenuButto
         </div>
     )
 }
-
 
 export default TopMenu
