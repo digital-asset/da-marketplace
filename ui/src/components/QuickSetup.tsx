@@ -14,7 +14,8 @@ import { CustodianInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Cus
 import { ExchangeInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Exchange"
 import { InvestorInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Investor"
 import { IssuerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Issuer"
-
+import { CCPInvitation } from "@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty"
+import { RegisteredCustodian } from "@daml.js/da-marketplace/lib/Marketplace/Registry"
 import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
 
 import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
@@ -24,7 +25,11 @@ import { RegistryLookupProvider, useRegistryLookup, RegistryLookup } from "./com
 import { halfSecondPromise } from "./common/utils"
 import { roleLabel } from "./common/utils"
 
-import QueryStreamProvider, { useContractQuery, useLoading } from "../websocket/queryStream"
+import QueryStreamProvider, {
+    useContractQuery,
+    useLoading,
+    AS_PUBLIC,
+} from "../websocket/queryStream"
 
 import { useDablParties, useOperator } from "../components/common/common"
 
@@ -41,6 +46,7 @@ interface IPartyLoginData extends PartyDetails {
     title?: string
     issuerId?: string
     deployMatchingEngine?: boolean
+    inviteCustodian?: string
 }
 
 const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => {
@@ -77,7 +83,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
     const partySelect = (
         <Form.Select
-            label={<p className='dark select-label'>Party</p>}
+            label={<p className='dark input-label'>Party</p>}
             value={
                 selectedParty ? partyOptions.find(p => selectedParty.party === p.value)?.value : ""
             }
@@ -93,7 +99,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         <Form.Select
             disabled={!selectedParty}
             value={selectedRole ? roleOptions.find(p => selectedRole === p.value)?.value : ""}
-            label={<p className='dark select-label'>Role</p>}
+            label={<p className='dark input-label'>Role</p>}
             placeholder='Select...'
             onChange={(_, data: any) => setSelectedRole(data.value)}
             options={roleOptions}
@@ -179,7 +185,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
         onLogin({ ledgerId, party, token })
 
-        const creds = await confirmCredentials(3, token)
+        const creds = await confirmCredentials(token)
 
         if (creds) {
             setCredentials(creds)
@@ -206,21 +212,19 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         setCredentials(undefined)
     }
 
-    async function confirmCredentials(
-        retries: number,
-        token: string
-    ): Promise<Credentials | undefined> {
-        const creds = retrieveCredentials()
+    async function confirmCredentials(token: string): Promise<Credentials | undefined> {
+        let attempts = 0
+        const MAX_ATTEMPTS = 3
 
-        if (creds && creds.token === token) {
-            return creds
+        while (attempts < MAX_ATTEMPTS) {
+            const creds = retrieveCredentials()
+            if (creds && creds.token === token) {
+                return creds
+            } else {
+                await halfSecondPromise()
+                attempts += 1
+            }
         }
-
-        if (retries > 0) {
-            await halfSecondPromise()
-            return confirmCredentials(retries - 1, token)
-        }
-
         return undefined
     }
 }
@@ -304,8 +308,12 @@ const RoleSetup = (props: {
     const [currentRole, setCurrentRole] = useState<MarketRole>()
 
     useEffect(() => {
+        const createUserSession = async () => {
+            const role = selectedRole
+            await ledger.create(UserSession, { user, role, operator })
+        }
         if (!wsLoading && !loading && userSessions.length === 0 && userContracts.length === 0) {
-            createUserSession(ledger, user, selectedRole, operator)
+            createUserSession()
         }
     }, [loading, wsLoading])
 
@@ -381,14 +389,13 @@ const RoleSetup = (props: {
             case MarketRole.CustodianRole:
                 return !!registry.custodianMap.get(party)
 
+            case MarketRole.CCPRole:
+                return !!registry.ccpMap.get(party)
+
             default:
                 return false
         }
     }
-}
-
-async function createUserSession(ledger: Ledger, user: string, role: MarketRole, operator: string) {
-    return await ledger.create(UserSession, { user, role, operator })
 }
 
 const InviteAccept = (props: {
@@ -407,6 +414,7 @@ const InviteAccept = (props: {
     const investorInvites = useContractQuery(InvestorInvitation)
     const exchangeInvites = useContractQuery(ExchangeInvitation)
     const brokerInvites = useContractQuery(BrokerInvitation)
+    const ccpInvites = useContractQuery(CCPInvitation)
 
     const [loginStatus, setLoginStatus] = useState<string>()
     const [partyLoggingIn, setPartyLoggingIn] = useState<boolean>(false)
@@ -418,6 +426,17 @@ const InviteAccept = (props: {
         location: "NYC",
         deployMatchingEngine: true,
     })
+
+    const custodianOptions = useContractQuery(RegisteredCustodian, AS_PUBLIC).map(d => {
+        return {
+            text: `${d.contractData.name}`,
+            value: d.contractData.custodian,
+        }
+    })
+
+    if (partyLoginData.role === MarketRole.CCPRole && custodianOptions.length === 0) {
+        return <p className='dark login-status'>You must onboard a custodian before the CCP.</p>
+    }
 
     if (partyLoggingIn) {
         return (
@@ -441,9 +460,8 @@ const InviteAccept = (props: {
                 <Grid.Row>
                     <Grid.Column width={8}>
                         <Form.Input
-                            label={<p className='dark'>Name</p>}
+                            label={<p className='input-label dark'>Name</p>}
                             value={partyLoginData.name}
-                            placeholder='name'
                             onChange={e =>
                                 setPartyLoginData({
                                     ...partyLoginData,
@@ -454,9 +472,8 @@ const InviteAccept = (props: {
                     </Grid.Column>
                     <Grid.Column width={8}>
                         <Form.Input
-                            label={<p className='dark'>Location</p>}
+                            label={<p className='input-label dark'>Location</p>}
                             value={partyLoginData.location}
-                            placeholder='location'
                             onChange={e =>
                                 setPartyLoginData({
                                     ...partyLoginData,
@@ -467,11 +484,11 @@ const InviteAccept = (props: {
                     </Grid.Column>
                 </Grid.Row>
 
-                {partyLoginData.role === MarketRole.IssuerRole ? (
+                {partyLoginData.role === MarketRole.IssuerRole && (
                     <Grid.Row>
                         <Grid.Column width={8}>
                             <Form.Input
-                                label={<p className='dark'>Title</p>}
+                                label={<p className='input-label dark'>Title</p>}
                                 value={partyLoginData.title}
                                 placeholder='title'
                                 onChange={e =>
@@ -484,9 +501,9 @@ const InviteAccept = (props: {
                         </Grid.Column>
                         <Grid.Column width={8}>
                             <Form.Input
-                                label={<p className='dark'>Issuer Id</p>}
+                                label={<p className='input-label dark'>Issuer Id</p>}
                                 value={partyLoginData.issuerId}
-                                placeholder='issuer Id'
+                                placeholder='Issuer Id'
                                 onChange={e =>
                                     setPartyLoginData({
                                         ...partyLoginData,
@@ -496,31 +513,48 @@ const InviteAccept = (props: {
                             />
                         </Grid.Column>
                     </Grid.Row>
-                ) : (
-                    deploymentMode === DeploymentMode.PROD_DABL &&
-                    partyLoginData.role === MarketRole.ExchangeRole && (
-                        <Grid.Row>
-                            <Grid.Column width={8}>
-                                <Form.Checkbox
-                                    defaultChecked
-                                    label={
-                                        <label>
-                                            <p className='dark p2'>
-                                                Deploy matching engine {<br />} (uncheck if you plan
-                                                to use the Exberry Integration)
-                                            </p>
-                                        </label>
-                                    }
-                                    onChange={event =>
-                                        setPartyLoginData({
-                                            ...partyLoginData,
-                                            deployMatchingEngine: !partyLoginData.deployMatchingEngine,
-                                        })
-                                    }
-                                />
-                            </Grid.Column>
-                        </Grid.Row>
-                    )
+                )}
+                {partyLoginData.role === MarketRole.ExchangeRole && (
+                    <Grid.Row>
+                        <Grid.Column width={8}>
+                            <Form.Checkbox
+                                defaultChecked
+                                label={
+                                    <label>
+                                        <p className='dark p2'>
+                                            Deploy matching engine {<br />} (uncheck if you plan to
+                                            use the Exberry Integration)
+                                        </p>
+                                    </label>
+                                }
+                                onChange={event =>
+                                    setPartyLoginData({
+                                        ...partyLoginData,
+                                        deployMatchingEngine: !partyLoginData.deployMatchingEngine,
+                                    })
+                                }
+                            />
+                        </Grid.Column>
+                    </Grid.Row>
+                )}
+                {partyLoginData.role === MarketRole.CCPRole && (
+                    <Grid.Row>
+                        <Grid.Column width={8}>
+                            <Form.Select
+                                label={<p className='input-label dark'>Margin/Clearing Account Custodian</p>}
+                                multiple={false}
+                                disabled={custodianOptions.length === 0}
+                                placeholder='Select...'
+                                options={custodianOptions}
+                                onChange={(_, data: any) =>
+                                    setPartyLoginData({
+                                        ...partyLoginData,
+                                        inviteCustodian: data.value,
+                                    })
+                                }
+                            />
+                        </Grid.Column>
+                    </Grid.Row>
                 )}
             </Grid>
             <Button
@@ -535,23 +569,28 @@ const InviteAccept = (props: {
         </>
     )
 
-    function getRoleInvitation(role: MarketRole, retries: number) {
-        if (role === MarketRole.InvestorRole) {
-            return !!investorInvites[0]
-        } else if (role === MarketRole.IssuerRole) {
-            return !!issuerInvites[0]
-        } else if (role === MarketRole.BrokerRole) {
-            return !!brokerInvites[0]
-        } else if (role === MarketRole.ExchangeRole) {
-            return !!exchangeInvites[0]
-        } else if (role === MarketRole.CustodianRole) {
-            return !!custodianInvites[0]
-        } else {
-            if (retries > 0) {
-                getRoleInvitation(role, retries - 1)
+    function getRoleInvitation(role: MarketRole) {
+        let attempts = 0
+        const MAX_ATTEMPTS = 3
+
+        while (attempts < MAX_ATTEMPTS) {
+            if (role === MarketRole.InvestorRole) {
+                return !!investorInvites[0]
+            } else if (role === MarketRole.IssuerRole) {
+                return !!issuerInvites[0]
+            } else if (role === MarketRole.BrokerRole) {
+                return !!brokerInvites[0]
+            } else if (role === MarketRole.ExchangeRole) {
+                return !!exchangeInvites[0]
+            } else if (role === MarketRole.CustodianRole) {
+                return !!custodianInvites[0]
+            } else if (role === MarketRole.CCPRole) {
+                return !!ccpInvites[0]
+            } else {
+                attempts += 1
             }
-            return false
         }
+        return false
     }
 
     async function handleSetLoginStatus(status: string) {
@@ -562,7 +601,7 @@ const InviteAccept = (props: {
     async function setupRole() {
         setPartyLoggingIn(true)
 
-        if (!getRoleInvitation(role, 3)) {
+        if (!getRoleInvitation(role)) {
             handleSetLoginStatus(`Error: could not find ${roleLabel(role)}Invitation contract`)
             setPartyLoggingIn(false)
         } else {
@@ -666,6 +705,20 @@ async function onboardParty(
                 })
                 .catch(err => console.error(err))
             break
+        case MarketRole.CCPRole:
+            if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && data.token) {
+                deployTrigger(TRIGGER_HASH, MarketplaceTrigger.CCPTrigger, data.token, publicParty)
+            }
+            if (!data.inviteCustodian) {
+                throw new Error("You must select a default custodian!")
+            }
+
+            await ledger
+                .exerciseByKey(CCPInvitation.CCPInvitation_Accept, key, {
+                    ...args,
+                    custodian: data.inviteCustodian,
+                })
+                .catch(err => console.error(err))
     }
 }
 

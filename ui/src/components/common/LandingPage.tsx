@@ -10,6 +10,8 @@ type Props = {
     sideNav: React.ReactElement;
     notifications?: React.ReactElement[];
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
 const LandingPage: React.FC<Props> = ({
@@ -17,7 +19,9 @@ const LandingPage: React.FC<Props> = ({
     marketRelationships,
     sideNav,
     notifications,
-    onLogout
+    onLogout,
+    showNotificationAlert,
+    handleNotificationAlert
 }) => (
     <Page
         sideNav={sideNav}
@@ -25,6 +29,8 @@ const LandingPage: React.FC<Props> = ({
         menuTitle={<WelcomeHeader/>}
         notifications={notifications}
         landingPage={true}
+        showNotificationAlert={showNotificationAlert}
+        handleNotificationAlert={handleNotificationAlert}
     >
         <PageSection>
             <div className='landing-page'>
