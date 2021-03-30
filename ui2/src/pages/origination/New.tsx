@@ -7,8 +7,8 @@ import Tile from "../../components/Tile/Tile";
 const NewComponent = ({ history } : RouteComponentProps) => {
   return (
     <div className='origination-new'>
-      <NavLink to='/app/registry/instruments/new/basic'>
-        <Tile header={<h2>Basic</h2>}>
+      <NavLink to='/app/registry/instruments/new/base'>
+        <Tile header={<h2>Base Instrument</h2>}>
           <p>Create a simple instrument with no claims</p>
         </Tile>
       </NavLink>

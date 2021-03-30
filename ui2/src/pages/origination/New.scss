@@ -1,7 +1,7 @@
-@use './NewZeroClaim';
+@use './NewBaseInstrument';
 
 @mixin origination-new {
-  @include NewZeroClaim.new-zero-claim();
+  @include NewBaseInstrument.new-base-instrument();
 
   .origination-new {
     display: flex;

@@ -1,7 +1,7 @@
 @use '../../themes/variables' as *;
 
-@mixin new-zero-claim {
-  .new-zero-claim {
+@mixin new-base-instrument {
+  .new-base-instrument {
       width: 100%;
       padding: $spacing-s $spacing-l;
       animation: fadeIn .5s;

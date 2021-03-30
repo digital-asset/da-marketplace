@@ -24,7 +24,7 @@ import classNames from "classnames";
 import { IconCircledCheck, LockIcon, PublicIcon } from "../../icons/icons";
 import { publicParty } from "../../config";
 
-const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
+const NewBaseInstrumentComponent = ({ history } : RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
 
   const [ observers, setObservers ] = useState<string[]>([]);
@@ -87,7 +87,7 @@ const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
   )
 
   return (
-    <div className='new-zero-claim'>
+    <div className='new-base-instrument'>
       <h2>New Basic Instrument</h2>
       <Tile header={<h5>Details</h5>}>
         <FormErrorHandled onSubmit={requestOrigination}>
@@ -158,4 +158,4 @@ const NewZeroClaimComponent = ({ history } : RouteComponentProps) => {
   );
 };
 
-export const NewZeroClaim = withRouter(NewZeroClaimComponent);
+export const NewBaseInstrument = withRouter(NewBaseInstrumentComponent);
