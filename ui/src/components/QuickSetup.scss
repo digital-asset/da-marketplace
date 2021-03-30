@@ -3,17 +3,40 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-direction: column;
         width: 100%;
         height: 100%;
         background-color: var(--cool-grey-20);
 
-        .quick-setup-tile {
+        .quick-setup-tiles {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            background-color: var(--cool-grey-10);
+            border-radius: 4px;
+            position: relative
+        }
+
+        button.back-button {
+           margin: $spacing-m;
+           align-self: flex-start;
+           position: absolute
+        }
+
+        .party-registry-tile {
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 500px;
-            min-height: 230px;
-            background-color: var(--cool-grey-10);
+            width: 500px;
+            margin-left: $spacing-l;
+            padding: $spacing-m;
+        }
+
+        .assign-role-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 500px;
             padding: $spacing-m;
 
             p.select-label{
@@ -39,9 +62,8 @@
                 }
             }
 
-            button.back-button {
-                margin-right: auto;
-            }
+          
+
 
             .ui.grid {
                 display: flex;

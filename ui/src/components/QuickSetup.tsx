@@ -20,7 +20,7 @@ import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
 import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 import { User } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 
-import { RegistryLookupProvider, useRegistryLookup } from "./common/RegistryLookup"
+import { RegistryLookupProvider, useRegistryLookup, RegistryLookup } from "./common/RegistryLookup"
 import { halfSecondPromise } from "./common/utils"
 import { roleLabel } from "./common/utils"
 
@@ -45,11 +45,15 @@ interface IPartyLoginData extends PartyDetails {
 
 const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => {
     const { onLogin } = props
+    const { loading } = useDablParties()
+    const { publicParty } = useDablParties().parties
 
     const history = useHistory()
 
     const [credentials, setCredentials] = useState<Credentials | undefined>()
     const [parties, setParties] = useState<PartyDetails[]>()
+    const [publicPartyToken, setPublicPartyToken] = useState<string>()
+
     const [selectedParty, setSelectedParty] = useState<PartyDetails>()
     const [selectedRole, setSelectedRole] = useState<MarketRole>()
     const [successMessage, setSuccessMessage] = useState<string>()
@@ -58,6 +62,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
         const parties = retrieveParties()
         if (parties) {
             setParties(parties)
+            setPublicPartyToken(parties.find(p => p.party === publicParty)?.token)
         }
     }, [])
 
@@ -97,49 +102,70 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
     return (
         <div className='quick-setup'>
-            <div className='quick-setup-tile'>
+            <div className='quick-setup-tiles'>
                 <Button
                     icon='left arrow'
                     className='back-button ghost dark'
                     onClick={() => history.push("/")}
                 />
-                <p className='login-details dark'>Quick Setup</p>
-                <Grid>
-                    <Grid.Row>
-                        <Grid.Column width={8}>{partySelect}</Grid.Column>
-                        <Grid.Column width={8}>{roleSelect}</Grid.Column>
-                    </Grid.Row>
-                </Grid>
-                {credentials && selectedRole && selectedParty ? (
+                <div className='assign-role-tile'>
+                    <p className='login-details dark'>Assign a Role</p>
+                    <Grid>
+                        <Grid.Row>
+                            <Grid.Column width={8}>{partySelect}</Grid.Column>
+                            <Grid.Column width={8}>{roleSelect}</Grid.Column>
+                        </Grid.Row>
+                    </Grid>
+                    {credentials && selectedRole && selectedParty ? (
+                        <DamlLedger
+                            reconnectThreshold={0}
+                            token={credentials.token}
+                            party={credentials.party}
+                            httpBaseUrl={httpBaseUrl}>
+                            <WellKnownPartiesProvider>
+                                <QueryStreamProvider>
+                                    <RegistryLookupProvider>
+                                        <RoleSetup
+                                            selectedParty={selectedParty}
+                                            selectedRole={selectedRole}
+                                            clearPartyRoleSelect={clearPartyRoleSelect}
+                                        />
+                                    </RegistryLookupProvider>
+                                </QueryStreamProvider>
+                            </WellKnownPartiesProvider>
+                        </DamlLedger>
+                    ) : (
+                        <Button
+                            fluid
+                            icon='right arrow'
+                            labelPosition='right'
+                            disabled={!selectedParty || !selectedRole}
+                            className='ghost dark submit-button'
+                            onClick={() => submitCredentials()}
+                            content={<p className='dark bold'>Next</p>}
+                        />
+                    )}
+                    {!!successMessage && <p className='dark'>{successMessage}</p>}
+                </div>
+                {loading || !publicParty || !publicPartyToken ? (
+                    <Loader active indeterminate inverted size='small'>
+                        <p>Loading registry table...</p>
+                    </Loader>
+                ) : (
                     <DamlLedger
                         reconnectThreshold={0}
-                        token={credentials.token}
-                        party={credentials.party}
+                        token={publicPartyToken}
+                        party={publicParty}
                         httpBaseUrl={httpBaseUrl}>
                         <WellKnownPartiesProvider>
                             <QueryStreamProvider>
                                 <RegistryLookupProvider>
-                                    <RoleSetup
-                                        selectedParty={selectedParty}
-                                        selectedRole={selectedRole}
-                                        clearPartyRoleSelect={clearPartyRoleSelect}
-                                    />
+                                    <PartyRegistry parties={parties} />
                                 </RegistryLookupProvider>
                             </QueryStreamProvider>
                         </WellKnownPartiesProvider>
                     </DamlLedger>
-                ) : (
-                    <Button
-                        fluid
-                        icon='right arrow'
-                        labelPosition='right'
-                        disabled={!selectedParty || !selectedRole}
-                        className='ghost dark submit-button'
-                        onClick={() => submitCredentials()}
-                        content={<p className='dark bold'>Go!</p>}
-                    />
                 )}
-                {!!successMessage && <p className='dark'>{successMessage}</p>}
             </div>
         </div>
     )
@@ -199,6 +225,64 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     }
 }
 
+const PartyRegistry = (props: { parties?: PartyDetails[] }) => {
+    const { parties } = props
+    const registry = useRegistryLookup()
+
+    const [registryData, setRegistryData] = useState<Map<string, string[]>>(new Map())
+
+    useEffect(() => {
+        if (!!parties && parties.length > 0) {
+            let partyRegistryMap = new Map()
+
+            parties.forEach(p => {
+                let roles = []
+                if (!!registry.investorMap.get(p.party)) {
+                    roles.push("Investor")
+                }
+                if (!!registry.issuerMap.get(p.party)) {
+                    roles.push("Issuer")
+                }
+                if (!!registry.brokerMap.get(p.party)) {
+                    roles.push("Broker")
+                }
+                if (!!registry.custodianMap.get(p.party)) {
+                    roles.push("Custodian")
+                }
+                if (!!registry.exchangeMap.get(p.party)) {
+                    roles.push("Exchange")
+                }
+                if (!!registry.ccpMap.get(p.party)) {
+                    roles.push("CCP")
+                }
+                partyRegistryMap.set(p.party, roles.join(", "))
+            })
+
+            setRegistryData(partyRegistryMap)
+        }
+    }, [registry, parties])
+
+    return (
+        <div className='party-registry-tile'>
+            <p className='login-details dark'>Assigned Roles</p>
+            <Table className='party-registry-table'>
+                <Table.Header>
+                    <Table.HeaderCell>Party</Table.HeaderCell>
+                    <Table.HeaderCell>Roles</Table.HeaderCell>
+                </Table.Header>
+                <Table.Body>
+                    {parties?.map(p => (
+                        <Table.Row>
+                            <Table.Cell>{p.partyName}</Table.Cell>
+                            <Table.Cell>{registryData.get(p.party)?.toString()}</Table.Cell>
+                        </Table.Row>
+                    ))}
+                </Table.Body>
+            </Table>
+        </div>
+    )
+}
+
 const RoleSetup = (props: {
     selectedParty: PartyDetails
     selectedRole: MarketRole
@@ -244,7 +328,11 @@ const RoleSetup = (props: {
     }, [userContracts, selectedRole])
 
     if (loading || wsLoading) {
-        return <p className='dark'>Loading contracts and parties...</p>
+        return (
+            <Loader active indeterminate inverted size='small'>
+                <p className='dark'>Loading contracts and parties...</p>
+            </Loader>
+        )
     }
 
     if (error) {
@@ -269,7 +357,11 @@ const RoleSetup = (props: {
         }
     }
 
-    return <p className='dark'>Loading role contract...</p>
+    return (
+        <Loader active indeterminate inverted size='small'>
+            <p className='dark'>Loading role contract...</p>
+        </Loader>
+    )
 
     function findRegisteredParty() {
         const party = selectedParty.party
