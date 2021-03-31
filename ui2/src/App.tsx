@@ -121,9 +121,11 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => listingService.length > 0,
     sidebar: [
-      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] },
-      { label: "New Listings", path: "/app/listing/new", render: () => (<ListingNew services={listingService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Listing Requests", path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] }
+      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PublicIcon />), children: [] },
+    ],
+    additionalRoutes : [
+      { path: "/app/listing/new", render: () => (<ListingNew services={listingService} />) },
+      { path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />) }
     ]
   });
   entries.push({

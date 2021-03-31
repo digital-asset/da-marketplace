@@ -16,7 +16,7 @@
 @use 'pages/origination/New' as OriginationNew;
 @use 'pages/distribution/auction/Auction';
 @use 'pages/distribution/bidding/Bidding';
-
+@use 'pages/listing/Listing';
 
 @use './icons/icons';
 @use './App';
@@ -194,6 +194,7 @@ html {
         @include New.new-account();
         @include Auction.auction();
         @include Bidding.bidding();
+        @include Listing.listing();
       }
     }
   }
