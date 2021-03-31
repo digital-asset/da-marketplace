@@ -13,6 +13,8 @@ import { Button, Header } from "semantic-ui-react";
 import Tile from "../../components/Tile/Tile";
 import StripedTable from "../../components/Table/StripedTable";
 import {AllocationAccountRule} from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
+import {MarginCall} from "./MarginCall";
+import MarginCallModal from "./MarginCallModal";
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
@@ -37,9 +39,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   return (
     <div className='assets'>
       <Tile header={<h2>Actions</h2>}>
-        <Button
-          className='ghost'
-          onClick={() => history.push("/app/clearing/margin-call")}>Perform Margin Call</Button>
+        <MarginCallModal services={services}/>
         <Button
           className='ghost'
           onClick={() => history.push("/app/clearing/mtm-calc")}>Perform Mark to Market</Button>

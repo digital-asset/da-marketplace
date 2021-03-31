@@ -3,11 +3,11 @@ import { RouteComponentProps, withRouter } from "react-router-dom";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import { getName, publicParty } from "../../config";
 import useStyles from "../styles";
-import { Party } from "@daml/types";
+import { Party, ContractId } from "@daml/types";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
 import { ServicePageProps } from "../common";
 import FormErrorHandled from "../../components/Form/FormErrorHandled";
-import {Button, Form, Header} from "semantic-ui-react";
+import {Button, Form, Header, Modal} from "semantic-ui-react";
 import {DropdownItemProps} from "semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem";
 import {IconClose} from "../../icons/icons";
 import {Service, CreateMarginCalculation} from "@daml.js/da-marketplace/lib/Marketplace/Clearing/Service";
@@ -16,7 +16,7 @@ function generateGuid() {
   var result, i, j;
   result = '';
   for(j=0; j<32; j++) {
-    if( j == 8 || j == 12 || j == 16 || j == 20)
+    if( j === 8 || j === 12 || j === 16 || j === 20)
       result = result + '-';
     i = Math.floor(Math.random()*16).toString(16).toUpperCase();
     result = result + i;
@@ -24,8 +24,11 @@ function generateGuid() {
   return result;
 }
 
+type MarginCallProps = {
+  member?: Party
+}
+
 const MarginCallComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services }: RouteComponentProps & ServicePageProps<Service>) => {
-  const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
 
@@ -45,7 +48,7 @@ const MarginCallComponent: React.FC<RouteComponentProps & ServicePageProps<Servi
       targetAmount: targetAmount
     };
     await ledger.exercise(Service.CreateMarginCalculation, service.contractId, request);
-    history.push("/app/clearing/members");
+    history.goBack();
   }
 
   const customers : DropdownItemProps[] = services.map((c, i) => (

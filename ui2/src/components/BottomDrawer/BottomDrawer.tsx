@@ -17,7 +17,6 @@ export const BottomDrawer = () => {
   // const [isPermanent, setPermanent] = useState(true);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
-  console.log(assets);
   return (
     <Drawer anchor="bottom" open={isSidebarOpened} variant="persistent">
       <Table size="small">

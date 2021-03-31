@@ -119,7 +119,7 @@ template MarkToMarketCalculation
         with
           note : Text
         do
-          create FulfilledMarkToMarketCalculation with ..
+          create FulfilledMarkToMarketCalculation with calculation = this, ..
 
       MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
         with
@@ -156,15 +156,12 @@ template FulfilledMarkToMarketCalculation
   with
     ccp : Party
     customer : Party
-    accountId : Id
-    currency : Text
-    mtmAmount : Decimal
-    calculationTime : Time
-    calculationId : Text
+    calculation : MarkToMarketCalculation
+    note : Text
+
   where
     signatory ccp
     observer customer
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
-

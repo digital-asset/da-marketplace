@@ -13,6 +13,7 @@ import { Button, Header } from "semantic-ui-react";
 import Tile from "../../components/Tile/Tile";
 import StripedTable from "../../components/Table/StripedTable";
 import {AllocationAccountRule} from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
+import MarginCallModal from "./MarginCallModal";
 
 const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
@@ -42,29 +43,24 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
   const pendingMTMCalcs = useStreamQueries(MarkToMarketCalculation).contracts.filter(mc => mc.payload.customer === customer);
   const failedMTMCalcs = useStreamQueries(RejectedMarkToMarketCalculation).contracts.filter(mc => mc.payload.customer === customer);
   const fulfilledMTMCalcs = useStreamQueries(FulfilledMarkToMarketCalculation).contracts.filter(mc => mc.payload.customer === customer);
+        // <Button
+        //   className='ghost'
+        //   onClick={() => history.push("/app/clearing/margin-call")}>Perform Margin Call</Button>
 
   return (
     <div className='assets'>
       <Tile header={<h2>Actions</h2>}>
-        <Button
-          className='ghost'
-          onClick={() => history.push("/app/clearing/margin-call")}>Perform Margin Call</Button>
+        <MarginCallModal services={services}/>
         <Button
           className='ghost'
           onClick={() => history.push("/app/clearing/mtm-calc")}>Perform Mark to Market</Button>
       </Tile>
-      <Header as='h2'>Standing</Header>
-      <StripedTable
-        headings={[
-          'Margin Calls',
-          'MTM Calculations',
-          'Account'
-        ]}
-        rows={[
-
-        ]}
-      />
-      <Header as='h2'>Curent Margin Calculations</Header>
+      <Tile header={<h2>Standing</h2>}>
+        <b>Margins:</b> {!!standing && standing?.payload.marginSatisfied ? "Yes" : "No"}<br/>
+        <b>MTM:</b> {!!standing && standing?.payload.mtmSatisfied ? "Yes" : "No"}
+      </Tile>
+      <Header as='h2'>Margin Calculations</Header>
+      <Header as='h3'>Curent Margin Calculations</Header>
       <StripedTable
         headings={[
           'Time',
@@ -82,7 +78,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
         }
       />
-      <Header as='h2'>Failed Margin Calculations</Header>
+      <Header as='h3'>Failed Margin Calculations</Header>
       <StripedTable
         headings={[
           'Time',
@@ -100,7 +96,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
         }
       />
-      <Header as='h2'>Fulfilled Margin Calculations</Header>
+      <Header as='h3'>Fulfilled Margin Calculations</Header>
       <StripedTable
         headings={[
           'Time',
@@ -112,6 +108,62 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
             return [
                 <>{mc.payload.calculation.calculationTime}</>,
                 <>{mc.payload.calculation.targetAmount}</>,
+                <>{mc.payload.calculation.accountId.label}</>
+              ];
+          })
+
+        }
+      />
+
+      <Header as='h2'>MTM Calculations</Header>
+      <Header as='h3'>Curent MTM Calculations</Header>
+      <StripedTable
+        headings={[
+          'Time',
+          'Amount',
+          'Account'
+        ]}
+        rows={
+          pendingMTMCalcs.map(mc => {
+            return [
+                <>{mc.payload.calculationTime}</>,
+                <>{mc.payload.mtmAmount}</>,
+                <>{mc.payload.accountId.label}</>
+              ];
+          })
+
+        }
+      />
+      <Header as='h3'>Failed MTM Calculations</Header>
+      <StripedTable
+        headings={[
+          'Time',
+          'Target Amount',
+          'Account'
+        ]}
+        rows={
+          failedMTMCalcs.map(mc => {
+            return [
+                <>{mc.payload.calculation.calculationTime}</>,
+                <>{mc.payload.calculation.mtmAmount}</>,
+                <>{mc.payload.calculation.accountId.label}</>
+              ];
+          })
+
+        }
+      />
+      <Header as='h3'>Fulfilled MTM Calculations</Header>
+      <StripedTable
+        headings={[
+          'Time',
+          'Target Amount',
+          'Account'
+        ]}
+        rows={
+          fulfilledMTMCalcs.map(mc => {
+            return [
+                <>{mc.payload.calculation.calculationTime}</>,
+                <>{mc.payload.calculation.mtmAmount}</>,
                 <>{mc.payload.calculation.accountId.label}</>
               ];
           })

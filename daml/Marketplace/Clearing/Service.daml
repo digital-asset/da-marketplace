@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiWayIf #-}
+
 module Marketplace.Clearing.Service where
 
 import DA.List
@@ -21,6 +23,7 @@ mergeAndSplit depositCids amount = do
 
 data CalculationResults = CalculationSatisfied
                         | CalculationFailed
+
 isSatisfied : CalculationResults -> Bool
 isSatisfied CalculationSatisfied = True
 isSatisfied CalculationFailed    = False
@@ -51,19 +54,19 @@ template Service
 
       resolveMarginCalculation : ContractId MarginCalculation -> CalculationResults -> Text -> Update ()
       resolveMarginCalculation = \calculationCid results note -> do
-        let satisfied = isSatisfied results
-        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with newMarginSatisfied = satisfied, ..
-        if satisfied
-        then void $ exercise calculationCid MarginCalculation_Resolve with ..
-        else void $ exercise calculationCid MarginCalculation_Reject with ..
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
+            newMarginSatisfied = isSatisfied results; ..
+        case results of
+          CalculationSatisfied -> void $ exercise calculationCid MarginCalculation_Resolve with ..
+          CalculationFailed    -> void $ exercise calculationCid MarginCalculation_Reject with ..
 
       resolveMarkToMarketCalculation : ContractId MarkToMarketCalculation -> CalculationResults -> Text -> Update ()
       resolveMarkToMarketCalculation = \calculationCid results note -> do
-        let satisfied = isSatisfied results
-        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with newMtmSatisied = satisfied, ..
-        if satisfied
-        then void $ exercise calculationCid MarkToMarketCalculation_Resolve with ..
-        else void $ exercise calculationCid MarkToMarketCalculation_Reject with ..
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with
+            newMtmSatisied = isSatisfied results; ..
+        case results of
+          CalculationSatisfied -> void $ exercise calculationCid MarkToMarketCalculation_Resolve with ..
+          CalculationFailed    -> void $ exercise calculationCid MarkToMarketCalculation_Reject with ..
 
       getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
       getDepositQuantities = \depositCids -> do
@@ -110,23 +113,18 @@ template Service
           if diff > 0.0 && depositAmount < diff
           then resolveMarginCalculation calculationCid CalculationFailed "" >> create this
           else do
-            resolveMarginCalculation calculationCid CalculationSatisfied "" >> create this
-            if diff > 0.0
-            then do
-              [transferCid, remainingCid] <- mergeAndSplit depositCids diff
-              allocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id
-                  AllocationAccountRule.Deposit with depositCid = transferCid; ..
-              create this with marginDeposits = Set.insert allocatedDepositCid marginDeposits
-
-            else do
-              -- [transferCid, remainingCid] <- mergeAndSplit (Set.toList marginDeposits) (abs diff)
-              mergeAndSplit (Set.toList marginDeposits) (abs diff) >>= \case
-                  [transferCid, remainingCid] -> do
-                    deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
-                        transferTo = clearingAccount
-                        depositCid = transferCid; ..
-                    create this with marginDeposits = Set.fromList [remainingCid]
-                  _ -> create this
+            resolveMarginCalculation calculationCid CalculationSatisfied ""
+            if | diff == 0.0 -> create this
+               | diff > 0.0 -> do
+                  [transferCid, remainingCid] <- mergeAndSplit depositCids diff
+                  allocatedDepositCid <- transferToMarginAccount transferCid
+                  create this with marginDeposits = Set.insert allocatedDepositCid marginDeposits
+               | otherwise ->
+                  mergeAndSplit (Set.toList marginDeposits) (abs diff) >>= \case
+                      [transferCid, remainingCid] -> do
+                        deallocatedDepositCid <- transferFromMarginAccount transferCid
+                        create this with marginDeposits = Set.fromList [remainingCid]
+                      _ -> create this
 
       nonconsuming TransferFromProvider : ContractId AssetDeposit
         with
@@ -142,7 +140,10 @@ template Service
             removeNominee = exerciseByKey @AssetSettlementRule clearingAccount.id
                 AssetSettlement_RemoveController with ctrl = provider
 
-          transferCid <- addNominee *> exerciseByKey @AssetSettlementRule ccpAccount.id AssetSettlement_Transfer with receiverAccountId = clearingAccount.id; .. <* removeNominee
+          transferCid <- addNominee *>
+                        exerciseByKey @AssetSettlementRule ccpAccount.id
+                            AssetSettlement_Transfer with receiverAccountId = clearingAccount.id; ..
+                        <* removeNominee
           exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
             transferTo = clearingAccount
             depositCid = transferCid; ..
@@ -154,17 +155,23 @@ template Service
         do
           let deposits = Set.toList marginDeposits
 
-          (<= amount) <$> getMarginAmount >>= \case
-            False -> do
+          debug "transfering..."
+          ma <- getMarginAmount
+          debug $ "is..." <> show ((< (2000.0 : Decimal)) ma)
+          (< amount) <$> getMarginAmount >>= \case
+            True -> do
+                debug $ "less than... " <> show ma <> show amount
                 whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationFailed ""
                 (,) None <$> create this
-            True -> do
+            False -> do
                 whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
                 (optDeposit, newMarginCids) <- mergeAndSplit deposits amount >>= \case
                   (transferCid::remainingCids) -> do
-                    deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Transfer with
-                        transferTo = ccpAccount
-                        depositCid = transferCid, ..
+                    debug "deallocating..."
+                    deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id
+                        AllocationAccountRule.Transfer with
+                            transferTo = ccpAccount
+                            depositCid = transferCid, ..
                     return (Some deallocatedDepositCid, remainingCids)
                   _ -> return (None,deposits)
 
@@ -184,12 +191,11 @@ template Service
         do
           let deposits = Set.toList marginDeposits
 
-          depositCid <- exercise (head deposits) AssetDeposit_Merge with depositCids = tail deposits
-          [transferCid, remainingCid] <- exercise depositCid AssetDeposit_Split with quantities = [amount]
+          (transferCid::remainingCids) <- mergeAndSplit deposits amount
           deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
               transferTo = clearingAccount
               depositCid = transferCid; ..
-          (,) deallocatedDepositCid <$> create this with marginDeposits = Set.fromList [remainingCid]
+          (,) deallocatedDepositCid <$> create this with marginDeposits = Set.fromList remainingCids
 
     choice Terminate : ()
       with

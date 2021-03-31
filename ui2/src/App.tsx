@@ -40,10 +40,13 @@ import { PublicIcon } from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
 import {WalletIcon} from "./icons/icons";
 import _ from "lodash";
-import {ClearingMembers} from "./pages/clearing/Members";
+import { ClearingMembers } from "./pages/clearing/Members";
 import { MarginCall } from "./pages/clearing/MarginCall";
 import { MTMCalculation } from "./pages/clearing/MTMCalculation";
-import {ClearingMember} from "./pages/clearing/Member";
+import { ClearingMember } from "./pages/clearing/Member";
+import { NewConvertibleNote } from "./pages/origination/NewConvertibleNote";
+import { NewBinaryOption } from "./pages/origination/NewBinaryOption";
+import { NewBaseInstrument } from "./pages/origination/NewBaseInstrument";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -57,7 +60,7 @@ const AppComponent = () => {
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(ClearingService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService, () => [{ customer: party }]);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(IssuanceService);
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
@@ -109,19 +112,19 @@ const AppComponent = () => {
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
-      { label: "New Auction", path: "/app/distribution/new", render: () => (<DistributionNew services={auctionService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Auction Requests", path: "/app/distribution/requests", render: () => (<AuctionRequests services={auctionService} />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
-      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />}
+      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />},
+      { path: "/app/distribution/new", render: () => <DistributionNew services={auctionService} />},
+      { path: "/app/distribution/requests", render: () => <AuctionRequests services={auctionService} />}
     ]
   });
   entries.push({ displayEntry: () => biddingService.length > 0,
     sidebar: [
-      { label: "My Auctions", path: "/app/distribution/auctions", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
+      { label: "My Auctions", path: "/app/distribution/bidding", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
-      { path: "/app/distribution/auction/:contractId", render: () => <BiddingAuction services={biddingService} />}
+      { path: "/app/distribution/bidding/:contractId", render: () => <BiddingAuction services={biddingService} />}
     ]
   });
   entries.push({
@@ -141,9 +144,11 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => listingService.length > 0,
     sidebar: [
-      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] },
-      { label: "New Listings", path: "/app/listing/new", render: () => (<ListingNew services={listingService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Listing Requests", path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />), icon: (<PlayArrow />), children: [] }
+      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PublicIcon />), children: [] },
+    ],
+    additionalRoutes : [
+      { path: "/app/listing/new", render: () => (<ListingNew services={listingService} />) },
+      { path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />) }
     ]
   });
   entries.push({
@@ -182,6 +187,9 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
+              <Route key={"newbaseinstrument"} path={"/app/registry/instruments/new/base"} component={NewBaseInstrument} />
+              <Route key={"newconvertiblenote"} path={"/app/registry/instruments/new/convertiblenote"} component={NewConvertibleNote} />
+              <Route key={"newbinaryoption"} path={"/app/registry/instruments/new/binaryoption"} component={NewBinaryOption} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />

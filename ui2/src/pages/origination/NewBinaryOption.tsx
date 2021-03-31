@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel } from "@material-ui/core";
+import { Typography, Grid, Paper, Select, MenuItem, TextField, Button as MUIButton, MenuProps, FormControl, InputLabel } from "@material-ui/core";
 import useStyles from "../styles";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
 import { render } from "../../components/Claims/render";
@@ -16,6 +16,10 @@ import DateFnsUtils from "@date-io/date-fns";
 import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service";
 import { AssetSettlementRule } from "@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement";
 import { RouteComponentProps, withRouter } from "react-router-dom";
+import Tile from "../../components/Tile/Tile";
+import FormErrorHandled from "../../components/Form/FormErrorHandled";
+import { Button, Form } from 'semantic-ui-react';
+import CalendarInput from "../../components/Form/CalendarInput";
 
 const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
   const classes = useStyles();
@@ -76,78 +80,103 @@ const NewBinaryOptionComponent = ({ history } : RouteComponentProps) => {
       return;
     }
     await ledger.exercise(Service.RequestOrigination, service.contractId, { assetLabel: label, description, claims, safekeepingAccountId, observers: [ service.payload.provider, party ] });
-    history.push("/app/registry/requests");
+    history.push("/app/instrument/requests");
   };
 
   const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };
   return (
-    <Grid container direction="column" spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>New Binary Option</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={4}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Details</Typography>
-                    <ToggleButtonGroup className={classes.fullWidth} value={isCall} exclusive onChange={(_, v) => { if (v !== null) setIsCall(v); }}>
-                    <ToggleButton className={classes.fullWidth} value={true}>Call</ToggleButton>
-                    <ToggleButton className={classes.fullWidth} value={false}>Put</ToggleButton>
-                  </ToggleButtonGroup>
-                  <FormControl className={classes.inputField} fullWidth>
-                    <InputLabel>Underlying</InputLabel>
-                    <Select value={underlying} onChange={e => setUnderlying(e.target.value as string)} MenuProps={menuProps}>
-                      {assets.map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
-                    </Select>
-                  </FormControl>
-                  <TextField className={classes.inputField} fullWidth label="Strike" type="number" value={strike} onChange={e => setStrike(e.target.value as string)} />
-                  <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                    <KeyboardDatePicker
-                      className={classes.inputField}
-                      fullWidth
-                      disableToolbar
-                      variant="inline"
-                      format="yyyy-MM-dd"
-                      margin="normal"
-                      label="Expiry Date"
-                      defaultValue=""
-                      value={expiry}
-                      onChange={e => setExpiry(e)} />
-                  </MuiPickersUtilsProvider>
-                  <FormControl className={classes.inputField} fullWidth>
-                    <InputLabel>Payout Currency</InputLabel>
-                    <Select value={currency} onChange={e => setCurrency(e.target.value as string)} MenuProps={menuProps}>
-                      {assets.map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
-                    </Select>
-                  </FormControl>
-                  <TextField className={classes.inputField} fullWidth label="Instrument ID" type="text" value={label} onChange={e => setLabel(e.target.value as string)} />
-                  <TextField className={classes.inputField} fullWidth label="Description" type="text" value={description} onChange={e => setDescription(e.target.value as string)} />
-                  <FormControl className={classes.inputField} fullWidth>
-                    <InputLabel>Safekeeping Account</InputLabel>
-                    <Select value={account} onChange={e => setAccount(e.target.value as string)} MenuProps={menuProps}>
-                      {accounts.filter(a => a.provider === service.payload.provider).map((c, i) => (<MenuItem key={i} value={c.id.label}>{c.id.label}</MenuItem>))}
-                    </Select>
-                  </FormControl>
-                  <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestOrigination}>Request Origination</Button>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Payoff</Typography>
-                  <div ref={el} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <div className='new-binary-option'>
+      <h2>New Binary Option</h2>
+      <Tile header={<h5>Details</h5>}>
+        <FormErrorHandled onSubmit={requestOrigination}>
+          <Button.Group>
+            <Button active={isCall} onClick={() => setIsCall(true)}>Call</Button>
+            <Button.Or/>
+            <Button active={!isCall} onClick={() => setIsCall(false)}>Put</Button>
+          </Button.Group>
+
+          <div className='asset-row'>
+            <Form.Select
+                  className='issue-asset-form-field select-account'
+                  placeholder='Underlying'
+                  label='Underlying'
+                  value={underlying}
+                  options={assets.map(c => ({ text: c.payload.assetId.label, value: c.payload.assetId.label }))}
+                  onChange={(event: React.SyntheticEvent, result: any) => {
+                    setUnderlying(result.value)
+                }}/>
+          </div>
+
+          <div className='asset-row'>
+                <Form.Input
+                    fluid
+                    label='Strike'
+                    placeholder='Strike'
+                    value={strike}
+                    className='issue-asset-form-field'
+                    onChange={e => setStrike(e.currentTarget.value)}/>
+            </div>
+
+              <div className='asset-row'>
+                <CalendarInput
+                  label='Expiry Date'
+                  placeholder='Expiry Date'
+                  value={expiry}
+                  onChange={e => setExpiry(e)}/>
+              </div>
+
+        <div className='asset-row'>
+          <Form.Select
+                className='issue-asset-form-field select-account'
+                placeholder='Payout Currency'
+                label='Payout Currency'
+                value={currency}
+                options={assets.map(c => ({ text: c.payload.assetId.label, value: c.payload.assetId.label }))}
+                onChange={(event: React.SyntheticEvent, result: any) => {
+                  setCurrency(result.value)
+              }}/>
+        </div>
+
+            <div className='asset-row'>
+                <Form.Input
+                    fluid
+                    label='Instrument ID'
+                    value={label}
+                    className='issue-asset-form-field'
+                    onChange={e => setLabel(e.currentTarget.value)}/>
+            </div>
+
+            <div className='asset-row'>
+                <Form.Input
+                    fluid
+                    label='Description'
+                    value={description}
+                    className='issue-asset-form-field'
+                    onChange={e => setDescription(e.currentTarget.value)}/>
+            </div>
+
+          <div className='asset-row'>
+            <Form.Select
+                className='issue-asset-form-field select-account'
+                placeholder='Safekeeping Account'
+                label='Safekeeping Account'
+                options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
+                onChange={(event: React.SyntheticEvent, result: any) => {
+                  setAccount(result.value)
+              }}/>
+          </div>
+
+          <Button
+            className='ghost submit'
+            type='submit'
+            content='Request Origination'/>
+        </FormErrorHandled>
+      </Tile>
+
+      <Tile header={<h5>Payoff</h5>}>
+        <div ref={el} style={{height: "100%"}}/>
+      </Tile>
+    </div>
   );
 };
 

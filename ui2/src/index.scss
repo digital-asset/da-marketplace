@@ -1,17 +1,25 @@
 @use 'themes/colors';
+@use 'themes/button';
+@use 'themes/overrides';
+
 @use 'components/Tile/TilePage';
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
+@use 'components/Form/CalendarInput';
+
 @use 'pages/login/Login';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
-@use './icons/icons.scss';
-@use './App.scss';
-@use '../../ui/src/overrides/overrides';
-@use 'themes/button';
 @use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
+@use 'pages/origination/New' as OriginationNew;
+@use 'pages/distribution/auction/Auction';
+@use 'pages/distribution/bidding/Bidding';
+@use 'pages/listing/Listing';
+
+@use './icons/icons';
+@use './App';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
@@ -175,12 +183,17 @@ html {
         @include Tile.tile();
         @include TilePage.tile-page();
         @include StripedTable.striped-table();
+        @include CalendarInput.calendar-input();
         @include App.app();
         @include Page.page();
+        @include OriginationNew.origination-new();
         @include Login.login-screen();
         @include Assets.assets();
         @include Account.account();
         @include New.new-account();
+        @include Auction.auction();
+        @include Bidding.bidding();
+        @include Listing.listing();
       }
     }
   }

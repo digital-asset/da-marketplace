@@ -49,7 +49,7 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
   }, [el, asset, showAsset]);
 
   const service = customerServices[0];
-  if (!service) return (<></>);
+  if (!service) return (<div><h2>Party "{party}" can not request new issuances.</h2></div>);
 
   const requestIssuance = async () => {
     if (!asset || !account) return;
