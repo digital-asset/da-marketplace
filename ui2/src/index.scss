@@ -5,6 +5,8 @@
 @use 'components/Tile/TilePage';
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
+@use 'components/Form/CalendarInput';
+
 @use 'pages/login/Login';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
@@ -182,6 +184,7 @@ html {
         @include Tile.tile();
         @include TilePage.tile-page();
         @include StripedTable.striped-table();
+        @include CalendarInput.calendar-input();
         @include App.app();
         @include Page.page();
         @include OriginationNew.origination-new();
