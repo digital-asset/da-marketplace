@@ -14,9 +14,13 @@
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
+@use 'pages/distribution/auction/Auction';
+@use 'pages/distribution/bidding/Bidding';
+
 
 @use './icons/icons';
 @use './App';
+
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
@@ -188,6 +192,8 @@ html {
         @include Assets.assets();
         @include Account.account();
         @include New.new-account();
+        @include Auction.auction();
+        @include Bidding.bidding();
       }
     }
   }

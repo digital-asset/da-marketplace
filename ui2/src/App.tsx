@@ -5,7 +5,7 @@ import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
 import { Account } from "./pages/custody/Account";
-import { useStreamQueries } from "@daml/react";
+import {useParty, useStreamQueries} from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module";
 import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module";
@@ -50,9 +50,11 @@ type Entry = {
 };
 
 const AppComponent = () => {
+  const party = useParty();
+
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService, () => [{ customer: party }]);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(IssuanceService);
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
@@ -87,19 +89,19 @@ const AppComponent = () => {
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
-      { label: "New Auction", path: "/app/distribution/new", render: () => (<DistributionNew services={auctionService} />), icon: (<PlayArrow />), children: [] },
-      { label: "Auction Requests", path: "/app/distribution/requests", render: () => (<AuctionRequests services={auctionService} />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
-      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />}
+      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />},
+      { path: "/app/distribution/new", render: () => <DistributionNew services={auctionService} />},
+      { path: "/app/distribution/requests", render: () => <AuctionRequests services={auctionService} />}
     ]
   });
   entries.push({ displayEntry: () => biddingService.length > 0,
     sidebar: [
-      { label: "My Auctions", path: "/app/distribution/auctions", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
+      { label: "My Auctions", path: "/app/distribution/bidding", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
     ],
     additionalRoutes : [
-      { path: "/app/distribution/auction/:contractId", render: () => <BiddingAuction services={biddingService} />}
+      { path: "/app/distribution/bidding/:contractId", render: () => <BiddingAuction services={biddingService} />}
     ]
   });
   entries.push({
@@ -160,14 +162,9 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
-              <Route key={"account"} path={"/app/custody/account/:contractId"} render={() => <Account services={custodyService} />} />
-              <Route key={"auction"} path={"/app/distribution/auctions/:contractId"} render={(props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />} />
-              <Route key={"request"} path={"/app/distribution/auction/:contractId"} render={() => <BiddingAuction services={biddingService} />} />
-              <Route exact key={"instruments"} path={"/app/registry/instruments/:contractId"} component={Instrument}/>
               <Route key={"newbaseinstrument"} path={"/app/registry/instruments/new/base"} component={NewBaseInstrument} />
               <Route key={"newconvertiblenote"} path={"/app/registry/instruments/new/convertiblenote"} component={NewConvertibleNote} />
               <Route key={"newbinaryoption"} path={"/app/registry/instruments/new/binaryoption"} component={NewBinaryOption} />
-              <Route key={"market"} path={"/app/trading/markets/:contractId"} render={() => <Market services={tradingService} />} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />

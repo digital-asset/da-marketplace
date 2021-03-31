@@ -1,25 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import classnames from "classnames";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Typography, Grid, Paper, Select, MenuItem, TextField, Button, MenuProps, FormControl, InputLabel, IconButton, Box } from "@material-ui/core";
-import useStyles from "../../styles";
 import { transformClaim } from "../../../components/Claims/util";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 import { Service, RequestCreateAuction, CreateAuctionRequest } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { CreateEvent } from "@daml/ledger";
-import { ContractId } from "@daml/types";
-import { Visibility, VisibilityOff } from "@material-ui/icons";
+import {ContractId, Party} from "@daml/types";
 import { render } from "../../../components/Claims/render";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import {Button, Form, Header, Icon} from "semantic-ui-react";
+import FormErrorHandled from "../../../components/Form/FormErrorHandled";
+import {IconClose} from "../../../icons/icons";
+import Tile from "../../../components/Tile/Tile";
+import {ServicePageProps} from "../../common";
 
-type Props = {
-  services : Readonly<CreateEvent<Service, any, any>[]>
-}
-
-const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
-  const classes = useStyles();
-
+const NewComponent : React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services } : RouteComponentProps & ServicePageProps<Service>) => {
   const el1 = useRef<HTMLDivElement>(null);
   const el2 = useRef<HTMLDivElement>(null);
 
@@ -91,70 +86,79 @@ const NewComponent : React.FC<RouteComponentProps & Props> = ({ history, service
     history.push("/app/distribution/requests");
   }
 
-  const menuProps : Partial<MenuProps> = { anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, getContentAnchorEl: null };
   return (
-    <Grid container direction="column" spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>New Auction</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={4}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Details</Typography>
-                  <FormControl className={classes.inputField} fullWidth>
-                    <Box className={classes.fullWidth}>
-                      <InputLabel>Auctioned Asset</InputLabel>
-                      <Select className={classes.width90} value={auctionedAssetLabel} onChange={e => setAuctionedAssetLabel(e.target.value as string)} MenuProps={menuProps}>
-                        {heldAssetLabels.filter(a => a !== quotedAssetLabel).map((a, i) => (<MenuItem key={i} value={a}>{a}</MenuItem>))}
-                      </Select>
-                      <IconButton className={classes.marginLeft10} color="primary" size="small" component="span" onClick={() => setShowAuctionedAsset(!showAuctionedAsset)}>
-                        {showAuctionedAsset ? <VisibilityOff fontSize="small"/> : <Visibility fontSize="small"/>}
-                      </IconButton>
-                    </Box>
-                  </FormControl>
-                  <FormControl className={classes.inputField} fullWidth>
-                    <Box className={classes.fullWidth}>
-                      <InputLabel>Quoted Asset</InputLabel>
-                      <Select className={classes.width90} value={quotedAssetLabel} onChange={e => setQuotedAssetLabel(e.target.value as string)} MenuProps={menuProps}>
-                        {assets.filter(c => c.payload.assetId.label !== auctionedAssetLabel).map((c, i) => (<MenuItem key={i} value={c.payload.assetId.label}>{c.payload.assetId.label}</MenuItem>))}
-                      </Select>
-                      <IconButton className={classes.marginLeft10} color="primary" size="small" component="span" onClick={() => setShowQuotedAsset(!showQuotedAsset)}>
-                        {showQuotedAsset ? <VisibilityOff fontSize="small"/> : <Visibility fontSize="small"/>}
-                      </IconButton>
-                    </Box>
-                  </FormControl>
-                  <TextField className={classes.inputField} fullWidth label="Quantity" type="number" value={quantity} onChange={e => setQuantity(e.target.value as string)} />
-                  <TextField className={classes.inputField} fullWidth label="Floor Price" type="number" value={floorPrice} onChange={e => setFloorPrice(e.target.value as string)} />
-                  <TextField className={classes.inputField} fullWidth label="Auction ID" type="text" value={auctionId} onChange={e => setAuctionId(e.target.value as string)} />
-                  <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!canRequest} onClick={requestCreateAuction}>Request Auction</Button>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              {showAuctionedAsset && (
-                <Grid item xs={12}>
-                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                    <Typography variant="h5" className={classes.heading}>Auctioned Asset</Typography>
-                    <div ref={el1} style={{ height: "100%" }}/>
-                  </Paper>
-                </Grid>)}
-              {showQuotedAsset && (
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Quoted Asset</Typography>
-                  <div ref={el2} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>)}
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <div className='auction'>
+      <div className='new-auction'>
+        <Header as='h2'>New Auction</Header>
+        <FormErrorHandled onSubmit={() => requestCreateAuction()} >
+          <div className='form-select'>
+            <Form.Select
+              className='select'
+              label='Auctioned Asset'
+              placeholder='Select...'
+              required
+              options={ heldAssetLabels.filter(a => a !== quotedAssetLabel).map(c => ({ key: c, text: c, value: c })) }
+              onChange={(_, change) => setAuctionedAssetLabel(change.value as Party)}
+            />
+            { showAuctionedAsset ?
+              <Icon name='eye slash' link onClick={() => setShowAuctionedAsset(false)} /> :
+              <Icon name='eye' link onClick={() => setShowAuctionedAsset(true)} />
+            }
+          </div>
+          <div className='form-select'>
+            <Form.Select
+              className='select'
+              label='Quoted Asset'
+              placeholder='Select...'
+              required
+              options={ assets.filter(c => c.payload.assetId.label !== auctionedAssetLabel).map(c => ({ key: c, text: c.payload.assetId.label, value: c.payload.assetId.label })) }
+              onChange={(_, change) => setQuotedAssetLabel(change.value as Party)}
+            />
+            { showQuotedAsset ?
+              <Icon name='eye slash' link onClick={() => setShowQuotedAsset(false)} /> :
+              <Icon name='eye' link onClick={() => setShowQuotedAsset(true)} />
+            }
+          </div>
+          <Form.Input
+            label='Quantity'
+            type='number'
+            required
+            onChange={(_, change) => setQuantity(change.value as string)}
+          />
+          <Form.Input
+            label='Floor Price'
+            type='number'
+            required
+            onChange={(_, change) => setFloorPrice(change.value as string)}
+          />
+          <Form.Input
+            label='Auction ID'
+            required
+            onChange={(_, change) => setAuctionId(change.value as string)}
+          />
+          <div className='submit'>
+            <Button
+              type='submit'
+              className='ghost'
+              disabled={!canRequest}
+              content='Submit'/>
+            <a className='a2' onClick={() => history.goBack()}><IconClose/> Cancel</a>
+          </div>
+        </FormErrorHandled>
+      </div>
+      <div className='asset'>
+        {showAuctionedAsset && (
+          <Tile header={<h2>Auctioned Asset</h2>}>
+            <div ref={el1} style={{ height: "100%" }}/>
+          </Tile>
+        )}
+        {showQuotedAsset && (
+          <Tile header={<h2>Quoted Asset</h2>}>
+            <div ref={el2} style={{ height: "100%" }}/>
+          </Tile>
+        )}
+      </div>
+    </div>
   );
 };
 

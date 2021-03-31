@@ -12,7 +12,7 @@ export const getAuctionStatus = (auctionStatus : AuctionStatus) : string => {
     default:
       return auctionStatus.tag
   }
-}
+};
 
 export const getBidStatus = (bidStatus : BidStatus) : string => {
   switch (bidStatus.tag) {
@@ -25,7 +25,7 @@ export const getBidStatus = (bidStatus : BidStatus) : string => {
     default:
       return bidStatus.tag
   }
-}
+};
 
 export const getBidAllocation = (bid : Bid) : string => {
   switch (bid.status.tag) {
@@ -36,4 +36,4 @@ export const getBidAllocation = (bid : Bid) : string => {
     default:
       return ""
   }
-}
+};
