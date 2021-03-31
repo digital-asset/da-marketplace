@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react"
 import { Form, Button, Grid, Loader, Table } from "semantic-ui-react"
 import { useHistory } from "react-router-dom"
 
-import classNames from "classnames"
-
 import DamlLedger, { useLedger, useParty } from "@daml/react"
 
 import Ledger from "@daml/ledger"
@@ -23,7 +21,7 @@ import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
 import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 import { User } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 
-import { RegistryLookupProvider, useRegistryLookup, RegistryLookup } from "./common/RegistryLookup"
+import { RegistryLookupProvider, useRegistryLookup } from "./common/RegistryLookup"
 import { halfSecondPromise } from "./common/utils"
 import { roleLabel } from "./common/utils"
 
@@ -139,7 +137,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                                 </QueryStreamProvider>
                             </WellKnownPartiesProvider>
                         </DamlLedger>
-                    ) : roleOptions.length > 0 ? (
+                    ) : (
                         <Button
                             fluid
                             icon='right arrow'
@@ -149,8 +147,6 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
                             onClick={() => submitCredentials()}
                             content={<p className='dark bold'>Next</p>}
                         />
-                    ) : (
-                        <p className='dark'>This party has been assigned to all roles.</p>
                     )}
                     {!!successMessage && <p className='dark'>{successMessage}</p>}
                 </div>
@@ -233,8 +229,10 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
 
 const PartyRegistry = (props: { parties: PartyDetails[] }) => {
     const { parties } = props
-    const [registryData, setRegistryData] = useState<Map<string, string[]>>(new Map())
+
     const registry = useRegistryLookup()
+
+    const [registryData, setRegistryData] = useState<Map<string, string[]>>(new Map())
 
     useEffect(() => {
         if (parties.length > 0) {

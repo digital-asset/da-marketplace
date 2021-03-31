@@ -14,6 +14,7 @@
             align-items: flex-start;
             justify-content: center;
             position: relative;
+
             @media screen and (max-width: 900px) {
                 flex-direction: column;
                 align-items: center;
@@ -43,13 +44,15 @@
                 margin: $spacing-l;
             }
 
-            .ui.table tr td { border-top: 0px !important; }
+            .ui.table tr td {
+                border-top: 0px !important;
+            }
 
             .party-registry-table {
-
                 tr.odd-row {
                     background-color: var(--blue-100);
                 }
+
                 tbody {
                     display: block;
                     max-height: 500px;
@@ -58,8 +61,7 @@
 
                 }
 
-                thead,
-                tbody tr {
+                thead, tbody tr {
                     display: table;
                     width: 100%;
                     table-layout: fixed;
