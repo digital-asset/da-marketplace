@@ -1,0 +1,170 @@
+module Marketplace.Clearing.Model where
+
+import DA.Finance.Types
+
+template MemberStanding
+  with
+    provider : Party
+    customer : Party
+    marginSatisfied : Bool
+    mtmSatisfied : Bool
+  where
+    signatory provider
+    observer customer
+    key (provider, customer) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+      MemberStanding_UpdateMargin : ContractId MemberStanding
+        with
+          newMarginSatisfied : Bool
+        do
+          create this with marginSatisfied = newMarginSatisfied
+
+      MemberStanding_UpdateMTM : ContractId MemberStanding
+        with
+          newMtmSatisied : Bool
+        do
+          create this with mtmSatisfied = newMtmSatisied
+
+
+template MarginCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    currency : Text
+    targetAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+    controller ccp can
+      MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
+        with
+          note : Text
+        do
+          create FulfilledMarginCalculation with calculation = this; ..
+
+      MarginCalculation_Reject : ContractId RejectedMarginCalculation
+        with
+          note : Text
+        do
+          create RejectedMarginCalculation with calculation = this; ..
+
+
+template FulfilledMarginCalculation
+  with
+    ccp : Party
+    customer : Party
+    calculation : MarginCalculation
+    calculationId : Text
+    note : Text
+  where
+    signatory ccp
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+
+template RejectedMarginCalculation
+  with
+    ccp : Party
+    customer : Party
+    calculation : MarginCalculation
+    note : Text
+  where
+    signatory ccp
+    observer customer
+
+    -- key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    -- maintainer key._1
+
+    controller ccp can
+      RejectedMarginCalculation_Retry : ContractId MarginCalculation
+        do create calculation
+
+      RejectedMarginCalculation_Cancel : ()
+        do return ()
+
+    controller customer can
+      RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
+        do create calculation
+
+
+template MarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    currency : Text
+    mtmAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+    controller customer can
+      MarkToMarketCalculation_Resolve : ContractId FulfilledMarkToMarketCalculation
+        with
+          note : Text
+        do
+          create FulfilledMarkToMarketCalculation with ..
+
+      MarkToMarketCalculation_Reject : ContractId RejectedMarkToMarketCalculation
+        with
+          note : Text
+        do
+          create RejectedMarkToMarketCalculation with calculation = this, ..
+
+
+template RejectedMarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    calculation : MarkToMarketCalculation
+    note : Text
+  where
+    signatory ccp
+
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    maintainer key._1
+
+    controller ccp can
+      RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
+        do create calculation
+
+      RejectedMarkToMarketCalculation_Cancel : ()
+        do return ()
+
+    controller customer can
+      RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
+        do create calculation
+
+
+template FulfilledMarkToMarketCalculation
+  with
+    ccp : Party
+    customer : Party
+    accountId : Id
+    currency : Text
+    mtmAmount : Decimal
+    calculationTime : Time
+    calculationId : Text
+  where
+    signatory ccp
+    observer customer
+
+    key (ccp, customer, calculationId) : (Party, Party, Text)
+    maintainer key._1
+

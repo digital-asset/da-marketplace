@@ -45,7 +45,10 @@ template AllocationAccountRule
           transferTo : Account
           depositCid : ContractId AssetDeposit
         do
-          debit depositCid >>= creditAccount transferTo
+          let
+            addNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = nominee
+            removeNominee = exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = nominee
+          addNominee *> (debit depositCid >>= creditAccount transferTo) <* removeNominee
 
       nonconsuming Deposit : ContractId AssetDeposit
         with

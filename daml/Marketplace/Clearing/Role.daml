@@ -1,11 +1,14 @@
 module Marketplace.Clearing.Role where
 
+import DA.Finance.Types
+
 import Marketplace.Clearing.Service qualified as Clearing
 
 template Role
   with
     operator : Party
     provider : Party
+    ccpAccount : Account
   where
     signatory operator, provider
 
@@ -53,6 +56,8 @@ template Offer
 
     controller provider can
       Accept : ContractId Role
+        with
+          ccpAccount : Account
         do
           create Role with ..
 
@@ -64,6 +69,7 @@ template Request
   with
     provider : Party
     operator : Party
+    ccpAccount : Account
   where
     signatory provider
 

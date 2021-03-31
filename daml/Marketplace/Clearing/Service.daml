@@ -1,19 +1,195 @@
 module Marketplace.Clearing.Service where
 
+import DA.List
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
 import DA.Finance.Types
+
+import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..), Transfer(..))
+import Marketplace.Clearing.Model
+
+import qualified DA.Set as Set
+import DA.Set (Set)
+import DA.Functor (void)
+import DA.Optional.Total (whenSome)
+
+mergeAndSplit : [ContractId AssetDeposit] -> Decimal -> Update [ContractId AssetDeposit]
+mergeAndSplit depositCids amount = do
+    depositCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
+    exercise depositCid AssetDeposit_Split with quantities = [amount]
+
+data CalculationResults = CalculationSatisfied
+                        | CalculationFailed
+isSatisfied : CalculationResults -> Bool
+isSatisfied CalculationSatisfied = True
+isSatisfied CalculationFailed    = False
 
 template Service
   with
     operator : Party
     provider : Party
     customer : Party
+    ccpAccount : Account
     clearingAccount : Account
-    marginAccount : Account   -- should this be locked?
+    marginAccount : Account
+    marginDeposits : Set (ContractId AssetDeposit)
   where
     signatory operator, provider, customer
 
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
+
+    let
+      transferToMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      transferToMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
+          AllocationAccountRule.Deposit with ..
+
+      transferFromMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      transferFromMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
+          AllocationAccountRule.Withdraw with transferTo = clearingAccount; ..
+
+      resolveMarginCalculation : ContractId MarginCalculation -> CalculationResults -> Text -> Update ()
+      resolveMarginCalculation = \calculationCid results note -> do
+        let satisfied = isSatisfied results
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with newMarginSatisfied = satisfied, ..
+        if satisfied
+        then void $ exercise calculationCid MarginCalculation_Resolve with ..
+        else void $ exercise calculationCid MarginCalculation_Reject with ..
+
+      resolveMarkToMarketCalculation : ContractId MarkToMarketCalculation -> CalculationResults -> Text -> Update ()
+      resolveMarkToMarketCalculation = \calculationCid results note -> do
+        let satisfied = isSatisfied results
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with newMtmSatisied = satisfied, ..
+        if satisfied
+        then void $ exercise calculationCid MarkToMarketCalculation_Resolve with ..
+        else void $ exercise calculationCid MarkToMarketCalculation_Reject with ..
+
+      getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
+      getDepositQuantities = \depositCids -> do
+        foldl (+) 0.0 <$> forA depositCids (\dcid -> do
+            d <- fetch dcid
+            return d.asset.quantity)
+
+      getMarginAmount : Update Decimal
+      getMarginAmount = getDepositQuantities $ Set.toList marginDeposits
+    -- TODO:
+      -- 1. maybe don't store margin deposits
+      -- 2. if so refactor transfers
+      -- 3. only merge what is necessary, make function
+
+    controller provider can
+      nonconsuming CreateMarginCalculation : ContractId MarginCalculation
+        with
+          targetAmount : Decimal
+          currency : Text
+          calculationId : Text
+        do
+          calculationTime <- getTime
+          create MarginCalculation with ccp = provider; accountId = clearingAccount.id; ..
+
+      nonconsuming CreateMarkToMarket : ContractId MarkToMarketCalculation
+        with
+          mtmAmount : Decimal
+          currency : Text
+          calculationId : Text
+        do
+          calculationTime <- getTime
+          create MarkToMarketCalculation with ccp = provider; accountId = clearingAccount.id; ..
+
+      PerformMarginFill : ContractId Service
+        with
+          depositCids : [ContractId AssetDeposit]
+          calculationCid : ContractId MarginCalculation
+        do
+          targetAmount <- (.targetAmount) <$> fetch calculationCid
+          depositAmount <- getDepositQuantities depositCids
+          marginAmount <- getMarginAmount
+
+          let diff = targetAmount - marginAmount
+          if diff > 0.0 && depositAmount < diff
+          then resolveMarginCalculation calculationCid CalculationFailed "" >> create this
+          else do
+            resolveMarginCalculation calculationCid CalculationSatisfied "" >> create this
+            if diff > 0.0
+            then do
+              [transferCid, remainingCid] <- mergeAndSplit depositCids diff
+              allocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id
+                  AllocationAccountRule.Deposit with depositCid = transferCid; ..
+              create this with marginDeposits = Set.insert allocatedDepositCid marginDeposits
+
+            else do
+              -- [transferCid, remainingCid] <- mergeAndSplit (Set.toList marginDeposits) (abs diff)
+              mergeAndSplit (Set.toList marginDeposits) (abs diff) >>= \case
+                  [transferCid, remainingCid] -> do
+                    deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
+                        transferTo = clearingAccount
+                        depositCid = transferCid; ..
+                    create this with marginDeposits = Set.fromList [remainingCid]
+                  _ -> create this
+
+      nonconsuming TransferFromProvider : ContractId AssetDeposit
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+        do
+          assertMsg "There must be at least one deposit" $ not $ null depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          deposit <- fetch depositCid
+          let
+            addNominee = exerciseByKey @AssetSettlementRule clearingAccount.id
+                AssetSettlement_AddController with ctrl = provider
+            removeNominee = exerciseByKey @AssetSettlementRule clearingAccount.id
+                AssetSettlement_RemoveController with ctrl = provider
+
+          transferCid <- addNominee *> exerciseByKey @AssetSettlementRule ccpAccount.id AssetSettlement_Transfer with receiverAccountId = clearingAccount.id; .. <* removeNominee
+          exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
+            transferTo = clearingAccount
+            depositCid = transferCid; ..
+
+      TransferToProvider : (Optional (ContractId AssetDeposit), ContractId Service)
+        with
+          amount : Decimal
+          optMTMCalculationCid : Optional (ContractId MarkToMarketCalculation)
+        do
+          let deposits = Set.toList marginDeposits
+
+          (<= amount) <$> getMarginAmount >>= \case
+            False -> do
+                whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationFailed ""
+                (,) None <$> create this
+            True -> do
+                whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
+                (optDeposit, newMarginCids) <- mergeAndSplit deposits amount >>= \case
+                  (transferCid::remainingCids) -> do
+                    deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Transfer with
+                        transferTo = ccpAccount
+                        depositCid = transferCid, ..
+                    return (Some deallocatedDepositCid, remainingCids)
+                  _ -> return (None,deposits)
+
+                (,) optDeposit <$> create this with marginDeposits = Set.fromList newMarginCids
+
+      TransferToMargin : (ContractId AssetDeposit, ContractId Service)
+        with
+          depositCid : ContractId AssetDeposit
+        do
+          allocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Deposit with ..
+          (,) allocatedDepositCid <$> create this with marginDeposits = Set.insert allocatedDepositCid marginDeposits
+
+      TransferFromMargin : (ContractId AssetDeposit, ContractId Service)
+        with
+          --  depositCid : ContractId AssetDeposit
+          amount : Decimal
+        do
+          let deposits = Set.toList marginDeposits
+
+          depositCid <- exercise (head deposits) AssetDeposit_Merge with depositCids = tail deposits
+          [transferCid, remainingCid] <- exercise depositCid AssetDeposit_Split with quantities = [amount]
+          deallocatedDepositCid <- exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
+              transferTo = clearingAccount
+              depositCid = transferCid; ..
+          (,) deallocatedDepositCid <$> create this with marginDeposits = Set.fromList [remainingCid]
 
     choice Terminate : ()
       with
@@ -26,6 +202,7 @@ template Offer
     operator : Party
     provider : Party
     customer : Party
+    ccpAccount : Account
   where
     signatory operator, provider
 
@@ -35,8 +212,8 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
-          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
-          create Service with ..
+          create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+          create Service with marginDeposits = mempty; ..
 
       Decline : ()
         do
@@ -66,6 +243,8 @@ template Request
     choice Approve : ContractId Service
       with
         operator : Party
+        ccpAccount : Account
       controller operator, provider
       do
-        create Service with ..
+        create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+        create Service with marginDeposits = mempty; ..

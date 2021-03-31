@@ -31,9 +31,10 @@ data Providers = Providers
     operator : Party
     bank : Party
     exchange : Party
+    ccp : Party
     public : Party
     operatorServiceCid : ContractId Operator.Service
-    clearingRoleCid : ContractId Clearing.Role
+    clearingRoleCid : ContractId Clearinghouse.Role
     custodianRoleCid : ContractId Custodian.Role
     exchangeRoleCid : ContractId Exchange.Role
     matchingServiceCid : ContractId Matching.Service
@@ -53,6 +54,8 @@ data Customer = Customer
     mainAccount : Account
     exchangeLockedAccount : Account
     auctionLockedAccount : Account
+    clearingAccount : Account
+    marginAccount : Account
 
 onboardProviders : Script Providers
 onboardProviders = do
@@ -75,8 +78,6 @@ onboardProviders = do
   settlementServiceCid      <- submit exchange  do exerciseCmd settlementServiceOfferCid Settlement.Accept
   distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
-  clearingRoleOfferCid      <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferClearingRole with provider = ccp
-  clearingRoleCid           <- submit bank      do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept
 
   -- Identities
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = bank
@@ -93,6 +94,21 @@ onboardProviders = do
   identityVerificationRequestCid  <- submit ccp  do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "CCPLegalName"; location = "CCPLocation"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
 
+
+  -- Clearing
+  custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with customer = ccp, ..
+  custodyServiceCid <- submit ccp do exerciseCmd custodyServiceOfferCid Custody.Accept
+
+  let
+    ccpAccountId = Id with signatories = fromList [ bank, ccp ]; label = "CCPAccount-" <> partyToText ccp; version = 0
+    ccpAccount   = Account with provider = bank; owner = ccp; id = ccpAccountId
+
+  openAccountRequestCid <- submit ccp do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = ccpAccountId; observers = [bank]; ctrls = [bank, ccp]
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
+
+  clearingRoleOfferCid  <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferClearingRole with provider = ccp
+  clearingRoleCid       <- submit ccp      do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ..
+
   pure Providers with ..
 
 onboardCustomer : Providers -> Text -> Script Customer
@@ -102,9 +118,13 @@ onboardCustomer Providers{..} party = do
     mainAccountId           = Id with signatories = fromList [ bank, customer ]; label = "MainAccount-" <> party; version = 0
     exchangeLockedAccountId = Id with signatories = fromList [ bank, customer ]; label = "ExchangeLockedAccount-" <> party; version = 0
     auctionLockedAccountId  = Id with signatories = fromList [ bank, customer ]; label = "AuctionLockedAccount-" <> party; version = 0
+    clearingAccountId       = Id with signatories = fromList [ bank, customer ]; label = "ClearingAccount-" <> party; version = 0
+    marginAccountId         = Id with signatories = fromList [ bank, customer ]; label = "MarginAccount-" <> party; version = 0
     mainAccount             = Account with provider = bank; owner = customer; id = mainAccountId
     exchangeLockedAccount   = Account with provider = bank; owner = customer; id = exchangeLockedAccountId
     auctionLockedAccount    = Account with provider = bank; owner = customer; id = auctionLockedAccountId
+    clearingAccount         = Account with provider = bank; owner = customer; id = clearingAccountId
+    marginAccount           = Account with provider = bank; owner = customer; id = marginAccountId
 
   -- Custody service
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with ..
@@ -118,6 +138,12 @@ onboardCustomer Providers{..} party = do
   openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = auctionLockedAccountId; observers = empty; nominee = bank
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
 
+  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = clearingAccountId; observers = [ccp, bank]; ctrls = [bank, customer]
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
+  openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = marginAccountId; observers = fromList [ccp, bank]; nominee = ccp
+  submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
+
+
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = exchangeLockedAccount
@@ -125,6 +151,10 @@ onboardCustomer Providers{..} party = do
   listingServiceCid <- submit customer do exerciseCmd listingServiceOfferCid Listing.Accept
   issuanceServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferIssuanceService with ..
   issuanceServiceCid <- submit customer do exerciseCmd issuanceServiceOfferCid Issuance.Accept
+
+  -- Clearing Service
+  clearingServiceOfferCid <- submit ccp do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
+  clearingServiceCid <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
 
   -- Identity
   regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..

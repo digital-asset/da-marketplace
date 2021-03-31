@@ -5,8 +5,9 @@ import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
 import { Account } from "./pages/custody/Account";
-import { useStreamQueries } from "@daml/react";
+import { useStreamQueries, useParty } from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
+import { Service as ClearingService } from "@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module";
 import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module";
 import { Service as IssuanceService } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module";
@@ -39,6 +40,10 @@ import { PublicIcon } from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
 import {WalletIcon} from "./icons/icons";
 import _ from "lodash";
+import {ClearingMembers} from "./pages/clearing/Members";
+import { MarginCall } from "./pages/clearing/MarginCall";
+import { MTMCalculation } from "./pages/clearing/MTMCalculation";
+import {ClearingMember} from "./pages/clearing/Member";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -47,7 +52,10 @@ type Entry = {
 };
 
 const AppComponent = () => {
+  const party = useParty();
+
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(ClearingService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(IssuanceService);
@@ -69,6 +77,23 @@ const AppComponent = () => {
       { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
     ]
   });
+
+  const clearingProvider = clearingService.filter(cs => cs.payload.provider === party);
+  // CLEARING_SERVICE_START
+  entries.push({
+    displayEntry: () => clearingService.length > 0,
+    sidebar: [
+      { label: "Members", path: "/app/clearing/members", render: () => (<ClearingMembers services={clearingProvider} />), icon: (<WalletIcon />), children: [] }
+    ],
+    additionalRoutes : [
+      { path: "/app/clearing/margin-call", render: () => (<MarginCall services={clearingProvider} />) },
+      { path: "/app/clearing/mtm-calc", render: () => (<MTMCalculation services={clearingProvider} />) },
+      { path: "/app/clearing/member/:contractId", render: () => (<ClearingMember services={clearingProvider} />) }
+      // { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
+    ]
+  });
+  //CLEARING_SERVICE_END
+  //
   entries.push({
     displayEntry: () => true,
     sidebar: [
