@@ -1,102 +1,57 @@
 @use '../../../themes/variables' as *;
 
-@mixin auction {
-  .auction {
+@mixin bidding {
+  .bidding {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     width: 100%;
     justify-content: space-between;
 
-    .new-auction {
+    table {
+      th {
+        background-color: var(--white);
+      }
+    }
+
+    .bidding-details {
       display: flex;
       flex-direction: column;
+      flex-wrap: wrap;
       width: 33%;
+      justify-content: space-between;
 
       h2 {
         margin-bottom: $spacing-m;
       }
 
-      .form-select {
+      table {
+        th {
+          background-color: var(--white);
+        }
+      }
+
+      .asset-details {
         display: flex;
         flex-direction: row;
-        align-items: center;
 
-        .select {
-          width: 90%
+        .text {
+          width: 90%;
         }
 
         .icon {
-          width: 10%
+          width: 10%;
         }
       }
 
-      .submit, a.a2 {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .submit a.a2 {
-        margin-left: $spacing-xl;
-
-        .icon {
-          margin-right: $spacing-xs;
-        }
-      }
     }
 
     .asset {
-      display: flex;
-      flex-direction: column;
       width: 66%;
-
-      h2 {
-        margin-bottom: $spacing-m;
-      }
-
-      .submit, a.a2 {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-      }
-
-      .submit a.a2 {
-        margin-left: $spacing-xl;
-
-        .icon {
-          margin-right: $spacing-xs;
-        }
-      }
     }
+  }
 
-    .bids {
-      display: flex;
-      flex-direction: column;
-      width: 66%;
-
-      table {
-        th {
-          background-color: var(--white);
-        }
-      }
-    }
-
-    .details {
-      display: flex;
-      flex-direction: column;
-      width: 33%;
-
-      table {
-        th {
-          background-color: var(--white);
-        }
-      }
-
-      .details-button {
-        margin-top: $spacing-s;
-      }
-    }
-
+  .header {
+    margin-bottom: $spacing-m;
   }
 }

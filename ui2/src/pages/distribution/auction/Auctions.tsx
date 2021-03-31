@@ -3,7 +3,6 @@ import { withRouter, RouteComponentProps } from "react-router-dom";
 import { IconButton } from "@material-ui/core";
 import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
-import useStyles from "../../styles";
 import { getName } from "../../../config";
 import { Auction } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
 import { getAuctionStatus } from "../Utils";

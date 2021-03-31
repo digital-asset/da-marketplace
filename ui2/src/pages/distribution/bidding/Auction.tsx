@@ -1,9 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import useStyles from "../../styles";
-import classnames from "classnames";
 import { Auction as BiddingAuctionContract, Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { useLedger, useStreamQueries } from "@daml/react";
-import { Grid, Paper, Typography, Table, TableHead, TableRow, TableCell, TableBody, TextField, Button, Checkbox, FormControlLabel, FormControl, IconButton } from "@material-ui/core";
 import { useParams } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 import { CreateEvent } from "@daml/ledger";
@@ -11,16 +8,18 @@ import { ContractId } from "@daml/types";
 import { Service, SubmitBid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service";
 import { transformClaim } from "../../../components/Claims/util";
 import { render } from "../../../components/Claims/render";
-import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { getBidAllocation, getBidStatus } from "../Utils";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import { Button, Form, Header, Table } from "semantic-ui-react";
+import { ServicePageProps } from "../../common";
+import StripedTable from "../../../components/Table/StripedTable";
+import { getName } from "../../../config";
+import { IconButton } from "@material-ui/core";
+import { Visibility, VisibilityOff } from "@material-ui/icons";
+import Tile from "../../../components/Tile/Tile";
+import FormErrorHandled from "../../../components/Form/FormErrorHandled";
 
-type Props = {
-  services : Readonly<CreateEvent<Service, any, any>[]>
-}
-
-export const BiddingAuction : React.FC<Props> = ({ services } : Props) => {
-  const classes = useStyles();
+export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({ services }: ServicePageProps<Service>) => {
   const ledger = useLedger();
   const { contractId } = useParams<any>();
 
@@ -89,151 +88,148 @@ export const BiddingAuction : React.FC<Props> = ({ services } : Props) => {
   };
 
   return (
-    <Grid container direction="column">
-      <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>Auction - {biddingAuction.payload.asset.id.label}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={4}>
-            <Grid container direction="column">
-              <Grid xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Auction Details</Typography>
-                  <Table size="small">
-                    <TableBody>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Issuer</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.issuer}</TableCell>
-                      </TableRow>
-                      <TableRow key={1} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Agent</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.provider}</TableCell>
-                      </TableRow>
-                      <TableRow key={2} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Auction ID</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.auctionId}</TableCell>
-                      </TableRow>
-                      <TableRow key={3} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Asset</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.asset.id.label}
-                          <IconButton className={classes.marginLeft10} color="primary" size="small" component="span" onClick={() => setShowAuctionedAsset(!showAuctionedAsset)}>
-                            {showAuctionedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow key={4} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Quantity</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.asset.quantity}</TableCell>
-                      </TableRow>
-                      <TableRow key={5} className={classes.tableRow}>
-                        <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Quoted Asset</b></TableCell>
-                        <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{biddingAuction.payload.quotedAssetId.label}
-                          <IconButton className={classes.marginLeft10} color="primary" size="small" component="span" onClick={() => setShowQuotedAsset(!showQuotedAsset)}>
-                            {showQuotedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </Paper>
-              </Grid>
-              <Grid xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Published Bids</Typography>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={1} className={classes.tableCell}>Investor</TableCell>
-                        <TableCell key={0} className={classes.tableCell} align="right">Quantity</TableCell>
-                        <TableCell key={2} className={classes.tableCell} align="right">Allocation %</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {biddingAuction.payload.publishedBids.map((c, i) =>
-                        <TableRow key={0} className={classes.tableRow}>
-                          <TableCell key={1} className={classes.tableCell}>{c.investor}</TableCell>
-                          <TableCell key={0} className={classes.tableCell} align="right">{c.quantity}</TableCell>
-                          <TableCell key={2} className={classes.tableCell} align="right">{(parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity) * 100).toFixed(2)}</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </Paper>
-              </Grid>
-              <Grid xs={12}>
-                {!!bid &&
-                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                    <Typography variant="h5" className={classes.heading}>Bid</Typography>
-                    <Table size="small">
-                      <TableBody>
-                        <TableRow key={0} className={classes.tableRow}>
-                          <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Quantity</b></TableCell>
-                          <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{bid.payload.details.quantity}</TableCell>
-                        </TableRow>
-                        <TableRow key={1} className={classes.tableRow}>
-                          <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Price</b></TableCell>
-                          <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{bid.payload.details.price} {bid.payload.quotedAssetId.label}</TableCell>
-                        </TableRow>
-                        <TableRow key={1} className={classes.tableRow}>
-                          <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Status</b></TableCell>
-                          <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{getBidStatus(bid.payload.status)}</TableCell>
-                        </TableRow>
-                        {getBidAllocation(bid.payload) &&
-                          <TableRow key={1} className={classes.tableRow}>
-                            <TableCell key={0} className={classnames(classes.tableCell, classes.width50)}><b>Allocation</b></TableCell>
-                            <TableCell key={1} className={classnames(classes.tableCell, classes.width50)}>{getBidAllocation(bid.payload)}</TableCell>
-                          </TableRow>
-                        }
-                      </TableBody>
-                    </Table>
-                  </Paper>}
-                {!bid &&
-                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                    <Typography variant="h5" className={classes.heading}>Submit Bid</Typography>
-                    <Table size="small">
-                      <TableBody>
-                        <TableRow key={0} className={classes.tableRow}>
-                          <TextField required autoFocus fullWidth type="number" label={"Quantity (" + biddingAuction.payload.asset.id.label + ")"} onChange={e => setQuantity(parseFloat(e.target.value))} />
-                        </TableRow>
-                        <TableRow key={1} className={classes.tableRow}>
-                          <TextField required fullWidth className={classes.inputField} type="number" label={"Price (" + biddingAuction.payload.quotedAssetId.label + ")"} onChange={e => setPrice(parseFloat(e.target.value))} />
-                        </TableRow>
-                        <TableRow key={2} className={classes.tableRow}>
-                          <br />
-                          <FormControl key={0} fullWidth>
-                            <FormControlLabel key={1} label="Allow Publishing of Bid?" control={<Checkbox color="primary" onChange={e => setAllowPublishing(e.target.checked)} />} />
-                          </FormControl>
-                        </TableRow>
-                        <TableRow key={3} className={classes.tableRow}>
-                          <Button color="primary" className={classnames(classes.fullWidth, classes.buttonMargin)} variant="contained" disabled={price === 0 || quantity === 0} onClick={() => submitBid()}>Bid</Button>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </Paper>}
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              {showAuctionedAsset && (
-                <Grid item xs={12}>
-                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                    <Typography variant="h5" className={classes.heading}>Auctioned Asset</Typography>
-                    <div ref={el1} style={{ height: "100%" }} />
-                  </Paper>
-                </Grid>)}
-              {showQuotedAsset && (
-                <Grid item xs={12}>
-                  <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                    <Typography variant="h5" className={classes.heading}>Quoted Asset</Typography>
-                    <div ref={el2} style={{ height: "100%" }} />
-                  </Paper>
-                </Grid>)}
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <>
+      <Header as='h2' className='header'>Auction - {biddingAuction.payload.asset.id.label}</Header>
+      <div className='bidding'>
+        <div className='bidding-details'>
+          <Tile header={<h2>Auction Details</h2>}>
+            <Table basic='very'>
+              <Table.Body>
+                <Table.Row key={0}>
+                  <Table.Cell key={0}><b>Issuer</b></Table.Cell>
+                  <Table.Cell key={1}>{getName(biddingAuction.payload.issuer)}</Table.Cell>
+                </Table.Row>
+                <Table.Row key={1}>
+                  <Table.Cell key={0}><b>Agent</b></Table.Cell>
+                  <Table.Cell key={1}>{getName(biddingAuction.payload.provider)}</Table.Cell>
+                </Table.Row>
+                <Table.Row key={2}>
+                  <Table.Cell key={0}><b>Auction ID</b></Table.Cell>
+                  <Table.Cell key={1}>{biddingAuction.payload.auctionId}</Table.Cell>
+                </Table.Row>
+                <Table.Row key={3}>
+                  <Table.Cell key={0}><b>Asset</b></Table.Cell>
+                  <Table.Cell key={1}>
+                    <div className='asset-details'>
+                      <div className='text'>
+                        {biddingAuction.payload.asset.id.label}
+                      </div>
+                      <div className='icon'>
+                        <IconButton color="primary" size="small" component="span" onClick={() => setShowAuctionedAsset(!showAuctionedAsset)}>
+                          {showAuctionedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+                <Table.Row key={4}>
+                  <Table.Cell key={0}><b>Quantity</b></Table.Cell>
+                  <Table.Cell key={1}>{biddingAuction.payload.asset.quantity}</Table.Cell>
+                </Table.Row>
+                <Table.Row key={5}>
+                  <Table.Cell key={0}><b>Quoted Asset</b></Table.Cell>
+                  <Table.Cell key={1}>
+                    <div className='asset-details'>
+                      <div className='text'>
+                        {biddingAuction.payload.quotedAssetId.label}
+                      </div>
+                      <div className='icon'>
+                        <IconButton color="primary" size="small" component="span" onClick={() => setShowQuotedAsset(!showQuotedAsset)}>
+                          {showQuotedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                        </IconButton>
+                      </div>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              </Table.Body>
+            </Table>
+          </Tile>
+          <Tile header={<h2>Published Bids</h2>}>
+            <StripedTable
+              headings={[
+                'Investor',
+                'Quantity',
+                'Allocation %'
+              ]}
+              rows={
+                biddingAuction.payload.publishedBids.map(c => [
+                  c.investor,
+                  c.quantity,
+                  (parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity) * 100).toFixed(2)
+                ])
+              }
+            />
+          </Tile>
+          {!!bid &&
+            <Tile header={<h2>Bid</h2>}>
+              <Table basic='very'>
+                <Table.Body>
+                  <Table.Row key={0}>
+                    <Table.Cell key={0}><b>Quantity</b></Table.Cell>
+                    <Table.Cell key={1}>{getName(bid.payload.details.quantity)}</Table.Cell>
+                  </Table.Row>
+                  <Table.Row key={1}>
+                    <Table.Cell key={0}><b>Price</b></Table.Cell>
+                    <Table.Cell key={1}>{bid.payload.details.price} {bid.payload.quotedAssetId.label}</Table.Cell>
+                  </Table.Row>
+                  <Table.Row key={2}>
+                    <Table.Cell key={0}><b>Status</b></Table.Cell>
+                    <Table.Cell key={1}>{getBidStatus(bid.payload.status)}</Table.Cell>
+                  </Table.Row>
+                  {getBidAllocation(bid.payload) &&
+                    <Table.Row key={1}>
+                      <Table.Cell key={0}><b>Allocation</b></Table.Cell>
+                      <Table.Cell key={1}>{getBidAllocation(bid.payload)}</Table.Cell>
+                    </Table.Row>
+                  }
+                </Table.Body>
+              </Table>
+            </Tile>
+          }
+          {!bid &&
+            <Tile header={<h2>Submit Bid</h2>}>
+              <FormErrorHandled onSubmit={() => submitBid()} >
+                <Form.Input
+                  label='Quantity'
+                  placeholder={biddingAuction.payload.asset.id.label}
+                  type='number'
+                  required
+                  focus
+                  onChange={(_, change) => setQuantity(parseFloat(change.value as string))}
+                />
+                <Form.Input
+                  label='Price'
+                  placeholder={biddingAuction.payload.quotedAssetId.label}
+                  type='number'
+                  required
+                  onChange={(_, change) => setPrice(parseFloat(change.value as string))}
+                />
+                <Form.Checkbox
+                  label='Allow Publishing of Bid ?'
+                  onChange={(_, value) => setAllowPublishing(value.checked as boolean)}
+                />
+                <Button
+                  type='Bid'
+                  className='ghost'
+                  disabled={price === 0 || quantity === 0}
+                  content='Submit' />
+              </FormErrorHandled>
+            </Tile>
+          }
+        </div>
+        <div className='asset'>
+          {showAuctionedAsset && (
+            <Tile header={<h2>Auctioned Asset</h2>}>
+              <div ref={el1} style={{ height: "100%" }} />
+            </Tile>
+          )}
+          {showQuotedAsset && (
+            <Tile header={<h2>Quoted Asset</h2>}>
+              <div ref={el2} style={{ height: "100%" }} />
+            </Tile>
+          )}
+        </div>
+      </div>
+    </>
   );
 };

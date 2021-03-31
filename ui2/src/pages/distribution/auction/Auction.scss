@@ -73,7 +73,7 @@
     .bids {
       display: flex;
       flex-direction: column;
-      width: 60%;
+      width: 66%;
 
       table {
         th {
@@ -85,12 +85,16 @@
     .details {
       display: flex;
       flex-direction: column;
-      width: 40%;
+      width: 33%;
 
       table {
         th {
           background-color: var(--white);
         }
+      }
+
+      .details-button {
+        margin-top: $spacing-s;
       }
     }
 
