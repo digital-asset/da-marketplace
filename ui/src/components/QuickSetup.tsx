@@ -293,12 +293,12 @@ const PartyRegistry = (props: { parties: PartyDetails[] }) => {
 
 const RegistryTableRow = (props: { index: number; party: PartyDetails; roles: string[] }) => {
     const { index, party, roles } = props
-    const oddRow = index % 2 === 0 ? "odd-row" : undefined
+    const rowClassname = index % 2 === 0 ? "odd-row" : ""
     const partyName = <p className='bold'>{party.partyName}</p>
 
     if (roles.length === 0) {
         return (
-            <Table.Row className={oddRow}>
+            <Table.Row className={rowClassname}>
                 <Table.Cell colSpan={3}>{partyName}</Table.Cell>
             </Table.Row>
         )
@@ -307,7 +307,7 @@ const RegistryTableRow = (props: { index: number; party: PartyDetails; roles: st
     return (
         <>
             {roles.map((role, roleIndex) => (
-                <Table.Row className={oddRow}>
+                <Table.Row className={rowClassname}>
                     <Table.Cell>{roleIndex == 0 ? partyName : ""}</Table.Cell>
                     <Table.Cell>{role}</Table.Cell>
                 </Table.Row>
