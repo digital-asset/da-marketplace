@@ -8,12 +8,9 @@ import { useLedger, useParty, useStreamQueries } from "@daml/react";
 import useStyles from "../../styles";
 import { CreateAuctionRequest, Service } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { getName } from "../../../config";
+import { ServicePageProps } from "../../common";
 
-type Props = {
-  services : Readonly<CreateEvent<Service, any, any>[]>
-}
-
-const RequestsComponent : React.FC<RouteComponentProps & Props> = ({ history, services } : RouteComponentProps & Props) => {
+const RequestsComponent : React.FC<RouteComponentProps & ServicePageProps<Service>> = ({ history, services } : RouteComponentProps & ServicePageProps<Service>) => {
   const classes = useStyles();
   const party = useParty();
   const ledger = useLedger();
