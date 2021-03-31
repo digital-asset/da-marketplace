@@ -10,12 +10,10 @@ import { transformClaim } from "../../../components/Claims/util";
 import { render } from "../../../components/Claims/render";
 import { getBidAllocation, getBidStatus } from "../Utils";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
-import { Button, Form, Header, Table } from "semantic-ui-react";
+import {Button, Form, Header, Icon, Table} from "semantic-ui-react";
 import { ServicePageProps } from "../../common";
 import StripedTable from "../../../components/Table/StripedTable";
 import { getName } from "../../../config";
-import { IconButton } from "@material-ui/core";
-import { Visibility, VisibilityOff } from "@material-ui/icons";
 import Tile from "../../../components/Tile/Tile";
 import FormErrorHandled from "../../../components/Form/FormErrorHandled";
 
@@ -115,9 +113,10 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({ services }
                         {biddingAuction.payload.asset.id.label}
                       </div>
                       <div className='icon'>
-                        <IconButton color="primary" size="small" component="span" onClick={() => setShowAuctionedAsset(!showAuctionedAsset)}>
-                          {showAuctionedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                        </IconButton>
+                        { showAuctionedAsset ?
+                          <Icon name='eye slash' link onClick={() => setShowAuctionedAsset(false)} /> :
+                          <Icon name='eye' link onClick={() => setShowAuctionedAsset(true)} />
+                        }
                       </div>
                     </div>
                   </Table.Cell>
@@ -134,9 +133,10 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({ services }
                         {biddingAuction.payload.quotedAssetId.label}
                       </div>
                       <div className='icon'>
-                        <IconButton color="primary" size="small" component="span" onClick={() => setShowQuotedAsset(!showQuotedAsset)}>
-                          {showQuotedAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                        </IconButton>
+                        { showQuotedAsset ?
+                          <Icon name='eye slash' link onClick={() => setShowQuotedAsset(false)} /> :
+                          <Icon name='eye' link onClick={() => setShowQuotedAsset(true)} />
+                        }
                       </div>
                     </div>
                   </Table.Cell>

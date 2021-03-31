@@ -1,14 +1,13 @@
 import React from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import { IconButton } from "@material-ui/core";
 import { useStreamQueries } from "@daml/react";
 import { getName } from "../../../config";
 import { Auction as BiddingAuctionContract } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { Bid } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model";
 import { getBidStatus, getBidAllocation } from "../Utils";
-import { KeyboardArrowRight } from "@material-ui/icons";
 import StripedTable from "../../../components/Table/StripedTable";
 import Tile from "../../../components/Tile/Tile";
+import {Icon} from "semantic-ui-react";
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const biddingAuctions = useStreamQueries(BiddingAuctionContract).contracts;
@@ -33,9 +32,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({ history }: Ro
               getName(c.payload.issuer),
               c.payload.asset.id.label,
               c.payload.asset.quantity,
-              <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/distribution/bidding/" + c.contractId.replace("#", "_"))}>
-                <KeyboardArrowRight fontSize="small" />
-              </IconButton>
+              <Icon name='angle right' link onClick={() => history.push("/app/distribution/bidding/" + c.contractId.replace("#", "_"))} />
             ])
           }
         />

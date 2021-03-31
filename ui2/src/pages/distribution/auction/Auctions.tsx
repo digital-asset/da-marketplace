@@ -1,13 +1,11 @@
 import React from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import { IconButton } from "@material-ui/core";
-import { KeyboardArrowRight } from "@material-ui/icons";
 import { useStreamQueries } from "@daml/react";
 import { getName } from "../../../config";
 import { Auction } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model";
 import { getAuctionStatus } from "../Utils";
 import Tile from "../../../components/Tile/Tile";
-import {Button, Header} from "semantic-ui-react";
+import { Button, Header, Icon } from "semantic-ui-react";
 import StripedTable from "../../../components/Table/StripedTable";
 
 const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteComponentProps) => {
@@ -35,9 +33,7 @@ const AuctionsComponent : React.FC<RouteComponentProps> = ({ history } : RouteCo
             c.payload.asset.quantity + " " + c.payload.asset.id.label,
             c.payload.floorPrice + " " + c.payload.quotedAssetId.label,
             getAuctionStatus(c.payload.status),
-            <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/distribution/auctions/" + c.contractId.replace("#", "_"))}>
-              <KeyboardArrowRight fontSize="small"/>
-            </IconButton>
+            <Icon name='angle right' link onClick={() => history.push("/app/distribution/auctions/" + c.contractId.replace("#", "_"))} />
           ])
         }
       />

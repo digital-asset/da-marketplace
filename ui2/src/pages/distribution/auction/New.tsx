@@ -1,16 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import {IconButton} from "@material-ui/core";
 import { transformClaim } from "../../../components/Claims/util";
 import { RouteComponentProps, withRouter } from "react-router-dom";
 import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
 import { Service, RequestCreateAuction, CreateAuctionRequest } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service";
 import { CreateEvent } from "@daml/ledger";
 import {ContractId, Party} from "@daml/types";
-import { Visibility, VisibilityOff } from "@material-ui/icons";
 import { render } from "../../../components/Claims/render";
 import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
-import {Button, Form, Header} from "semantic-ui-react";
+import {Button, Form, Header, Icon} from "semantic-ui-react";
 import FormErrorHandled from "../../../components/Form/FormErrorHandled";
 import {IconClose} from "../../../icons/icons";
 import Tile from "../../../components/Tile/Tile";
@@ -102,9 +100,10 @@ const NewComponent : React.FC<RouteComponentProps & ServicePageProps<Service>> =
               options={ heldAssetLabels.filter(a => a !== quotedAssetLabel).map(c => ({ key: c, text: c, value: c })) }
               onChange={(_, change) => setAuctionedAssetLabel(change.value as Party)}
             />
-            <IconButton className='icon' color="primary" size="small" component="span" onClick={() => setShowAuctionedAsset(!showAuctionedAsset)}>
-              {showAuctionedAsset ? <VisibilityOff fontSize="small"/> : <Visibility fontSize="small"/>}
-            </IconButton>
+            { showAuctionedAsset ?
+              <Icon name='eye slash' link onClick={() => setShowAuctionedAsset(false)} /> :
+              <Icon name='eye' link onClick={() => setShowAuctionedAsset(true)} />
+            }
           </div>
           <div className='form-select'>
             <Form.Select
@@ -115,9 +114,10 @@ const NewComponent : React.FC<RouteComponentProps & ServicePageProps<Service>> =
               options={ assets.filter(c => c.payload.assetId.label !== auctionedAssetLabel).map(c => ({ key: c, text: c.payload.assetId.label, value: c.payload.assetId.label })) }
               onChange={(_, change) => setQuotedAssetLabel(change.value as Party)}
             />
-            <IconButton className='icon' color="primary" size="small" component="span" onClick={() => setShowQuotedAsset(!showQuotedAsset)}>
-              {showQuotedAsset ? <VisibilityOff fontSize="small"/> : <Visibility fontSize="small"/>}
-            </IconButton>
+            { showQuotedAsset ?
+              <Icon name='eye slash' link onClick={() => setShowQuotedAsset(false)} /> :
+              <Icon name='eye' link onClick={() => setShowQuotedAsset(true)} />
+            }
           </div>
           <Form.Input
             label='Quantity'
