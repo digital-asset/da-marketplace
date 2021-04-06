@@ -85,13 +85,8 @@ template Issuer
           optionData : Optional OptionData
           underlying : Id
           isPublic : Bool
-          optEndDate : Optional Time
           observers : [Party]
         do
-          time <- getTime
-          let endDate = case optEndDate of
-                (Some x) -> x
-                None     -> time
           let id = Id with signatories = fromList [ issuer ], label = prodSym, version = 0
               derivativeObservers = if isPublic then (public :: operator :: observers) else observers
               typ = case secType of

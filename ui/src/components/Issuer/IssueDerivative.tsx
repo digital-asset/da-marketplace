@@ -72,8 +72,7 @@ const IssueDerivative = () => {
             isPublic,
             observers,
             secType: null,
-            optionData: null,
-            optEndDate: null
+            optionData: null
         }
 
         await ledger.exerciseByKey(Issuer.Issuer_IssueDerivative, key, args);

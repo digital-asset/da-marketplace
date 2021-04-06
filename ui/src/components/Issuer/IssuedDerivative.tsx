@@ -136,7 +136,6 @@ const IssuedDerivative: React.FC<Props> = ({ sideNav, onLogout }) => {
         }
 
         const newObservers = wrapTextMap([...participants, ...selectedParties]);
-            // new Set<string>([...barticipants, ...selectedParties])
 
         await ledger.exerciseByKey(Token.Token_AddObservers, derivativeId, { party, newObservers })
             .then(resp => history.push(`${baseUrl}/${resp[0]}`))

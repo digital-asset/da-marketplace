@@ -24,8 +24,6 @@ import Marketplace.Transfer
 import DA.Finance.Asset
 import DA.Finance.Types
 
-import DA.Date
-import DA.Time
 import DA.Foldable (forA_)
 import DA.Optional
 
@@ -89,8 +87,8 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
   h2oQ421DerId <- createSimpleDerivative operator issuer "H2OQ421" "H2O" "H2O Q4 21" 6 1 "h2o" h2oTokenId observers
 
-  (q121usdId, q121usdPair) <- createMarketPair exchange operator h2oQ121DerId DerivativeAsset usdTokenId TokenAsset ccp
-  (q221usdId, q221usdPair) <- createMarketPair exchange operator h2oQ221DerId DerivativeAsset usdTokenId TokenAsset ccp
+  (q121usdId, q121usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ121DerId DerivativeAsset ccp
+  (q221usdId, q221usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ221DerId DerivativeAsset ccp
   (q321q421Id, q321q421Pair) <- createMarketPair exchange operator h2oQ321DerId DerivativeAsset h2oQ421DerId DerivativeAsset ccp
 
   let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0  10_000.0 3000.0
@@ -188,8 +186,6 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     accountId = usdTokenId
     currency = "USD"
     targetAmount = 1200.0
-    margin = 1000.0
-    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -205,8 +201,6 @@ doTestClearingResolution wt lp@(LedgerParties operator public custodian exchange
     accountId = usdTokenId
     currency = "USD"
     targetAmount = 1000.0
-    margin = 1000.0
-    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -320,8 +314,6 @@ setupInvestorAccount wt lp usdTokenId custodianAmount clearingAmount marginAmoun
     accountId = usdTokenId
     currency = "USD"
     targetAmount = marginAmount
-    margin = 1000.0
-    collateralValue = 1000.0
     calculationTime = time
     calculationId = "2134820934"
 
@@ -377,7 +369,6 @@ createSimpleDerivative operator issuer prodSym prodCode description pricePrecisi
         optionData = None
         underlying
         isPublic = True
-        endDate = time (date 2020 Dec 15) 0 0 0
         observers = fromList observers
 
   issuer `submit` createCmd derivative

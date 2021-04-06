@@ -41,7 +41,6 @@ template Derivative
     uom : Text  -- Unit of measure (barrels, troy ounces, bushels, coins etc..)
     optionData : Optional OptionData
     underlying : Id  -- an identifier for the underlying instrument
-    endDate : Time
     isPublic : Bool
     observers : Set Party
   where

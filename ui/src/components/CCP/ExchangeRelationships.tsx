@@ -1,11 +1,10 @@
 import React, {useState} from 'react'
-import { useParty, useLedger, useStreamQueries} from '@daml/react'
+import { useParty, useLedger } from '@daml/react'
 import { Header, Form, Button } from 'semantic-ui-react'
 
 import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
 
 import { UserIcon, AddPlusIcon } from '../../icons/Icons'
 import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
@@ -14,7 +13,7 @@ import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, TokenInfo, makeContractInfo } from '../common/damlTypes'
+import { wrapDamlTuple, TokenInfo } from '../common/damlTypes'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -110,8 +109,7 @@ export const RequestFairValues: React.FC<RequestFairValuesProps> = ({exchanges})
     const custodian = useParty();
     const ledger = useLedger();
 
-    const allTokens: TokenInfo[] = useStreamQueries(Token).contracts.map(makeContractInfo);
-    //const allTokens: TokenInfo[] = useContractQuery(Token);
+    const allTokens: TokenInfo[] = useContractQuery(Token);
 
     // TODO: Add a date picker widget
     const handleUpToChange = (_: any, result: any) => {
