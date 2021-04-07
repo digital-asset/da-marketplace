@@ -1,5 +1,7 @@
+import classNames from 'classnames';
 import React, { useState, FunctionComponent } from 'react';
 import { useHistory } from 'react-router-dom';
+import { Button } from 'semantic-ui-react';
 
 import { OverflowIcon } from '../../icons/icons';
 
@@ -29,8 +31,11 @@ export const OverflowMenuEntry : FunctionComponent<{
     );
 };
 
+type OverflowMenuProps = {
+    align?: 'left' | 'right';
+}
 
-const OverflowMenu : FunctionComponent<{}> = (props) => {
+const OverflowMenu : React.FC<OverflowMenuProps> = ({ children, align }) => {
 
     const [ showModal, setShowModal ] = useState(false);
 
@@ -38,16 +43,16 @@ const OverflowMenu : FunctionComponent<{}> = (props) => {
         useDismissableElement<HTMLDivElement, HTMLDivElement>(() => setShowModal(false));
 
     return (
-        <div className='overflow-menu'
+        <Button className={classNames('ghost overflow-menu', { 'inactive': showModal })}
              onClick={() => setShowModal(!showModal)}>
             <div className="overflow-menu-title" ref={refControl}>
                 <OverflowIcon/>
             </div>
             {showModal &&
-               <div className="overflow-menu-modal" ref={refDismissable}>
-                   {props.children}
+               <div className={classNames("overflow-menu-modal", align)} ref={refDismissable}>
+                   {children}
                </div>}
-        </div>
+        </Button>
     );
 }
 

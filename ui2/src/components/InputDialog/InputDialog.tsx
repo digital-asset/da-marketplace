@@ -32,14 +32,13 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
   defaultValue: T
   fields: Record<keyof T, Field>
   onClose: (state: T | null) => Promise<void>
+  onChange?: (state: T | null) => void
 }
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
   const [state, setState] = useState<T>(props.defaultValue);
 
-  useEffect(() =>
-    setState(props.defaultValue)
-  , [props.defaultValue])
+  useEffect(() => props.onChange && props.onChange(state), [state]);
 
   function fieldsToInput([fieldName, field]: [string, Field], index: number): JSX.Element {
     if (field.type === "selection") {
@@ -47,7 +46,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           <Form.Select
             key={index}
             label={field.label}
-            onChange={(_, change) => setState({ ...state, [fieldName]: change.value })}
+            onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
             options={ field.items.map(item => ({ key: item, value: item, text: item })) }
             value={ state[fieldName] }
           />
@@ -57,7 +56,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           <Form.Checkbox
             key={index}
             label={field.label}
-            onChange={(_, change) => setState({ ...state, [fieldName]: change.checked })}
+            onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.checked }))}
           />
       )
     } else {
@@ -67,7 +66,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           required
           label={field.label}
           type={field.type}
-          onChange={(_, change) => setState({ ...state, [fieldName]: change.value })}
+          onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
           placeholder={(field.type === "date") ? "YYYY-MM-DD" : ""}
         />
       )

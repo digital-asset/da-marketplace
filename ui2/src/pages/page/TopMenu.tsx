@@ -30,7 +30,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, buttonDivid
         <div className='top-section'>
             <Menu className='top-menu'>
                 <Menu.Menu position='left'>
-                    <Menu.Item disabled={!activeMenuTitle} onClick={history.goBack}>
+                    <Menu.Item as={!activeMenuTitle ? 'div' : undefined} disabled={!activeMenuTitle} onClick={history.goBack}>
                         <Header as='h1'>
                             <Header.Content>{ title }</Header.Content>
                         </Header>

@@ -43,3 +43,11 @@ export function useDismissableElement<T extends HTMLElement, C extends HTMLEleme
 
     return { refDismissable, refControl };
 }
+
+export function getAbbreviation(phrase: string) {
+    const wordsToExclude =  ["and", "or", "of", "to", "the"]
+    return phrase.split(' ')
+                 .filter(item => !wordsToExclude.includes(item))
+                 .map(item => item.charAt(0)).join('')
+                 .substring(0,3)
+}
