@@ -52,11 +52,6 @@ interface RequestInterface {
 const Landing = () => {
   const party = useParty();
   const providers = useProviderServices(party);
-  const extras = [
-    { provider: 'Generic Provider 1', services: [ServiceKind.TRADING, ServiceKind.ISSUANCE], contracts: [] },
-    { provider: 'Generic Provider 2', services: [ServiceKind.AUCTION, ServiceKind.LISTING], contracts: [] },
-    { provider: 'Generic Provider 3', services: [ServiceKind.CUSTODY, ServiceKind.ISSUANCE], contracts: [] },
-  ];
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
