@@ -6,11 +6,9 @@ import { Service as BiddingService, Request as BiddingRequest } from "@daml.js/d
 import { Service as IssuanceService, Request as IssuanceRequest } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module";
 import { Service as ListingService, Request as ListingRequest } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module";
 import { Service as TradingService, Request as TradingRequest } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module";
-import { useParty, useStreamQueries } from "@daml/react";
+import { useStreamQueries } from "@daml/react";
 import { CreateEvent } from "@daml/ledger";
 import { Template } from "@daml/types";
-
-const ServicesStateContext = React.createContext<ServicesState>({ services: [] });
 
 export enum ServiceKind {
   CUSTODY = "Custody",
@@ -31,14 +29,6 @@ export type ServiceRequestTemplates =
   ListingRequest |
   TradingRequest;
 
-type ServiceRequestTemplates2 =
-  typeof CustodyRequest |
-  typeof AuctionRequest |
-  typeof BiddingRequest |
-  typeof IssuanceRequest |
-  typeof ListingRequest |
-  typeof TradingRequest;
-
 type ServiceContract =
   CreateEvent<CustodyService> |
   CreateEvent<AuctionService> |
@@ -54,11 +44,12 @@ type Service = {
 
 type ServicesState = {
   services: Service[];
+  loading: boolean;
 }
 
-const ServicesProvider : React.FC = ({ children }) => {
-  const party = useParty();
+const ServicesStateContext = React.createContext<ServicesState>({ services: [], loading: false });
 
+const ServicesProvider : React.FC = ({ children }) => {
   const [ services, setServices ] = useState<Service[]>([]);
   const [ loading, setLoading ] = useState<boolean>(false);
 
@@ -92,7 +83,7 @@ const ServicesProvider : React.FC = ({ children }) => {
   );
 
   return (
-    <ServicesStateContext.Provider value={{services}}>
+    <ServicesStateContext.Provider value={{services, loading}}>
       {children}
     </ServicesStateContext.Provider>
   );
