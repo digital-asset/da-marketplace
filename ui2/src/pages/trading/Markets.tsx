@@ -1,72 +1,45 @@
 import React from "react";
 import { withRouter, RouteComponentProps } from "react-router-dom";
-import { Table, TableBody, TableCell, TableRow, TableHead, Button, Grid, Paper, Typography } from "@material-ui/core";
-import { IconButton } from "@material-ui/core";
-import { KeyboardArrowRight } from "@material-ui/icons";
-import useStyles from "../styles";
 import { getName } from "../../config";
 import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
 import {CreateEvent} from "@daml/ledger";
+import Tile from "../../components/Tile/Tile";
+import {Button, Header, Icon} from "semantic-ui-react";
+import StripedTable from "../../components/Table/StripedTable";
 
 type Props = {
   listings : Readonly<CreateEvent<Listing, any, any>[]>
 }
 
 const MarketsComponent : React.FC<RouteComponentProps & Props> = ({ history, listings } : RouteComponentProps & Props) => {
-  const classes = useStyles();
 
   return (
-    <>
-      <Grid container direction="column">
-        <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography variant="h2">Actions</Typography></Grid>
-              <Grid container direction="row" justify="center">
-                <Grid item xs={12}>
-                  <Grid container justify="center">
-                    <Button color="primary" size="large" className={classes.actionButton} variant="outlined" onClick={() => history.push("/app/listing/new")}>New Market</Button>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}><Typography variant="h2">Markets</Typography></Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}><b>Provider</b></TableCell>
-                    <TableCell key={1} className={classes.tableCell}><b>Client</b></TableCell>
-                    <TableCell key={2} className={classes.tableCell}><b>Symbol</b></TableCell>
-                    <TableCell key={3} className={classes.tableCell}><b>Traded Asset</b></TableCell>
-                    <TableCell key={4} className={classes.tableCell}><b>Quoted Asset</b></TableCell>
-                    <TableCell key={5} className={classes.tableCell}><b>Details</b></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {listings.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>{getName(c.payload.provider)}</TableCell>
-                      <TableCell key={1} className={classes.tableCell}>{getName(c.payload.customer)}</TableCell>
-                      <TableCell key={2} className={classes.tableCell}>{c.payload.listingId}</TableCell>
-                      <TableCell key={3} className={classes.tableCell}>{c.payload.tradedAssetId.label}</TableCell>
-                      <TableCell key={4} className={classes.tableCell}>{c.payload.quotedAssetId.label}</TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/trading/markets/" + c.contractId.replace("#", "_"))}>
-                          <KeyboardArrowRight fontSize="small"/>
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Grid>
-    </>
+    <div>
+      <Tile header={<h2>Actions</h2>}>
+        <Button className='ghost' onClick={() => history.push("/app/listing/new")}>New Market</Button>
+      </Tile>
+      <Header as='h2'>Markets</Header>
+      <StripedTable
+        headings={[
+          'Provider',
+          'Client',
+          'Symbol',
+          'Traded Asset',
+          'Quoted Asset',
+          'Details',
+        ]}
+        rows={
+          listings.map(c => [
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            c.payload.listingId,
+            c.payload.tradedAssetId.label,
+            c.payload.quotedAssetId.label,
+            <Icon name='angle right' link onClick={() => history.push("/app/trading/markets/" + c.contractId.replace("#", "_"))} />
+          ])
+        }
+      />
+    </div>
   );
 };
 

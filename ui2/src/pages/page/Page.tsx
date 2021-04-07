@@ -27,6 +27,29 @@ const Page: React.FC<Props> = ({
 }) => {
   const user = useParty();
 
+  const constructMenu = (sideBarItem: SidebarEntry, level: number) : React.ReactElement => {
+    const childMenu = sideBarItem.children.map(child => constructMenu(child, level + 1));
+    const margin = level * 25;
+
+    return (
+      <>
+        <Menu.Item
+          exact
+          key={sideBarItem.label+sideBarItem.path}
+          as={NavLink}
+          to={sideBarItem.path}
+          className='sidemenu-item-normal'>
+          <p style={{ marginLeft : margin }}>{sideBarItem.icon}{sideBarItem.label}</p>
+        </Menu.Item>
+        {childMenu.length > 0 &&
+          <Menu.Menu>
+            {childMenu}
+          </Menu.Menu>
+        }
+      </>
+    );
+  }
+
   return (
     <Grid className={classNames('page', className)}>
       <Grid.Column className="page-sidemenu">
@@ -44,17 +67,9 @@ const Page: React.FC<Props> = ({
             </Menu.Menu>
 
             <Menu.Menu>
-              { sideBarItems?.map(item => (
-                <Menu.Item
-                  exact
-                  key={item.label+item.path}
-                  as={NavLink}
-                  to={item.path}
-                  className='sidemenu-item-normal'
-                >
-                  <p>{item.icon}{item.label}</p>
-                </Menu.Item>
-              )) }
+              {sideBarItems?.map(item =>
+                constructMenu(item, 0)
+              )}
             </Menu.Menu>
           </Menu>
       </Grid.Column>
