@@ -125,7 +125,7 @@ $(exberry_adapter_dir):
 	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
 
 $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
-	cd exberry_adapter && (DAML_LEDGER_URL=localhost:6865 $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
+	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
 
 start_adapter: $(adapter_pid)
 
