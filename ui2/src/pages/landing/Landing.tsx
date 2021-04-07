@@ -179,8 +179,8 @@ const Landing = () => {
           </OverflowMenu>
         </div>
         <div className='relationships'>
-          { providers.concat(extras)
-              .map(p => <Relationship key={p.provider} provider={p.provider} services={p.services}/>)
+          {
+            providers.map(p => <Relationship key={p.provider} provider={p.provider} services={p.services}/>)
           }
         </div>
       </div>
