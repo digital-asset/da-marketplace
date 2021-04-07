@@ -167,6 +167,7 @@ const AppComponent = () => {
           :
           <div className='app-container'>
             <Switch>
+              <Route exact key={"landing"} path="/app/" component={Landing}/>
               { routeEntries(entriesToDisplay) }
               { additionRouting.map((routeProps, i) =>
                 <Route key={i} {...routeProps} />
