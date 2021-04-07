@@ -1,0 +1,28 @@
+@use '../../themes/variables' as *;
+
+@mixin market {
+  .market {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+
+    .orders {
+      display: flex;
+      flex-direction: column;
+      width: 66%;
+    }
+
+    .new-order {
+      display: flex;
+      flex-direction: column;
+      width: 33%;
+
+      button {
+        margin-bottom: $spacing-m;
+      }
+    }
+
+  }
+}

@@ -17,6 +17,7 @@
 @use 'pages/distribution/auction/Auction';
 @use 'pages/distribution/bidding/Bidding';
 @use 'pages/listing/Listing';
+@use 'pages/trading/Market';
 
 @use './icons/icons';
 @use './App';
@@ -194,6 +195,7 @@ html {
         @include Auction.auction();
         @include Bidding.bidding();
         @include Listing.listing();
+        @include Market.market();
       }
     }
   }

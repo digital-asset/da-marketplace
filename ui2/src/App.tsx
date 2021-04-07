@@ -35,7 +35,7 @@ import { Custody as CustodyNetwork } from "./pages/network/Custody";
 import { Trading as TradingNetwork } from "./pages/network/Trading";
 import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
 import Page from "./pages/page/Page";
-import { PublicIcon } from "./icons/icons";
+import {ExchangeIcon, OrdersIcon, PublicIcon} from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
 import {WalletIcon} from "./icons/icons";
 import _ from "lodash";
@@ -115,6 +115,9 @@ const AppComponent = () => {
       { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
     ],
     additionalRoutes : [
+      { path: "/app/registry/instruments/new/base", component: NewBaseInstrument },
+      { path: "/app/registry/instruments/new/convertiblenote", component: NewConvertibleNote },
+      { path: "/app/registry/instruments/new/binaryoption", component: NewBinaryOption },
       { path: "/app/registry/instruments/:contractId", component: Instrument }
     ]
   });
@@ -132,12 +135,11 @@ const AppComponent = () => {
     displayEntry: () => tradingService.length > 0,
     sidebar: [
       {
-        label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<PlayArrow />),
-        children: listings.map(c => ({ label: c.payload.listingId, path: "/app/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<></>), icon: (<PlayArrow />), children: [] }))
-      }],
-    additionalRoutes: [
-      { path: "/app/trading/markets/:contractId", render: () => <Market services={tradingService} /> }
-    ]
+        label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<OrdersIcon />),
+        children: listings.map(c => (
+          { label: c.payload.listingId, path: "/app/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<Market services={tradingService} cid={c.contractId} listings={listings} />), icon: (<ExchangeIcon />), children: [] }
+          ))
+      }]
   });
 
   const entriesToDisplay = entries
@@ -164,9 +166,6 @@ const AppComponent = () => {
           :
           <div>
             <Switch>
-              <Route key={"newbaseinstrument"} path={"/app/registry/instruments/new/base"} component={NewBaseInstrument} />
-              <Route key={"newconvertiblenote"} path={"/app/registry/instruments/new/convertiblenote"} component={NewConvertibleNote} />
-              <Route key={"newbinaryoption"} path={"/app/registry/instruments/new/binaryoption"} component={NewBinaryOption} />
               { routeEntries(entriesToDisplay) }
               { additionRouting.map(routeProps =>
                 <Route {...routeProps} />
