@@ -28,30 +28,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
 @font-face {
-  font-family: "BrownStd-Regular";
-  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+  font-family: 'BrownStd-Regular';
+  src: url('../src/fonts/BrownStd-Regular.otf') format('opentype');
 }
 
 @font-face {
-  font-family: "BrownStd-Light";
-  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+  font-family: 'BrownStd-Light';
+  src: url('../src/fonts/BrownStd-Light.otf') format('opentype');
 }
 
 @font-face {
-  font-family: "BrownStd-Bold";
-  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
+  font-family: 'BrownStd-Bold';
+  src: url('../src/fonts/BrownStd-Bold.otf') format('opentype');
 }
 
 html {
   height: 100%;
 
   code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   }
 
   h1.ui.header {
-    font-family: "BrownStd-Light";
+    font-family: 'BrownStd-Light';
     font-style: normal;
     font-weight: normal;
     font-size: 20px;
@@ -64,12 +63,12 @@ html {
     }
 
     &.bold {
-      font-family: "BrownStd-Bold";
+      font-family: 'BrownStd-Bold';
     }
   }
 
   h2.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 20px;
@@ -87,7 +86,7 @@ html {
   }
 
   h3.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 16px;
@@ -105,7 +104,7 @@ html {
   }
 
   h4.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -114,7 +113,7 @@ html {
   }
 
   p {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 14px;

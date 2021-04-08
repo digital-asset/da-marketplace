@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
-import marketplaceLogo from "./marketplace.svg";
+import marketplaceLogo from './marketplace.svg';
 // import lock from './lock.svg'
 
 type IconProps = {
-  size?: "24" | "32" | "48" | "64";
-  color?: "green" | "blue";
+  size?: '24' | '32' | '48' | '64';
+  color?: 'green' | 'blue';
 };
 
 export const ArrowRightIcon = () => (
@@ -27,14 +27,7 @@ export const CogIcon = () => (
       d="M9.47311 7.07633C7.86133 7.07633 6.54968 8.38798 6.54968 9.99977C6.54968 11.6116 7.86133 12.9232 9.47311 12.9232C11.0849 12.9232 12.3966 11.6116 12.3966 9.99977C12.3966 8.38798 11.0849 7.07633 9.47311 7.07633ZM9.47311 13.8976C7.32341 13.8976 5.5752 12.1494 5.5752 9.99972C5.5752 7.85002 7.32341 6.10181 9.47311 6.10181C11.6228 6.10181 13.371 7.85002 13.371 9.99972C13.371 12.1494 11.6228 13.8976 9.47311 13.8976Z"
       fill="#B4F5A3"
     />
-    <mask
-      id="mask0"
-      maskUnits="userSpaceOnUse"
-      x="1"
-      y="1"
-      width="17"
-      height="18"
-    >
+    <mask id="mask0" maskUnits="userSpaceOnUse" x="1" y="1" width="17" height="18">
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -57,43 +50,13 @@ export const ControlsIcon = () => (
   <svg className="icon controls-icon" viewBox="0 0 15 13" fill="none">
     <g id="controls" transform="translate(-4.5,-5.5)">
       <g id="Group">
-        <path
-          id="Path 2"
-          d="M 17,6 V 18"
-          stroke="#b4f5a3"
-          strokeLinecap="round"
-        />
-        <path
-          id="Path 2_2"
-          d="M 12,6 V 18"
-          stroke="#b4f5a3"
-          strokeLinecap="round"
-        />
-        <path
-          id="Path 2_3"
-          d="M 7,6 V 18"
-          stroke="#b4f5a3"
-          strokeLinecap="round"
-        />
+        <path id="Path 2" d="M 17,6 V 18" stroke="#b4f5a3" strokeLinecap="round" />
+        <path id="Path 2_2" d="M 12,6 V 18" stroke="#b4f5a3" strokeLinecap="round" />
+        <path id="Path 2_3" d="M 7,6 V 18" stroke="#b4f5a3" strokeLinecap="round" />
       </g>
-      <path
-        id="Path 2_4"
-        d="M 5,8 H 9"
-        stroke="#b4f5a3"
-        strokeLinecap="round"
-      />
-      <path
-        id="Path 2_5"
-        d="m 10,16 h 4"
-        stroke="#b4f5a3"
-        strokeLinecap="round"
-      />
-      <path
-        id="Path 2_6"
-        d="m 15,12 h 4"
-        stroke="#b4f5a3"
-        strokeLinecap="round"
-      />
+      <path id="Path 2_4" d="M 5,8 H 9" stroke="#b4f5a3" strokeLinecap="round" />
+      <path id="Path 2_5" d="m 10,16 h 4" stroke="#b4f5a3" strokeLinecap="round" />
+      <path id="Path 2_6" d="m 15,12 h 4" stroke="#b4f5a3" strokeLinecap="round" />
     </g>
   </svg>
 );
@@ -138,7 +101,7 @@ export const LogoIcon: React.FC<IconProps> = ({ size }) => (
   <img
     className={`icon logo-icon icon-size-${size}`}
     src={marketplaceLogo}
-    color={"#4BE725"}
+    color={'#4BE725'}
     alt="command"
   />
 );
@@ -169,14 +132,7 @@ export const CandlestickIcon = () => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <line
-      y1="9.9165"
-      x2="18"
-      y2="9.9165"
-      stroke="white"
-      strokeWidth="1.5"
-      strokeDasharray="1 1"
-    />
+    <line y1="9.9165" x2="18" y2="9.9165" stroke="white" strokeWidth="1.5" strokeDasharray="1 1" />
     <line
       x1="3.5"
       y1="0.5"
@@ -206,14 +162,7 @@ export const CandlestickIcon = () => (
     />
     <rect x="2.5" y="3.5" width="2" height="3" fill="white" stroke="white" />
     <rect x="8.5" y="7.5" width="2" height="5" fill="white" stroke="white" />
-    <rect
-      x="14.5"
-      y="4.30957"
-      width="2"
-      height="7.38095"
-      fill="white"
-      stroke="white"
-    />
+    <rect x="14.5" y="4.30957" width="2" height="7.38095" fill="white" stroke="white" />
   </svg>
 );
 
@@ -227,12 +176,12 @@ export const ExchangeIcon: React.FC<IconProps> = ({ size, color }) => (
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      className={color ? `fill-${color}` : ""}
+      className={color ? `fill-${color}` : ''}
       d="M15.5303 6.53033C15.8232 6.23744 15.8232 5.76256 15.5303 5.46967L10.7574 0.696699C10.4645 0.403806 9.98959 0.403806 9.6967 0.696699C9.40381 0.989593 9.40381 1.46447 9.6967 1.75736L13.9393 6L9.6967 10.2426C9.40381 10.5355 9.40381 11.0104 9.6967 11.3033C9.98959 11.5962 10.4645 11.5962 10.7574 11.3033L15.5303 6.53033ZM1 6.75H15V5.25H1V6.75Z"
       fill="#4E5E7E"
     />
     <path
-      className={color ? `fill-${color}` : ""}
+      className={color ? `fill-${color}` : ''}
       d="M0.46967 14.5303C0.176777 14.2374 0.176777 13.7626 0.46967 13.4697L5.24264 8.6967C5.53553 8.40381 6.01041 8.40381 6.3033 8.6967C6.59619 8.98959 6.59619 9.46447 6.3033 9.75736L2.06066 14L6.3033 18.2426C6.59619 18.5355 6.59619 19.0104 6.3033 19.3033C6.01041 19.5962 5.53553 19.5962 5.24264 19.3033L0.46967 14.5303ZM15 14.75H1V13.25H15V14.75Z"
       fill="#4E5E7E"
     />
@@ -390,12 +339,7 @@ export const UserIcon: React.FC<IconProps> = ({ size }) => (
       width="18"
       height="18"
     >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M0 0H17.9999V17.9997H0V0Z"
-        fill="white"
-      />
+      <path fillRule="evenodd" clipRule="evenodd" d="M0 0H17.9999V17.9997H0V0Z" fill="white" />
     </mask>
     <g mask="url(#mask0)">
       <path
@@ -457,12 +401,7 @@ export const IconChevronUp = () => (
 );
 
 export const AddPlusIcon = () => (
-  <svg
-    className="icon add-plus"
-    viewBox="0 0 22 22"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg className="icon add-plus" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       className="fill-blue"
       fillRule="evenodd"
@@ -490,10 +429,7 @@ export const OverflowIcon = () => (
 
 export const EditIcon = () => (
   <svg className="icon edit-icon fill-blue" viewBox="0 0 15 15">
-    <polygon
-      className="fill-blue"
-      points="11.1,7.1 8.9,4.9 3.4,10.4 5.6,12.6 "
-    />
+    <polygon className="fill-blue" points="11.1,7.1 8.9,4.9 3.4,10.4 5.6,12.6 " />
     <polygon className="fill-blue" points="3,10.8 3,13 5.2,13 " />
     <path
       className="fill-blue"

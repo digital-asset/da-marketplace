@@ -8,15 +8,10 @@ type Props = {
   placeholder?: string;
   value: string | Date | undefined | null;
   onChange: (e: any) => void;
-}
+};
 
 const CalendarInput: React.FC<Props> = ({ value, label, placeholder, onChange }) => (
-  <Form.Input
-    fluid
-    className='calendar-input'
-    label={label}
-    placeholder={placeholder}
-  >
+  <Form.Input fluid className="calendar-input" label={label} placeholder={placeholder}>
     <MuiPickersUtilsProvider utils={DateFnsUtils}>
       <KeyboardDatePicker
         fullWidth
@@ -27,12 +22,13 @@ const CalendarInput: React.FC<Props> = ({ value, label, placeholder, onChange })
         label=""
         placeholder={placeholder}
         PopoverProps={{
-          anchorOrigin: { horizontal: "right", vertical: "top" },
-          transformOrigin: { horizontal: "right", vertical: "top" }
+          anchorOrigin: { horizontal: 'right', vertical: 'top' },
+          transformOrigin: { horizontal: 'right', vertical: 'top' },
         }}
         defaultValue=""
         value={value}
-        onChange={onChange} />
+        onChange={onChange}
+      />
     </MuiPickersUtilsProvider>
   </Form.Input>
 );
