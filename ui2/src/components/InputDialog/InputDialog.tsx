@@ -1,38 +1,38 @@
-import React, { useEffect, useState } from "react";
-import TextField from "@material-ui/core/TextField";
-import Select from "@material-ui/core/Select";
-import InputLabel from "@material-ui/core/InputLabel";
-import FormControl from "@material-ui/core/FormControl";
-import MenuItem from "@material-ui/core/MenuItem";
-import Checkbox from "@material-ui/core/Checkbox";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import {Button, Form, Label, Modal} from "semantic-ui-react";
+import React, { useEffect, useState } from 'react';
+import TextField from '@material-ui/core/TextField';
+import Select from '@material-ui/core/Select';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import MenuItem from '@material-ui/core/MenuItem';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { Button, Form, Label, Modal } from 'semantic-ui-react';
 
 export interface RegularField {
-  label: string
-  type: "text" | "number" | "date"
+  label: string;
+  type: 'text' | 'number' | 'date';
 }
 
 export interface SelectionField {
-  label: string
-  type: "selection"
-  items: string[]
+  label: string;
+  type: 'selection';
+  items: string[];
 }
 
 export interface CheckBoxField {
-  label: string
-  type: "checkbox"
+  label: string;
+  type: 'checkbox';
 }
 
-export type Field = RegularField | SelectionField | CheckBoxField
+export type Field = RegularField | SelectionField | CheckBoxField;
 
 export interface InputDialogProps<T extends { [key: string]: any }> {
-  open: boolean
-  title: string
-  defaultValue: T
-  fields: Record<keyof T, Field>
-  onClose: (state: T | null) => Promise<void>
-  onChange?: (state: T | null) => void
+  open: boolean;
+  title: string;
+  defaultValue: T;
+  fields: Record<keyof T, Field>;
+  onClose: (state: T | null) => Promise<void>;
+  onChange?: (state: T | null) => void;
 }
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
@@ -41,24 +41,24 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   useEffect(() => props.onChange && props.onChange(state), [state]);
 
   function fieldsToInput([fieldName, field]: [string, Field], index: number): JSX.Element {
-    if (field.type === "selection") {
+    if (field.type === 'selection') {
       return (
-          <Form.Select
-            key={index}
-            label={field.label}
-            onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
-            options={ field.items.map(item => ({ key: item, value: item, text: item })) }
-            value={ state[fieldName] }
-          />
-      )
-    } else if (field.type === "checkbox") {
+        <Form.Select
+          key={index}
+          label={field.label}
+          onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
+          options={field.items.map(item => ({ key: item, value: item, text: item }))}
+          value={state[fieldName]}
+        />
+      );
+    } else if (field.type === 'checkbox') {
       return (
-          <Form.Checkbox
-            key={index}
-            label={field.label}
-            onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.checked }))}
-          />
-      )
+        <Form.Checkbox
+          key={index}
+          label={field.label}
+          onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.checked }))}
+        />
+      );
     } else {
       return (
         <Form.Input
@@ -67,24 +67,26 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           label={field.label}
           type={field.type}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
-          placeholder={(field.type === "date") ? "YYYY-MM-DD" : ""}
+          placeholder={field.type === 'date' ? 'YYYY-MM-DD' : ''}
         />
-      )
+      );
     }
   }
   const fieldsAsArray: [string, Field][] = Object.entries(props.fields);
 
   return (
     <Modal open={props.open} size="small" onClose={() => props.onClose(null)}>
-      <Modal.Header as='h3'>{props.title}</Modal.Header>
+      <Modal.Header as="h3">{props.title}</Modal.Header>
       <Modal.Content>
-        <Form>
-          {fieldsAsArray.map((value, index) => fieldsToInput(value, index))}
-        </Form>
+        <Form>{fieldsAsArray.map((value, index) => fieldsToInput(value, index))}</Form>
       </Modal.Content>
       <Modal.Actions>
-          <Button className='ghost' onClick={() => props.onClose(state)}>Confirm</Button>
-          <Button className='ghost' onClick={() => props.onClose(null)}>Cancel</Button>
+        <Button className="ghost" onClick={() => props.onClose(state)}>
+          Confirm
+        </Button>
+        <Button className="ghost" onClick={() => props.onClose(null)}>
+          Cancel
+        </Button>
       </Modal.Actions>
     </Modal>
   );

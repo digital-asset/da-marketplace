@@ -2,7 +2,7 @@
 
 @mixin assets {
   .assets {
-    animation: fadeIn .5s;
+    animation: fadeIn 0.5s;
 
     h2 {
       margin-bottom: $spacing-m;

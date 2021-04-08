@@ -1,19 +1,18 @@
 /** Creates color properties such as var(--cool-grey-50) */
 @mixin set-color-properties($color-name, $hue, $sat, $start-step) {
   @for $i from $start-step through 100 {
-      @if $i % 10 == 0 {
-          --#{$color-name}-#{$i}: hsl(#{$hue}, #{$sat}, #{getHslLightness($i) + "%"});
-      }
+    @if $i % 10 == 0 {
+      --#{$color-name}-#{$i}: hsl(#{$hue}, #{$sat}, #{getHslLightness($i) + '%'});
+    }
   }
 }
 
 @function getHslLightness($lightness) {
   @if $lightness == 100 {
-      @return 98;
+    @return 98;
   }
   @return $lightness;
 }
-
 
 :root {
   @include set-color-properties('cool-grey', 220, 24%, 10);
@@ -22,7 +21,7 @@
   @include set-color-properties('red', 349, 90%, 40);
   @include set-color-properties('yellow', 62, 100%, 40);
 
-  --white: #FFFFFF;
+  --white: #ffffff;
   --textcolor: var(--cool-grey-10);
 }
 

@@ -14,16 +14,16 @@ interface Props<T extends ServiceRequestTemplates> {
   service: ServiceKind;
   onChange: (state: any) => void;
   onClose: (open: boolean) => void;
-};
+}
 
-const ServiceRequestDialog = <T extends ServiceRequestTemplates,>({
+const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   fields,
   open,
   params,
   request,
   service,
   onChange,
-  onClose
+  onClose,
 }: Props<T>) => {
   const ledger = useLedger();
 
@@ -35,17 +35,20 @@ const ServiceRequestDialog = <T extends ServiceRequestTemplates,>({
 
     await ledger.create(request, params);
     onClose(false);
-  }
+  };
 
-  return <InputDialog
-            open={!!open}
-            title={`Request ${service} Service`}
-            defaultValue={{
-              provider: ""
-            }}
-            fields={fields}
-            onChange={onChange}
-            onClose={handleClose}/>
-}
+  return (
+    <InputDialog
+      open={!!open}
+      title={`Request ${service} Service`}
+      defaultValue={{
+        provider: '',
+      }}
+      fields={fields}
+      onChange={onChange}
+      onClose={handleClose}
+    />
+  );
+};
 
 export default ServiceRequestDialog;

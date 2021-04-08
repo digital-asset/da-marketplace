@@ -7,53 +7,56 @@ import { OverflowIcon } from '../../icons/icons';
 
 import { useDismissableElement } from './utils';
 
-export const OverflowMenuEntry : FunctionComponent<{
-    label : React.ReactElement | string,
-    onClick?: () => void,
-    href?: string
-}> = (props) => {
-    const { href, onClick } = props;
-    const history  = useHistory()
+export const OverflowMenuEntry: FunctionComponent<{
+  label: React.ReactElement | string;
+  onClick?: () => void;
+  href?: string;
+}> = props => {
+  const { href, onClick } = props;
+  const history = useHistory();
 
-    function handleClick() {
-        if (href) {
-            history.push(href);
-        }
-        if (onClick) {
-            onClick();
-        }
+  function handleClick() {
+    if (href) {
+      history.push(href);
     }
+    if (onClick) {
+      onClick();
+    }
+  }
 
-    return (
-      <div className='overflow-menu-entry' onClick={handleClick}>
-          <p>{props.label}</p>
-      </div>
-    );
+  return (
+    <div className="overflow-menu-entry" onClick={handleClick}>
+      <p>{props.label}</p>
+    </div>
+  );
 };
 
 type OverflowMenuProps = {
-    align?: 'left' | 'right';
-}
+  align?: 'left' | 'right';
+};
 
-const OverflowMenu : React.FC<OverflowMenuProps> = ({ children, align }) => {
+const OverflowMenu: React.FC<OverflowMenuProps> = ({ children, align }) => {
+  const [showModal, setShowModal] = useState(false);
 
-    const [ showModal, setShowModal ] = useState(false);
+  const { refDismissable, refControl } = useDismissableElement<HTMLDivElement, HTMLDivElement>(() =>
+    setShowModal(false)
+  );
 
-    const { refDismissable, refControl } =
-        useDismissableElement<HTMLDivElement, HTMLDivElement>(() => setShowModal(false));
-
-    return (
-        <Button className={classNames('ghost overflow-menu', { 'inactive': showModal })}
-             onClick={() => setShowModal(!showModal)}>
-            <div className="overflow-menu-title" ref={refControl}>
-                <OverflowIcon/>
-            </div>
-            {showModal &&
-               <div className={classNames("overflow-menu-modal", align)} ref={refDismissable}>
-                   {children}
-               </div>}
-        </Button>
-    );
-}
+  return (
+    <Button
+      className={classNames('ghost overflow-menu', { inactive: showModal })}
+      onClick={() => setShowModal(!showModal)}
+    >
+      <div className="overflow-menu-title" ref={refControl}>
+        <OverflowIcon />
+      </div>
+      {showModal && (
+        <div className={classNames('overflow-menu-modal', align)} ref={refDismissable}>
+          {children}
+        </div>
+      )}
+    </Button>
+  );
+};
 
 export default OverflowMenu;
