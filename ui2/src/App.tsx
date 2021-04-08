@@ -42,6 +42,7 @@ import _ from "lodash";
 import { NewConvertibleNote } from "./pages/origination/NewConvertibleNote";
 import { NewBinaryOption } from "./pages/origination/NewBinaryOption";
 import { NewBaseInstrument } from "./pages/origination/NewBaseInstrument";
+import Landing from "./pages/landing/Landing";
 
 type Entry = {
   displayEntry: () => boolean,
@@ -158,17 +159,18 @@ const AppComponent = () => {
   };
 
   return (
-    <Page sideBarItems={entriesToDisplay}>
+    <Page className='app' sideBarItems={entriesToDisplay}>
        { servicesLoading ?
           <div>
             <CircularProgress color={"secondary"} />
           </div>
           :
-          <div>
+          <div className='app-container'>
             <Switch>
+              <Route exact key={"landing"} path="/app/" component={Landing}/>
               { routeEntries(entriesToDisplay) }
-              { additionRouting.map(routeProps =>
-                <Route {...routeProps} />
+              { additionRouting.map((routeProps, i) =>
+                <Route key={i} {...routeProps} />
               )}
             </Switch>
           </div>

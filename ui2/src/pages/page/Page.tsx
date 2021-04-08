@@ -7,6 +7,7 @@ import { useParty } from '@daml/react'
 import PageSection from './PageSection'
 import WelcomeHeader from './WelcomeHeader'
 import { SidebarEntry } from '../../components/Sidebar/SidebarEntry'
+import { CogIcon } from '../../icons/icons'
 
 type Props = {
   className?: string;
@@ -61,6 +62,7 @@ const Page: React.FC<Props> = ({
                   className='home-item'
               >
                 <Header as='h1' className='dark'>@{user}</Header>
+                <CogIcon/>
               </Menu.Item>
             </Menu.Menu>
 

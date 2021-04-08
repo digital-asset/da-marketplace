@@ -1,0 +1,126 @@
+@use '../../themes/variables' as *;
+
+@mixin landing {
+  .landing {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+
+    .header {
+      display: inline-block;
+      margin-right: $spacing-m;
+    }
+
+    .col {
+      flex-grow: 1;
+      flex-basis: 100%;
+      flex-shrink: 2;
+      margin-right: $spacing-m;
+
+      &.col-2 {
+        flex-grow: 2;
+        flex-basis: 100%;
+        flex-shrink: 1;
+
+        .relationships {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+        }
+      }
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      .profile {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        .profile-name {
+          display: flex;
+          align-items: center;
+          background: var(--blue-100);
+          border-radius: 40px;
+          font-weight: 600;
+          font-size: 24px;
+          padding: $spacing-s $spacing-m;
+          line-height: 33px;
+          text-align: center;
+          vertical-align: middle;
+        }
+      }
+
+      .link-tile {
+        display: flex;
+        justify-content: space-between;
+
+        .link > a {
+          font-size: 14px;
+        }
+      }
+
+      .relationship-tile {
+        margin-right: $spacing-m;
+        padding: 16px $spacing-m;
+        width: 47%;
+
+        .tile-content {
+          display: flex;
+          align-items: center;
+
+          .child {
+            margin-right: $spacing-s;
+
+            &:last-child {
+              margin-right: 0;
+            }
+          }
+
+          .provider {
+            flex-grow: 1;
+          }
+
+          .profile-pic {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            border-radius: 50%;
+            min-width: 40px;
+            min-height: 40px;
+            width: 40px;
+            height: 40px;
+
+            font-family: Open Sans;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 22px;
+
+            background: var(--green-40); /* default bg color */
+            color: var(--white);
+
+            &.bg-color-1 {
+              background: var(--green-40);
+            }
+
+            &.bg-color-2 {
+              background: var(--red-70);
+            }
+
+            &.bg-color-3 {
+              background: var(--cool-grey-60);
+            }
+
+            &.bg-color-4 {
+              background: #956C91;
+            }
+          }
+        }
+      }
+    }
+  }
+}

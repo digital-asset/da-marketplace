@@ -1,29 +1,13 @@
 @use '../../../themes/variables' as *;
 
 @mixin bidding {
-  .bidding {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: space-between;
-
-    table {
-      th {
-        background-color: var(--white);
-      }
-    }
-
-    .bidding-details {
+  .auction {
+    .bidding {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       flex-wrap: wrap;
-      width: 33%;
+      width: 100%;
       justify-content: space-between;
-
-      h2 {
-        margin-bottom: $spacing-m;
-      }
 
       table {
         th {
@@ -31,27 +15,45 @@
         }
       }
 
-      .asset-details {
+      .bidding-details {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
+        flex-wrap: wrap;
+        width: 33%;
+        justify-content: space-between;
 
-        .text {
-          width: 90%;
+        h2 {
+          margin-bottom: $spacing-m;
         }
 
-        .icon {
-          width: 10%;
+        table {
+          th {
+            background-color: var(--white);
+          }
         }
+
+        .asset-details {
+          display: flex;
+          flex-direction: row;
+
+          .text {
+            width: 90%;
+          }
+
+          .icon {
+            width: 10%;
+          }
+        }
+
       }
 
+      .asset {
+        width: 66%;
+      }
     }
 
-    .asset {
-      width: 66%;
+    .header {
+      margin-bottom: $spacing-m;
     }
-  }
-
-  .header {
-    margin-bottom: $spacing-m;
   }
 }

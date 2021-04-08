@@ -86,7 +86,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({ services }
   };
 
   return (
-    <>
+    <div className='auction'>
       <Header as='h2' className='header'>Auction - {biddingAuction.payload.asset.id.label}</Header>
       <div className='bidding'>
         <div className='bidding-details'>
@@ -230,6 +230,6 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({ services }
           )}
         </div>
       </div>
-    </>
+    </div>
   );
 };

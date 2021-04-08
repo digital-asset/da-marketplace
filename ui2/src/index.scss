@@ -8,8 +8,10 @@
 @use 'components/Form/CalendarInput';
 
 @use 'pages/login/Login';
+@use 'pages/landing/Landing';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
+@use 'pages/page/OverflowMenu';
 @use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
@@ -187,8 +189,10 @@ html {
         @include CalendarInput.calendar-input();
         @include App.app();
         @include Page.page();
+        @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Login.login-screen();
+        @include Landing.landing();
         @include Assets.assets();
         @include Account.account();
         @include New.new-account();
