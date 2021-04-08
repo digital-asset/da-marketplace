@@ -1,11 +1,17 @@
 import React from "react";
-import { Route, Switch, withRouter, RouteProps } from "react-router-dom";
+import {
+  Route,
+  Switch,
+  withRouter,
+  RouteProps,
+  Redirect,
+} from "react-router-dom";
 import { PlayArrow } from "@material-ui/icons";
 import { SidebarEntry } from "./components/Sidebar/SidebarEntry";
 import { New as CustodyNew } from "./pages/custody/New";
 import { Requests as CustodyRequests } from "./pages/custody/Requests";
 import { Account } from "./pages/custody/Account";
-import {useParty, useStreamQueries} from "@daml/react";
+import { useParty, useStreamQueries } from "@daml/react";
 import { Service as CustodyService } from "@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module";
 import { Service as AuctionService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module";
 import { Service as BiddingService } from "@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module";
@@ -35,148 +41,389 @@ import { Custody as CustodyNetwork } from "./pages/network/Custody";
 import { Trading as TradingNetwork } from "./pages/network/Trading";
 import { BiddingAuctions } from "./pages/distribution/bidding/Auctions";
 import Page from "./pages/page/Page";
-import {ExchangeIcon, OrdersIcon, PublicIcon} from "./icons/icons";
+import {
+  ControlsIcon,
+  ExchangeIcon,
+  OrdersIcon,
+  PublicIcon,
+} from "./icons/icons";
 import { Instrument } from "./pages/origination/Instrument";
-import {WalletIcon} from "./icons/icons";
+import { WalletIcon } from "./icons/icons";
 import _ from "lodash";
 import { NewConvertibleNote } from "./pages/origination/NewConvertibleNote";
 import { NewBinaryOption } from "./pages/origination/NewBinaryOption";
 import { NewBaseInstrument } from "./pages/origination/NewBaseInstrument";
 import Landing from "./pages/landing/Landing";
+import Manage from "./pages/manage/Manage";
 
 type Entry = {
-  displayEntry: () => boolean,
-  sidebar: SidebarEntry[],
-  additionalRoutes?: RouteProps[]
+  displayEntry: () => boolean;
+  sidebar: SidebarEntry[];
+  additionalRoutes?: RouteProps[];
 };
 
 const AppComponent = () => {
   const party = useParty();
 
-  const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
-  const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService, () => [{ customer: party }]);
-  const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(IssuanceService);
-  const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
-  const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
-  const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
+  const {
+    contracts: custodyService,
+    loading: custodyLoading,
+  } = useStreamQueries(CustodyService);
+  const {
+    contracts: auctionService,
+    loading: auctionLoading,
+  } = useStreamQueries(AuctionService);
+  const {
+    contracts: biddingService,
+    loading: biddingLoading,
+  } = useStreamQueries(BiddingService, () => [{ customer: party }]);
+  const {
+    contracts: issuanceService,
+    loading: issuanceLoading,
+  } = useStreamQueries(IssuanceService);
+  const {
+    contracts: listingService,
+    loading: listingLoading,
+  } = useStreamQueries(ListingService);
+  const {
+    contracts: tradingService,
+    loading: tradingLoading,
+  } = useStreamQueries(TradingService);
+  const { contracts: listings, loading: listingsLoading } = useStreamQueries(
+    Listing
+  );
 
-  const servicesLoading: boolean = [custodyLoading, auctionLoading, biddingLoading, issuanceLoading, listingLoading, tradingLoading, listingsLoading].every(s => s);
+  const servicesLoading: boolean = [
+    custodyLoading,
+    auctionLoading,
+    biddingLoading,
+    issuanceLoading,
+    listingLoading,
+    tradingLoading,
+    listingsLoading,
+  ].every((s) => s);
 
   const entries: Entry[] = [];
   entries.push({
     displayEntry: () => custodyService.length > 0,
     sidebar: [
-      { label: "Wallet", path: "/app/custody/assets", render: () => (<Assets services={custodyService} />), icon: (<WalletIcon />), children: [] }
+      {
+        label: "Wallet",
+        path: "/app/custody/assets",
+        render: () => <Assets services={custodyService} />,
+        icon: <WalletIcon />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/custody/accounts/new", render: () => (<CustodyNew services={custodyService} />) },
-      { path: "/app/custody/account/:contractId", render: () => (<Account services={custodyService} />) },
-      { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
-    ]
+    additionalRoutes: [
+      {
+        path: "/app/custody/accounts/new",
+        render: () => <CustodyNew services={custodyService} />,
+      },
+      {
+        path: "/app/custody/account/:contractId",
+        render: () => <Account services={custodyService} />,
+      },
+      {
+        path: "/app/custody/requests",
+        render: () => <CustodyRequests services={custodyService} />,
+      },
+    ],
   });
   entries.push({
     displayEntry: () => true,
     sidebar: [
       {
-        label: "Network", path: "/app/network/custody", render: () => (<CustodyNetwork services={custodyService} />), icon: (<PlayArrow />), children: [
-          { label: "Custody", path: "/app/network/custody", render: () => (<CustodyNetwork services={custodyService} />), icon: (<PlayArrow />), children: [] },
-          { label: "Trading", path: "/app/network/trading", render: () => (<TradingNetwork services={tradingService} />), icon: (<PlayArrow />), children: [] },
-          { label: "Listing", path: "/app/network/listing", render: () => (<MarketNetwork listings={listings} />), icon: (<PlayArrow />), children: [] }
-        ]
-      }]
+        label: "Network",
+        path: "/app/network/custody",
+        render: () => <CustodyNetwork services={custodyService} />,
+        icon: <PlayArrow />,
+        children: [
+          {
+            label: "Custody",
+            path: "/app/network/custody",
+            render: () => <CustodyNetwork services={custodyService} />,
+            icon: <PlayArrow />,
+            children: [],
+          },
+          {
+            label: "Trading",
+            path: "/app/network/trading",
+            render: () => <TradingNetwork services={tradingService} />,
+            icon: <PlayArrow />,
+            children: [],
+          },
+          {
+            label: "Listing",
+            path: "/app/network/listing",
+            render: () => <MarketNetwork listings={listings} />,
+            icon: <PlayArrow />,
+            children: [],
+          },
+        ],
+      },
+    ],
   });
   entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
-      { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
+      {
+        label: "Auctions",
+        path: "/app/distribution/auctions",
+        render: () => <Auctions />,
+        icon: <PlayArrow />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />},
-      { path: "/app/distribution/new", render: () => <DistributionNew services={auctionService} />},
-      { path: "/app/distribution/requests", render: () => <AuctionRequests services={auctionService} />}
-    ]
+    additionalRoutes: [
+      {
+        path: "/app/distribution/auctions/:contractId",
+        render: (props) => (
+          <Auction
+            auctionServices={auctionService}
+            biddingServices={biddingService}
+            {...props}
+          />
+        ),
+      },
+      {
+        path: "/app/distribution/new",
+        render: () => <DistributionNew services={auctionService} />,
+      },
+      {
+        path: "/app/distribution/requests",
+        render: () => <AuctionRequests services={auctionService} />,
+      },
+    ],
   });
-  entries.push({ displayEntry: () => biddingService.length > 0,
+  entries.push({
+    displayEntry: () => biddingService.length > 0,
     sidebar: [
-      { label: "My Auctions", path: "/app/distribution/bidding", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
+      {
+        label: "My Auctions",
+        path: "/app/distribution/bidding",
+        render: () => <BiddingAuctions />,
+        icon: <PlayArrow />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/distribution/bidding/:contractId", render: () => <BiddingAuction services={biddingService} />}
-    ]
+    additionalRoutes: [
+      {
+        path: "/app/distribution/bidding/:contractId",
+        render: () => <BiddingAuction services={biddingService} />,
+      },
+    ],
   });
   entries.push({
     displayEntry: () => issuanceService.length > 0,
     sidebar: [
-      { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), children: [] },
-      { label: "New Instruments", path: "/app/instrument/new", render: () => (<InstrumentsNew />), icon: (<PublicIcon />), children: [] },
-      { label: "Instrument Requests", path: "/app/instrument/requests", render: () => (<InstrumentsRequests />), icon: (<PublicIcon />), children: [] },
-      { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), children: [] },
-      { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PublicIcon />), children: [] },
-      { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
+      {
+        label: "Instruments",
+        path: "/app/instrument/instruments",
+        render: () => <Instruments />,
+        icon: <PublicIcon />,
+        children: [],
+      },
+      {
+        label: "New Instruments",
+        path: "/app/instrument/new",
+        render: () => <InstrumentsNew />,
+        icon: <PublicIcon />,
+        children: [],
+      },
+      {
+        label: "Instrument Requests",
+        path: "/app/instrument/requests",
+        render: () => <InstrumentsRequests />,
+        icon: <PublicIcon />,
+        children: [],
+      },
+      {
+        label: "Issuances",
+        path: "/app/issuance/issuances",
+        render: () => <Issuances />,
+        icon: <PublicIcon />,
+        children: [],
+      },
+      {
+        label: "New Issuances",
+        path: "/app/issuance/new",
+        render: () => <IssuanceNew services={issuanceService} />,
+        icon: <PublicIcon />,
+        children: [],
+      },
+      {
+        label: "Issuance Requests",
+        path: "/app/issuance/requests",
+        render: () => <IssuanceRequests services={issuanceService} />,
+        icon: <PublicIcon />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/registry/instruments/new/base", component: NewBaseInstrument },
-      { path: "/app/registry/instruments/new/convertiblenote", component: NewConvertibleNote },
-      { path: "/app/registry/instruments/new/binaryoption", component: NewBinaryOption },
-      { path: "/app/registry/instruments/:contractId", component: Instrument }
-    ]
+    additionalRoutes: [
+      {
+        path: "/app/registry/instruments/new/base",
+        component: NewBaseInstrument,
+      },
+      {
+        path: "/app/registry/instruments/new/convertiblenote",
+        component: NewConvertibleNote,
+      },
+      {
+        path: "/app/registry/instruments/new/binaryoption",
+        component: NewBinaryOption,
+      },
+      { path: "/app/registry/instruments/:contractId", component: Instrument },
+    ],
   });
   entries.push({
     displayEntry: () => listingService.length > 0,
     sidebar: [
-      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PublicIcon />), children: [] },
+      {
+        label: "Listings",
+        path: "/app/listing/listings",
+        render: () => (
+          <Listings services={listingService} listings={listings} />
+        ),
+        icon: <PublicIcon />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/listing/new", render: () => (<ListingNew services={listingService} />) },
-      { path: "/app/listing/requests", render: () => (<ListingRequests services={listingService} listings={listings} />) }
-    ]
+    additionalRoutes: [
+      {
+        path: "/app/listing/new",
+        render: () => <ListingNew services={listingService} />,
+      },
+      {
+        path: "/app/listing/requests",
+        render: () => (
+          <ListingRequests services={listingService} listings={listings} />
+        ),
+      },
+    ],
   });
   entries.push({
     displayEntry: () => tradingService.length > 0,
     sidebar: [
       {
-        label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<OrdersIcon />),
-        children: listings.map(c => (
-          { label: c.payload.listingId, path: "/app/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<Market services={tradingService} cid={c.contractId} listings={listings} />), icon: (<ExchangeIcon />), children: [] }
-          ))
-      }]
+        label: "Markets",
+        path: "/app/trading/markets",
+        render: () => <Markets listings={listings} />,
+        icon: <OrdersIcon />,
+        children: listings.map((c) => ({
+          label: c.payload.listingId,
+          path: "/app/trading/markets/" + c.contractId.replace("#", "_"),
+          render: () => (
+            <Market
+              services={tradingService}
+              cid={c.contractId}
+              listings={listings}
+            />
+          ),
+          icon: <ExchangeIcon />,
+          children: [],
+        })),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: "Manage",
+        path: "/app/manage",
+        render: () => <Redirect to="/app/manage/distributions" />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: "/app/manage/distributions",
+        render: () => (
+          <Manage>
+            {/* <h3>Assets</h3>
+          <Assets services={custodyService}/> */}
+            <h3>Auctions</h3>
+            <Auctions />
+          </Manage>
+        ),
+      },
+      {
+        path: "/app/manage/issuance",
+        render: () => (
+          <Manage>
+            <h2>issuance</h2>
+          </Manage>
+        ),
+      },
+      {
+        path: "/app/manage/origination",
+        render: () => (
+          <Manage>
+            <h2>origination</h2>
+          </Manage>
+        ),
+      },
+      {
+        path: "/app/manage/trading",
+        render: () => (
+          <Manage>
+            <h2>trading</h2>
+          </Manage>
+        ),
+      },
+      {
+        path: "/app/manage/listings",
+        render: () => (
+          <Manage>
+            <h2>listings</h2>
+          </Manage>
+        ),
+      },
+    ],
   });
 
   const entriesToDisplay = entries
-    .filter(e => e.displayEntry())
-    .flatMap(e => e.sidebar);
-  const additionRouting : RouteProps[] = _.compact(entries
-    .filter(e => e.displayEntry())
-    .flatMap(e => e.additionalRoutes)
+    .filter((e) => e.displayEntry())
+    .flatMap((e) => e.sidebar);
+  const additionRouting: RouteProps[] = _.compact(
+    entries.filter((e) => e.displayEntry()).flatMap((e) => e.additionalRoutes)
   );
 
-  const routeEntries = (sidebarEntries : SidebarEntry[]) : React.ReactElement[] => {
-    const childRoutes = sidebarEntries.map(e => routeEntries(e.children)).flat();
-    const routes = sidebarEntries.map(e => <Route exact={true} key={e.label} path={e.path} render={e.render} />);
+  const routeEntries = (
+    sidebarEntries: SidebarEntry[]
+  ): React.ReactElement[] => {
+    const childRoutes = sidebarEntries
+      .map((e) => routeEntries(e.children))
+      .flat();
+    const routes = sidebarEntries.map((e) => (
+      <Route exact={true} key={e.label} path={e.path} render={e.render} />
+    ));
 
     return routes.concat(childRoutes);
   };
 
   return (
-    <Page className='app' sideBarItems={entriesToDisplay}>
-       { servicesLoading ?
-          <div>
-            <CircularProgress color={"secondary"} />
-          </div>
-          :
-          <div className='app-container'>
-            <Switch>
-              <Route exact key={"landing"} path="/app/" component={Landing}/>
-              { routeEntries(entriesToDisplay) }
-              { additionRouting.map((routeProps, i) =>
-                <Route key={i} {...routeProps} />
-              )}
-            </Switch>
-          </div>
-        }
+    <Page className="app" sideBarItems={entriesToDisplay}>
+      {servicesLoading ? (
+        <div>
+          <CircularProgress color={"secondary"} />
+        </div>
+      ) : (
+        <div className="app-container">
+          <Switch>
+            <Route exact key={"landing"} path="/app/" component={Landing} />
+            {routeEntries(entriesToDisplay)}
+            {additionRouting.map((routeProps, i) => (
+              <Route key={i} {...routeProps} />
+            ))}
+          </Switch>
+        </div>
+      )}
     </Page>
   );
-}
+};
 
 export const App = withRouter(AppComponent);
