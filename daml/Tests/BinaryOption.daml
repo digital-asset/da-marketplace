@@ -5,6 +5,7 @@ import Common (onboardProviders, onboardCustomer)
 import ContingentClaims.Claim (serialize)
 import DA.Date (date, datetime, Month(Mar, Oct))
 import DA.Finance.Types (Id(..), Asset(..))
+import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..), AssetSettlement_Transfer(..))
 import Daml.Script
 import DA.Next.Set qualified as Set
@@ -12,6 +13,8 @@ import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
 import Tests.Utils (binaryCallOption)
+import DA.Time (time)
+import DA.Assert
 
 endToEnd = script do
   providers <- onboardProviders
@@ -73,3 +76,10 @@ endToEnd = script do
     safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList [ ("TSLA", Map.insert (date 2020 Mar 18) 920.0 Map.empty) ]
+
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "TSLA Mar21 910.0")
+  bobsOption.asset.id.version === 1
+  [(_, bobsMoney)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "USD")
+  bobsMoney.asset.quantity === 1.0 -- TODO why not 1000.0, as Bob has 1000 options (quantity = 1000.0)
+  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice.customer (\c -> c.asset.id.label == "USD")
+  alicesMoney.asset.quantity === 99.0
