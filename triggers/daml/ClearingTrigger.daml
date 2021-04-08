@@ -2,7 +2,6 @@ module ClearingTrigger where
 
 import DA.Action
 import DA.Optional
-import DA.List
 import DA.Foldable hiding (elem, null, foldl)
 import Daml.Trigger
 
@@ -63,8 +62,7 @@ handleCCPRule party = do
   handleOutgoingMTMCalculations party ownedAssetDeposits outgoingMarkToMarkets
 
 
--- |Find all 'AssetDeposit' that a CCP Customer has with the CCP that are
--- _not_ margin deposits.
+-- |Find all 'AssetDeposit' that a CCP Customer has with the CCP in a specific account
 getCustomerDeposits : Party -> Party -> (Clearing.Service -> Account) -> TriggerA CCPState [ContractId AssetDeposit]
 getCustomerDeposits ccp customer account = do
     state@CCPState { operatorParty } <- get
@@ -81,10 +79,11 @@ handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targ
   CCPState { operatorParty } <- get
 
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
+  marginDepositCids <- getCustomerDeposits ccp customer (.marginAccount)
   debug $ show clearingDepositCids
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarginFill with
-                   calculationCid = mcCid, depositCids = clearingDepositCids]
-               ([toAnyContractId mcCid] <> map toAnyContractId clearingDepositCids)
+                   calculationCid = mcCid, depositCids = clearingDepositCids, marginDepositCids]
+               ([toAnyContractId mcCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
 
   return ()
 
@@ -102,9 +101,10 @@ handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalc
   debug ("handling incoming mtm calculation: " <> show mtm)
   CCPState { operatorParty } <- get
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
+  marginDepositCids <- getCustomerDeposits ccp customer (.marginAccount)
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.TransferToProvider with
-                  amount = (mtmAmount * (-1.0)); optMTMCalculationCid = Some mtmCid]
-               (toAnyContractId mtmCid :: map toAnyContractId clearingDepositCids)
+                  amount = (mtmAmount * (-1.0)); marginDepositCids; optMTMCalculationCid = Some mtmCid]
+               ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
   return ()
 --
 --
@@ -125,7 +125,7 @@ handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
       CCPState { operatorParty } <- get
       let depositCids = map fst toUse
       dedupExerciseByKey @Clearing.Service (operatorParty, party, (snd mtm).customer) TransferFromProvider
-          with  ..
+          with  optMTMCalculationCid = Some (fst mtm); ..
       handleOutgoingMTMCalculations party remaining mtms
   where
     amount = (snd mtm).mtmAmount

@@ -31,17 +31,17 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   const [open, setOpen] = React.useState(false)
 
   const loadAndCatch = async (fn: () => Promise<void>) => {
-    let hadError = false;
+    let didError = false;
     setLoading(true);
     setError(undefined);
     try {
       await fn();
     } catch (err) {
       setError(parseError(err));
-      hadError = true;
+      didError = true;
     }
 
-    if (!hadError) { setOpen(false) };
+    if (!didError) { setOpen(false) };
     setLoading(false);
   }
 
@@ -58,17 +58,19 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>
-        {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
-        {!!error && <Message
-          negative
-          header={error?.header}
-          content={errorMsgContent}
-          list={errorMsgList} />}
+        <Form onSubmit={() => loadAndCatch(onSubmit)}>
+          {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
+        </Form>
+          {!!error && <Message
+            negative
+            header={error?.header}
+            content={errorMsgContent}
+            list={errorMsgList} />}
       </Modal.Content>
       <Modal.Actions>
         <Button color='black' onClick={() => setOpen(false)}>
           Cancel
-          </Button>
+        </Button>
         <Button
           content="Submit"
           labelPosition='right'
