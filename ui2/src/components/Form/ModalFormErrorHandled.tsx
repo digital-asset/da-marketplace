@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react'
-import { Button, Form, Message, Modal } from 'semantic-ui-react'
-import classNames from 'classnames'
+import React, { useState, useEffect } from 'react';
+import { Button, Form, Message, Modal } from 'semantic-ui-react';
+import classNames from 'classnames';
 
-import { ErrorMessage, parseError } from '../../pages/error/errorTypes'
+import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
-type Callable = ((callback: (fn: () => Promise<void>) => void) => Renderable);
+type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;
 
 const isCallable = (maybeCallable: any): maybeCallable is Callable => {
   return typeof maybeCallable === 'function';
-}
+};
 
 type Props = {
   title: string;
@@ -17,18 +17,18 @@ type Props = {
   className?: string;
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
-}
+};
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   title,
   size,
   className,
   children,
-  onSubmit
+  onSubmit,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   const loadAndCatch = async (fn: () => Promise<void>) => {
     let didError = false;
@@ -41,9 +41,11 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       didError = true;
     }
 
-    if (!didError) { setOpen(false) };
+    if (!didError) {
+      setOpen(false);
+    }
     setLoading(false);
-  }
+  };
 
   const errorMsgList = error?.message instanceof Array ? error.message : undefined;
   const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
@@ -54,35 +56,32 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
-      trigger={<Button className='ghost'>{title}</Button>}
+      trigger={<Button className="ghost">{title}</Button>}
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>
         <Form onSubmit={() => loadAndCatch(onSubmit)}>
           {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
         </Form>
-          {!!error && <Message
-            negative
-            header={error?.header}
-            content={errorMsgContent}
-            list={errorMsgList} />}
+        {!!error && (
+          <Message negative header={error?.header} content={errorMsgContent} list={errorMsgList} />
+        )}
       </Modal.Content>
       <Modal.Actions>
-        <Button color='black' onClick={() => setOpen(false)}>
+        <Button color="black" onClick={() => setOpen(false)}>
           Cancel
         </Button>
         <Button
           content="Submit"
-          labelPosition='right'
-          icon='checkmark'
-          type='submit'
+          labelPosition="right"
+          icon="checkmark"
+          type="submit"
           loading={loading}
           positive
         />
       </Modal.Actions>
     </Modal>
-  )
-}
-
+  );
+};
 
 export default ModalFormErrorHandled;

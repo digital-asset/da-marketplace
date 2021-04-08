@@ -59,7 +59,9 @@ const AppComponent = () => {
   const party = useParty();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
-  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(ClearingService);
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
+    ClearingService
+  );
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(
     BiddingService,
@@ -112,14 +114,29 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => clearingService.length > 0,
     sidebar: [
-      { label: "Members", path: "/app/clearing/members", render: () => (<ClearingMembers services={clearingProvider} />), icon: (<WalletIcon />), children: [] }
+      {
+        label: 'Members',
+        path: '/app/clearing/members',
+        render: () => <ClearingMembers services={clearingProvider} />,
+        icon: <WalletIcon />,
+        children: [],
+      },
     ],
-    additionalRoutes : [
-      { path: "/app/clearing/margin-call", render: () => (<MarginCall services={clearingProvider} />) },
-      { path: "/app/clearing/mtm-calc", render: () => (<MTMCalculation services={clearingProvider} />) },
-      { path: "/app/clearing/member/:contractId", render: () => (<ClearingMember services={clearingProvider} />) }
+    additionalRoutes: [
+      {
+        path: '/app/clearing/margin-call',
+        render: () => <MarginCall services={clearingProvider} />,
+      },
+      {
+        path: '/app/clearing/mtm-calc',
+        render: () => <MTMCalculation services={clearingProvider} />,
+      },
+      {
+        path: '/app/clearing/member/:contractId',
+        render: () => <ClearingMember services={clearingProvider} />,
+      },
       // { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
-    ]
+    ],
   });
   //CLEARING_SERVICE_END
   //
