@@ -2,48 +2,48 @@
 
 @mixin new-base-instrument {
   .new-base-instrument {
+    width: 100%;
+    padding: $spacing-s $spacing-l;
+    animation: fadeIn 0.5s;
+
+    .issue-asset-fields {
+      display: flex;
+      flex-direction: column;
       width: 100%;
-      padding: $spacing-s $spacing-l;
-      animation: fadeIn .5s;
 
-      .issue-asset-fields {
-          display: flex;
-          flex-direction: column;
-          width: 100%;
+      .asset-row {
+        padding-bottom: $spacing-m;
 
-          .asset-row {
-              padding-bottom: $spacing-m;
-
-              textarea {
-                  max-width: 50%;
-              }
-          }
-
-          button {
-              width: fit-content;
-          }
+        textarea {
+          max-width: 50%;
+        }
       }
 
-      .form-label {
-          h3 {
-              margin-bottom: $spacing-s;
-          }
-          margin-bottom: $spacing-s;
+      button {
+        width: fit-content;
       }
+    }
 
-      .button-toggle {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          margin-bottom: $spacing-m;
-
-          button {
-              margin: 0px;
-          }
+    .form-label {
+      h3 {
+        margin-bottom: $spacing-s;
       }
+      margin-bottom: $spacing-s;
+    }
 
-      @media screen and (max-width: 850px) {
-          padding: 0px;
+    .button-toggle {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: $spacing-m;
+
+      button {
+        margin: 0px;
       }
+    }
+
+    @media screen and (max-width: 850px) {
+      padding: 0px;
+    }
   }
 }
