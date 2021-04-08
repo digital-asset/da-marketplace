@@ -9,6 +9,7 @@ import { Service as TradingService, Request as TradingRequest } from "@daml.js/d
 import { useStreamQueries } from "@daml/react";
 import { CreateEvent } from "@daml/ledger";
 import { Template } from "@daml/types";
+import _ from "lodash";
 
 export enum ServiceKind {
   CUSTODY = "Custody",
@@ -108,8 +109,8 @@ function useProviderServices (party: string): GroupedCustomerServices {
       const providerDetails = acc.find(i => i.provider === service.contract.payload.provider);
 
       const provider = providerDetails?.provider || service.contract.payload.provider;
-      const services = [ ...(providerDetails?.services || []), service.service];
-      const contracts = [ ...(providerDetails?.contracts || []), service.contract];
+      const services = _.concat(_.compact(providerDetails?.services), service.service);
+      const contracts = _.concat(_.compact(providerDetails?.contracts), service.contract);
 
       return [
         ...acc.filter(i => i.provider !== service.contract.payload.provider),

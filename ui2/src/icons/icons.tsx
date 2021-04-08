@@ -18,7 +18,7 @@ export const ArrowRightIcon = () => (
 )
 
 export const CogIcon = () => (
-    <svg width="19" height="20" viewBox="0 0 19 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="icon cog-icon" viewBox="0 0 19 20">
         <path fillRule="evenodd" clipRule="evenodd" d="M9.47311 7.07633C7.86133 7.07633 6.54968 8.38798 6.54968 9.99977C6.54968 11.6116 7.86133 12.9232 9.47311 12.9232C11.0849 12.9232 12.3966 11.6116 12.3966 9.99977C12.3966 8.38798 11.0849 7.07633 9.47311 7.07633ZM9.47311 13.8976C7.32341 13.8976 5.5752 12.1494 5.5752 9.99972C5.5752 7.85002 7.32341 6.10181 9.47311 6.10181C11.6228 6.10181 13.371 7.85002 13.371 9.99972C13.371 12.1494 11.6228 13.8976 9.47311 13.8976Z" fill="#B4F5A3"/>
         <mask id="mask0" maskUnits="userSpaceOnUse" x="1" y="1" width="17" height="18">
         <path fillRule="evenodd" clipRule="evenodd" d="M1.18408 1.25H17.7628V18.75H1.18408V1.25Z" fill="white"/>
