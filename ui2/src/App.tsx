@@ -42,7 +42,6 @@ import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
-import Landing from './pages/landing/Landing';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -142,6 +141,7 @@ const AppComponent = () => {
         path: '/app/distribution/auctions',
         render: () => <Auctions />,
         icon: <PlayArrow />,
+        groupBy: 'Primary Market',
         children: [],
       },
     ],
@@ -166,10 +166,11 @@ const AppComponent = () => {
     displayEntry: () => biddingService.length > 0,
     sidebar: [
       {
-        label: 'My Auctions',
+        label: 'Auctions',
         path: '/app/distribution/bidding',
         render: () => <BiddingAuctions />,
         icon: <PlayArrow />,
+        groupBy: 'Primary Market',
         children: [],
       },
     ],
@@ -188,20 +189,7 @@ const AppComponent = () => {
         path: '/app/instrument/instruments',
         render: () => <Instruments />,
         icon: <PublicIcon />,
-        children: [],
-      },
-      {
-        label: 'New Instruments',
-        path: '/app/instrument/new',
-        render: () => <InstrumentsNew />,
-        icon: <PublicIcon />,
-        children: [],
-      },
-      {
-        label: 'Instrument Requests',
-        path: '/app/instrument/requests',
-        render: () => <InstrumentsRequests />,
-        icon: <PublicIcon />,
+        groupBy: 'Primary Market',
         children: [],
       },
       {
@@ -209,20 +197,7 @@ const AppComponent = () => {
         path: '/app/issuance/issuances',
         render: () => <Issuances />,
         icon: <PublicIcon />,
-        children: [],
-      },
-      {
-        label: 'New Issuances',
-        path: '/app/issuance/new',
-        render: () => <IssuanceNew services={issuanceService} />,
-        icon: <PublicIcon />,
-        children: [],
-      },
-      {
-        label: 'Issuance Requests',
-        path: '/app/issuance/requests',
-        render: () => <IssuanceRequests services={issuanceService} />,
-        icon: <PublicIcon />,
+        groupBy: 'Primary Market',
         children: [],
       },
     ],
@@ -231,6 +206,13 @@ const AppComponent = () => {
       { path: '/app/registry/instruments/new/convertiblenote', component: NewConvertibleNote },
       { path: '/app/registry/instruments/new/binaryoption', component: NewBinaryOption },
       { path: '/app/registry/instruments/:contractId', component: Instrument },
+      { path: '/app/instrument/requests', render: () => <InstrumentsRequests /> },
+      { path: '/app/instrument/new', component: InstrumentsNew },
+      { path: '/app/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
+      {
+        path: '/app/issuance/requests',
+        render: () => <IssuanceRequests services={issuanceService} />,
+      },
     ],
   });
   entries.push({
@@ -241,6 +223,7 @@ const AppComponent = () => {
         path: '/app/listing/listings',
         render: () => <Listings services={listingService} listings={listings} />,
         icon: <PublicIcon />,
+        groupBy: 'Secondary Market',
         children: [],
       },
     ],
@@ -260,6 +243,7 @@ const AppComponent = () => {
         path: '/app/trading/markets',
         render: () => <Markets listings={listings} />,
         icon: <OrdersIcon />,
+        groupBy: 'Secondary Market',
         children: listings.map(c => ({
           label: c.payload.listingId,
           path: '/app/trading/markets/' + c.contractId.replace('#', '_'),
@@ -286,18 +270,17 @@ const AppComponent = () => {
   };
 
   return (
-    <Page className="app" sideBarItems={entriesToDisplay}>
+    <Page sideBarItems={entriesToDisplay}>
       {servicesLoading ? (
         <div>
           <CircularProgress color={'secondary'} />
         </div>
       ) : (
-        <div className="app-container">
+        <div>
           <Switch>
-            <Route exact key={'landing'} path="/app/" component={Landing} />
             {routeEntries(entriesToDisplay)}
-            {additionRouting.map((routeProps, i) => (
-              <Route key={i} {...routeProps} />
+            {additionRouting.map(routeProps => (
+              <Route {...routeProps} />
             ))}
           </Switch>
         </div>
