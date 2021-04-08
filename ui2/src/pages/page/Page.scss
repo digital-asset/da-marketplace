@@ -36,10 +36,15 @@
 
           .sub-menu {
             border-top: 2px solid var(--cool-grey-20);
-            border-bottom: 2px solid var(--cool-grey-20);
 
             .empty-item {
                 padding-top: 0px;
+            }
+
+            h3.ui.header {
+              color: var(--cool-grey-60);
+              padding: $spacing-s;
+              margin: 0
             }
           }
 
@@ -79,7 +84,7 @@
               }
 
               > .icon {
-                margin-right: $spacing-s;;
+                margin-right: $spacing-s;
                 width: 16px;
                 height: 16px;
               }

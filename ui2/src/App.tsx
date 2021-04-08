@@ -88,7 +88,7 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
-      { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), children: [] },
+      { label: "Auctions", path: "/app/distribution/auctions", render: () => (<Auctions />), icon: (<PlayArrow />), groupBy: "Primary Market", children: [] },
     ],
     additionalRoutes : [
       { path: "/app/distribution/auctions/:contractId", render: (props) => <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />},
@@ -98,7 +98,7 @@ const AppComponent = () => {
   });
   entries.push({ displayEntry: () => biddingService.length > 0,
     sidebar: [
-      { label: "My Auctions", path: "/app/distribution/bidding", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), children: [] }
+      { label: "Auctions", path: "/app/distribution/bidding", render: () => (<BiddingAuctions />), icon: (<PlayArrow />), groupBy: "Primary Market", children: [] }
     ],
     additionalRoutes : [
       { path: "/app/distribution/bidding/:contractId", render: () => <BiddingAuction services={biddingService} />}
@@ -107,24 +107,24 @@ const AppComponent = () => {
   entries.push({
     displayEntry: () => issuanceService.length > 0,
     sidebar: [
-      { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), children: [] },
-      { label: "New Instruments", path: "/app/instrument/new", render: () => (<InstrumentsNew />), icon: (<PublicIcon />), children: [] },
-      { label: "Instrument Requests", path: "/app/instrument/requests", render: () => (<InstrumentsRequests />), icon: (<PublicIcon />), children: [] },
-      { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), children: [] },
-      { label: "New Issuances", path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />), icon: (<PublicIcon />), children: [] },
-      { label: "Issuance Requests", path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />), icon: (<PublicIcon />), children: [] }
+      { label: "Instruments", path: "/app/instrument/instruments", render: () => (<Instruments />), icon: (<PublicIcon />), groupBy: "Primary Market", children: [] },
+      { label: "Issuances", path: "/app/issuance/issuances", render: () => (<Issuances />), icon: (<PublicIcon />), groupBy: "Primary Market", children: [] },
     ],
     additionalRoutes : [
       { path: "/app/registry/instruments/new/base", component: NewBaseInstrument },
       { path: "/app/registry/instruments/new/convertiblenote", component: NewConvertibleNote },
       { path: "/app/registry/instruments/new/binaryoption", component: NewBinaryOption },
-      { path: "/app/registry/instruments/:contractId", component: Instrument }
+      { path: "/app/registry/instruments/:contractId", component: Instrument },
+      { path: "/app/instrument/requests", render: () => (<InstrumentsRequests />) },
+      { path: "/app/instrument/new", component: InstrumentsNew },
+      { path: "/app/issuance/new", render: () => (<IssuanceNew services={issuanceService} />) },
+      { path: "/app/issuance/requests", render: () => (<IssuanceRequests services={issuanceService} />) }
     ]
   });
   entries.push({
     displayEntry: () => listingService.length > 0,
     sidebar: [
-      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PublicIcon />), children: [] },
+      { label: "Listings", path: "/app/listing/listings", render: () => (<Listings services={listingService} listings={listings} />), icon: (<PublicIcon />), groupBy: "Secondary Market", children: [] },
     ],
     additionalRoutes : [
       { path: "/app/listing/new", render: () => (<ListingNew services={listingService} />) },
@@ -135,7 +135,7 @@ const AppComponent = () => {
     displayEntry: () => tradingService.length > 0,
     sidebar: [
       {
-        label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<OrdersIcon />),
+        label: "Markets", path: "/app/trading/markets", render: () => (<Markets listings={listings} />), icon: (<OrdersIcon />), groupBy: "Secondary Market",
         children: listings.map(c => (
           { label: c.payload.listingId, path: "/app/trading/markets/" + c.contractId.replace("#", "_"), render: () => (<Market services={tradingService} cid={c.contractId} listings={listings} />), icon: (<ExchangeIcon />), children: [] }
           ))

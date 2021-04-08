@@ -5,6 +5,7 @@ export type SidebarEntry = {
   render : () => JSX.Element
   children : SidebarEntry[]
   divider?: boolean
+  groupBy?: string
 }
 
 export const getChildren = (e : SidebarEntry) : SidebarEntry[] => {
