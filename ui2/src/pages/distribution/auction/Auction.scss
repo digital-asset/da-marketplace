@@ -23,15 +23,16 @@
         align-items: center;
 
         .select {
-          width: 90%
+          width: 90%;
         }
 
         .icon {
-          width: 10%
+          width: 10%;
         }
       }
 
-      .submit, a.a2 {
+      .submit,
+      a.a2 {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -55,7 +56,8 @@
         margin-bottom: $spacing-m;
       }
 
-      .submit, a.a2 {
+      .submit,
+      a.a2 {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -97,6 +99,5 @@
         margin-top: $spacing-s;
       }
     }
-
   }
 }

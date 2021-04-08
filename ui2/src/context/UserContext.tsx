@@ -1,25 +1,40 @@
-import React from "react";
+import React from 'react';
 import { History } from 'history';
-import { getName } from "../config";
-import Credentials, { clearCredentials, retrieveCredentials, storeCredentials } from "../Credentials";
+import { getName } from '../config';
+import Credentials, {
+  clearCredentials,
+  retrieveCredentials,
+  storeCredentials,
+} from '../Credentials';
 
-const UserStateContext = React.createContext<UserState>({ isAuthenticated: false, name: "", party: "", token: "" });
+const UserStateContext = React.createContext<UserState>({
+  isAuthenticated: false,
+  name: '',
+  party: '',
+  token: '',
+});
 const UserDispatchContext = React.createContext<React.Dispatch<any>>({} as React.Dispatch<any>);
 
 type UserState = {
-  isAuthenticated : boolean
-  name : string
-  party : string
-  token : string
-}
+  isAuthenticated: boolean;
+  name: string;
+  party: string;
+  token: string;
+};
 
-function userReducer(state : UserState, action : any) {
+function userReducer(state: UserState, action: any) {
   switch (action.type) {
-    case "LOGIN_SUCCESS":
-      return { ...state, isAuthenticated: true, name: action.name, party: action.party, token: action.token };
-    case "LOGIN_FAILURE":
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: true,
+        name: action.name,
+        party: action.party,
+        token: action.token,
+      };
+    case 'LOGIN_FAILURE':
       return { ...state, isAuthenticated: false };
-    case "SIGN_OUT_SUCCESS":
+    case 'SIGN_OUT_SUCCESS':
       return { ...state, isAuthenticated: false };
     default: {
       throw new Error(`Unhandled action type: ${action.type}`);
@@ -27,40 +42,38 @@ function userReducer(state : UserState, action : any) {
   }
 }
 
-const UserProvider : React.FC = ({ children }) => {
+const UserProvider: React.FC = ({ children }) => {
   const credentials = retrieveCredentials();
 
   var initialUserState: UserState = {
     isAuthenticated: false,
-    name: "",
-    party: "",
-    token: ""
-  }
+    name: '',
+    party: '',
+    token: '',
+  };
 
   if (credentials) {
     initialUserState = {
       isAuthenticated: true,
       name: getName(credentials),
       party: credentials.party,
-      token: credentials.token
-    }
+      token: credentials.token,
+    };
   }
 
   var [state, dispatch] = React.useReducer(userReducer, initialUserState);
 
   return (
     <UserStateContext.Provider value={state}>
-      <UserDispatchContext.Provider value={dispatch}>
-        {children}
-      </UserDispatchContext.Provider>
+      <UserDispatchContext.Provider value={dispatch}>{children}</UserDispatchContext.Provider>
     </UserStateContext.Provider>
   );
-}
+};
 
 function useUserState() {
   var context = React.useContext<UserState>(UserStateContext);
   if (context === undefined) {
-    throw new Error("useUserState must be used within a UserProvider");
+    throw new Error('useUserState must be used within a UserProvider');
   }
   return context;
 }
@@ -68,18 +81,18 @@ function useUserState() {
 function useUserDispatch() {
   var context = React.useContext<React.Dispatch<any>>(UserDispatchContext);
   if (context === undefined) {
-    throw new Error("useUserDispatch must be used within a UserProvider");
+    throw new Error('useUserDispatch must be used within a UserProvider');
   }
   return context;
 }
 
-
 // ###########################################################
 
 async function loginUser(
-    dispatch : React.Dispatch<any>,
-    history : History,
-    credentials : Credentials) {
+  dispatch: React.Dispatch<any>,
+  history: History,
+  credentials: Credentials
+) {
   // setError(false);
   // setIsLoading(true);
   const { party, token } = credentials;
@@ -87,21 +100,21 @@ async function loginUser(
 
   if (!!name) {
     storeCredentials(credentials);
-    dispatch({ type: "LOGIN_SUCCESS", name, party, token });
+    dispatch({ type: 'LOGIN_SUCCESS', name, party, token });
     // setError(false);
     // setIsLoading(false);
-    history.push("/app");
+    history.push('/app');
   } else {
-    dispatch({ type: "LOGIN_FAILURE" });
+    dispatch({ type: 'LOGIN_FAILURE' });
     // setError(true);
     // setIsLoading(false);
   }
 }
 
-function signOut(dispatch : React.Dispatch<any>, history : History) {
+function signOut(dispatch: React.Dispatch<any>, history: History) {
   clearCredentials();
-  dispatch({ type: "SIGN_OUT_SUCCESS" });
-  history.push("/login");
+  dispatch({ type: 'SIGN_OUT_SUCCESS' });
+  history.push('/login');
 }
 
 export { UserProvider, useUserState, useUserDispatch, loginUser, signOut };

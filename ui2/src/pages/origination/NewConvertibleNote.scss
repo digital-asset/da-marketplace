@@ -2,7 +2,8 @@
 
 @mixin new-convertible-note {
   .new-convertible-note {
-    .asset-row, .button.submit {
+    .asset-row,
+    .button.submit {
       margin-top: $spacing-m;
     }
 

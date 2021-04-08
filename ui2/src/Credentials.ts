@@ -1,10 +1,10 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { encode } from 'jwt-simple'
-import { expiredToken } from '@daml/hub-react'
+import { encode } from 'jwt-simple';
+import { expiredToken } from '@daml/hub-react';
 
-import { ledgerId, publicParty } from './config'
+import { ledgerId, publicParty } from './config';
 
 export const APPLICATION_ID: string = 'da-marketplace';
 
@@ -17,12 +17,14 @@ export type Credentials = {
   party: string;
   token: string;
   ledgerId: string;
-}
+};
 
 export function isCredentials(credentials: any): credentials is Credentials {
-  return typeof credentials.party === 'string' &&
-         typeof credentials.token === 'string' &&
-         typeof credentials.ledgerId === 'string'
+  return (
+    typeof credentials.party === 'string' &&
+    typeof credentials.token === 'string' &&
+    typeof credentials.ledgerId === 'string'
+  );
 }
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
@@ -48,7 +50,7 @@ export function retrieveCredentials(): Credentials | undefined {
       return credentials;
     }
   } catch {
-    console.error("Could not parse credentials: ", credentialsJson);
+    console.error('Could not parse credentials: ', credentialsJson);
   }
 
   return undefined;
@@ -56,19 +58,19 @@ export function retrieveCredentials(): Credentials | undefined {
 
 function computeToken(party: string): string {
   const payload = {
-    "https://daml.com/ledger-api": {
-      "ledgerId": ledgerId,
-      "applicationId": APPLICATION_ID,
-      "actAs": [party],
-      "readAs": [party, publicParty]
-    }
+    'https://daml.com/ledger-api': {
+      ledgerId: ledgerId,
+      applicationId: APPLICATION_ID,
+      actAs: [party],
+      readAs: [party, publicParty],
+    },
   };
   return encode(payload, SECRET_KEY, 'HS256');
 }
 
 export const computeCredentials = (party: string): Credentials => {
   const token = computeToken(party);
-  return {party, token, ledgerId};
-}
+  return { party, token, ledgerId };
+};
 
 export default Credentials;

@@ -2,7 +2,7 @@
 
 @mixin account {
   .account {
-    animation: fadeIn .5s;
+    animation: fadeIn 0.5s;
 
     h2 {
       margin-bottom: $spacing-m;
@@ -46,6 +46,5 @@
         }
       }
     }
-
   }
 }

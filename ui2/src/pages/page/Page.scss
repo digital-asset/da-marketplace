@@ -39,7 +39,7 @@
             border-bottom: 2px solid var(--cool-grey-20);
 
             .empty-item {
-                padding-top: 0px;
+              padding-top: 0px;
             }
           }
 
@@ -50,8 +50,9 @@
             padding: $spacing-m;
             margin: 0;
 
-            p, h3 {
-                color: var(--white)
+            p,
+            h3 {
+              color: var(--white);
             }
 
             &.active {
@@ -87,7 +88,7 @@
               }
 
               > .icon {
-                margin-right: $spacing-s;;
+                margin-right: $spacing-s;
                 width: 16px;
                 height: 16px;
               }

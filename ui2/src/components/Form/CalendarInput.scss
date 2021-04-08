@@ -9,7 +9,8 @@
     }
 
     .MuiInputBase-root.MuiInput-root.MuiInput-underline.MuiInputBase-fullWidth.MuiInput-fullWidth.MuiInputBase-formControl.MuiInput-formControl.MuiInputBase-adornedEnd {
-      &::before, &::after {
+      &::before,
+      &::after {
         border: none;
       }
     }
