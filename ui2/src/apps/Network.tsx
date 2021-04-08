@@ -1,14 +1,14 @@
-import React from "react";
-import { Route, Switch, withRouter } from "react-router-dom";
-import { PlayArrow } from "@material-ui/icons";
-import { SidebarEntry } from "../components/Sidebar/SidebarEntry";
-import { Custody } from "../pages/network/Custody";
-import { Trading } from "../pages/network/Trading";
-import { Listing } from "../pages/network/Listing";
-import Page from "../pages/page/Page";
+import React from 'react';
+import { Route, Switch, withRouter } from 'react-router-dom';
+import { PlayArrow } from '@material-ui/icons';
+import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
+import { Custody } from '../pages/network/Custody';
+import { Trading } from '../pages/network/Trading';
+import { Listing } from '../pages/network/Listing';
+import Page from '../pages/page/Page';
 
 const NetworkApp = () => {
-  const entries : SidebarEntry[] = [];
+  const entries: SidebarEntry[] = [];
   // entries.push({ label: "Overview", path: "/apps/network/overview", render: () => (<Overview />), icon: (<PlayArrow/>), children: [] });
   // entries.push({ label: "Custody", path: "/apps/network/custody", render: () => (<Custody />), icon: (<PlayArrow/>), children: [] });
   // entries.push({ label: "Trading", path: "/apps/network/trading", render: () => (<Trading />), icon: (<PlayArrow/>), children: [] });
@@ -17,12 +17,12 @@ const NetworkApp = () => {
   return (
     <Page sideBarItems={entries} menuTitle={<h1>Network Portal</h1>}>
       <Switch>
-        {entries.map(e =>
+        {entries.map(e => (
           <Route exact={true} key={e.label} path={e.path} render={e.render} />
-        )}
+        ))}
       </Switch>
     </Page>
-  )
-}
+  );
+};
 
 export const Network = withRouter(NetworkApp);

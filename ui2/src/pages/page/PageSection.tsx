@@ -1,14 +1,12 @@
-import React from 'react'
-import classNames from 'classnames'
+import React from 'react';
+import classNames from 'classnames';
 
 type Props = {
-    className?: string;
-}
+  className?: string;
+};
 
 const PageSection: React.FC<Props> = ({ children, className }) => (
-    <div className={classNames('page-section', className)}>
-        { children }
-    </div>
-)
+  <div className={classNames('page-section', className)}>{children}</div>
+);
 
 export default PageSection;

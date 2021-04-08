@@ -38,13 +38,13 @@
             border-top: 2px solid var(--cool-grey-20);
 
             .empty-item {
-                padding-top: 0px;
+              padding-top: 0px;
             }
 
             h3.ui.header {
               color: var(--cool-grey-60);
               padding: $spacing-s;
-              margin: 0
+              margin: 0;
             }
           }
 
@@ -55,12 +55,14 @@
             padding: $spacing-m;
             margin: 0;
 
-            p, h3 {
-                color: var(--white)
+            p,
+            h3 {
+              color: var(--white);
             }
 
             &.active {
               background-color: var(--cool-grey-20);
+              border-radius: 0;
             }
 
             &:hover {
@@ -70,6 +72,13 @@
             &.home-item {
               padding: $spacing-l $spacing-m;
               height: 75px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+
+              h1 {
+                margin: 0;
+              }
             }
 
             &.sidemenu-item-normal > p {

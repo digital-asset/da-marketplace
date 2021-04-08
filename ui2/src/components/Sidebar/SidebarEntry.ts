@@ -1,13 +1,13 @@
 export type SidebarEntry = {
-  label : string
-  path : string
-  icon : JSX.Element
-  render : () => JSX.Element
-  children : SidebarEntry[]
-  divider?: boolean
-  groupBy?: string
-}
+  label: string;
+  path: string;
+  icon: JSX.Element;
+  render: () => JSX.Element;
+  children: SidebarEntry[];
+  divider?: boolean;
+  groupBy?: string;
+};
 
-export const getChildren = (e : SidebarEntry) : SidebarEntry[] => {
+export const getChildren = (e: SidebarEntry): SidebarEntry[] => {
   return e.children.concat(e.children.flatMap(c => getChildren(c)));
-}
+};

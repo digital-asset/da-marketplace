@@ -2,10 +2,10 @@
 
 @mixin tile-page() {
   .tile-page {
-      height: 100%;
-      width: 100%;
-      background-color: var(--cool-grey-20);
+    height: 100%;
+    width: 100%;
+    background-color: var(--cool-grey-20);
 
-      @include Tile.tile();
+    @include Tile.tile();
   }
 }
