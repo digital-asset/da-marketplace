@@ -29,8 +29,8 @@ testClearingTransfers = do
   clearingDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferFromMargin with amount = 1000.0, marginDepositCids = [marginDepositCid]
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 19000.0
 
-  bobMarginDepositCid <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToMargin with depositCid = bobDepositCid
-  (Some providerDepositCid) <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider with amount = 2000.0; optMTMCalculationCid = None; marginDepositCids = [bobMarginDepositCid]
+  -- bobMarginDepositCid <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToMargin with depositCid = bobDepositCid
+  (Some providerDepositCid) <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider with amount = 2000.0; optMTMCalculationCid = None; depositCids = [bobDepositCid]
   submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider with amount = 1000.0; optMTMCalculationCid = None; depositCids = [providerDepositCid]
   assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 2000.0
 
@@ -95,8 +95,8 @@ testMarkToMarket = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  marginDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin with depositCid = aliceDepositCid
-  Some ccpAssetDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToProvider with amount = 20000.0; marginDepositCids = [marginDepositCid]; optMTMCalculationCid = None
+  -- marginDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin with depositCid = aliceDepositCid
+  Some ccpAssetDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToProvider with amount = 20000.0; depositCids = [aliceDepositCid]; optMTMCalculationCid = None
   _ <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferFromProvider with depositCids = [ccpAssetDepositCid]; optMTMCalculationCid = None; amount = 2000.0
 
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 0.0
