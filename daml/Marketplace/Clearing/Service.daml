@@ -19,6 +19,9 @@ mergeAndSplit depositCids amount = do
     depositCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
     exercise depositCid AssetDeposit_Split with quantities = [amount]
 
+getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
+getDepositQuantities depositCids = foldl (+) 0.0 <$> forA depositCids (fmap (.asset.quantity) . fetch)
+
 data CalculationResults = CalculationSatisfied
                         | CalculationFailed
 
@@ -65,12 +68,6 @@ template Service
           CalculationSatisfied -> void $ exercise calculationCid MarkToMarketCalculation_Resolve with ..
           CalculationFailed    -> void $ exercise calculationCid MarkToMarketCalculation_Reject with ..
 
-      getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
-      getDepositQuantities = \depositCids -> do
-        foldl (+) 0.0 <$> forA depositCids (\dcid -> do
-            d <- fetch dcid
-            return d.asset.quantity)
-
       transferWithController : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
       transferWithController = \depositCid to -> do
           deposit <- fetch depositCid
@@ -83,8 +80,6 @@ template Service
               exerciseByKey @AssetSettlementRule deposit.account.id
                 AssetSettlement_Transfer with receiverAccountId = to.id; ..
             <* removeNominee
-
-    -- TODO: only merge what is necessary, make function
 
     controller provider can
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
@@ -124,21 +119,13 @@ template Service
                | diff > 0.0  -> Some <$> (transferToMarginAccount =<< head <$> mergeAndSplit depositCids diff)
                | otherwise   -> Some <$> (transferFromMarginAccount =<< head <$> mergeAndSplit marginDepositCids (abs diff))
 
-                  -- [transferCid, remainingCid] <- mergeAndSplit depositCids diff
-                  -- void $ transferToMarginAccount transferCid
-
-                  -- mergeAndSplit marginDepositCids (abs diff) >>= \case
-                  --     [transferCid, remainingCid] -> Some <$> transferFromMarginAccount transferCid
-                  --     _ -> return None
-
       nonconsuming TransferFromProvider : ContractId AssetDeposit
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
           optMTMCalculationCid : Optional (ContractId MarkToMarketCalculation)
         do
-          -- TODO: enforce depositCid is in clearing account
-          assertMsg "There must be at least one deposit" $ not $ null depositCids
+          assertMsg "deposits are not enough to fulfill calculation" =<< (< amount) <$> getDepositQuantities depositCids
           whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           transferWithController depositCid clearingAccount
@@ -156,35 +143,25 @@ template Service
                 return None
             False -> do
                 whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
-                (optDeposit, newMarginCids) <- mergeAndSplit depositCids amount >>= \case
-                  (transferCid::remainingCids) -> do
-                    transferredDepositCid <- transferWithController transferCid ccpAccount
-                    return (Some transferredDepositCid, remainingCids)
-                  _ -> return (None, depositCids)
-                return optDeposit
+                Some <$> (flip transferWithController ccpAccount =<< head <$> mergeAndSplit depositCids amount)
 
       nonconsuming TransferToMargin : ContractId AssetDeposit
         with
           depositCid : ContractId AssetDeposit
-        do
-          exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Deposit with ..
+        do transferToMarginAccount depositCid
 
       nonconsuming TransferFromMargin : ContractId AssetDeposit
         with
           marginDepositCids : [ContractId AssetDeposit]
           amount : Decimal
-        do
-
-          (transferCid::remainingCids) <- mergeAndSplit marginDepositCids amount
-          exerciseByKey @AllocationAccountRule.T marginAccount.id AllocationAccountRule.Withdraw with
-              transferTo = clearingAccount
-              depositCid = transferCid; ..
+        do transferFromMarginAccount =<< head <$> mergeAndSplit marginDepositCids amount
 
     choice Terminate : ()
       with
         ctrl : Party
       controller ctrl
-      do pure ()
+      do
+        void $ archive . fst <$> fetchByKey @MemberStanding (provider,customer)
 
 template Offer
   with
