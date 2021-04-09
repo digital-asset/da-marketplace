@@ -16,29 +16,38 @@ import Tests.Utils (binaryCallOption)
 import DA.Time (time)
 import DA.Assert
 
+
+expiry = date 2022 Oct 22
+notExpiry = date 2020 Mar 18
+usd = "USD"
+strike : Decimal = 700.0
+aboveStrike : Decimal = 920.0
+optionAssetLabel = "TSLA Oct22 700.0"
+
+
 endToEnd = script do
   requestExercise 920.0 $ date 2020 Mar 18
 
 
 testNotExercisedWhenFixingDateIsNotExpiry = script do
-  (alice, bob) <- requestExercise 920.0 $ date 2020 Mar 18
+  (alice, bob) <- requestExercise aboveStrike notExpiry
 
-  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == "TSLA Mar21 910.0")
-  bobsOption.asset.id.version === 1
-  [(_, bobsMoney)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == "USD")
-  bobsMoney.asset.quantity === 1000.0
-  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == "USD")
-  alicesMoney.asset.quantity === 2000.0
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
+  bobsOption.asset.id.version === 0
+  bobsMoneyAssets <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == usd)
+  bobsMoneyAssets === []
+  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == usd)
+  alicesMoney.asset.quantity === 3000.0
 
 
 testExercisedOnExpiry = script do
-  (alice, bob) <- requestExercise 920.0 $ date 2020 Mar 18
+  (alice, bob) <- requestExercise aboveStrike expiry
 
-  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == "TSLA Mar21 910.0")
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 1
-  [(_, bobsMoney)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == "USD")
+  [(_, bobsMoney)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == usd)
   bobsMoney.asset.quantity === 1000.0
-  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == "USD")
+  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == usd)
   alicesMoney.asset.quantity === 2000.0
 
 
@@ -48,23 +57,21 @@ requestExercise underlyingPrice observationDate = script do
 
   let usdId = Id with
                 signatories = Set.singleton providers.bank
-                label = "USD"
+                label = usd
                 version = 0
       usdAsset = Asset with id = usdId, quantity = 3000.0
       underlyingId = Id with
                        signatories = Set.singleton providers.bank
                        label = "TSLA"
                        version = 0
-      strike = 910.0: Decimal
-      expiration = date 2020 Mar 18
 
   alice <- onboardCustomer providers "Alice"
   bob <- onboardCustomer providers "Bob"
 
   -- Alice originates the option
-  let boClaims = binaryCallOption underlyingId usdId strike expiration
+  let boClaims = binaryCallOption underlyingId usdId strike expiry
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
-      assetLabel = "TSLA Mar21 910.0"
+      assetLabel = optionAssetLabel
       description = "Tesla Binary Option"
       safekeepingAccountId = alice.mainAccount.id
       claims = serialize boClaims
@@ -77,7 +84,7 @@ requestExercise underlyingPrice observationDate = script do
       issuanceId = "Myissuance"
       accountId = Id (Set.fromList [alice.customer, providers.bank]) alice.mainAccount.id.label 0
       assetId = optionDesc.assetId
-      quantity = 1000.0 -- TODO is this unused ???
+      quantity = 1000.0
   (_issuanceCid, optionDepositCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
 
   -- Alice gifts the option to Bob
