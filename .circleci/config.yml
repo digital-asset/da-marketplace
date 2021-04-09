@@ -1,16 +1,94 @@
-version: 2.1
-orbs:
-  node: circleci/node@4.2.0 #orb version
+#
+# Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 
-jobs:
-  build:
-    executor:
-      name: node/default
+version: 2.1
+
+executors:
+  daml-executor:
+    docker:
+      - image: cimg/openjdk:11.0-node
+
+commands:
+  install_sdk:
+    description: "Install Daml SDK"
+    parameters:
+      version:
+        type: string
     steps:
       - run:
-          command: echo "Hello"
+          name: Install Daml SDK
+          command: |
+            curl -sSL https://get.daml.com/ | sh /dev/stdin << parameters.version >>
+            # idea from https://circleci.com/docs/2.0/env-vars/
+            >> $BASH_ENV echo 'export PATH="$HOME/.daml/bin:$PATH"'
+
+jobs:
+  daml_test:
+    parameters:
+      daml_sdk_version:
+        type: string
+    executor: daml-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - daml-{{ checksum "daml.yaml" }}
+      - install_sdk:
+          version: << parameters.daml_sdk_version >>
+      - run:
+          name: Init submodules
+          command: |
+            git submodule init && git submodule update
+      - run:
+          name: Daml tests
+          command: |
+            daml test --junit target/daml-test-reports/da-marketplace.xml
+      - save_cache:
+          paths:
+            - ~/.daml
+          key: daml-{{ checksum "daml.yaml" }}
+      - store_test_results:
+          path: target/daml-test-reports
+      - store_artifacts:
+          path: target/daml-test-reports
+
+  ui_test:
+    parameters:
+      daml_sdk_version:
+        type: string
+    executor: daml-executor
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - daml-{{ checksum "daml.yaml" }}
+      - install_sdk:
+          version: << parameters.daml_sdk_version >>
+      - run:
+          name: Init submodules
+          command: |
+            git submodule init && git submodule update
+      - run:
+          name: UI build
+          command: |
+            make package
+      - run:
+          name: Npm test
+          command: |
+            cd ui2 && yarn test  -- --watchAll=false
+      - save_cache:
+          paths:
+            - ~/.daml
+          key: daml-{{ checksum "daml.yaml" }}
 
 workflows:
-  build:
+  version: 2
+  test:
     jobs:
-      - build
+      - daml_test:
+          daml_sdk_version: "1.10.0"
+      - ui_test:
+          daml_sdk_version: "1.10.0"
+
