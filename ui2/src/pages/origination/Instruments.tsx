@@ -22,7 +22,7 @@ export const InstrumentsTable: React.FC = () => {
         c.payload.assetId.label,
         c.payload.assetId.version,
         c.payload.description,
-        <NavLink to={`/app/registry/instruments/${c.contractId.replace('#', '_')}`}>
+        <NavLink to={`/app/manage/instrument/${c.contractId.replace('#', '_')}`}>
           <IconButton color="primary" size="small" component="span">
             <KeyboardArrowRight fontSize="small" />
           </IconButton>

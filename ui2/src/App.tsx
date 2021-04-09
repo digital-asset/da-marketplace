@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
-import { FastfoodOutlined, PlayArrow } from '@material-ui/icons';
+import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -21,12 +21,12 @@ import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { Instruments, InstrumentsTable } from './pages/origination/Instruments';
 import { New as InstrumentsNew } from './pages/origination/New';
 import { Requests as InstrumentsRequests } from './pages/origination/Requests';
-import { Issuances } from './pages/issuance/Issuances';
+import { Issuances, IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
 import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
 import { Requests as ListingRequests } from './pages/listing/Requests';
-import { Listings } from './pages/listing/Listings';
+import { Listings, ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -187,72 +187,7 @@ const AppComponent = () => {
       },
     ],
   });
-  entries.push({
-    displayEntry: () => issuanceService.length > 0,
-    sidebar: [
-      {
-        label: 'Instruments',
-        path: '/app/instrument/instruments',
-        render: () => <Instruments />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-      {
-        label: 'Issuances',
-        path: '/app/issuance/issuances',
-        render: () => <Issuances />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: '/app/registry/instruments/new/base',
-        component: NewBaseInstrument,
-      },
-      {
-        path: '/app/registry/instruments/new/convertiblenote',
-        component: NewConvertibleNote,
-      },
-      {
-        path: '/app/registry/instruments/new/binaryoption',
-        component: NewBinaryOption,
-      },
-      { path: '/app/registry/instruments/:contractId', component: Instrument },
-      { path: '/app/instrument/requests', render: () => <InstrumentsRequests /> },
-      { path: '/app/instrument/new', component: InstrumentsNew },
-      { path: '/app/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
-      {
-        path: '/app/issuance/requests',
-        render: () => <IssuanceRequests services={issuanceService} />,
-      },
-    ],
-  });
-  entries.push({
-    displayEntry: () => listingService.length > 0,
-    sidebar: [
-      {
-        label: 'Listings',
-        path: '/app/listing/listings',
-        render: () => <Listings services={listingService} listings={listings} />,
-        icon: <PublicIcon />,
-        groupBy: 'Secondary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: '/app/listing/new',
-        render: () => <ListingNew services={listingService} />,
-      },
-      {
-        path: '/app/listing/requests',
-        render: () => <ListingRequests services={listingService} listings={listings} />,
-      },
-    ],
-  });
+
   entries.push({
     displayEntry: () => tradingService.length > 0,
     sidebar: [
@@ -292,7 +227,7 @@ const AppComponent = () => {
             {/* <h3>Assets</h3>
           <Assets services={custodyService}/> */}
             <h3>Auctions</h3>
-            <Auctions />
+            {/* <Auctions /> */}
           </Manage>
         ),
       },
@@ -300,7 +235,7 @@ const AppComponent = () => {
         path: '/app/manage/issuance',
         render: () => (
           <Manage>
-            <h2>issuance</h2>
+            <IssuancesTable />
           </Manage>
         ),
       },
@@ -312,6 +247,7 @@ const AppComponent = () => {
           </Manage>
         ),
       },
+      { path: '/app/manage/instrument/:contractId', component: Instrument },
       {
         path: '/app/manage/trading',
         render: () => (
@@ -324,7 +260,7 @@ const AppComponent = () => {
         path: '/app/manage/listings',
         render: () => (
           <Manage>
-            <h2>listings</h2>
+            <ListingsTable services={listingService} listings={listings} />
           </Manage>
         ),
       },
@@ -343,48 +279,22 @@ const AppComponent = () => {
       },
     ],
     additionalRoutes: [
+      { path: '/app/setup/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
       {
-        path: '/app/setup/distributions',
-        render: () => (
-          <Manage>
-            {/* <h3>Assets</h3>
-          <Assets services={custodyService}/> */}
-            <h3>Auctions</h3>
-            <Auctions />
-          </Manage>
-        ),
+        path: '/app/setup/instruments/new/base',
+        component: NewBaseInstrument,
       },
       {
-        path: '/app/setup/issuance',
-        render: () => (
-          <Manage>
-            <h2>issuance</h2>
-          </Manage>
-        ),
+        path: '/app/setup/instruments/new/convertiblenote',
+        component: NewConvertibleNote,
       },
       {
-        path: '/app/setup/origination',
-        render: () => (
-          <Manage>
-            <InstrumentsTable />
-          </Manage>
-        ),
+        path: '/app/setup/instruments/new/binaryoption',
+        component: NewBinaryOption,
       },
       {
-        path: '/app/setup/trading',
-        render: () => (
-          <Manage>
-            <h2>trading</h2>
-          </Manage>
-        ),
-      },
-      {
-        path: '/app/setup/listings',
-        render: () => (
-          <Manage>
-            <h2>listings</h2>
-          </Manage>
-        ),
+        path: '/app/setup/listings/new',
+        render: () => <ListingNew services={listingService} />,
       },
     ],
   });

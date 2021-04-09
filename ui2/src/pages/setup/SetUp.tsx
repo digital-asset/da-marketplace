@@ -35,27 +35,27 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Issuance"
-      links={[
-        { label: 'Issue Digital Token', path: '' },
-        { label: 'Issue Derivative', path: '' },
-      ]}
+      links={[{ label: 'Create New Issuance', path: '/app/setup/issuance/new' }]}
     />
 
-    <SetupService name="Listings" links={[{ label: 'Create New Listing', path: '' }]} />
+    <SetupService
+      name="Listings"
+      links={[{ label: 'Create New Listing', path: '/app/setup/listings/new' }]}
+    />
 
     <SetupService
       name="Originations"
       links={[
-        { label: 'Create Base Instrument', path: '/app/registry/instruments/new/base' },
-        { label: 'Create Binary Option', path: '/app/registry/instruments/new/binaryoption' },
+        { label: 'Create Base Instrument', path: '/app/setup/instruments/new/base' },
+        { label: 'Create Binary Option', path: '/app/setup/instruments/new/binaryoption' },
         {
           label: 'Create Convertible Note',
-          path: '/app/registry/instruments/new/convertiblenote',
+          path: '/app/setup/instruments/new/convertiblenote',
         },
       ]}
     />
 
-    <SetupService name="Trading" links={[{ label: 'Create New Market', path: '' }]} />
+    <SetupService name="Trading" links={[{ label: 'Offer Trading Service', path: '' }]} />
   </div>
 );
 
