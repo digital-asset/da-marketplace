@@ -7,6 +7,7 @@ import { useParty } from '@daml/react';
 import PageSection from './PageSection';
 import WelcomeHeader from './WelcomeHeader';
 import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
+import _ from 'lodash';
 import { CogIcon } from '../../icons/icons';
 
 type Props = {
@@ -26,6 +27,12 @@ const Page: React.FC<Props> = ({
   sideBarItems,
 }) => {
   const user = useParty();
+  const groupSideBarItems = Array.from(
+    sideBarItems?.reduce(
+      (acc, cur) => acc.set(cur.groupBy, [..._.compact(acc.get(cur.groupBy)), cur]),
+      new Map<string | undefined, SidebarEntry[]>()
+    ) || []
+  );
 
   const constructMenu = (sideBarItem: SidebarEntry, level: number): React.ReactElement => {
     const childMenu = sideBarItem.children.map(child => constructMenu(child, level + 1));
@@ -63,7 +70,18 @@ const Page: React.FC<Props> = ({
             </Menu.Item>
           </Menu.Menu>
 
-          <Menu.Menu>{sideBarItems?.map(item => constructMenu(item, 0))}</Menu.Menu>
+          <Menu.Menu>
+            {groupSideBarItems.map(([key, items]) =>
+              key ? (
+                <Menu.Menu className="sub-menu">
+                  <Header as="h3">{key}</Header>
+                  {items.map(item => constructMenu(item, 0))}
+                </Menu.Menu>
+              ) : (
+                items.map(item => constructMenu(item, 0))
+              )
+            )}
+          </Menu.Menu>
         </Menu>
       </Grid.Column>
       <Grid.Column className="page-body">

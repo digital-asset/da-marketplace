@@ -10,6 +10,7 @@
 @use 'pages/login/Login';
 @use 'pages/landing/Landing';
 @use 'pages/manage/Manage';
+@use 'pages/setup/SetUp';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
@@ -189,6 +190,7 @@ html {
         @include CalendarInput.calendar-input();
         @include App.app();
         @include Manage.manage();
+        @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
