@@ -23,7 +23,7 @@ endToEnd = script do
                 signatories = Set.singleton providers.bank
                 label = "USD"
                 version = 0
-      usdAsset = Asset with id = usdId, quantity = 100.0
+      usdAsset = Asset with id = usdId, quantity = 3000.0
       underlyingId = Id with
                        signatories = Set.singleton providers.bank
                        label = "TSLA"
@@ -81,6 +81,6 @@ endToEnd = script do
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "TSLA Mar21 910.0")
   bobsOption.asset.id.version === 1
   [(_, bobsMoney)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "USD")
-  bobsMoney.asset.quantity === 1.0 -- TODO why not 1000.0, as Bob has 1000 options (quantity = 1000.0)
+  bobsMoney.asset.quantity === 1000.0
   [(_, alicesMoney)] <- queryFilter @AssetDeposit alice.customer (\c -> c.asset.id.label == "USD")
-  alicesMoney.asset.quantity === 99.0
+  alicesMoney.asset.quantity === 2000.0
