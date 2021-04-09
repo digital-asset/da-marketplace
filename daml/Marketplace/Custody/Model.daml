@@ -115,7 +115,7 @@ template LifecycleRequest
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
           (_, postAssetVersion) <- exercise versionsCid . AssetDescription.LookupOrInsert $ serialize remaining
           payoutCids <- forA pending \(qty, asset) -> do
-            payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty]
+            payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty * assetDeposit.asset.quantity]
             exerciseByKey @AssetSettlementRule assetDeposit.account.id $
                AssetSettlement_AddController description.issuer
             cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
