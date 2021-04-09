@@ -75,7 +75,7 @@ jobs:
           command: |
             make package
       - run:
-          name: Npm test
+          name: Yarn test
           command: |
             cd ui2 && yarn test  -- --watchAll=false
       - save_cache:
