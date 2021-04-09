@@ -21,8 +21,6 @@ type Props = {
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   title,
-  size,
-  className,
   children,
   onSubmit,
 }) => {
@@ -60,9 +58,8 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>
-        <Form onSubmit={() => loadAndCatch(onSubmit)}>
-          {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
-        </Form>
+        {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
+        <input hidden type="submit" />
         {!!error && (
           <Message negative header={error?.header} content={errorMsgContent} list={errorMsgList} />
         )}

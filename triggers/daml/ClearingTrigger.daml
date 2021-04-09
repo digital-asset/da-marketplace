@@ -103,7 +103,7 @@ handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalc
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
   marginDepositCids <- getCustomerDeposits ccp customer (.marginAccount)
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.TransferToProvider with
-                  amount = (mtmAmount * (-1.0)); marginDepositCids; optMTMCalculationCid = Some mtmCid]
+                  amount = (mtmAmount * (-1.0)); depositCids = clearingDepositCids; optMTMCalculationCid = Some mtmCid]
                ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
   return ()
 --

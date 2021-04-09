@@ -71,15 +71,16 @@ template Service
             d <- fetch dcid
             return d.asset.quantity)
 
-      transferWithController : ContractId AssetDeposit -> Account -> Account -> Update (ContractId AssetDeposit)
-      transferWithController = \depositCid from to -> do
+      transferWithController : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
+      transferWithController = \depositCid to -> do
+          deposit <- fetch depositCid
           let addNominee = exerciseByKey @AssetSettlementRule to.id
-                AssetSettlement_AddController with ctrl = from.owner; ..
+                AssetSettlement_AddController with ctrl = deposit.account.owner
               removeNominee = exerciseByKey @AssetSettlementRule to.id
-                AssetSettlement_RemoveController with ctrl = from.owner; ..
+                AssetSettlement_RemoveController with ctrl = deposit.account.owner
 
           addNominee *>
-              exerciseByKey @AssetSettlementRule from.id
+              exerciseByKey @AssetSettlementRule deposit.account.id
                 AssetSettlement_Transfer with receiverAccountId = to.id; ..
             <* removeNominee
 
@@ -136,11 +137,13 @@ template Service
           amount : Decimal
           optMTMCalculationCid : Optional (ContractId MarkToMarketCalculation)
         do
+          -- TODO: enforce depositCid is in clearing account
           assertMsg "There must be at least one deposit" $ not $ null depositCids
           whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          transferWithController depositCid ccpAccount clearingAccount
+          transferWithController depositCid clearingAccount
 
+      -- TODO: check that the deposit cid matches the clearing account?
       nonconsuming TransferToProvider : Optional (ContractId AssetDeposit)
         with
           amount : Decimal
@@ -155,7 +158,7 @@ template Service
                 whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
                 (optDeposit, newMarginCids) <- mergeAndSplit depositCids amount >>= \case
                   (transferCid::remainingCids) -> do
-                    transferredDepositCid <- transferWithController transferCid clearingAccount ccpAccount
+                    transferredDepositCid <- transferWithController transferCid ccpAccount
                     return (Some transferredDepositCid, remainingCids)
                   _ -> return (None, depositCids)
                 return optDeposit

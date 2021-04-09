@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { IconButton } from '@material-ui/core';
 import { useParty, useStreamQueries } from '@daml/react';
@@ -9,12 +9,11 @@ import { KeyboardArrowRight } from '@material-ui/icons';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { MemberStanding } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Button, Header } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
-import { MarginCall } from './MarginCall';
 import MarginCallModal from './MarginCallModal';
+import MTMCalculationModal from './MTMCalculationModal';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -23,34 +22,19 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const party = useParty();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
-  const allocationAccounts = useStreamQueries(AllocationAccountRule).contracts;
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const standings = useStreamQueries(MemberStanding).contracts;
 
-  const tradeableDeposits = useMemo(
-    () =>
-      deposits.filter(
-        d =>
-          accounts.findIndex(s => s.payload.account.id.label === d.payload.account.id.label) !== -1
-      ),
-    [deposits, accounts, party]
-  );
-  // return [
-  //   <><b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}</>,
-  //   c.payload.account.id.label,
-  //   getName(c.payload.account.owner),
-  //   <IconButton color="primary" size="small" component="span" onClick={() => history.push("/app/custody/account/" + accounts.find(a => a.payload.account.id.label === c.payload.account.id.label)?.contractId.replace("#", "_"))}>
-  //     <KeyboardArrowRight fontSize="small" />
-  //   </IconButton>
-  // ])
+  const formatter = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  });
 
   return (
     <div className="assets">
       <Tile header={<h2>Actions</h2>}>
         <MarginCallModal services={services} />
-        <Button className="ghost" onClick={() => history.push('/app/clearing/mtm-calc')}>
-          Perform Mark to Market
-        </Button>
+        <MTMCalculationModal services={services} />
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
@@ -79,8 +63,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               : 'No';
           return [
             <>{s.payload.customer}</>,
-            clearingAmount,
-            marginAmount,
+            formatter.format(clearingAmount),
+            formatter.format(marginAmount),
             standingText,
             <IconButton
               color="primary"

@@ -56,25 +56,33 @@ testMarginCalls = do
     customer = alice.customer; currency = "USD"; targetAmount = 4000.0
     calculationTime = time; calculationId = "123456"; accountId = alice.marginAccount.id; ..
 
-  (Some marginDepositCid) <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.PerformMarginFill with depositCids = [aliceDepositCid]; marginDepositCids = []; ..
+  (Some marginDepositCid) <- submit ccp $
+    exerciseCmd alice.clearingServiceCid Clearing.PerformMarginFill
+      with depositCids = [aliceDepositCid]; marginDepositCids = []; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
 
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
+
   calculationCid <- submit ccp $ createCmd MarginCalculation with
     customer = alice.customer; currency = "USD"; targetAmount = 1000.0
     calculationTime = time; calculationId = "456789"; accountId = alice.marginAccount.id; ..
 
-  (Some marginDepositCid2) <- submit ccp do exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid]; ..
+  (Some marginDepositCid2) <- submit ccp $
+    exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
+      with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid]; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   -- Fail margin calculation
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   calculationCid <- submit ccp $ createCmd MarginCalculation with
     customer = alice.customer; currency = "USD"; targetAmount = 50000.0
     calculationTime = time; calculationId = "34567"; accountId = alice.marginAccount.id; ..
 
-  void $ submit ccp do exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid2]; ..
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
+  void $ submit ccp $
+    exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
+      with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid2]; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
+
   (Some (_,aliceStanding)) <- queryContractKey @MemberStanding ccp (ccp, alice.customer)
   assert $ not aliceStanding.marginSatisfied
 
@@ -95,20 +103,27 @@ testMarkToMarket = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  -- marginDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin with depositCid = aliceDepositCid
-  Some ccpAssetDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToProvider with amount = 20000.0; depositCids = [aliceDepositCid]; optMTMCalculationCid = None
-  _ <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferFromProvider with depositCids = [ccpAssetDepositCid]; optMTMCalculationCid = None; amount = 2000.0
+  Some ccpAssetDepositCid <- submit ccp $
+    exerciseCmd alice.clearingServiceCid Clearing.TransferToProvider
+      with amount = 5000.0; depositCids = [aliceDepositCid]; optMTMCalculationCid = None
 
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 0.0
+  _ <- submit ccp $
+    exerciseCmd bob.clearingServiceCid Clearing.TransferFromProvider
+      with depositCids = [ccpAssetDepositCid]; optMTMCalculationCid = None; amount = 2000.0
+
+  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 15000.0
   assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 22000.0
 
   return ()
---
+
+-- |Check if the given account has deposits equaling the given amount
 depositsQuantityEquals : Party -> Account -> Decimal -> Script Bool
 depositsQuantityEquals party account amount = do
-  marginCids <- map fst . filter (\(_,d) -> d.account == account) <$> query @AssetDeposit party
-  depositsQuantity <- getDepositQuantities party marginCids
-  return $ amount == depositsQuantity
+  accountQuantity <- getDepositQuantities party =<< getDepositsForAccount party account
+  return $ amount == accountQuantity
+
+getDepositsForAccount : Party -> Account -> Script [ContractId AssetDeposit]
+getDepositsForAccount party account = map fst . filter (\(_,d) -> d.account == account) <$> query @AssetDeposit party
 
 getDepositQuantities : Party -> [ContractId AssetDeposit] -> Script Decimal
 getDepositQuantities party depositCids = do

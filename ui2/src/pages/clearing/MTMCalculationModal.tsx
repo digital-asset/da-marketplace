@@ -7,23 +7,23 @@ import { Form } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 import {
   Service,
-  CreateMarginCalculation,
+  CreateMarkToMarket,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 
-type MarginCallProps = {
+type MTMProps = {
   member?: Party;
 };
 
-const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = ({
+const MTMCalculationModal: React.FC<ServicePageProps<Service> & MTMProps> = ({
   services,
   member,
-}: ServicePageProps<Service> & MarginCallProps) => {
+}: ServicePageProps<Service> & MTMProps) => {
   const party = useParty();
   const ledger = useLedger();
 
   const [customer, setCustomer] = useState<Party>();
-  const [targetAmount, setTargetAmount] = useState<string>();
+  const [amount, setAmount] = useState<string>();
 
   useEffect(() => {
     if (!!member) {
@@ -31,19 +31,19 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
     }
   }, [member]);
 
-  const requestAccount = async () => {
+  const handleCalculation = async () => {
     const service = services.find(
       s => s.payload.customer === customer && s.payload.provider === party
     );
-    if (!service || !targetAmount) return;
-    const request: CreateMarginCalculation = {
+    if (!service || !amount) return;
+    const request: CreateMarkToMarket = {
       calculationId: uuidv4(),
       currency: 'USD',
-      targetAmount: targetAmount,
+      mtmAmount: amount,
     };
-    await ledger.exercise(Service.CreateMarginCalculation, service.contractId, request);
+    await ledger.exercise(Service.CreateMarkToMarket, service.contractId, request);
     setCustomer(undefined);
-    setTargetAmount(undefined);
+    setAmount(undefined);
   };
 
   const customers: DropdownItemProps[] = services.map((c, i) => ({
@@ -53,7 +53,7 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
   }));
 
   return (
-    <ModalFormErrorHandled onSubmit={() => requestAccount()} title="Perform Margin Call">
+    <ModalFormErrorHandled onSubmit={() => handleCalculation()} title="Perform Mark to Market">
       <Form.Select
         label="Customer"
         placeholder="Select..."
@@ -66,12 +66,10 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
         label="Target Amount"
         placeholder="0"
         type="number"
-        onChange={(_, change) =>
-          setTargetAmount(change.value === '999' ? 'hello' : (change.value as string))
-        }
+        onChange={(_, change) => setAmount(change.value as string)}
       />
     </ModalFormErrorHandled>
   );
 };
 
-export default MarginCallModal;
+export default MTMCalculationModal;

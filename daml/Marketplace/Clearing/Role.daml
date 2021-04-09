@@ -35,18 +35,6 @@ template Role
         do
           archive custodyServiceCid
 
-      -- nonconsuming OfferIssuanceService : ContractId Issuance.Offer
-      --   with
-      --     customer : Party
-      --   do
-      --     create Issuance.Offer with ..
-      --
-      -- nonconsuming TerminateIssuanceService : ()
-      --   with
-      --     issuanceServiceCid : ContractId Issuance.Service
-      --   do
-      --     archive issuanceServiceCid
-
 template Offer
   with
     operator : Party

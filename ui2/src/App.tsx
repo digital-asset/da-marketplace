@@ -40,8 +40,6 @@ import { ExchangeIcon, OrdersIcon, PublicIcon } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { WalletIcon } from './icons/icons';
 import { ClearingMembers } from './pages/clearing/Members';
-import { MarginCall } from './pages/clearing/MarginCall';
-import { MTMCalculation } from './pages/clearing/MTMCalculation';
 import { ClearingMember } from './pages/clearing/Member';
 import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
@@ -124,18 +122,9 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/clearing/margin-call',
-        render: () => <MarginCall services={clearingProvider} />,
-      },
-      {
-        path: '/app/clearing/mtm-calc',
-        render: () => <MTMCalculation services={clearingProvider} />,
-      },
-      {
         path: '/app/clearing/member/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
       },
-      // { path: "/app/custody/requests", render: () => (<CustodyRequests services={custodyService} />) }
     ],
   });
   //CLEARING_SERVICE_END
