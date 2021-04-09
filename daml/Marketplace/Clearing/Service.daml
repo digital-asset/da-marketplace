@@ -12,7 +12,6 @@ import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T,
 import Marketplace.Clearing.Model
 
 import DA.Functor (void)
-import DA.Optional.Total (whenSome)
 
 mergeAndSplit : [ContractId AssetDeposit] -> Decimal -> Update [ContractId AssetDeposit]
 mergeAndSplit depositCids amount = do
@@ -100,7 +99,7 @@ template Service
           calculationTime <- getTime
           create MarkToMarketCalculation with ccp = provider; accountId = clearingAccount.id; ..
 
-      nonconsuming PerformMarginFill : Optional (ContractId AssetDeposit)
+      nonconsuming PerformMarginFill : Optional ((ContractId AssetDeposit), [ContractId AssetDeposit])
         with
           depositCids : [ContractId AssetDeposit]
           marginDepositCids : [ContractId AssetDeposit]
@@ -116,45 +115,76 @@ template Service
           else do
             resolveMarginCalculation calculationCid CalculationSatisfied ""
             if | diff == 0.0 -> return None
-               | diff > 0.0  -> Some <$> (transferToMarginAccount =<< head <$> mergeAndSplit depositCids diff)
-               | otherwise   -> Some <$> (transferFromMarginAccount =<< head <$> mergeAndSplit marginDepositCids (abs diff))
+               | diff > 0.0  -> Some <$> exercise self TransferToMargin with amount = diff; ..
+               | otherwise   -> Some <$> exercise self TransferFromMargin with amount = (abs diff); ..
 
-      nonconsuming TransferFromProvider : ContractId AssetDeposit
+      nonconsuming PerformMarkToMarket : Optional (ContractId AssetDeposit, [ContractId AssetDeposit])
+        with
+          providerDepositCids : [ContractId AssetDeposit]
+          customerDepositCids : [ContractId AssetDeposit]
+          calculationCid : ContractId MarkToMarketCalculation
+        do
+          mtmAmount <- (.mtmAmount) <$> fetch calculationCid
+          providerAmount <- getDepositQuantities providerDepositCids
+          customerAmount <- getDepositQuantities customerDepositCids
+
+          let failCalc : Text -> Update ()
+              failCalc = \txt -> resolveMarkToMarketCalculation calculationCid CalculationFailed txt
+
+              satisfyCalc : Text -> Update ()
+              satisfyCalc = \txt -> resolveMarkToMarketCalculation calculationCid CalculationSatisfied txt
+
+          if
+            | mtmAmount == 0.0 -> satisfyCalc "" >> return None
+            | mtmAmount > 0.0  ->
+              if providerAmount < mtmAmount
+              then failCalc "" >> return None
+              else do
+                satisfyCalc ""
+                Some <$> exercise self TransferFromProvider with amount = mtmAmount; depositCids = providerDepositCids
+            | otherwise ->
+              if customerAmount < abs mtmAmount
+              then failCalc "" >> return None
+              else do
+                satisfyCalc ""
+                Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
+
+      nonconsuming TransferFromProvider : (ContractId AssetDeposit, [ContractId AssetDeposit])
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
-          optMTMCalculationCid : Optional (ContractId MarkToMarketCalculation)
         do
-          assertMsg "deposits are not enough to fulfill calculation" =<< (< amount) <$> getDepositQuantities depositCids
-          whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
+          assertMsg "deposits are not enough to transfer from provider" =<< (>= amount) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
-          transferWithController depositCid clearingAccount
+          flip (,) remainingCids <$> transferWithController depositCid clearingAccount
 
       -- TODO: check that the deposit cid matches the clearing account?
-      nonconsuming TransferToProvider : Optional (ContractId AssetDeposit)
+      nonconsuming TransferToProvider : (ContractId AssetDeposit, [ContractId AssetDeposit])
         with
           amount : Decimal
           depositCids : [ContractId AssetDeposit]
-          optMTMCalculationCid : Optional (ContractId MarkToMarketCalculation)
         do
-          (< amount) <$> getDepositQuantities depositCids >>= \case
-            True -> do
-                whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationFailed ""
-                return None
-            False -> do
-                whenSome optMTMCalculationCid $ \cid -> resolveMarkToMarketCalculation cid CalculationSatisfied ""
-                Some <$> (flip transferWithController ccpAccount =<< head <$> mergeAndSplit depositCids amount)
+          assertMsg "deposits are not enough to transfer to provider" =<< (>= amount) <$> getDepositQuantities depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          flip (,) remainingCids <$> transferWithController depositCid ccpAccount
 
-      nonconsuming TransferToMargin : ContractId AssetDeposit
-        with
-          depositCid : ContractId AssetDeposit
-        do transferToMarginAccount depositCid
-
-      nonconsuming TransferFromMargin : ContractId AssetDeposit
+      nonconsuming TransferFromMargin : (ContractId AssetDeposit,[ContractId AssetDeposit])
         with
           marginDepositCids : [ContractId AssetDeposit]
           amount : Decimal
-        do transferFromMarginAccount =<< head <$> mergeAndSplit marginDepositCids amount
+        do
+          assertMsg "deposits are not enough to transfer from margin" =<< (>= amount) <$> getDepositQuantities marginDepositCids
+          (depositCid::remainingCids) <- mergeAndSplit marginDepositCids amount
+          flip (,) remainingCids <$> transferFromMarginAccount depositCid
+
+      nonconsuming TransferToMargin : (ContractId AssetDeposit,[ContractId AssetDeposit])
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+        do
+          assertMsg "deposits are not enough to transfer to margin" =<< (>= amount) <$> getDepositQuantities depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          flip (,) remainingCids <$> transferToMarginAccount depositCid
 
     choice Terminate : ()
       with

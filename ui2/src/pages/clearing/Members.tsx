@@ -24,6 +24,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const standings = useStreamQueries(MemberStanding).contracts;
+  const ccpDeposits = deposits.filter(
+    d => d.payload.account.id.label === services[0].payload.ccpAccount.id.label
+  );
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -76,6 +79,15 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             </IconButton>,
           ];
         })}
+      />
+      <Header as="h2">CCP Account</Header>
+      <StripedTable
+        headings={['Account', 'Asset', 'Amount']}
+        rows={ccpDeposits.map(c => [
+          c.payload.account.id.label,
+          c.payload.asset.id.label,
+          formatter.format(Number(c.payload.asset.quantity)),
+        ])}
       />
       <Header as="h2">Accounts</Header>
       <StripedTable

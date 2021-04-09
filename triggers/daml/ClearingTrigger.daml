@@ -101,10 +101,9 @@ handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalc
   debug ("handling incoming mtm calculation: " <> show mtm)
   CCPState { operatorParty } <- get
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
-  marginDepositCids <- getCustomerDeposits ccp customer (.marginAccount)
-  emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.TransferToProvider with
-                  amount = (mtmAmount * (-1.0)); depositCids = clearingDepositCids; optMTMCalculationCid = Some mtmCid]
-               ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
+  emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarkToMarket with
+                  customerDepositCids = clearingDepositCids; providerDepositCids = []; calculationCid = mtmCid]
+               ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids)
   return ()
 --
 --
@@ -123,9 +122,9 @@ handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
     (Some (toUse,remaining)) -> do
       debug ("resolving outgoing mtm calculation: " <> show (snd mtm))
       CCPState { operatorParty } <- get
-      let depositCids = map fst toUse
-      dedupExerciseByKey @Clearing.Service (operatorParty, party, (snd mtm).customer) TransferFromProvider
-          with  optMTMCalculationCid = Some (fst mtm); ..
+      let providerDepositCids = map fst toUse
+      dedupExerciseByKey @Clearing.Service (operatorParty, party, (snd mtm).customer) Clearing.PerformMarkToMarket
+          with customerDepositCids = []; calculationCid = fst mtm; ..
       handleOutgoingMTMCalculations party remaining mtms
   where
     amount = (snd mtm).mtmAmount

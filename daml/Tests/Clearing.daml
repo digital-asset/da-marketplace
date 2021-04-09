@@ -25,16 +25,22 @@ testClearingTransfers = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  marginDepositCid   <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin with depositCid = aliceDepositCid
-  clearingDepositCid <- submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferFromMargin with amount = 1000.0, marginDepositCids = [marginDepositCid]
-  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 19000.0
+  (marginDepositCid,_) <- submit ccp $
+    exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin
+      with depositCids = [aliceDepositCid]; amount = 5000.0
 
-  -- bobMarginDepositCid <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToMargin with depositCid = bobDepositCid
-  (Some providerDepositCid) <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider with amount = 2000.0; optMTMCalculationCid = None; depositCids = [bobDepositCid]
-  submit ccp do exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider with amount = 1000.0; optMTMCalculationCid = None; depositCids = [providerDepositCid]
-  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 2000.0
+  clearingDepositCid <- submit ccp $
+    exerciseCmd alice.clearingServiceCid Clearing.TransferFromMargin
+      with amount = 1000.0, marginDepositCids = [marginDepositCid]
+  assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
 
-  -- _ <- submit ccp do exerciseCmd bob.clearingServiceCid Clearing.TransferFromProvider with depositCids = [providerDepositCid]; amount = 2000.0
+  (providerDepositCid,_) <- submit ccp $
+    exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider
+      with amount = 2000.0; depositCids = [bobDepositCid]
+
+  submit ccp $ exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider
+      with amount = 1000.0; depositCids = [providerDepositCid]
+  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 17_000.0
 
   return ()
 
@@ -56,31 +62,28 @@ testMarginCalls = do
     customer = alice.customer; currency = "USD"; targetAmount = 4000.0
     calculationTime = time; calculationId = "123456"; accountId = alice.marginAccount.id; ..
 
-  (Some marginDepositCid) <- submit ccp $
+  (Some (marginDepositCid,[remainingClearingCid])) <- submit ccp $
     exerciseCmd alice.clearingServiceCid Clearing.PerformMarginFill
       with depositCids = [aliceDepositCid]; marginDepositCids = []; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
-
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
 
   calculationCid <- submit ccp $ createCmd MarginCalculation with
     customer = alice.customer; currency = "USD"; targetAmount = 1000.0
     calculationTime = time; calculationId = "456789"; accountId = alice.marginAccount.id; ..
 
-  (Some marginDepositCid2) <- submit ccp $
+  (Some (clearingDepositCid2,[remainingMarginCid])) <- submit ccp $
     exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
-      with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid]; ..
+      with depositCids = [remainingClearingCid]; marginDepositCids = [marginDepositCid]; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   -- Fail margin calculation
   calculationCid <- submit ccp $ createCmd MarginCalculation with
-    customer = alice.customer; currency = "USD"; targetAmount = 50000.0
+    customer = alice.customer; currency = "USD"; targetAmount = 50_000.0
     calculationTime = time; calculationId = "34567"; accountId = alice.marginAccount.id; ..
 
-  aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   void $ submit ccp $
     exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
-      with depositCids = [aliceDepositCid]; marginDepositCids = [marginDepositCid2]; ..
+      with depositCids = [clearingDepositCid2]; marginDepositCids = [remainingMarginCid]; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   (Some (_,aliceStanding)) <- queryContractKey @MemberStanding ccp (ccp, alice.customer)
@@ -103,16 +106,24 @@ testMarkToMarket = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  Some ccpAssetDepositCid <- submit ccp $
-    exerciseCmd alice.clearingServiceCid Clearing.TransferToProvider
-      with amount = 5000.0; depositCids = [aliceDepositCid]; optMTMCalculationCid = None
+  calculationCid <- submit ccp $ createCmd MarkToMarketCalculation with
+    customer = alice.customer; currency = "USD"; mtmAmount = -5000.0
+    calculationTime = time; calculationId = "34567"; accountId = alice.clearingAccount.id; ..
+
+  Some (ccpAssetDepositCid,_) <- submit ccp $
+    exerciseCmd alice.clearingServiceCid Clearing.PerformMarkToMarket
+      with customerDepositCids = [aliceDepositCid]; providerDepositCids = []; ..
+
+  calculationCid2 <- submit ccp $ createCmd MarkToMarketCalculation with
+    customer = bob.customer; currency = "USD"; mtmAmount = 5000.0
+    calculationTime = time; calculationId = "34567"; accountId = bob.clearingAccount.id; ..
 
   _ <- submit ccp $
-    exerciseCmd bob.clearingServiceCid Clearing.TransferFromProvider
-      with depositCids = [ccpAssetDepositCid]; optMTMCalculationCid = None; amount = 2000.0
+    exerciseCmd bob.clearingServiceCid Clearing.PerformMarkToMarket
+      with customerDepositCids = []; providerDepositCids = [ccpAssetDepositCid]; calculationCid = calculationCid2
 
-  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 15000.0
-  assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 22000.0
+  assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 15_000.0
+  assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 25_000.0
 
   return ()
 

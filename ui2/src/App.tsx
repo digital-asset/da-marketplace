@@ -108,7 +108,6 @@ const AppComponent = () => {
   });
 
   const clearingProvider = clearingService.filter(cs => cs.payload.provider === party);
-  // CLEARING_SERVICE_START
   entries.push({
     displayEntry: () => clearingService.length > 0,
     sidebar: [
@@ -127,8 +126,7 @@ const AppComponent = () => {
       },
     ],
   });
-  //CLEARING_SERVICE_END
-  //
+
   entries.push({
     displayEntry: () => true,
     sidebar: [
