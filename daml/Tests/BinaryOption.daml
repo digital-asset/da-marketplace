@@ -34,9 +34,9 @@ testNotExercisedWhenFixingDateIsNotExpiry = script do
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 0
-  bobsMoneyAssets <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == usd)
+  bobsMoneyAssets <- getMoneyAssetsFor bob
   bobsMoneyAssets === []
-  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == usd)
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 3000.0
 
 
@@ -45,10 +45,14 @@ testExercisedOnExpiry = script do
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 1
-  [(_, bobsMoney)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == usd)
+  [(_, bobsMoney)] <- getMoneyAssetsFor bob
   bobsMoney.asset.quantity === 1000.0
-  [(_, alicesMoney)] <- queryFilter @AssetDeposit alice (\c -> c.asset.id.label == usd)
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 2000.0
+
+
+getMoneyAssetsFor party = do
+  queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
 
 
 requestExercise: Decimal -> Date -> Script (Party, Party)
