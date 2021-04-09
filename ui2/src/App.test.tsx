@@ -3,9 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-
-import App from './App';
-import { Router } from "react-router-dom";
 import { Stream } from '@daml/ledger';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -45,31 +42,3 @@ it('renders without crashing', () => {
   );
   ReactDOM.unmountComponentAtNode(div);
 });
-
-/*
-import React from 'react';
-import ReactDOM from 'react-dom';
-
-import Themes from './themes';
-import Main from './Main';
-import { LayoutProvider } from './context/LayoutContext';
-import { UserProvider } from './context/UserContext';
-import { CustomThemeProvider } from './context/ThemeContext';
-
-import 'semantic-ui-css/semantic.min.css';
-import './index.scss';
-
-ReactDOM.render(
-  <LayoutProvider>
-    <UserProvider>
-      <CustomThemeProvider lightTheme={Themes.light} darkTheme={Themes.dark}>
-        <div className="app">
-          <Main defaultPath="/app" />
-        </div>
-      </CustomThemeProvider>
-    </UserProvider>
-  </LayoutProvider>,
-  document.getElementById('root')
-);
-
-*/
