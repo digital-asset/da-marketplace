@@ -22,6 +22,7 @@ notExpiry = date 2020 Mar 18
 usd = "USD"
 strike : Decimal = 700.0
 aboveStrike : Decimal = 920.0
+belowStrike : Decimal = 630.0
 optionAssetLabel = "TSLA Oct22 700.0"
 
 
@@ -34,6 +35,17 @@ testNotExercisedWhenFixingDateIsNotExpiry = script do
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
   bobsOption.asset.id.version === 0
+  bobsMoneyAssets <- getMoneyAssetsFor bob
+  bobsMoneyAssets === []
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  alicesMoney.asset.quantity === 3000.0
+
+
+testNotExercisedWhenPriceIsBelowStrikeAtExpiry = script do
+  (alice, bob) <- requestExercise belowStrike expiry
+
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob (\c -> c.asset.id.label == optionAssetLabel)
+  bobsOption.asset.id.version === 1
   bobsMoneyAssets <- getMoneyAssetsFor bob
   bobsMoneyAssets === []
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
