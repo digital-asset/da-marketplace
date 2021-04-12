@@ -463,3 +463,25 @@ export const ToolIcon = () => (
     />
   </svg>
 );
+
+export const MegaphoneIcon = () => (
+  <svg className="icon megaphone-icon" viewBox="0 0 11 11.666457">
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="m 0.5,5.4999075 c 0,-0.92048 0.74552,-1.66667 1.66599,-1.66667 1.12223,0 2.5887,0 3.66735,0 2,0 4.66666,-3.33332998 4.66666,-3.33332998 V 10.499858 c 0,0 -2.66666,-3.3332905 -4.66666,-3.3332905 -1.07865,0 -2.54512,0 -3.66734,0 -0.92048,0 -1.666,-0.74619 -1.666,-1.66666 z"
+      stroke="#b4f5a3"
+      stroke-linejoin="round"
+      id="path833"
+    />
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M 2.5,7.1664075 3.83334,11.166458 H 6.5 L 5.16667,7.1664075 Z"
+      stroke="#b4f5a3"
+      stroke-linejoin="round"
+      id="path835"
+    />
+    <path d="m 5.16667,3.8331575 v 3.33333" stroke="#b4f5a3" id="path837" />
+  </svg>
+);

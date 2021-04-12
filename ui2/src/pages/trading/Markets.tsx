@@ -17,11 +17,11 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   return (
     <div>
-      <Tile header={<h2>Actions</h2>}>
+      {/* <Tile header={<h2>Actions</h2>}>
         <Button className="ghost" onClick={() => history.push('/app/listing/new')}>
           New Market
         </Button>
-      </Tile>
+      </Tile> */}
       <Header as="h2">Markets</Header>
       <StripedTable
         headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset', 'Details']}

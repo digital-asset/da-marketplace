@@ -25,11 +25,19 @@ const SetupService: React.FC<SetupServiceProps> = ({ name, links }) => (
 
 const SetUp: React.FC = () => (
   <div className="set-up">
+    <SetupService name="Custody" links={[{ label: 'Offer Custody Service', path: '' }]} />
+
+    <SetupService name="Distributions" links={[{ label: 'Create New Auction', path: '' }]} />
+
     <SetupService
-      name="Distributions"
+      name="Instruments"
       links={[
-        { label: 'Create New Asset', path: '' },
-        { label: 'Create New Auction', path: '' },
+        { label: 'Create Base Instrument', path: '/app/setup/instrument/new/base' },
+        { label: 'Create Binary Option', path: '/app/setup/instrument/new/binaryoption' },
+        {
+          label: 'Create Convertible Note',
+          path: '/app/setup/instrument/new/convertiblenote',
+        },
       ]}
     />
 
@@ -40,22 +48,13 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Listings"
-      links={[{ label: 'Create New Listing', path: '/app/setup/listings/new' }]}
+      links={[{ label: 'Create New Listing', path: '/app/setup/listing/new' }]}
     />
 
     <SetupService
-      name="Originations"
-      links={[
-        { label: 'Create Base Instrument', path: '/app/setup/instruments/new/base' },
-        { label: 'Create Binary Option', path: '/app/setup/instruments/new/binaryoption' },
-        {
-          label: 'Create Convertible Note',
-          path: '/app/setup/instruments/new/convertiblenote',
-        },
-      ]}
+      name="Trading"
+      links={[{ label: 'Offer Trading Service', path: '/app/setup/trading/offer' }]}
     />
-
-    <SetupService name="Trading" links={[{ label: 'Offer Trading Service', path: '' }]} />
   </div>
 );
 

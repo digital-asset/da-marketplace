@@ -31,11 +31,18 @@ import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
-import { Custody as CustodyNetwork } from './pages/network/Custody';
-import { Trading as TradingNetwork } from './pages/network/Trading';
+import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
+import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
-import { ControlsIcon, ExchangeIcon, OrdersIcon, PublicIcon, ToolIcon } from './icons/icons';
+import {
+  ControlsIcon,
+  ExchangeIcon,
+  MegaphoneIcon,
+  OrdersIcon,
+  PublicIcon,
+  ToolIcon,
+} from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { WalletIcon } from './icons/icons';
 import _ from 'lodash';
@@ -45,6 +52,7 @@ import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
 import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
+import Offer from './pages/setup/Offer';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -105,40 +113,33 @@ const AppComponent = () => {
       },
     ],
   });
-  entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Network',
-        path: '/app/network/custody',
-        render: () => <CustodyNetwork services={custodyService} />,
-        icon: <PlayArrow />,
-        children: [
-          {
-            label: 'Custody',
-            path: '/app/network/custody',
-            render: () => <CustodyNetwork services={custodyService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Trading',
-            path: '/app/network/trading',
-            render: () => <TradingNetwork services={tradingService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Listing',
-            path: '/app/network/listing',
-            render: () => <MarketNetwork listings={listings} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-        ],
-      },
-    ],
-  });
+  // entries.push({
+  //   displayEntry: () => true,
+  //   sidebar: [
+  //     {
+  //       label: 'Network',
+  //       path: '/app/network/custody',
+  //       render: () => <CustodyNetwork services={custodyService} />,
+  //       icon: <PlayArrow />,
+  //       children: [
+  //         {
+  //           label: 'Custody',
+  //           path: '/app/network/custody',
+  //           render: () => <CustodyNetwork services={custodyService} />,
+  //           icon: <PlayArrow />,
+  //           children: [],
+  //         },
+  //         {
+  //           label: 'Trading',
+  //           path: '/app/network/trading',
+  //           render: () => <TradingNetwork services={tradingService} />,
+  //           icon: <PlayArrow />,
+  //           children: [],
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // });
   entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
@@ -146,7 +147,7 @@ const AppComponent = () => {
         label: 'Auctions',
         path: '/app/distribution/auctions',
         render: () => <Auctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -172,10 +173,10 @@ const AppComponent = () => {
     displayEntry: () => biddingService.length > 0,
     sidebar: [
       {
-        label: 'Auctions',
+        label: 'Bidding Auctions',
         path: '/app/distribution/bidding',
         render: () => <BiddingAuctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -214,23 +215,38 @@ const AppComponent = () => {
       {
         label: 'Manage',
         path: '/app/manage',
-        render: () => <Redirect to="/app/manage/distributions" />,
+        activeSubroutes: true,
+        render: () => <Redirect to="/app/manage/custody" />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
       {
-        path: '/app/manage/distributions',
+        path: '/app/manage/custody',
         render: () => (
           <Manage>
-            {/* <h3>Assets</h3>
-          <Assets services={custodyService}/> */}
-            <h3>Auctions</h3>
-            {/* <Auctions /> */}
+            <CustodyServiceTable services={custodyService} />
           </Manage>
         ),
       },
+      {
+        path: '/app/manage/distributions',
+        render: () => (
+          <Manage>
+            <h3>Auctions</h3>
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/instruments',
+        render: () => (
+          <Manage>
+            <InstrumentsTable />
+          </Manage>
+        ),
+      },
+      { path: '/app/manage/instrument/:contractId', component: Instrument },
       {
         path: '/app/manage/issuance',
         render: () => (
@@ -240,19 +256,10 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/origination',
-        render: () => (
-          <Manage>
-            <InstrumentsTable />
-          </Manage>
-        ),
-      },
-      { path: '/app/manage/instrument/:contractId', component: Instrument },
-      {
         path: '/app/manage/trading',
         render: () => (
           <Manage>
-            <h2>trading</h2>
+            <TradingServiceTable services={tradingService} />
           </Manage>
         ),
       },
@@ -273,29 +280,31 @@ const AppComponent = () => {
       {
         label: 'Setup',
         path: '/app/setup',
+        activeSubroutes: true,
         render: () => <SetUp />,
         icon: <ToolIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
-      { path: '/app/setup/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
       {
-        path: '/app/setup/instruments/new/base',
+        path: '/app/setup/instrument/new/base',
         component: NewBaseInstrument,
       },
       {
-        path: '/app/setup/instruments/new/convertiblenote',
+        path: '/app/setup/instrument/new/convertiblenote',
         component: NewConvertibleNote,
       },
       {
-        path: '/app/setup/instruments/new/binaryoption',
+        path: '/app/setup/instrument/new/binaryoption',
         component: NewBinaryOption,
       },
+      { path: '/app/setup/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
       {
-        path: '/app/setup/listings/new',
+        path: '/app/setup/listing/new',
         render: () => <ListingNew services={listingService} />,
       },
+      { path: '/app/setup/trading/offer', render: () => <Offer /> },
     ],
   });
 
@@ -317,7 +326,7 @@ const AppComponent = () => {
     <Page sideBarItems={entriesToDisplay}>
       {servicesLoading ? (
         <div>
-          <CircularProgress color={'secondary'} />
+          <CircularProgress color="secondary" />
         </div>
       ) : (
         <div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Grid, Header, Menu } from 'semantic-ui-react';
 import classNames from 'classnames';
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
 import { useParty } from '@daml/react';
 import PageSection from './PageSection';
 import WelcomeHeader from './WelcomeHeader';
@@ -27,6 +27,8 @@ const Page: React.FC<Props> = ({
   sideBarItems,
 }) => {
   const user = useParty();
+  const history = useHistory();
+
   const groupSideBarItems = Array.from(
     sideBarItems?.reduce(
       (acc, cur) => acc.set(cur.groupBy, [..._.compact(acc.get(cur.groupBy)), cur]),
@@ -42,6 +44,11 @@ const Page: React.FC<Props> = ({
       <>
         <Menu.Item
           exact
+          active={
+            sideBarItem.activeSubroutes
+              ? history.location.pathname.includes(sideBarItem.path)
+              : undefined
+          }
           key={sideBarItem.label + sideBarItem.path}
           as={NavLink}
           to={sideBarItem.path}
