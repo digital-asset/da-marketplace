@@ -2,31 +2,14 @@
 
 module Marketplace.Clearing.Service where
 
-import DA.List
+import DA.Functor (void)
 
 import DA.Finance.Asset
-import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Clearing.Model
-
-import DA.Functor (void)
-
-mergeAndSplit : [ContractId AssetDeposit] -> Decimal -> Update [ContractId AssetDeposit]
-mergeAndSplit depositCids amount = do
-    depositCid <- exercise (head depositCids) AssetDeposit_Merge with depositCids = tail depositCids
-    exercise depositCid AssetDeposit_Split with quantities = [amount]
-
-getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
-getDepositQuantities depositCids = foldl (+) 0.0 <$> forA depositCids (fmap (.asset.quantity) . fetch)
-
-data CalculationResults = CalculationSatisfied
-                        | CalculationFailed
-
-isSatisfied : CalculationResults -> Bool
-isSatisfied CalculationSatisfied = True
-isSatisfied CalculationFailed    = False
+import Marketplace.Clearing.Utils
 
 template Service
   with
@@ -51,34 +34,21 @@ template Service
       transferFromMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
           AllocationAccountRule.Withdraw with transferTo = clearingAccount; ..
 
-      resolveMarginCalculation : ContractId MarginCalculation -> CalculationResults -> Text -> Update ()
-      resolveMarginCalculation = \calculationCid results note -> do
+      resolveMarginCalculation : ContractId MarginCalculation -> CalculationResults -> Update ()
+      resolveMarginCalculation = \calculationCid results -> do
         exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
             newMarginSatisfied = isSatisfied results; ..
         case results of
-          CalculationSatisfied -> void $ exercise calculationCid MarginCalculation_Resolve with ..
-          CalculationFailed    -> void $ exercise calculationCid MarginCalculation_Reject with ..
+          CalculationSatisfied -> void $ exercise calculationCid MarginCalculation_Resolve with note = ""; ..
+          CalculationFailed    -> void $ exercise calculationCid MarginCalculation_Reject with note = ""; ..
 
-      resolveMarkToMarketCalculation : ContractId MarkToMarketCalculation -> CalculationResults -> Text -> Update ()
-      resolveMarkToMarketCalculation = \calculationCid results note -> do
+      resolveMarkToMarketCalculation : ContractId MarkToMarketCalculation -> CalculationResults -> Update ()
+      resolveMarkToMarketCalculation = \calculationCid results -> do
         exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with
             newMtmSatisied = isSatisfied results; ..
         case results of
-          CalculationSatisfied -> void $ exercise calculationCid MarkToMarketCalculation_Resolve with ..
-          CalculationFailed    -> void $ exercise calculationCid MarkToMarketCalculation_Reject with ..
-
-      transferWithController : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
-      transferWithController = \depositCid to -> do
-          deposit <- fetch depositCid
-          let addNominee = exerciseByKey @AssetSettlementRule to.id
-                AssetSettlement_AddController with ctrl = deposit.account.owner
-              removeNominee = exerciseByKey @AssetSettlementRule to.id
-                AssetSettlement_RemoveController with ctrl = deposit.account.owner
-
-          addNominee *>
-              exerciseByKey @AssetSettlementRule deposit.account.id
-                AssetSettlement_Transfer with receiverAccountId = to.id; ..
-            <* removeNominee
+          CalculationSatisfied -> void $ exercise calculationCid MarkToMarketCalculation_Resolve with note = ""; ..
+          CalculationFailed    -> void $ exercise calculationCid MarkToMarketCalculation_Reject with note = ""; ..
 
     controller provider can
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
@@ -105,15 +75,15 @@ template Service
           marginDepositCids : [ContractId AssetDeposit]
           calculationCid : ContractId MarginCalculation
         do
-          targetAmount <- (.targetAmount) <$> fetch calculationCid
+          targetAmount  <- (.targetAmount) <$> fetch calculationCid
           depositAmount <- getDepositQuantities depositCids
-          marginAmount <- getDepositQuantities marginDepositCids
+          marginAmount  <- getDepositQuantities marginDepositCids
 
           let diff = targetAmount - marginAmount
           if diff > 0.0 && depositAmount < diff
-          then resolveMarginCalculation calculationCid CalculationFailed "" >> return None
+          then resolveMarginCalculation calculationCid CalculationFailed >> return None
           else do
-            resolveMarginCalculation calculationCid CalculationSatisfied ""
+            resolveMarginCalculation calculationCid CalculationSatisfied
             if | diff == 0.0 -> return None
                | diff > 0.0  -> Some <$> exercise self TransferToMargin with amount = diff; ..
                | otherwise   -> Some <$> exercise self TransferFromMargin with amount = (abs diff); ..
@@ -124,37 +94,33 @@ template Service
           customerDepositCids : [ContractId AssetDeposit]
           calculationCid : ContractId MarkToMarketCalculation
         do
-          mtmAmount <- (.mtmAmount) <$> fetch calculationCid
+          mtmAmount      <- (.mtmAmount) <$> fetch calculationCid
           providerAmount <- getDepositQuantities providerDepositCids
           customerAmount <- getDepositQuantities customerDepositCids
 
-          let failCalc : Text -> Update ()
-              failCalc = \txt -> resolveMarkToMarketCalculation calculationCid CalculationFailed txt
+          let failCalc : Update ()
+              failCalc = resolveMarkToMarketCalculation calculationCid CalculationFailed
 
-              satisfyCalc : Text -> Update ()
-              satisfyCalc = \txt -> resolveMarkToMarketCalculation calculationCid CalculationSatisfied txt
+              satisfyCalc : Update ()
+              satisfyCalc = resolveMarkToMarketCalculation calculationCid CalculationSatisfied
 
           if
-            | mtmAmount == 0.0 -> satisfyCalc "" >> return None
+            | mtmAmount == 0.0 -> satisfyCalc >> return None
             | mtmAmount > 0.0  ->
               if providerAmount < mtmAmount
-              then failCalc "" >> return None
-              else do
-                satisfyCalc ""
-                Some <$> exercise self TransferFromProvider with amount = mtmAmount; depositCids = providerDepositCids
+              then failCalc >> return None
+              else satisfyCalc >> Some <$> exercise self TransferFromProvider with amount = mtmAmount; depositCids = providerDepositCids
             | otherwise ->
               if customerAmount < abs mtmAmount
-              then failCalc "" >> return None
-              else do
-                satisfyCalc ""
-                Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
+              then failCalc >> return None
+              else satisfyCalc >> Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
 
       nonconsuming TransferFromProvider : (ContractId AssetDeposit, [ContractId AssetDeposit])
         with
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
         do
-          assertMsg "deposits are not enough to transfer from provider" =<< (>= amount) <$> getDepositQuantities depositCids
+          assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           flip (,) remainingCids <$> transferWithController depositCid clearingAccount
 
@@ -164,7 +130,7 @@ template Service
           amount : Decimal
           depositCids : [ContractId AssetDeposit]
         do
-          assertMsg "deposits are not enough to transfer to provider" =<< (>= amount) <$> getDepositQuantities depositCids
+          assertMsg "deposits are not enough to transfer to provider" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           flip (,) remainingCids <$> transferWithController depositCid ccpAccount
 
@@ -173,7 +139,7 @@ template Service
           marginDepositCids : [ContractId AssetDeposit]
           amount : Decimal
         do
-          assertMsg "deposits are not enough to transfer from margin" =<< (>= amount) <$> getDepositQuantities marginDepositCids
+          assertMsg "deposits are not enough to transfer from margin" =<< (amount <=) <$> getDepositQuantities marginDepositCids
           (depositCid::remainingCids) <- mergeAndSplit marginDepositCids amount
           flip (,) remainingCids <$> transferFromMarginAccount depositCid
 
@@ -182,7 +148,7 @@ template Service
           depositCids : [ContractId AssetDeposit]
           amount : Decimal
         do
-          assertMsg "deposits are not enough to transfer to margin" =<< (>= amount) <$> getDepositQuantities depositCids
+          assertMsg "deposits are not enough to transfer to margin" =<< (amount <=) <$> getDepositQuantities depositCids
           (depositCid::remainingCids) <- mergeAndSplit depositCids amount
           flip (,) remainingCids <$> transferToMarginAccount depositCid
 

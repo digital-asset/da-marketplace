@@ -28,6 +28,13 @@ template MemberStanding
           create this with mtmSatisfied = newMtmSatisied
 
 
+data CalculationResults = CalculationSatisfied
+                        | CalculationFailed
+
+isSatisfied : CalculationResults -> Bool
+isSatisfied CalculationSatisfied = True
+isSatisfied CalculationFailed    = False
+
 template MarginCalculation
   with
     ccp : Party
@@ -40,6 +47,8 @@ template MarginCalculation
   where
     signatory ccp
     observer customer
+    -- TODO: should a zero target amount margin amount be allowed?
+    ensure targetAmount > 0.0
 
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
@@ -57,7 +66,8 @@ template MarginCalculation
         do
           create RejectedMarginCalculation with calculation = this; ..
 
-
+-- TODO: Possibly change Text notes to specific fields, eg for fulfilled calculation:
+-- fundsMoved : Decimal, or failed calculation, fundsMissing : Decimal
 template FulfilledMarginCalculation
   with
     ccp : Party
@@ -72,7 +82,6 @@ template FulfilledMarginCalculation
     key (ccp, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-
 template RejectedMarginCalculation
   with
     ccp : Party
@@ -83,8 +92,8 @@ template RejectedMarginCalculation
     signatory ccp
     observer customer
 
-    -- key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
-    -- maintainer key._1
+    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    maintainer key._1
 
     controller ccp can
       RejectedMarginCalculation_Retry : ContractId MarginCalculation
@@ -96,7 +105,6 @@ template RejectedMarginCalculation
     controller customer can
       RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
         do create calculation
-
 
 template MarkToMarketCalculation
   with
@@ -127,7 +135,6 @@ template MarkToMarketCalculation
         do
           create RejectedMarkToMarketCalculation with calculation = this, ..
 
-
 template RejectedMarkToMarketCalculation
   with
     ccp : Party
@@ -150,7 +157,6 @@ template RejectedMarkToMarketCalculation
     controller customer can
       RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
         do create calculation
-
 
 template FulfilledMarkToMarketCalculation
   with

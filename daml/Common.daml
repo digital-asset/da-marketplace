@@ -106,8 +106,8 @@ onboardProviders = do
   openAccountRequestCid <- submit ccp do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = ccpAccountId; observers = [bank]; ctrls = [bank, ccp]
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
 
-  clearingRoleOfferCid  <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferClearingRole with provider = ccp
-  clearingRoleCid       <- submit ccp      do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ..
+  clearingRoleOfferCid  <- submit operator do exerciseCmd operatorServiceCid Operator.OfferClearingRole with provider = ccp
+  clearingRoleCid       <- submit ccp do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ..
 
   pure Providers with ..
 
@@ -154,7 +154,7 @@ onboardCustomer Providers{..} party = do
 
   -- Clearing Service
   clearingServiceOfferCid <- submit ccp do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
-  clearingServiceCid <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
+  clearingServiceCid      <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
 
   -- Identity
   regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..

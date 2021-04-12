@@ -58,6 +58,7 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
         label="Customer"
         placeholder="Select..."
         required
+        min={1}
         options={customers}
         value={customer}
         onChange={(_, change) => setCustomer(change.value as Party)}
