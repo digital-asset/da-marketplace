@@ -80,6 +80,9 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     <Tile dark thinGap key="login" header={logoHeader}>
       <LocalLoginForm onLogin={onLogin} />
     </Tile>,
+    <Tile dark thinGap key="quick-setup">
+      <QuickSetupButton />
+    </Tile>,
   ];
 
   const dablTiles = [
@@ -88,6 +91,9 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     </Tile>,
     <Tile dark thinGap key="parties">
       <PartiesLoginForm onLogin={onLogin} />
+    </Tile>,
+    <Tile dark thinGap key="quick-setup">
+      <QuickSetupButton />
     </Tile>,
     <Tile dark thinGap key="jwt">
       <JWTLoginForm onLogin={onLogin} />
@@ -106,7 +112,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   );
 };
 
-const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
+export const LocalLoginForm: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const history = useHistory();
   const userDispatch = useUserDispatch();
@@ -183,6 +189,33 @@ const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
           onClick={handleDablTokenLogin}
         />
       </Form>
+    </>
+  );
+};
+
+const QuickSetupButton = () => {
+  const [parties, setParties] = useState<PartyDetails[]>();
+  const history = useHistory();
+
+  useEffect(() => {
+    const parties = retrieveParties();
+    if (parties) {
+      setParties(parties);
+    }
+  }, []);
+
+  const isDisabled = !parties || parties.length === 0;
+
+  return (
+    <>
+      {/* {isDisabled && <p className="login-details dark">Please load a parties.json file to access quick setup.</p>} */}
+      <Button
+        className="ghost dark"
+        onClick={() => history.push('/quick-setup')}
+        // disabled={isDisabled}
+      >
+        Quick Setup
+      </Button>
     </>
   );
 };

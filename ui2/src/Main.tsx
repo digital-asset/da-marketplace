@@ -15,6 +15,7 @@ import { Listing } from './apps/Listing';
 import { Trading } from './apps/Trading';
 import { Registry } from './apps/Registry';
 import { ServicesProvider } from './context/ServicesContext';
+import QuickSetup from './pages/login/QuickSetup';
 
 type MainProps = {
   defaultPath: string;
@@ -42,6 +43,7 @@ export default function Main({ defaultPath }: MainProps) {
             <PrivateRoute path="/apps/distribution" component={Distribution} />
             <PrivateRoute path="/apps/listing" component={Listing} />
             <PrivateRoute path="/apps/trading" component={Trading} /> */}
+            <PublicRoute path="/quick-setup" component={QuickSetup} />
             <PublicRoute path="/login" component={Login} />
             <Route component={ErrorComponent} />
           </Switch>
