@@ -78,7 +78,6 @@ handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targ
 
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
   marginDepositCids   <- getCustomerDeposits ccp customer (.marginAccount)
-  debug $ show clearingDepositCids
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarginFill with
                    calculationCid = mcCid, depositCids = clearingDepositCids, marginDepositCids]
                ([toAnyContractId mcCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
@@ -115,17 +114,19 @@ handleOutgoingMTMCalculations
 handleOutgoingMTMCalculations _ [] _  = return ()
 handleOutgoingMTMCalculations _ _  [] = return ()
 
-handleOutgoingMTMCalculations party ds (mtm::mtms) = case ds' of
+handleOutgoingMTMCalculations party ds ((mtmCid,mtm)::mtms) = case ds' of
     None -> handleOutgoingMTMCalculations party ds mtms
     (Some (toUse,remaining)) -> do
-      debug ("resolving outgoing mtm calculation: " <> show (snd mtm))
+      debug ("resolving outgoing mtm calculation: " <> show mtm)
       CCPState { operatorParty } <- get
       let providerDepositCids = map fst toUse
-      dedupExerciseByKey @Clearing.Service (operatorParty, party, (snd mtm).customer) Clearing.PerformMarkToMarket
-          with customerDepositCids = []; calculationCid = fst mtm; ..
+      emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, party, mtm.customer) Clearing.PerformMarkToMarket with
+                      customerDepositCids = []; calculationCid = mtmCid; ..]
+                   ([toAnyContractId mtmCid] <> map toAnyContractId providerDepositCids)
+
       handleOutgoingMTMCalculations party remaining mtms
   where
-    amount = (snd mtm).mtmAmount
+    amount = mtm.mtmAmount
     ds'    = collectDeposits amount ([], ds)
 
 
