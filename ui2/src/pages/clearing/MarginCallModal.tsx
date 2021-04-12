@@ -18,7 +18,7 @@ type MarginCallProps = {
 const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = ({
   services,
   member,
-}: ServicePageProps<Service> & MarginCallProps) => {
+}) => {
   const party = useParty();
   const ledger = useLedger();
 
@@ -67,9 +67,7 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
         label="Target Amount"
         placeholder="0"
         type="number"
-        onChange={(_, change) =>
-          setTargetAmount(change.value === '999' ? 'hello' : (change.value as string))
-        }
+        onChange={(_, change) => setTargetAmount(change.value as string)}
       />
     </ModalFormErrorHandled>
   );

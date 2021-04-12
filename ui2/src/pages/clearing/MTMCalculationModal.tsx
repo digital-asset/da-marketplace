@@ -18,7 +18,7 @@ type MTMProps = {
 const MTMCalculationModal: React.FC<ServicePageProps<Service> & MTMProps> = ({
   services,
   member,
-}: ServicePageProps<Service> & MTMProps) => {
+}) => {
   const party = useParty();
   const ledger = useLedger();
 

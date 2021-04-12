@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useParams } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useParams, NavLink } from 'react-router-dom';
 import { useStreamQueries, useLedger } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service, Cancel } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
@@ -13,19 +13,17 @@ import {
   FulfilledMarkToMarketCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header } from 'semantic-ui-react';
+import { Header, Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import { IconButton } from '@material-ui/core';
-import { Cancel as CancelIcon, Undo as UndoIcon } from '@material-ui/icons';
 import { ContractId } from '@daml/types';
 
 const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
   services,
-}: RouteComponentProps & ServicePageProps<Service>) => {
+}) => {
   const { contractId } = useParams<any>();
   const ledger = useLedger();
   const service = useStreamQueries(Service).contracts.find(s => s.contractId === contractId)
@@ -112,14 +110,14 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
         <b>Clearing Amount:</b> {formatter.format(clearingAmount)}
       </Tile>
       <Header as="h2">Margin Calculations</Header>
-      <Header as="h3">Curent Margin Calculations</Header>
+      <Header as="h3">Pending Margin Calculations</Header>
       <StripedTable
         headings={['Time', 'Target Amount', 'Account']}
         rows={pendingMarginCalcs.map(mc => {
           return [
-            <>{mc.payload.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.targetAmount))}</>,
-            <>{mc.payload.accountId.label}</>,
+            mc.payload.calculationTime,
+            formatter.format(Number(mc.payload.targetAmount)),
+            mc.payload.accountId.label,
           ];
         })}
       />
@@ -128,17 +126,17 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
         headings={['Time', 'Target Amount', 'Account', 'Action']}
         rows={failedMarginCalcs.map(mc => {
           return [
-            <>{mc.payload.calculation.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.calculation.targetAmount))}</>,
-            <>{mc.payload.calculation.accountId.label}</>,
-            <span>
-              <IconButton color="primary" size="small" component="span">
-                <UndoIcon fontSize="small" onClick={() => handleMarginRetry(mc.contractId)} />
-              </IconButton>
-              <IconButton color="primary" size="small" component="span">
-                <CancelIcon fontSize="small" onClick={() => handleMarginCancel(mc.contractId)} />
-              </IconButton>
-            </span>,
+            mc.payload.calculation.calculationTime,
+            formatter.format(Number(mc.payload.calculation.targetAmount)),
+            mc.payload.calculation.accountId.label,
+            <Button.Group size="mini">
+              <Button className="ghost" onClick={() => handleMarginRetry(mc.contractId)}>
+                Retry
+              </Button>
+              <Button className="ghost" onClick={() => handleMarginCancel(mc.contractId)}>
+                Cancel
+              </Button>
+            </Button.Group>,
           ];
         })}
       />
@@ -147,41 +145,42 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
         headings={['Time', 'Target Amount', 'Account']}
         rows={fulfilledMarginCalcs.map(mc => {
           return [
-            <>{mc.payload.calculation.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.calculation.targetAmount))}</>,
-            <>{mc.payload.calculation.accountId.label}</>,
+            mc.payload.calculation.calculationTime,
+            formatter.format(Number(mc.payload.calculation.targetAmount)),
+            mc.payload.calculation.accountId.label,
           ];
         })}
       />
 
       <Header as="h2">MTM Calculations</Header>
-      <Header as="h3">Curent MTM Calculations</Header>
+      <Header as="h3">Pending MTM Calculations</Header>
       <StripedTable
         headings={['Time', 'Amount', 'Account']}
         rows={pendingMTMCalcs.map(mc => {
           return [
-            <>{mc.payload.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.mtmAmount))}</>,
-            <>{mc.payload.accountId.label}</>,
+            mc.payload.calculationTime,
+            formatter.format(Number(mc.payload.mtmAmount)),
+            mc.payload.accountId.label,
           ];
         })}
       />
+
       <Header as="h3">Failed MTM Calculations</Header>
       <StripedTable
         headings={['Time', 'Target Amount', 'Account', 'Action']}
         rows={failedMTMCalcs.map(mc => {
           return [
-            <>{mc.payload.calculation.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.calculation.mtmAmount))}</>,
-            <>{mc.payload.calculation.accountId.label}</>,
-            <span>
-              <IconButton color="primary" size="small" component="span">
-                <UndoIcon fontSize="small" onClick={() => handleMTMRetry(mc.contractId)} />
-              </IconButton>
-              <IconButton color="primary" size="small" component="span">
-                <CancelIcon fontSize="small" onClick={() => handleMTMCancel(mc.contractId)} />
-              </IconButton>
-            </span>,
+            mc.payload.calculation.calculationTime,
+            formatter.format(Number(mc.payload.calculation.mtmAmount)),
+            mc.payload.calculation.accountId.label,
+            <Button.Group size="mini">
+              <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
+                Retry
+              </Button>
+              <Button className="ghost" onClick={() => handleMTMCancel(mc.contractId)}>
+                Cancel
+              </Button>
+            </Button.Group>,
           ];
         })}
       />
@@ -190,9 +189,9 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
         headings={['Time', 'Target Amount', 'Account']}
         rows={fulfilledMTMCalcs.map(mc => {
           return [
-            <>{mc.payload.calculation.calculationTime}</>,
-            <>{formatter.format(Number(mc.payload.calculation.mtmAmount))}</>,
-            <>{mc.payload.calculation.accountId.label}</>,
+            mc.payload.calculation.calculationTime,
+            formatter.format(Number(mc.payload.calculation.mtmAmount)),
+            mc.payload.calculation.accountId.label,
           ];
         })}
       />

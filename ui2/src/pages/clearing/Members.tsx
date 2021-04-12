@@ -1,11 +1,9 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { IconButton } from '@material-ui/core';
+import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import { useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { getName } from '../../config';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { MemberStanding } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
@@ -14,11 +12,12 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
   services,
-}: RouteComponentProps & ServicePageProps<Service>) => {
+}) => {
   const party = useParty();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
@@ -69,14 +68,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             formatter.format(clearingAmount),
             formatter.format(marginAmount),
             standingText,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() => history.push('/app/clearing/member/' + s.contractId.replace('#', '_'))}
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
+            <NavLink to={`/app/clearing/member/${s.contractId.replace('#', '_')}`}>
+              <ArrowRightIcon />
+            </NavLink>,
           ];
         })}
       />
@@ -106,14 +100,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           getName(c.payload.account.owner),
           party === c.payload.account.provider ? 'Provider' : 'Client',
           Object.keys(c.payload.ctrls.textMap).join(', '),
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() => history.push('/app/custody/account/' + c.contractId.replace('#', '_'))}
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
+          <NavLink to={`/app/custody/account/${c.contractId.replace('#', '_')}`}>
+            <ArrowRightIcon />
+          </NavLink>,
         ])}
       />
     </div>
