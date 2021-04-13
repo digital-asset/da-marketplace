@@ -39,6 +39,12 @@ template Role
         do
           create Issuance.Offer with ..
 
+      nonconsuming AcceptIssuanceRequest : ContractId Issuance.Service
+        with
+          issuanceServiceRequestCid : ContractId Issuance.Request
+        do
+          exercise issuanceServiceRequestCid Issuance.Approve with ..
+
       nonconsuming TerminateIssuanceService : ()
         with
           issuanceServiceCid : ContractId Issuance.Service
