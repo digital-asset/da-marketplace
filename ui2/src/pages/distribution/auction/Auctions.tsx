@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
 import { getName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';

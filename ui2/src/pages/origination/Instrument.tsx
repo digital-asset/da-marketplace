@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { useParams, RouteComponentProps } from 'react-router-dom';
 import { getName } from '../../config';
 import { render } from '../../components/Claims/render';
