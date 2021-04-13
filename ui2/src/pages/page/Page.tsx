@@ -41,7 +41,7 @@ const Page: React.FC<Props> = ({
     const margin = level * 25;
 
     return (
-      <>
+      <React.Fragment key={sideBarItem.label + sideBarItem.path}>
         <Menu.Item
           exact
           active={
@@ -60,7 +60,7 @@ const Page: React.FC<Props> = ({
           </p>
         </Menu.Item>
         {childMenu.length > 0 && <Menu.Menu>{childMenu}</Menu.Menu>}
-      </>
+      </React.Fragment>
     );
   };
 
@@ -80,7 +80,7 @@ const Page: React.FC<Props> = ({
           <Menu.Menu>
             {groupSideBarItems.map(([key, items]) =>
               key ? (
-                <Menu.Menu className="sub-menu">
+                <Menu.Menu key={key} className="sub-menu">
                   <Header as="h3">{key}</Header>
                   {items.map(item => constructMenu(item, 0))}
                 </Menu.Menu>

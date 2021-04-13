@@ -333,8 +333,8 @@ const AppComponent = () => {
           <Switch>
             <Route exact path="/app" component={Landing} />
             {routeEntries(entriesToDisplay)}
-            {additionRouting.map(routeProps => (
-              <Route {...routeProps} />
+            {additionRouting.map((routeProps, i) => (
+              <Route key={i} {...routeProps} />
             ))}
           </Switch>
         </div>

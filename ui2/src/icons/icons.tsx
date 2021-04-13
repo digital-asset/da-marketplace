@@ -281,7 +281,7 @@ export const OrdersIcon: React.FC<IconProps> = ({ size }) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <g clip-path="url(#clip0)">
+    <g clipPath="url(#clip0)">
       <path
         d="M10.8109 1.40002L10.8887 1.78891H12.0554L11.822 0.622244C11.7443 0.311133 11.4332 0.0777996 11.122 0.155577L1.71094 1.78891H8.55538L10.8109 1.40002Z"
         fill="#B4F5A3"
@@ -467,19 +467,19 @@ export const ToolIcon = () => (
 export const MegaphoneIcon = () => (
   <svg className="icon megaphone-icon" viewBox="0 0 11 11.666457">
     <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
+      fillRule="evenodd"
+      clipRule="evenodd"
       d="m 0.5,5.4999075 c 0,-0.92048 0.74552,-1.66667 1.66599,-1.66667 1.12223,0 2.5887,0 3.66735,0 2,0 4.66666,-3.33332998 4.66666,-3.33332998 V 10.499858 c 0,0 -2.66666,-3.3332905 -4.66666,-3.3332905 -1.07865,0 -2.54512,0 -3.66734,0 -0.92048,0 -1.666,-0.74619 -1.666,-1.66666 z"
       stroke="#b4f5a3"
-      stroke-linejoin="round"
+      strokeLinejoin="round"
       id="path833"
     />
     <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
+      fillRule="evenodd"
+      clipRule="evenodd"
       d="M 2.5,7.1664075 3.83334,11.166458 H 6.5 L 5.16667,7.1664075 Z"
       stroke="#b4f5a3"
-      stroke-linejoin="round"
+      strokeLinejoin="round"
       id="path835"
     />
     <path d="m 5.16667,3.8331575 v 3.33333" stroke="#b4f5a3" id="path837" />
