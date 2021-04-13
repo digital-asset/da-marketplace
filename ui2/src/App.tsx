@@ -279,8 +279,8 @@ const AppComponent = () => {
         <div>
           <Switch>
             {routeEntries(entriesToDisplay)}
-            {additionRouting.map(routeProps => (
-              <Route {...routeProps} />
+            {additionRouting.map((routeProps, i) => (
+              <Route key={i} {...routeProps} />
             ))}
           </Switch>
         </div>

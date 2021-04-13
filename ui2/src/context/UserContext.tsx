@@ -111,26 +111,22 @@ async function loginUser(
   }
 }
 
-async function quickSetuploginUser(
-    dispatch: React.Dispatch<any>,
-    credentials: Credentials
-  ) {
-    // setError(false);
-    // setIsLoading(true);
-    const { party, token } = credentials;
-    const name = getName(credentials);
+async function loginQuickSetup(
+  dispatch: React.Dispatch<any>,
+  history: History,
+  credentials: Credentials
+) {
+  const { party, token } = credentials;
+  const name = getName(credentials);
 
-    if (!!name) {
-      storeCredentials(credentials);
-      dispatch({ type: 'LOGIN_SUCCESS', name, party, token });
-      // setError(false);
-      // setIsLoading(false);
-    } else {
-      dispatch({ type: 'LOGIN_FAILURE' });
-      // setError(true);
-      // setIsLoading(false);
-    }
+  if (!!name) {
+    storeCredentials(credentials);
+    // dispatch({ type: 'LOGIN_SUCCESS', name, party, token });
+    // history.push('/app/hey');
+  } else {
+    dispatch({ type: 'LOGIN_FAILURE' });
   }
+}
 
 function signOut(dispatch: React.Dispatch<any>, history: History) {
   clearCredentials();
@@ -138,4 +134,4 @@ function signOut(dispatch: React.Dispatch<any>, history: History) {
   history.push('/login');
 }
 
-export { UserProvider, useUserState, useUserDispatch, loginUser, signOut, quickSetuploginUser };
+export { UserProvider, useUserState, useUserDispatch, loginUser, signOut, loginQuickSetup };

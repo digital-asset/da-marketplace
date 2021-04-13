@@ -25,31 +25,41 @@ export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
 
   return (
-    <DamlLedger
-      party={user.party}
-      token={user.token}
-      httpBaseUrl={httpBaseUrl}
-      wsBaseUrl={wsBaseUrl}
-    >
-      <ServicesProvider>
-        <HashRouter>
-          <Switch>
-            <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
-            <PrivateRoute path="/app" component={App} />
-            {/* <PrivateRoute path="/apps/network" component={Network} />
+    <HashRouter>
+      <Switch>
+        <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
+        <Route
+          path="/app"
+          render={() => {
+            return user ? (
+              <DamlLedger
+                reconnectThreshold={0}
+                token={user.token}
+                party={user.party}
+                httpBaseUrl={httpBaseUrl}
+              >
+                <ServicesProvider>
+                  <App />
+                </ServicesProvider>
+              </DamlLedger>
+            ) : (
+              <Redirect to="/" />
+            );
+          }}
+        ></Route>
+
+        {/* <PrivateRoute path="/apps/network" component={Network} />
             <PrivateRoute path="/apps/custody" component={Custody} />
             <PrivateRoute path="/apps/registry" component={Registry} />
             <PrivateRoute path="/apps/issuance" component={Issuance} />
             <PrivateRoute path="/apps/distribution" component={Distribution} />
             <PrivateRoute path="/apps/listing" component={Listing} />
             <PrivateRoute path="/apps/trading" component={Trading} /> */}
-            <PublicRoute path="/quick-setup" component={QuickSetup} />
-            <PublicRoute path="/login" component={Login} />
-            <Route component={ErrorComponent} />
-          </Switch>
-        </HashRouter>
-      </ServicesProvider>
-    </DamlLedger>
+        <PublicRoute path="/quick-setup" component={QuickSetup} />
+        <PublicRoute path="/login" component={Login} />
+        <Route component={ErrorComponent} />
+      </Switch>
+    </HashRouter>
   );
 
   function PrivateRoute({ component, ...rest }: any) {

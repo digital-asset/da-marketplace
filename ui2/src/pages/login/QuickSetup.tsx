@@ -2,326 +2,379 @@ import React, { useEffect, useState } from 'react';
 import { Form, Button, Grid, Loader, Table } from 'semantic-ui-react';
 import { useHistory } from 'react-router-dom';
 
-import DamlLedger, { useLedger, useParty } from '@daml/react';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 
-import Ledger from '@daml/ledger';
-
-import { PartyDetails, WellKnownPartiesProvider } from '@daml/hub-react';
+import { PartyDetails } from '@daml/hub-react';
 import { retrieveParties } from '../../Parties';
-import { useUserState } from '../../context/UserContext';
-import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from '../../config';
+import { useUserState, loginQuickSetup, useUserDispatch } from '../../context/UserContext';
+import { DeploymentMode, deploymentMode, httpBaseUrl, getName, ledgerId } from '../../config';
 
-import Credentials, { retrieveCredentials, computeCredentials } from '../../Credentials';
-import { quickSetuploginUser, useUserDispatch } from '../../context/UserContext';
-import {
-    ServiceKind,
-    ServiceRequest,
-    ServiceRequestTemplates,
-    useCustomerServices,
-    useProviderServices,
-  } from '../../context/ServicesContext';
+import Credentials, {
+  retrieveCredentials,
+  computeCredentials,
+  storeCredentials,
+  clearCredentials,
+} from '../../Credentials';
+import DamlLedger from '@daml/react';
 
-const QuickSetup = (props: { onLogin: (credentials: Credentials) => void }) => {
-  const { onLogin } = props;
+import { useCustomerServices, useProviderServices } from '../../context/ServicesContext';
+import { Service as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Service';
 
-  const history = useHistory();
-  const userDispatch = useUserDispatch();
+import { Offer as RegulatorServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { Offer as CustodianRoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Offer as DistributorRoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
+import { Offer as SettlementServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
+import { Offer as ExchangeRoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Offer as MatchingServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-  const [credentials, setCredentials] = useState<Credentials | undefined>();
-  const [parties, setParties] = useState<PartyDetails[]>([]);
+//   REGULARTOR_SERVICE = 'OfferRegulatorService',  TO DO
+
+enum offerOptionsEnum {
+  CUSTODIAN_ROLE = 'OfferCustodianRole',
+  EXCHANGE_ROLE = 'OfferExchangeRole',
+  MATCHING_SERVICE = 'OfferMatchingService',
+  SETTLEMENT_SERVICE = 'OfferSettlementService',
+  DISTRIBUTOR_ROLE = 'OfferDistributorRole',
+}
+
+const offerOptions = [
+  'OfferCustodianRole',
+  'OfferExchangeRole',
+  'OfferMatchingService',
+  'OfferSettlementService',
+  'OfferDistributorRole',
+];
+
+const OperatorQuickSetupLedger = () => {
+  const [credentials, setCredentials] = useState<Credentials>();
+  const localCreds = computeCredentials('Operator');
+
+  const userDispatch = useUserDispatch()
+
+  useEffect(() => {
+    if (deploymentMode === DeploymentMode.PROD_DABL) {
+      setCredentials({ token: '', party: '', ledgerId });
+    } else {
+      setCredentials(localCreds);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (credentials === localCreds) {
+        loginQuickSetup(userDispatch, history, credentials)
+    }
+
+  }, [credentials]);
+
+  if (credentials?.token === '' || credentials?.party === '') {
+    return (
+      <div className="quick-setup ">
+        <div className="assign-role-tile">
+          <p className="login-details dark">Please enter the User Admin PartyId and JWT Token:</p>
+          <Grid>
+            <Grid.Row>
+              <Grid.Column width={8}>
+                <Form.Input
+                  required
+                  label={<p className="dark">Party</p>}
+                  placeholder="Party ID"
+                  value={credentials.party}
+                  onChange={e => setCredentials({ ...credentials, party: e.currentTarget.value })}
+                />
+              </Grid.Column>
+              <Grid.Column width={8}>
+                <Form.Input
+                  required
+                  type="password"
+                  label={<p className="dark">Token</p>}
+                  placeholder="Party JWT"
+                  value={credentials.token}
+                  onChange={e => setCredentials({ ...credentials, token: e.currentTarget.value })}
+                />
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
+        </div>
+      </div>
+    );
+  }
+
+  return credentials ? (
+    <DamlLedger
+      reconnectThreshold={0}
+      token={credentials.token}
+      party={credentials.party}
+      httpBaseUrl={httpBaseUrl}
+    >
+      <RoleContractSetup credentials={credentials} />
+    </DamlLedger>
+  ) : (
+    <Loader active indeterminate inverted size="small">
+      <p className="dark">Loading operator credentials...</p>
+    </Loader>
+  );
+};
+
+const RoleContractSetup = (props: { credentials: Credentials }) => {
+  const { credentials } = props;
+
   const [selectedParty, setSelectedParty] = useState<PartyDetails>();
-  const [successMessage, setSuccessMessage] = useState<string>();
-  const [username, setUsername] = useState('');
+  const [selectedRole, setSelectedRole] = useState<string>();
+  const [parties, setParties] = useState<PartyDetails[]>([]);
+  const [status, setStatus] = useState<string>();
 
-  const user = useUserState();
+  const ledger = useLedger();
+
+  const { contracts: operatorService, loading: loadingOperatorService } = useStreamQueries(
+    OperatorService
+  );
 
   useEffect(() => {
     const parties = retrieveParties();
+
     if (parties) {
+      console.log('settings parties:', parties);
       setParties(parties);
     }
   }, []);
+
+  useEffect(() => {
+    console.log(operatorService);
+    console.log(loadingOperatorService);
+
+    const createOperatorService = async () => {
+      console.log('creating operator service');
+      await ledger.create(OperatorService, { operator: credentials.party });
+    };
+
+    if (!loadingOperatorService && operatorService.length === 0) {
+      createOperatorService();
+    }
+  }, [loadingOperatorService, operatorService]);
 
   const partyOptions =
     parties.map(party => {
       return { text: party.partyName, value: party.party };
     }) || [];
 
-  let partySelect = (
-    <Form.Select
-      label={<p className="dark input-label">Party</p>}
-      value={selectedParty ? partyOptions.find(p => selectedParty.party === p.value)?.value : ''}
-      placeholder="Select..."
-      onChange={(_, data: any) => handleChangeParty(data.value)}
-      options={partyOptions}
-    />
-  );
+  const roleOptions = offerOptions.map(role => {
+    return { text: role, value: role };
+  });
 
-  if (deploymentMode != DeploymentMode.PROD_DABL) {
-    partySelect = (
-      <Form.Input
-        required
-        placeholder="Username"
-        value={username}
-        onChange={e => setUsername(e.currentTarget.value)}
-      />
+  if (loadingOperatorService || operatorService.length === 0) {
+    return (
+      <Loader active indeterminate inverted size="small">
+        <p className="dark">Loading</p>
+      </Loader>
     );
   }
+
+  return (
+    <div>
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={8}>
+            {deploymentMode === DeploymentMode.PROD_DABL ? (
+              <Form.Select
+                label={<p className="dark input-label">Party</p>}
+                value={
+                  selectedParty
+                    ? partyOptions.find(p => selectedParty.party === p.value)?.value
+                    : ''
+                }
+                placeholder="Select..."
+                onChange={(_, data: any) => handleChangeParty(data.value)}
+                options={partyOptions}
+              />
+            ) : (
+              <Form.Input
+                required
+                placeholder="Username"
+                label={<p className="dark input-label">Party</p>}
+                onChange={e => handleChangeParty(e.currentTarget.value)}
+              />
+            )}
+          </Grid.Column>
+          <Grid.Column width={8}>
+            <Form.Select
+              disabled={!selectedParty}
+              value={selectedRole ? roleOptions.find(p => selectedRole === p.value)?.value : ''}
+              label={<p className="dark input-label">Role</p>}
+              placeholder="Select..."
+              onChange={(_, data: any) => setSelectedRole(data.value)}
+              options={roleOptions}
+            />
+          </Grid.Column>
+        </Grid.Row>
+      </Grid>
+
+      <Button
+        fluid
+        icon="right arrow"
+        labelPosition="right"
+        disabled={!selectedParty}
+        className="ghost dark submit-button"
+        onClick={() => createRoleContract()}
+        content={<p className="dark bold">Next</p>}
+      />
+      {!!status && (
+        <Loader active indeterminate inverted size="small">
+          <p className="dark">{status}</p>
+        </Loader>
+      )}
+    </div>
+  );
+
+  function handleChangeParty(newPartyId?: string) {
+    if (!newPartyId) {
+      setSelectedParty(undefined);
+      setSelectedRole(undefined);
+      return;
+    }
+
+    let newParty: PartyDetails | undefined;
+
+    if (deploymentMode === DeploymentMode.PROD_DABL) {
+      newParty = parties.find(p => p.party === newPartyId);
+    } else {
+      const { ledgerId, party, token } = computeCredentials(newPartyId);
+
+      newParty = {
+        ledgerId,
+        party,
+        token,
+        owner: 'Operator',
+        partyName: newPartyId,
+      };
+    }
+
+    if (!newParty) return;
+
+    setSelectedParty(newParty);
+    setSelectedRole(undefined);
+  }
+
+  async function createRoleContract() {
+    console.log('creating role contract for ', selectedParty?.partyName);
+
+    if (!selectedParty || !operatorService[0]) {
+      console.log('no operator service contract');
+      handleChangeParty();
+      return;
+    }
+
+    const contractId = operatorService[0].contractId;
+
+    const provider = selectedParty.party;
+
+    switch (selectedRole) {
+      case offerOptionsEnum.CUSTODIAN_ROLE:
+        await ledger.exercise(OperatorService.OfferCustodianRole, contractId, { provider });
+      case offerOptionsEnum.EXCHANGE_ROLE:
+        await ledger.exercise(OperatorService.OfferExchangeRole, contractId, {
+          provider,
+        });
+      case offerOptionsEnum.MATCHING_SERVICE:
+        await ledger.exercise(OperatorService.OfferMatchingService, contractId, {
+          provider,
+        });
+      case offerOptionsEnum.SETTLEMENT_SERVICE:
+        await ledger.exercise(OperatorService.OfferSettlementService, contractId, {
+          provider,
+        });
+      case offerOptionsEnum.DISTRIBUTOR_ROLE:
+        await ledger.exercise(OperatorService.OfferDistributorRole, contractId, {
+          provider,
+        });
+    }
+
+    setStatus(undefined);
+  }
+};
+
+const QuickSetup = () => {
+  const history = useHistory();
 
   return (
     <div className="quick-setup">
       <Button
         icon="left arrow"
         className="back-button ghost dark"
-        onClick={() => history.push('/')}
+        onClick={() => history.push('/login')}
       />
       <div className="quick-setup-tiles">
-        <div className="assign-role-tile">
-          <p className="login-details dark">Assign a Role</p>
-          <Grid>
-            <Grid.Row>
-              <Grid.Column width={8}>{partySelect}</Grid.Column>
-            </Grid.Row>
-          </Grid>
-          {credentials && (deploymentMode === DeploymentMode.PROD_DABL ? selectedParty : username) ? (
-            <ServiceSetup
-              clearPartyRoleSelect={clearPartyRoleSelect}
-            />
-          ) : (
-            <Button
-              fluid
-              icon="right arrow"
-              labelPosition="right"
-              disabled={deploymentMode === DeploymentMode.PROD_DABL ? !selectedParty : !username}
-              className="ghost dark submit-button"
-              onClick={() => submitCredentials()}
-              content={<p className="dark bold">Next</p>}
-            />
-          )}
-          {!!successMessage && <p className="dark">{successMessage}</p>}
-        </div>
-        {/* {publicParty ? (
-                    <DamlLedger
-                        reconnectThreshold={0}
-                        token={publicParty.token}
-                        party={publicParty.party}
-                        httpBaseUrl={httpBaseUrl}>
-                        <WellKnownPartiesProvider>
-                            <QueryStreamProvider>
-                                <RegistryLookupProvider>
-                                    <PartyRegistry parties={parties} />
-                                </RegistryLookupProvider>
-                            </QueryStreamProvider>
-                        </WellKnownPartiesProvider>
-                    </DamlLedger>
-                ) : (
-                    <Loader active indeterminate inverted size='small'>
-                        <p>Loading registry table...</p>
-                    </Loader>
-                )} */}
+        <OperatorQuickSetupLedger />
       </div>
     </div>
   );
-
-  async function submitCredentials() {
-    let creds;
-    if (deploymentMode === DeploymentMode.PROD_DABL) {
-      if (!selectedParty) {
-        return;
-      }
-      const { ledgerId, party, token } = selectedParty;
-      quickSetuploginUser(userDispatch, { token, party, ledgerId });
-      creds = await confirmCredentials(token);
-    } else {
-      const credentials = computeCredentials(username);
-      quickSetuploginUser(userDispatch, credentials);
-      creds = await confirmCredentials(credentials.token);
-    }
-
-    if (creds) {
-      setCredentials(creds);
-    } else {
-      clearPartyRoleSelect('Error: invalid credentials');
-    }
-  }
-
-  function handleChangeParty(newPartyId?: string) {
-    const newParty = parties.find(p => p.party === newPartyId);
-    if (!newParty) {
-      return;
-    }
-    setSelectedParty(newParty);
-    setCredentials(undefined);
-    setSuccessMessage(undefined);
-  }
-
-  function clearPartyRoleSelect(message?: string) {
-    setSuccessMessage(message);
-    setSelectedParty(undefined);
-    setCredentials(undefined);
-  }
-
-  async function confirmCredentials(token: string): Promise<Credentials | undefined> {
-    let attempts = 0;
-    const MAX_ATTEMPTS = 3;
-
-    while (attempts < MAX_ATTEMPTS) {
-      const creds = retrieveCredentials();
-      if (creds && creds.token === token) {
-        console.log(creds)
-        return creds;
-      } else {
-        attempts += 1;
-      }
-    }
-    return undefined;
-  }
 };
 
-// const PartyRegistry = (props: { parties: PartyDetails[] }) => {
-//     const { parties } = props
-
-//     const registry = useRegistryLookup()
-
-//     const [registryData, setRegistryData] = useState<Map<string, string[]>>(new Map())
-
-//     useEffect(() => {
-//         if (parties.length > 0) {
-//             let partyRegistryMap = new Map<string, string[]>()
-
-//             parties.forEach(p => {
-//                 let roles = []
-
-//                 if (!!registry.investorMap.get(p.party)) {
-//                     roles.push("Investor")
-//                 }
-//                 if (!!registry.issuerMap.get(p.party)) {
-//                     roles.push("Issuer")
-//                 }
-//                 if (!!registry.brokerMap.get(p.party)) {
-//                     roles.push("Broker")
-//                 }
-//                 if (!!registry.custodianMap.get(p.party)) {
-//                     roles.push("Custodian")
-//                 }
-//                 if (!!registry.exchangeMap.get(p.party)) {
-//                     roles.push("Exchange")
-//                 }
-//                 if (!!registry.ccpMap.get(p.party)) {
-//                     roles.push("CCP")
-//                 }
-//                 if (roles.length > 0) {
-//                     partyRegistryMap.set(p.party, roles)
-//                 }
-//             })
-
-//             setRegistryData(partyRegistryMap)
-//         }
-//     }, [registry, parties])
-
-//     return (
-//         <div className='party-registry-tile'>
-//             <p className='login-details dark'>Market Setup</p>
-
-//             <Table className='party-registry-table' fixed>
-//                 <Table.Header>
-//                     <Table.HeaderCell>Party</Table.HeaderCell>
-//                     <Table.HeaderCell>Role</Table.HeaderCell>
-//                 </Table.Header>
-//                 <Table.Body>
-//                     {parties.map((p, index) => (
-//                         <RegistryTableRow
-//                             index={index}
-//                             party={p}
-//                             roles={registryData.get(p.party) || []}
-//                         />
-//                     ))}
-//                 </Table.Body>
-//             </Table>
-//         </div>
-//     )
-// }
-
-// const RegistryTableRow = (props: { index: number; party: PartyDetails; roles: string[] }) => {
-//     const { index, party, roles } = props
-//     const rowClassname = index % 2 === 0 ? "odd-row" : ""
-//     const partyName = <p className='bold'>{party.partyName}</p>
-
-//     if (roles.length === 0) {
-//         return (
-//             <Table.Row className={rowClassname}>
-//                 <Table.Cell colSpan={3}>{partyName}</Table.Cell>
-//             </Table.Row>
-//         )
-//     }
-
-//     return (
-//         <>
-//             {roles.map((role, roleIndex) => (
-//                 <Table.Row className={rowClassname}>
-//                     <Table.Cell>{roleIndex == 0 ? partyName : ""}</Table.Cell>
-//                     <Table.Cell>{role}</Table.Cell>
-//                 </Table.Row>
-//             ))}
-//         </>
-//     )
-// }
-
 const ServiceSetup = (props: {
-  clearPartyRoleSelect: (message: string) => void;
+  clearPartyRoleSelect: () => void;
+  setStatus: (message: string) => void;
+  selectedParty: PartyDetails;
+  selectedRole: string;
 }) => {
-  const { clearPartyRoleSelect } = props;
+  const { clearPartyRoleSelect, setStatus, selectedParty, selectedRole } = props;
 
   const [currentService, setCurrentService] = useState();
-  const [status, setStatus] = useState<string>();
-  const party = useParty();
-  const providers = useProviderServices(party);
-  const customers = useCustomerServices(party)
-  console.log(providers)
-  const user = useUserState();
 
-  const services = [
-    'Custody',
-    'Listing',
-    'Distribution',
-    'Trading',
-    'Distributor Service',
-  ];
+  const party = useParty();
+  const ledger = useLedger();
+
+  const providers = useProviderServices(party);
+  const customers = useCustomerServices(party);
+
+  const custodianRoleOffers = useStreamQueries(CustodianRoleOffer).contracts;
+  const distributorRoleOffers = useStreamQueries(DistributorRoleOffer).contracts;
+  const settlementServiceOffers = useStreamQueries(SettlementServiceOffer).contracts;
+  const exhangeRoleOffers = useStreamQueries(ExchangeRoleOffer).contracts;
+  const matchingServiceOffers = useStreamQueries(MatchingServiceOffer).contracts;
 
   useEffect(() => {
-    // create Operator.Service if it does not yet exist
-  }, []);
+    switch (selectedRole) {
+      case offerOptionsEnum.CUSTODIAN_ROLE:
+        return custodianRoleOffers.forEach(c => {
+          ledger.exercise(CustodianRoleOffer.Accept, c.contractId, {
+            operator: 'Operator',
+            provider: party,
+          });
+        });
 
-  return (
-    <div>
-      <p className='dark'>Signed in as user: {user.name}</p>
-      <Form.Select
-        label={<p className="input-label dark">Pick a service</p>}
-        multiple={false}
-        placeholder="Select..."
-        options={services.map(r => {
-          return { text: r, value: r };
-        })}
-        onChange={(_, data: any) => setCurrentService(data.value)}
-      />
-      <Button
-        disabled={!currentService}
-        onClick={() => offerService(currentService)}
-      >
-        offer service
-      </Button>
-      {status}
-    </div>
-  );
+      case offerOptionsEnum.EXCHANGE_ROLE:
+        return exhangeRoleOffers.forEach(c => {
+          ledger.exercise(CustodianRoleOffer.Accept, c.contractId, {
+            operator: 'Operator',
+            provider: party,
+          });
+        });
 
-  function offerService(selectedService?: string) {
-    if (!selectedService) {
-      setStatus('no service selected');
-      return;
+      case offerOptionsEnum.MATCHING_SERVICE:
+        return matchingServiceOffers.forEach(c => {
+          ledger.exercise(CustodianRoleOffer.Accept, c.contractId, {
+            operator: 'Operator',
+            provider: party,
+          });
+        });
+
+      case offerOptionsEnum.SETTLEMENT_SERVICE:
+        return settlementServiceOffers.forEach(c => {
+          ledger.exercise(CustodianRoleOffer.Accept, c.contractId, {
+            operator: 'Operator',
+            provider: party,
+          });
+        });
+      case offerOptionsEnum.DISTRIBUTOR_ROLE:
+        return distributorRoleOffers.forEach(c => {
+          ledger.exercise(CustodianRoleOffer.Accept, c.contractId, {
+            operator: 'Operator',
+            provider: party,
+          });
+        });
     }
+  }, [selectedParty, selectedRole]);
 
-    //given a role and provider party, exercise choice on Operator.Service contract
-  }
+  return <div>signing in</div>;
 };
 
 export default QuickSetup;

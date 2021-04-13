@@ -71,6 +71,11 @@
             }
         }
 
+        .ui.loader {
+            position: static;
+            transform: translateX(-0%) translateY(-0%);
+        }
+
         .assign-role-tile {
             display: flex;
             flex-direction: column;
@@ -85,10 +90,6 @@
                 margin: $spacing-l;
             }
 
-            .ui.loader {
-                position: static;
-                transform: translateX(-0%) translateY(-0%);
-            }
 
             p.input-label {
                 padding-bottom: $spacing-xs;
