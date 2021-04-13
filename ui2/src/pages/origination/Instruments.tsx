@@ -2,7 +2,7 @@ import React from 'react';
 import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
-import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { getName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';

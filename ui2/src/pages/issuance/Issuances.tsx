@@ -3,7 +3,7 @@ import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
-import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { getName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import Tile from '../../components/Tile/Tile';

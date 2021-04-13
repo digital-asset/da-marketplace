@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Label } from 'semantic-ui-react';
 
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 
 import {
   ServiceKind,
