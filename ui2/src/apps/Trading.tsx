@@ -4,7 +4,8 @@ import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
 import { Market } from '../pages/trading/Market';
 import { Markets } from '../pages/trading/Markets';
-import { useStreamQueries } from '@daml/react';
+// import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../Main';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Page from '../pages/page/Page';
 
