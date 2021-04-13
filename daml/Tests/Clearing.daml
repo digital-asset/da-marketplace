@@ -4,6 +4,7 @@ import Daml.Script
 import DA.Finance.Asset
 import DA.Finance.Types
 import Marketplace.Clearing.Model
+import Marketplace.Clearing.Service (DepositWithRemaining(..),CalculationResult(..))
 import Marketplace.Clearing.Service qualified as Clearing
 
 import Common
@@ -12,7 +13,7 @@ import DA.Action (void)
 testClearingTransfers : Script ()
 testClearingTransfers = do
   time <- getTime
-  providers@Providers{ccp} <- onboardProviders
+  providers@Providers{clearinghouse} <- onboardProviders
   Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
@@ -25,30 +26,29 @@ testClearingTransfers = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  (marginDepositCid,_) <- submit ccp $
+  marginDepositWithRemaining <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.TransferToMargin
       with depositCids = [aliceDepositCid]; amount = 5000.0
 
-  clearingDepositCid <- submit ccp $
+  clearingDepositCid <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.TransferFromMargin
-      with amount = 1000.0, marginDepositCids = [marginDepositCid]
+      with amount = 1000.0, marginDepositCids = [marginDepositWithRemaining.deposit]
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
 
-  (providerDepositCid,_) <- submit ccp $
+  (DepositWithRemaining providerDepositCid _) <- submit clearinghouse $
     exerciseCmd bob.clearingServiceCid Clearing.TransferToProvider
       with amount = 2000.0; depositCids = [bobDepositCid]
 
-  submit ccp $ exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider
+  submit clearinghouse $ exerciseCmd alice.clearingServiceCid Clearing.TransferFromProvider
       with amount = 1000.0; depositCids = [providerDepositCid]
   assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 17_000.0
 
   return ()
 
-
 testMarginCalls : Script ()
 testMarginCalls = do
   time <- getTime
-  providers@Providers{ccp; operator} <- onboardProviders
+  providers@Providers{clearinghouse; operator} <- onboardProviders
   Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
@@ -58,35 +58,35 @@ testMarginCalls = do
   bob   <- onboardCustomer providers "Bob"
 
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
-  calculationCid <- submit ccp $ createCmd MarginCalculation with
-    customer = alice.customer; currency = "USD"; targetAmount = 4000.0
-    calculationTime = time; calculationId = "123456"; accountId = alice.marginAccount.id; ..
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = "USD"; targetAmount = 4000.0; calculationId = "123456"; ..
 
-  (Some (marginDepositCid,[remainingClearingCid])) <- submit ccp $
+  CalculationSuccess _ (Some marginWithRemaining) <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.PerformMarginFill
       with depositCids = [aliceDepositCid]; marginDepositCids = []; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 4000.0
 
-  calculationCid <- submit ccp $ createCmd MarginCalculation with
-    customer = alice.customer; currency = "USD"; targetAmount = 1000.0
-    calculationTime = time; calculationId = "456789"; accountId = alice.marginAccount.id; ..
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = "USD"; targetAmount = 1000.0; calculationId = "456789"
 
-  (Some (clearingDepositCid2,[remainingMarginCid])) <- submit ccp $
-    exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
-      with depositCids = [remainingClearingCid]; marginDepositCids = [marginDepositCid]; ..
+  CalculationSuccess _ (Some clearingWithRemaining) <- submit clearinghouse $
+    exerciseByKeyCmd @Clearing.Service (operator, clearinghouse, alice.customer) Clearing.PerformMarginFill
+      with depositCids = marginWithRemaining.remaining; marginDepositCids = [marginWithRemaining.deposit]; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
   -- Fail margin calculation
-  calculationCid <- submit ccp $ createCmd MarginCalculation with
-    customer = alice.customer; currency = "USD"; targetAmount = 50_000.0
-    calculationTime = time; calculationId = "34567"; accountId = alice.marginAccount.id; ..
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = "USD"; targetAmount = 50_000.0; calculationId = "34556"
 
-  void $ submit ccp $
-    exerciseByKeyCmd @Clearing.Service (operator, ccp, alice.customer) Clearing.PerformMarginFill
-      with depositCids = [clearingDepositCid2]; marginDepositCids = [remainingMarginCid]; ..
+  void $ submit clearinghouse $
+    exerciseByKeyCmd @Clearing.Service (operator, clearinghouse, alice.customer) Clearing.PerformMarginFill
+      with depositCids = [clearingWithRemaining.deposit]; marginDepositCids = clearingWithRemaining.remaining; ..
   assert =<< depositsQuantityEquals alice.customer alice.marginAccount 1000.0
 
-  (Some (_,aliceStanding)) <- queryContractKey @MemberStanding ccp (ccp, alice.customer)
+  (Some (_,aliceStanding)) <- queryContractKey @MemberStanding clearinghouse (clearinghouse, alice.customer)
   assert $ not aliceStanding.marginSatisfied
 
   return ()
@@ -94,7 +94,7 @@ testMarginCalls = do
 testMarkToMarket : Script ()
 testMarkToMarket = do
   time <- getTime
-  providers@Providers{ccp} <- onboardProviders
+  providers@Providers{clearinghouse} <- onboardProviders
   Assets{usd; tsla} <- onboardAssets providers
 
   -- Assets
@@ -106,21 +106,21 @@ testMarkToMarket = do
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
 
-  calculationCid <- submit ccp $ createCmd MarkToMarketCalculation with
-    customer = alice.customer; currency = "USD"; mtmAmount = -5000.0
-    calculationTime = time; calculationId = "34567"; accountId = alice.clearingAccount.id; ..
+  calculationCid <- submit clearinghouse $
+    exerciseCmd alice.clearingServiceCid Clearing.CreateMarkToMarket with
+      currency = "USD"; mtmAmount = -5000.0; calculationId = "34567"
 
-  Some (ccpAssetDepositCid,_) <- submit ccp $
+  CalculationSuccess _ (Some depositWithRemaining) <- submit clearinghouse $
     exerciseCmd alice.clearingServiceCid Clearing.PerformMarkToMarket
       with customerDepositCids = [aliceDepositCid]; providerDepositCids = []; ..
 
-  calculationCid2 <- submit ccp $ createCmd MarkToMarketCalculation with
-    customer = bob.customer; currency = "USD"; mtmAmount = 5000.0
-    calculationTime = time; calculationId = "34567"; accountId = bob.clearingAccount.id; ..
+  calculationCid2 <- submit clearinghouse $
+    exerciseCmd bob.clearingServiceCid Clearing.CreateMarkToMarket with
+      currency = "USD"; mtmAmount = 5000.0; calculationId = "34567"
 
-  _ <- submit ccp $
+  _ <- submit clearinghouse $
     exerciseCmd bob.clearingServiceCid Clearing.PerformMarkToMarket
-      with customerDepositCids = []; providerDepositCids = [ccpAssetDepositCid]; calculationCid = calculationCid2
+      with customerDepositCids = []; providerDepositCids = [depositWithRemaining.deposit]; calculationCid = calculationCid2
 
   assert =<< depositsQuantityEquals alice.customer alice.clearingAccount 15_000.0
   assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 25_000.0

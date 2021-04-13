@@ -11,7 +11,7 @@ mergeAndSplit depositCids amount = do
     exercise depositCid AssetDeposit_Split with quantities = [amount]
 
 getDepositQuantities : [ContractId AssetDeposit] -> Update Decimal
-getDepositQuantities depositCids = foldl (+) 0.0 <$> forA depositCids (fmap (.asset.quantity) . fetch)
+getDepositQuantities depositCids = sum <$> forA depositCids (fmap (.asset.quantity) . fetch)
 
 transferWithController : ContractId AssetDeposit -> Account -> Update (ContractId AssetDeposit)
 transferWithController depositCid to = do

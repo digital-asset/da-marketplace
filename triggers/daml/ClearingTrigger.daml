@@ -15,13 +15,13 @@ import  Marketplace.Clearing.Service
 
 import Utils
 
-data CCPState = CCPState {
+data ClearingState = ClearingState {
    operatorParty : Party
  }
 
-handleClearing : Trigger CCPState
+handleClearing : Trigger ClearingState
 handleClearing = Trigger
-  { initialize = return $ CCPState $ fromSome $ partyFromText "Operator"
+  { initialize = return $ ClearingState $ fromSome $ partyFromText "Operator"
   , updateState = \_ -> pure ()
   , rule = handleCCPRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @Clearing.Role
@@ -33,7 +33,7 @@ handleClearing = Trigger
   }
 
 -- |Accept 'DepositTransferRequest' and 'CustodianRelationshipRequest'
-handleCCPRule : Party -> TriggerA CCPState ()
+handleCCPRule : Party -> TriggerA ClearingState ()
 handleCCPRule party = do
   debug "Running ccp rule..."
   state <- get
@@ -61,9 +61,9 @@ handleCCPRule party = do
 
 
 -- |Find all 'AssetDeposit' that a CCP Customer has with the CCP in a specific account
-getCustomerDeposits : Party -> Party -> (Clearing.Service -> Account) -> TriggerA CCPState [ContractId AssetDeposit]
+getCustomerDeposits : Party -> Party -> (Clearing.Service -> Account) -> TriggerA ClearingState [ContractId AssetDeposit]
 getCustomerDeposits ccp customer account = do
-    state@CCPState { operatorParty } <- get
+    state@ClearingState { operatorParty } <- get
     (_,ccpCustomer) <- fromSomeNote "getCustomerDeposits" <$> queryContractKey @Clearing.Service (operatorParty, ccp, customer)
     map fst . filter (checkDeposit ccpCustomer) <$> query @AssetDeposit
   where
@@ -71,10 +71,10 @@ getCustomerDeposits ccp customer account = do
 
 
 -- |Transfer to and from the CCPCustomer's margin deposits from their clearing account.
-handleMarginCalculation : Party -> ContractPair Clearing.MarginCalculation -> TriggerA CCPState ()
+handleMarginCalculation : Party -> ContractPair Clearing.MarginCalculation -> TriggerA ClearingState ()
 handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targetAmount}) = do
   debug ("resolving margin calculation: " <> show mc)
-  CCPState { operatorParty } <- get
+  ClearingState { operatorParty } <- get
 
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
   marginDepositCids   <- getCustomerDeposits ccp customer (.marginAccount)
@@ -93,10 +93,10 @@ handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targ
 handleIncomingMarkToMarketCalculation
   : Party
   -> ContractPair Clearing.MarkToMarketCalculation
-  -> TriggerA CCPState ()
+  -> TriggerA ClearingState ()
 handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
   debug ("handling incoming mtm calculation: " <> show mtm)
-  CCPState { operatorParty } <- get
+  ClearingState { operatorParty } <- get
   clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
   emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarkToMarket with
                   customerDepositCids = clearingDepositCids; providerDepositCids = []; calculationCid = mtmCid]
@@ -110,7 +110,7 @@ handleOutgoingMTMCalculations
   : Party
   -> [ContractPair AssetDeposit]
   -> [ContractPair Clearing.MarkToMarketCalculation]
-  -> TriggerA CCPState ()
+  -> TriggerA ClearingState ()
 handleOutgoingMTMCalculations _ [] _  = return ()
 handleOutgoingMTMCalculations _ _  [] = return ()
 
@@ -118,7 +118,7 @@ handleOutgoingMTMCalculations party ds ((mtmCid,mtm)::mtms) = case ds' of
     None -> handleOutgoingMTMCalculations party ds mtms
     (Some (toUse,remaining)) -> do
       debug ("resolving outgoing mtm calculation: " <> show mtm)
-      CCPState { operatorParty } <- get
+      ClearingState { operatorParty } <- get
       let providerDepositCids = map fst toUse
       emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, party, mtm.customer) Clearing.PerformMarkToMarket with
                       customerDepositCids = []; calculationCid = mtmCid; ..]

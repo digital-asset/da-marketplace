@@ -37,7 +37,7 @@ isSatisfied CalculationFailed    = False
 
 template MarginCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     accountId : Id
     currency : Text
@@ -45,15 +45,15 @@ template MarginCalculation
     calculationTime : Time
     calculationId : Text
   where
-    signatory ccp
+    signatory provider
     observer customer
     -- TODO: should a zero target amount margin amount be allowed?
     ensure targetAmount > 0.0
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (provider, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
+    controller provider can
       MarginCalculation_Resolve : ContractId FulfilledMarginCalculation
         with
           note : Text
@@ -70,32 +70,32 @@ template MarginCalculation
 -- fundsMoved : Decimal, or failed calculation, fundsMissing : Decimal
 template FulfilledMarginCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     calculation : MarginCalculation
     calculationId : Text
     note : Text
   where
-    signatory ccp
+    signatory provider
     observer customer
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (provider, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
 template RejectedMarginCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     calculation : MarginCalculation
     note : Text
   where
-    signatory ccp
+    signatory provider
     observer customer
 
-    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
+    controller provider can
       RejectedMarginCalculation_Retry : ContractId MarginCalculation
         do create calculation
 
@@ -108,7 +108,7 @@ template RejectedMarginCalculation
 
 template MarkToMarketCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     accountId : Id
     currency : Text
@@ -116,10 +116,10 @@ template MarkToMarketCalculation
     calculationTime : Time
     calculationId : Text
   where
-    signatory ccp
+    signatory provider
     observer customer
 
-    key (ccp, customer, calculationId) : (Party, Party, Text)
+    key (provider, customer, calculationId) : (Party, Party, Text)
     maintainer key._1
 
     controller customer can
@@ -137,17 +137,17 @@ template MarkToMarketCalculation
 
 template RejectedMarkToMarketCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     calculation : MarkToMarketCalculation
     note : Text
   where
-    signatory ccp
+    signatory provider
 
-    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller ccp can
+    controller provider can
       RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
         do create calculation
 
@@ -160,14 +160,14 @@ template RejectedMarkToMarketCalculation
 
 template FulfilledMarkToMarketCalculation
   with
-    ccp : Party
+    provider : Party
     customer : Party
     calculation : MarkToMarketCalculation
     note : Text
 
   where
-    signatory ccp
+    signatory provider
     observer customer
 
-    key (ccp, customer, calculation.calculationId) : (Party, Party, Text)
+    key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
