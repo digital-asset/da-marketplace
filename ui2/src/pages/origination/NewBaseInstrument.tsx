@@ -1,36 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
-import classnames from 'classnames';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
-import {
-  Typography,
-  Grid,
-  Paper,
-  Select,
-  MenuItem,
-  TextField,
-  Button as MUIButton,
-  MenuProps,
-  FormControl,
-  InputLabel,
-} from '@material-ui/core';
-import useStyles from '../styles';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
 import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate } from '@daml/types';
-import DateFnsUtils from '@date-io/date-fns';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
-import { storeCredentials } from '../../Credentials';
 import classNames from 'classnames';
 import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
 import { publicParty } from '../../config';

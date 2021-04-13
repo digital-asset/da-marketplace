@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
 import { transformClaim } from '../../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';

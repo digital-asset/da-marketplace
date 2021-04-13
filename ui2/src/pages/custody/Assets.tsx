@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { IconButton } from '@material-ui/core';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { getName } from '../../config';

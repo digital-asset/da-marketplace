@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
+
+import DamlLedger, { QueryResult, useStreamQueries as usq } from '@daml/react';
+import { PublicLedger, useStreamQueriesAsPublic as usqp } from '@daml/hub-react/lib';
+import { Template } from '@daml/types';
+
 import ErrorComponent from './pages/error/Error';
 import { useUserState } from './context/UserContext';
 import Login from './pages/login/Login';
 // import Apps from "./Apps";
-import DamlLedger from '@daml/react';
-import { httpBaseUrl, wsBaseUrl } from './config';
 import { App } from './App';
 import { Network } from './apps/Network';
 import { Custody } from './apps/Custody';
@@ -16,6 +19,9 @@ import { Trading } from './apps/Trading';
 import { Registry } from './apps/Registry';
 import { ServicesProvider } from './context/ServicesContext';
 import QuickSetup from './pages/login/QuickSetup';
+import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from './config';
+import { Query, StreamCloseEvent } from '@daml/ledger';
+import { computeCredentials } from './Credentials';
 
 type MainProps = {
   defaultPath: string;
@@ -32,16 +38,16 @@ export default function Main({ defaultPath }: MainProps) {
           path="/app"
           render={() => {
             return user ? (
-              <DamlLedger
-                reconnectThreshold={0}
-                token={user.token}
+              <PublicDamlProvider
                 party={user.party}
+                token={user.token}
                 httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
               >
                 <ServicesProvider>
                   <App />
                 </ServicesProvider>
-              </DamlLedger>
+              </PublicDamlProvider>
             ) : (
               <Redirect to="/" />
             );
@@ -49,7 +55,7 @@ export default function Main({ defaultPath }: MainProps) {
         ></Route>
 
         {/* <PrivateRoute path="/apps/network" component={Network} />
-            <PrivateRoute path="/apps/custody" component={Custody} />
+         <PrivateRoute path="/apps/custody" component={Custody} />
             <PrivateRoute path="/apps/registry" component={Registry} />
             <PrivateRoute path="/apps/issuance" component={Issuance} />
             <PrivateRoute path="/apps/distribution" component={Distribution} />
@@ -91,4 +97,49 @@ export default function Main({ defaultPath }: MainProps) {
       />
     );
   }
+}
+
+type PublicDamlProviderProps = {
+  party: string;
+  token: string;
+  httpBaseUrl?: string;
+  wsBaseUrl?: string;
+};
+
+const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
+  children,
+  party,
+  token,
+  httpBaseUrl,
+  wsBaseUrl,
+}) => (
+  <DamlLedger party={party} token={token} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
+    <PublicLedger
+      ledgerId={ledgerId}
+      publicParty={publicParty}
+      defaultToken={computeCredentials(publicParty).token}
+    >
+      {children}
+    </PublicLedger>
+  </DamlLedger>
+);
+
+export function useStreamQueries<T extends object, K, I extends string>(
+  template: Template<T, K, I>,
+  queryFactory?: () => Query<T>[],
+  queryDeps?: readonly unknown[],
+  closeHandler?: (e: StreamCloseEvent) => void
+): QueryResult<T, K, I> {
+  const contractsAsPublic = usqp(template, queryFactory, queryDeps, closeHandler);
+  const contractsAsParty = usq(template, queryFactory, queryDeps, closeHandler);
+
+  const result = useMemo(
+    () => ({
+      contracts: [...contractsAsParty.contracts, ...contractsAsPublic.contracts],
+      loading: contractsAsParty.loading && contractsAsPublic.loading,
+    }),
+    [contractsAsPublic, contractsAsParty]
+  );
+
+  return result;
 }

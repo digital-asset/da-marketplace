@@ -3,7 +3,8 @@ import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { useLedger, useStreamQueries } from '@daml/react';
+import { useLedger } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
 import { useParams } from 'react-router-dom';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { CreateEvent } from '@daml/ledger';
