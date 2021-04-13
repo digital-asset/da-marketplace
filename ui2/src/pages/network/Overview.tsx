@@ -1,5 +1,4 @@
 import React from 'react';
-// import { useStreamQueries } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { Table, TableBody, TableCell, TableRow, TableHead } from '@material-ui/core';
 import { withRouter, RouteComponentProps } from 'react-router-dom';

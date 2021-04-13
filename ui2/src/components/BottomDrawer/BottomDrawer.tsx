@@ -3,7 +3,6 @@ import Drawer from '@material-ui/core/Drawer';
 import { Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
 import { useLayoutState } from '../../context/LayoutContext';
 import useStyles from '../../pages/styles';
-// import { useStreamQueries } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
