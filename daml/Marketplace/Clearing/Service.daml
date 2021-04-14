@@ -36,8 +36,7 @@ template Service
 
     let
       transferToMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
-      transferToMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
-          AllocationAccountRule.Deposit with ..
+      transferToMarginAccount = exerciseByKey @AllocationAccountRule.T marginAccount.id . AllocationAccountRule.Deposit
 
       transferFromMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
       transferFromMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
@@ -107,7 +106,7 @@ template Service
           providerAmount <- getDepositQuantities providerDepositCids
           customerAmount <- getDepositQuantities customerDepositCids
 
-          let fail = do
+          let reject = do
                 exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with
                     newMtmSatisied = False; ..
                 CalculationFailure <$> exercise calculationCid MarkToMarketCalculation_Reject with note = ""; ..
@@ -122,11 +121,11 @@ template Service
             | mtmAmount == 0.0 -> succeed $ return None
             | mtmAmount > 0.0  ->
               if providerAmount < mtmAmount
-              then fail
+              then reject
               else succeed $ Some <$> exercise self TransferFromProvider with amount = mtmAmount; depositCids = providerDepositCids
             | otherwise ->
               if customerAmount < abs mtmAmount
-              then fail
+              then reject
               else succeed $ Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
 
       nonconsuming TransferFromProvider : DepositWithRemaining

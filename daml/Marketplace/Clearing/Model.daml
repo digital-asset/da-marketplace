@@ -27,14 +27,6 @@ template MemberStanding
         do
           create this with mtmSatisfied = newMtmSatisied
 
-
-data CalculationResults = CalculationSatisfied
-                        | CalculationFailed
-
-isSatisfied : CalculationResults -> Bool
-isSatisfied CalculationSatisfied = True
-isSatisfied CalculationFailed    = False
-
 template MarginCalculation
   with
     provider : Party
@@ -73,13 +65,12 @@ template FulfilledMarginCalculation
     provider : Party
     customer : Party
     calculation : MarginCalculation
-    calculationId : Text
     note : Text
   where
     signatory provider
     observer customer
 
-    key (provider, customer, calculationId) : (Party, Party, Text)
+    key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
 template RejectedMarginCalculation
