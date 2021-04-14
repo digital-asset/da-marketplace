@@ -20,7 +20,6 @@ export const IssuancesTable: React.FC = () => {
         'Issuance Account',
         'Asset',
         'Quantity',
-        'Action',
         'Details',
       ]}
       rows={issuances.map(c => [
@@ -30,10 +29,6 @@ export const IssuancesTable: React.FC = () => {
         c.payload.accountId.label,
         c.payload.assetId.label,
         c.payload.quantity,
-        <>
-          {/* { party === c.payload.client &&
-          <Button secondary className='ghost' onClick={() => requestDelisting(c)}>Delist</Button>}                */}
-        </>,
         <NavLink to={`/app/issuance/issuances/${c.contractId.replace('#', '_')}`}>
           <IconButton color="primary" size="small" component="span">
             <KeyboardArrowRight fontSize="small" />

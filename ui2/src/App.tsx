@@ -118,33 +118,7 @@ const AppComponent = () => {
       },
     ],
   });
-  // entries.push({
-  //   displayEntry: () => true,
-  //   sidebar: [
-  //     {
-  //       label: 'Network',
-  //       path: '/app/network/custody',
-  //       render: () => <CustodyNetwork services={custodyService} />,
-  //       icon: <PlayArrow />,
-  //       children: [
-  //         {
-  //           label: 'Custody',
-  //           path: '/app/network/custody',
-  //           render: () => <CustodyNetwork services={custodyService} />,
-  //           icon: <PlayArrow />,
-  //           children: [],
-  //         },
-  //         {
-  //           label: 'Trading',
-  //           path: '/app/network/trading',
-  //           render: () => <TradingNetwork services={tradingService} />,
-  //           icon: <PlayArrow />,
-  //           children: [],
-  //         },
-  //       ],
-  //     },
-  //   ],
-  // });
+
   entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [

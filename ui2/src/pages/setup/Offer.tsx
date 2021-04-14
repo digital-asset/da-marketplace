@@ -10,12 +10,12 @@ import { Offer as IssuanceOffer } from '@daml.js/da-marketplace/lib/Marketplace/
 import { Offer as ListingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 
-import { ServiceOfferDialog } from '../../components/InputDialog/ServiceRequestDialog';
-import { ServiceKind, ServiceOffer } from '../../context/ServicesContext';
+import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
+import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { useHistory } from 'react-router';
 import { useWellKnownParties } from '@daml/hub-react/lib';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import SetUp from './SetUp';
 
 interface RequestInterface {
@@ -25,12 +25,6 @@ interface RequestInterface {
   tradingAccount?: Account;
   allocationAccount?: Account;
 }
-
-type ServiceOfferChoice =
-  | typeof TradingRole.OfferTradingService
-  | typeof TradingRole.OfferListingService
-  | typeof CustodyRole.OfferIssuanceService
-  | typeof CustodyRole.OfferCustodyService;
 
 const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const provider = useParty();
@@ -43,9 +37,8 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   ]);
 
   const [offer, setOffer] = useState<ServiceOffer>(CustodyOffer);
-  const [choice, setChoice] = useState<ServiceOfferChoice>();
+  const [choice, setChoice] = useState<ServiceRoleOfferChoice>();
   const [openDialog, setOpenDialog] = useState(true);
-  const [fields, setFields] = useState<object>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [params, setParams] = useState<RequestInterface>({
     operator,
@@ -58,46 +51,18 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       case ServiceKind.CUSTODY: {
         setOffer(CustodyOffer);
         setChoice(CustodyRole.OfferCustodyService);
-        setFields({
-          customer: {
-            label: 'Customer',
-            type: 'selection',
-            items: legalNames,
-          },
-        });
       }
       case ServiceKind.ISSUANCE: {
         setOffer(IssuanceOffer);
         setChoice(CustodyRole.OfferIssuanceService);
-        setFields({
-          customer: {
-            label: 'Customer',
-            type: 'selection',
-            items: legalNames,
-          },
-        });
       }
       case ServiceKind.TRADING: {
         setOffer(TradingOffer);
         setChoice(TradingRole.OfferTradingService);
-        setFields({
-          customer: {
-            label: 'Customer',
-            type: 'selection',
-            items: legalNames,
-          },
-        });
       }
       case ServiceKind.LISTING: {
         setOffer(ListingOffer);
         setChoice(TradingRole.OfferListingService);
-        setFields({
-          customer: {
-            label: 'Customer',
-            type: 'selection',
-            items: legalNames,
-          },
-        });
       }
     }
   }, [service, legalNames]);
@@ -128,7 +93,13 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
     <div className="offer">
       <ServiceOfferDialog
         choice={choice}
-        fields={fields}
+        fields={{
+          customer: {
+            label: 'Customer',
+            type: 'selection',
+            items: legalNames,
+          },
+        }}
         offer={offer}
         onChange={(state: any) => setDialogState(state)}
         onClose={onClose}

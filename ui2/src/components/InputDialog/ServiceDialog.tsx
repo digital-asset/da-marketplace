@@ -76,9 +76,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
           return;
         }
     }
-
-    // await ledger.create(offer, params);
-    // onClose(false);
   };
 
   return (

@@ -1,4 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import _ from 'lodash';
+
+import { CreateEvent } from '@daml/ledger';
+import { Template } from '@daml/types';
 
 import {
   Service as CustodyService,
@@ -26,10 +30,10 @@ import {
   Offer as TradingOffer,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+
 import { useStreamQueries } from '../Main';
-import { CreateEvent } from '@daml/ledger';
-import { Template } from '@daml/types';
-import _ from 'lodash';
 
 export enum ServiceKind {
   CUSTODY = 'Custody',
@@ -39,6 +43,12 @@ export enum ServiceKind {
   LISTING = 'Listing',
   TRADING = 'Trading',
 }
+
+export type ServiceRoleOfferChoice =
+  | typeof TradingRole.OfferTradingService
+  | typeof TradingRole.OfferListingService
+  | typeof CustodyRole.OfferIssuanceService
+  | typeof CustodyRole.OfferCustodyService;
 
 export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string>;
 
