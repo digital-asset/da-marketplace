@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import {
   Service as CustodyService,
+  Offer as CustodyOffer,
   Request as CustodyRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import {
@@ -22,6 +23,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import {
   Service as TradingService,
+  Offer as TradingOffer,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import { useStreamQueries } from '../Main';
@@ -47,6 +49,9 @@ export type ServiceRequestTemplates =
   | IssuanceRequest
   | ListingRequest
   | TradingRequest;
+
+export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
+export type ServiceOfferTemplates = TradingOffer | CustodyOffer;
 
 type ServiceContract =
   | CreateEvent<CustodyService>

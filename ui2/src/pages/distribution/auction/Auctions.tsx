@@ -4,21 +4,15 @@ import { useStreamQueries } from '../../../Main';
 import { getName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';
-import Tile from '../../../components/Tile/Tile';
-import { Button, Header, Icon } from 'semantic-ui-react';
+import { Header, Icon } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const auctions = useStreamQueries(Auction).contracts;
 
   return (
-    <div>
-      <Tile header={<h2>Actions</h2>}>
-        <Button className="ghost" onClick={() => history.push('/app/distribution/new')}>
-          New Auction
-        </Button>
-      </Tile>
-      <Header as="h2">Holdings</Header>
+    <div className="auctions">
+      <Header as="h2">Auctions</Header>
       <StripedTable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status', 'Details']}
         rows={auctions.map(c => [

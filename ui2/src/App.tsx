@@ -49,11 +49,15 @@ import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
+import { New as NewAuction } from './pages/distribution/auction/New';
 import Landing from './pages/landing/Landing';
 import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
+import { ServiceKind } from './context/ServicesContext';
+import { DistributionServiceTable } from './pages/network/Distribution';
+import { Header } from 'semantic-ui-react';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -235,7 +239,9 @@ const AppComponent = () => {
         path: '/app/manage/distributions',
         render: () => (
           <Manage>
-            <h3>Auctions</h3>
+            <Header as="h2">Service</Header>
+            <DistributionServiceTable />
+            <Auctions />
           </Manage>
         ),
       },
@@ -289,6 +295,14 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
+        path: '/app/setup/custody/offer',
+        render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+      {
+        path: '/app/setup/distribution/new/auction',
+        render: () => <NewAuction services={auctionService} />,
+      },
+      {
         path: '/app/setup/instrument/new/base',
         component: NewBaseInstrument,
       },
@@ -300,12 +314,18 @@ const AppComponent = () => {
         path: '/app/setup/instrument/new/binaryoption',
         component: NewBinaryOption,
       },
-      { path: '/app/setup/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
+      {
+        path: '/app/setup/issuance/new',
+        render: () => <IssuanceNew services={issuanceService} />,
+      },
       {
         path: '/app/setup/listing/new',
         render: () => <ListingNew services={listingService} />,
       },
-      { path: '/app/setup/trading/offer', render: () => <Offer /> },
+      {
+        path: '/app/setup/trading/offer',
+        render: () => <Offer service={ServiceKind.TRADING} />,
+      },
     ],
   });
 

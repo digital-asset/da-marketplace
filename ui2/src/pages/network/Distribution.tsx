@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useHistory, NavLink } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -17,11 +17,41 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import useStyles from '../styles';
 import { getName, getTemplateId } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import StripedTable from '../../components/Table/StripedTable';
+
+export const DistributionServiceTable = () => {
+  const party = useParty();
+
+  const services = [
+    ...useStreamQueries(AuctionService).contracts,
+    ...useStreamQueries(BiddingService).contracts,
+  ];
+
+  return (
+    <StripedTable
+      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
+      rows={services.map(c => [
+        getTemplateId(c.templateId).split('.')[2],
+        getName(c.payload.operator),
+        getName(c.payload.provider),
+        getName(c.payload.customer),
+        party === c.payload.provider ? 'Provider' : 'Consumer',
+        // <NavLink to={`/app/network/listing/service/${c.contractId.replace('#', '_')}`}>
+        //   <IconButton color="primary" size="small" component="span">
+        //     <KeyboardArrowRight fontSize="small" />
+        //   </IconButton>
+        // </NavLink>,
+      ])}
+    />
+  );
+};
 
 const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
@@ -33,7 +63,6 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
-  const services = useStreamQueries(Service).contracts;
   const requests = useStreamQueries(Request).contracts;
   const offers = useStreamQueries(Offer).contracts;
 
@@ -81,10 +110,6 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
       });
     };
     setOfferDialogProps({ ...defaultOfferDialogProps, open: true, onClose });
-  };
-
-  const terminateService = async (c: CreateEvent<Service>) => {
-    await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
   };
 
   const approveRequest = async (c: CreateEvent<Request>) => {
@@ -154,75 +179,7 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
               <Grid container direction="row" justify="center" className={classes.paperHeading}>
                 <Typography variant="h2">Services</Typography>
               </Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}>
-                      <b>Service</b>
-                    </TableCell>
-                    <TableCell key={1} className={classes.tableCell}>
-                      <b>Operator</b>
-                    </TableCell>
-                    <TableCell key={2} className={classes.tableCell}>
-                      <b>Provider</b>
-                    </TableCell>
-                    <TableCell key={3} className={classes.tableCell}>
-                      <b>Consumer</b>
-                    </TableCell>
-                    <TableCell key={4} className={classes.tableCell}>
-                      <b>Role</b>
-                    </TableCell>
-                    <TableCell key={5} className={classes.tableCell}></TableCell>
-                    <TableCell key={6} className={classes.tableCell}></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {services.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        {getTemplateId(c.templateId)}
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.operator)}
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        {party === c.payload.provider ? 'Provider' : 'Consumer'}
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        <Button
-                          color="primary"
-                          size="small"
-                          className={classes.choiceButton}
-                          variant="contained"
-                          onClick={() => terminateService(c)}
-                        >
-                          Terminate
-                        </Button>
-                      </TableCell>
-                      <TableCell key={6} className={classes.tableCell}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
-                          onClick={() =>
-                            history.push(
-                              '/app/network/listing/service/' + c.contractId.replace('#', '_')
-                            )
-                          }
-                        >
-                          <KeyboardArrowRight fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <DistributionServiceTable />
             </Paper>
           </Grid>
         </Grid>

@@ -2,7 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
 
 import DamlLedger, { QueryResult, useStreamQueries as usq } from '@daml/react';
-import { PublicLedger, useStreamQueriesAsPublic as usqp } from '@daml/hub-react/lib';
+import {
+  PublicLedger,
+  useStreamQueriesAsPublic as usqp,
+  WellKnownPartiesProvider,
+} from '@daml/hub-react/lib';
 import { Template } from '@daml/types';
 
 import ErrorComponent from './pages/error/Error';
@@ -30,30 +34,32 @@ export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
 
   return (
-    <PublicDamlProvider
-      party={user.party}
-      token={user.token}
-      httpBaseUrl={httpBaseUrl}
-      wsBaseUrl={wsBaseUrl}
-    >
-      <ServicesProvider>
-        <HashRouter>
-          <Switch>
-            <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
-            <PrivateRoute path="/app" component={App} />
-            {/* <PrivateRoute path="/apps/network" component={Network} />
-            <PrivateRoute path="/apps/custody" component={Custody} />
-            <PrivateRoute path="/apps/registry" component={Registry} />
-            <PrivateRoute path="/apps/issuance" component={Issuance} />
-            <PrivateRoute path="/apps/distribution" component={Distribution} />
-            <PrivateRoute path="/apps/listing" component={Listing} />
-            <PrivateRoute path="/apps/trading" component={Trading} /> */}
-            <PublicRoute path="/login" component={Login} />
-            <Route component={ErrorComponent} />
-          </Switch>
-        </HashRouter>
-      </ServicesProvider>
-    </PublicDamlProvider>
+    <WellKnownPartiesProvider>
+      <PublicDamlProvider
+        party={user.party}
+        token={user.token}
+        httpBaseUrl={httpBaseUrl}
+        wsBaseUrl={wsBaseUrl}
+      >
+        <ServicesProvider>
+          <HashRouter>
+            <Switch>
+              <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
+              <PrivateRoute path="/app" component={App} />
+              {/* <PrivateRoute path="/apps/network" component={Network} />
+                  <PrivateRoute path="/apps/custody" component={Custody} />
+                  <PrivateRoute path="/apps/registry" component={Registry} />
+                  <PrivateRoute path="/apps/issuance" component={Issuance} />
+                  <PrivateRoute path="/apps/distribution" component={Distribution} />
+                  <PrivateRoute path="/apps/listing" component={Listing} />
+                  <PrivateRoute path="/apps/trading" component={Trading} /> */}
+              <PublicRoute path="/login" component={Login} />
+              <Route component={ErrorComponent} />
+            </Switch>
+          </HashRouter>
+        </ServicesProvider>
+      </PublicDamlProvider>
+    </WellKnownPartiesProvider>
   );
 
   function PrivateRoute({ component, ...rest }: any) {

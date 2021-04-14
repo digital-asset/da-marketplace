@@ -25,15 +25,37 @@ const SetupService: React.FC<SetupServiceProps> = ({ name, links }) => (
 
 const SetUp: React.FC = () => (
   <div className="set-up">
-    <SetupService name="Custody" links={[{ label: 'Offer Custody Service', path: '' }]} />
+    <SetupService
+      name="Custody"
+      links={[
+        {
+          label: 'Offer Custody Service',
+          path: '/app/setup/custody/offer',
+        },
+      ]}
+    />
 
-    <SetupService name="Distributions" links={[{ label: 'Create New Auction', path: '' }]} />
+    <SetupService
+      name="Distributions"
+      links={[
+        {
+          label: 'Create New Auction',
+          path: '/app/setup/distribution/new/auction',
+        },
+      ]}
+    />
 
     <SetupService
       name="Instruments"
       links={[
-        { label: 'Create Base Instrument', path: '/app/setup/instrument/new/base' },
-        { label: 'Create Binary Option', path: '/app/setup/instrument/new/binaryoption' },
+        {
+          label: 'Create Base Instrument',
+          path: '/app/setup/instrument/new/base',
+        },
+        {
+          label: 'Create Binary Option',
+          path: '/app/setup/instrument/new/binaryoption',
+        },
         {
           label: 'Create Convertible Note',
           path: '/app/setup/instrument/new/convertiblenote',
@@ -43,17 +65,32 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Issuance"
-      links={[{ label: 'Create New Issuance', path: '/app/setup/issuance/new' }]}
+      links={[
+        {
+          label: 'Create New Issuance',
+          path: '/app/setup/issuance/new',
+        },
+      ]}
     />
 
     <SetupService
       name="Listings"
-      links={[{ label: 'Create New Listing', path: '/app/setup/listing/new' }]}
+      links={[
+        {
+          label: 'Create New Listing',
+          path: '/app/setup/listing/new',
+        },
+      ]}
     />
 
     <SetupService
       name="Trading"
-      links={[{ label: 'Offer Trading Service', path: '/app/setup/trading/offer' }]}
+      links={[
+        {
+          label: 'Offer Trading Service',
+          path: '/app/setup/trading/offer',
+        },
+      ]}
     />
   </div>
 );
