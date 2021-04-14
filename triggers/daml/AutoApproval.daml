@@ -76,8 +76,8 @@ handleApprovalRule party = do
   custodyServicesRequests   <- queryByParty @CustodyService.Request  (.provider)
   issuanceServiceRequests   <- queryByParty @IssuanceService.Request (.provider)
   custodyRoles              <- queryByParty @CustodyRole.Role        (.provider)
-  let custodyRequests  = generateRoleCommands CustodyRole.AcceptCustodyRequest  custodyServicesRequests custodyRoles
-      issuanceRequests = generateRoleCommands CustodyRole.AcceptIssuanceRequest issuanceServiceRequests custodyRoles
+  let custodyRequests  = generateRoleCommands CustodyRole.ApproveCustodyRequest  custodyServicesRequests custodyRoles
+      issuanceRequests = generateRoleCommands CustodyRole.ApproveIssuanceRequest issuanceServiceRequests custodyRoles
 
   auctionServiceRequests    <- queryByParty @AuctionService.Request (.provider)
   biddingServiceRequests    <- queryByParty @BiddingService.Request (.provider)
@@ -118,8 +118,8 @@ generateCommands choiceArg queryResults = map (\cid -> (toAnyContractId cid, exe
 -- | Generates commands in the expected format based off exercising a nonconsuming choice on one contract (ie, a role contract) with the contract id of another contract
 -- | Note - this currently takes the first role contract in the provided list and generates exercise commands against it
 generateRoleCommands : forall t c r t2. (Template t, Choice t c r, Template t2) => (ContractId t2 -> c) -> [ContractId t2] -> [ContractId t] -> [(AnyContractId, Command)]
-generateRoleCommands toChoice requests (cid :: _) = map (\reqCid -> (toAnyContractId cid, exerciseCmd cid $ toChoice reqCid)) requests
 generateRoleCommands _ _ [] = []
+generateRoleCommands toChoice requests (cid :: _) = map (\reqCid -> (toAnyContractId cid, exerciseCmd cid $ toChoice reqCid)) requests
 
 submitCommands : [(AnyContractId, Command)] -> TriggerA () ()
 submitCommands [] = pure ()

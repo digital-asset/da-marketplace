@@ -21,7 +21,7 @@ template Role
         do
           create Custody.Offer with ..
 
-      nonconsuming AcceptCustodyRequest : ContractId Custody.Service
+      nonconsuming ApproveCustodyRequest : ContractId Custody.Service
         with
           custodyRequestCid : ContractId Custody.Request
         do
@@ -39,7 +39,7 @@ template Role
         do
           create Issuance.Offer with ..
 
-      nonconsuming AcceptIssuanceRequest : ContractId Issuance.Service
+      nonconsuming ApproveIssuanceRequest : ContractId Issuance.Service
         with
           issuanceServiceRequestCid : ContractId Issuance.Request
         do
