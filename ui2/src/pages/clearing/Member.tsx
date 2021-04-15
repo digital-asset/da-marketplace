@@ -1,16 +1,14 @@
 import React from 'react';
 import { withRouter, RouteComponentProps, useParams, NavLink } from 'react-router-dom';
-import { useStreamQueries, useLedger } from '@daml/react';
+import { useStreamQueries, useLedger, useParty } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service, Cancel } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import {
-  MemberStanding,
-  MarginCalculation,
-  RejectedMarginCalculation,
+import {       MemberStanding,  MarginCalculation,  RejectedMarginCalculation,
   FulfilledMarginCalculation,
   MarkToMarketCalculation,
   RejectedMarkToMarketCalculation,
   FulfilledMarkToMarketCalculation,
+  RejectedMarkToMarketCalculation_CustomerRetry,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
 import { Header, Button } from 'semantic-ui-react';
@@ -18,16 +16,22 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import { ContractId } from '@daml/types';
+import { ContractId, Party } from '@daml/types';
 
-const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
-  history,
-  services,
-}) => {
+type Props = {
+  member?: boolean;
+};
+
+const ClearingMemberComponent: React.FC<
+  RouteComponentProps & ServicePageProps<Service> & Props
+> = ({ history, services, member }) => {
   const { contractId } = useParams<any>();
+  let party = useParty();
+
   const ledger = useLedger();
-  const service = useStreamQueries(Service).contracts.find(s => s.contractId === contractId)
-    ?.payload;
+  const service = useStreamQueries(Service).contracts.find(s =>
+    !!member ? s.payload.customer === party : s.contractId === contractId
+  )?.payload;
   const customer = service?.customer;
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
@@ -77,7 +81,9 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     .reverse();
 
   const handleMTMRetry = async (cid: ContractId<RejectedMarkToMarketCalculation>) => {
-    const choice = RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Retry;
+    const choice = !!member
+      ? RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_CustomerRetry
+      : RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Retry;
     await ledger.exercise(choice, cid, {});
   };
   const handleMTMCancel = async (cid: ContractId<RejectedMarkToMarketCalculation>) => {
@@ -97,8 +103,12 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
   return (
     <div className="assets">
       <Tile header={<h2>Actions</h2>}>
-        <MarginCallModal services={services} member={customer} />
-        <MTMCalculationModal services={services} member={customer} />
+        {!member && (
+          <>
+            <MarginCallModal services={services} member={customer} />
+            <MTMCalculationModal services={services} member={customer} />
+          </>
+        )}
       </Tile>
       <Tile header={<h2>Standing</h2>}>
         <b>Margins:</b> {!!standing && standing?.payload.marginSatisfied ? 'Yes' : 'No'}
@@ -133,9 +143,11 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
               <Button className="ghost" onClick={() => handleMarginRetry(mc.contractId)}>
                 Retry
               </Button>
-              <Button className="ghost" onClick={() => handleMarginCancel(mc.contractId)}>
-                Cancel
-              </Button>
+              {!member && (
+                <Button className="ghost" onClick={() => handleMarginCancel(mc.contractId)}>
+                  Cancel
+                </Button>
+              )}
             </Button.Group>,
           ];
         })}
@@ -177,9 +189,11 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
               <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
                 Retry
               </Button>
-              <Button className="ghost" onClick={() => handleMTMCancel(mc.contractId)}>
-                Cancel
-              </Button>
+              {!member && (
+                <Button className="ghost" onClick={() => handleMTMCancel(mc.contractId)}>
+                  Cancel
+                </Button>
+              )}
             </Button.Group>,
           ];
         })}

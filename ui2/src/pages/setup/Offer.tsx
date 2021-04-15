@@ -4,6 +4,7 @@ import { useParty } from '@daml/react';
 import { useStreamQueries } from '@daml/react';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Offer as IssuanceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -11,6 +12,7 @@ import { Offer as ListingOffer } from '@daml.js/da-marketplace/lib/Marketplace/L
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
@@ -36,7 +38,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
     identities,
   ]);
 
-  const [offer, setOffer] = useState<ServiceOffer>(CustodyOffer);
+  const [offer, setOffer] = useState<ServiceOffer>(TradingOffer);
   const [choice, setChoice] = useState<ServiceRoleOfferChoice>();
   const [openDialog, setOpenDialog] = useState(true);
   const [dialogState, setDialogState] = useState<any>({});
@@ -63,6 +65,10 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       case ServiceKind.LISTING: {
         setOffer(ListingOffer);
         setChoice(TradingRole.OfferListingService);
+      }
+      case ServiceKind.CLEARING: {
+        setOffer(CustodyOffer);
+        setChoice(ClearingRole.OfferClearingService);
       }
     }
   }, [service, legalNames]);

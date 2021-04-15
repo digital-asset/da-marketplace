@@ -10,6 +10,11 @@ import {
   Request as CustodyRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import {
+  Service as ClearingService,
+  Offer as ClearingOffer,
+  Request as ClearingRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
+import {
   Service as AuctionService,
   Request as AuctionRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
@@ -32,6 +37,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { useStreamQueries } from '../Main';
 
@@ -42,9 +48,11 @@ export enum ServiceKind {
   ISSUANCE = 'Issuance',
   LISTING = 'Listing',
   TRADING = 'Trading',
+  CLEARING = 'Clearing',
 }
 
 export type ServiceRoleOfferChoice =
+  | typeof ClearingRole.OfferClearingService
   | typeof TradingRole.OfferTradingService
   | typeof TradingRole.OfferListingService
   | typeof CustodyRole.OfferIssuanceService
@@ -54,6 +62,7 @@ export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string
 
 export type ServiceRequestTemplates =
   | CustodyRequest
+  | ClearingRequest
   | AuctionRequest
   | BiddingRequest
   | IssuanceRequest
@@ -61,10 +70,11 @@ export type ServiceRequestTemplates =
   | TradingRequest;
 
 export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
-export type ServiceOfferTemplates = TradingOffer | CustodyOffer;
+export type ServiceOfferTemplates = TradingOffer;
 
 type ServiceContract =
   | CreateEvent<CustodyService>
+  | CreateEvent<ClearingService>
   | CreateEvent<AuctionService>
   | CreateEvent<BiddingService>
   | CreateEvent<IssuanceService>
@@ -87,6 +97,7 @@ const ServicesProvider: React.FC = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(ClearingService);
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
@@ -100,6 +111,7 @@ const ServicesProvider: React.FC = ({ children }) => {
     () =>
       setLoading(
         custodyLoading ||
+          clearingLoading ||
           auctionLoading ||
           biddingLoading ||
           issuanceLoading ||
@@ -108,6 +120,7 @@ const ServicesProvider: React.FC = ({ children }) => {
       ),
     [
       custodyLoading,
+      clearingLoading,
       auctionLoading,
       biddingLoading,
       issuanceLoading,
@@ -119,6 +132,7 @@ const ServicesProvider: React.FC = ({ children }) => {
   useEffect(
     () =>
       setServices([
+        ...clearingService.map(c => ({ contract: c, service: ServiceKind.CLEARING })),
         ...custodyService.map(c => ({ contract: c, service: ServiceKind.CUSTODY })),
         ...auctionService.map(c => ({ contract: c, service: ServiceKind.AUCTION })),
         ...biddingService.map(c => ({ contract: c, service: ServiceKind.BIDDING })),
@@ -127,6 +141,7 @@ const ServicesProvider: React.FC = ({ children }) => {
         ...tradingService.map(c => ({ contract: c, service: ServiceKind.TRADING })),
       ]),
     [
+      clearingService,
       custodyService,
       auctionService,
       biddingService,

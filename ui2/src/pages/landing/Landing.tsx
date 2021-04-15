@@ -19,6 +19,7 @@ import { NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
@@ -56,6 +57,9 @@ interface RequestInterface {
   provider: string;
   tradingAccount?: Account;
   allocationAccount?: Account;
+
+  clearingAccount?: Account;
+  marginAccount?: Account;
 }
 
 const Landing = () => {
@@ -91,10 +95,25 @@ const Landing = () => {
       const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
       const allocationAccount = accounts.find(a => a.id.label === dialogState.allocationAccount);
 
+      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
+      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount);
+
       const params = {
         provider,
         tradingAccount,
         allocationAccount,
+        customer: party,
+      };
+
+      setRequestParams(params);
+    } else if (dialogState?.clearingAccount && dialogState?.marginAccount) {
+      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
+      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount);
+
+      const params = {
+        provider,
+        clearingAccount,
+        marginAccount,
         customer: party,
       };
 
@@ -187,6 +206,23 @@ const Landing = () => {
             <OverflowMenuEntry
               label="Request Listing Service"
               onClick={() => requestService(ListingRequest, ServiceKind.LISTING)}
+            />
+            <OverflowMenuEntry
+              label="Request Clearing Service"
+              onClick={() =>
+                requestService(ClearingRequest, ServiceKind.CLEARING, {
+                  clearingAccount: {
+                    label: 'Clearing Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  marginAccount: {
+                    label: 'Margin Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                })
+              }
             />
             <OverflowMenuEntry
               label="Request Trading Service"

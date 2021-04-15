@@ -23,11 +23,11 @@ template Role
         do
           create Clearing.Offer with ..
 
-      nonconsuming AcceptClearingRequest : ContractId Clearing.Service
+      nonconsuming ApproveClearingRequest : ContractId Clearing.Service
         with
-          custodyRequestCid : ContractId Clearing.Request
+          clearingRequestCid : ContractId Clearing.Request
         do
-          exercise custodyRequestCid Clearing.Approve with ..
+          exercise clearingRequestCid Clearing.Approve with ..
 
       nonconsuming TerminateClearingService : ()
         with

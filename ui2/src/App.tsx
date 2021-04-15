@@ -32,6 +32,7 @@ import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
+import { Clearing as ClearingNetwork, ClearingServiceTable } from './pages/network/Clearing';
 import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
 import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
@@ -127,7 +128,7 @@ const AppComponent = () => {
 
   const clearingProvider = clearingService.filter(cs => cs.payload.provider === party);
   entries.push({
-    displayEntry: () => clearingService.length > 0,
+    displayEntry: () => clearingProvider.length > 0,
     sidebar: [
       {
         label: 'Members',
@@ -141,6 +142,20 @@ const AppComponent = () => {
       {
         path: '/app/clearing/member/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
+      },
+    ],
+  });
+
+  const clearingCustomer = clearingService.filter(cs => cs.payload.customer === party);
+  entries.push({
+    displayEntry: () => clearingCustomer.length > 0,
+    sidebar: [
+      {
+        label: 'Clearing',
+        path: `/app/clearing/member`,
+        render: () => <ClearingMember services={clearingProvider} member />,
+        icon: <WalletIcon />,
+        children: [],
       },
     ],
   });
@@ -228,6 +243,14 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
+        path: '/app/manage/clearing',
+        render: () => (
+          <Manage>
+            <ClearingServiceTable services={clearingService} />
+          </Manage>
+        ),
+      },
+      {
         path: '/app/manage/custody',
         render: () => (
           <Manage>
@@ -297,6 +320,10 @@ const AppComponent = () => {
       {
         path: '/app/setup/custody/offer',
         render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+      {
+        path: '/app/setup/clearing/offer',
+        render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
         path: '/app/setup/distribution/new/auction',
