@@ -124,11 +124,9 @@ const QuickSetupButton = () => {
   }, []);
 
   return (
-    <>
-      <Button className="ghost dark" onClick={() => history.push('/quick-setup')}>
-        Quick Setup
-      </Button>
-    </>
+    <Button className="ghost dark" onClick={() => history.push('/quick-setup')}>
+      Quick Setup
+    </Button>
   );
 };
 

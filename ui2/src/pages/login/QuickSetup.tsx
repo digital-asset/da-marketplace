@@ -4,9 +4,10 @@ import { Form, Button, Icon, Loader, Table } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import { WellKnownPartiesProvider, useWellKnownParties } from '@daml/hub-react/lib';
 
 import { useUserDispatch } from '../../context/UserContext';
+import { ServiceKind } from '../../context/ServicesContext';
 import { useHistory } from 'react-router-dom';
 
 import {
@@ -49,20 +50,10 @@ import { CreateEvent } from '@daml/ledger';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
-enum serviceOptionsEnum {
-  CUSTODY = 'Custody',
-  TRADING = 'Trading',
-  MATCHING = 'Matching',
-  SETTLEMENT = 'Settlement',
-  LISTING = 'Listing',
-}
-
 interface IServiceContractSetupData {
   party?: PartyDetails;
   service?: string;
 }
-
-const services = ['Custody', 'Trading', 'Matching', 'Settlement', 'Listing'];
 
 const OfferServiceContractSetup = (props: {
   credentials: Credentials;
@@ -123,11 +114,15 @@ const OfferServiceContractSetup = (props: {
 
     let newMarketData: Map<string, string[]> = new Map();
 
-    custodianRoles.contracts.forEach(c => addMarketData(c.payload.provider, 'Custody'));
-    distributorRoles.contracts.forEach(c => addMarketData(c.payload.provider, 'Listing'));
-    settlementServices.contracts.forEach(c => addMarketData(c.payload.provider, 'Settlement'));
-    exchangeRoles.contracts.forEach(c => addMarketData(c.payload.provider, 'Trading'));
-    matchingServices.contracts.forEach(c => addMarketData(c.payload.provider, 'Matching'));
+    custodianRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.CUSTODY));
+    distributorRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.LISTING));
+    settlementServices.contracts.forEach(c =>
+      addMarketData(c.payload.provider, ServiceKind.SETTLEMENT)
+    );
+    exchangeRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.TRADING));
+    matchingServices.contracts.forEach(c =>
+      addMarketData(c.payload.provider, ServiceKind.MATCHING)
+    );
 
     function addMarketData(party: string, serviceName: string) {
       newMarketData.set(party, [...(newMarketData.get(party) || []), serviceName]);
@@ -157,7 +152,9 @@ const OfferServiceContractSetup = (props: {
     return { text: party.partyName, value: party.party };
   });
 
-  let serviceOptions = services.map(service => {
+  const servicesNotSupported = [ServiceKind.AUCTION, ServiceKind.ISSUANCE, ServiceKind.BIDDING] // services not yet supported by this modal
+
+  let serviceOptions = Object.values(ServiceKind).filter(s => !servicesNotSupported.includes(s)).map(service => {
     return { text: service, value: service };
   });
 
@@ -211,7 +208,11 @@ const OfferServiceContractSetup = (props: {
             </Table.Cell>
             <Table.Cell>
               {creatingRoleContracts ? (
-                <Loader active indeterminate inverted size="small"></Loader>
+                   <Button
+                   disabled
+                   className="ghost"
+                   content={<p>Adding...</p>}
+                 />
               ) : (
                 <Button
                   disabled={!selectedParty || !!status}
@@ -284,23 +285,23 @@ const OfferServiceContractSetup = (props: {
     const provider = selectedParty.party;
 
     switch (selectedService) {
-      case serviceOptionsEnum.CUSTODY:
+      case ServiceKind.CUSTODY:
         return await ledger
           .exercise(OperatorService.OfferCustodianRole, id, { provider })
           .then(_ => onComplete());
-      case serviceOptionsEnum.TRADING:
+      case ServiceKind.TRADING:
         return await ledger
           .exercise(OperatorService.OfferExchangeRole, id, { provider })
           .then(_ => onComplete());
-      case serviceOptionsEnum.MATCHING:
+      case ServiceKind.MATCHING:
         return await ledger
           .exercise(OperatorService.OfferMatchingService, id, { provider })
           .then(_ => onComplete());
-      case serviceOptionsEnum.SETTLEMENT:
+      case ServiceKind.SETTLEMENT:
         return await ledger
           .exercise(OperatorService.OfferSettlementService, id, { provider })
           .then(_ => onComplete());
-      case serviceOptionsEnum.LISTING:
+      case ServiceKind.LISTING:
         return await ledger
           .exercise(OperatorService.OfferDistributorRole, id, { provider })
           .then(_ => onComplete());
@@ -309,15 +310,15 @@ const OfferServiceContractSetup = (props: {
 
   function findExistingRoleorOffer(newRole: string) {
     switch (newRole) {
-      case serviceOptionsEnum.CUSTODY:
+      case ServiceKind.CUSTODY:
         return !!custodianRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
-      case serviceOptionsEnum.TRADING:
+      case ServiceKind.TRADING:
         return !!exchangeRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
-      case serviceOptionsEnum.MATCHING:
+      case ServiceKind.MATCHING:
         return !!matchingServices.contracts.find(c => c.payload.provider === selectedParty?.party);
-      case serviceOptionsEnum.LISTING:
+      case ServiceKind.LISTING:
         return !!distributorRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
-      case serviceOptionsEnum.SETTLEMENT:
+      case ServiceKind.SETTLEMENT:
         return !!settlementServices.contracts.find(
           c => c.payload.provider === selectedParty?.party
         );
@@ -412,19 +413,19 @@ const CreateRoleContract = (props: {
     }
 
     switch (service) {
-      case serviceOptionsEnum.CUSTODY:
+      case ServiceKind.CUSTODY:
         acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
         break;
-      case serviceOptionsEnum.TRADING:
+      case ServiceKind.TRADING:
         acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
         break;
-      case serviceOptionsEnum.MATCHING:
+      case ServiceKind.MATCHING:
         acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
         break;
-      case serviceOptionsEnum.SETTLEMENT:
+      case ServiceKind.SETTLEMENT:
         acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
         break;
-      case serviceOptionsEnum.LISTING:
+      case ServiceKind.LISTING:
         acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
         break;
     }
@@ -455,9 +456,7 @@ const QuickSetup = () => {
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [startServiceSetup, setStartServiceSetup] = useState(false);
 
-  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
-
-  const localCreds = computeCredentials(operator);
+  const localCreds = computeCredentials('Operator');
   const history = useHistory();
 
   useEffect(() => {
@@ -475,7 +474,7 @@ const QuickSetup = () => {
   };
 
   function handleNewParties(newParties: PartyDetails[]) {
-    const adminParty = newParties.find(p => p.party === operator);
+    const adminParty = newParties.find(p => p.partyName === 'UserAdmin');
 
     setParties(newParties.filter(p => p.party != publicParty && p != adminParty));
 
@@ -514,21 +513,24 @@ const QuickSetup = () => {
         className="back-button ghost dark"
         onClick={() => history.push('/login')}
       />
-      <DamlLedger
-        token={adminCredentials.token}
-        party={adminCredentials.party}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <OfferServiceContractSetup
-          credentials={adminCredentials}
-          serviceSetupData={serviceSetupData}
-          setServiceSetupData={setServiceSetupData}
-          parties={parties}
-          creatingRoleContracts={startServiceSetup}
-          onComplete={() => setStartServiceSetup(true)}
-        />
-      </DamlLedger>
+      <WellKnownPartiesProvider>
+        <DamlLedger
+          token={adminCredentials.token}
+          party={adminCredentials.party}
+          httpBaseUrl={httpBaseUrl}
+          wsBaseUrl={wsBaseUrl}
+        >
+          <OfferServiceContractSetup
+            credentials={adminCredentials}
+            serviceSetupData={serviceSetupData}
+            setServiceSetupData={setServiceSetupData}
+            parties={parties}
+            creatingRoleContracts={startServiceSetup}
+            onComplete={() => setStartServiceSetup(true)}
+          />
+        </DamlLedger>
+      </WellKnownPartiesProvider>
+
       {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (
         <DamlLedger
           party={serviceSetupData.party.party}
