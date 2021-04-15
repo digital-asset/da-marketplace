@@ -46,7 +46,7 @@
             transform: translateX(-0%) translateY(-0%);
         }
 
-        .assign-role-tile {
+        .setup-tile {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -76,6 +76,7 @@
             .ui.table tr th {
                 padding-left: $spacing-m;
                 border-top: 0px !important;
+                max-height: 300px;
             }
 
             .party-registry-table {
@@ -83,6 +84,18 @@
 
                 tr:nth-of-type(odd){
                     background-color: var(--blue-100);
+                }
+
+                tbody {
+                    display: block;
+                    max-height: 500px;
+                    overflow: auto;
+                    background-color: var(--white);
+                }
+                thead, tbody tr {
+                    display: table;
+                    width: 100%;
+                    table-layout: fixed;
                 }
             }
 
