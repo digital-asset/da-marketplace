@@ -24,7 +24,7 @@ import {
   Service as TradingService,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import { useStreamQueries } from '@daml/react';
+import { useStreamQueries } from '../Main';
 import { CreateEvent } from '@daml/ledger';
 import { Template } from '@daml/types';
 import _ from 'lodash';

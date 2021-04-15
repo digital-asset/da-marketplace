@@ -4,7 +4,8 @@ import { Button } from 'semantic-ui-react';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
 import { getName } from '../../config';
 import {

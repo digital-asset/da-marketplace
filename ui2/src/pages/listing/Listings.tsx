@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { getName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';

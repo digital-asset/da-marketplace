@@ -2,6 +2,7 @@ module Marketplace.Operator.Role where
 
 import Marketplace.Regulator.Service qualified as Regulator
 import Marketplace.Custody.Role qualified as Custodian
+import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
@@ -53,3 +54,9 @@ template Role
           provider : Party
         do
           create Distributor.Offer with ..
+
+      nonconsuming OfferClearingRole : ContractId Clearing.Offer
+        with
+          provider : Party
+        do
+          create Clearing.Offer with ..
