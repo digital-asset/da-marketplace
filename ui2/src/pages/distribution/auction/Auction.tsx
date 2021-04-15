@@ -43,7 +43,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const auctionCustomerServices = auctionServices.filter(s => s.payload.customer === party);
   const isAuctionCustomer = auctionCustomerServices.length > 0;
   const biddingProviderServices = biddingServices.filter(s => s.payload.provider === party);
-  console.log('biddingProviderServices length:' + biddingProviderServices.length.toString());
   const auctions = useStreamQueries(AuctionContract).contracts;
   const auction = auctions.find(c => c.contractId === cid);
 
