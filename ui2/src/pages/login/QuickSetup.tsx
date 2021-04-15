@@ -23,7 +23,7 @@ import { retrieveParties, storeParties } from '../../Parties';
 
 import { halfSecondPromise } from '../page/utils';
 
-import { Service as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Service';
+import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import {
   Offer as CustodianOffer,
   Role as CustodianRole,
