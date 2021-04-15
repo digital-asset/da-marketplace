@@ -4,6 +4,7 @@ import { Form, Button, Icon, Loader, Table } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
+import { useWellKnownParties } from '@daml/hub-react/lib';
 
 import { useUserDispatch } from '../../context/UserContext';
 import { useHistory } from 'react-router-dom';
@@ -46,8 +47,6 @@ import {
 
 import { CreateEvent } from '@daml/ledger';
 
-const OPERATOR = 'Operator';
-
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
 enum serviceOptionsEnum {
@@ -62,8 +61,6 @@ interface IServiceContractSetupData {
   party?: PartyDetails;
   service?: string;
 }
-
-const USER_ADMIN = 'UserAdmin'; // will sub for wellKnownParty hook when it is in master
 
 const services = ['Custody', 'Trading', 'Matching', 'Settlement', 'Listing'];
 
@@ -89,6 +86,7 @@ const OfferServiceContractSetup = (props: {
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, string[]>>(new Map());
 
   const ledger = useLedger();
+  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
 
   const custodianRoles = useStreamQueries(CustodianRole);
   const exchangeRoles = useStreamQueries(ExchangeRole);
@@ -267,7 +265,7 @@ const OfferServiceContractSetup = (props: {
         ledgerId,
         party,
         token,
-        owner: OPERATOR,
+        owner: operator,
         partyName: newPartyId,
       };
     }
@@ -457,7 +455,9 @@ const QuickSetup = () => {
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [startServiceSetup, setStartServiceSetup] = useState(false);
 
-  const localCreds = computeCredentials(OPERATOR);
+  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+
+  const localCreds = computeCredentials(operator);
   const history = useHistory();
 
   useEffect(() => {
@@ -475,7 +475,7 @@ const QuickSetup = () => {
   };
 
   function handleNewParties(newParties: PartyDetails[]) {
-    const adminParty = newParties.find(p => p.partyName === USER_ADMIN);
+    const adminParty = newParties.find(p => p.party === operator);
 
     setParties(newParties.filter(p => p.party != publicParty && p != adminParty));
 
