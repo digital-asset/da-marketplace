@@ -8,6 +8,7 @@
 @use 'components/Form/CalendarInput';
 
 @use 'pages/login/Login';
+@use 'pages/login/QuickSetup';
 @use 'pages/landing/Landing';
 @use 'pages/manage/Manage';
 @use 'pages/setup/SetUp';
@@ -199,6 +200,7 @@ html {
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Login.login-screen();
+        @include QuickSetup.quick-setup();
         @include Landing.landing();
         @include Assets.assets();
         @include Account.account();
