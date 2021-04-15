@@ -40,8 +40,8 @@ export default function Main({ defaultPath }: MainProps) {
         <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
         <PrivateRoute
           path="/app"
-          render={() => {
-            return user ? (
+          component={() => {
+            return (
               <WellKnownPartiesProvider>
                 <PublicDamlProvider
                   party={user.party}
@@ -54,18 +54,16 @@ export default function Main({ defaultPath }: MainProps) {
                   </ServicesProvider>
                 </PublicDamlProvider>
               </WellKnownPartiesProvider>
-            ) : (
-              <Redirect to="/" />
             );
           }}
-        ></PrivateRoute>
+        />
         {/* <PrivateRoute path="/apps/network" component={Network} />
-                  <PrivateRoute path="/apps/custody" component={Custody} />
-                  <PrivateRoute path="/apps/registry" component={Registry} />
-                  <PrivateRoute path="/apps/issuance" component={Issuance} />
-                  <PrivateRoute path="/apps/distribution" component={Distribution} />
-                  <PrivateRoute path="/apps/listing" component={Listing} />
-                  <PrivateRoute path="/apps/trading" component={Trading} /> */}
+        <PrivateRoute path="/apps/custody" component={Custody} />
+        <PrivateRoute path="/apps/registry" component={Registry} />
+        <PrivateRoute path="/apps/issuance" component={Issuance} />
+        <PrivateRoute path="/apps/distribution" component={Distribution} />
+        <PrivateRoute path="/apps/listing" component={Listing} />
+        <PrivateRoute path="/apps/trading" component={Trading} /> */}
         <PublicRoute path="/quick-setup" component={QuickSetup} />
         <PublicRoute path="/login" component={Login} />
         <Route component={ErrorComponent} />
