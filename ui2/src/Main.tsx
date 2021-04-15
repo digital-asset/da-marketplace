@@ -29,12 +29,12 @@ type MainProps = {
 
 export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
-
+console.log(user)
   return (
     <HashRouter>
       <Switch>
         <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
-        <Route
+        <PrivateRoute
           path="/app"
           render={() => {
             return user ? (
@@ -52,7 +52,7 @@ export default function Main({ defaultPath }: MainProps) {
               <Redirect to="/" />
             );
           }}
-        ></Route>
+        ></PrivateRoute>
 
         {/* <PrivateRoute path="/apps/network" component={Network} />
          <PrivateRoute path="/apps/custody" component={Custody} />
@@ -106,7 +106,7 @@ type PublicDamlProviderProps = {
   wsBaseUrl?: string;
 };
 
-const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
+export const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
   children,
   party,
   token,

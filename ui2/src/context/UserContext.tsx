@@ -91,7 +91,7 @@ function useUserDispatch() {
 async function loginUser(
   dispatch: React.Dispatch<any>,
   history: History,
-  credentials: Credentials
+  credentials: Credentials,
 ) {
   // setError(false);
   // setIsLoading(true);
