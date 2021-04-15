@@ -72,9 +72,17 @@ const OfferServiceContractSetup = (props: {
   serviceSetupData?: IServiceContractSetupData;
   setServiceSetupData: (data: IServiceContractSetupData) => void;
   parties: PartyDetails[];
+  creatingRoleContracts: boolean;
   onComplete: () => void;
 }) => {
-  const { credentials, serviceSetupData, setServiceSetupData, parties, onComplete } = props;
+  const {
+    credentials,
+    serviceSetupData,
+    setServiceSetupData,
+    parties,
+    onComplete,
+    creatingRoleContracts,
+  } = props;
 
   const [status, setStatus] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
@@ -204,12 +212,16 @@ const OfferServiceContractSetup = (props: {
               />
             </Table.Cell>
             <Table.Cell>
-              <Button
-                disabled={!selectedParty || !!status}
-                className="ghost"
-                onClick={() => createRoleContract()}
-                content={<p>Add</p>}
-              />
+              {creatingRoleContracts ? (
+                <Loader active indeterminate inverted size="small"></Loader>
+              ) : (
+                <Button
+                  disabled={!selectedParty || !!status}
+                  className="ghost"
+                  onClick={() => createRoleContract()}
+                  content={<p>Add</p>}
+                />
+              )}
             </Table.Cell>
           </Table.Row>
           {!!status && (
@@ -513,6 +525,7 @@ const QuickSetup = () => {
           serviceSetupData={serviceSetupData}
           setServiceSetupData={setServiceSetupData}
           parties={parties}
+          creatingRoleContracts={startServiceSetup}
           onComplete={() => setStartServiceSetup(true)}
         />
       </DamlLedger>
