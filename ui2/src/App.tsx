@@ -61,10 +61,7 @@ const AppComponent = () => {
     ClearingService
   );
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(
-    BiddingService,
-    () => [{ customer: party }]
-  );
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
     IssuanceService
   );
@@ -74,6 +71,7 @@ const AppComponent = () => {
 
   const servicesLoading: boolean = [
     custodyLoading,
+    clearingLoading,
     auctionLoading,
     biddingLoading,
     issuanceLoading,

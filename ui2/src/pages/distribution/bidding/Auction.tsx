@@ -3,7 +3,7 @@ import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { useLedger } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { useParams } from 'react-router-dom';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -27,6 +27,7 @@ import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,
 }: ServicePageProps<Service>) => {
+  const party = useParty();
   const ledger = useLedger();
   const { contractId } = useParams<any>();
 
@@ -71,7 +72,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   }, [el2, assets, biddingAuction, showQuotedAsset]);
 
   if (!biddingAuction || services.length === 0) return <></>;
-  const service = services[0];
+  const service = services.filter(s => s.payload.customer === party)[0];
 
   const bid = bids.contracts.find(b => b.payload.auctionId === biddingAuction.payload.auctionId);
 
