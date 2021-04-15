@@ -1,0 +1,35 @@
+@use '../../themes/variables' as v;
+
+@mixin login-screen {
+  .login-screen {
+    height: 100%;
+    background-color: var(--cool-grey-20);
+    animation: fadeIn 0.5s;
+    .setup-required {
+      color: var(--white);
+      font-weight: normal;
+      a.dark {
+        color: var(--blue-80);
+      }
+    }
+
+    .dabl-login-button {
+      p {
+        color: var(--text-color);
+      }
+    }
+
+    .login-header {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: center;
+      margin: v.$spacing-s 0;
+
+      h1.ui.header {
+        color: var(--white);
+        font-weight: normal;
+      }
+    }
+  }
+}

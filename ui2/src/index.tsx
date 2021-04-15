@@ -1,21 +1,24 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { ThemeProvider } from "@material-ui/styles";
-import { CssBaseline } from "@material-ui/core";
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-import Themes from "./themes";
-import Main from "./Main";
-import { LayoutProvider } from "./context/LayoutContext";
-import { UserProvider } from "./context/UserContext";
+import Themes from './themes';
+import Main from './Main';
+import { LayoutProvider } from './context/LayoutContext';
+import { UserProvider } from './context/UserContext';
+import { CustomThemeProvider } from './context/ThemeContext';
+
+import 'semantic-ui-css/semantic.min.css';
+import './index.scss';
 
 ReactDOM.render(
   <LayoutProvider>
     <UserProvider>
-      <ThemeProvider theme={Themes.default}>
-        <CssBaseline />
-        <Main defaultPath="/apps"/>
-      </ThemeProvider>
+      <CustomThemeProvider lightTheme={Themes.light} darkTheme={Themes.dark}>
+        <div className="app">
+          <Main defaultPath="/app" />
+        </div>
+      </CustomThemeProvider>
     </UserProvider>
   </LayoutProvider>,
-  document.getElementById("root"),
+  document.getElementById('root')
 );

@@ -1,23 +1,34 @@
 
-.ui.card {
-    box-shadow: none;
-    width: 100%;
-}
+@mixin role-selector {
+    .role-selector {
+        height: 100%;
+        animation: fadeIn .5s;
 
-.ui.card > .ui.button {
-    width: 100%;
-    height: 100%;
-    padding: var(--spacing-m);
-}
+        .role-select > .ui.button {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--white);
+            padding: $spacing-m;
 
-.ui.card > .ui.button.ghost:hover {
-    background: none;
-}
+            &:hover {
+                transform: scale(1.01);
+            }
+        }
 
-.role-select > .ui.button {
-    background-color: var(--white);
+        .ui.card {
+            box-shadow: none;
+            width: 100%;
 
-    &:hover {
-        transform: scale(1.01);
+            & > .ui.button {
+                width: 100%;
+                height: 100%;
+                padding: $spacing-m;
+
+                &.ghost:hover {
+                    background: none;
+                }
+            }
+        }
     }
 }

@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import _ from 'lodash'
+import { Header } from 'semantic-ui-react'
 
-import { useParty, useStreamQueries } from '@daml/react'
+import { useParty } from '@daml/react'
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
+import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order'
+import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
 import { CandlestickIcon, ExchangeIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
 
-import { DepositInfo, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
+import { DepositInfo, unwrapDamlTuple } from '../common/damlTypes'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
 
@@ -24,6 +27,8 @@ type Props = {
 }
 
 type LocationState = {
+    isCleared?: boolean;
+    defaultCCP?: string;
     exchange?: Exchange;
     tokenPair?: Id[];
 }
@@ -47,12 +52,16 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const history = useHistory();
     const investor = useParty();
 
-    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts.map(makeContractInfo);
+    const allOrders = useContractQuery(Order);
+    const allClearedOrders = useContractQuery(ClearedOrder);
+    const ccpCustomerContracts = useContractQuery(CCPCustomer);
 
     const exchangeData = location.state && location.state.exchange;
     const tokenPair = location.state && location.state.tokenPair;
+    const isCleared = location.state && !!location.state.isCleared;
+    const defaultCCP = location.state && location.state.defaultCCP;
+
+    const ccpCustomer = ccpCustomerContracts.find(ccp => ccp.contractData.ccpCustomer === investor)
 
     if (!exchangeData || !tokenPair) {
         history.push('/role/investor');
@@ -62,21 +71,34 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     const { exchange } = exchangeData;
     const [ base, quote ] = tokenPair.map(t => t.label);
 
-    const tokens = useStreamQueries(Token).contracts.map(makeContractInfo);
+    const tokens = useContractQuery(Token);
 
     const basePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[0].label)?.contractData.quantityPrecision) || 0;
     const quotePrecision = Number(tokens.find(token => token.contractData.id.label === tokenPair[1].label)?.contractData.quantityPrecision) || 0;
 
-    const marketData = allOrders
-        .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
-        .reduce((map, order) => {
-            const { price, qty } = order.contractData;
+    const marketData = isCleared ?
+        allClearedOrders
+            .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+            .reduce((map, order) => {
+                const { price, qty } = order.contractData;
 
-            const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
-            const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+                const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+                const qtyOrders = map[order.contractId]?.qtyOrders || 0;
 
-            return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
-    }, {} as MarketDataMap)
+                return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+        }, {} as MarketDataMap)
+        :
+        allOrders
+            .filter(order => _.isEqual(unwrapDamlTuple(order.contractData.pair), tokenPair))
+            .reduce((map, order) => {
+                const { price, qty } = order.contractData;
+
+                const kind = order.contractData.isBid ? OrderKind.BID : OrderKind.OFFER;
+                const qtyOrders = map[order.contractId]?.qtyOrders || 0;
+
+                return { ...map, [order.contractId]: { kind, qtyOrders: qtyOrders + +qty, price: +price } };
+        }, {} as MarketDataMap)
+
 
     useEffect(() => {
         const label = `'${investor}'@'${exchange}'`;
@@ -87,17 +109,21 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
     return (
         <Page
             sideNav={sideNav}
-            menuTitle={<><ExchangeIcon size='24'/>{base}/{quote}</>}
+            menuTitle={<><ExchangeIcon color='green' size='24'/>{base}/{quote}</>}
             onLogout={onLogout}
         >
             <PageSection className='investor-trade'>
                 <div className='order'>
-                    <h3><CandlestickIcon/>Order</h3>
+                    <Header className='dark' as='h3'><CandlestickIcon/>Order</Header>
                     <div className='order-input'>
                         <OrderForm
+                            allowedToOrder={!!ccpCustomer}
+                            inGoodStanding={!!ccpCustomer?.contractData?.inGoodStanding}
                             assetPrecisions={[basePrecision, quotePrecision]}
                             deposits={[bidDeposits, offerDeposits]}
+                            defaultCCP={defaultCCP}
                             exchange={exchange}
+                            isCleared={isCleared}
                             tokenPair={tokenPair}/>
                         <OrderLadder orders={marketData}/>
                     </div>

@@ -1,0 +1,18 @@
+@mixin calendar-input {
+  .calendar-input {
+    input {
+      width: 100%;
+    }
+
+    .MuiFormControl-root.MuiTextField-root.MuiFormControl-marginNormal.MuiFormControl-fullWidth {
+      margin-top: 0;
+    }
+
+    .MuiInputBase-root.MuiInput-root.MuiInput-underline.MuiInputBase-fullWidth.MuiInput-fullWidth.MuiInputBase-formControl.MuiInput-formControl.MuiInputBase-adornedEnd {
+      &::before,
+      &::after {
+        border: none;
+      }
+    }
+  }
+}

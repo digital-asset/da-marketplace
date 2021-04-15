@@ -1,10 +1,131 @@
+@mixin profile {
+    .profile {
+        animation: fadeIn .5s;
 
-.profile-form-field {
-    width: 260px;
-    margin-top: var(--spacing-s);
-    margin-right: var(--spacing-s);
-}
+        .profile-form {
+            &.landing-page {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background-color: var(--white);
+                border: 1px solid var(--cool-grey-90);
+                padding: $spacing-l;
+                border-radius: 2px;
 
-.profile-submit-button {
-    width: fit-content;
+                .profile-values {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+
+                    .profile-name {
+                        display: flex;
+                        background: var(--blue-100);
+                        border-radius: 40px;
+                        font-weight: 600;
+                        font-size: 24px;
+                        padding: $spacing-xs $spacing-m $spacing-s $spacing-m;
+                        line-height: 33px;
+                        text-align: center;
+                        vertical-align: middle;
+                    }
+
+                    .field-value {
+                        margin-top: $spacing-s;
+                    }
+                }
+            }
+
+            .ui .checkbox label {
+                color: var(--white);
+            }
+
+            .button-row {
+                display: flex;
+
+                .invite-indicator {
+                    display: flex;
+                    align-items: center;
+
+                    p {
+                        margin: 0px $spacing-m;
+                    }
+
+                    .ui.loader {
+                        position: static;
+                        transform: translateX(-0%) translateY(-0%);
+                    }
+                }
+            }
+
+            .profile-actions {
+                display: flex;
+                flex-direction: row;
+                margin-top: $spacing-m;
+
+                a, p {
+                    margin-right: $spacing-s;
+                }
+            }
+
+
+            .profile-form-field {
+                margin-top: $spacing-s;
+                margin-right: $spacing-s;
+
+                .ui.input {
+                    width: 100%;
+                }
+            }
+
+            .profile-submit-button {
+                width: fit-content;
+            }
+        }
+    }
+
+    .profile-link {
+        display: flex;
+        flex-direction: column;
+        background-color: var(--white);
+        border: 1px solid var(--cool-grey-90);
+        padding: $spacing-l;
+        margin: $spacing-m 0;
+        border-radius: 2px;
+        width: 100%;
+        color: var(--text-color);
+
+        .title {
+            margin-bottom: $spacing-s;
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            line-height: 22px;
+        }
+
+        &:hover {
+            background-color: var(--lightblue);
+            cursor: pointer;
+        }
+    }
+
+    .default-profile-icon {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        background: var(--green-40);
+
+        font-family: Open Sans;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        color: var(--white);
+    }
 }

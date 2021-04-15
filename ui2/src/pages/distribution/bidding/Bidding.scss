@@ -1,0 +1,58 @@
+@use '../../../themes/variables' as *;
+
+@mixin bidding {
+  .auction {
+    .bidding {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      width: 100%;
+      justify-content: space-between;
+
+      table {
+        th {
+          background-color: var(--white);
+        }
+      }
+
+      .bidding-details {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+        width: 33%;
+        justify-content: space-between;
+
+        h2 {
+          margin-bottom: $spacing-m;
+        }
+
+        table {
+          th {
+            background-color: var(--white);
+          }
+        }
+
+        .asset-details {
+          display: flex;
+          flex-direction: row;
+
+          .text {
+            width: 90%;
+          }
+
+          .icon {
+            width: 10%;
+          }
+        }
+      }
+
+      .asset {
+        width: 66%;
+      }
+    }
+
+    .header {
+      margin-bottom: $spacing-m;
+    }
+  }
+}

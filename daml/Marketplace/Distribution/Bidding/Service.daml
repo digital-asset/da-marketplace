@@ -130,6 +130,7 @@ template Request
     allocationAccount : Account
   where
     signatory customer
+    observer provider
 
     controller customer can
       Cancel : ()

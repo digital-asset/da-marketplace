@@ -1,18 +1,25 @@
 import React from 'react'
-
-import { useStreamQueries } from '@daml/react'
-import { BrokerTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { Settled as SettledTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Trade'
-import { Order, Request as OrderRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Order' 
 import { Header } from 'semantic-ui-react'
 
+import {
+    BrokerTrade,
+    ClearedOrder,
+    ClearedOrderRequest,
+    ClearedTradeSide,
+    Order,
+    OrderRequest,
+    SettledTradeSide
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+
 import { OrdersIcon } from '../../icons/Icons'
+import { useContractQuery } from '../../websocket/queryStream'
+
 import { BrokerTradeCard } from '../common/BrokerTradeCard'
-import ExchangeOrderCard from '../common/ExchangeOrderCard'
 import { OrderCard } from '../common/OrderCard'
+import { TradeCard } from '../common/TradeCard'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import { TradeCard } from '../common/TradeCard'
+import ExchangeOrderCard from '../common/ExchangeOrderCard'
 
 
 type Props = {
@@ -21,18 +28,30 @@ type Props = {
 }
 
 const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
-    const allOrders = useStreamQueries(Order, () => [], [], (e) => {
-        console.log("Unexpected close from Order: ", e);
-    }).contracts;
-    const allOrderRequests = useStreamQueries(OrderRequest, () => [], [], (e) => {
-        console.log("Unexpected close from OrderRequest: ", e);
-    }).contracts;
-    const allExchangeTrades = useStreamQueries(SettledTrade, () => [], [], (e) => {
-        console.log("Unexpected close from settledTradeSide: ", e);
-    }).contracts;
-    const allBrokerTrades = useStreamQueries(BrokerTrade, () => [], [], (e) => {
-        console.log("Unexpected close from brokerTrade: ", e);
-    }).contracts;
+    const allOrders = useContractQuery(Order);
+    const allOrderRequests = useContractQuery(OrderRequest);
+    const allClearedOrders = useContractQuery(ClearedOrder);
+    const allClearedOrderRequests = useContractQuery(ClearedOrderRequest);
+    const allClearedOrderTrades = useContractQuery(ClearedTradeSide);
+    const allExchangeTrades = useContractQuery(SettledTradeSide);
+    const allBrokerTrades = useContractQuery(BrokerTrade);
+
+    const orderRequests = [
+        ...allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>),
+        ...allClearedOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+    ];
+
+    const openOrders = [
+        ...allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.contractData}/>),
+        ...allClearedOrders.map(o => <ExchangeOrderCard cleared key={o.contractId} order={o.contractData}/>)
+    ]
+
+    const trades = [
+        ...allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>),
+        ...allClearedOrderTrades.map(t => <TradeCard key={t.contractId} trade={t.contractData}/>)
+    ]
+
+    const brokerTrades = allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.contractData}/>);
 
     return (
         <Page
@@ -42,34 +61,25 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
         >
             <PageSection>
                 <div className='investor-orders'>
-                    <Header as='h3'>Requested Orders</Header>
-                    {allOrderRequests.length > 0 ?
-                        allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.payload.order}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Requested Orders</Header>
+                        { orderRequests.length > 0 ? orderRequests : <i>none</i> }
+                    </div>
 
-                    <Header as='h3'>Open Orders</Header>
-                    {allOrders.length > 0 ?
-                        allOrders.map(o => <ExchangeOrderCard key={o.contractId} order={o.payload}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Open Orders</Header>
+                        { openOrders.length > 0 ? openOrders : <i>none</i> }
+                    </div>
 
-                    <Header as='h3'>Exchange Trades</Header>
-                    {allExchangeTrades.length > 0 ?
-                        allExchangeTrades.map(t => <TradeCard key={t.contractId} trade={t.payload}/>)
-                        :
-                        <i>none</i>
-                    }
+                    <div className='order-section'>
+                        <Header as='h2'>Exchange Trades</Header>
+                        { trades.length > 0 ? trades : <i>none</i> }
+                    </div>
 
-                    <Header as='h3'>Broker Trades</Header>
-                    {allBrokerTrades.length > 0 ?
-                        allBrokerTrades.map(t => <BrokerTradeCard key={t.contractId} brokerTrade={t.payload}/>)
-                        :
-                        <i>none</i>
-                    }
-
+                    <div className='order-section'>
+                        <Header as='h2'>Broker Trades</Header>
+                        { brokerTrades.length > 0 ? brokerTrades : <i>none</i> }
+                    </div>
                 </div>
             </PageSection>
         </Page>

@@ -1,251 +1,428 @@
-import React, { useState } from "react";
-import classnames from "classnames";
-import { v4 as uuidv4 } from "uuid";
-import { useLedger, useParty, useStreamQueries } from "@daml/react";
-import { Typography, Grid, Table, TableBody, TableCell, TableRow, TextField, Button, Slider, Paper } from "@material-ui/core";
-import { useParams, RouteComponentProps } from "react-router-dom";
-import useStyles from "../styles";
-import { Listing } from "@daml.js/da-marketplace/lib/Marketplace/Listing/Model";
-import { Details, Order, OrderType, Side } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Model";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
-import { Service } from "@daml.js/da-marketplace/lib/Marketplace/Trading/Service";
-import { withStyles } from "@material-ui/styles";
-import { CreateEvent } from "@daml/ledger";
-import { ContractId } from "@daml/types";
-import { AssetDeposit } from "@daml.js/da-marketplace/lib/DA/Finance/Asset";
+import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import useStyles from '../styles';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {
+  Details,
+  Order,
+  OrderType,
+  Side,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { CreateEvent } from '@daml/ledger';
+import { ContractId } from '@daml/types';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { ServicePageProps } from '../common';
+import { Button, Form, Header, Label, Table } from 'semantic-ui-react';
+import Tile from '../../components/Tile/Tile';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import { DateTime } from 'luxon';
 
-const PercentageSlider = withStyles({
-  root: {
-    paddingTop: "30px",
-  },
-  active: {},
-  valueLabel: {
-    top: -22,
-    "& *": {
-      background: "transparent",
-      color: "#203260",
-    },
-  },
-})(Slider);
+type Props = {
+  cid: string;
+  listings: Readonly<CreateEvent<Listing, any, any>[]>;
+};
 
-export const Market : React.FC<RouteComponentProps> = () => {
+export const Market: React.FC<ServicePageProps<Service> & Props> = ({
+  services,
+  cid,
+  listings,
+}: ServicePageProps<Service> & Props) => {
   const classes = useStyles();
 
-  const [ isBuy, setIsBuy ] = useState(true);
-  const [ isLimit, setIsLimit ] = useState(true);
-  const [ price, setPrice ] = useState(0.0);
-  const [ quantity, setQuantity ] = useState(0.0);
-  const [ percentage, setPercentage ] = useState(0.0);
-  const [ total, setTotal ] = useState(0.0);
+  const [isBuy, setIsBuy] = useState(true);
+  const [isLimit, setIsLimit] = useState(true);
+  const [price, setPrice] = useState(0.0);
+  const [quantity, setQuantity] = useState(0.0);
+  const [percentage, setPercentage] = useState(0.0);
+  const [total, setTotal] = useState(0.0);
 
-  const handlePriceChange = (p : number) => {
-    const perc = isBuy ? (quotedAssetsTotal === 0 ? 0 : 100 * quantity * p / quotedAssetsTotal) : (tradedAssetsTotal === 0 ? 0 : 100 * quantity / tradedAssetsTotal);
+  type TimeInForces = 'GTC' | 'GTD' | 'GAA' | 'IOC' | 'FOK';
+  const [timeInForce, setTimeInForce] = useState<TimeInForces>('GTC');
+  const [expiryDate, setExpiryDate] = useState(0);
+
+  const handlePriceChange = (p: number) => {
+    const perc = isBuy
+      ? quotedAssetsTotal === 0
+        ? 0
+        : (100 * quantity * p) / quotedAssetsTotal
+      : tradedAssetsTotal === 0
+      ? 0
+      : (100 * quantity) / tradedAssetsTotal;
     setPrice(p);
     setTotal(quantity * p);
-    setPercentage(perc);
-  }
+    setPercentage(Math.round(perc) || 0);
+  };
 
-  const handleQuantityChange = (q : number) => {
-    const perc = isBuy ? (quotedAssetsTotal === 0 ? 0 : 100 * q * price / quotedAssetsTotal) : (tradedAssetsTotal === 0 ? 0 : 100 * q / tradedAssetsTotal);
+  const handleQuantityChange = (q: number) => {
+    const perc = isBuy
+      ? quotedAssetsTotal === 0
+        ? 0
+        : (100 * q * price) / quotedAssetsTotal
+      : tradedAssetsTotal === 0
+      ? 0
+      : (100 * q) / tradedAssetsTotal;
+    setPercentage(Math.round(perc) || 0);
     setQuantity(q);
-    setTotal(q * price);
-    setPercentage(perc);
-  }
+    isLimit && setTotal(q * price);
+  };
 
-  const handleTotalChange = (t : number) => {
-    const perc = isBuy ? (quotedAssetsTotal === 0 ? 0 : 100 * t / quotedAssetsTotal) : (tradedAssetsTotal === 0 || price === 0 ? 0 : 100 * t / price / tradedAssetsTotal);
+  const handleTotalChange = (t: number) => {
+    const perc = isBuy
+      ? quotedAssetsTotal === 0
+        ? 0
+        : (100 * t) / quotedAssetsTotal
+      : tradedAssetsTotal === 0 || price === 0
+      ? 0
+      : (100 * t) / price / tradedAssetsTotal;
     setQuantity(t / price);
     setTotal(t);
-    setPercentage(perc);
-  }
+    setPercentage(Math.round(perc) || 0);
+  };
 
-  const handlePercentageChange = (perc : number) => {
-    const q = isBuy ? (price === 0 ? 0 : perc * quotedAssetsTotal / 100 / price) : perc * tradedAssetsTotal / 100;
+  const handlePercentageChange = (perc: number) => {
+    const q = isBuy
+      ? price === 0
+        ? 0
+        : (perc * quotedAssetsTotal) / 100 / price
+      : (perc * tradedAssetsTotal) / 100;
     setQuantity(q);
-    setTotal(q * price);
-    setPercentage(perc);
-  }
+    setPercentage(Math.round(perc) || 0);
+    isLimit && setTotal(q * price);
+  };
 
-  const { contractId } = useParams<any>();
-  const cid = contractId.replace("_", "#");
+  const handleLimitChange = (l: boolean) => {
+    setIsLimit(l);
+    timeInForceOptions(l).find(t => t.value === timeInForce) ?? setTimeInForce('IOC');
+  };
+
+  const timeInForceOptions = (isLimitOrder: boolean) =>
+    isLimitOrder
+      ? [
+          { text: 'Good Till Cancelled', value: 'GTC' },
+          { text: 'Good Till Date', value: 'GTD' },
+          { text: 'Good At Auction', value: 'GAA' },
+          { text: 'Immediate Or Cancel', value: 'IOC' },
+          { text: 'Fill Or Kill', value: 'FOK' },
+        ]
+      : [
+          { text: 'Immediate Or Cancel', value: 'IOC' },
+          { text: 'Fill Or Kill', value: 'FOK' },
+        ];
 
   const party = useParty();
   const ledger = useLedger();
-  const services = useStreamQueries(Service).contracts;
   const clientServices = services.filter(s => s.payload.customer === party);
-  const listings = useStreamQueries(Listing).contracts;
   const listing = listings.find(c => c.contractId === cid);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
   const orders = useStreamQueries(Order).contracts;
-  const limits = orders.filter(c => c.payload.details.orderType.tag === "Limit")
-  const bids = limits.filter(c => c.payload.details.side === Side.Buy).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
-  const asks = limits.filter(c => c.payload.details.side === Side.Sell).sort((a, b) => parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) - parseFloat((a.payload.details.orderType.value as OrderType.Limit).price));
+  const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
+  const bids = limits
+    .filter(c => c.payload.details.side === Side.Buy)
+    .sort(
+      (a, b) =>
+        parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) -
+        parseFloat((a.payload.details.orderType.value as OrderType.Limit).price)
+    );
+  const asks = limits
+    .filter(c => c.payload.details.side === Side.Sell)
+    .sort(
+      (a, b) =>
+        parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) -
+        parseFloat((a.payload.details.orderType.value as OrderType.Limit).price)
+    );
 
-  if (!listing || clientServices.length === 0) return (<></>); // TODO: Return 404 not found
+  if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
 
-  const available = assets.filter(c => c.payload.account.id.label === service.payload.tradingAccount.id.label);
-  const tradedAssets = available.filter(c => c.payload.asset.id.label === listing?.payload.tradedAssetId.label);
-  const quotedAssets = available.filter(c => c.payload.asset.id.label === listing?.payload.quotedAssetId.label);
-  const tradedAssetsTotal = tradedAssets.reduce((acc, c) => acc + parseFloat(c.payload.asset.quantity), 0);
-  const quotedAssetsTotal = quotedAssets.reduce((acc, c) => acc + parseFloat(c.payload.asset.quantity), 0);
+  const available = assets.filter(
+    c => c.payload.account.id.label === service.payload.tradingAccount.id.label
+  );
+  const tradedAssets = available.filter(
+    c => c.payload.asset.id.label === listing.payload.tradedAssetId.label
+  );
+  const quotedAssets = available.filter(
+    c => c.payload.asset.id.label === listing.payload.quotedAssetId.label
+  );
+  const tradedAssetsTotal = tradedAssets.reduce(
+    (acc, c) => acc + parseFloat(c.payload.asset.quantity),
+    0
+  );
+  const quotedAssetsTotal = quotedAssets.reduce(
+    (acc, c) => acc + parseFloat(c.payload.asset.quantity),
+    0
+  );
 
-  const getAsset = async (deposits : CreateEvent<AssetDeposit>[], quantity : number) : Promise<ContractId<AssetDeposit> | null> => {
+  const getAsset = async (
+    deposits: CreateEvent<AssetDeposit>[],
+    quantity: number
+  ): Promise<ContractId<AssetDeposit> | null> => {
     const deposit = deposits.find(c => parseFloat(c.payload.asset.quantity) >= quantity);
     if (!deposit) return null;
     if (parseFloat(deposit.payload.asset.quantity) > quantity) {
-      const [ [ split,], ] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, { quantities: [quantity.toString()] });
+      const [[split]] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, {
+        quantities: [quantity.toString()],
+      });
       return split;
     }
     return deposit.contractId;
-  }
+  };
 
   const requestCreateOrder = async () => {
-    const depositCid = isBuy ? await getAsset(quotedAssets, price * quantity) : await getAsset(tradedAssets, quantity);
+    const depositCid = isBuy
+      ? await getAsset(quotedAssets, price * quantity)
+      : await getAsset(tradedAssets, quantity);
     if (!depositCid) return;
-    const details : Details = {
-      id: { signatories: { textMap: {} }, label: uuidv4(), version: "0" },
+
+    const details: Details = {
+      id: { signatories: { textMap: {} }, label: uuidv4(), version: '0' },
       symbol: listing.payload.listingId,
-      asset: { id : listing.payload.tradedAssetId, quantity: quantity.toString() },
+      asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,
-      orderType: isLimit ? { tag: "Limit", value: { price: price.toString() } } : { tag: "Market", value: {} },
-      timeInForce: { tag: "GTC", value: {} }
-    }
+      orderType: isLimit
+        ? { tag: 'Limit', value: { price: price.toString() } }
+        : { tag: 'Market', value: {} },
+      timeInForce:
+        timeInForce === 'GTD'
+          ? { tag: 'GTD', value: { expiryDate: expiryDate.toString() } }
+          : { tag: timeInForce, value: {} },
+    };
     await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
   };
 
-  const getPrice = (c : CreateEvent<Order>) => {
+  const getPrice = (c: CreateEvent<Order>) => {
     return parseFloat((c.payload.details.orderType.value as OrderType.Limit).price);
-  }
+  };
 
-  const getQuantity = (c : CreateEvent<Order>) => {
+  const getQuantity = (c: CreateEvent<Order>) => {
     return parseFloat(c.payload.details.asset.quantity);
-  }
+  };
 
-  const getVolume = (c : CreateEvent<Order>) => {
+  const getVolume = (c: CreateEvent<Order>) => {
     return getPrice(c) * getQuantity(c);
-  }
+  };
 
-  const getColor = (c : CreateEvent<Order>) => {
-    return c.payload.details.side === Side.Buy ? "green" : "red";
-  }
+  const getColor = (c: CreateEvent<Order>) => {
+    return c.payload.details.side === Side.Buy ? 'green' : 'red';
+  };
 
   return (
-    <Grid container direction="column" spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>{listing.payload.listingId}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Orderbook</Typography>
-                  <Table size="small">
-                    <TableBody>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}></TableCell>
-                        <TableCell key={1} className={classes.tableCell}></TableCell>
-                        <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
-                        <TableCell key={3} className={classes.tableCell}><b>Sell Quantity ({listing.payload.tradedAssetId.label})</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Sell Volume ({listing.payload.quotedAssetId.label})</b></TableCell>
-                      </TableRow>
-                      {asks.map((c, i) => (
-                        <TableRow key={i+1} className={classes.tableRow}>
-                          <TableCell key={0} className={classes.tableCell}></TableCell>
-                          <TableCell key={1} className={classes.tableCell}></TableCell>
-                          <TableCell key={2} className={classes.tableCell} style={{ color: "red"}}>{getPrice(c)}</TableCell>
-                          <TableCell key={3} className={classes.tableCell}>{getQuantity(c)}</TableCell>
-                          <TableCell key={4} className={classes.tableCell}>{getVolume(c)}</TableCell>
-                        </TableRow>
-                      ))}
-                      {bids.map((c, i) => (
-                        <TableRow key={i+1} className={classes.tableRow}>
-                          <TableCell key={0} className={classes.tableCell}>{getVolume(c)}</TableCell>
-                          <TableCell key={1} className={classes.tableCell}>{getQuantity(c)}</TableCell>
-                          <TableCell key={2} className={classes.tableCell} style={{ color: "green"}}>{getPrice(c)}</TableCell>
-                          <TableCell key={3} className={classes.tableCell}></TableCell>
-                          <TableCell key={4} className={classes.tableCell}></TableCell>
-                        </TableRow>
-                      ))}
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Buy Volume ({listing.payload.quotedAssetId.label})</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}><b>Buy Quantity ({listing.payload.tradedAssetId.label})</b></TableCell>
-                        <TableCell key={2} className={classes.tableCell}><b>Price</b></TableCell>
-                        <TableCell key={3} className={classes.tableCell}></TableCell>
-                        <TableCell key={4} className={classes.tableCell}></TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={4}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <ToggleButtonGroup className={classes.fullWidth} value={isBuy} exclusive onChange={(_, v) => { if (v !== null) setIsBuy(v); }}>
-                  <ToggleButton className={classes.fullWidth} color="primary" value={true}>Buy</ToggleButton>
-                  <ToggleButton className={classes.fullWidth} value={false}>Sell</ToggleButton>
-                </ToggleButtonGroup>
-                <ToggleButtonGroup className={classnames(classes.fullWidth, classes.buttonMargin)} value={isLimit} exclusive onChange={(_, v) => { if (v !== null) setIsLimit(v); }}>
-                  <ToggleButton className={classes.fullWidth} value={true}>Limit</ToggleButton>
-                  <ToggleButton className={classes.fullWidth} value={false}>Market</ToggleButton>
-                </ToggleButtonGroup>
-                <TextField className={classes.inputField} fullWidth label="Price" type="number" value={isLimit ? price : "Market"} disabled={!isLimit} onChange={e => handlePriceChange(parseFloat(e.target.value))}/>
-                <TextField className={classes.inputField} fullWidth label="Quantity" type="number" value={quantity} onChange={e => handleQuantityChange(parseFloat(e.target.value))}/>
-                <PercentageSlider step={1} valueLabelFormat={v => v + "%"} value={percentage} valueLabelDisplay="auto" onChange={(_, v) => handlePercentageChange(v as number)} />
-                <TextField className={classes.inputField} fullWidth label="Total" type="number" value={total} onChange={e => handleTotalChange(parseFloat(e.target.value))}/>
-                <Button className={classnames(classes.fullWidth, classes.buttonMargin)} size="large" variant="contained" color="primary" disabled={!price || !quantity} onClick={requestCreateOrder}>{isBuy ? "Buy" : "Sell"} {listing.payload.tradedAssetId.label}</Button>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={8}>
-            <Paper className={classnames(classes.fullWidth, classes.paper)}>
-              <Typography variant="h5" className={classes.heading}>Orders</Typography>
-                <Table size="small">
-                    <TableBody>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Symbol</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}><b>Order ID</b></TableCell>
-                        <TableCell key={2} className={classes.tableCell}><b>Type</b></TableCell>
-                        <TableCell key={3} className={classes.tableCell}><b>Side</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Price</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Quantity</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Volume</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>TimeInForce</b></TableCell>
-                        <TableCell key={4} className={classes.tableCell}><b>Filled</b></TableCell>
-                      </TableRow>
-                      {limits.map((c, i) => (
-                        <TableRow key={i+1} className={classes.tableRow}>
-                          <TableCell key={0} className={classes.tableCell}>{c.payload.details.symbol}</TableCell>
-                          <TableCell key={1} className={classes.tableCell}>{c.payload.details.id.label}</TableCell>
-                          <TableCell key={2} className={classes.tableCell}>{c.payload.details.orderType.tag}</TableCell>
-                          <TableCell key={3} className={classes.tableCell} style={{ color: getColor(c)}}>{c.payload.details.side}</TableCell>
-                          <TableCell key={4} className={classes.tableCell}>{getPrice(c)}</TableCell>
-                          <TableCell key={5} className={classes.tableCell}>{getQuantity(c)}</TableCell>
-                          <TableCell key={6} className={classes.tableCell}>{getVolume(c)}</TableCell>
-                          <TableCell key={7} className={classes.tableCell}>{c.payload.details.timeInForce.tag}</TableCell>
-                          <TableCell key={8} className={classes.tableCell}>{(100.0 - 100.0 * parseFloat(c.payload.remainingQuantity) / getQuantity(c)).toFixed(2)}%</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-            </Paper>
-          </Grid>
-          <Grid item xs={4}>
-            <Paper className={classnames(classes.fullWidth, classes.paper)}>
-              <Typography variant="h5" className={classes.heading}>Trades</Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <>
+      <Header as="h2" textAlign="center">
+        <b>{listing.payload.listingId}</b>
+      </Header>
+      <div className="market">
+        <div className="orders">
+          <Tile header={<h2>Order Book</h2>}>
+            <Table basic="very">
+              <Table.Header>
+                <Table.Cell key={0}></Table.Cell>
+                <Table.Cell key={1}></Table.Cell>
+                <Table.Cell key={2}>
+                  <b>Price</b>
+                </Table.Cell>
+                <Table.Cell key={3}>
+                  <b>Sell Quantity ({listing.payload.tradedAssetId.label})</b>
+                </Table.Cell>
+                <Table.Cell key={4}>
+                  <b>Sell Volume ({listing.payload.quotedAssetId.label})</b>
+                </Table.Cell>
+              </Table.Header>
+              <Table.Body>
+                {asks.map((c, i) => (
+                  <Table.Row key={i + 1} className={classes.tableRow}>
+                    <Table.Cell key={0} className={classes.tableCell}></Table.Cell>
+                    <Table.Cell key={1} className={classes.tableCell}></Table.Cell>
+                    <Table.Cell key={2} className={classes.tableCell} style={{ color: 'red' }}>
+                      {getPrice(c)}
+                    </Table.Cell>
+                    <Table.Cell key={3} className={classes.tableCell}>
+                      {getQuantity(c)}
+                    </Table.Cell>
+                    <Table.Cell key={4} className={classes.tableCell}>
+                      {getVolume(c)}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+                {bids.map((c, i) => (
+                  <Table.Row key={i + 1} className={classes.tableRow}>
+                    <Table.Cell key={0} className={classes.tableCell}>
+                      {getVolume(c)}
+                    </Table.Cell>
+                    <Table.Cell key={1} className={classes.tableCell}>
+                      {getQuantity(c)}
+                    </Table.Cell>
+                    <Table.Cell key={2} className={classes.tableCell} style={{ color: 'green' }}>
+                      {getPrice(c)}
+                    </Table.Cell>
+                    <Table.Cell key={3} className={classes.tableCell}></Table.Cell>
+                    <Table.Cell key={4} className={classes.tableCell}></Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+              <Table.Footer>
+                <Table.Cell key={0}>
+                  <b>Buy Volume ({listing.payload.quotedAssetId.label})</b>
+                </Table.Cell>
+                <Table.Cell key={1}>
+                  <b>Buy Quantity ({listing.payload.tradedAssetId.label})</b>
+                </Table.Cell>
+                <Table.Cell key={2}>
+                  <b>Price</b>
+                </Table.Cell>
+                <Table.Cell key={3}></Table.Cell>
+                <Table.Cell key={4}></Table.Cell>
+              </Table.Footer>
+            </Table>
+          </Tile>
+          <Tile header={<h2>Orders</h2>}>
+            <Table basic="very">
+              <Table.Header>
+                <Table.Cell key={0}>
+                  <b>Symbol</b>
+                </Table.Cell>
+                <Table.Cell key={1}>
+                  <b>Order ID</b>
+                </Table.Cell>
+                <Table.Cell key={2}>
+                  <b>Type</b>
+                </Table.Cell>
+                <Table.Cell key={3}>
+                  <b>Side</b>
+                </Table.Cell>
+                <Table.Cell key={4}>
+                  <b>Price</b>
+                </Table.Cell>
+                <Table.Cell key={5}>
+                  <b>Quantity</b>
+                </Table.Cell>
+                <Table.Cell key={6}>
+                  <b>Volume</b>
+                </Table.Cell>
+                <Table.Cell key={7}>
+                  <b>Time In Force</b>
+                </Table.Cell>
+                <Table.Cell key={8}>
+                  <b>Filled</b>
+                </Table.Cell>
+              </Table.Header>
+              <Table.Body>
+                {orders.map((c, i) => (
+                  <Table.Row key={i + 1}>
+                    <Table.Cell key={0}>{c.payload.details.symbol}</Table.Cell>
+                    <Table.Cell key={1}>{c.payload.details.id.label}</Table.Cell>
+                    <Table.Cell key={2}>{c.payload.details.orderType.tag}</Table.Cell>
+                    <Table.Cell key={3} style={{ color: getColor(c) }}>
+                      {c.payload.details.side}
+                    </Table.Cell>
+                    <Table.Cell key={4}>{getPrice(c) || ''}</Table.Cell>
+                    <Table.Cell key={5}>{getQuantity(c)}</Table.Cell>
+                    <Table.Cell key={6}>{getVolume(c) || ''}</Table.Cell>
+                    <Table.Cell key={7}>{c.payload.details.timeInForce.tag}</Table.Cell>
+                    <Table.Cell key={8}>
+                      {(
+                        100.0 -
+                        (100.0 * parseFloat(c.payload.remainingQuantity)) / getQuantity(c)
+                      ).toFixed(2)}
+                      %
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          </Tile>
+        </div>
+        <div className="new-order">
+          <Tile header={<h2>New Order</h2>}>
+            <FormErrorHandled onSubmit={requestCreateOrder}>
+              <Button.Group widths="2" toggle>
+                <Button type="button" active={isBuy} onClick={() => setIsBuy(true)}>
+                  Buy
+                </Button>
+                <Button type="button" active={!isBuy} onClick={() => setIsBuy(false)}>
+                  Sell
+                </Button>
+              </Button.Group>
+              <Button.Group widths="2" toggle>
+                <Button type="button" active={isLimit} onClick={() => handleLimitChange(true)}>
+                  Limit
+                </Button>
+                <Button type="button" active={!isLimit} onClick={() => handleLimitChange(false)}>
+                  Market
+                </Button>
+              </Button.Group>
+              <Form.Select
+                selection
+                label="Time in Force"
+                options={timeInForceOptions(isLimit)}
+                required
+                value={timeInForce}
+                onChange={(_, change) => setTimeInForce(change.value as TimeInForces)}
+              />
+              {timeInForce === 'GTD' && (
+                <Form.Input
+                  label="Price"
+                  type="datetime-local"
+                  required
+                  onChange={(_, change) =>
+                    setExpiryDate(DateTime.fromISO(change.value).toUTC().toSeconds())
+                  }
+                />
+              )}
+              <Form.Input
+                label="Price"
+                type="number"
+                required
+                disabled={!isLimit}
+                value={price}
+                labelPosition="right"
+                onChange={(_, change) => handlePriceChange(parseFloat(change.value as string))}
+              >
+                <input />
+                <Label>{listing.payload.quotedAssetId.label}</Label>
+              </Form.Input>
+              <Form.Input
+                label="Quantity"
+                type="number"
+                required
+                value={quantity}
+                labelPosition="right"
+                onChange={(_, change) => handleQuantityChange(parseFloat(change.value as string))}
+              >
+                <input />
+                <Label>{listing.payload.tradedAssetId.label}</Label>
+              </Form.Input>
+              <Form.Input
+                min={0}
+                max={100}
+                step={1}
+                value={percentage}
+                type="range"
+                label={percentage + '%'}
+                onChange={(_, change) => handlePercentageChange(parseFloat(change.value as string))}
+              />
+              <Form.Input
+                label="Total"
+                type="number"
+                required
+                value={total}
+                disabled={!isLimit}
+                labelPosition="right"
+                onChange={(_, change) => handleTotalChange(parseFloat(change.value as string))}
+              >
+                <input />
+                <Label>{listing.payload.quotedAssetId.label}</Label>
+              </Form.Input>
+              <Button className="ghost" type="submit" disabled={!price || !quantity}>
+                {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
+              </Button>
+            </FormErrorHandled>
+          </Tile>
+        </div>
+      </div>
+    </>
   );
 };

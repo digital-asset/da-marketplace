@@ -1,16 +1,13 @@
 module Marketplace.Issuance.Service where
 
-import ContingentClaims.Claim (serialize)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Map qualified as Map
 import DA.Next.Set (Set, fromList)
-import DA.Text (unwords)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
-import Marketplace.Issuance.Utils (binaryCallOption)
 
 template Service
   with
@@ -34,23 +31,6 @@ template Service
         do
           create OriginationRequest with observers = fromList observers; ..
 
-      nonconsuming RequestBinaryCallOptionOrigination: ContractId OriginationRequest
-        with
-          assetLabel : Text
-          safekeepingAccountId : Id
-          observers : [Party]
-          expiry : Date
-          strike : Decimal
-          underlyingId : Id
-          currencyId : Id
-        do
-          -- TODO: refactor into a more composable form and add to contingent-claims lib
-          create OriginationRequest with
-            claims = serialize $ binaryCallOption expiry strike underlyingId currencyId
-            description = unwords [ underlyingId.label, show expiry, "Binary Call @", show strike ]
-            observers = fromList observers
-            ..
-
       nonconsuming RequestCreateIssuance : ContractId CreateIssuanceRequest
         with
           issuanceId : Text
@@ -69,7 +49,7 @@ template Service
           create ReduceIssuanceRequest with ..
 
     controller provider can
-      nonconsuming Originate: ContractId AssetDescription
+      nonconsuming Originate: (ContractId AssetDescription, AssetDescription)
         with
           createOriginationCid: ContractId OriginationRequest
         do
@@ -85,7 +65,7 @@ template Service
                      assetLabel
                      descriptionSignatories = assetId.signatories
                      versions = Map.insert claims 0 Map.empty
-          create AssetDescription
+          let ad = AssetDescription
                    with
                      assetId
                      description
@@ -93,6 +73,8 @@ template Service
                      safekeepingAccountId
                      observers
                      claims
+          adCid <- create ad
+          pure (adCid, ad)
 
       nonconsuming CreateIssuance : (ContractId Issuance, ContractId AssetDeposit)
         with

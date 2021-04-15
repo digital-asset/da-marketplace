@@ -1,23 +1,22 @@
-.invite-accept-is-public {
-    display: flex;
-    flex-direction: row;
-    width: 100;
-}
+@mixin invite-accept-tile {
+    .invite-accept-tile {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        animation: fadeIn .5s;
 
-.invite-accept-is-public p {
-    margin-bottom: var(--spacing-xs);
-}
+        .invite-accept-form {
+            margin-top: $spacing-s;
+            display: flex;
+            flex-direction: column;
+            flex-wrap: wrap;
+            text-align: left;
 
-.invite-accept-form {
-    margin-top: var(--spacing-s);
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    text-align: left;
-}
-
-.invite-accept-form .invite-accept-form-item {
-    padding-top: var(--spacing-s);
-    padding-right: var(--spacing-m);
-    width: 100%;
+            .invite-accept-form-item {
+                padding-top: $spacing-s;
+                padding-right: $spacing-m;
+                width: 100%;
+            }
+        }
+    }
 }

@@ -1,0 +1,7 @@
+@use '../../themes/variables' as *;
+
+@mixin pagination-controls {
+  .pagination-controls {
+    margin: $spacing-s 0;
+  }
+}

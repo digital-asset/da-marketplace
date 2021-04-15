@@ -12,7 +12,7 @@
     }
 
     .overflow-menu-modal {
-        top: var(--spacing-s);
+        top: $spacing-s;
         right: 0px;
         display: block;
         position: absolute;
@@ -23,7 +23,7 @@
     }
 
     .overflow-menu-entry {
-        padding: var(--spacing-s);
+        padding: $spacing-s;
         white-space: nowrap;
         color: var(--text-color)
     }

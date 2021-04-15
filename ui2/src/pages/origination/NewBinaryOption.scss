@@ -1,0 +1,14 @@
+@use '../../themes/variables' as *;
+
+@mixin new-binary-option {
+  .new-binary-option {
+    .asset-row,
+    .button.submit {
+      margin-top: $spacing-m;
+    }
+
+    @media screen and (max-width: 850px) {
+      padding: 0px;
+    }
+  }
+}

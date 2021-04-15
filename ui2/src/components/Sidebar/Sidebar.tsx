@@ -1,24 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { withRouter, RouteComponentProps } from "react-router-dom";
-import classNames from "classnames";
-import Drawer from "@material-ui/core/Drawer";
-import IconButton from "@material-ui/core/IconButton";
-import List from "@material-ui/core/List";
-import Divider from "@material-ui/core/Divider";
-import { Box, Theme } from "@material-ui/core";
-import ArrowBack from "@material-ui/icons/ArrowBack";
-import { useTheme } from "@material-ui/styles";
-import { useLayoutState, useLayoutDispatch, toggleSidebar } from "../../context/LayoutContext";
-import SidebarLink from "./components/SidebarLink/SidebarLink";
-import { SidebarEntry } from "./SidebarEntry";
-import useStyles from "./styles";
-import headerLogo from "../../images/companyLogo.svg";
+import React, { useEffect, useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import classNames from 'classnames';
+import Drawer from '@material-ui/core/Drawer';
+import IconButton from '@material-ui/core/IconButton';
+import List from '@material-ui/core/List';
+import { Box, Divider, Theme } from '@material-ui/core';
+import ArrowBack from '@material-ui/icons/ArrowBack';
+import { useTheme } from '@material-ui/styles';
+import { toggleSidebar, useLayoutDispatch, useLayoutState } from '../../context/LayoutContext';
+import { SidebarEntry } from './SidebarEntry';
+import useStyles from './styles';
+import headerLogo from '../../images/companyLogo.svg';
+import SidebarLink from './components/SidebarLink/SidebarLink';
 
 type SidebarProps = {
-  entries : SidebarEntry[]
-}
+  entries: SidebarEntry[];
+};
 
-function Sidebar({ entries, location } : RouteComponentProps & SidebarProps) {
+function Sidebar({ entries, location }: RouteComponentProps & SidebarProps) {
   const classes = useStyles();
   const theme = useTheme() as Theme;
 
@@ -26,17 +25,17 @@ function Sidebar({ entries, location } : RouteComponentProps & SidebarProps) {
   const layoutDispatch = useLayoutDispatch();
   const [isPermanent, setPermanent] = useState(true);
 
-  useEffect(function() {
-    window.addEventListener("resize", handleWindowWidthChange);
+  useEffect(function () {
+    window.addEventListener('resize', handleWindowWidthChange);
     handleWindowWidthChange();
     return function cleanup() {
-      window.removeEventListener("resize", handleWindowWidthChange);
+      window.removeEventListener('resize', handleWindowWidthChange);
     };
   });
 
   return (
     <Drawer
-      variant={isPermanent ? "permanent" : "temporary"}
+      variant={isPermanent ? 'permanent' : 'temporary'}
       className={classNames(classes.drawer, {
         [classes.drawerOpen]: isSidebarOpened,
         [classes.drawerClose]: !isSidebarOpened,
@@ -50,21 +49,31 @@ function Sidebar({ entries, location } : RouteComponentProps & SidebarProps) {
       open={isSidebarOpened}
     >
       <div className={classes.toolbar} />
-      {!isPermanent && <Box display="flex" flexDirection="row" className={classes.sidebarBox} >
-        <div className={classes.mobileBackButton}>
-          <IconButton onClick={() => toggleSidebar(layoutDispatch)} className={classNames(classes.headerMenuButtonSandwich, classes.headerMenuButtonCollapse)}>
-            <ArrowBack classes={{ root: classNames(classes.headerIcon, classes.headerIconCollapse) }} />
-          </IconButton>
-        </div>
-        <img alt="headerLogo" src={headerLogo} height="48px" />
-      </Box>}
+      {!isPermanent && (
+        <Box display="flex" flexDirection="row" className={classes.sidebarBox}>
+          <div className={classes.mobileBackButton}>
+            <IconButton
+              onClick={() => toggleSidebar(layoutDispatch)}
+              className={classNames(
+                classes.headerMenuButtonSandwich,
+                classes.headerMenuButtonCollapse
+              )}
+            >
+              <ArrowBack
+                classes={{ root: classNames(classes.headerIcon, classes.headerIconCollapse) }}
+              />
+            </IconButton>
+          </div>
+          <img alt="headerLogo" src={headerLogo} height="48px" />
+        </Box>
+      )}
       <List>
-        {entries.map(e =>
+        {entries.map(e => (
           <>
             <SidebarLink key={e.label} level={0} location={location} {...e} />
             {!!e.divider && <Divider />}
           </>
-        )}
+        ))}
       </List>
     </Drawer>
   );

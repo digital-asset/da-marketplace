@@ -1,0 +1,59 @@
+@use '../../themes/variables' as *;
+
+@mixin welcome-header {
+  .welcome-header {
+    display: flex;
+    flex-direction: row;
+    align-content: center;
+
+    .welcome-header-row {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      margin-left: $spacing-s;
+      margin-top: $spacing-xs;
+
+      .title {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+
+        h1.ui.header {
+          margin-bottom: $spacing-xs;
+        }
+
+        h1.ui.header.bold {
+          margin-left: $spacing-xs;
+        }
+      }
+    }
+
+    @media screen and (max-width: 850px) {
+      .icon {
+        display: none;
+      }
+
+      .welcome-header-row {
+        justify-content: flex-start;
+        align-items: flex-start;
+        margin: 0;
+
+        .title {
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: flex-start;
+
+          h1.ui.header.bold {
+            margin-left: 0px;
+          }
+        }
+
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}

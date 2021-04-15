@@ -1,37 +1,13 @@
-@import "../common/DonutChart.scss";
-
 @mixin issued-token {
     .issued-token {
-        @include donut-chart;
+        animation: fadeIn .5s;
 
         .position-holdings-data {
-            display: flex;
-            flex-direction: row;
-
-            .ui.table.issuer-cap-table {
-                border: 0px !important;
-
-                tr td {
-                    border-top: 0px !important;
-                }
-
-                tr:nth-child(odd) {
-                    background-color: var(--grey3);
-                }
-
-                tr th {
-                    border-bottom: 0px !important;
-                }
-
-                tr th:nth-of-type(1){
-                    padding-left: 0px;
-                }
-            }
+            margin-top: $spacing-m;
         }
 
         .allocations {
-            margin: 0 0 $spacing-m $spacing-m;
-            width: 80%;
+            margin: $spacing-m 0;
             border: 1px solid var(--cool-grey-90);
             border-radius: 2px;
             background-color: var(--white);
@@ -40,37 +16,62 @@
         .token-subheading {
             display: flex;
             flex-direction: row;
+            flex-wrap: wrap;
             justify-content: space-between;
-            align-items: center;
+            align-items: baseline;
+            margin-bottom: $spacing-m;
 
             .token-details {
                 display: flex;
                 flex-direction: row;
-                p {
-                    margin-left: var(--spacing-m);
+                align-items: flex-end;
+                flex-wrap: wrap;
+
+                h3 {
+                    margin-left: $spacing-l;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+
+                    .globe-icon, .lock-icon {
+                        margin-right: $spacing-xs;
+                    }
                 }
             }
         }
 
         .participants-viewer {
-            padding: var(--spacing-m) 0 var(--spacing-m) 0;
-            border-bottom: 2px solid var(--grey3);
+            padding-bottom: $spacing-m;
+            margin-bottom: $spacing-m;
+            border-bottom: 2px solid var(--cool-grey-90);
+
+            a.a2 {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                width: fit-content;
+            }
+
 
             .list-heading {
                 display: flex;
                 flex-direction: row;
-                padding: var(--spacing-m) 0 var(--spacing-s) 0;
+                padding: $spacing-m 0 $spacing-s 0;
                 align-items: center;
 
-                button.ghost {
-                    margin-left: var(--spacing-m);
+                a.a2 {
+                    margin-left: $spacing-m;
+
+                    .icon {
+                        margin-right: $spacing-xs;
+                    }
                 }
             }
 
             ul.participants-list  {
                 display: inline-flex;
                 flex-direction: column;
-                max-height: 128px;
+                max-height: 80px;
                 flex-wrap: wrap;
                 list-style-type: none;
                 padding-left: 0px;
@@ -78,27 +79,29 @@
                 margin: 0px;
 
                 li {
-                    padding: var(--spacing-s) var(--spacing-l) 0 0;
+                    padding: $spacing-xs $spacing-l 0 0;
                     width: fit-content;
                 }
 
             }
         }
 
-        @media screen and (max-width: 1000px) {
-            .position-holdings-data {
+        @media screen and (max-width: 850px) {
+            padding: 0px;
+
+            .token-subheading {
                 flex-direction: column;
 
-                .allocations {
-                    margin: 0px;
-                    width: 100%;
-                };
-            }
+                .token-details {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    margin-top: $spacing-xs;
 
-            .ui.table.issuer-cap-table tr:nth-child(odd) {
-                background-color: unset;
+                    h3 {
+                        margin-left: 0px;
+                    }
+                }
             }
         }
     }
 }
-

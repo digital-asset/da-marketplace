@@ -1,85 +1,51 @@
-import React, { useEffect, useRef } from "react";
-import classnames from "classnames";
-import { useStreamQueries } from "@daml/react";
-import { Typography, Grid, Table, TableBody, TableCell, TableRow, Paper } from "@material-ui/core";
-import { useParams, RouteComponentProps } from "react-router-dom";
-import useStyles from "../styles";
-import { getName } from "../../config";
-import { render } from "../../components/Claims/render";
-import { transformClaim } from "../../components/Claims/util";
-import { AssetDescription } from "@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription";
+import React, { useEffect, useRef } from 'react';
+import { useStreamQueries } from '../../Main';
+import { useParams, RouteComponentProps } from 'react-router-dom';
+import { getName } from '../../config';
+import { render } from '../../components/Claims/render';
+import { transformClaim } from '../../components/Claims/util';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import Tile from '../../components/Tile/Tile';
+import StripedTable from '../../components/Table/StripedTable';
 
-export const Instrument : React.FC<RouteComponentProps> = () => {
-  const classes = useStyles();
-
+export const Instrument: React.FC<RouteComponentProps> = () => {
   const el = useRef<HTMLDivElement>(null);
 
   const { contractId } = useParams<any>();
-  const cid = contractId.replace("_", "#");
+  const cid = contractId.replace('_', '#');
 
   const instruments = useStreamQueries(AssetDescription).contracts;
   const instrument = instruments.find(c => c.contractId === cid);
 
   useEffect(() => {
     if (!el.current || !instrument) return;
-    const data = transformClaim(instrument.payload.claims, "root");
+    const data = transformClaim(instrument.payload.claims, 'root');
     render(el.current, data);
   }, [el, instrument]);
 
-  if (!instrument) return (<Typography variant="h5">Instrument not found</Typography>);
+  if (!instrument) return <h5>Instrument not found</h5>;
 
   return (
-    <Grid container direction="column" spacing={2}>
-      <Grid item xs={12}>
-        <Typography variant="h3" className={classes.heading}>{instrument.payload.description}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Grid container spacing={4}>
-          <Grid item xs={4}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Details</Typography>
-                  <Table size="small">
-                    <TableBody>
-                      <TableRow key={0} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Issuer</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}>{getName(instrument.payload.issuer)}</TableCell>
-                      </TableRow>
-                      <TableRow key={1} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Signatories</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}>{Object.keys(instrument.payload.assetId.signatories.textMap).join(", ")}</TableCell>
-                      </TableRow>
-                      <TableRow key={2} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Label</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}>{instrument.payload.assetId.label}</TableCell>
-                      </TableRow>
-                      <TableRow key={3} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Version</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}>{instrument.payload.assetId.version}</TableCell>
-                      </TableRow>
-                      <TableRow key={4} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}><b>Description</b></TableCell>
-                        <TableCell key={1} className={classes.tableCell}>{instrument.payload.description}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Grid item xs={8}>
-            <Grid container direction="column" spacing={2}>
-              <Grid item xs={12}>
-                <Paper className={classnames(classes.fullWidth, classes.paper)}>
-                  <Typography variant="h5" className={classes.heading}>Claims</Typography>
-                  <div ref={el} style={{ height: "100%" }}/>
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Grid>
-    </Grid>
+    <div>
+      <Tile header={<h3>{instrument.payload.description}</h3>}>
+        <h5>Details</h5>
+        <StripedTable
+          headings={['Issuer', 'Signatories', 'Label', 'Version', 'Description']}
+          rows={[
+            [
+              getName(instrument.payload.issuer),
+              Object.keys(instrument.payload.assetId.signatories.textMap).join(', '),
+              instrument.payload.assetId.label,
+              instrument.payload.assetId.version,
+              instrument.payload.description,
+            ],
+          ]}
+        />
+      </Tile>
+
+      <Tile header={<h3>Claims</h3>}>
+        <div ref={el} style={{ height: '100%' }} />
+      </Tile>
+    </div>
   );
 };

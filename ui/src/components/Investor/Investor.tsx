@@ -1,29 +1,36 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import { Label, Menu } from 'semantic-ui-react'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { Invitation as InvestorInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
+import {
+    Investor as InvestorTemplate,
+    InvestorInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import { RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
+import { ExchangeIcon, OrdersIcon, WalletIcon } from '../../icons/Icons'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+
 import { useOperator } from '../common/common'
-import { wrapDamlTuple, makeContractInfo, unwrapDamlTuple } from '../common/damlTypes'
+import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
 import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
-import OnboardingTile from '../common/OnboardingTile'
 import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
-import RoleSideNav from '../common/RoleSideNav';
+import RoleSideNav from '../common/RoleSideNav'
 
-import { ExchangeIcon, OrdersIcon, WalletIcon, UserIcon } from '../../icons/Icons'
-
+import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
+import { useCCPCustomerInviteNotifications } from './CCPInviteNotifications'
 import { useExchangeInviteNotifications } from './ExchangeInviteNotifications'
 import { useBrokerCustomerInviteNotifications } from './BrokerCustomerInviteNotifications'
 import InvestorTrade from './InvestorTrade'
@@ -38,25 +45,23 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const investor = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
+
+    const dismissibleNotifications = useDismissibleNotifications();
     const notifications = [
+        ...useCCPCustomerNotifications(),
+        ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
-        ...useDismissibleNotifications(),
+        ...dismissibleNotifications
     ];
-    const registeredInvestor = useStreamQueries(RegisteredInvestor, () => [], [], (e) => {
-        console.log("Unexpected close from registeredInvestor: ", e);
-    });
 
-    const allExchanges = useStreamQueries(Exchange, () => [], [], (e) => {
-        console.log("Unexpected close from exchange: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDeposit: ", e);
-    }).contracts.map(makeContractInfo);
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredInvestor = useContractQuery(RegisteredInvestor);
+    const invitation = useContractQuery(InvestorInvitation);
+    const allExchanges = useContractQuery(Exchange);
+    const allDeposits = useContractQuery(AssetDeposit);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your full legal name', 'text'),
@@ -64,8 +69,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredInvestor.contracts[0]) {
-            const riData = registeredInvestor.contracts[0].payload;
+        if (registeredInvestor[0]) {
+            const riData = registeredInvestor[0].contractData;
             setProfile({
                 name: { ...profile.name, value: riData.name },
                 location: { ...profile.location, value: riData.location }
@@ -80,7 +85,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value
         };
-        await ledger.exerciseByKey(RegisteredInvestor.UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredInvestor.RegisteredInvestor_UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 
@@ -91,12 +96,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
             location: profile.location.value,
             isPublic: true
         };
-        await ledger.exerciseByKey(InvestorInvitation.Accept, key, args)
+        await ledger.exerciseByKey(InvestorInvitation.InvestorInvitation_Accept, key, args)
                     .catch(err => console.error(err));
     }
 
     const sideNav = <RoleSideNav url={url}
-                        name={registeredInvestor.contracts[0]?.payload.name || investor}
+                        name={registeredInvestor[0]?.contractData.name || investor}
                         items={[
                             {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
                             {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
@@ -108,24 +113,59 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
 
                             { allExchanges.length > 0 ?
                                 allExchanges.map(exchange => {
-                                    return exchange.contractData.tokenPairs.map(tokenPair => {
+                                    const tokenPairs = exchange.contractData.tokenPairs.map(tokenPair => {
                                         const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
 
                                         return <Menu.Item
                                             as={NavLink}
+                                            exact
                                             to={{
                                                 pathname: `${url}/trade/${base}-${quote}`,
                                                 state: {
+                                                    isCleared: false,
                                                     exchange: exchange.contractData,
                                                     tokenPair: unwrapDamlTuple(tokenPair)
                                                 }
                                             }}
                                             className='sidemenu-item-normal'
-                                            key={exchange.contractId}
+                                            key={`${base}${quote}`}
                                         >
                                             <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
                                         </Menu.Item>
                                     })
+
+                                    const clearedMarkets = exchange.contractData.clearedMarkets.map(marketListing => {
+                                        const listing = unwrapDamlTuple(marketListing);
+                                        const tokenPair = typeof listing[0] !== 'string' && listing[0];
+                                        const defaultCCP = typeof listing[1] === 'string' && listing[1];
+
+                                        if (!tokenPair || !defaultCCP) {
+                                            throw new Error("Expected token pair and default CCP")
+                                        }
+
+                                        const [ base, quote ] = unwrapDamlTuple(tokenPair).map(t => t.label.toLowerCase());
+
+                                        return <Menu.Item
+                                            as={NavLink}
+                                            exact
+                                            to={{
+                                                pathname: `${url}/trade/${base}-${quote}/cleared`,
+                                                state: {
+                                                    defaultCCP,
+                                                    isCleared: true,
+                                                    exchange: exchange.contractData,
+                                                    tokenPair: unwrapDamlTuple(tokenPair)
+                                                }
+                                            }}
+                                            className='sidemenu-item-normal'
+                                            key={`${base}${quote}CLR`}
+                                        >
+                                            <p><ExchangeIcon/>{base.toUpperCase()}/{quote.toUpperCase()}</p>
+                                            <Label className='cleared-market-label'>Cleared</Label>
+                                        </Menu.Item>
+                                    })
+
+                                    return [...tokenPairs, ...clearedMarkets]
                                 }).flat()
                             :
                             <Menu.Item className='empty-item'>
@@ -141,13 +181,13 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.InvestorRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <InvestorProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
+                role={MarketRole.InvestorRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
-
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
 
     const investorScreen = <Switch>
         <Route exact path={path}>
@@ -157,14 +197,20 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     <FormErrorHandled onSubmit={updateProfile}>
                         <InvestorProfile
                             content='Save'
+                            profileLinks={[
+                                {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                            ]}
+                            role={MarketRole.InvestorRole}
                             defaultProfile={profile}
                             submitProfile={profile => setProfile(profile)}/>
                     </FormErrorHandled>
                 }
                 sideNav={sideNav}
                 marketRelationships={
-                    <MarketRelationships role={MarketRole.InvestorRole}
-                                         custodianRelationships={allCustodianRelationships}/>}
+                    <MarketRelationships
+                        relationshipRequestChoice={InvestorTemplate.Investor_RequestCustodianRelationship}
+                        custodianRelationships={allCustodianRelationships}/>}
                 onLogout={onLogout}/>
         </Route>
 
@@ -189,9 +235,8 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         </Route>
     </Switch>
 
-    return registeredInvestor.loading
-         ? loadingScreen
-         : registeredInvestor.contracts.length === 0 ? inviteScreen : investorScreen
+    const shouldLoad = loading || (registeredInvestor.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredInvestor.length !== 0 ? investorScreen : inviteScreen
 }
 
 export default Investor;

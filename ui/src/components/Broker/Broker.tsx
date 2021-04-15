@@ -1,31 +1,38 @@
 import React, { useEffect, useState } from 'react'
 import { Switch, Route, useRouteMatch } from 'react-router-dom'
 
-import { useLedger, useParty, useStreamQueries } from '@daml/react'
+import { useLedger, useParty } from '@daml/react'
+
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
-import { Invitation as BrokerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {
+    Broker as BrokerTemplate,
+    BrokerInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
 import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import BrokerProfile, { Profile, createField } from '../common/Profile'
-import { wrapDamlTuple, makeContractInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useOperator } from '../common/common'
-import MarketRelationships from '../common/MarketRelationships'
-import InviteAcceptTile from '../common/InviteAcceptTile'
-import OnboardingTile from '../common/OnboardingTile'
-import LandingPage from '../common/LandingPage'
-import Wallet from '../common/Wallet';
+import { retrieveCredentials } from '../../Credentials'
+import { deploymentMode, DeploymentMode } from '../../config'
+import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
 
 import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+
+import { useOperator, useDablParties } from '../common/common'
+import { wrapDamlTuple } from '../common/damlTypes'
+import { useDismissibleNotifications } from '../common/DismissibleNotifications'
+import BrokerProfile, { Profile, createField } from '../common/Profile'
+
+import MarketRelationships from '../common/MarketRelationships'
+import FormErrorHandled from '../common/FormErrorHandled'
+import InviteAcceptTile from '../common/InviteAcceptTile'
+import RoleSideNav from '../common/RoleSideNav'
+import LandingPage from '../common/LandingPage'
+import LoadingScreen from '../common/LoadingScreen'
+import Wallet from '../common/Wallet'
 
 import BrokerOrders from './BrokerOrders'
-import FormErrorHandled from '../common/FormErrorHandled'
-import RoleSideNav from '../common/RoleSideNav'
-
 
 type Props = {
     onLogout: () => void;
@@ -36,43 +43,13 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const operator = useOperator();
     const broker = useParty();
     const ledger = useLedger();
+    const loading = usePartyLoading();
 
-    const registeredBroker = useStreamQueries(RegisteredBroker, () => [], [], (e) => {
-        console.log("Unexpected close from registeredBroker: ", e);
-    });
-    const allCustodianRelationships = useStreamQueries(CustodianRelationship, () => [], [], (e) => {
-        console.log("Unexpected close from custodianRelationship: ", e);
-    }).contracts.map(makeContractInfo);
-    const allDeposits = useStreamQueries(AssetDeposit, () => [], [], (e) => {
-        console.log("Unexpected close from assetDepositBroker: ", e);
-    }).contracts.map(makeContractInfo);
+    const registeredBroker = useContractQuery(RegisteredBroker);
+    const invitation = useContractQuery(BrokerInvitation);
+    const allCustodianRelationships = useContractQuery(CustodianRelationship);
+    const allDeposits = useContractQuery(AssetDeposit);
     const notifications = useDismissibleNotifications();
-
-    const { custodianMap, exchangeMap } = useRegistryLookup();
-
-    const exchangeProviders = useStreamQueries(ExchangeParticipant, () => [], [], (e) => {
-        console.log("Unexpected close from exchangeParticipant: ", e);
-    }).contracts
-        .map(exchParticipant => {
-            const party = exchParticipant.payload.exchange;
-            const name = exchangeMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Exchange`
-            }
-        });
-
-    const allProviders = [
-        ...exchangeProviders,
-        ...allCustodianRelationships.map(relationship => {
-            const party = relationship.contractData.custodian;
-            const name = custodianMap.get(party)?.name;
-            return {
-                party,
-                label: `${name ? `${name} (${party})` : party} | Custodian`,
-            }
-        }),
-    ]
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
@@ -80,8 +57,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     });
 
     useEffect(() => {
-        if (registeredBroker.contracts[0]) {
-            const rbData = registeredBroker.contracts[0].payload;
+        if (registeredBroker[0]) {
+            const rbData = registeredBroker[0].contractData;
             setProfile({
                 name: { ...profile.name, value: rbData.name },
                 location: { ...profile.location, value: rbData.location }
@@ -96,17 +73,23 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
             newName: profile.name.value,
             newLocation: profile.location.value,
         };
-        await ledger.exerciseByKey(RegisteredBroker.UpdateProfile, key, args)
+        await ledger.exerciseByKey(RegisteredBroker.RegisteredBroker_UpdateProfile, key, args)
                     .catch(err => console.error(err));
     }
 
+    const token = retrieveCredentials()?.token;
+    const publicParty = useDablParties().parties.publicParty;
+
     const acceptInvite = async () => {
+        if (deploymentMode == DeploymentMode.PROD_DABL && TRIGGER_HASH && token) {
+            deployTrigger(TRIGGER_HASH, MarketplaceTrigger.BrokerTrigger, token, publicParty);
+        }
         const key = wrapDamlTuple([operator, broker]);
         const args = {
             name: profile.name.value,
             location: profile.location.value
         };
-        await ledger.exerciseByKey(BrokerInvitation.Accept, key, args)
+        await ledger.exerciseByKey(BrokerInvitation.BrokerInvitation_Accept, key, args)
                     .catch(err => console.error(err));
     }
 
@@ -114,19 +97,19 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         <InviteAcceptTile role={MarketRole.BrokerRole} onSubmit={acceptInvite} onLogout={onLogout}>
             <BrokerProfile
                 content='Submit'
+                receivedInvitation={!!invitation[0]}
+                role={MarketRole.BrokerRole}
                 inviteAcceptTile
                 defaultProfile={profile}
                 submitProfile={profile => setProfile(profile)}/>
         </InviteAcceptTile>
     );
 
-    const loadingScreen = <OnboardingTile>Loading...</OnboardingTile>
-
     const sideNav = <RoleSideNav url={url}
-                                 name={registeredBroker.contracts[0]?.payload.name || broker}
+                                 name={registeredBroker[0]?.contractData.name || broker}
                                  items={[
                                     {to: `${url}/wallet`, label: 'Wallet', icon: <WalletIcon/>},
-                                    {to: `${url}/orders`, label: 'Customer Orders', icon: <OrdersIcon/>}
+                                    {to: `${url}/orders`, label: 'Orders', icon: <OrdersIcon/>}
                                  ]}/>
 
     const brokerScreen =
@@ -138,13 +121,19 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <BrokerProfile
                                     content='Save'
+                                    role={MarketRole.BrokerRole}
                                     defaultProfile={profile}
+                                    profileLinks={[
+                                        {to: `${url}/wallet`, title: 'Go to Wallet', subtitle: 'Add or Withdraw Funds'},
+                                        {to: `${url}/orders`, title: 'View Open Orders', subtitle: 'Manage your Orders'}
+                                    ]}
                                     submitProfile={profile => setProfile(profile)}/>
                             </FormErrorHandled>
                         }
                         marketRelationships={
-                            <MarketRelationships role={MarketRole.BrokerRole}
-                                                custodianRelationships={allCustodianRelationships}/>}
+                            <MarketRelationships
+                                relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
+                                custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
                         notifications={notifications}
                         onLogout={onLogout}/>
@@ -167,9 +156,8 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
         </div>
 
 
-    return registeredBroker.loading
-        ? loadingScreen
-        : registeredBroker.contracts.length === 0 ? inviteScreen : brokerScreen
+    const shouldLoad = loading || (registeredBroker.length === 0 && invitation.length === 0);
+    return shouldLoad ? <LoadingScreen/> : registeredBroker.length !== 0 ? brokerScreen : inviteScreen
 }
 
 export default Broker;

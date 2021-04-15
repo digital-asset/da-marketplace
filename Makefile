@@ -7,10 +7,11 @@ TAG_NAME=${BASENAME}-v${VERSION}
 NAME=${BASENAME}-${VERSION}
 
 dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
-exberry_adapter_version := $(shell cd exberry_adapter && poetry version | cut -f 2 -d ' ')
+exberry_adapter_version := $(shell cd exberry_adapter && pipenv run python setup.py --version)
 trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
-ui_version := $(shell node -p "require(\"./ui/package.json\").version")
+ui_version := $(shell node -p "require(\"./ui2/package.json\").version")
 
+PYTHON := pipenv run python
 
 state_dir := .dev
 daml_build_log = $(state_dir)/daml_build.log
@@ -19,7 +20,7 @@ sandbox_log := $(state_dir)/sandbox.log
 
 trigger_build := triggers/.daml/dist/da-marketplace-triggers-$(trigger_version).dar
 
-exberry_adapter_dir := exberry_adapter/bot.egg-info
+exberry_adapter_dir := exberry_adapter/dist
 adapter_pid := $(state_dir)/adapter.pid
 adapter_log := $(state_dir)/adapter.log
 
@@ -31,6 +32,9 @@ operator_log := $(state_dir)/operator.log
 
 custodian_pid := $(state_dir)/custodian.pid
 custodian_log := $(state_dir)/custodian.log
+
+ccp_pid := $(state_dir)/ccp.pid
+ccp_log := $(state_dir)/ccp.log
 
 broker_pid := $(state_dir)/broker.pid
 broker_log := $(state_dir)/broker.log
@@ -64,7 +68,7 @@ $(trigger_build): $(daml_build_log)
 
 .PHONY: clean_triggers
 clean_triggers:
-	rm $(trigger_build)
+	rm -rf $(trigger_build) triggers/.daml
 
 $(operator_pid): |$(state_dir) $(trigger_build)
 	(daml trigger --dar $(trigger_build) \
@@ -76,6 +80,17 @@ start_operator: $(operator_pid)
 
 stop_operator:
 	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
+
+$(ccp_pid): |$(state_dir) $(trigger_build)
+	(daml trigger --dar $(trigger_build) \
+	    --trigger-name ClearingTrigger:handleClearing \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Ccp > $(ccp_log) & echo "$$!" > $(ccp_pid))
+
+start_ccp: $(ccp_pid)
+
+stop_ccp:
+	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
 
 ### DA Marketplace Custodian Bot
 
@@ -120,10 +135,11 @@ stop_exchange:
 
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
-	cd exberry_adapter && poetry install && poetry build
+	cd exberry_adapter && $(PYTHON) setup.py sdist
+	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
 
 $(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
-	cd exberry_adapter && (DAML_LEDGER_URL=localhost:6865 poetry run python bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
+	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
 
 start_adapter: $(adapter_pid)
 
@@ -177,22 +193,25 @@ $(trigger): $(target_dir) $(trigger_build)
 	cp $(trigger_build) $@
 
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
-	cp exberry_adapter/dist/bot-$(exberry_adapter_version).tar.gz $@
+	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
 
-$(ui):
+.PHONY: ui
+ui: $(dar) $(ui)
+
+$(ui): $(exberry_adapter)
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
-	cd ui && yarn install
-	cd ui && yarn build
-	cd ui && zip -r da-marketplace-ui-$(ui_version).zip build
-	mv ui/da-marketplace-ui-$(ui_version).zip $@
-	rm -r ui/build
+	cd ui2 && yarn install
+	cd ui2 && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_build) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}')  yarn build
+	cd ui2 && zip -r da-marketplace-ui-$(ui_version).zip build
+	mv ui2/da-marketplace-ui-$(ui_version).zip $@
+	rm -r ui2/build
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(trigger) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit
+	rm -rf .daml triggers/.daml $(state_dir) $(trigger) $(exberry_adapter_dir) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit .daml
 
 clean-ui:
-	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock
+	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock ui2/node_modules ui2/build ui2/yarn.lock
 
 verify-artifacts:
 	for filename in $(SUBDEPLOYMENTS) ; do \
