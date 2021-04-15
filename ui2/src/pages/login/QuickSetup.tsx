@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
+
 import { Form, Button, Icon, Loader, Table } from 'semantic-ui-react';
+
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
+
+import { useUserDispatch } from '../../context/UserContext';
 import { useHistory } from 'react-router-dom';
 
-import { useLedger, useStreamQueries } from '@daml/react';
-
-import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
-import { useUserDispatch } from '../../context/UserContext';
 import {
   DeploymentMode,
   deploymentMode,
@@ -16,11 +18,11 @@ import {
 } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
-import DamlLedger from '@daml/react';
-
-import { Service as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Service';
 import { retrieveParties, storeParties } from '../../Parties';
 
+import { halfSecondPromise } from '../page/utils';
+
+import { Service as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Service';
 import {
   Offer as CustodianOffer,
   Role as CustodianRole,
@@ -56,36 +58,27 @@ enum serviceOptionsEnum {
   LISTING = 'Listing',
 }
 
-const serviceOptions = ['Custody', 'Trading', 'Matching', 'Settlement', 'Listing'];
+interface IServiceContractSetupData {
+  party?: PartyDetails;
+  service?: string;
+}
 
-const RoleContractSetup = (props: {
+const USER_ADMIN = 'UserAdmin'; // will sub for wellKnownParty hook when it is in master
+
+const services = ['Custody', 'Trading', 'Matching', 'Settlement', 'Listing'];
+
+const OfferServiceContractSetup = (props: {
   credentials: Credentials;
-  roleSetupData?: IRoleContractSetupData;
-  setRoleSetupData: (data: IRoleContractSetupData) => void;
+  serviceSetupData?: IServiceContractSetupData;
+  setServiceSetupData: (data: IServiceContractSetupData) => void;
   parties: PartyDetails[];
   onComplete: () => void;
 }) => {
-  const { credentials, roleSetupData, setRoleSetupData, parties, onComplete } = props;
+  const { credentials, serviceSetupData, setServiceSetupData, parties, onComplete } = props;
 
   const [status, setStatus] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, string[]>>(new Map());
-
-  const { contracts: custodianOffers, loading: custodianOffersLoading } = useStreamQueries(
-    CustodianOffer
-  );
-  const { contracts: distributorOffers, loading: distributorOffersLoading } = useStreamQueries(
-    DistributorOffer
-  );
-  const { contracts: settlementOffers, loading: settlementOffersLoading } = useStreamQueries(
-    SettlementOffer
-  );
-  const { contracts: exhangeOffers, loading: exchangeOffersLoading } = useStreamQueries(
-    ExchangeOffer
-  );
-  const { contracts: matchingOffers, loading: matchingOffersLoading } = useStreamQueries(
-    MatchingOffer
-  );
 
   const ledger = useLedger();
 
@@ -96,8 +89,8 @@ const RoleContractSetup = (props: {
   const matchingServices = useStreamQueries(MarchingService);
   const operatorService = useStreamQueries(OperatorService);
 
-  const selectedParty = roleSetupData?.party;
-  const selectedRole = roleSetupData?.role;
+  const selectedParty = serviceSetupData?.party;
+  const selectedService = serviceSetupData?.service;
 
   useEffect(() => {
     setLoading(
@@ -158,8 +151,8 @@ const RoleContractSetup = (props: {
     return { text: party.partyName, value: party.party };
   });
 
-  let roleOptions = serviceOptions.map(role => {
-    return { text: role, value: role };
+  let serviceOptions = services.map(service => {
+    return { text: service, value: service };
   });
 
   if (operatorService.contracts.length === 0 || loading) {
@@ -200,10 +193,14 @@ const RoleContractSetup = (props: {
             <Table.Cell>
               <Form.Select
                 disabled={!selectedParty}
-                value={selectedRole ? roleOptions.find(p => selectedRole === p.value)?.value : ''}
+                value={
+                  selectedService
+                    ? serviceOptions.find(p => selectedService === p.value)?.value
+                    : ''
+                }
                 placeholder="Select..."
                 onChange={(_, data: any) => hangleChangeRole(data.value)}
-                options={roleOptions}
+                options={serviceOptions}
               />
             </Table.Cell>
             <Table.Cell>
@@ -227,13 +224,13 @@ const RoleContractSetup = (props: {
   );
 
   function hangleChangeRole(newRole: string) {
-    setRoleSetupData({ ...roleSetupData, role: newRole });
+    setServiceSetupData({ ...serviceSetupData, service: newRole });
 
     const hasRole = findExistingRoleorOffer(newRole);
 
     if (hasRole) {
       setStatus(`${selectedParty?.partyName} already offers ${newRole} services`);
-      setRoleSetupData({ ...roleSetupData, role: undefined });
+      setServiceSetupData({ ...serviceSetupData, service: undefined });
     } else {
       setStatus(undefined);
     }
@@ -243,7 +240,7 @@ const RoleContractSetup = (props: {
     setStatus(undefined);
 
     if (!newPartyId) {
-      setRoleSetupData({ ...roleSetupData, party: undefined, role: undefined });
+      setServiceSetupData({ ...serviceSetupData, party: undefined, service: undefined });
       return;
     }
 
@@ -265,18 +262,18 @@ const RoleContractSetup = (props: {
 
     if (!newParty) return;
 
-    setRoleSetupData({ ...roleSetupData, party: newParty, role: undefined });
+    setServiceSetupData({ ...serviceSetupData, party: newParty, service: undefined });
   }
 
   async function createRoleContract() {
     const operatorServiceContract = operatorService.contracts[0];
 
-    if (!selectedParty || !operatorServiceContract || !selectedRole) return undefined;
+    if (!selectedParty || !operatorServiceContract || !selectedService) return undefined;
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
 
-    switch (selectedRole) {
+    switch (selectedService) {
       case serviceOptionsEnum.CUSTODY:
         return await ledger
           .exercise(OperatorService.OfferCustodianRole, id, { provider })
@@ -303,92 +300,182 @@ const RoleContractSetup = (props: {
   function findExistingRoleorOffer(newRole: string) {
     switch (newRole) {
       case serviceOptionsEnum.CUSTODY:
-        return (
-          !!custodianRoles.contracts.find(c => c.payload.provider === selectedParty?.party) ||
-          !!custodianOffers.find(c => c.payload.provider === selectedParty?.party)
-        );
+        return !!custodianRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
       case serviceOptionsEnum.TRADING:
-        return (
-          !!exchangeRoles.contracts.find(c => c.payload.provider === selectedParty?.party) ||
-          !!exhangeOffers.find(c => c.payload.provider === selectedParty?.party)
-        );
+        return !!exchangeRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
       case serviceOptionsEnum.MATCHING:
-        return (
-          !!matchingServices.contracts.find(c => c.payload.provider === selectedParty?.party) ||
-          !!matchingOffers.find(c => c.payload.provider === selectedParty?.party)
-        );
-      case serviceOptionsEnum.SETTLEMENT:
-        return (
-          !!settlementServices.contracts.find(c => c.payload.provider === selectedParty?.party) ||
-          !!settlementOffers.find(c => c.payload.provider === selectedParty?.party)
-        );
+        return !!matchingServices.contracts.find(c => c.payload.provider === selectedParty?.party);
       case serviceOptionsEnum.LISTING:
-        return (
-          !!distributorRoles.contracts.find(c => c.payload.provider === selectedParty?.party) ||
-          !!distributorOffers.find(c => c.payload.provider === selectedParty?.party)
+        return !!distributorRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
+      case serviceOptionsEnum.SETTLEMENT:
+        return !!settlementServices.contracts.find(
+          c => c.payload.provider === selectedParty?.party
         );
     }
   }
 };
 
-interface IRoleContractSetupData {
-  party?: PartyDetails;
-  role?: string;
-}
+const MarketSetup = (props: {
+  parties: PartyDetails[];
+  loading: boolean;
+  marketSetupDataMap: Map<string, string[]>;
+}) => {
+  const { parties, loading, marketSetupDataMap } = props;
+  const dispatch = useUserDispatch();
+  const history = useHistory();
 
-const USER_ADMIN = 'UserAdmin';
+  const marketDataParties = Array.from(marketSetupDataMap.keys()).sort();
+
+  if (loading) {
+    return <LoadingWheel label="Loading market data..." />;
+  }
+
+  return (
+    <Table className="party-registry-table" fixed>
+      <Table.Body>
+        {marketSetupDataMap.size > 0 ? (
+          marketDataParties.map((p, i) => (
+            <Table.Row key={i}>
+              <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
+              <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
+              {/* <Table.Cell>
+                <Button className="ghost" onClick={() => loginAsParty(p)}>
+                  Log in
+                </Button>
+              </Table.Cell> */}
+            </Table.Row>
+          ))
+        ) : (
+          <Table.Row>
+            <Table.Cell textAlign="center" colSpan={4}>
+              None
+            </Table.Cell>
+          </Table.Row>
+        )}
+      </Table.Body>
+    </Table>
+  );
+
+  //   function loginAsParty(p: string) {
+  //     const creds = computeCredentials(p);
+  //     loginUser(dispatch, history, creds);
+  //   }
+};
+
+const CreateRoleContract = (props: {
+  serviceSetupData: IServiceContractSetupData;
+  operator: string;
+  onFinish: () => void;
+}) => {
+  const { serviceSetupData, operator, onFinish } = props;
+  const { party, service } = serviceSetupData;
+
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const ledger = useLedger();
+
+  const custodianOffers = useStreamQueries(CustodianOffer);
+  const distributorOffers = useStreamQueries(DistributorOffer);
+  const settlementOffers = useStreamQueries(SettlementOffer);
+  const exhangeOffers = useStreamQueries(ExchangeOffer);
+  const matchingOffers = useStreamQueries(MatchingOffer);
+
+  useEffect(() => {
+    setLoading(
+      custodianOffers.loading ||
+        distributorOffers.loading ||
+        settlementOffers.loading ||
+        exhangeOffers.loading ||
+        matchingOffers.loading
+    );
+  }, [
+    custodianOffers.loading,
+    distributorOffers.loading,
+    settlementOffers.loading,
+    exhangeOffers.loading,
+    matchingOffers.loading,
+  ]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    switch (service) {
+      case serviceOptionsEnum.CUSTODY:
+        acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
+        break;
+      case serviceOptionsEnum.TRADING:
+        acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
+        break;
+      case serviceOptionsEnum.MATCHING:
+        acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
+        break;
+      case serviceOptionsEnum.SETTLEMENT:
+        acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
+        break;
+      case serviceOptionsEnum.LISTING:
+        acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
+        break;
+    }
+  }, [loading]);
+
+  const acceptAllOffers = async (
+    contracts: readonly CreateEvent<Offer, undefined, any>[],
+    choice: any
+  ) => {
+    const args = { operator, provider: party };
+
+    await halfSecondPromise();
+
+    Promise.all(
+      contracts.map(async c => {
+        return await ledger.exercise(choice, c.contractId, args);
+      })
+    ).then(_ => onFinish());
+  };
+
+  return null;
+};
 
 const QuickSetup = () => {
-  const [parties, setParties] = useState<PartyDetails[]>([]);
-  const [roleSetupData, setRoleSetupData] = useState<IRoleContractSetupData>();
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [error, setError] = useState<string>();
+  const [parties, setParties] = useState<PartyDetails[]>([]);
+  const [serviceSetupData, setServiceSetupData] = useState<IServiceContractSetupData>();
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [startServiceSetup, setStartServiceSetup] = useState(false);
 
   const localCreds = computeCredentials(OPERATOR);
   const history = useHistory();
 
   useEffect(() => {
-    const parties = retrieveParties();
-    if (parties) {
-      console.log('RELOADING PARTIES');
-      setParties(parties.filter(p => p.party != publicParty && p.partyName != USER_ADMIN));
-
-      const adminParty = parties.find(p => p.partyName === USER_ADMIN);
-
-      if (deploymentMode === DeploymentMode.PROD_DABL && adminParty) {
-        console.log('found the admin party', adminParty);
-
-        setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
-      }
+    const newParties = retrieveParties();
+    if (newParties) {
+      handleNewParties(newParties);
     } else {
       setAdminCredentials(localCreds);
     }
   }, []);
 
-  useEffect(() => {
-    console.log('credentials changed', adminCredentials);
-  }, [adminCredentials]);
+  const handleLoad = async (newParties: PartyDetails[]) => {
+    storeParties(newParties);
+    handleNewParties(newParties);
+  };
 
-  const handleLoad = async (parties: PartyDetails[]) => {
-    console.log('loading parties', parties);
-    const adminParty = parties.find(p => p.partyName === USER_ADMIN);
+  function handleNewParties(newParties: PartyDetails[]) {
+    const adminParty = newParties.find(p => p.partyName === USER_ADMIN);
+
+    setParties(newParties.filter(p => p.party != publicParty && p != adminParty));
 
     if (deploymentMode === DeploymentMode.PROD_DABL && adminParty) {
-      console.log('found the admin party', adminParty);
-
       setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
-    } else {
-      console.log('DID NOT FIND ADMIN PARTY', adminParty);
     }
-    setParties(parties.filter(p => p.party != publicParty && p.partyName != USER_ADMIN));
-    storeParties(parties);
-  };
+  }
 
   if (deploymentMode === DeploymentMode.PROD_DABL && parties.length === 0) {
     return (
       <div className="quick-setup">
-        <div className="assign-role-tile">
+        <div className="assign-service-tile">
           <span className="login-details dark">
             To get started, add the UserAdmin party found in the DABL Console Users tab, download
             the <code className="link">parties.json</code> file, and upload it here:
@@ -421,23 +508,23 @@ const QuickSetup = () => {
         httpBaseUrl={httpBaseUrl}
         wsBaseUrl={wsBaseUrl}
       >
-        <RoleContractSetup
+        <OfferServiceContractSetup
           credentials={adminCredentials}
-          roleSetupData={roleSetupData}
-          setRoleSetupData={setRoleSetupData}
+          serviceSetupData={serviceSetupData}
+          setServiceSetupData={setServiceSetupData}
           parties={parties}
           onComplete={() => setStartServiceSetup(true)}
         />
       </DamlLedger>
-      {roleSetupData && roleSetupData.party && roleSetupData.role && startServiceSetup && (
+      {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (
         <DamlLedger
-          party={roleSetupData.party.party}
-          token={roleSetupData.party.token}
+          party={serviceSetupData.party.party}
+          token={serviceSetupData.party.token}
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
-          <ServiceSetup
-            roleSetupData={roleSetupData}
+          <CreateRoleContract
+            serviceSetupData={serviceSetupData}
             operator={adminCredentials.party}
             onFinish={() => setStartServiceSetup(false)}
           />
@@ -449,118 +536,6 @@ const QuickSetup = () => {
   );
 };
 
-const MarketSetup = (props: {
-  parties: PartyDetails[];
-  loading: boolean;
-  marketSetupDataMap: Map<string, string[]>;
-}) => {
-  const { parties, loading, marketSetupDataMap } = props;
-  const dispatch = useUserDispatch();
-  const history = useHistory();
-
-  const marketDataParties = Array.from(marketSetupDataMap.keys()).sort();
-
-  if (loading) {
-    return <LoadingWheel label="Loading market data..." />;
-  }
-
-  return (
-    <Table className="party-registry-table" fixed>
-      <Table.Body>
-        {marketSetupDataMap.size > 0 ? (
-          marketDataParties.map((p, i) => (
-            <Table.Row key={i}>
-              <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
-              <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
-              <Table.Cell>
-                <Button className="ghost" onClick={() => loginAsParty(p)}>
-                  Log in
-                </Button>
-              </Table.Cell>
-            </Table.Row>
-          ))
-        ) : (
-          <Table.Row>
-            <Table.Cell textAlign="center" colSpan={4}>
-              None
-            </Table.Cell>
-          </Table.Row>
-        )}
-      </Table.Body>
-    </Table>
-  );
-
-  function loginAsParty(p: string) {
-    const creds = computeCredentials(p);
-    console.log('logging in as ', creds);
-    //   loginUser(dispatch, history, creds);
-  }
-};
-
-const ServiceSetup = (props: {
-  roleSetupData: IRoleContractSetupData;
-  operator: string;
-  onFinish: () => void;
-}) => {
-  const { roleSetupData, operator, onFinish } = props;
-  const { party, role } = roleSetupData;
-
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const ledger = useLedger();
-
-  const { contracts: custodianOffers, loading: cl } = useStreamQueries(CustodianOffer);
-  const { contracts: distributorOffers, loading: dl } = useStreamQueries(DistributorOffer);
-  const { contracts: settlementOffers, loading: sl } = useStreamQueries(SettlementOffer);
-  const { contracts: exhangeOffers, loading: el } = useStreamQueries(ExchangeOffer);
-  const { contracts: matchingOffers, loading: ml } = useStreamQueries(MatchingOffer);
-
-  useEffect(() => {
-    setLoading(cl || dl || sl || el || ml);
-  }, [cl, dl, sl, el, ml]);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    switch (role) {
-      case serviceOptionsEnum.CUSTODY:
-        acceptAllOffers(custodianOffers, CustodianOffer.Accept);
-        break;
-      case serviceOptionsEnum.TRADING:
-        acceptAllOffers(exhangeOffers, ExchangeOffer.Accept);
-        break;
-      case serviceOptionsEnum.MATCHING:
-        acceptAllOffers(matchingOffers, MatchingOffer.Accept);
-        break;
-      case serviceOptionsEnum.SETTLEMENT:
-        acceptAllOffers(settlementOffers, SettlementOffer.Accept);
-        break;
-      case serviceOptionsEnum.LISTING:
-        acceptAllOffers(distributorOffers, DistributorOffer.Accept);
-        break;
-    }
-  }, [loading]);
-
-  const acceptAllOffers = async (
-    contracts: readonly CreateEvent<Offer, undefined, any>[],
-    choice: any
-  ) => {
-    const args = { operator, provider: party };
-
-    await halfSecondPromise();
-
-    Promise.all(
-      contracts.map(async c => {
-        return await ledger.exercise(choice, c.contractId, args);
-      })
-    ).then(_ => onFinish());
-  };
-
-  return null;
-};
-
 const LoadingWheel = (props: { label?: string }) => {
   return (
     <Loader active indeterminate inverted size="small">
@@ -568,9 +543,5 @@ const LoadingWheel = (props: { label?: string }) => {
     </Loader>
   );
 };
-export async function halfSecondPromise() {
-  await new Promise<void>((resolve, _) => {
-    setTimeout(() => resolve(), 500);
-  });
-}
+
 export default QuickSetup;
