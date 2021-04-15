@@ -2,12 +2,13 @@ import React from 'react';
 import { Grid, Header, Menu } from 'semantic-ui-react';
 import classNames from 'classnames';
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
 import { useParty } from '@daml/react';
 import PageSection from './PageSection';
 import WelcomeHeader from './WelcomeHeader';
 import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
 import _ from 'lodash';
+import { CogIcon } from '../../icons/icons';
 
 type Props = {
   className?: string;
@@ -26,6 +27,8 @@ const Page: React.FC<Props> = ({
   sideBarItems,
 }) => {
   const user = useParty();
+  const history = useHistory();
+
   const groupSideBarItems = Array.from(
     sideBarItems?.reduce(
       (acc, cur) => acc.set(cur.groupBy, [..._.compact(acc.get(cur.groupBy)), cur]),
@@ -38,9 +41,14 @@ const Page: React.FC<Props> = ({
     const margin = level * 25;
 
     return (
-      <>
+      <React.Fragment key={sideBarItem.label + sideBarItem.path}>
         <Menu.Item
           exact
+          active={
+            sideBarItem.activeSubroutes
+              ? history.location.pathname.includes(sideBarItem.path)
+              : undefined
+          }
           key={sideBarItem.label + sideBarItem.path}
           as={NavLink}
           to={sideBarItem.path}
@@ -52,7 +60,7 @@ const Page: React.FC<Props> = ({
           </p>
         </Menu.Item>
         {childMenu.length > 0 && <Menu.Menu>{childMenu}</Menu.Menu>}
-      </>
+      </React.Fragment>
     );
   };
 
@@ -65,13 +73,14 @@ const Page: React.FC<Props> = ({
               <Header as="h1" className="dark">
                 @{user}
               </Header>
+              <CogIcon />
             </Menu.Item>
           </Menu.Menu>
 
           <Menu.Menu>
             {groupSideBarItems.map(([key, items]) =>
               key ? (
-                <Menu.Menu className="sub-menu">
+                <Menu.Menu key={key} className="sub-menu">
                   <Header as="h3">{key}</Header>
                   {items.map(item => constructMenu(item, 0))}
                 </Menu.Menu>

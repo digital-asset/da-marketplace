@@ -2,6 +2,12 @@
 
 @mixin manage {
   .manage {
+    .auctions {
+      .header {
+        margin-top: $spacing-l;
+      }
+    }
+
     .manage-menu {
       border-width: 1px;
       border-color: var(--cool-grey-80);

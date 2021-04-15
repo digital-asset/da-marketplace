@@ -16,7 +16,7 @@ import { getAbbreviation } from '../page/utils';
 import { getName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { NavLink } from 'react-router-dom';
-import ServiceRequestDialog from '../../components/InputDialog/ServiceRequestDialog';
+import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';

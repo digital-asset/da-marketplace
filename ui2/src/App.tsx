@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch, withRouter, RouteProps } from 'react-router-dom';
+import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
 import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
@@ -19,24 +19,31 @@ import { Requests as AuctionRequests } from './pages/distribution/auction/Reques
 import { Assets } from './pages/custody/Assets';
 import { New as DistributionNew } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
-import { Instruments } from './pages/origination/Instruments';
+import { Instruments, InstrumentsTable } from './pages/origination/Instruments';
 import { New as InstrumentsNew } from './pages/origination/New';
 import { Requests as InstrumentsRequests } from './pages/origination/Requests';
-import { Issuances } from './pages/issuance/Issuances';
+import { Issuances, IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
 import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
 import { Requests as ListingRequests } from './pages/listing/Requests';
-import { Listings } from './pages/listing/Listings';
+import { Listings, ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
-import { Custody as CustodyNetwork } from './pages/network/Custody';
-import { Trading as TradingNetwork } from './pages/network/Trading';
+import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
+import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
-import { ExchangeIcon, OrdersIcon, PublicIcon } from './icons/icons';
+import {
+  ControlsIcon,
+  ExchangeIcon,
+  MegaphoneIcon,
+  OrdersIcon,
+  PublicIcon,
+  ToolIcon,
+} from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { WalletIcon } from './icons/icons';
 import { ClearingMembers } from './pages/clearing/Members';
@@ -45,7 +52,15 @@ import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
+import { New as NewAuction } from './pages/distribution/auction/New';
+import Landing from './pages/landing/Landing';
+import Manage from './pages/manage/Manage';
+import SetUp from './pages/setup/SetUp';
+import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
+import { ServiceKind } from './context/ServicesContext';
+import { DistributionServiceTable } from './pages/network/Distribution';
+import { Header } from 'semantic-ui-react';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -93,7 +108,10 @@ const AppComponent = () => {
       },
     ],
     additionalRoutes: [
-      { path: '/app/custody/accounts/new', render: () => <CustodyNew services={custodyService} /> },
+      {
+        path: '/app/custody/accounts/new',
+        render: () => <CustodyNew services={custodyService} />,
+      },
       {
         path: '/app/custody/account/:contractId',
         render: () => <Account services={custodyService} />,
@@ -126,47 +144,13 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Network',
-        path: '/app/network/custody',
-        render: () => <CustodyNetwork services={custodyService} />,
-        icon: <PlayArrow />,
-        children: [
-          {
-            label: 'Custody',
-            path: '/app/network/custody',
-            render: () => <CustodyNetwork services={custodyService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Trading',
-            path: '/app/network/trading',
-            render: () => <TradingNetwork services={tradingService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Listing',
-            path: '/app/network/listing',
-            render: () => <MarketNetwork listings={listings} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-        ],
-      },
-    ],
-  });
-  entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       {
         label: 'Auctions',
         path: '/app/distribution/auctions',
         render: () => <Auctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -192,10 +176,10 @@ const AppComponent = () => {
     displayEntry: () => biddingService.length > 0,
     sidebar: [
       {
-        label: 'Auctions',
+        label: 'Bidding Auctions',
         path: '/app/distribution/bidding',
         render: () => <BiddingAuctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -207,60 +191,7 @@ const AppComponent = () => {
       },
     ],
   });
-  entries.push({
-    displayEntry: () => issuanceService.length > 0,
-    sidebar: [
-      {
-        label: 'Instruments',
-        path: '/app/instrument/instruments',
-        render: () => <Instruments />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-      {
-        label: 'Issuances',
-        path: '/app/issuance/issuances',
-        render: () => <Issuances />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      { path: '/app/registry/instruments/new/base', component: NewBaseInstrument },
-      { path: '/app/registry/instruments/new/convertiblenote', component: NewConvertibleNote },
-      { path: '/app/registry/instruments/new/binaryoption', component: NewBinaryOption },
-      { path: '/app/registry/instruments/:contractId', component: Instrument },
-      { path: '/app/instrument/requests', render: () => <InstrumentsRequests /> },
-      { path: '/app/instrument/new', component: InstrumentsNew },
-      { path: '/app/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
-      {
-        path: '/app/issuance/requests',
-        render: () => <IssuanceRequests services={issuanceService} />,
-      },
-    ],
-  });
-  entries.push({
-    displayEntry: () => listingService.length > 0,
-    sidebar: [
-      {
-        label: 'Listings',
-        path: '/app/listing/listings',
-        render: () => <Listings services={listingService} listings={listings} />,
-        icon: <PublicIcon />,
-        groupBy: 'Secondary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      { path: '/app/listing/new', render: () => <ListingNew services={listingService} /> },
-      {
-        path: '/app/listing/requests',
-        render: () => <ListingRequests services={listingService} listings={listings} />,
-      },
-    ],
-  });
+
   entries.push({
     displayEntry: () => tradingService.length > 0,
     sidebar: [
@@ -277,6 +208,121 @@ const AppComponent = () => {
           icon: <ExchangeIcon />,
           children: [],
         })),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Manage',
+        path: '/app/manage',
+        activeSubroutes: true,
+        render: () => <Redirect to="/app/manage/custody" />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/manage/custody',
+        render: () => (
+          <Manage>
+            <CustodyServiceTable services={custodyService} />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/distributions',
+        render: () => (
+          <Manage>
+            <Header as="h2">Service</Header>
+            <DistributionServiceTable />
+            <Auctions />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/instruments',
+        render: () => (
+          <Manage>
+            <InstrumentsTable />
+          </Manage>
+        ),
+      },
+      { path: '/app/manage/instrument/:contractId', component: Instrument },
+      {
+        path: '/app/manage/issuance',
+        render: () => (
+          <Manage>
+            <IssuancesTable />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/trading',
+        render: () => (
+          <Manage>
+            <TradingServiceTable services={tradingService} />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/listings',
+        render: () => (
+          <Manage>
+            <ListingsTable services={listingService} listings={listings} />
+          </Manage>
+        ),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Setup',
+        path: '/app/setup',
+        activeSubroutes: true,
+        render: () => <SetUp />,
+        icon: <ToolIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/setup/custody/offer',
+        render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+      {
+        path: '/app/setup/distribution/new/auction',
+        render: () => <NewAuction services={auctionService} />,
+      },
+      {
+        path: '/app/setup/instrument/new/base',
+        component: NewBaseInstrument,
+      },
+      {
+        path: '/app/setup/instrument/new/convertiblenote',
+        component: NewConvertibleNote,
+      },
+      {
+        path: '/app/setup/instrument/new/binaryoption',
+        component: NewBinaryOption,
+      },
+      {
+        path: '/app/setup/issuance/new',
+        render: () => <IssuanceNew services={issuanceService} />,
+      },
+      {
+        path: '/app/setup/listing/new',
+        render: () => <ListingNew services={listingService} />,
+      },
+      {
+        path: '/app/setup/trading/offer',
+        render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
   });
@@ -299,14 +345,15 @@ const AppComponent = () => {
     <Page sideBarItems={entriesToDisplay}>
       {servicesLoading ? (
         <div>
-          <CircularProgress color={'secondary'} />
+          <CircularProgress color="secondary" />
         </div>
       ) : (
         <div>
           <Switch>
+            <Route exact path="/app" component={Landing} />
             {routeEntries(entriesToDisplay)}
-            {additionRouting.map(routeProps => (
-              <Route {...routeProps} />
+            {additionRouting.map((routeProps, i) => (
+              <Route key={i} {...routeProps} />
             ))}
           </Switch>
         </div>

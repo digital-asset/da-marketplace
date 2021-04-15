@@ -9,6 +9,8 @@
 
 @use 'pages/login/Login';
 @use 'pages/landing/Landing';
+@use 'pages/manage/Manage';
+@use 'pages/setup/SetUp';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
@@ -120,6 +122,10 @@ html {
     margin: 0px;
     color: var(--grey-10);
 
+    &.error {
+      color: var(--red-50);
+    }
+
     &.bold {
       font-weight: 600;
     }
@@ -187,6 +193,8 @@ html {
         @include StripedTable.striped-table();
         @include CalendarInput.calendar-input();
         @include App.app();
+        @include Manage.manage();
+        @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();

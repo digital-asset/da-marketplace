@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import _ from 'lodash';
+
+import { CreateEvent } from '@daml/ledger';
+import { Template } from '@daml/types';
 
 import {
   Service as CustodyService,
+  Offer as CustodyOffer,
   Request as CustodyRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import {
@@ -22,12 +27,13 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import {
   Service as TradingService,
+  Offer as TradingOffer,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+
 import { useStreamQueries } from '../Main';
-import { CreateEvent } from '@daml/ledger';
-import { Template } from '@daml/types';
-import _ from 'lodash';
 
 export enum ServiceKind {
   CUSTODY = 'Custody',
@@ -38,6 +44,12 @@ export enum ServiceKind {
   TRADING = 'Trading',
 }
 
+export type ServiceRoleOfferChoice =
+  | typeof TradingRole.OfferTradingService
+  | typeof TradingRole.OfferListingService
+  | typeof CustodyRole.OfferIssuanceService
+  | typeof CustodyRole.OfferCustodyService;
+
 export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string>;
 
 export type ServiceRequestTemplates =
@@ -47,6 +59,9 @@ export type ServiceRequestTemplates =
   | IssuanceRequest
   | ListingRequest
   | TradingRequest;
+
+export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
+export type ServiceOfferTemplates = TradingOffer | CustodyOffer;
 
 type ServiceContract =
   | CreateEvent<CustodyService>
