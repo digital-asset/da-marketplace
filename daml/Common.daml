@@ -4,7 +4,7 @@ import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Next.Set
-import qualified Marketplace.Operator.Service as Operator
+import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
 import qualified Marketplace.Clearing.Service as Clearing
 import qualified Marketplace.Custody.Role as Custodian
@@ -33,7 +33,7 @@ data Providers = Providers
     exchange : Party
     clearinghouse : Party
     public : Party
-    operatorServiceCid : ContractId Operator.Service
+    operatorRoleCid : ContractId Operator.Role
     clearingRoleCid : ContractId Clearinghouse.Role
     custodianRoleCid : ContractId Custodian.Role
     exchangeRoleCid : ContractId Exchange.Role
@@ -67,33 +67,32 @@ onboardProviders = do
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
-  operatorServiceCid        <- submit operator  do createCmd Operator.Service with ..
-  custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferCustodianRole with provider = bank
+  operatorRoleCid           <- submit operator  do createCmd Operator.Role with ..
+  custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
   custodianRoleCid          <- submit bank      do exerciseCmd custodianRoleOfferCid Custodian.Accept
-  exchangeRoleOfferCid      <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferExchangeRole with provider = exchange
+  exchangeRoleOfferCid      <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
   exchangeRoleCid           <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
-  matchingServiceOfferCid   <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferMatchingService with provider = exchange
+  matchingServiceOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferMatchingService with provider = exchange
   matchingServiceCid        <- submit exchange  do exerciseCmd matchingServiceOfferCid Matching.Accept
-  settlementServiceOfferCid <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferSettlementService with provider = exchange
+  settlementServiceOfferCid <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferSettlementService with provider = exchange
   settlementServiceCid      <- submit exchange  do exerciseCmd settlementServiceOfferCid Settlement.Accept
-  distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferDistributorRole with provider = bank
+  distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
 
   -- Identities
-  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = bank
+  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorService with provider = operator; customer = bank
   regulatorServiceCid             <- submit bank      do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid  <- submit bank      do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "BankLegalName"; location = "BankLocation"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
-  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = exchange
+  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorService with provider = operator; customer = exchange
   regulatorServiceCid             <- submit exchange  do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid  <- submit exchange  do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "ExchangeLegalName"; location = "ExchangeLocation"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
 
-  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; customer = clearinghouse
+  regulatorServiceOfferCid        <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorService with provider = operator; customer = clearinghouse
   regulatorServiceCid             <- submit clearinghouse  do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid  <- submit clearinghouse  do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with legalName = "CCPLegalName"; location = "CCPLocation"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..
-
 
   -- Clearing
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with customer = clearinghouse, ..
@@ -106,7 +105,7 @@ onboardProviders = do
   openAccountRequestCid <- submit clearinghouse do exerciseCmd custodyServiceCid Custody.RequestOpenAccount with accountId = clearinghouseAccountId; observers = [bank]; ctrls = [bank, clearinghouse]
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
 
-  clearingRoleOfferCid  <- submit operator do exerciseCmd operatorServiceCid Operator.OfferClearingRole with provider = clearinghouse
+  clearingRoleOfferCid  <- submit operator do exerciseCmd operatorRoleCid Operator.OfferClearingRole with provider = clearinghouse
   clearingRoleCid       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
 
   pure Providers with ..
@@ -157,7 +156,7 @@ onboardCustomer Providers{..} party = do
   clearingServiceCid      <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
 
   -- Identity
-  regulatorServiceOfferCid <- submit operator do exerciseCmd operatorServiceCid Operator.OfferRegulatorService with provider = operator; ..
+  regulatorServiceOfferCid <- submit operator do exerciseCmd operatorRoleCid Operator.OfferRegulatorService with provider = operator; ..
   regulatorServiceCid <- submit customer do exerciseCmd regulatorServiceOfferCid Regulator.Accept
   identityVerificationRequestCid <- submit customer do exerciseCmd regulatorServiceCid Regulator.RequestIdentityVerification with observers = [public]; legalName = party <> " Legal Name"; location = party <> " Location"
   verifiedIdentity <- submit operator do exerciseCmd regulatorServiceCid Regulator.VerifyIdentity with ..

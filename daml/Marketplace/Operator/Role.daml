@@ -1,4 +1,4 @@
-module Marketplace.Operator.Service where
+module Marketplace.Operator.Role where
 
 import Marketplace.Regulator.Service qualified as Regulator
 import Marketplace.Custody.Role qualified as Custodian
@@ -8,7 +8,7 @@ import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
 
-template Service
+template Role
   with
     operator : Party
   where

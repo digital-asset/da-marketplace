@@ -20,6 +20,12 @@ template Role
         do
           create Auction.Offer with ..
 
+      nonconsuming ApproveAuctionServiceRequest : ContractId Auction.Service
+        with
+          auctionServiceRequestCid : ContractId Auction.Request
+        do
+          exercise auctionServiceRequestCid Auction.Approve with ..
+
       nonconsuming TerminateAuctionService : ()
         with
           auctionServiceCid : ContractId Auction.Service
@@ -31,6 +37,12 @@ template Role
           customer : Party
         do
           create Bidding.Offer with ..
+
+      nonconsuming ApproveBiddingServiceRequest : ContractId Bidding.Service
+        with
+          biddingServiceRequestCid : ContractId Bidding.Request
+        do
+          exercise biddingServiceRequestCid Bidding.Approve with ..
 
       nonconsuming TerminateBiddingService : ()
         with
