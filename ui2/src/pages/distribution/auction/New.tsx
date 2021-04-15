@@ -74,7 +74,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   console.log(customerServices);
   const service = customerServices[0];
-  if (!service) return <></>;
+  if (!service) return <p>Not an auction service customer.</p>;
 
   const rightsizeAsset = async (
     deposit: CreateEvent<AssetDeposit>,
@@ -141,7 +141,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== auctionedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}

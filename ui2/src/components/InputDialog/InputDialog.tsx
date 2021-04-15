@@ -30,6 +30,7 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
   open: boolean;
   title: string;
   defaultValue: T;
+  error?: string;
   fields: Record<keyof T, Field>;
   onClose: (state: T | null) => Promise<void>;
   onChange?: (state: T | null) => void;
@@ -87,6 +88,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
         <Button className="ghost" onClick={() => props.onClose(null)}>
           Cancel
         </Button>
+        {props.error && <p className="error">{props.error}</p>}
       </Modal.Actions>
     </Modal>
   );
