@@ -11,7 +11,9 @@ parties:
   - UsdtIssuer
   - Public
   - Exchange
+  - Ccp
   - Broker
+  - Bank
 version: 0.1.8
 dependencies:
   - daml-prim

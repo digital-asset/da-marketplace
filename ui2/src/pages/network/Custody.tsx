@@ -128,7 +128,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
 
   const approveRequest = async (c: CreateEvent<Request>) => {
     if (!hasRole) return; // TODO: Display error
-    await ledger.exercise(Role.AcceptCustodyRequest, roles[0].contractId, {
+    await ledger.exercise(Role.ApproveCustodyRequest, roles[0].contractId, {
       custodyRequestCid: c.contractId,
     });
   };
