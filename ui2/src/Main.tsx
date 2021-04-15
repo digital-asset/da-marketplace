@@ -21,6 +21,7 @@ import { Distribution } from './apps/Distribution';
 import { Listing } from './apps/Listing';
 import { Trading } from './apps/Trading';
 import { Registry } from './apps/Registry';
+import QuickSetup from './pages/login/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from './config';
 import { Query, StreamCloseEvent } from '@daml/ledger';
@@ -34,32 +35,42 @@ export default function Main({ defaultPath }: MainProps) {
   const user = useUserState();
 
   return (
-    <WellKnownPartiesProvider>
-      <PublicDamlProvider
-        party={user.party}
-        token={user.token}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <ServicesProvider>
-          <HashRouter>
-            <Switch>
-              <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
-              <PrivateRoute path="/app" component={App} />
-              {/* <PrivateRoute path="/apps/network" component={Network} />
+    <HashRouter>
+      <Switch>
+        <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
+        <PrivateRoute
+          path="/app"
+          render={() => {
+            return user ? (
+              <WellKnownPartiesProvider>
+                <PublicDamlProvider
+                  party={user.party}
+                  token={user.token}
+                  httpBaseUrl={httpBaseUrl}
+                  wsBaseUrl={wsBaseUrl}
+                >
+                  <ServicesProvider>
+                    <App />
+                  </ServicesProvider>
+                </PublicDamlProvider>
+              </WellKnownPartiesProvider>
+            ) : (
+              <Redirect to="/" />
+            );
+          }}
+        ></PrivateRoute>
+        {/* <PrivateRoute path="/apps/network" component={Network} />
                   <PrivateRoute path="/apps/custody" component={Custody} />
                   <PrivateRoute path="/apps/registry" component={Registry} />
                   <PrivateRoute path="/apps/issuance" component={Issuance} />
                   <PrivateRoute path="/apps/distribution" component={Distribution} />
                   <PrivateRoute path="/apps/listing" component={Listing} />
                   <PrivateRoute path="/apps/trading" component={Trading} /> */}
-              <PublicRoute path="/login" component={Login} />
-              <Route component={ErrorComponent} />
-            </Switch>
-          </HashRouter>
-        </ServicesProvider>
-      </PublicDamlProvider>
-    </WellKnownPartiesProvider>
+        <PublicRoute path="/quick-setup" component={QuickSetup} />
+        <PublicRoute path="/login" component={Login} />
+        <Route component={ErrorComponent} />
+      </Switch>
+    </HashRouter>
   );
 
   function PrivateRoute({ component, ...rest }: any) {
