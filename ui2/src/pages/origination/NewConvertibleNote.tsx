@@ -108,11 +108,11 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   const oneAsset: Claim<DamlDate, Id> = { tag: 'One', value: assetId };
   const notional: Claim<DamlDate, Id> = {
     tag: 'Scale',
-    value: { k: obsPrincipal, obligation: oneUsd },
+    value: { k: obsPrincipal, claim: oneUsd },
   };
   const conversion: Claim<DamlDate, Id> = {
     tag: 'Scale',
-    value: { k: obsConversion, obligation: oneAsset },
+    value: { k: obsConversion, claim: oneAsset },
   };
   const cond: Claim<DamlDate, Id> = {
     tag: 'Cond',
@@ -120,7 +120,7 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   };
   const claims: Claim<DamlDate, Id> = {
     tag: 'When',
-    value: { predicate: obsEuropean, obligation: cond },
+    value: { predicate: obsEuropean, claim: cond },
   };
 
   useEffect(() => {

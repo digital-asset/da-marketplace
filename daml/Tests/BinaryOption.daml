@@ -122,7 +122,7 @@ requestExercise underlyingPrice observationDate = script do
   -- Bob exercises the Option
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = optionDepositCid
-    choice = optionDesc.claims.obligation.lhs -- TODO: How do we get this in practice? From a UI?
+    choice = optionDesc.claims.claim.lhs -- TODO: How do we get this in practice? From a UI?
   submit providers.bank $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
     safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
     lifecycleRequestCid = lifecycleReqCid
