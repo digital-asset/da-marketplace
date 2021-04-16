@@ -49,6 +49,8 @@ export enum ServiceKind {
   LISTING = 'Listing',
   TRADING = 'Trading',
   CLEARING = 'Clearing',
+  MATCHING = 'Matching',
+  SETTLEMENT = 'Settlement',
 }
 
 export type ServiceRoleOfferChoice =

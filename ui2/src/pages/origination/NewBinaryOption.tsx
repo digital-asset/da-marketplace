@@ -80,7 +80,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const choice: Claim<DamlDate, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
   const claims: Claim<DamlDate, Id> = {
     tag: 'When',
-    value: { predicate: obsEuropean, obligation: choice },
+    value: { predicate: obsEuropean, claim: choice },
   };
 
   useEffect(() => {

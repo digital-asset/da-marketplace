@@ -103,7 +103,7 @@ export const transformClaim = (claim: Claim<Date, Id>, linkText: string): any =>
         type: 'Claim',
         children: [
           transformObservation(claim.value.predicate, 'condition'),
-          transformClaim(claim.value.obligation, 'then'),
+          transformClaim(claim.value.claim, 'then'),
         ],
       };
     case 'Scale':
@@ -113,7 +113,7 @@ export const transformClaim = (claim: Claim<Date, Id>, linkText: string): any =>
         type: 'Claim',
         children: [
           transformObservation(claim.value.k, 'factor'),
-          transformClaim(claim.value.obligation, 'then'),
+          transformClaim(claim.value.claim, 'then'),
         ],
       };
     case 'Give':
