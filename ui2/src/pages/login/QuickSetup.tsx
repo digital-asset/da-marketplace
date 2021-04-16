@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button, Icon, Loader, Table } from 'semantic-ui-react';
+import { Form, Button, Icon, Loader, Table, DropdownItemProps } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
-import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
+import {
+  DablPartiesInput,
+  PartyDetails,
+  useWellKnownParties,
+  PublicLedger,
+  WellKnownPartiesProvider,
+} from '@daml/hub-react';
 
 import { useUserDispatch, loginUser } from '../../context/UserContext';
 import { ServiceKind } from '../../context/ServicesContext';
@@ -46,6 +52,8 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
 import { CreateEvent } from '@daml/ledger';
+import deployTrigger, { getPublicAutomation, PublicAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+import {handleSelectMultiple} from '../common';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
@@ -74,9 +82,53 @@ const OfferServiceContractSetup = (props: {
   const [status, setStatus] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, string[]>>(new Map());
+  const [automations, setAutomations] = useState<PublicAutomation[] | undefined>([]);
+  const [ toDeploy, setToDeploy ] = useState<string[]>([]);
 
   const ledger = useLedger();
   const operator = credentials.party;
+
+  const publicParty = useWellKnownParties().parties?.publicParty;
+
+  const onDabl = () => {
+    return DeploymentMode.PROD_DABL;
+  };
+
+  const triggerOptions: DropdownItemProps[] = Object.values(MarketplaceTrigger).map(tn => {
+    return {
+      key: tn,
+      value: tn,
+      text: tn.split(':')[0],
+    }
+  });
+
+  useEffect(() => {
+    if (deploymentMode !== DeploymentMode.PROD_DABL) {
+      setAutomations(undefined);
+      return;
+    }
+    getPublicAutomation(publicParty).then(autos => {
+      setAutomations(autos);
+    });
+    const timer = setInterval(() => {
+      getPublicAutomation(publicParty).then(autos => {
+        setAutomations(autos);
+        if (!!automations && automations.length > 0) {
+          clearInterval(timer);
+        }
+      });
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [publicParty]);
+
+  const handleDeployment = async (token: string) => {
+    for (const auto of toDeploy) {
+      if (TRIGGER_HASH) {
+        deployTrigger(TRIGGER_HASH, auto, token, publicParty);
+      }
+    }
+
+  }
 
   const custodianRoles = useStreamQueries(CustodianRole);
   const exchangeRoles = useStreamQueries(ExchangeRole);
@@ -170,6 +222,7 @@ const OfferServiceContractSetup = (props: {
           <Table.Row>
             <Table.HeaderCell>Party</Table.HeaderCell>
             <Table.HeaderCell>Services</Table.HeaderCell>
+            <Table.HeaderCell>Automation</Table.HeaderCell>
             <Table.HeaderCell></Table.HeaderCell>
           </Table.Row>
         </Table.Header>
@@ -205,6 +258,15 @@ const OfferServiceContractSetup = (props: {
                 placeholder="Select..."
                 onChange={(_, data: any) => hangleChangeService(data.value)}
                 options={serviceOptions}
+              />
+            </Table.Cell>
+            <Table.Cell>
+              <Form.Select
+                disabled={!selectedParty}
+                placeholder="Select..."
+                multiple
+                onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
+                options={triggerOptions}
               />
             </Table.Cell>
             <Table.Cell>
@@ -275,6 +337,8 @@ const OfferServiceContractSetup = (props: {
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
+    const token = selectedParty.token;
+    await handleDeployment(token);
 
     switch (selectedService) {
       case ServiceKind.CUSTODY:
@@ -342,9 +406,12 @@ const MarketSetup = (props: {
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
               <Table.Cell>
-                  <Button className='ghost' onClick={() => loginUser(dispatch, history, computeCredentials(p))}>
-                      Login
-                  </Button>
+                <Button
+                  className="ghost"
+                  onClick={() => loginUser(dispatch, history, computeCredentials(p))}
+                >
+                  Login
+                </Button>
               </Table.Cell>
             </Table.Row>
           ))
@@ -515,14 +582,16 @@ const QuickSetup = () => {
         httpBaseUrl={httpBaseUrl}
         wsBaseUrl={wsBaseUrl}
       >
-        <OfferServiceContractSetup
-          credentials={adminCredentials}
-          serviceSetupData={serviceSetupData}
-          setServiceSetupData={setServiceSetupData}
-          parties={parties}
-          creatingRoleContracts={startServiceSetup}
-          onComplete={() => setStartServiceSetup(true)}
-        />
+        <WellKnownPartiesProvider>
+          <OfferServiceContractSetup
+            credentials={adminCredentials}
+            serviceSetupData={serviceSetupData}
+            setServiceSetupData={setServiceSetupData}
+            parties={parties}
+            creatingRoleContracts={startServiceSetup}
+            onComplete={() => setStartServiceSetup(true)}
+          />
+        </WellKnownPartiesProvider>
       </DamlLedger>
       {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (
         <DamlLedger
