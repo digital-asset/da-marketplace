@@ -53,3 +53,9 @@ export function getAbbreviation(phrase: string) {
     .join('')
     .substring(0, 3);
 }
+
+export async function halfSecondPromise() {
+  await new Promise<void>((resolve, _) => {
+    setTimeout(() => resolve(), 500);
+  });
+}
