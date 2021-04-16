@@ -8,8 +8,9 @@ const StripedTable = (props: {
   rows: React.ReactNode[][];
   rowsPerPage?: number;
   emptyLabel?: string;
+  showLabel?: boolean;
 }) => {
-  const { headings, rows, rowsPerPage, emptyLabel } = props;
+  const { headings, rows, rowsPerPage, emptyLabel, showLabel } = props;
 
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
@@ -45,7 +46,7 @@ const StripedTable = (props: {
               <Table.Row key={i}>
                 {row.map((item, j) => (
                   <Table.Cell key={j} textAlign={j + 1 > row.length / 2 ? 'right' : 'left'}>
-                    <b className="label">{headings[j]}: </b> {item}
+                    {showLabel && <b className="label">{headings[j]}: </b>} {item}
                   </Table.Cell>
                 ))}
               </Table.Row>

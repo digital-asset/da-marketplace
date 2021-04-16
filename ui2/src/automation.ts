@@ -8,7 +8,7 @@ export enum MarketplaceTrigger {
   AutoApproveTrigger = 'AutoApproval:handleApprovalTrigger',
   ClearingTrigger = 'ClearingTrigger:handleClearing',
   MatchingEngine = 'MatchingEngine:handleMatching',
-  SettlementInstructionTrigger = 'SettlementInstructionTrigger:handleSettlementInstruction'
+  SettlementInstructionTrigger = 'SettlementInstructionTrigger:handleSettlementInstruction',
 }
 
 type PublicTokenAPIResult =
@@ -37,38 +37,38 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
 };
 
 export type PublishedInstance = {
-  ledgerId: string
-  entityInfo : {
+  ledgerId: string;
+  entityInfo: {
     apiVersion: string;
     artifactHash: string;
     entity: {
       tag: string;
       value: {
-        tag: string,
-        value: AutomationValue
-      }
-    }
-  }
+        tag: string;
+        value: AutomationValue;
+      };
+    };
+  };
   enabled: boolean;
-  deployer: string
+  deployer: string;
   config: {
-    tag: string
+    tag: string;
     value: {
-      name: string,  // the one we want
-      runAs: string,
-      configMap: {}
-    }
-  }
+      name: string; // the one we want
+      runAs: string;
+      configMap: {};
+    };
+  };
   id: string;
   instanceLabel: string;
   createdAt: string;
-  owner: string
-}
-    // const handleDeploy = async (partyDetails: PartyDetails, party: string) => {
-    //   await getAutomationInstances(partyDetails.token).then(pd => {
-    //     newAutomations.set(party, pd || []);
-    // });
-    //
+  owner: string;
+};
+// const handleDeploy = async (partyDetails: PartyDetails, party: string) => {
+//   await getAutomationInstances(partyDetails.token).then(pd => {
+//     newAutomations.set(party, pd || []);
+// });
+//
 type PublishedInstanceAPIResult = PublishedInstance[] | undefined;
 
 export type AutomationValue = {
@@ -77,7 +77,7 @@ export type AutomationValue = {
   metadata: {};
   sdkVersion: string;
   triggerNames: [string];
-}
+};
 
 export type PublicAutomation = {
   artifactHash: string;
@@ -123,16 +123,16 @@ export const getAutomationInstances = async (
 ): Promise<PublishedInstance[] | undefined> => {
   const headers = {
     Authorization: `Bearer ${token?.toString()}`,
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  };
   const url = `https://${ledgerId}.${dablHostname}/.hub/v1/published/instance`;
   const result: Promise<PublishedInstanceAPIResult> = fetch(url, {
     method: 'GET',
-    headers
+    headers,
   }).then(response => response.json());
 
   return result;
-}
+};
 
 export const deployTrigger = async (
   artifactHash: string,
@@ -159,6 +159,22 @@ export const deployTrigger = async (
       }).then(response => response.json());
     }
   });
+};
+
+export const undeployTrigger = async (token: string, instanceId: string, owner: string) => {
+  const headers = {
+    Authorization: `Bearer ${token?.toString()}`,
+    'Content-Type': 'application/json',
+  };
+  const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/instance/delete`;
+  fetch(deployUrl, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      instanceId,
+      owner,
+    }),
+  }).then(response => response.json());
 };
 
 export default deployTrigger;
