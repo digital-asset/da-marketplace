@@ -10,7 +10,7 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 
 export const IssuancesTable: React.FC = () => {
-  const issuances = useStreamQueries(Issuance).contracts;
+  const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
   return (
     <StripedTable
       headings={[
@@ -22,6 +22,7 @@ export const IssuancesTable: React.FC = () => {
         'Quantity',
         'Details',
       ]}
+      loading={issuancesLoading}
       rows={issuances.map(c => [
         getName(c.payload.provider),
         getName(c.payload.customer),
@@ -42,13 +43,13 @@ export const IssuancesTable: React.FC = () => {
 const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   return (
     <div className="issuances">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
           New Issuance
         </Button>
       </Tile>
 
-      <Tile header={<h2>Issuances</h2>}>
+      <Tile header={<h4>Issuances</h4>}>
         <IssuancesTable />
       </Tile>
     </div>

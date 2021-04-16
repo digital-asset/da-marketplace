@@ -14,7 +14,9 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   const { contractId } = useParams<any>();
   const cid = contractId.replace('_', '#');
 
-  const instruments = useStreamQueries(AssetDescription).contracts;
+  const { contracts: instruments, loading: instrumentsLoading } = useStreamQueries(
+    AssetDescription
+  );
   const instrument = instruments.find(c => c.contractId === cid);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
         <h5>Details</h5>
         <StripedTable
           headings={['Issuer', 'Signatories', 'Label', 'Version', 'Description']}
+          loading={instrumentsLoading}
           rows={[
             [
               getName(instrument.payload.issuer),

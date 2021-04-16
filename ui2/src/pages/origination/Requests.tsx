@@ -22,7 +22,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
-  const requests = useStreamQueries(OriginationRequest).contracts;
+  const { contracts: requests, loading: requestsLoading } = useStreamQueries(OriginationRequest);
 
   const originateInstrument = async (c: CreateEvent<OriginationRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
@@ -35,13 +35,13 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   return (
     <div className="origination-requests">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
           New Instrument
         </Button>
       </Tile>
 
-      <Tile header={<h2>Origination Requests</h2>}>
+      <Tile header={<h4>Origination Requests</h4>}>
         <StripedTable
           headings={[
             'Registrar',
@@ -52,6 +52,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
             'Action',
             'Details',
           ]}
+          loading={requestsLoading}
           rows={requests.map(c => [
             getName(c.payload.provider),
             getName(c.payload.customer),

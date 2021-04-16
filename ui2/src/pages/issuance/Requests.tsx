@@ -27,8 +27,12 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);
-  const createRequests = useStreamQueries(CreateIssuanceRequest).contracts;
-  const reduceRequests = useStreamQueries(ReduceIssuanceRequest).contracts;
+  const { contracts: createRequests, loading: createRequestsLoading } = useStreamQueries(
+    CreateIssuanceRequest
+  );
+  const { contracts: reduceRequests, loading: reduceRequestsLoading } = useStreamQueries(
+    ReduceIssuanceRequest
+  );
   const createIssuance = async (c: CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
@@ -49,13 +53,13 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="issuance-requests">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
           New Issuance
         </Button>
       </Tile>
 
-      <Tile header={<h2>Issuance Requests</h2>}>
+      <Tile header={<h4>Issuance Requests</h4>}>
         <StripedTable
           headings={[
             'Issuing Agent',
@@ -67,6 +71,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             'Action',
             'Details',
           ]}
+          loading={createRequestsLoading}
           rows={createRequests.map(c => [
             getName(c.payload.provider),
             getName(c.payload.customer),
@@ -95,7 +100,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
         />
       </Tile>
 
-      <Tile header={<h2>Deissuance Requests</h2>}>
+      <Tile header={<h4>Deissuance Requests</h4>}>
         <StripedTable
           headings={[
             'Provider',
@@ -108,6 +113,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             'Action',
             'Details',
           ]}
+          loading={reduceRequestsLoading}
           rows={reduceRequests.map(c => [
             getName(c.payload.provider),
             getName(c.payload.customer),

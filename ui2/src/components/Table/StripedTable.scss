@@ -1,4 +1,5 @@
 @use './PaginationControls';
+@use '../../themes/variables.scss' as *;
 
 @mixin striped-table {
   .striped-table {
@@ -14,6 +15,11 @@
       border-collapse: collapse;
       border: none;
       margin: 0px;
+    
+      .ui.loader {
+        position: relative;
+        transform: translateX(-0%) translateY(-0%);
+    }
 
       th {
         border: none;
@@ -38,7 +44,7 @@
       }
     }
 
-    @media screen and (max-width: 769px) {
+    @media screen and (max-width: 1050px) {
       table {
         border-bottom: none;
 
@@ -48,13 +54,28 @@
 
         tr {
           background-color: var(--cool-grey-100);
+          display: flex;
+          flex-direction: column;
+          padding: $spacing-xs;
 
           td {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+            word-break: break-all;
             font-weight: normal;
             text-align: left;
+            padding: $spacing-xs;
 
             .label {
               display: inline-flex;
+              padding-right: $spacing-xs;
+            }
+
+            .ui.button {
+                display: unset;
+                margin: unset;
             }
           }
         }

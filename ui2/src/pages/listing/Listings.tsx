@@ -66,7 +66,7 @@ const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   return (
     <div>
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button className="ghost" onClick={() => history.push('/app/listing/new')}>
           New Listing
         </Button>

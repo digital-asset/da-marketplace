@@ -18,7 +18,7 @@ import {
   publicParty,
 } from '../../config';
 
-import Credentials, { computeCredentials, storeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
 
 import { halfSecondPromise } from '../page/utils';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table } from 'semantic-ui-react';
+import { Table, Loader } from 'semantic-ui-react';
 
 import PaginationControls from './PaginationControls';
 
@@ -8,8 +8,9 @@ const StripedTable = (props: {
   rows: React.ReactNode[][];
   rowsPerPage?: number;
   emptyLabel?: string;
+  loading?: boolean;
 }) => {
-  const { headings, rows, rowsPerPage, emptyLabel } = props;
+  const { headings, rows, rowsPerPage, emptyLabel, loading } = props;
 
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
@@ -39,25 +40,35 @@ const StripedTable = (props: {
             ))}
           </Table.Row>
         </Table.Header>
-        <Table.Body>
-          {rows.length > 0 ? (
-            activePageRows.map((row, i) => (
-              <Table.Row key={i}>
-                {row.map((item, j) => (
-                  <Table.Cell key={j} textAlign={j + 1 > row.length / 2 ? 'right' : 'left'}>
-                    <b className="label">{headings[j]}: </b> {item}
-                  </Table.Cell>
-                ))}
-              </Table.Row>
-            ))
-          ) : (
+        {loading ? (
+          <Table.Body>
             <Table.Row className="empty-table">
               <Table.Cell textAlign={'center'} colSpan={headings.length}>
-                <i>{emptyLabel || 'none'}</i>
+                <Loader active indeterminate size="small"/>
               </Table.Cell>
             </Table.Row>
-          )}
-        </Table.Body>
+          </Table.Body>
+        ) : (
+          <Table.Body>
+            {rows.length > 0 ? (
+              activePageRows.map((row, i) => (
+                <Table.Row key={i}>
+                  {row.map((item, j) => (
+                    <Table.Cell key={j} textAlign={j + 1 > row.length / 2 ? 'right' : 'left'}>
+                      <b className="label">{headings[j]}: </b> {item}
+                    </Table.Cell>
+                  ))}
+                </Table.Row>
+              ))
+            ) : (
+              <Table.Row className="empty-table">
+                <Table.Cell textAlign={'center'} colSpan={headings.length}>
+                  <i>{emptyLabel || 'none'}</i>
+                </Table.Cell>
+              </Table.Row>
+            )}
+          </Table.Body>
+        )}
       </Table>
       {totalPages > 1 && (
         <PaginationControls

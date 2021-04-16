@@ -2,7 +2,7 @@
   &.button {
     display: flex;
     color: var(--textcolor);
-    border-radius: 2px;
+    border-radius: 4px;
 
     &.basic.basic-button-fill {
       background-color: var(--white) !important;
@@ -13,12 +13,16 @@
       background: var(--white);
       align-items: center;
       border: 1px solid var(--green-50);
-      border-radius: 2px;
+      border-radius: 4px;
       font-weight: 400;
 
       &:hover {
         background-color: var(--lightblue);
         cursor: pointer;
+      }
+
+      &.warning {
+        border: 1px solid var(--red-50);
       }
 
       &.smaller {

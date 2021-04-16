@@ -216,7 +216,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       </Header>
       <div className="market">
         <div className="orders">
-          <Tile header={<h2>Order Book</h2>}>
+          <Tile header={<h4>Order Book</h4>}>
             <Table basic="very">
               <Table.Header>
                 <Table.Cell key={0}></Table.Cell>
@@ -278,7 +278,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               </Table.Footer>
             </Table>
           </Tile>
-          <Tile header={<h2>Orders</h2>}>
+          <Tile header={<h4>Orders</h4>}>
             <Table basic="very">
               <Table.Header>
                 <Table.Cell key={0}>
@@ -336,7 +336,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           </Tile>
         </div>
         <div className="new-order">
-          <Tile header={<h2>New Order</h2>}>
+          <Tile header={<h4>New Order</h4>}>
             <FormErrorHandled onSubmit={requestCreateOrder}>
               <Button.Group widths="2" toggle>
                 <Button type="button" active={isBuy} onClick={() => setIsBuy(true)}>

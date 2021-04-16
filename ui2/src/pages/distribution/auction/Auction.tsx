@@ -47,7 +47,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const auction = auctions.find(c => c.contractId === cid);
 
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
-  const allBids = useStreamQueries(Bid).contracts;
+  const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
   if (!auction || (!isAuctionProvider && !isAuctionCustomer)) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
@@ -135,7 +135,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   return (
     <div className="auction">
       <div className="bids">
-        <Tile header={<h2>Bids</h2>}>
+        <Tile header={<h4>Bids</h4>}>
           <StripedTable
             headings={[
               'Bidder',
@@ -147,6 +147,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
               'Status',
               'Allocation',
             ]}
+            loading={allBidsLoading}
             rows={bids.map(c => [
               c.payload.customer,
               c.payload.details.quantity,
@@ -164,7 +165,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
         </Tile>
       </div>
       <div className="details">
-        <Tile header={<h2>Details</h2>}>
+        <Tile header={<h4>Details</h4>}>
           <Table basic="very">
             <Table.Body>
               <Table.Row key={0}>
@@ -254,7 +255,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
             </Table.Body>
           </Table>
         </Tile>
-        <Tile header={<h2>Investors</h2>}>
+        <Tile header={<h4>Investors</h4>}>
           <StripedTable
             headings={['Investor', 'Status', 'Action']}
             rows={biddingProviderServices

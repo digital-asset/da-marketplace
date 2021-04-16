@@ -12,14 +12,15 @@ import { Icon } from 'semantic-ui-react';
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
 }: RouteComponentProps) => {
-  const biddingAuctions = useStreamQueries(BiddingAuctionContract).contracts;
-  const bids = useStreamQueries(Bid).contracts;
+  const {contracts: biddingAuctions, loading: biddingAuctionsLoading } = useStreamQueries(BiddingAuctionContract);
+  const {contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
 
   return (
     <div className="bidding">
-      <Tile header={<h2>Auctions</h2>}>
+      <Tile header={<h4>Auctions</h4>}>
         <StripedTable
           headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity', 'Details']}
+          loading={biddingAuctionsLoading}
           rows={biddingAuctions.map(c => [
             c.payload.auctionId,
             getName(c.payload.provider),
@@ -36,7 +37,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
           ])}
         />
       </Tile>
-      <Tile header={<h2>Bids</h2>}>
+      <Tile header={<h4>Bids</h4>}>
         <StripedTable
           headings={[
             'Auction ID',
@@ -48,6 +49,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
             'Status',
             'Allocation',
           ]}
+          loading={bidsLoading}
           rows={bids.map(c => [
             c.payload.auctionId,
             getName(c.payload.provider),

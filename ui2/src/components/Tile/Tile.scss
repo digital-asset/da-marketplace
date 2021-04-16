@@ -7,10 +7,15 @@
     border: 1px solid var(--cool-grey-90);
     background-color: white;
     color: var(--textcolor);
-    padding: v.$spacing-l;
-    border-radius: 2px;
+    padding: v.$spacing-m;
+    border-radius: 4px;
     margin-bottom: v.$spacing-l;
     text-align: left;
+
+    .striped-table table thead tr th {
+        background-color: white;
+
+    }
 
     &.thin-gap {
       margin-bottom: 2px;
@@ -101,7 +106,7 @@
             align-items: center;
             justify-content: flex-start;
             align-self: flex-end;
-            border-radius: 2px;
+            border-radius: 4px;
             background-color: var(--cool-grey-30);
 
             > input[type='file'] {

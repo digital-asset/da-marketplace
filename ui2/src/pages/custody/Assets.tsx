@@ -19,8 +19,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
 
-  const accounts = useStreamQueries(AssetSettlementRule).contracts;
-  const deposits = useStreamQueries(AssetDeposit).contracts;
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
   const tradeableDeposits = useMemo(
     () =>
@@ -33,7 +33,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
 
   return (
     <div className="assets">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button className="ghost" onClick={() => history.push('/app/custody/accounts/new')}>
           New Account
         </Button>
@@ -41,6 +41,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Asset', 'Account', 'Owner', 'Details']}
+        loading={accountsLoading || depositsLoading}
         rows={tradeableDeposits.map(c => [
           <>
             <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
@@ -75,6 +76,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           // 'Requests',
           'Details',
         ]}
+        loading={accountsLoading}
         rows={accounts.map(c => [
           c.payload.account.id.label,
           getName(c.payload.account.provider),

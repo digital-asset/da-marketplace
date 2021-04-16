@@ -26,7 +26,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const accounts = useStreamQueries(AssetSettlementRule);
-  const deposits = useStreamQueries(AssetDeposit);
+  const {contracts: deposits, loading: depositsLoading} = useStreamQueries(AssetDeposit);
   const assets = useStreamQueries(AssetDescription).contracts;
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
@@ -62,7 +62,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const account = accounts.contracts.find(a => a.contractId === cid);
   if (!account) return <></>;
 
-  const accountDeposits = deposits.contracts.filter(
+  const accountDeposits = deposits.filter(
     d =>
       d.payload.account.id.label === account.payload.account.id.label &&
       d.payload.account.provider === account.payload.account.provider &&
@@ -163,7 +163,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...creditDialogProps} />
       <div className="account">
         <Header as="h2">{account.payload.account.id.label}</Header>
-        <Tile header={<h2>Actions</h2>}>
+        <Tile header={<h4>Actions</h4>}>
           <div className="action-row">
             <Button className="ghost" onClick={() => requestCredit(account.payload.account.id)}>
               Deposit
@@ -176,7 +176,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
         <div className="account-overview">
           <div className="details">
-            <Tile header={<h2>Account Details</h2>}>
+            <Tile header={<h4>Account Details</h4>}>
               <Table basic="very">
                 <Table.Body>
                   <Table.Row key={0}>
@@ -218,9 +218,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             </Tile>
           </div>
           <div className="holdings">
-            <Tile header={<h2>Holdings</h2>}>
+            <Tile header={<h4>Holdings</h4>}>
               <StripedTable
-                headings={['Holding', 'Asset', 'Actions']}
+                headings={['Holding', 'Asset', '']}
+                loading={depositsLoading}
                 rows={accountDeposits.map(c => [
                   c.payload.asset.quantity,
                   c.payload.asset.id.label,

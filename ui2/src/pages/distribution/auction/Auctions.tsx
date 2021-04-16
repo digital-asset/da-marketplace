@@ -8,13 +8,14 @@ import { Header, Icon } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  const auctions = useStreamQueries(Auction).contracts;
+  const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
 
   return (
     <div className="auctions">
       <Header as="h2">Auctions</Header>
       <StripedTable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status', 'Details']}
+        loading={auctionsLoading}
         rows={auctions.map(c => [
           getName(c.payload.provider),
           getName(c.payload.customer),

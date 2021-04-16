@@ -20,11 +20,11 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 }) => {
   const party = useParty();
 
-  const accounts = useStreamQueries(AssetSettlementRule).contracts;
-  const deposits = useStreamQueries(AssetDeposit).contracts;
-  const standings = useStreamQueries(MemberStanding).contracts;
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+  const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
   const ccpDeposits = deposits.filter(
-    d => d.payload.account.id.label === services[0].payload.ccpAccount.id.label
+    d => d.payload.account.id.label === services[0]?.payload.ccpAccount.id.label
   );
 
   const formatter = new Intl.NumberFormat('en-US', {
@@ -34,13 +34,14 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   return (
     <div className="assets">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing', 'Details']}
+        loading={accountsLoading || depositsLoading || standingsLoading}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
@@ -77,6 +78,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <Header as="h2">CCP Account</Header>
       <StripedTable
         headings={['Account', 'Asset', 'Amount']}
+        loading={depositsLoading}
         rows={ccpDeposits.map(c => [
           c.payload.account.id.label,
           c.payload.asset.id.label,
@@ -85,6 +87,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
+        loading={accountsLoading}
         headings={[
           'Account',
           'Provider',

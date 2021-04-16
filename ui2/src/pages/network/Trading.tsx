@@ -6,11 +6,12 @@ import {
   TableCell,
   TableRow,
   TableHead,
-  Button,
   Grid,
   Paper,
   Typography,
 } from '@material-ui/core';
+import { Button } from 'semantic-ui-react';
+
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
@@ -62,13 +63,7 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
         party === c.payload.provider ? 'Provider' : 'Consumer',
         c.payload.tradingAccount.id.label,
         c.payload.allocationAccount.id.label,
-        <Button
-          color="primary"
-          size="small"
-          className="{classes.choiceButton}"
-          variant="contained"
-          onClick={() => terminateService(c)}
-        >
+        <Button className="ghost warning" onClick={() => terminateService(c)}>
           Terminate
         </Button>,
         // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
@@ -216,13 +211,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center">
                 <Grid item xs={6}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
-                      onClick={requestService}
-                    >
+                    <Button className="ghost" onClick={requestService}>
                       Request Trading Service
                     </Button>
                   </Grid>
@@ -230,13 +219,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                 <Grid item xs={6}>
                   <Grid container justify="center">
                     {hasRole && (
-                      <Button
-                        color="primary"
-                        size="large"
-                        className={classes.actionButton}
-                        variant="outlined"
-                        onClick={offerService}
-                      >
+                      <Button className="ghost" onClick={offerService}>
                         Offer Trading Service
                       </Button>
                     )}
@@ -312,33 +295,19 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => cancelRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => cancelRequest(c)}>
                             Cancel
                           </Button>
                         )}
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => approveRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => approveRequest(c)}>
                             Approve
                           </Button>
                         )}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
                         <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
+                          className="ghost"
                           onClick={() =>
                             history.push(
                               '/app/network/trading/request/' + c.contractId.replace('#', '_')
@@ -401,24 +370,12 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => withdrawOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => withdrawOffer(c)}>
                             Withdraw
                           </Button>
                         )}
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => acceptOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => acceptOffer(c)}>
                             Accept
                           </Button>
                         )}
