@@ -32,6 +32,12 @@
         border: none;
       }
 
+      &.back-button {
+        padding: 6px ;
+
+          margin-bottom: 12px;
+      }
+
       &.dark {
         border: 1px solid var(--blue-80);
         background-color: transparent;

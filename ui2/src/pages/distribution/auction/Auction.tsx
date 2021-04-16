@@ -20,6 +20,7 @@ import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 import { getName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
+import { ArrowLeftIcon } from '../../../icons/icons';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -32,7 +33,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   biddingServices,
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
-
   const { contractId } = useParams<any>();
   const cid = contractId.replace('_', '#');
 
@@ -134,6 +134,9 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="auction">
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <div className="bids">
         <Tile header={<h4>Bids</h4>}>
           <StripedTable

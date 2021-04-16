@@ -3,6 +3,8 @@ import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
+import { useHistory } from 'react-router-dom';
+
 import { useLedger } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { useParams } from 'react-router-dom';
@@ -23,11 +25,13 @@ import StripedTable from '../../../components/Table/StripedTable';
 import { getName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
+import { ArrowLeftIcon } from '../../../icons/icons';
 
 export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,
 }: ServicePageProps<Service>) => {
   const ledger = useLedger();
+  const history = useHistory()
   const { contractId } = useParams<any>();
 
   const [quantity, setQuantity] = useState<number>(0);
@@ -113,6 +117,9 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
 
   return (
     <div className="auction">
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <Header as="h2" className="header">
         Auction - {biddingAuction.payload.asset.id.label}
       </Header>

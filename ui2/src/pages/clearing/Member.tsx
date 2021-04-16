@@ -19,6 +19,7 @@ import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
+import { ArrowLeftIcon } from '../../icons/icons';
 
 const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -101,6 +102,9 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
   return (
     <div className="assets">
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <Tile header={<h4>Actions</h4>}>
         <MarginCallModal services={services} member={customer} />
         <MTMCalculationModal services={services} member={customer} />

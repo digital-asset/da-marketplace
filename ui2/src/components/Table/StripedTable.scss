@@ -29,9 +29,7 @@
       tr {
         &.clickable {
             &:hover {
-                background-color: red;
                 background-color: var(--cool-grey-90);
-
                 cursor: pointer;
             }
         }

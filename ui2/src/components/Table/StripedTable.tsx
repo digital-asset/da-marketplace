@@ -49,7 +49,7 @@ const StripedTable = (props: {
         </Table.Header>
         {loading ? (
           <Table.Body>
-            <Table.Row className="empty-table">
+            <Table.Row className="loading-table">
               <Table.Cell textAlign={'center'} colSpan={headings.length}>
                 <Loader active indeterminate size="small" />
               </Table.Cell>
