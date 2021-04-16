@@ -63,6 +63,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
   const { contracts: failedMarginCalcs, loading: failedMarginCalcsLoading } = useStreamQueries(
     RejectedMarginCalculation
   );
+
   const {
     contracts: fulfilledMarginCalcs,
     loading: fulfilledMarginCalcsLoading,

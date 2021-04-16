@@ -28,7 +28,6 @@ export const Tile: React.FC<TileProps> = ({
 }) => {
   return (
     <>
-      {/* {!!header && <h4 className="tile-header">{header}</h4>} */}
       <div className={classNames('tile', className, { dark, 'thin-gap': thinGap })}>
         {!!header && <div className="tile-header">{header}</div>}
         {!!subtitle && <p className="subtitle">{subtitle}</p>}
