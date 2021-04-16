@@ -4,8 +4,7 @@ import { Menu, Form } from 'semantic-ui-react';
 
 const Manage: React.FC = ({ children }) => {
   const history = useHistory();
-
-  let path = useLocation().pathname;
+  const path = useLocation().pathname;
 
   const menuItems = [
     { text: 'Custody', value: '/app/manage/custody' },
@@ -17,16 +16,13 @@ const Manage: React.FC = ({ children }) => {
   ];
 
   const [currentMenuItem, setCurrentMenuItem] = useState<{ text: string; value: string }>();
+
   useEffect(() => {
     const item = menuItems.find(i => path === i.value);
     if (item) {
-      console.log(item);
-
       setCurrentMenuItem(item);
     }
   }, [path]);
-
-  console.log(currentMenuItem?.text);
 
   return (
     <div className="manage">
