@@ -52,8 +52,15 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
 import { CreateEvent } from '@daml/ledger';
-import deployTrigger, { getPublicAutomation, PublicAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
-import {handleSelectMultiple} from '../common';
+import deployTrigger, {
+  getPublicAutomation,
+  PublicAutomation,
+  MarketplaceTrigger,
+  TRIGGER_HASH,
+  PublishedInstance,
+  getAutomationInstances,
+} from '../../automation';
+import { handleSelectMultiple } from '../common';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
@@ -81,9 +88,10 @@ const OfferServiceContractSetup = (props: {
 
   const [status, setStatus] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
+  const [instanceLoading, setInstanceLoading] = useState<boolean>(false);
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, string[]>>(new Map());
   const [automations, setAutomations] = useState<PublicAutomation[] | undefined>([]);
-  const [ toDeploy, setToDeploy ] = useState<string[]>([]);
+  const [toDeploy, setToDeploy] = useState<string[]>([]);
 
   const ledger = useLedger();
   const operator = credentials.party;
@@ -99,7 +107,7 @@ const OfferServiceContractSetup = (props: {
       key: tn,
       value: tn,
       text: tn.split(':')[0],
-    }
+    };
   });
 
   useEffect(() => {
@@ -127,8 +135,7 @@ const OfferServiceContractSetup = (props: {
         deployTrigger(TRIGGER_HASH, auto, token, publicParty);
       }
     }
-
-  }
+  };
 
   const custodianRoles = useStreamQueries(CustodianRole);
   const exchangeRoles = useStreamQueries(ExchangeRole);
@@ -188,6 +195,23 @@ const OfferServiceContractSetup = (props: {
     exchangeRoles.contracts.length,
     matchingServices.contracts.length,
   ]);
+
+  const [publishedAutomationMap, setPublishedAutomationMap] = useState<
+    Map<string, PublishedInstance[]>
+  >(new Map());
+  useEffect(() => {
+    let newAutomations: Map<string, PublishedInstance[]> = new Map();
+    Array.from(marketSetupDataMap.keys()).forEach(party => {
+      const partyDetails = parties.find(p => p.party === party);
+      if (!!partyDetails) {
+        getAutomationInstances(partyDetails.token).then(pd => {
+          newAutomations.set(party, pd || []);
+        });
+      }
+    });
+
+    setPublishedAutomationMap(newAutomations);
+  }, [parties, marketSetupDataMap]);
 
   useEffect(() => {
     const createOperatorService = async () => {
@@ -265,6 +289,7 @@ const OfferServiceContractSetup = (props: {
                 disabled={!selectedParty}
                 placeholder="Select..."
                 multiple
+                value={toDeploy}
                 onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
                 options={triggerOptions}
               />
@@ -274,7 +299,9 @@ const OfferServiceContractSetup = (props: {
                 <Button disabled className="ghost" content={<p>Adding...</p>} />
               ) : (
                 <Button
-                  disabled={!selectedParty || !selectedService || !!status}
+                  disabled={
+                    !selectedParty || (!selectedService && toDeploy.length === 0) || !!status
+                  }
                   className="ghost"
                   onClick={() => createRoleContract()}
                   content={<p>Add</p>}
@@ -289,7 +316,12 @@ const OfferServiceContractSetup = (props: {
           )}
         </Table.Body>
       </Table>
-      <MarketSetup parties={parties} loading={loading} marketSetupDataMap={marketSetupDataMap} />
+      <MarketSetup
+        parties={parties}
+        loading={loading || instanceLoading}
+        marketSetupDataMap={marketSetupDataMap}
+        automationInstanceMap={publishedAutomationMap}
+      />
     </div>
   );
 
@@ -333,7 +365,7 @@ const OfferServiceContractSetup = (props: {
   async function createRoleContract() {
     const operatorServiceContract = operatorService.contracts[0];
 
-    if (!selectedParty || !operatorServiceContract || !selectedService) return undefined;
+    if (!selectedParty || !operatorServiceContract || (!selectedService && !toDeploy.length)) return undefined;
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
@@ -362,6 +394,8 @@ const OfferServiceContractSetup = (props: {
           .exercise(OperatorService.OfferDistributorRole, id, { provider })
           .then(_ => onComplete());
     }
+
+    setToDeploy([]);
   }
 
   function findExistingRoleorOffer(newService: string) {
@@ -386,8 +420,9 @@ const MarketSetup = (props: {
   parties: PartyDetails[];
   loading: boolean;
   marketSetupDataMap: Map<string, string[]>;
+  automationInstanceMap: Map<string, PublishedInstance[]>;
 }) => {
-  const { parties, loading, marketSetupDataMap } = props;
+  const { parties, loading, marketSetupDataMap, automationInstanceMap } = props;
   const dispatch = useUserDispatch();
   const history = useHistory();
 
@@ -399,12 +434,27 @@ const MarketSetup = (props: {
 
   return (
     <Table className="party-registry-table" fixed>
+      <Table.Header>
+        <Table.Row>
+          <Table.HeaderCell>Party</Table.HeaderCell>
+          <Table.HeaderCell>Services</Table.HeaderCell>
+          <Table.HeaderCell>Automation</Table.HeaderCell>
+          <Table.HeaderCell></Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
       <Table.Body>
         {marketSetupDataMap.size > 0 ? (
           marketDataParties.map((p, i) => (
             <Table.Row key={i}>
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
+              <Table.Cell>
+                {automationInstanceMap
+                  .get(p)
+                  ?.map(a => a?.config?.value.name.split(':')[0] || 'Error')
+                  .sort()
+                  .join(', ')}
+              </Table.Cell>
               <Table.Cell>
                 <Button
                   className="ghost"
