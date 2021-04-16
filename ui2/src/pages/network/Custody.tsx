@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import {
   Table,
   TableBody,
   TableCell,
   TableRow,
   TableHead,
-  Button,
   Grid,
   Paper,
   Typography,
 } from '@material-ui/core';
+import { Button } from 'semantic-ui-react';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
@@ -31,6 +31,7 @@ type Props = {
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const ledger = useLedger();
+  const history = useHistory();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -38,28 +39,24 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <StripedTable
-      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
-      rows={services.map((c, i) => [
-        getTemplateId(c.templateId),
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        <Button
-          color="primary"
-          size="small"
-          className="{classes.choiceButton}"
-          variant="contained"
-          onClick={() => terminateService(c)}
-        >
-          Terminate
-        </Button>,
-        // <NavLink to={`/app/network/custody/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
+      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
+      rows={services.map((c, i) => {
+        return {
+          elements: [
+            getTemplateId(c.templateId),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+            <Button className="ghost warning small" onClick={() => terminateService(c)}>
+              Terminate
+            </Button>,
+            // <NavLink to={`/app/network/custody/service/${c.contractId.replace('#', '_')}`}>
+            //     <ArrowRightIcon/>
+            // </NavLink>
+          ],
+        };
+      })}
     />
   );
 };
@@ -159,13 +156,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center">
                 <Grid item xs={6}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
-                      onClick={requestService}
-                    >
+                    <Button className="ghost" onClick={requestService}>
                       Request Custody Service
                     </Button>
                   </Grid>
@@ -173,13 +164,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                 <Grid item xs={6}>
                   <Grid container justify="center">
                     {hasRole && (
-                      <Button
-                        color="primary"
-                        size="large"
-                        className={classes.actionButton}
-                        variant="outlined"
-                        onClick={offerService}
-                      >
+                      <Button className="ghost" onClick={offerService}>
                         Offer Custody Service
                       </Button>
                     )}
@@ -239,24 +224,12 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => cancelRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => cancelRequest(c)}>
                             Cancel
                           </Button>
                         )}
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => approveRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => approveRequest(c)}>
                             Approve
                           </Button>
                         )}
@@ -324,24 +297,12 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => withdrawOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => withdrawOffer(c)}>
                             Withdraw
                           </Button>
                         )}
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => acceptOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => acceptOffer(c)}>
                             Accept
                           </Button>
                         )}

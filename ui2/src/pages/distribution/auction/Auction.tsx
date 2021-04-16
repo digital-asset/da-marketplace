@@ -20,6 +20,7 @@ import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 import { getName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
+import { ArrowLeftIcon } from '../../../icons/icons';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -32,7 +33,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   biddingServices,
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
-
   const { contractId } = useParams<any>();
   const cid = contractId.replace('_', '#');
 
@@ -47,7 +47,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const auction = auctions.find(c => c.contractId === cid);
 
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
-  const allBids = useStreamQueries(Bid).contracts;
+  const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
   if (!auction || (!isAuctionProvider && !isAuctionCustomer)) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
@@ -134,8 +134,11 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="auction">
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <div className="bids">
-        <Tile header={<h2>Bids</h2>}>
+        <Tile header={<h4>Bids</h4>}>
           <StripedTable
             headings={[
               'Bidder',
@@ -147,24 +150,29 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
               'Status',
               'Allocation',
             ]}
-            rows={bids.map(c => [
-              c.payload.customer,
-              c.payload.details.quantity,
-              c.payload.details.price,
-              (
-                (100.0 * parseFloat(c.payload.details.quantity)) /
-                parseFloat(auction.payload.asset.quantity)
-              ).toFixed(2) + '%',
-              DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL),
-              c.payload.allowPublishing ? 'Public' : 'Private',
-              getBidStatus(c.payload.status),
-              getBidAllocation(c.payload),
-            ])}
+            loading={allBidsLoading}
+            rows={bids.map(c => {
+              return {
+                elements: [
+                  c.payload.customer,
+                  c.payload.details.quantity,
+                  c.payload.details.price,
+                  (
+                    (100.0 * parseFloat(c.payload.details.quantity)) /
+                    parseFloat(auction.payload.asset.quantity)
+                  ).toFixed(2) + '%',
+                  DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL),
+                  c.payload.allowPublishing ? 'Public' : 'Private',
+                  getBidStatus(c.payload.status),
+                  getBidAllocation(c.payload),
+                ],
+              };
+            })}
           />
         </Tile>
       </div>
       <div className="details">
-        <Tile header={<h2>Details</h2>}>
+        <Tile header={<h4>Details</h4>}>
           <Table basic="very">
             <Table.Body>
               <Table.Row key={0}>
@@ -254,29 +262,33 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
             </Table.Body>
           </Table>
         </Tile>
-        <Tile header={<h2>Investors</h2>}>
+        <Tile header={<h4>Investors</h4>}>
           <StripedTable
             headings={['Investor', 'Status', 'Action']}
             rows={biddingProviderServices
               .filter(c => c.payload.customer !== auction.payload.customer)
-              .map(c => [
-                getName(c.payload.customer),
-                getbiddingAuctionstatus(c.payload.customer),
-                isAuctionProvider && (
-                  <Button
-                    floated="right"
-                    type="submit"
-                    className="ghost"
-                    disabled={
-                      getbiddingAuctionstatus(c.payload.customer) !== 'No bid requested' ||
-                      auction.payload.status.tag !== 'Open'
-                    }
-                    onClick={() => requestBid(c)}
-                  >
-                    Request Bid
-                  </Button>
-                ),
-              ])}
+              .map(c => {
+                return {
+                  elements: [
+                    getName(c.payload.customer),
+                    getbiddingAuctionstatus(c.payload.customer),
+                    isAuctionProvider && (
+                      <Button
+                        floated="right"
+                        type="submit"
+                        className="ghost"
+                        disabled={
+                          getbiddingAuctionstatus(c.payload.customer) !== 'No bid requested' ||
+                          auction.payload.status.tag !== 'Open'
+                        }
+                        onClick={() => requestBid(c)}
+                      >
+                        Request Bid
+                      </Button>
+                    ),
+                  ],
+                };
+              })}
           />
         </Tile>
       </div>

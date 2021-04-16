@@ -180,12 +180,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       </div>
       <div className="asset">
         {showAuctionedAsset && (
-          <Tile header={<h2>Auctioned Asset</h2>}>
+          <Tile header={<h4>Auctioned Asset</h4>}>
             <div ref={el1} style={{ height: '100%' }} />
           </Tile>
         )}
         {showQuotedAsset && (
-          <Tile header={<h2>Quoted Asset</h2>}>
+          <Tile header={<h4>Quoted Asset</h4>}>
             <div ref={el2} style={{ height: '100%' }} />
           </Tile>
         )}
