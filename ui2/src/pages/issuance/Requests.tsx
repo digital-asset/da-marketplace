@@ -1,12 +1,11 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getName } from '../../config';
+import { ArrowRightIcon } from '../../icons/icons';
 import {
   Service,
   CreateIssuanceRequest,
@@ -14,6 +13,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { fromPairs } from 'lodash';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -72,31 +72,28 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             'Details',
           ]}
           loading={createRequestsLoading}
-          rows={createRequests.map(c => [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            c.payload.issuanceId,
-            c.payload.accountId.label,
-            c.payload.assetId.label,
-            c.payload.quantity,
-            <>
-              {party === c.payload.provider && (
-                <Button secondary className="ghost" onClick={() => createIssuance(c)}>
-                  Issue
-                </Button>
-              )}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/issuance/createrequest/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
+          rows={createRequests.map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                c.payload.issuanceId,
+                c.payload.accountId.label,
+                c.payload.assetId.label,
+                c.payload.quantity,
+                <>
+                  {party === c.payload.provider && (
+                    <Button className="ghost" onClick={() => createIssuance(c)}>
+                      Issue
+                    </Button>
+                  )}
+                </>,
+                <NavLink to={'/app/issuance/createrequest/' + c.contractId.replace('#', '_')}>
+                  <ArrowRightIcon />
+                </NavLink>,
+              ],
+            };
+          })}
         />
       </Tile>
 
@@ -111,35 +108,32 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             // 'Asset',
             // 'Quantity',
             'Action',
-            'Details',
+            'Details'
           ]}
           loading={reduceRequestsLoading}
-          rows={reduceRequests.map(c => [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Client',
-            c.payload.issuanceId,
-            c.payload.accountId.label,
-            // c.payload.assetId.label,
-            // c.payload.quotedAssetId.label,
-            <>
-              {party === c.payload.provider && (
-                <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
-                  Deissue
-                </Button>
-              )}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/issuance/deleterequest/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
+          rows={reduceRequests.map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                party === c.payload.provider ? 'Provider' : 'Client',
+                c.payload.issuanceId,
+                c.payload.accountId.label,
+                // c.payload.assetId.label,
+                // c.payload.quotedAssetId.label,
+                <>
+                  {party === c.payload.provider && (
+                    <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
+                      Deissue
+                    </Button>
+                  )}
+                </>,
+                <NavLink to={'/app/issuance/deleterequest/' + c.contractId.replace('#', '_')}>
+                  <ArrowRightIcon />
+                </NavLink>,
+              ],
+            };
+          })}
         />
       </Tile>
     </div>

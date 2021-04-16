@@ -42,28 +42,25 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <StripedTable
         headings={['Asset', 'Account', 'Owner', 'Details']}
         loading={accountsLoading || depositsLoading}
-        rows={tradeableDeposits.map(c => [
-          <>
-            <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
-          </>,
-          c.payload.account.id.label,
-          getName(c.payload.account.owner),
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() =>
+        rowsClickable
+        rows={tradeableDeposits.map(c => {
+          return {
+            elements: [
+              <>
+                <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
+              </>,
+              c.payload.account.id.label,
+              getName(c.payload.account.owner),
+            ],
+            onClick: () =>
               history.push(
                 '/app/custody/account/' +
                   accounts
                     .find(a => a.payload.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
-              )
-            }
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
-        ])}
+              ),
+          };
+        })}
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
@@ -74,24 +71,21 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           'Role',
           'Controllers',
           // 'Requests',
-          'Details',
         ]}
+        rowsClickable
         loading={accountsLoading}
-        rows={accounts.map(c => [
-          c.payload.account.id.label,
-          getName(c.payload.account.provider),
-          getName(c.payload.account.owner),
-          party === c.payload.account.provider ? 'Provider' : 'Client',
-          Object.keys(c.payload.ctrls.textMap).join(', '),
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() => history.push('/app/custody/account/' + c.contractId.replace('#', '_'))}
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
-        ])}
+        rows={accounts.map(c => {
+          return {
+            elements: [
+              c.payload.account.id.label,
+              getName(c.payload.account.provider),
+              getName(c.payload.account.owner),
+              party === c.payload.account.provider ? 'Provider' : 'Client',
+              Object.keys(c.payload.ctrls.textMap).join(', '),
+            ],
+            onClick: () => history.push('/app/custody/account/' + c.contractId.replace('#', '_')),
+          };
+        })}
       />
     </div>
   );

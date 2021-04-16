@@ -53,25 +53,27 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
         'Trading Account',
         'Allocation Account',
         'Action',
-        // 'Details',
+        // 'Details'
       ]}
-      rows={services.map((c, i) => [
-        getTemplateId(c.templateId),
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        c.payload.tradingAccount.id.label,
-        c.payload.allocationAccount.id.label,
-        <Button className="ghost warning" onClick={() => terminateService(c)}>
-          Terminate
-        </Button>,
-        // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
+      rows={services.map((c, i) => {
+        return {
+          elements: [
+            getTemplateId(c.templateId),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+            c.payload.tradingAccount.id.label,
+            c.payload.allocationAccount.id.label,
+            <Button className="ghost warning" onClick={() => terminateService(c)}>
+              Terminate
+            </Button>,
+            // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
+            //     <ArrowRightIcon/>
+            // </NavLink>
+          ],
+        };
+      })}
     />
   );
 };

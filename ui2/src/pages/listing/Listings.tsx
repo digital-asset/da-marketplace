@@ -40,21 +40,25 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         'Quoted Asset Precision',
         'Action',
       ]}
-      rows={listings.map(c => [
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        c.payload.listingId,
-        c.payload.calendarId,
-        c.payload.tradedAssetId.label,
-        c.payload.tradedAssetPrecision,
-        c.payload.quotedAssetId.label,
-        c.payload.quotedAssetPrecision,
-        party === c.payload.customer && (
-          <Button floated="right" className="ghost" onClick={() => requestDisableDelisting(c)}>
-            Disable
-          </Button>
-        ),
-      ])}
+      rows={listings.map(c => {
+        return {
+          elements: [
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            c.payload.listingId,
+            c.payload.calendarId,
+            c.payload.tradedAssetId.label,
+            c.payload.tradedAssetPrecision,
+            c.payload.quotedAssetId.label,
+            c.payload.quotedAssetPrecision,
+            party === c.payload.customer && (
+              <Button floated="right" className="ghost" onClick={() => requestDisableDelisting(c)}>
+                Disable
+              </Button>
+            ),
+          ],
+        };
+      })}
     />
   );
 };

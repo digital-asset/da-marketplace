@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -31,6 +31,7 @@ type Props = {
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const ledger = useLedger();
+  const history = useHistory();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -38,22 +39,24 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <StripedTable
-      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
-      rows={services.map((c, i) => [
-        getTemplateId(c.templateId),
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        <Button className="ghost warning small" onClick={() => terminateService(c)}>
-          Terminate
-        </Button>,
-        // <NavLink to={`/app/network/custody/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
+      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
+      rows={services.map((c, i) => {
+        return {
+          elements: [
+            getTemplateId(c.templateId),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+            <Button className="ghost warning small" onClick={() => terminateService(c)}>
+              Terminate
+            </Button>,
+            // <NavLink to={`/app/network/custody/service/${c.contractId.replace('#', '_')}`}>
+            //     <ArrowRightIcon/>
+            // </NavLink>
+          ],
+        };
+      })}
     />
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -12,7 +12,6 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import { ArrowRightIcon } from '../../icons/icons';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -40,8 +39,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
-        headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing', 'Details']}
+        headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
+        rowsClickable
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
@@ -64,30 +64,35 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             !!standing && standing.payload.marginSatisfied && standing.payload.mtmSatisfied
               ? 'Yes'
               : 'No';
-          return [
-            <>{s.payload.customer}</>,
-            formatter.format(clearingAmount),
-            formatter.format(marginAmount),
-            standingText,
-            <NavLink to={`/app/clearing/member/${s.contractId.replace('#', '_')}`}>
-              <ArrowRightIcon />
-            </NavLink>,
-          ];
+          return {
+            elements: [
+              <>{s.payload.customer}</>,
+              formatter.format(clearingAmount),
+              formatter.format(marginAmount),
+              standingText,
+            ],
+            onClick: () => history.push(`/app/clearing/member/${s.contractId.replace('#', '_')}`),
+          };
         })}
       />
       <Header as="h2">CCP Account</Header>
       <StripedTable
         headings={['Account', 'Asset', 'Amount']}
         loading={depositsLoading}
-        rows={ccpDeposits.map(c => [
-          c.payload.account.id.label,
-          c.payload.asset.id.label,
-          formatter.format(Number(c.payload.asset.quantity)),
-        ])}
+        rows={ccpDeposits.map(c => {
+          return {
+            elements: [
+              c.payload.account.id.label,
+              c.payload.asset.id.label,
+              formatter.format(Number(c.payload.asset.quantity)),
+            ],
+          };
+        })}
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
         loading={accountsLoading}
+        rowsClickable
         headings={[
           'Account',
           'Provider',
@@ -95,18 +100,19 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           'Role',
           'Controllers',
           // 'Requests',
-          'Details',
         ]}
-        rows={accounts.map(c => [
-          c.payload.account.id.label,
-          getName(c.payload.account.provider),
-          getName(c.payload.account.owner),
-          party === c.payload.account.provider ? 'Provider' : 'Client',
-          Object.keys(c.payload.ctrls.textMap).join(', '),
-          <NavLink to={`/app/custody/account/${c.contractId.replace('#', '_')}`}>
-            <ArrowRightIcon />
-          </NavLink>,
-        ])}
+        rows={accounts.map(c => {
+          return {
+            elements: [
+              c.payload.account.id.label,
+              getName(c.payload.account.provider),
+              getName(c.payload.account.owner),
+              party === c.payload.account.provider ? 'Provider' : 'Client',
+              Object.keys(c.payload.ctrls.textMap).join(', '),
+            ],
+            onClick: () => history.push(`/app/custody/account/${c.contractId.replace('#', '_')}`),
+          };
+        })}
       />
     </div>
   );

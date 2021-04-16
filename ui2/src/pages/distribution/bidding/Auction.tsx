@@ -34,7 +34,9 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   const [price, setPrice] = useState<number>(0);
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
 
-  const {contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } = useStreamQueries(BiddingAuctionContract);
+  const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } = useStreamQueries(
+    BiddingAuctionContract
+  );
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const bids = useStreamQueries(Bid);
 
@@ -188,14 +190,18 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
             <StripedTable
               headings={['Investor', 'Quantity', 'Allocation %']}
               loading={allBiddingAuctionsLoading}
-              rows={biddingAuction.payload.publishedBids.map(c => [
-                c.investor,
-                c.quantity,
-                (
-                  (parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity)) *
-                  100
-                ).toFixed(2),
-              ])}
+              rows={biddingAuction.payload.publishedBids.map(c => {
+                return {
+                  elements: [
+                    c.investor,
+                    c.quantity,
+                    (
+                      (parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity)) *
+                      100
+                    ).toFixed(2),
+                  ],
+                };
+              })}
             />
           </Tile>
           {!!bid && (

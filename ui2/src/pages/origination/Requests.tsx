@@ -50,33 +50,29 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
             'Description',
             'Safekeeping Account',
             'Action',
-            'Details',
           ]}
           loading={requestsLoading}
-          rows={requests.map(c => [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            c.payload.assetLabel,
-            c.payload.description,
-            c.payload.safekeepingAccountId.label,
-            <>
-              {party === c.payload.provider && (
-                <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
-                  Originate
-                </Button>
-              )}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/registry/requests/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
+          rowsClickable
+          rows={requests.map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                c.payload.assetLabel,
+                c.payload.description,
+                c.payload.safekeepingAccountId.label,
+                <>
+                  {party === c.payload.provider && (
+                    <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
+                      Originate
+                    </Button>
+                  )}
+                </>,
+              ],
+              onClick: () =>
+                history.push('/app/registry/requests/' + c.contractId.replace('#', '_')),
+            };
+          })}
         />
       </Tile>
     </div>

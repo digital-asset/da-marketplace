@@ -26,7 +26,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const accounts = useStreamQueries(AssetSettlementRule);
-  const {contracts: deposits, loading: depositsLoading} = useStreamQueries(AssetDeposit);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const assets = useStreamQueries(AssetDescription).contracts;
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
@@ -222,24 +222,28 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               <StripedTable
                 headings={['Holding', 'Asset', '']}
                 loading={depositsLoading}
-                rows={accountDeposits.map(c => [
-                  c.payload.asset.quantity,
-                  c.payload.asset.id.label,
-                  <>
-                    {party === account.payload.account.owner && (
-                      <div className="action-row">
-                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                          Withdraw
-                        </Button>
-                        {relatedAccounts.length > 0 && (
-                          <Button className="ghost" onClick={() => requestTransfer(c)}>
-                            Transfer
-                          </Button>
+                rows={accountDeposits.map(c => {
+                  return {
+                    elements: [
+                      c.payload.asset.quantity,
+                      c.payload.asset.id.label,
+                      <>
+                        {party === account.payload.account.owner && (
+                          <div className="action-row">
+                            <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                              Withdraw
+                            </Button>
+                            {relatedAccounts.length > 0 && (
+                              <Button className="ghost" onClick={() => requestTransfer(c)}>
+                                Transfer
+                              </Button>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
-                  </>,
-                ])}
+                      </>,
+                    ],
+                  };
+                })}
               />
             </Tile>
           </div>

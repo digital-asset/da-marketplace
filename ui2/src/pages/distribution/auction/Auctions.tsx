@@ -16,20 +16,20 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
       <StripedTable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status', 'Details']}
         loading={auctionsLoading}
-        rows={auctions.map(c => [
-          getName(c.payload.provider),
-          getName(c.payload.customer),
-          c.payload.asset.quantity + ' ' + c.payload.asset.id.label,
-          c.payload.floorPrice + ' ' + c.payload.quotedAssetId.label,
-          getAuctionStatus(c.payload.status),
-          <Icon
-            name="angle right"
-            link
-            onClick={() =>
-              history.push('/app/distribution/auctions/' + c.contractId.replace('#', '_'))
-            }
-          />,
-        ])}
+        rowsClickable
+        rows={auctions.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.asset.quantity + ' ' + c.payload.asset.id.label,
+              c.payload.floorPrice + ' ' + c.payload.quotedAssetId.label,
+              getAuctionStatus(c.payload.status),
+            ],
+            onClick: () =>
+              history.push('/app/distribution/auctions/' + c.contractId.replace('#', '_')),
+          };
+        })}
       />
     </div>
   );

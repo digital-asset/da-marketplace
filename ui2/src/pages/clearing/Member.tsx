@@ -123,11 +123,13 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculationTime,
-              formatter.format(Number(mc.payload.targetAmount)),
-              mc.payload.accountId.label,
-            ];
+            return {
+              elements: [
+                mc.payload.calculationTime,
+                formatter.format(Number(mc.payload.targetAmount)),
+                mc.payload.accountId.label,
+              ],
+            };
           })}
       />
       <Header as="h3">Failed Margin Calculations</Header>
@@ -138,19 +140,21 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculation.calculationTime,
-              formatter.format(Number(mc.payload.calculation.targetAmount)),
-              mc.payload.calculation.accountId.label,
-              <Button.Group size="mini">
-                <Button className="ghost" onClick={() => handleMarginRetry(mc.contractId)}>
-                  Retry
-                </Button>
-                <Button className="ghost" onClick={() => handleMarginCancel(mc.contractId)}>
-                  Cancel
-                </Button>
-              </Button.Group>,
-            ];
+            return {
+              elements: [
+                mc.payload.calculation.calculationTime,
+                formatter.format(Number(mc.payload.calculation.targetAmount)),
+                mc.payload.calculation.accountId.label,
+                <Button.Group size="mini">
+                  <Button className="ghost" onClick={() => handleMarginRetry(mc.contractId)}>
+                    Retry
+                  </Button>
+                  <Button className="ghost" onClick={() => handleMarginCancel(mc.contractId)}>
+                    Cancel
+                  </Button>
+                </Button.Group>,
+              ],
+            };
           })}
       />
       <Header as="h3">Fulfilled Margin Calculations</Header>
@@ -161,11 +165,13 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculation.calculationTime,
-              formatter.format(Number(mc.payload.calculation.targetAmount)),
-              mc.payload.calculation.accountId.label,
-            ];
+            return {
+              elements: [
+                mc.payload.calculation.calculationTime,
+                formatter.format(Number(mc.payload.calculation.targetAmount)),
+                mc.payload.calculation.accountId.label,
+              ],
+            };
           })}
       />
 
@@ -178,11 +184,13 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculationTime,
-              formatter.format(Number(mc.payload.mtmAmount)),
-              mc.payload.accountId.label,
-            ];
+            return {
+              elements: [
+                mc.payload.calculationTime,
+                formatter.format(Number(mc.payload.mtmAmount)),
+                mc.payload.accountId.label,
+              ],
+            };
           })}
       />
 
@@ -194,19 +202,21 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculation.calculationTime,
-              formatter.format(Number(mc.payload.calculation.mtmAmount)),
-              mc.payload.calculation.accountId.label,
-              <Button.Group size="mini">
-                <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
-                  Retry
-                </Button>
-                <Button className="ghost" onClick={() => handleMTMCancel(mc.contractId)}>
-                  Cancel
-                </Button>
-              </Button.Group>,
-            ];
+            return {
+              elements: [
+                mc.payload.calculation.calculationTime,
+                formatter.format(Number(mc.payload.calculation.mtmAmount)),
+                mc.payload.calculation.accountId.label,
+                <Button.Group size="mini">
+                  <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
+                    Retry
+                  </Button>
+                  <Button className="ghost" onClick={() => handleMTMCancel(mc.contractId)}>
+                    Cancel
+                  </Button>
+                </Button.Group>,
+              ],
+            };
           })}
       />
       <Header as="h3">Fulfilled MTM Calculations</Header>
@@ -217,11 +227,13 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           .filter(mc => mc.payload.customer === customer)
           .reverse()
           .map(mc => {
-            return [
-              mc.payload.calculation.calculationTime,
-              formatter.format(Number(mc.payload.calculation.mtmAmount)),
-              mc.payload.calculation.accountId.label,
-            ];
+            return {
+              elements: [
+                mc.payload.calculation.calculationTime,
+                formatter.format(Number(mc.payload.calculation.mtmAmount)),
+                mc.payload.calculation.accountId.label,
+              ],
+            };
           })}
       />
     </div>

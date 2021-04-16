@@ -12,29 +12,31 @@ import { Icon } from 'semantic-ui-react';
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
 }: RouteComponentProps) => {
-  const {contracts: biddingAuctions, loading: biddingAuctionsLoading } = useStreamQueries(BiddingAuctionContract);
-  const {contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
+  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } = useStreamQueries(
+    BiddingAuctionContract
+  );
+  const { contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
 
   return (
     <div className="bidding">
       <Tile header={<h4>Auctions</h4>}>
         <StripedTable
-          headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity', 'Details']}
+          headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
           loading={biddingAuctionsLoading}
-          rows={biddingAuctions.map(c => [
-            c.payload.auctionId,
-            getName(c.payload.provider),
-            getName(c.payload.issuer),
-            c.payload.asset.id.label,
-            c.payload.asset.quantity,
-            <Icon
-              name="angle right"
-              link
-              onClick={() =>
-                history.push('/app/distribution/bidding/' + c.contractId.replace('#', '_'))
-              }
-            />,
-          ])}
+          rowsClickable
+          rows={biddingAuctions.map(c => {
+            return {
+              elements: [
+                c.payload.auctionId,
+                getName(c.payload.provider),
+                getName(c.payload.issuer),
+                c.payload.asset.id.label,
+                c.payload.asset.quantity,
+              ],
+              onClick: () =>
+                history.push('/app/distribution/bidding/' + c.contractId.replace('#', '_')),
+            };
+          })}
         />
       </Tile>
       <Tile header={<h4>Bids</h4>}>
@@ -50,16 +52,20 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
             'Allocation',
           ]}
           loading={bidsLoading}
-          rows={bids.map(c => [
-            c.payload.auctionId,
-            getName(c.payload.provider),
-            getName(c.payload.issuer),
-            c.payload.assetId.label,
-            c.payload.details.quantity,
-            c.payload.details.price,
-            getBidStatus(c.payload.status),
-            getBidAllocation(c.payload),
-          ])}
+          rows={bids.map(c => {
+            return {
+              elements: [
+                c.payload.auctionId,
+                getName(c.payload.provider),
+                getName(c.payload.issuer),
+                c.payload.assetId.label,
+                c.payload.details.quantity,
+                c.payload.details.price,
+                getBidStatus(c.payload.status),
+                getBidAllocation(c.payload),
+              ],
+            };
+          })}
         />
       </Tile>
     </div>

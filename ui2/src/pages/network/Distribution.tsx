@@ -41,18 +41,19 @@ export const DistributionServiceTable = () => {
     <StripedTable
       headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
       loading={biddingServicesLoading || auctionServicesLoading}
-      rows={services.map(c => [
-        getTemplateId(c.templateId).split('.')[2],
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        // <NavLink to={`/app/network/listing/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
+    //   rowsClickable
+      rows={services.map(c => {
+        return {
+          elements: [
+            getTemplateId(c.templateId).split('.')[2],
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer'
+          ],
+        //   onClick: history.push(`/app/network/listing/service/${c.contractId.replace('#', '_')}`)
+        };
+      })}
     />
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { withRouter, RouteComponentProps, NavLink, useHistory } from 'react-router-dom';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { useStreamQueries } from '../../Main';
@@ -10,6 +10,7 @@ import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 
 export const InstrumentsTable: React.FC = () => {
+  const history = useHistory();
   const { contracts: allInstruments, loading: allInstrumentsLoading } = useStreamQueries(
     AssetDescription
   );
@@ -17,20 +18,21 @@ export const InstrumentsTable: React.FC = () => {
 
   return (
     <StripedTable
-      headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description', 'Details']}
+      headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
       loading={allInstrumentsLoading}
-      rows={instruments.map(c => [
-        getName(c.payload.issuer),
-        Object.keys(c.payload.assetId.signatories.textMap).join(', '),
-        c.payload.assetId.label,
-        c.payload.assetId.version,
-        c.payload.description,
-        <NavLink to={`/app/manage/instrument/${c.contractId.replace('#', '_')}`}>
-          <IconButton color="primary" size="small" component="span">
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>
-        </NavLink>,
-      ])}
+      rowsClickable
+      rows={instruments.map(c => {
+        return {
+          elements: [
+            getName(c.payload.issuer),
+            Object.keys(c.payload.assetId.signatories.textMap).join(', '),
+            c.payload.assetId.label,
+            c.payload.assetId.version,
+            c.payload.description,
+          ],
+          onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
+        };
+      })}
     />
   );
 };

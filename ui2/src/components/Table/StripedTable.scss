@@ -15,7 +15,7 @@
       border-collapse: collapse;
       border: none;
       margin: 0px;
-    
+
       .ui.loader {
         position: relative;
         transform: translateX(-0%) translateY(-0%);
@@ -24,6 +24,17 @@
       th {
         border: none;
         background-color: var(--cool-grey-100);
+      }
+
+      tr {
+        &.clickable {
+            &:hover {
+                background-color: red;
+                background-color: var(--cool-grey-90);
+
+                cursor: pointer;
+            }
+        }
       }
 
       tr td {

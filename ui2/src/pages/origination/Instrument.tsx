@@ -35,13 +35,15 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
           headings={['Issuer', 'Signatories', 'Label', 'Version', 'Description']}
           loading={instrumentsLoading}
           rows={[
-            [
-              getName(instrument.payload.issuer),
-              Object.keys(instrument.payload.assetId.signatories.textMap).join(', '),
-              instrument.payload.assetId.label,
-              instrument.payload.assetId.version,
-              instrument.payload.description,
-            ],
+            {
+              elements: [
+                getName(instrument.payload.issuer),
+                Object.keys(instrument.payload.assetId.signatories.textMap).join(', '),
+                instrument.payload.assetId.label,
+                instrument.payload.assetId.version,
+                instrument.payload.description,
+              ],
+            },
           ]}
         />
       </Tile>
