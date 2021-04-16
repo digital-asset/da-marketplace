@@ -3,7 +3,7 @@ module Tests.Utils where
 import ContingentClaims.Claim (Claim, Claim(Zero), when, scale, cond, give, one, and, or)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (at, cpb, european, irs, bermudan)
+import ContingentClaims.FinancialClaim (at, fixed, floating, swap, european, bermudan)
 import DA.Finance.Types (Id(..))
 import Prelude hiding (and, or)
 
@@ -35,7 +35,7 @@ futureDvp asset assetQty ccy ccyQty d =
 
 bond : Id -> Decimal -> Decimal -> [Date] -> C
 bond ccy notional coupon dates =
-  cpb notional (notional * coupon) ccy dates
+  fixed notional (notional * coupon) ccy dates
 
 callOptionPhysical : Id -> Decimal -> Id -> Decimal -> Date -> C
 callOptionPhysical asset assetQty ccy ccyQty d =
@@ -53,8 +53,9 @@ bermudanSwaption : Id -> Decimal -> Id -> Decimal -> [Date] -> [Date] -> C
 bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates exerciseDates =
   let
     floatObs = O.observe floatingRateId.label
-    swap = irs principal floatObs floatingRateId fixedRate fixedCcyId fixingDates
-  in bermudan swap exerciseDates
+    floatingLeg = floating (O.pure 0.0) floatObs floatingRateId 
+    fixedLeg = fixed principal fixedRate fixedCcyId
+  in bermudan (swap floatingLeg fixedLeg fixingDates) exerciseDates
 
 -- Modeled after https://ledgy.com/blog/examples-of-convertible-notes/
 convertibleNote : Id -> Id -> Decimal -> Decimal -> Date -> Decimal -> Decimal -> C
