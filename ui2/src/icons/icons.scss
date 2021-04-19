@@ -22,6 +22,10 @@
       fill: var(--textcolor);
     }
 
+    &.arrow-left-icon {
+        transform: rotate(180deg);
+    }
+
     &.candlestick-icon {
       line,
       rect {

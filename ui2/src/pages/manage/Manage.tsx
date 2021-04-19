@@ -1,19 +1,42 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Menu } from 'semantic-ui-react';
+import React, { useEffect, useState } from 'react';
+import { NavLink, useHistory, useLocation } from 'react-router-dom';
+import { Menu, Form } from 'semantic-ui-react';
 
 const Manage: React.FC = ({ children }) => {
+  const history = useHistory();
+  const path = useLocation().pathname;
+
+  const menuItems = [
+    { text: 'Custody', value: '/app/manage/custody' },
+    { text: 'Distributions', value: '/app/manage/distributions' },
+    { text: 'Instruments', value: '/app/manage/instruments' },
+    { text: 'Issuances', value: '/app/manage/issuance' },
+    { text: 'Listings', value: '/app/manage/listings' },
+    { text: 'Trading', value: '/app/manage/trading' },
+  ];
+
+  const [currentMenuItem, setCurrentMenuItem] = useState<{ text: string; value: string }>();
+
+  useEffect(() => {
+    const item = menuItems.find(i => path === i.value);
+    if (item) {
+      setCurrentMenuItem(item);
+    }
+  }, [path]);
+
   return (
     <div className="manage">
       <Menu className="manage-menu" pointing secondary>
-        <Menu.Item as={NavLink} name="custody" to="/app/manage/custody" />
-        <Menu.Item as={NavLink} name="distributions" to="/app/manage/distributions" />
-        <Menu.Item as={NavLink} name="instruments" to="/app/manage/instruments" />
-        <Menu.Item as={NavLink} name="issuances" to="/app/manage/issuance" />
-        <Menu.Item as={NavLink} name="listings" to="/app/manage/listings" />
-        <Menu.Item as={NavLink} name="trading" to="/app/manage/trading" />
+        {menuItems.map(item => (
+          <Menu.Item as={NavLink} name={item.text} to={item.value} />
+        ))}
       </Menu>
-
+      <Form.Select
+        placeholder="Select..."
+        options={menuItems}
+        value={currentMenuItem?.value}
+        onChange={(_, data: any) => history.push(data.value)}
+      />
       {children}
     </div>
   );

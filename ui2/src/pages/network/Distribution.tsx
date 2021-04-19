@@ -28,27 +28,32 @@ import StripedTable from '../../components/Table/StripedTable';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
+  const { contracts: auctionServices, loading: auctionServicesLoading } = useStreamQueries(
+    AuctionService
+  );
+  const { contracts: biddingServices, loading: biddingServicesLoading } = useStreamQueries(
+    BiddingService
+  );
 
-  const services = [
-    ...useStreamQueries(AuctionService).contracts,
-    ...useStreamQueries(BiddingService).contracts,
-  ];
+  const services = [...auctionServices, ...biddingServices];
 
   return (
     <StripedTable
       headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
-      rows={services.map(c => [
-        getTemplateId(c.templateId).split('.')[2],
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        // <NavLink to={`/app/network/listing/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
+      loading={biddingServicesLoading || auctionServicesLoading}
+    //   rowsClickable
+      rows={services.map(c => {
+        return {
+          elements: [
+            getTemplateId(c.templateId).split('.')[2],
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer'
+          ],
+        //   onClick: history.push(`/app/network/listing/service/${c.contractId.replace('#', '_')}`)
+        };
+      })}
     />
   );
 };

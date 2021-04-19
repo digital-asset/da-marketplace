@@ -14,6 +14,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { getName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps } from '../common';
+import { ArrowLeftIcon } from '../../icons/icons';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -25,9 +26,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const cid = contractId.replace('_', '#');
 
-  const accounts = useStreamQueries(AssetSettlementRule);
-  const deposits = useStreamQueries(AssetDeposit);
-  const assets = useStreamQueries(AssetDescription).contracts;
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+  const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -59,10 +60,17 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const clientServices = services.filter(s => s.payload.customer === party);
-  const account = accounts.contracts.find(a => a.contractId === cid);
-  if (!account) return <></>;
+  const account = accounts.find(a => a.contractId === cid);
 
-  const accountDeposits = deposits.contracts.filter(
+  if (accountsLoading || assetsLoading || depositsLoading) {
+    return <h4>Loading account...</h4>;
+  }
+
+  if (!account) {
+    return <h4>Could not find account.</h4>;
+  }
+
+  const accountDeposits = deposits.filter(
     d =>
       d.payload.account.id.label === account.payload.account.id.label &&
       d.payload.account.provider === account.payload.account.provider &&
@@ -79,7 +87,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     history.push('/app/custody/requests');
   };
 
-  const relatedAccounts = accounts.contracts
+  const relatedAccounts = accounts
     .filter(a => a.contractId !== cid)
     .filter(a => a.payload.account.owner === account.payload.account.owner)
     .map(r => r.payload.account.id.label);
@@ -88,7 +96,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     const onClose = async (state: any | null) => {
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
-      const transferToAccount = accounts.contracts.find(
+      const transferToAccount = accounts.find(
         a => a.payload.account.id.label === state.account
       );
       const service = clientServices.find(
@@ -159,11 +167,14 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <InputDialog {...transferDialogProps} />
       <InputDialog {...creditDialogProps} />
       <div className="account">
         <Header as="h2">{account.payload.account.id.label}</Header>
-        <Tile header={<h2>Actions</h2>}>
+        <Tile header={<h4>Actions</h4>}>
           <div className="action-row">
             <Button className="ghost" onClick={() => requestCredit(account.payload.account.id)}>
               Deposit
@@ -176,7 +187,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
         <div className="account-overview">
           <div className="details">
-            <Tile header={<h2>Account Details</h2>}>
+            <Tile header={<h4>Account Details</h4>}>
               <Table basic="very">
                 <Table.Body>
                   <Table.Row key={0}>
@@ -218,27 +229,32 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             </Tile>
           </div>
           <div className="holdings">
-            <Tile header={<h2>Holdings</h2>}>
+            <Tile header={<h4>Holdings</h4>}>
               <StripedTable
-                headings={['Holding', 'Asset', 'Actions']}
-                rows={accountDeposits.map(c => [
-                  c.payload.asset.quantity,
-                  c.payload.asset.id.label,
-                  <>
-                    {party === account.payload.account.owner && (
-                      <div className="action-row">
-                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                          Withdraw
-                        </Button>
-                        {relatedAccounts.length > 0 && (
-                          <Button className="ghost" onClick={() => requestTransfer(c)}>
-                            Transfer
-                          </Button>
+                headings={['Holding', 'Asset', '']}
+                loading={depositsLoading}
+                rows={accountDeposits.map(c => {
+                  return {
+                    elements: [
+                      c.payload.asset.quantity,
+                      c.payload.asset.id.label,
+                      <>
+                        {party === account.payload.account.owner && (
+                          <div className="action-row">
+                            <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                              Withdraw
+                            </Button>
+                            {relatedAccounts.length > 0 && (
+                              <Button className="ghost" onClick={() => requestTransfer(c)}>
+                                Transfer
+                              </Button>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
-                  </>,
-                ])}
+                      </>,
+                    ],
+                  };
+                })}
               />
             </Tile>
           </div>
