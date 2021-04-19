@@ -30,6 +30,11 @@ import {
   Offer as TradingOffer,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import {
+  Service as RegulatorService,
+  Request as RegulatorRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 
@@ -44,6 +49,7 @@ export enum ServiceKind {
   TRADING = 'Trading',
   MATCHING = 'Matching',
   SETTLEMENT = 'Settlement',
+  REGULATOR = 'Regulator',
 }
 
 export type ServiceRoleOfferChoice =
@@ -97,6 +103,9 @@ const ServicesProvider: React.FC = ({ children }) => {
   );
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
+  const { contracts: regulatorService, loading: regulatorLoading } = useStreamQueries(
+    RegulatorService
+  );
 
   useEffect(
     () =>
@@ -106,7 +115,8 @@ const ServicesProvider: React.FC = ({ children }) => {
           biddingLoading ||
           issuanceLoading ||
           listingLoading ||
-          tradingLoading
+          tradingLoading ||
+          regulatorLoading
       ),
     [
       custodyLoading,
@@ -115,6 +125,7 @@ const ServicesProvider: React.FC = ({ children }) => {
       issuanceLoading,
       listingLoading,
       tradingLoading,
+      regulatorLoading,
     ]
   );
 
@@ -127,6 +138,7 @@ const ServicesProvider: React.FC = ({ children }) => {
         ...issuanceService.map(c => ({ contract: c, service: ServiceKind.ISSUANCE })),
         ...listingService.map(c => ({ contract: c, service: ServiceKind.LISTING })),
         ...tradingService.map(c => ({ contract: c, service: ServiceKind.TRADING })),
+        ...regulatorService.map(c => ({ contract: c, service: ServiceKind.REGULATOR })),
       ]),
     [
       custodyService,
@@ -135,6 +147,7 @@ const ServicesProvider: React.FC = ({ children }) => {
       issuanceService,
       listingService,
       tradingService,
+      regulatorService,
     ]
   );
 

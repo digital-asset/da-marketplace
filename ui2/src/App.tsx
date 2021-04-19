@@ -61,6 +61,7 @@ import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
 import { Header } from 'semantic-ui-react';
+import RequestIdentityVerification from './pages/identity/Request';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -301,6 +302,10 @@ const AppComponent = () => {
       {
         path: '/app/setup/distribution/new/auction',
         render: () => <NewAuction services={auctionService} />,
+      },
+      {
+        path: '/app/setup/identity',
+        render: () => <RequestIdentityVerification />,
       },
       {
         path: '/app/setup/instrument/new/base',
