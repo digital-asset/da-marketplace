@@ -1,5 +1,6 @@
 module Marketplace.Trading.Service where
 
+import DA.Foldable (sequence_)
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
@@ -102,7 +103,7 @@ template Service
 
           if isMarketOrder && isFullCancellation && isWaitingExecution
             then do
-              sequence [archive orderCid, archive createOrderRequestCid]
+              sequence_ [archive orderCid, archive createOrderRequestCid]
               orderCid <- create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
               depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = order.depositCid
 
