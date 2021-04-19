@@ -21,8 +21,6 @@ const Request = () => {
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
 
-  console.log('ids', identities);
-
   const [isPublic, setIsPublic] = useState(true);
   const [legalName, setLegalName] = useState('');
   const [location, setLocation] = useState('');
@@ -49,7 +47,6 @@ const Request = () => {
   }
 
   const onSubmit = async () => {
-    console.log('ay', observers);
     await ledger.exercise(Service.RequestIdentityVerification, service.contractId, {
       legalName,
       location,
