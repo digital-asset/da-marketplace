@@ -140,7 +140,7 @@ export const transformClaim = (claim: Claim<Date, Id>, linkText: string): any =>
         type: 'Claim',
         children: [
           transformClaim(claim.value.lhs, 'left'),
-          transformClaim(claim.value.rhs, 'right'),
+          transformClaim(claim.value.rhs, 'right') ,
         ],
       };
     case 'Cond':
@@ -158,5 +158,17 @@ export const transformClaim = (claim: Claim<Date, Id>, linkText: string): any =>
       return { ...claim, linkText, type: 'Claim', children: null };
     case 'One':
       return { ...claim, linkText, type: 'Claim', text: '1 ' + claim.value.label, children: null };
+    case 'Anytime':
+      return { ...claim, linkText, type: 'Claim', children: [
+          transformObservation(claim.value.predicate, 'anytime'),
+          transformClaim(claim.value.claim, 'then')
+        ]
+      };
+    case 'Until':
+      return { ...claim, linkText, type: 'Claim', children: [
+          transformObservation(claim.value.predicate, 'until'),
+          transformClaim(claim.value.claim, 'then')
+        ]
+      };
   }
 };

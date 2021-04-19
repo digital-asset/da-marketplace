@@ -6,4 +6,4 @@
 [submodule "contingent-claims"]
 	path = contingent-claims
 	url = git@github.com:DACH-NY/contingent-claims.git
-	branch = master
+	branch = path-dependent
