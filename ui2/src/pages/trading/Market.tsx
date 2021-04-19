@@ -8,14 +8,14 @@ import {
   Details,
   Order,
   OrderType,
-  Side,
+  Side, Status
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { ServicePageProps } from '../common';
-import { Button, Form, Header, Label, Table } from 'semantic-ui-react';
+import {Button, Form, Header, Label, Popup, Table} from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { DateTime } from 'luxon';
@@ -112,6 +112,11 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           { text: 'Fill Or Kill', value: 'FOK' },
         ];
 
+  const getTimeInForceText = (timeInForce : TimeInForces, isLimitOrder: boolean) =>
+    timeInForceOptions(isLimitOrder)
+      .filter(({text, value}) => value === timeInForce)
+      .map(({text, value}) => text)[0]
+
   const party = useParty();
   const ledger = useLedger();
   const clientServices = services.filter(s => s.payload.customer === party);
@@ -120,8 +125,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const assets = useStreamQueries(AssetDeposit).contracts;
   const orders = useStreamQueries(Order).contracts;
   const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
+  const isPendingLimitOrder = (status: Status) => ['New', 'PendingExecution', 'PartiallyExecuted'].includes(status.tag)
   const bids = limits
     .filter(c => c.payload.details.side === Side.Buy)
+    .filter(c => isPendingLimitOrder(c.payload.status))
     .sort(
       (a, b) =>
         parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) -
@@ -129,6 +136,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     );
   const asks = limits
     .filter(c => c.payload.details.side === Side.Sell)
+    .filter(c => isPendingLimitOrder(c.payload.status))
     .sort(
       (a, b) =>
         parseFloat((b.payload.details.orderType.value as OrderType.Limit).price) -
@@ -177,8 +185,9 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       : await getAsset(tradedAssets, quantity);
     if (!depositCid) return;
 
+    const orderId : string = Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
-      id: { signatories: { textMap: {} }, label: uuidv4(), version: '0' },
+      id: { signatories: { textMap: {} }, label: orderId, version: '0' },
       symbol: listing.payload.listingId,
       asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,
@@ -208,6 +217,31 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const getColor = (c: CreateEvent<Order>) => {
     return c.payload.details.side === Side.Buy ? 'green' : 'red';
   };
+
+  const getStatusReason = (status: Status) => {
+    if (status.tag === 'Rejected' || status.tag === 'CancellationRejected') {
+      return status.value.reason.message;
+    }
+  };
+
+  const displayStatus = (status: Status) => {
+    switch (status.tag) {
+      case "New":
+      case "Rejected":
+      case "Cancelled":
+        return status.tag
+      case "PendingExecution":
+        return "Pending Execution"
+      case "PartiallyExecuted":
+        return "Partially Executed"
+      case "FullyExecuted":
+        return "Fully Executed"
+      case "PendingCancellation":
+        return "Pending Cancellation"
+      case "CancellationRejected":
+        return "Cancellation Rejected"
+    }
+  }
 
   return (
     <>
@@ -308,6 +342,9 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <Table.Cell key={8}>
                   <b>Filled</b>
                 </Table.Cell>
+                <Table.Cell key={9}>
+                  <b>Status</b>
+                </Table.Cell>
               </Table.Header>
               <Table.Body>
                 {orders.map((c, i) => (
@@ -321,13 +358,34 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                     <Table.Cell key={4}>{getPrice(c) || ''}</Table.Cell>
                     <Table.Cell key={5}>{getQuantity(c)}</Table.Cell>
                     <Table.Cell key={6}>{getVolume(c) || ''}</Table.Cell>
-                    <Table.Cell key={7}>{c.payload.details.timeInForce.tag}</Table.Cell>
+                    <Table.Cell key={7}>
+                      <Popup
+                        content={getTimeInForceText(c.payload.details.timeInForce.tag, c.payload.details.orderType.tag == "Limit")}
+                        mouseEnterDelay={500}
+                        mouseLeaveDelay={500}
+                        on="hover"
+                        trigger={<div>{c.payload.details.timeInForce.tag}</div>}
+                      />
+                      </Table.Cell>
                     <Table.Cell key={8}>
                       {(
                         100.0 -
                         (100.0 * parseFloat(c.payload.remainingQuantity)) / getQuantity(c)
                       ).toFixed(2)}
                       %
+                    </Table.Cell>
+                    <Table.Cell key={9}>
+                      {
+                        c.payload.status.tag !== 'Rejected' && c.payload.status.tag !== 'CancellationRejected'
+                          ? displayStatus(c.payload.status)
+                          : <Popup
+                              content={getStatusReason(c.payload.status)}
+                              mouseEnterDelay={500}
+                              mouseLeaveDelay={500}
+                              on="hover"
+                              trigger={<div>{displayStatus(c.payload.status)}</div>}
+                            />
+                      }
                     </Table.Cell>
                   </Table.Row>
                 ))}

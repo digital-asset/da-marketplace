@@ -60,7 +60,7 @@ template Service
           createOrderRequestCid : ContractId CreateOrderRequest
           providerOrderId : Text
         do
-          CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
+          CreateOrderRequest{..} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
 
           -- TODO: Confirm what to do with this business ACK when received out of the expected order.
@@ -71,13 +71,13 @@ template Service
               create order with status = Order.PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
 
-      nonconsuming RejectOrder : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming RejectOrderRequest : (ContractId Order.T, ContractId AssetDeposit)
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
+          CreateOrderRequest{details, depositCid} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
@@ -86,6 +86,28 @@ template Service
           depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
           return (orderCid, depositCid)
+
+      nonconsuming MarketOrderCancelRequest : (ContractId Order.T, ContractId AssetDeposit)
+        with
+          createOrderRequestCid : ContractId CreateOrderRequest
+          providerOrderId : Text
+          cancelledQuantity : Decimal
+        do
+          CreateOrderRequest{details} <- fetch createOrderRequestCid
+          (orderCid, order) <- fetchByKey (provider, details.id.label)
+
+          let isFullCancellation = cancelledQuantity >= order.details.asset.quantity
+              isWaitingExecution = order.status `elem` [Order.New, Order.PendingExecution]
+              isMarketOrder = order.details.orderType == Order.Market
+
+          if isMarketOrder && isFullCancellation && isWaitingExecution
+            then do
+              sequence [archive orderCid, archive createOrderRequestCid]
+              orderCid <- create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
+              depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = order.depositCid
+
+              return (orderCid, depositCid)
+            else return (orderCid, order.depositCid)
 
       nonconsuming CancelOrder : (ContractId Order.T, ContractId AssetDeposit)
         with
@@ -202,7 +224,14 @@ template CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          exerciseByKey @Service serviceKey RejectOrder with createOrderRequestCid = self, ..
+          exerciseByKey @Service serviceKey RejectOrderRequest with createOrderRequestCid = self, ..
+
+      nonconsuming CancelRequest : (ContractId Order.T, ContractId AssetDeposit)
+        with
+          providerOrderId : Text
+          cancelledQuantity : Decimal
+        do
+          exerciseByKey @Service serviceKey MarketOrderCancelRequest with createOrderRequestCid = self, ..
 
 template CancelOrderRequest
   with
