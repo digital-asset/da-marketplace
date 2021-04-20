@@ -227,6 +227,12 @@ auctionNoBidsAboveFloorPrice = do
   auction.status === Auction.NoValidBids
   bids <- query @Bidding.Bid bank
   all ((\bid -> bid.status == Bidding.Invalid) . snd) bids === True
+  F.forA_ [alice, bob, charlie, dave] (\party -> do
+    let ((_, bid) :: _) = filter (\(_, bid) -> bid.customer == party.customer) bids
+    deposit <- queryFilter @AssetDeposit party.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id.label == bid.quotedAssetId.label)
+    assertMsg ("Deposit not returned to Investor: " <> show party.customer) (not $ null deposit)
+    pure ()
+    )
 
 depositsDontCoverBids : Script ()
 depositsDontCoverBids = do

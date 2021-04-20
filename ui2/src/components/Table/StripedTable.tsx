@@ -65,7 +65,10 @@ const StripedTable = (props: {
                   onClick={row.onClick}
                 >
                   {row.elements.map((item, j) => (
-                    <Table.Cell key={j} textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}>
+                    <Table.Cell
+                      key={j}
+                      textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}
+                    >
                       <b className="label">{headings[j]}: </b> {item}
                     </Table.Cell>
                   ))}

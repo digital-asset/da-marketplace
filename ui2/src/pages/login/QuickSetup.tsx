@@ -342,9 +342,12 @@ const MarketSetup = (props: {
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
               <Table.Cell>
-                  <Button className='ghost' onClick={() => loginUser(dispatch, history, computeCredentials(p))}>
-                      Login
-                  </Button>
+                <Button
+                  className="ghost"
+                  onClick={() => loginUser(dispatch, history, computeCredentials(p))}
+                >
+                  Login
+                </Button>
               </Table.Cell>
             </Table.Row>
           ))

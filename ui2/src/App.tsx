@@ -63,6 +63,7 @@ import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
 import { Header } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
+import { TradingOrder } from './pages/trading/Order';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -78,10 +79,7 @@ const AppComponent = () => {
     ClearingService
   );
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(
-    BiddingService,
-    () => [{ customer: party }]
-  );
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
     IssuanceService
   );
@@ -91,6 +89,7 @@ const AppComponent = () => {
 
   const servicesLoading: boolean = [
     custodyLoading,
+    clearingLoading,
     auctionLoading,
     biddingLoading,
     issuanceLoading,
@@ -226,6 +225,12 @@ const AppComponent = () => {
           icon: <ExchangeIcon />,
           children: [],
         })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/trading/order/:contractId',
+        render: () => <TradingOrder listings={listings} />,
       },
     ],
   });

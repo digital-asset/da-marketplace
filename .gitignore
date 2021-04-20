@@ -20,3 +20,5 @@ daml.js/
 
 .idea/
 .vscode/
+
+Pipfile.lock

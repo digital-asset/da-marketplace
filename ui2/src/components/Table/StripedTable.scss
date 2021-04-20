@@ -19,7 +19,7 @@
       .ui.loader {
         position: relative;
         transform: translateX(-0%) translateY(-0%);
-    }
+      }
 
       th {
         border: none;
@@ -28,10 +28,10 @@
 
       tr {
         &.clickable {
-            &:hover {
-                background-color: var(--cool-grey-90);
-                cursor: pointer;
-            }
+          &:hover {
+            background-color: var(--cool-grey-90);
+            cursor: pointer;
+          }
         }
       }
 
@@ -83,8 +83,8 @@
             }
 
             .ui.button {
-                display: unset;
-                margin: unset;
+              display: unset;
+              margin: unset;
             }
           }
         }

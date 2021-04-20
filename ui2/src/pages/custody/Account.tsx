@@ -96,9 +96,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     const onClose = async (state: any | null) => {
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
-      const transferToAccount = accounts.find(
-        a => a.payload.account.id.label === state.account
-      );
+      const transferToAccount = accounts.find(a => a.payload.account.id.label === state.account);
       const service = clientServices.find(
         s => s.payload.provider === account.payload.account.provider
       );
