@@ -6,7 +6,6 @@ import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
 import { useUserDispatch, loginUser } from '../../context/UserContext';
-import { ServiceKind } from '../../context/ServicesContext';
 import { useHistory } from 'react-router-dom';
 
 import {
@@ -49,6 +48,14 @@ import { CreateEvent } from '@daml/ledger';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
+enum ServiceKind {
+  CUSTODY = 'Custody',
+  LISTING = 'Listing',
+  TRADING = 'Trading',
+  MATCHING = 'Matching',
+  SETTLEMENT = 'Settlement',
+}
+
 interface IServiceContractSetupData {
   party?: PartyDetails;
   services: string[];
@@ -85,6 +92,12 @@ const OfferServiceContractSetup = (props: {
   const matchingServices = useStreamQueries(MarchingService);
   const operatorService = useStreamQueries(OperatorService);
 
+  const custodianOffers = useStreamQueries(CustodianOffer);
+  const distributorOffers = useStreamQueries(DistributorOffer);
+  const settlementOffers = useStreamQueries(SettlementOffer);
+  const exhangeOffers = useStreamQueries(ExchangeOffer);
+  const matchingOffers = useStreamQueries(MatchingOffer);
+
   const selectedParty = serviceSetupData?.party;
   const selectedServices = serviceSetupData?.services || [];
 
@@ -95,7 +108,12 @@ const OfferServiceContractSetup = (props: {
         settlementServices.loading ||
         exchangeRoles.loading ||
         matchingServices.loading ||
-        operatorService.loading
+        operatorService.loading ||
+        custodianOffers.loading ||
+        distributorOffers.loading ||
+        settlementOffers.loading ||
+        exhangeOffers.loading ||
+        matchingOffers.loading
     );
   }, [
     custodianRoles.loading,
@@ -104,6 +122,11 @@ const OfferServiceContractSetup = (props: {
     exchangeRoles.loading,
     matchingServices.loading,
     operatorService.loading,
+    custodianOffers.loading,
+    distributorOffers.loading,
+    settlementOffers.loading,
+    exhangeOffers.loading,
+    matchingOffers.loading,
   ]);
 
   useEffect(() => {
@@ -128,14 +151,7 @@ const OfferServiceContractSetup = (props: {
     }
 
     setMarketSetupDataMap(newMarketData);
-  }, [
-    loading,
-    custodianRoles.contracts.length,
-    distributorRoles.contracts.length,
-    settlementServices.contracts.length,
-    exchangeRoles.contracts.length,
-    matchingServices.contracts.length,
-  ]);
+  }, [loading]);
 
   useEffect(() => {
     const createOperatorService = async () => {
@@ -151,15 +167,7 @@ const OfferServiceContractSetup = (props: {
     return { text: party.partyName, value: party.party };
   });
 
-  const servicesNotSupported = [
-    ServiceKind.AUCTION,
-    ServiceKind.ISSUANCE,
-    ServiceKind.BIDDING,
-    ServiceKind.REGULATOR,
-  ]; // services not yet supported by this modal
-
   const serviceOptions = Object.values(ServiceKind)
-    .filter(s => !servicesNotSupported.includes(s))
     .filter(s => !findExistingRole(s))
     .map(service => {
       return { text: service, value: service };
@@ -243,14 +251,6 @@ const OfferServiceContractSetup = (props: {
     </div>
   );
 
-  function hangleChangeService(newServices: string[]) {
-    // const hasRole = findExistingRoleorOffer(newService);
-    // if (hasRole) {
-    //   setStatus(`${selectedParty?.partyName} already offers ${newService} services`);
-    // } else {
-    // }
-  }
-
   function handleChangeParty(newPartyId: string) {
     setStatus(undefined);
 
@@ -287,15 +287,39 @@ const OfferServiceContractSetup = (props: {
     selectedServices.map(async service => {
       switch (service) {
         case ServiceKind.CUSTODY:
-          return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
+          if (!custodianOffers.contracts.find(c => c.payload.provider === provider)) {
+            return await ledger
+              .exercise(OperatorService.OfferCustodianRole, id, { provider })
+              .catch(() => console.log('cant offer this service'));
+          }
+
         case ServiceKind.TRADING:
-          return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
+          if (!exhangeOffers.contracts.find(c => c.payload.provider === provider)) {
+            return await ledger
+              .exercise(OperatorService.OfferExchangeRole, id, { provider })
+              .catch(() => console.log('cant offer this service'));
+          }
+
         case ServiceKind.MATCHING:
-          return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
+          if (!matchingOffers.contracts.find(c => c.payload.provider === provider)) {
+            return await ledger
+              .exercise(OperatorService.OfferMatchingService, id, { provider })
+              .catch(() => console.log('cant offer this service'));
+          }
+
         case ServiceKind.SETTLEMENT:
-          return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
+          if (!settlementOffers.contracts.find(c => c.payload.provider === provider)) {
+            return await ledger
+              .exercise(OperatorService.OfferSettlementService, id, { provider })
+              .catch(() => console.log('cant offer this service'));
+          }
+
         case ServiceKind.LISTING:
-          return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
+          if (!distributorOffers.contracts.find(c => c.payload.provider === provider)) {
+            return await ledger
+              .exercise(OperatorService.OfferDistributorRole, id, { provider })
+              .catch(() => console.log('cant offer this service'));
+          }
       }
     });
   }
@@ -401,21 +425,29 @@ const CreateRoleContract = (props: {
     if (loading) {
       return;
     }
-    services.map(async service => {
-      switch (service) {
-        case ServiceKind.CUSTODY:
-          return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
-        case ServiceKind.TRADING:
-          return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
-        case ServiceKind.MATCHING:
-          return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
-        case ServiceKind.SETTLEMENT:
-          return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
-        case ServiceKind.LISTING:
-          return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
-      }
-    });
+
+    handleOffers();
   }, [loading]);
+
+  async function handleOffers() {
+    await Promise.all(
+      services.map(async service => {
+        switch (service) {
+          case ServiceKind.CUSTODY:
+            return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
+          case ServiceKind.TRADING:
+            return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
+          case ServiceKind.MATCHING:
+            return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
+          case ServiceKind.SETTLEMENT:
+            return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
+          case ServiceKind.LISTING:
+            return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
+        }
+      })
+    );
+    onFinish();
+  }
 
   const acceptAllOffers = async (
     contracts: readonly CreateEvent<Offer, undefined, any>[],
@@ -424,12 +456,14 @@ const CreateRoleContract = (props: {
     const args = { operator, provider: party };
 
     let retries = 0;
-
+    console.log(contracts);
     while (retries < 3) {
       if (contracts.length > 0) {
         await Promise.all(
           contracts.map(async c => {
-            return await ledger.exercise(choice, c.contractId, args);
+            return await ledger
+              .exercise(choice, c.contractId, args)
+              .catch(() => console.log('cant accept this offer'));
           })
         );
         break;
@@ -438,8 +472,6 @@ const CreateRoleContract = (props: {
         retries++;
       }
     }
-
-    onFinish();
   };
 
   return null;
