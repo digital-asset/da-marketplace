@@ -1,12 +1,11 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getName } from '../../config';
+import { ArrowRightIcon } from '../../icons/icons';
 import {
   Service,
   CreateIssuanceRequest,
@@ -14,6 +13,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { fromPairs } from 'lodash';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -27,8 +27,12 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);
-  const createRequests = useStreamQueries(CreateIssuanceRequest).contracts;
-  const reduceRequests = useStreamQueries(ReduceIssuanceRequest).contracts;
+  const { contracts: createRequests, loading: createRequestsLoading } = useStreamQueries(
+    CreateIssuanceRequest
+  );
+  const { contracts: reduceRequests, loading: reduceRequestsLoading } = useStreamQueries(
+    ReduceIssuanceRequest
+  );
   const createIssuance = async (c: CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error
@@ -49,13 +53,13 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="issuance-requests">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
           New Issuance
         </Button>
       </Tile>
 
-      <Tile header={<h2>Issuance Requests</h2>}>
+      <Tile header={<h4>Issuance Requests</h4>}>
         <StripedTable
           headings={[
             'Issuing Agent',
@@ -67,35 +71,33 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             'Action',
             'Details',
           ]}
-          rows={createRequests.map(c => [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            c.payload.issuanceId,
-            c.payload.accountId.label,
-            c.payload.assetId.label,
-            c.payload.quantity,
-            <>
-              {party === c.payload.provider && (
-                <Button secondary className="ghost" onClick={() => createIssuance(c)}>
-                  Issue
-                </Button>
-              )}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/issuance/createrequest/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
+          loading={createRequestsLoading}
+          rows={createRequests.map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                c.payload.issuanceId,
+                c.payload.accountId.label,
+                c.payload.assetId.label,
+                c.payload.quantity,
+                <>
+                  {party === c.payload.provider && (
+                    <Button className="ghost" onClick={() => createIssuance(c)}>
+                      Issue
+                    </Button>
+                  )}
+                </>,
+                <NavLink to={'/app/issuance/createrequest/' + c.contractId.replace('#', '_')}>
+                  <ArrowRightIcon />
+                </NavLink>,
+              ],
+            };
+          })}
         />
       </Tile>
 
-      <Tile header={<h2>Deissuance Requests</h2>}>
+      <Tile header={<h4>Deissuance Requests</h4>}>
         <StripedTable
           headings={[
             'Provider',
@@ -106,34 +108,32 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             // 'Asset',
             // 'Quantity',
             'Action',
-            'Details',
+            'Details'
           ]}
-          rows={reduceRequests.map(c => [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Client',
-            c.payload.issuanceId,
-            c.payload.accountId.label,
-            // c.payload.assetId.label,
-            // c.payload.quotedAssetId.label,
-            <>
-              {party === c.payload.provider && (
-                <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
-                  Deissue
-                </Button>
-              )}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/issuance/deleterequest/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
+          loading={reduceRequestsLoading}
+          rows={reduceRequests.map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                party === c.payload.provider ? 'Provider' : 'Client',
+                c.payload.issuanceId,
+                c.payload.accountId.label,
+                // c.payload.assetId.label,
+                // c.payload.quotedAssetId.label,
+                <>
+                  {party === c.payload.provider && (
+                    <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
+                      Deissue
+                    </Button>
+                  )}
+                </>,
+                <NavLink to={'/app/issuance/deleterequest/' + c.contractId.replace('#', '_')}>
+                  <ArrowRightIcon />
+                </NavLink>,
+              ],
+            };
+          })}
         />
       </Tile>
     </div>

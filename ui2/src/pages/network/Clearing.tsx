@@ -90,7 +90,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
-        rows={services.map((c, i) => [
+        rows={services.map((c, i) => { return {elements: [
           getTemplateId(c.templateId),
           getName(c.payload.operator),
           getName(c.payload.provider),
@@ -104,12 +104,12 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           >
             Terminate
           </Button>,
-        ])}
+        ]}})}
       />
       <Header as="h3">Requests</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        rows={requests.map((c, i) => [
+        rows={requests.map((c, i) => { return { elements: [
           getTemplateId(c.templateId),
           getName(c.payload.customer),
           <Button.Group>
@@ -145,12 +145,12 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               </>
             )}
           </Button.Group>,
-        ])}
+        ]}})}
       />
       <Header as="h3">Offers</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        rows={offers.map((c, i) => [
+        rows={offers.map((c, i) => {return {elements: [
           getTemplateId(c.templateId),
           getName(c.payload.customer),
           <Button.Group>
@@ -197,7 +197,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               </>
             )}
           </Button.Group>,
-        ])}
+        ]}})}
       />
     </div>
   );

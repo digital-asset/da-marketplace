@@ -19,19 +19,20 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
     <div>
       <Header as="h2">Markets</Header>
       <StripedTable
-        headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset', 'Details']}
-        rows={listings.map(c => [
-          getName(c.payload.provider),
-          getName(c.payload.customer),
-          c.payload.listingId,
-          c.payload.tradedAssetId.label,
-          c.payload.quotedAssetId.label,
-          <Icon
-            name="angle right"
-            link
-            onClick={() => history.push('/app/trading/markets/' + c.contractId.replace('#', '_'))}
-          />,
-        ])}
+        headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset']}
+        rowsClickable
+        rows={listings.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.listingId,
+              c.payload.tradedAssetId.label,
+              c.payload.quotedAssetId.label,
+            ],
+            onClick: () => history.push('/app/trading/markets/' + c.contractId.replace('#', '_')),
+          };
+        })}
       />
     </div>
   );

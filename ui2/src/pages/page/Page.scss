@@ -83,6 +83,9 @@
 
               .cog-icon {
                 height: 20px;
+                width: 20px;
+                min-height: 20px; /* prevent icon shrinking if out of space */
+                min-width: 20px;
               }
             }
 

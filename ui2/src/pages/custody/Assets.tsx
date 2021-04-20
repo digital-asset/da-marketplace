@@ -19,8 +19,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
 
-  const accounts = useStreamQueries(AssetSettlementRule).contracts;
-  const deposits = useStreamQueries(AssetDeposit).contracts;
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
   const tradeableDeposits = useMemo(
     () =>
@@ -33,7 +33,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
 
   return (
     <div className="assets">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button className="ghost" onClick={() => history.push('/app/custody/accounts/new')}>
           New Account
         </Button>
@@ -41,28 +41,26 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Asset', 'Account', 'Owner', 'Details']}
-        rows={tradeableDeposits.map(c => [
-          <>
-            <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
-          </>,
-          c.payload.account.id.label,
-          getName(c.payload.account.owner),
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() =>
+        loading={accountsLoading || depositsLoading}
+        rowsClickable
+        rows={tradeableDeposits.map(c => {
+          return {
+            elements: [
+              <>
+                <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
+              </>,
+              c.payload.account.id.label,
+              getName(c.payload.account.owner),
+            ],
+            onClick: () =>
               history.push(
                 '/app/custody/account/' +
                   accounts
                     .find(a => a.payload.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
-              )
-            }
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
-        ])}
+              ),
+          };
+        })}
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
@@ -73,23 +71,21 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           'Role',
           'Controllers',
           // 'Requests',
-          'Details',
         ]}
-        rows={accounts.map(c => [
-          c.payload.account.id.label,
-          getName(c.payload.account.provider),
-          getName(c.payload.account.owner),
-          party === c.payload.account.provider ? 'Provider' : 'Client',
-          Object.keys(c.payload.ctrls.textMap).join(', '),
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() => history.push('/app/custody/account/' + c.contractId.replace('#', '_'))}
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
-        ])}
+        rowsClickable
+        loading={accountsLoading}
+        rows={accounts.map(c => {
+          return {
+            elements: [
+              c.payload.account.id.label,
+              getName(c.payload.account.provider),
+              getName(c.payload.account.owner),
+              party === c.payload.account.provider ? 'Provider' : 'Client',
+              Object.keys(c.payload.ctrls.textMap).join(', '),
+            ],
+            onClick: () => history.push('/app/custody/account/' + c.contractId.replace('#', '_')),
+          };
+        })}
       />
     </div>
   );
