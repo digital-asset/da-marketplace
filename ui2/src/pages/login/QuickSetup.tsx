@@ -151,10 +151,16 @@ const OfferServiceContractSetup = (props: {
     return { text: party.partyName, value: party.party };
   });
 
-  const servicesNotSupported = [ServiceKind.AUCTION, ServiceKind.ISSUANCE, ServiceKind.BIDDING]; // services not yet supported by this modal
+  const servicesNotSupported = [
+    ServiceKind.AUCTION,
+    ServiceKind.ISSUANCE,
+    ServiceKind.BIDDING,
+    ServiceKind.REGULATOR,
+  ]; // services not yet supported by this modal
 
-  let serviceOptions = Object.values(ServiceKind)
+  const serviceOptions = Object.values(ServiceKind)
     .filter(s => !servicesNotSupported.includes(s))
+    .filter(s => !findExistingRole(s))
     .map(service => {
       return { text: service, value: service };
     });
@@ -195,14 +201,23 @@ const OfferServiceContractSetup = (props: {
               )}
             </Table.Cell>
             <Table.Cell>
-              <Form.Select
-                multiple
-                value={selectedServices}
-                disabled={!selectedParty}
-                placeholder="Select..."
-                onChange={(_, data: any) => hangleChangeService(data.value)}
-                options={serviceOptions}
-              />
+              {serviceOptions.length > 0 ? (
+                <Form.Select
+                  multiple
+                  value={selectedServices}
+                  disabled={!selectedParty}
+                  placeholder="Select..."
+                  onChange={(_, data: any) =>
+                    setServiceSetupData({
+                      ...serviceSetupData,
+                      services: data.value,
+                    })
+                  }
+                  options={serviceOptions}
+                />
+              ) : (
+                <p>All services added</p>
+              )}
             </Table.Cell>
             <Table.Cell>
               {creatingRoleContracts ? (
@@ -230,11 +245,9 @@ const OfferServiceContractSetup = (props: {
 
   function hangleChangeService(newServices: string[]) {
     // const hasRole = findExistingRoleorOffer(newService);
-
     // if (hasRole) {
     //   setStatus(`${selectedParty?.partyName} already offers ${newService} services`);
     // } else {
-    setServiceSetupData({ ...serviceSetupData, services: newServices });
     // }
   }
 
@@ -287,7 +300,7 @@ const OfferServiceContractSetup = (props: {
     });
   }
 
-  function findExistingRoleorOffer(newService: string) {
+  function findExistingRole(newService: string) {
     switch (newService) {
       case ServiceKind.CUSTODY:
         return !!custodianRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
@@ -392,19 +405,14 @@ const CreateRoleContract = (props: {
       switch (service) {
         case ServiceKind.CUSTODY:
           return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
-        //   break;
         case ServiceKind.TRADING:
           return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
-        //   break;
         case ServiceKind.MATCHING:
           return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
-        //   break;
         case ServiceKind.SETTLEMENT:
           return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
-        //   break;
         case ServiceKind.LISTING:
           return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
-        //   break;
       }
     });
   }, [loading]);
