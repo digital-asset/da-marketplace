@@ -51,7 +51,7 @@ type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer
 
 interface IServiceContractSetupData {
   party?: PartyDetails;
-  service?: string;
+  services: string[];
 }
 
 const OfferServiceContractSetup = (props: {
@@ -86,7 +86,7 @@ const OfferServiceContractSetup = (props: {
   const operatorService = useStreamQueries(OperatorService);
 
   const selectedParty = serviceSetupData?.party;
-  const selectedService = serviceSetupData?.service;
+  const selectedServices = serviceSetupData?.services || [];
 
   useEffect(() => {
     setLoading(
@@ -196,12 +196,9 @@ const OfferServiceContractSetup = (props: {
             </Table.Cell>
             <Table.Cell>
               <Form.Select
+                multiple
+                value={selectedServices}
                 disabled={!selectedParty}
-                value={
-                  selectedService
-                    ? serviceOptions.find(p => selectedService === p.value)?.value
-                    : ''
-                }
                 placeholder="Select..."
                 onChange={(_, data: any) => hangleChangeService(data.value)}
                 options={serviceOptions}
@@ -212,9 +209,9 @@ const OfferServiceContractSetup = (props: {
                 <Button disabled className="ghost" content={<p>Adding...</p>} />
               ) : (
                 <Button
-                  disabled={!selectedParty || !selectedService || !!status}
+                  disabled={!selectedParty || selectedServices.length === 0 || !!status}
                   className="ghost"
-                  onClick={() => createRoleContract()}
+                  onClick={() => createRoleContract().then(_ => onComplete())}
                   content={<p>Add</p>}
                 />
               )}
@@ -231,17 +228,14 @@ const OfferServiceContractSetup = (props: {
     </div>
   );
 
-  function hangleChangeService(newService: string) {
-    setServiceSetupData({ ...serviceSetupData, service: newService });
+  function hangleChangeService(newServices: string[]) {
+    // const hasRole = findExistingRoleorOffer(newService);
 
-    const hasRole = findExistingRoleorOffer(newService);
-
-    if (hasRole) {
-      setStatus(`${selectedParty?.partyName} already offers ${newService} services`);
-      setServiceSetupData({ ...serviceSetupData, service: undefined });
-    } else {
-      setStatus(undefined);
-    }
+    // if (hasRole) {
+    //   setStatus(`${selectedParty?.partyName} already offers ${newService} services`);
+    // } else {
+    setServiceSetupData({ ...serviceSetupData, services: newServices });
+    // }
   }
 
   function handleChangeParty(newPartyId: string) {
@@ -265,39 +259,32 @@ const OfferServiceContractSetup = (props: {
 
     if (!newParty) return;
 
-    setServiceSetupData({ ...serviceSetupData, party: newParty, service: undefined });
+    setServiceSetupData({ ...serviceSetupData, party: newParty, services: [] });
   }
 
   async function createRoleContract() {
     const operatorServiceContract = operatorService.contracts[0];
 
-    if (!selectedParty || !operatorServiceContract || !selectedService) return undefined;
+    if (!selectedParty || !operatorServiceContract || selectedServices.length === 0)
+      return undefined;
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
 
-    switch (selectedService) {
-      case ServiceKind.CUSTODY:
-        return await ledger
-          .exercise(OperatorService.OfferCustodianRole, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.TRADING:
-        return await ledger
-          .exercise(OperatorService.OfferExchangeRole, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.MATCHING:
-        return await ledger
-          .exercise(OperatorService.OfferMatchingService, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.SETTLEMENT:
-        return await ledger
-          .exercise(OperatorService.OfferSettlementService, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.LISTING:
-        return await ledger
-          .exercise(OperatorService.OfferDistributorRole, id, { provider })
-          .then(_ => onComplete());
-    }
+    selectedServices.map(async service => {
+      switch (service) {
+        case ServiceKind.CUSTODY:
+          return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
+        case ServiceKind.TRADING:
+          return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
+        case ServiceKind.MATCHING:
+          return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
+        case ServiceKind.SETTLEMENT:
+          return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
+        case ServiceKind.LISTING:
+          return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
+      }
+    });
   }
 
   function findExistingRoleorOffer(newService: string) {
@@ -342,9 +329,12 @@ const MarketSetup = (props: {
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
               <Table.Cell>
-                  <Button className='ghost' onClick={() => loginUser(dispatch, history, computeCredentials(p))}>
-                      Login
-                  </Button>
+                <Button
+                  className="ghost"
+                  onClick={() => loginUser(dispatch, history, computeCredentials(p))}
+                >
+                  Login
+                </Button>
               </Table.Cell>
             </Table.Row>
           ))
@@ -366,7 +356,7 @@ const CreateRoleContract = (props: {
   onFinish: () => void;
 }) => {
   const { serviceSetupData, operator, onFinish } = props;
-  const { party, service } = serviceSetupData;
+  const { party, services } = serviceSetupData;
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -398,23 +388,25 @@ const CreateRoleContract = (props: {
     if (loading) {
       return;
     }
-    switch (service) {
-      case ServiceKind.CUSTODY:
-        acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
-        break;
-      case ServiceKind.TRADING:
-        acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
-        break;
-      case ServiceKind.MATCHING:
-        acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
-        break;
-      case ServiceKind.SETTLEMENT:
-        acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
-        break;
-      case ServiceKind.LISTING:
-        acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
-        break;
-    }
+    services.map(async service => {
+      switch (service) {
+        case ServiceKind.CUSTODY:
+          return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
+        //   break;
+        case ServiceKind.TRADING:
+          return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
+        //   break;
+        case ServiceKind.MATCHING:
+          return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
+        //   break;
+        case ServiceKind.SETTLEMENT:
+          return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
+        //   break;
+        case ServiceKind.LISTING:
+          return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
+        //   break;
+      }
+    });
   }, [loading]);
 
   const acceptAllOffers = async (
@@ -448,7 +440,10 @@ const CreateRoleContract = (props: {
 const QuickSetup = () => {
   const [error, setError] = useState<string>();
   const [parties, setParties] = useState<PartyDetails[]>([]);
-  const [serviceSetupData, setServiceSetupData] = useState<IServiceContractSetupData>();
+  const [serviceSetupData, setServiceSetupData] = useState<IServiceContractSetupData>({
+    party: undefined,
+    services: [],
+  });
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
   const [startServiceSetup, setStartServiceSetup] = useState(false);
 
@@ -524,20 +519,23 @@ const QuickSetup = () => {
           onComplete={() => setStartServiceSetup(true)}
         />
       </DamlLedger>
-      {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (
-        <DamlLedger
-          party={serviceSetupData.party.party}
-          token={serviceSetupData.party.token}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
-        >
-          <CreateRoleContract
-            serviceSetupData={serviceSetupData}
-            operator={adminCredentials.party}
-            onFinish={() => setStartServiceSetup(false)}
-          />
-        </DamlLedger>
-      )}
+      {serviceSetupData &&
+        serviceSetupData.party &&
+        serviceSetupData.services.length > 0 &&
+        startServiceSetup && (
+          <DamlLedger
+            party={serviceSetupData.party.party}
+            token={serviceSetupData.party.token}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <CreateRoleContract
+              serviceSetupData={serviceSetupData}
+              operator={adminCredentials.party}
+              onFinish={() => setStartServiceSetup(false)}
+            />
+          </DamlLedger>
+        )}
     </div>
   ) : (
     <LoadingWheel label={'Loading credentials...'} />
