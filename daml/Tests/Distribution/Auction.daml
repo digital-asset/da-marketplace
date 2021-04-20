@@ -217,11 +217,11 @@ auctionNoBidsAboveFloorPrice = do
   charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 3.0 100.0
   daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 4.0 100.0
 
-  -- -- Kick off the auction
+  -- Kick off the auction
   let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
   (auctionCid, siCids) <- bank `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
 
-  -- -- Assertions
+  -- Assertions
   siCids === []
   auction <- fromSome <$> queryContractId bank auctionCid
   auction.status === Auction.NoValidBids

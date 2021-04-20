@@ -60,7 +60,6 @@ template Confirmation
           [payment, delivery] <- forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
             let
               isPartialFill = execution.quantity < order.remainingQuantity
-              -- status = if isPartialFill then Order.PartiallyExecuted else Order.FullyExecuted
               executions = execution :: order.executions
               remainingQuantity = order.remainingQuantity - execution.quantity
               quantities = [case order.details.side of
@@ -78,7 +77,6 @@ template Confirmation
                 create order with executions, remainingQuantity, status = Order.FullyExecuted
                 pure order.depositCid
 
-            -- create order with status, executions, remainingQuantity
             pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
             )
 
