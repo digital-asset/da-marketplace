@@ -63,7 +63,6 @@ interface RequestInterface {
   provider: string;
   tradingAccount?: Account;
   allocationAccount?: Account;
-
   clearingAccount?: Account;
   marginAccount?: Account;
 }

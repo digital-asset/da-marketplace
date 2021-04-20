@@ -24,8 +24,8 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const ledger = useLedger();
 
-  const offers = useStreamQueries(Offer).contracts;
-  const requests = useStreamQueries(Request).contracts;
+  const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
+  const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
@@ -113,6 +113,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Requests</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
+        loading={requestsLoading}
         rows={requests.map((c, i) => {
           return {
             elements: [
@@ -158,6 +159,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Offers</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
+        loading={offersLoading}
         rows={offers.map((c, i) => {
           return {
             elements: [
