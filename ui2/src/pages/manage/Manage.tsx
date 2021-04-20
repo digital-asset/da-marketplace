@@ -8,6 +8,7 @@ const Manage: React.FC = ({ children }) => {
 
   const menuItems = [
     { text: 'Custody', value: '/app/manage/custody' },
+    { text: 'Clearing', value: '/app/manage/clearing' },
     { text: 'Distributions', value: '/app/manage/distributions' },
     { text: 'Instruments', value: '/app/manage/instruments' },
     { text: 'Issuances', value: '/app/manage/issuance' },

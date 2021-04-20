@@ -36,6 +36,16 @@ const SetUp: React.FC = () => (
     />
 
     <SetupService
+      name="Clearing"
+      links={[
+        {
+          label: 'Offer Clearing Service',
+          path: '/app/setup/clearing/offer',
+        },
+      ]}
+    />
+
+    <SetupService
       name="Distributions"
       links={[
         {
