@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { Header } from 'semantic-ui-react';
 import { SetupAutomation } from './Automation';
 import { isHubDeployment } from '../../config';
+import { useUserState } from '../../context/UserContext';
 
 type SetupServiceProps = {
   name: string;
@@ -12,7 +13,7 @@ type SetupServiceProps = {
   }[];
 };
 
-const SetupService: React.FC<SetupServiceProps> = ({ name, links }) => (
+const SetupService: React.FC<SetupServiceProps> = ({ name, links, children }) => (
   <div className="setup-service">
     <Header as="h2">{name}</Header>
     <div className="links">
@@ -21,82 +22,89 @@ const SetupService: React.FC<SetupServiceProps> = ({ name, links }) => (
           {link.label}
         </NavLink>
       ))}
+      {children}
     </div>
   </div>
 );
 
-const SetUp: React.FC = () => (
-  <div className="set-up">
-    <SetupService
-      name="Custody"
-      links={[
-        {
-          label: 'Offer Custody Service',
-          path: '/app/setup/custody/offer',
-        },
-      ]}
-    />
+const SetUp: React.FC = () => {
+  return (
+    <div className="set-up">
+      <SetupService
+        name="Custody"
+        links={[
+          {
+            label: 'Offer Custody Service',
+            path: '/app/setup/custody/offer',
+          },
+        ]}
+      />
 
-    <SetupService
-      name="Distributions"
-      links={[
-        {
-          label: 'Create New Auction',
-          path: '/app/setup/distribution/new/auction',
-        },
-      ]}
-    />
+      <SetupService
+        name="Distributions"
+        links={[
+          {
+            label: 'Create New Auction',
+            path: '/app/setup/distribution/new/auction',
+          },
+        ]}
+      />
 
-    <SetupService
-      name="Instruments"
-      links={[
-        {
-          label: 'Create Base Instrument',
-          path: '/app/setup/instrument/new/base',
-        },
-        {
-          label: 'Create Binary Option',
-          path: '/app/setup/instrument/new/binaryoption',
-        },
-        {
-          label: 'Create Convertible Note',
-          path: '/app/setup/instrument/new/convertiblenote',
-        },
-      ]}
-    />
+      <SetupService
+        name="Instruments"
+        links={[
+          {
+            label: 'Create Base Instrument',
+            path: '/app/setup/instrument/new/base',
+          },
+          {
+            label: 'Create Binary Option',
+            path: '/app/setup/instrument/new/binaryoption',
+          },
+          {
+            label: 'Create Convertible Note',
+            path: '/app/setup/instrument/new/convertiblenote',
+          },
+        ]}
+      />
 
-    <SetupService
-      name="Issuance"
-      links={[
-        {
-          label: 'Create New Issuance',
-          path: '/app/setup/issuance/new',
-        },
-      ]}
-    />
+      <SetupService
+        name="Issuance"
+        links={[
+          {
+            label: 'Create New Issuance',
+            path: '/app/setup/issuance/new',
+          },
+        ]}
+      />
 
-    <SetupService
-      name="Listings"
-      links={[
-        {
-          label: 'Create New Listing',
-          path: '/app/setup/listing/new',
-        },
-      ]}
-    />
+      <SetupService
+        name="Listings"
+        links={[
+          {
+            label: 'Create New Listing',
+            path: '/app/setup/listing/new',
+          },
+        ]}
+      />
 
-    <SetupService
-      name="Trading"
-      links={[
-        {
-          label: 'Offer Trading Service',
-          path: '/app/setup/trading/offer',
-        },
-      ]}
-    />
+      <SetupService
+        name="Trading"
+        links={[
+          {
+            label: 'Offer Trading Service',
+            path: '/app/setup/trading/offer',
+          },
+        ]}
+      />
 
-    {isHubDeployment && <SetupAutomation />}
-  </div>
-);
+      {isHubDeployment && (
+        <SetupService name="Setup Automation" links={[]}>
+          <SetupAutomation modalTrigger={<NavLink to="#">Setup Automation</NavLink>} />
+        </SetupService>
+      )}
+    </div>
+  );
+};
 
 export default SetUp;

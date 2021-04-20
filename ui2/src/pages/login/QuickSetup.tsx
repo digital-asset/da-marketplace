@@ -13,7 +13,7 @@ import {
 
 import { useUserDispatch, loginUser } from '../../context/UserContext';
 import { ServiceKind } from '../../context/ServicesContext';
-import { useHistory } from 'react-router-dom';
+import { useHistory, NavLink } from 'react-router-dom';
 
 import {
   DeploymentMode,
@@ -54,14 +54,11 @@ import {
 
 import { CreateEvent } from '@daml/ledger';
 import deployTrigger, {
-  getPublicAutomation,
-  PublicAutomation,
-  MarketplaceTrigger,
   TRIGGER_HASH,
-  PublishedInstance,
-  getAutomationInstances,
 } from '../../automation';
 import { handleSelectMultiple } from '../common';
+import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
+import { SetupAutomation } from '../setup/Automation';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
@@ -89,9 +86,7 @@ const OfferServiceContractSetup = (props: {
 
   const [status, setStatus] = useState<string>();
   const [loading, setLoading] = useState<boolean>(false);
-  const [instanceLoading, setInstanceLoading] = useState<boolean>(false);
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, string[]>>(new Map());
-  const [automations, setAutomations] = useState<PublicAutomation[] | undefined>([]);
   const [toDeploy, setToDeploy] = useState<string[]>([]);
 
   const ledger = useLedger();
@@ -99,32 +94,21 @@ const OfferServiceContractSetup = (props: {
 
   const publicParty = useWellKnownParties().parties?.publicParty;
 
-  const triggerOptions: DropdownItemProps[] = Object.values(MarketplaceTrigger).map(tn => {
-    return {
-      key: tn,
-      value: tn,
-      text: tn.split(':')[0],
-    };
-  });
-
-  useEffect(() => {
-    if (!isHubDeployment) {
-      setAutomations(undefined);
-      return;
-    }
-    getPublicAutomation(publicParty).then(autos => {
-      setAutomations(autos);
-    });
-    const timer = setInterval(() => {
-      getPublicAutomation(publicParty).then(autos => {
-        setAutomations(autos);
-        if (!!automations && automations.length > 0) {
-          clearInterval(timer);
-        }
-      });
-    }, 2000);
-    return () => clearInterval(timer);
-  }, [publicParty]);
+  const automations = useAutomations();
+  const triggerOptions: DropdownItemProps[] =
+    automations?.flatMap(auto => {
+      if (auto.automationEntity.tag === 'DamlTrigger') {
+        return auto.automationEntity.value.triggerNames.map(tn => {
+          return {
+            key: tn,
+            value: tn,
+            text: tn.split(':')[0],
+          };
+        });
+      } else {
+        return [];
+      }
+    }) || [];
 
   const handleDeployment = async (token: string) => {
     for (const auto of toDeploy) {
@@ -192,23 +176,6 @@ const OfferServiceContractSetup = (props: {
     exchangeRoles.contracts.length,
     matchingServices.contracts.length,
   ]);
-
-  const [publishedAutomationMap, setPublishedAutomationMap] = useState<
-    Map<string, PublishedInstance[]>
-  >(new Map());
-  useEffect(() => {
-    let newAutomations: Map<string, PublishedInstance[]> = new Map();
-    Array.from(marketSetupDataMap.keys()).forEach(party => {
-      const partyDetails = parties.find(p => p.party === party);
-      if (!!partyDetails) {
-        getAutomationInstances(partyDetails.token).then(pd => {
-          newAutomations.set(party, pd || []);
-        });
-      }
-    });
-
-    setPublishedAutomationMap(newAutomations);
-  }, [parties, marketSetupDataMap]);
 
   useEffect(() => {
     const createOperatorService = async () => {
@@ -315,9 +282,8 @@ const OfferServiceContractSetup = (props: {
       </Table>
       <MarketSetup
         parties={parties}
-        loading={loading || instanceLoading}
+        loading={loading}
         marketSetupDataMap={marketSetupDataMap}
-        automationInstanceMap={publishedAutomationMap}
       />
     </div>
   );
@@ -362,12 +328,15 @@ const OfferServiceContractSetup = (props: {
   async function createRoleContract() {
     const operatorServiceContract = operatorService.contracts[0];
 
-    if (!selectedParty || !operatorServiceContract || (!selectedService && !toDeploy.length)) return undefined;
+    if (!selectedParty || !operatorServiceContract || (!selectedService && !toDeploy.length))
+      return undefined;
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
     const token = selectedParty.token;
-    await handleDeployment(token);
+    await handleDeployment(token).then(_ => {
+      if (!selectedService) onComplete();
+    });
 
     switch (selectedService) {
       case ServiceKind.CUSTODY:
@@ -417,9 +386,8 @@ const MarketSetup = (props: {
   parties: PartyDetails[];
   loading: boolean;
   marketSetupDataMap: Map<string, string[]>;
-  automationInstanceMap: Map<string, PublishedInstance[]>;
 }) => {
-  const { parties, loading, marketSetupDataMap, automationInstanceMap } = props;
+  const { parties, loading, marketSetupDataMap } = props;
   const dispatch = useUserDispatch();
   const history = useHistory();
 
@@ -435,7 +403,7 @@ const MarketSetup = (props: {
         <Table.Row>
           <Table.HeaderCell>Party</Table.HeaderCell>
           <Table.HeaderCell>Services</Table.HeaderCell>
-          <Table.HeaderCell>Automation</Table.HeaderCell>
+          <Table.HeaderCell>Setup Automation</Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -446,11 +414,11 @@ const MarketSetup = (props: {
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
               <Table.Cell>
-                {automationInstanceMap
-                  .get(p)
-                  ?.map(a => a?.config?.value.name.split(':')[0] || 'Error')
-                  .sort()
-                  .join(', ')}
+                <SetupAutomation
+                  title={`Setup Automation: ${parties.find(party => party.party === p)?.partyName}`}
+                  token={parties.find(party => party.party === p)?.token || ''}
+                  modalTrigger={<NavLink to="#">Setup Automation</NavLink>}
+                />
               </Table.Cell>
               <Table.Cell>
                 <Button
@@ -630,14 +598,16 @@ const QuickSetup = () => {
         wsBaseUrl={wsBaseUrl}
       >
         <WellKnownPartiesProvider>
-          <OfferServiceContractSetup
-            credentials={adminCredentials}
-            serviceSetupData={serviceSetupData}
-            setServiceSetupData={setServiceSetupData}
-            parties={parties}
-            creatingRoleContracts={startServiceSetup}
-            onComplete={() => setStartServiceSetup(true)}
-          />
+          <AutomationProvider publicParty={publicParty}>
+            <OfferServiceContractSetup
+              credentials={adminCredentials}
+              serviceSetupData={serviceSetupData}
+              setServiceSetupData={setServiceSetupData}
+              parties={parties}
+              creatingRoleContracts={startServiceSetup}
+              onComplete={() => setStartServiceSetup(true)}
+            />
+          </AutomationProvider>
         </WellKnownPartiesProvider>
       </DamlLedger>
       {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (

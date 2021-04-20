@@ -130,6 +130,27 @@ export const getAutomationInstances = async (
   return result;
 };
 
+export const deployTriggerAutomation = async (
+  automation: PublicAutomation,
+  name: string,
+  token: string,
+) => {
+  const headers = {
+    Authorization: `Bearer ${token?.toString()}`,
+    'Content-Type': 'application/json',
+  };
+  const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/deploy`;
+  fetch(deployUrl, {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      artifactHash: automation.artifactHash,
+      owner: automation.owner,
+      name
+    }),
+  }).then(response => response.json());
+}
+
 export const deployTrigger = async (
   artifactHash: string,
   trigger: string,
@@ -163,7 +184,7 @@ export const undeployTrigger = async (token: string, instanceId: string, owner: 
     'Content-Type': 'application/json',
   };
   const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/instance/delete`;
-  fetch(deployUrl, {
+  await fetch(deployUrl, {
     method: 'POST',
     headers: headers,
     body: JSON.stringify({
