@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
 import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableHead,
-  Button,
-  Grid,
-  Paper,
-  Typography,
-} from '@material-ui/core';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -23,6 +10,11 @@ import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regula
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import StripedTable from '../../components/Table/StripedTable';
+import { Header, Button, Form, DropdownItemProps } from 'semantic-ui-react';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { createDropdownProp } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -32,35 +24,182 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const ledger = useLedger();
 
+  const offers = useStreamQueries(Offer).contracts;
+  const requests = useStreamQueries(Request).contracts;
+
+  const roles = useStreamQueries(Role).contracts;
+  const hasRole = roles.length > 0 && roles[0].payload.provider === party;
+
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
   };
 
+  const [clearingAccountName, setClearingAccountName] = useState('');
+  const [marginAccountName, setMarginAccountName] = useState('');
+  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
+  const allocationAccounts = allocationAccountRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const allocationAccountNames: DropdownItemProps[] = allocationAccounts.map(a =>
+    createDropdownProp(a.id.label)
+  );
+
+  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
+  const accounts = assetSettlementRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
+
+  const approveRequest = async (c: CreateEvent<Request>) => {
+    if (!hasRole) return; // TODO: Display error
+    console.log(roles[0].contractId);
+    await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
+      clearingRequestCid: c.contractId,
+    });
+  };
+
+  const rejectRequest = async (c: CreateEvent<Request>) => {
+    if (!hasRole) return; // TODO: Display error
+    console.log(roles[0].contractId);
+    await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
+      clearingRequestCid: c.contractId,
+    });
+  };
+
+  const cancelRequest = async (c: CreateEvent<Request>) => {
+    await ledger.exercise(Request.Cancel, c.contractId, {});
+  };
+
+  const acceptOffer = async (c: CreateEvent<Offer>) => {
+    const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
+    const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
+    if (!clearingAccount || !marginAccount) return;
+    await ledger.exercise(Offer.Accept, c.contractId, { marginAccount, clearingAccount });
+  };
+
+  const withdrawOffer = async (c: CreateEvent<Offer>) => {
+    await ledger.exercise(Offer.Withdraw, c.contractId, {});
+  };
+
+  const rejectOffer = async (c: CreateEvent<Offer>) => {
+    await ledger.exercise(Offer.Decline, c.contractId, {});
+  };
+
   return (
-    <StripedTable
-      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
-      rows={services.map((c, i) => [
-        getTemplateId(c.templateId),
-        getName(c.payload.operator),
-        getName(c.payload.provider),
-        getName(c.payload.customer),
-        party === c.payload.provider ? 'Provider' : 'Consumer',
-        <Button
-          color="primary"
-          size="small"
-          className="{classes.choiceButton}"
-          variant="contained"
-          onClick={() => terminateService(c)}
-        >
-          Terminate
-        </Button>,
-        // <NavLink to={`/app/network/custody/service/${c.contractId.replace('#', '_')}`}>
-        //   <IconButton color="primary" size="small" component="span">
-        //     <KeyboardArrowRight fontSize="small" />
-        //   </IconButton>
-        // </NavLink>,
-      ])}
-    />
+    <div className="assets">
+      <Header as="h3">Current Services</Header>
+      <StripedTable
+        headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
+        rows={services.map((c, i) => [
+          getTemplateId(c.templateId),
+          getName(c.payload.operator),
+          getName(c.payload.provider),
+          getName(c.payload.customer),
+          party === c.payload.provider ? 'Provider' : 'Consumer',
+          <Button
+            size="small"
+            className="ghost"
+            variant="contained"
+            onClick={() => terminateService(c)}
+          >
+            Terminate
+          </Button>,
+        ])}
+      />
+      <Header as="h3">Requests</Header>
+      <StripedTable
+        headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
+        rows={requests.map((c, i) => [
+          getTemplateId(c.templateId),
+          getName(c.payload.customer),
+          <Button.Group>
+            {c.payload.customer === party ? (
+              <>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => cancelRequest(c)}
+                >
+                  Approve
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => approveRequest(c)}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => rejectRequest(c)}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
+          </Button.Group>,
+        ])}
+      />
+      <Header as="h3">Offers</Header>
+      <StripedTable
+        headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
+        rows={offers.map((c, i) => [
+          getTemplateId(c.templateId),
+          getName(c.payload.customer),
+          <Button.Group>
+            {c.payload.customer === party ? (
+              <>
+                <ModalFormErrorHandled onSubmit={() => acceptOffer(c)} title="Accept Offer">
+                  <Form.Select
+                    label="Clearing Account"
+                    placeholder="Select..."
+                    required
+                    min={1}
+                    options={accountNames}
+                    value={clearingAccountName}
+                    onChange={(_, change) => setClearingAccountName(change.value as string)}
+                  />
+                  <Form.Select
+                    label="Margin Account"
+                    placeholder="Select..."
+                    required
+                    options={allocationAccountNames}
+                    value={marginAccountName}
+                    onChange={(_, change) => setMarginAccountName(change.value as string)}
+                  />
+                </ModalFormErrorHandled>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => rejectOffer(c)}
+                >
+                  Reject
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => withdrawOffer(c)}
+                >
+                  Withdraw
+                </Button>
+              </>
+            )}
+          </Button.Group>,
+        ])}
+      />
+    </div>
   );
 };
 
@@ -128,9 +267,9 @@ const ClearingComponent: React.FC<RouteComponentProps & Props> = ({
 
   const approveRequest = async (c: CreateEvent<Request>) => {
     if (!hasRole) return; // TODO: Display error
-    // await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
-      // clearingRequestCid: c.contractId,
-    // });
+    await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
+      clearingRequestCid: c.contractId,
+    });
   };
 
   const cancelRequest = async (c: CreateEvent<Request>) => {
@@ -145,231 +284,7 @@ const ClearingComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Offer.Withdraw, c.contractId, {});
   };
 
-  return (
-    <>
-      <InputDialog {...requestDialogProps} />
-      <InputDialog {...offerDialogProps} />
-      <Grid container direction="column">
-        <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Actions</Typography>
-              </Grid>
-              <Grid container direction="row" justify="center">
-                <Grid item xs={6}>
-                  <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
-                      onClick={requestService}
-                    >
-                      Request Custody Service
-                    </Button>
-                  </Grid>
-                </Grid>
-                <Grid item xs={6}>
-                  <Grid container justify="center">
-                    {hasRole && (
-                      <Button
-                        color="primary"
-                        size="large"
-                        className={classes.actionButton}
-                        variant="outlined"
-                        onClick={offerService}
-                      >
-                        Offer Custody Service
-                      </Button>
-                    )}
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Services</Typography>
-              </Grid>
-              <ClearingServiceTable services={services} />
-            </Paper>
-          </Grid>
-        </Grid>
-        <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Requests</Typography>
-              </Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}>
-                      <b>Service</b>
-                    </TableCell>
-                    <TableCell key={1} className={classes.tableCell}>
-                      <b>Provider</b>
-                    </TableCell>
-                    <TableCell key={2} className={classes.tableCell}>
-                      <b>Consumer</b>
-                    </TableCell>
-                    <TableCell key={3} className={classes.tableCell}>
-                      <b>Role</b>
-                    </TableCell>
-                    <TableCell key={4} className={classes.tableCell}></TableCell>
-                    <TableCell key={5} className={classes.tableCell}></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requests.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        {getTemplateId(c.templateId)}
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        {party === c.payload.provider ? 'Provider' : 'Consumer'}
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => cancelRequest(c)}
-                          >
-                            Cancel
-                          </Button>
-                        )}
-                        {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => approveRequest(c)}
-                          >
-                            Approve
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
-                          onClick={() =>
-                            history.push(
-                              '/app/network/custody/request/' + c.contractId.replace('#', '_')
-                            )
-                          }
-                        >
-                          <KeyboardArrowRight fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          </Grid>
-        </Grid>
-        <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Offers</Typography>
-              </Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}>
-                      <b>Service</b>
-                    </TableCell>
-                    <TableCell key={1} className={classes.tableCell}>
-                      <b>Provider</b>
-                    </TableCell>
-                    <TableCell key={2} className={classes.tableCell}>
-                      <b>Consumer</b>
-                    </TableCell>
-                    <TableCell key={3} className={classes.tableCell}>
-                      <b>Role</b>
-                    </TableCell>
-                    <TableCell key={4} className={classes.tableCell}></TableCell>
-                    <TableCell key={5} className={classes.tableCell}></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {offers.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        {getTemplateId(c.templateId)}
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        {party === c.payload.provider ? 'Provider' : 'Consumer'}
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => withdrawOffer(c)}
-                          >
-                            Withdraw
-                          </Button>
-                        )}
-                        {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => acceptOffer(c)}
-                          >
-                            Accept
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
-                          onClick={() =>
-                            history.push(
-                              '/app/network/custody/offer/' + c.contractId.replace('#', '_')
-                            )
-                          }
-                        >
-                          <KeyboardArrowRight fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Grid>
-    </>
-  );
+  return <></>;
 };
 
 export const Clearing = withRouter(ClearingComponent);

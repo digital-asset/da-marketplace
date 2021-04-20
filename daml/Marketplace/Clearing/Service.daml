@@ -170,7 +170,10 @@ template Service
         ctrl : Party
       controller ctrl
       do
-        void $ archive . fst <$> fetchByKey @MemberStanding (provider,customer)
+        (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
+        debug standingCid
+        archive standingCid
+
 
 template Offer
   with

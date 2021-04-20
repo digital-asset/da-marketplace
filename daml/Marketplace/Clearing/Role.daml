@@ -29,6 +29,12 @@ template Role
         do
           exercise clearingRequestCid Clearing.Approve with ..
 
+      nonconsuming RejectClearingRequest : ()
+        with
+          clearingRequestCid : ContractId Clearing.Request
+        do
+          exercise clearingRequestCid Clearing.Reject
+
       nonconsuming TerminateClearingService : ()
         with
           custodyServiceCid : ContractId Clearing.Service

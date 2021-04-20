@@ -133,16 +133,16 @@ export function useStreamQueries<T extends object, K, I extends string>(
   queryDeps?: readonly unknown[],
   closeHandler?: (e: StreamCloseEvent) => void
 ): QueryResult<T, K, I> {
-  const contractsAsPublic = usqp(template, queryFactory, queryDeps, closeHandler);
+  // const contractsAsPublic = usqp(template, queryFactory, queryDeps, closeHandler);
   const contractsAsParty = usq(template, queryFactory, queryDeps, closeHandler);
 
-  const result = useMemo(
-    () => ({
-      contracts: [...contractsAsParty.contracts, ...contractsAsPublic.contracts],
-      loading: contractsAsParty.loading && contractsAsPublic.loading,
-    }),
-    [contractsAsPublic, contractsAsParty]
-  );
-
-  return result;
+  // const result = useMemo(
+  //   () => ({
+  //     contracts: [...contractsAsParty.contracts, ...contractsAsPublic.contracts],
+  //     loading: contractsAsParty.loading && contractsAsPublic.loading,
+  //   }),
+  //   [contractsAsPublic, contractsAsParty]
+  // );
+  //
+  return contractsAsParty;
 }

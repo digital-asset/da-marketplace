@@ -27,6 +27,7 @@ import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regula
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 
 function hashUserName(name: string): number {
   // Hash a user name to map to values in the range [1, 4], to determine profile pic color
@@ -69,6 +70,12 @@ const Landing = () => {
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
 
+  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
+  const allocationAccounts = allocationAccountRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
+
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
     .filter(c => c.payload.account.owner === party)
@@ -95,9 +102,6 @@ const Landing = () => {
       const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
       const allocationAccount = accounts.find(a => a.id.label === dialogState.allocationAccount);
 
-      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
-      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount);
-
       const params = {
         provider,
         tradingAccount,
@@ -108,7 +112,7 @@ const Landing = () => {
       setRequestParams(params);
     } else if (dialogState?.clearingAccount && dialogState?.marginAccount) {
       const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
-      const marginAccount = accounts.find(a => a.id.label === dialogState.marginAccount);
+      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
 
       const params = {
         provider,
@@ -219,7 +223,7 @@ const Landing = () => {
                   marginAccount: {
                     label: 'Margin Account',
                     type: 'selection',
-                    items: accountNames,
+                    items: allocationAccountNames,
                   },
                 })
               }
