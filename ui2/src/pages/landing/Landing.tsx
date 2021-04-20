@@ -31,7 +31,7 @@ import {
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
 function hashUserName(name: string): number {

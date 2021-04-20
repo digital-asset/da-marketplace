@@ -32,7 +32,7 @@ import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
-import { Clearing as ClearingNetwork, ClearingServiceTable } from './pages/network/Clearing';
+import { ClearingServiceTable } from './pages/network/Clearing';
 import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
 import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';

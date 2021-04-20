@@ -38,7 +38,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
     identities,
   ]);
 
-  const [offer, setOffer] = useState<ServiceOffer>(TradingOffer);
+  const [offer, setOffer] = useState<ServiceOffer>(CustodyOffer);
   const [choice, setChoice] = useState<ServiceRoleOfferChoice>();
   const [openDialog, setOpenDialog] = useState(true);
   const [dialogState, setDialogState] = useState<any>({});

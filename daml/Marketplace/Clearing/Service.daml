@@ -171,7 +171,6 @@ template Service
       controller ctrl
       do
         (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
-        debug standingCid
         archive standingCid
 
 

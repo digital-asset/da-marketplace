@@ -105,7 +105,9 @@ const ServicesProvider: React.FC = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(ClearingService);
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
+    ClearingService
+  );
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
