@@ -463,7 +463,6 @@ const CreateRoleContract = (props: {
 
     while (retries < 3) {
       if (contracts.length > 0) {
-        console.log('got offer contracts');
         await Promise.all(
           contracts.map(async c => {
             return await ledger.exercise(choice, c.contractId, args);
