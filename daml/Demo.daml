@@ -2,7 +2,7 @@ module Demo where
 
 import Common
 import ContingentClaims.Claim (Claim(Zero), serialize)
-import ContingentClaims.FinancialClaim (couponDates)
+import ContingentClaims.FinancialClaim (unrollDates)
 import Daml.Script
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
@@ -79,11 +79,11 @@ examples Providers{..} Assets{..} issuer = do
   (_, del)    <- originate "DEL-TSLA" "Delivery Example" $ delivery tsla.assetId 20.0
   (_, dvp)    <- originate "DVP-TSLA-USD" "DvP Example" $ dvp tsla.assetId 20.0 usd.assetId 10_000.0
   (_, fwd)    <- originate "FWD-TSLA-USD-20221022" "Forward Example" $ futureDvp tsla.assetId 20.0 usd.assetId 10_000.0 (date 2022 Oct 22)
-  (_, bnd)    <- originate "BOND-USD-4.875" "Forward Example" $ bond usd.assetId 1000000.0 0.04875 $ couponDates 2021 2023 [Jan,Jul] 15
+  (_, bnd)    <- originate "BOND-USD-4.875" "Forward Example" $ bond usd.assetId 1000000.0 0.04875 $ unrollDates 2021 2023 [Jan,Jul] 15
   (_, opt)    <- originate "OPT-TSLA-USD-20221022" "Call Option Example" $ callOptionPhysical tsla.assetId 20.0 usd.assetId 10_000.0 (date 2022 Oct 22)
   (_, bopt)   <- originate "BIN-TSLA-USD-20221022" "Binary Option Example" $ binaryCallOption tsla.assetId usd.assetId 700.0 (date 2022 Oct 22)
   (_, wrnt)   <- originate "WRNT-KO-PUT-DAX" "Open-end Knock-out Put Warrant Example" $ koPutWarrant 10110.0 10110.0 dax.assetId eur.assetId
-  (_, swpt)   <- originate "SWPT-BERMUDAN-LIBOR" "Bermudan Swaption Example" $ bermudanSwaption libor.id 0.015 usd.assetId 500_000.0 (couponDates 2021 2022 [Jan, Jul] 15) (date 2021 <$> [Feb,Mar,Apr] <*> [1])
+  (_, swpt)   <- originate "SWPT-BERMUDAN-LIBOR" "Bermudan Swaption Example" $ bermudanSwaption libor.id 0.015 usd.assetId 500_000.0 (unrollDates 2021 2022 [Jan, Jul] 15) (date 2021 <$> [Feb,Mar,Apr] <*> [1])
   (_, conv)   <- originate "CONV-TSLA-20221022" "Convertible Note Example" $ convertibleNote nflx.id usd.assetId 100_000.0 0.20 (date 2021 Jun 06) 0.04 550.0
 
   pure ()

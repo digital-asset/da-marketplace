@@ -22,9 +22,10 @@ import {
   wsBaseUrl,
   ledgerId,
   publicParty,
+  isHubDeployment,
 } from '../../config';
 
-import Credentials, { computeCredentials, storeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
 
 import { halfSecondPromise } from '../page/utils';
@@ -98,10 +99,6 @@ const OfferServiceContractSetup = (props: {
 
   const publicParty = useWellKnownParties().parties?.publicParty;
 
-  const onDabl = () => {
-    return DeploymentMode.PROD_DABL;
-  };
-
   const triggerOptions: DropdownItemProps[] = Object.values(MarketplaceTrigger).map(tn => {
     return {
       key: tn,
@@ -111,7 +108,7 @@ const OfferServiceContractSetup = (props: {
   });
 
   useEffect(() => {
-    if (deploymentMode !== DeploymentMode.PROD_DABL) {
+    if (!isHubDeployment) {
       setAutomations(undefined);
       return;
     }
@@ -596,7 +593,7 @@ const QuickSetup = () => {
     }
   }
 
-  if (deploymentMode === DeploymentMode.PROD_DABL && parties.length === 0) {
+  if (isHubDeployment && parties.length === 0) {
     return (
       <div className="quick-setup">
         <div className="setup-tile">

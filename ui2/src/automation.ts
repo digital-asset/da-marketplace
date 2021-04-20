@@ -64,11 +64,7 @@ export type PublishedInstance = {
   createdAt: string;
   owner: string;
 };
-// const handleDeploy = async (partyDetails: PartyDetails, party: string) => {
-//   await getAutomationInstances(partyDetails.token).then(pd => {
-//     newAutomations.set(party, pd || []);
-// });
-//
+
 type PublishedInstanceAPIResult = PublishedInstance[] | undefined;
 
 export type AutomationValue = {

@@ -11,6 +11,7 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
+
 export const dablHostname = window.location.hostname.split('.').slice(1).join('.');
 
 export const deploymentMode: DeploymentMode =
@@ -19,6 +20,8 @@ export const deploymentMode: DeploymentMode =
     : dablHostname.includes('projectdabl')
     ? DeploymentMode.PROD_DABL
     : DeploymentMode.PROD_OTHER;
+
+export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DABL;
 
 // Decide the ledger ID based on the deployment mode first,
 // then an environment variable, falling back on the sandbox ledger ID.
