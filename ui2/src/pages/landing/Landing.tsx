@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Label } from 'semantic-ui-react';
+import { Button, Label } from 'semantic-ui-react';
 
-import { useParty } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 
 import {
@@ -13,9 +13,9 @@ import {
 import Tile from '../../components/Tile/Tile';
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 import { getAbbreviation } from '../page/utils';
-import { getName } from '../../config';
+import { getName, ledgerId } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
@@ -23,9 +23,14 @@ import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketpl
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {
+  Request as RegulatorRequest,
+  Service as RegulatorService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { useWellKnownParties } from '@daml/hub-react/lib';
 
 function hashUserName(name: string): number {
   // Hash a user name to map to values in the range [1, 4], to determine profile pic color
@@ -57,6 +62,66 @@ interface RequestInterface {
   tradingAccount?: Account;
   allocationAccount?: Account;
 }
+
+const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
+  const customer = useParty();
+  const ledger = useLedger();
+  const { parties, loading: operatorLoading } = useWellKnownParties();
+  const provider = parties?.userAdminParty || 'Operator';
+
+  const { contracts: regulatorServices, loading: regulatorLoading } = useStreamQueries(
+    RegulatorService
+  );
+
+  const requestContract = useStreamQueries(RegulatorRequest).contracts.find(
+    r => r.payload.customer === customer
+  );
+
+  const regulatorCustomer = regulatorServices.find(r => r.payload.customer === customer);
+
+  const { contracts: identities, loading: identitiesLoading } = useStreamQueries(VerifiedIdentity);
+  const partyIdentity = identities.find(id => id.payload.customer === customer);
+
+  if (requestContract) {
+    return (
+      <div>
+        <p>Regulator Request pending...</p>
+      </div>
+    );
+  } else if (!regulatorCustomer && !regulatorLoading && !operatorLoading) {
+    return (
+      <div className="link">
+        <Button
+          className="ghost"
+          onClick={() => {
+            console.log('click');
+            if (!operatorLoading) {
+              console.log('creating');
+              ledger.create(RegulatorRequest, { customer, provider });
+            }
+          }}
+        >
+          Request Regulator Service
+        </Button>
+      </div>
+    );
+  } else if (!partyIdentity && !identitiesLoading && !regulatorLoading) {
+    return (
+      <div className="link">
+        <Link to="/app/setup/identity">Request Identity Verification</Link>
+      </div>
+    );
+  } else if (partyIdentity) {
+    return (
+      <>
+        <p>Party ID: {customer}</p>
+        <p>Location: {partyIdentity.payload.location}</p>
+      </>
+    );
+  }
+
+  return <></>;
+};
 
 const Landing = () => {
   const party = useParty();
@@ -153,6 +218,9 @@ const Landing = () => {
         <Tile>
           <div className="profile">
             <div className="profile-name">@{getName(party)}</div>
+            <ProfileSection
+              action={() => requestService(RegulatorRequest, ServiceKind.REGULATOR)}
+            />
           </div>
         </Tile>
 
