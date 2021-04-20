@@ -11,7 +11,6 @@ export enum DeploymentMode {
   PROD_OTHER,
 }
 
-
 export const dablHostname = window.location.hostname.split('.').slice(1).join('.');
 
 export const deploymentMode: DeploymentMode =

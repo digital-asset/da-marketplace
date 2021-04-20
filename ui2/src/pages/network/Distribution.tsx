@@ -41,7 +41,6 @@ export const DistributionServiceTable = () => {
     <StripedTable
       headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
       loading={biddingServicesLoading || auctionServicesLoading}
-    //   rowsClickable
       rows={services.map(c => {
         return {
           elements: [
@@ -49,9 +48,8 @@ export const DistributionServiceTable = () => {
             getName(c.payload.operator),
             getName(c.payload.provider),
             getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Consumer'
+            party === c.payload.provider ? 'Provider' : 'Consumer',
           ],
-        //   onClick: history.push(`/app/network/listing/service/${c.contractId.replace('#', '_')}`)
         };
       })}
     />

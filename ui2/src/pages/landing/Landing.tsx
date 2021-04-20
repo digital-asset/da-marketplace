@@ -19,6 +19,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
@@ -30,6 +31,7 @@ import {
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
 function hashUserName(name: string): number {
@@ -61,6 +63,8 @@ interface RequestInterface {
   provider: string;
   tradingAccount?: Account;
   allocationAccount?: Account;
+  clearingAccount?: Account;
+  marginAccount?: Account;
 }
 
 const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
@@ -130,6 +134,12 @@ const Landing = () => {
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
 
+  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
+  const allocationAccounts = allocationAccountRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
+
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
     .filter(c => c.payload.account.owner === party)
@@ -160,6 +170,18 @@ const Landing = () => {
         provider,
         tradingAccount,
         allocationAccount,
+        customer: party,
+      };
+
+      setRequestParams(params);
+    } else if (dialogState?.clearingAccount && dialogState?.marginAccount) {
+      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
+      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
+
+      const params = {
+        provider,
+        clearingAccount,
+        marginAccount,
         customer: party,
       };
 
@@ -255,6 +277,23 @@ const Landing = () => {
             <OverflowMenuEntry
               label="Request Listing Service"
               onClick={() => requestService(ListingRequest, ServiceKind.LISTING)}
+            />
+            <OverflowMenuEntry
+              label="Request Clearing Service"
+              onClick={() =>
+                requestService(ClearingRequest, ServiceKind.CLEARING, {
+                  clearingAccount: {
+                    label: 'Clearing Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  marginAccount: {
+                    label: 'Margin Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
+                  },
+                })
+              }
             />
             <OverflowMenuEntry
               label="Request Trading Service"

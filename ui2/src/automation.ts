@@ -130,28 +130,7 @@ export const getAutomationInstances = async (
   return result;
 };
 
-export const deployTriggerAutomation = async (
-  automation: PublicAutomation,
-  name: string,
-  token: string,
-) => {
-  const headers = {
-    Authorization: `Bearer ${token?.toString()}`,
-    'Content-Type': 'application/json',
-  };
-  const deployUrl = `https://${ledgerId}.${dablHostname}/.hub/v1/published/deploy`;
-  fetch(deployUrl, {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify({
-      artifactHash: automation.artifactHash,
-      owner: automation.owner,
-      name
-    }),
-  }).then(response => response.json());
-}
-
-export const deployTrigger = async (
+export const deployAutomation = async (
   artifactHash: string,
   trigger: string,
   token: string,
@@ -178,7 +157,7 @@ export const deployTrigger = async (
   });
 };
 
-export const undeployTrigger = async (token: string, instanceId: string, owner: string) => {
+export const undeployAutomation = async (token: string, instanceId: string, owner: string) => {
   const headers = {
     Authorization: `Bearer ${token?.toString()}`,
     'Content-Type': 'application/json',
@@ -193,5 +172,3 @@ export const undeployTrigger = async (token: string, instanceId: string, owner: 
     }),
   }).then(response => response.json());
 };
-
-export default deployTrigger;

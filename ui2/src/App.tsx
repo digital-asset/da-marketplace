@@ -32,6 +32,7 @@ import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
+import { ClearingServiceTable } from './pages/network/Clearing';
 import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
 import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
@@ -62,6 +63,7 @@ import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
 import { Header } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
+import { TradingOrder } from './pages/trading/Order';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -77,10 +79,7 @@ const AppComponent = () => {
     ClearingService
   );
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(
-    BiddingService,
-    () => [{ customer: party }]
-  );
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
     IssuanceService
   );
@@ -90,6 +89,7 @@ const AppComponent = () => {
 
   const servicesLoading: boolean = [
     custodyLoading,
+    clearingLoading,
     auctionLoading,
     biddingLoading,
     issuanceLoading,
@@ -128,7 +128,7 @@ const AppComponent = () => {
 
   const clearingProvider = clearingService.filter(cs => cs.payload.provider === party);
   entries.push({
-    displayEntry: () => clearingService.length > 0,
+    displayEntry: () => clearingProvider.length > 0,
     sidebar: [
       {
         label: 'Members',
@@ -142,6 +142,20 @@ const AppComponent = () => {
       {
         path: '/app/clearing/member/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
+      },
+    ],
+  });
+
+  const clearingCustomer = clearingService.filter(cs => cs.payload.customer === party);
+  entries.push({
+    displayEntry: () => clearingCustomer.length > 0,
+    sidebar: [
+      {
+        label: 'Clearing',
+        path: `/app/clearing/member`,
+        render: () => <ClearingMember services={clearingProvider} member />,
+        icon: <WalletIcon />,
+        children: [],
       },
     ],
   });
@@ -213,6 +227,12 @@ const AppComponent = () => {
         })),
       },
     ],
+    additionalRoutes: [
+      {
+        path: '/app/trading/order/:contractId',
+        render: () => <TradingOrder listings={listings} />,
+      },
+    ],
   });
 
   entries.push({
@@ -228,6 +248,14 @@ const AppComponent = () => {
       },
     ],
     additionalRoutes: [
+      {
+        path: '/app/manage/clearing',
+        render: () => (
+          <Manage>
+            <ClearingServiceTable services={clearingService} />
+          </Manage>
+        ),
+      },
       {
         path: '/app/manage/custody',
         render: () => (
@@ -298,6 +326,10 @@ const AppComponent = () => {
       {
         path: '/app/setup/custody/offer',
         render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+      {
+        path: '/app/setup/clearing/offer',
+        render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
         path: '/app/setup/distribution/new/auction',

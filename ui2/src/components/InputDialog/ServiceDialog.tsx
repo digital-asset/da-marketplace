@@ -13,6 +13,7 @@ import { Template } from '@daml/types';
 import { useStreamQueries } from '../../Main';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 interface OfferProps<T extends ServiceOfferTemplates> {
   choice?: any;
@@ -43,6 +44,10 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
     r => r.payload.provider === party
   );
 
+  const clearingRole = useStreamQueries(ClearingRole).contracts.find(
+    r => r.payload.provider === party
+  );
+
   const custodyRole = useStreamQueries(CustodyRole).contracts.find(
     r => r.payload.provider === party
   );
@@ -55,6 +60,16 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
 
     switch (service) {
       case ServiceKind.TRADING:
+      case ServiceKind.CLEARING: {
+        if (!clearingRole || !choice) {
+          setError(`You can not offer ${service} services without a Clearing Role contract.`);
+          return;
+        } else {
+          await ledger.exercise(choice, clearingRole.contractId, params);
+          onClose(false);
+          return;
+        }
+      }
       case ServiceKind.LISTING: {
         if (!tradingRole || !choice) {
           setError(`You can not offer ${service} services without a Trading Role contract.`);

@@ -9,12 +9,12 @@
     }
 
     .field {
-       display: none;
-       margin-bottom: $spacing-s;
+      display: none;
+      margin-bottom: $spacing-s;
 
-       .ui.selection.dropdown {
-            width: 100%;
-        }
+      .ui.selection.dropdown {
+        width: 100%;
+      }
     }
 
     .manage-menu {
@@ -38,13 +38,13 @@
     }
 
     @media screen and (max-width: 1050px) {
-        .manage-menu  {
-            display: none;
-        }
+      .manage-menu {
+        display: none;
+      }
 
-        .field {
-            display: flex;
-        }
+      .field {
+        display: flex;
+      }
     }
   }
 }

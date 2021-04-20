@@ -3,16 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { Form, Button, Icon, Loader, Table, DropdownItemProps } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
-import {
-  DablPartiesInput,
-  PartyDetails,
-  useWellKnownParties,
-  PublicLedger,
-  WellKnownPartiesProvider,
-} from '@daml/hub-react';
+import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
 import { useUserDispatch, loginUser } from '../../context/UserContext';
-import { ServiceKind } from '../../context/ServicesContext';
 import { useHistory, NavLink } from 'react-router-dom';
 
 import {
@@ -53,32 +46,38 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
 import { CreateEvent } from '@daml/ledger';
-import deployTrigger, {
-  TRIGGER_HASH,
-} from '../../automation';
+import { deployAutomation } from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
-import { SetupAutomation } from '../setup/Automation';
+import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
-interface IServiceContractSetupData {
-  party?: PartyDetails;
-  service?: string;
+enum ServiceKind {
+  CUSTODY = 'Custody',
+  LISTING = 'Listing',
+  TRADING = 'Trading',
+  MATCHING = 'Matching',
+  SETTLEMENT = 'Settlement',
 }
 
-const OfferServiceContractSetup = (props: {
+interface IQuickSetupData {
+  party?: PartyDetails;
+  services: string[];
+}
+
+const QuickSetupTable = (props: {
   credentials: Credentials;
-  serviceSetupData?: IServiceContractSetupData;
-  setServiceSetupData: (data: IServiceContractSetupData) => void;
+  quickSetupData?: IQuickSetupData;
+  setQuickSetupData: (data: IQuickSetupData) => void;
   parties: PartyDetails[];
   creatingRoleContracts: boolean;
   onComplete: () => void;
 }) => {
   const {
     credentials,
-    serviceSetupData,
-    setServiceSetupData,
+    quickSetupData,
+    setQuickSetupData,
     parties,
     onComplete,
     creatingRoleContracts,
@@ -92,28 +91,14 @@ const OfferServiceContractSetup = (props: {
   const ledger = useLedger();
   const operator = credentials.party;
 
-  const publicParty = useWellKnownParties().parties?.publicParty;
-
   const automations = useAutomations();
-  const triggerOptions: DropdownItemProps[] =
-    automations?.flatMap(auto => {
-      if (auto.automationEntity.tag === 'DamlTrigger') {
-        return auto.automationEntity.value.triggerNames.map(tn => {
-          return {
-            key: tn,
-            value: tn,
-            text: tn.split(':')[0],
-          };
-        });
-      } else {
-        return [];
-      }
-    }) || [];
+  const triggerOptions: DropdownItemProps[] = makeAutomationOptions(automations);
 
   const handleDeployment = async (token: string) => {
     for (const auto of toDeploy) {
-      if (TRIGGER_HASH) {
-        deployTrigger(TRIGGER_HASH, auto, token, publicParty);
+      const [name, hash] = auto.split('#');
+      if (hash) {
+        deployAutomation(hash, name, token, publicParty);
       }
     }
   };
@@ -125,8 +110,14 @@ const OfferServiceContractSetup = (props: {
   const matchingServices = useStreamQueries(MarchingService);
   const operatorService = useStreamQueries(OperatorService);
 
-  const selectedParty = serviceSetupData?.party;
-  const selectedService = serviceSetupData?.service;
+  const custodianOffers = useStreamQueries(CustodianOffer);
+  const distributorOffers = useStreamQueries(DistributorOffer);
+  const settlementOffers = useStreamQueries(SettlementOffer);
+  const exhangeOffers = useStreamQueries(ExchangeOffer);
+  const matchingOffers = useStreamQueries(MatchingOffer);
+
+  const selectedParty = quickSetupData?.party;
+  const selectedServices = quickSetupData?.services || [];
 
   useEffect(() => {
     setLoading(
@@ -135,7 +126,12 @@ const OfferServiceContractSetup = (props: {
         settlementServices.loading ||
         exchangeRoles.loading ||
         matchingServices.loading ||
-        operatorService.loading
+        operatorService.loading ||
+        custodianOffers.loading ||
+        distributorOffers.loading ||
+        settlementOffers.loading ||
+        exhangeOffers.loading ||
+        matchingOffers.loading
     );
   }, [
     custodianRoles.loading,
@@ -144,6 +140,11 @@ const OfferServiceContractSetup = (props: {
     exchangeRoles.loading,
     matchingServices.loading,
     operatorService.loading,
+    custodianOffers.loading,
+    distributorOffers.loading,
+    settlementOffers.loading,
+    exhangeOffers.loading,
+    matchingOffers.loading,
   ]);
 
   useEffect(() => {
@@ -191,10 +192,8 @@ const OfferServiceContractSetup = (props: {
     return { text: party.partyName, value: party.party };
   });
 
-  const servicesNotSupported = [ServiceKind.AUCTION, ServiceKind.ISSUANCE, ServiceKind.BIDDING]; // services not yet supported by this modal
-
-  let serviceOptions = Object.values(ServiceKind)
-    .filter(s => !servicesNotSupported.includes(s))
+  const serviceOptions = Object.values(ServiceKind)
+    .filter(s => !findExistingRole(s))
     .map(service => {
       return { text: service, value: service };
     });
@@ -210,14 +209,14 @@ const OfferServiceContractSetup = (props: {
           <Table.Row>
             <Table.HeaderCell>Party</Table.HeaderCell>
             <Table.HeaderCell>Services</Table.HeaderCell>
-            <Table.HeaderCell>Automation</Table.HeaderCell>
+            {isHubDeployment && <Table.HeaderCell>Automation</Table.HeaderCell>}
             <Table.HeaderCell></Table.HeaderCell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
           <Table.Row>
             <Table.Cell>
-              {deploymentMode === DeploymentMode.PROD_DABL ? (
+              {isHubDeployment ? (
                 <Form.Select
                   value={
                     selectedParty
@@ -236,35 +235,45 @@ const OfferServiceContractSetup = (props: {
               )}
             </Table.Cell>
             <Table.Cell>
-              <Form.Select
-                disabled={!selectedParty}
-                value={
-                  selectedService
-                    ? serviceOptions.find(p => selectedService === p.value)?.value
-                    : ''
-                }
-                placeholder="Select..."
-                onChange={(_, data: any) => hangleChangeService(data.value)}
-                options={serviceOptions}
-              />
+              {serviceOptions.length > 0 ? (
+                <Form.Select
+                  multiple
+                  value={selectedServices}
+                  disabled={!selectedParty}
+                  placeholder="Select..."
+                  onChange={(_, data: any) =>
+                    setQuickSetupData({
+                      ...quickSetupData,
+                      services: data.value,
+                    })
+                  }
+                  options={serviceOptions}
+                />
+              ) : (
+                <p>All services added</p>
+              )}
             </Table.Cell>
-            <Table.Cell>
-              <Form.Select
-                disabled={!selectedParty}
-                placeholder="Select..."
-                multiple
-                value={toDeploy}
-                onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
-                options={triggerOptions}
-              />
-            </Table.Cell>
+            {isHubDeployment && (
+              <Table.Cell>
+                <Form.Select
+                  disabled={!selectedParty}
+                  placeholder="Select..."
+                  multiple
+                  value={toDeploy}
+                  onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
+                  options={triggerOptions}
+                />
+              </Table.Cell>
+            )}
             <Table.Cell>
               {creatingRoleContracts ? (
                 <Button disabled className="ghost" content={<p>Adding...</p>} />
               ) : (
                 <Button
                   disabled={
-                    !selectedParty || (!selectedService && toDeploy.length === 0) || !!status
+                    !selectedParty ||
+                    (selectedServices.length === 0 && toDeploy.length === 0) ||
+                    !!status
                   }
                   className="ghost"
                   onClick={() => createRoleContract()}
@@ -280,26 +289,9 @@ const OfferServiceContractSetup = (props: {
           )}
         </Table.Body>
       </Table>
-      <MarketSetup
-        parties={parties}
-        loading={loading}
-        marketSetupDataMap={marketSetupDataMap}
-      />
+      <MarketSetup parties={parties} loading={loading} marketSetupDataMap={marketSetupDataMap} />
     </div>
   );
-
-  function hangleChangeService(newService: string) {
-    setServiceSetupData({ ...serviceSetupData, service: newService });
-
-    const hasRole = findExistingRoleorOffer(newService);
-
-    if (hasRole) {
-      setStatus(`${selectedParty?.partyName} already offers ${newService} services`);
-      setServiceSetupData({ ...serviceSetupData, service: undefined });
-    } else {
-      setStatus(undefined);
-    }
-  }
 
   function handleChangeParty(newPartyId: string) {
     setStatus(undefined);
@@ -322,49 +314,65 @@ const OfferServiceContractSetup = (props: {
 
     if (!newParty) return;
 
-    setServiceSetupData({ ...serviceSetupData, party: newParty, service: undefined });
+    setQuickSetupData({ ...quickSetupData, party: newParty, services: [] });
   }
 
   async function createRoleContract() {
     const operatorServiceContract = operatorService.contracts[0];
 
-    if (!selectedParty || !operatorServiceContract || (!selectedService && !toDeploy.length))
+    if (
+      !selectedParty ||
+      !operatorServiceContract ||
+      (selectedServices.length === 0 && !toDeploy.length)
+    )
       return undefined;
 
     const id = operatorServiceContract.contractId;
     const provider = selectedParty.party;
     const token = selectedParty.token;
     await handleDeployment(token).then(_ => {
-      if (!selectedService) onComplete();
+      if (selectedServices.length === 0) onComplete();
+      setToDeploy([]);
     });
 
-    switch (selectedService) {
-      case ServiceKind.CUSTODY:
-        return await ledger
-          .exercise(OperatorService.OfferCustodianRole, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.TRADING:
-        return await ledger
-          .exercise(OperatorService.OfferExchangeRole, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.MATCHING:
-        return await ledger
-          .exercise(OperatorService.OfferMatchingService, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.SETTLEMENT:
-        return await ledger
-          .exercise(OperatorService.OfferSettlementService, id, { provider })
-          .then(_ => onComplete());
-      case ServiceKind.LISTING:
-        return await ledger
-          .exercise(OperatorService.OfferDistributorRole, id, { provider })
-          .then(_ => onComplete());
-    }
-
-    setToDeploy([]);
+    Promise.all(
+      selectedServices.map(async service => {
+        if (findExistingOffer(service)) {
+          return;
+        }
+        switch (service) {
+          case ServiceKind.CUSTODY:
+            return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
+          case ServiceKind.TRADING:
+            return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
+          case ServiceKind.MATCHING:
+            return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
+          case ServiceKind.SETTLEMENT:
+            return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
+          case ServiceKind.LISTING:
+            return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
+        }
+      })
+    );
+    onComplete();
   }
 
-  function findExistingRoleorOffer(newService: string) {
+  function findExistingOffer(newService: string) {
+    switch (newService) {
+      case ServiceKind.CUSTODY:
+        return !!custodianOffers.contracts.find(c => c.payload.provider === selectedParty?.party);
+      case ServiceKind.TRADING:
+        return !!exhangeOffers.contracts.find(c => c.payload.provider === selectedParty?.party);
+      case ServiceKind.MATCHING:
+        return !!matchingOffers.contracts.find(c => c.payload.provider === selectedParty?.party);
+      case ServiceKind.LISTING:
+        return !!distributorOffers.contracts.find(c => c.payload.provider === selectedParty?.party);
+      case ServiceKind.SETTLEMENT:
+        return !!settlementOffers.contracts.find(c => c.payload.provider === selectedParty?.party);
+    }
+  }
+
+  function findExistingRole(newService: string) {
     switch (newService) {
       case ServiceKind.CUSTODY:
         return !!custodianRoles.contracts.find(c => c.payload.provider === selectedParty?.party);
@@ -403,7 +411,7 @@ const MarketSetup = (props: {
         <Table.Row>
           <Table.HeaderCell>Party</Table.HeaderCell>
           <Table.HeaderCell>Services</Table.HeaderCell>
-          <Table.HeaderCell>Setup Automation</Table.HeaderCell>
+          {isHubDeployment && <Table.HeaderCell>Setup Automation</Table.HeaderCell>}
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>
       </Table.Header>
@@ -413,17 +421,27 @@ const MarketSetup = (props: {
             <Table.Row key={i}>
               <Table.Cell>{parties.find(party => party.party === p)?.partyName || p}</Table.Cell>
               <Table.Cell>{marketSetupDataMap.get(p)?.sort().join(', ')}</Table.Cell>
-              <Table.Cell>
-                <SetupAutomation
-                  title={`Setup Automation: ${parties.find(party => party.party === p)?.partyName}`}
-                  token={parties.find(party => party.party === p)?.token || ''}
-                  modalTrigger={<NavLink to="#">Setup Automation</NavLink>}
-                />
-              </Table.Cell>
+              {isHubDeployment && (
+                <Table.Cell>
+                  <SetupAutomation
+                    title={`Setup Automation: ${
+                      parties.find(party => party.party === p)?.partyName
+                    }`}
+                    token={parties.find(party => party.party === p)?.token || ''}
+                    modalTrigger={<NavLink to="#">Setup Automation</NavLink>}
+                  />
+                </Table.Cell>
+              )}
               <Table.Cell>
                 <Button
                   className="ghost"
-                  onClick={() => loginUser(dispatch, history, computeCredentials(p))}
+                  onClick={() =>
+                    loginUser(
+                      dispatch,
+                      history,
+                      parties.find(party => party.party === p) || computeCredentials(p)
+                    )
+                  }
                 >
                   Login
                 </Button>
@@ -443,12 +461,12 @@ const MarketSetup = (props: {
 };
 
 const CreateRoleContract = (props: {
-  serviceSetupData: IServiceContractSetupData;
+  quickSetupData: IQuickSetupData;
   operator: string;
   onFinish: () => void;
 }) => {
-  const { serviceSetupData, operator, onFinish } = props;
-  const { party, service } = serviceSetupData;
+  const { quickSetupData, operator, onFinish } = props;
+  const { party, services } = quickSetupData;
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -480,24 +498,29 @@ const CreateRoleContract = (props: {
     if (loading) {
       return;
     }
-    switch (service) {
-      case ServiceKind.CUSTODY:
-        acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
-        break;
-      case ServiceKind.TRADING:
-        acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
-        break;
-      case ServiceKind.MATCHING:
-        acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
-        break;
-      case ServiceKind.SETTLEMENT:
-        acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
-        break;
-      case ServiceKind.LISTING:
-        acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
-        break;
-    }
+
+    handleOffers();
   }, [loading]);
+
+  async function handleOffers() {
+    await Promise.all(
+      services.map(async service => {
+        switch (service) {
+          case ServiceKind.CUSTODY:
+            return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
+          case ServiceKind.TRADING:
+            return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
+          case ServiceKind.MATCHING:
+            return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
+          case ServiceKind.SETTLEMENT:
+            return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
+          case ServiceKind.LISTING:
+            return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
+        }
+      })
+    );
+    onFinish();
+  }
 
   const acceptAllOffers = async (
     contracts: readonly CreateEvent<Offer, undefined, any>[],
@@ -520,8 +543,6 @@ const CreateRoleContract = (props: {
         retries++;
       }
     }
-
-    onFinish();
   };
 
   return null;
@@ -530,9 +551,12 @@ const CreateRoleContract = (props: {
 const QuickSetup = () => {
   const [error, setError] = useState<string>();
   const [parties, setParties] = useState<PartyDetails[]>([]);
-  const [serviceSetupData, setServiceSetupData] = useState<IServiceContractSetupData>();
+  const [quickSetupData, setQuickSetupData] = useState<IQuickSetupData>({
+    party: undefined,
+    services: [],
+  });
   const [adminCredentials, setAdminCredentials] = useState<Credentials>();
-  const [startServiceSetup, setStartServiceSetup] = useState(false);
+  const [submitSetupData, setSubmitSetupData] = useState(false);
 
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
@@ -556,7 +580,6 @@ const QuickSetup = () => {
 
     if (deploymentMode === DeploymentMode.PROD_DABL && adminParty) {
       setParties(newParties.filter(p => p.party != publicParty && p != adminParty));
-
       setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
     }
   }
@@ -597,33 +620,37 @@ const QuickSetup = () => {
         httpBaseUrl={httpBaseUrl}
         wsBaseUrl={wsBaseUrl}
       >
-        <WellKnownPartiesProvider>
-          <AutomationProvider publicParty={publicParty}>
-            <OfferServiceContractSetup
-              credentials={adminCredentials}
-              serviceSetupData={serviceSetupData}
-              setServiceSetupData={setServiceSetupData}
-              parties={parties}
-              creatingRoleContracts={startServiceSetup}
-              onComplete={() => setStartServiceSetup(true)}
-            />
-          </AutomationProvider>
-        </WellKnownPartiesProvider>
-      </DamlLedger>
-      {serviceSetupData && serviceSetupData.party && serviceSetupData.service && startServiceSetup && (
-        <DamlLedger
-          party={serviceSetupData.party.party}
-          token={serviceSetupData.party.token}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
-        >
-          <CreateRoleContract
-            serviceSetupData={serviceSetupData}
-            operator={adminCredentials.party}
-            onFinish={() => setStartServiceSetup(false)}
+        <AutomationProvider publicParty={publicParty}>
+          <QuickSetupTable
+            credentials={adminCredentials}
+            quickSetupData={quickSetupData}
+            setQuickSetupData={setQuickSetupData}
+            parties={parties}
+            creatingRoleContracts={submitSetupData}
+            onComplete={() => setSubmitSetupData(true)}
           />
-        </DamlLedger>
-      )}
+        </AutomationProvider>
+      </DamlLedger>
+      {quickSetupData &&
+        quickSetupData.party &&
+        quickSetupData.services.length > 0 &&
+        submitSetupData && (
+          <DamlLedger
+            party={quickSetupData.party.party}
+            token={quickSetupData.party.token}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <CreateRoleContract
+              quickSetupData={quickSetupData}
+              operator={adminCredentials.party}
+              onFinish={() => {
+                setQuickSetupData({ party: quickSetupData.party, services: [] });
+                setSubmitSetupData(false);
+              }}
+            />
+          </DamlLedger>
+        )}
     </div>
   ) : (
     <LoadingWheel label={'Loading credentials...'} />

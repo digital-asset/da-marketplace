@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {PublicAutomation, getPublicAutomation} from '../automation';
-import {isHubDeployment} from '../config';
+import { PublicAutomation, getPublicAutomation } from '../automation';
+import { isHubDeployment } from '../config';
 
 type AutomationState = {
   automations?: PublicAutomation[];
@@ -8,12 +8,18 @@ type AutomationState = {
 };
 
 type AutomationProviderProps = {
-  publicParty: string
-}
+  publicParty: string;
+};
 
-const AutomationStateContext = React.createContext<AutomationState>({ automations: [], loading: false });
+const AutomationStateContext = React.createContext<AutomationState>({
+  automations: [],
+  loading: false,
+});
 
-export const AutomationProvider: React.FC<AutomationProviderProps> = ({ publicParty, children }) => {
+export const AutomationProvider: React.FC<AutomationProviderProps> = ({
+  publicParty,
+  children,
+}) => {
   const [automations, setAutomations] = useState<PublicAutomation[] | undefined>([]);
   const [loading, setLoading] = useState(false);
 
@@ -39,8 +45,7 @@ export const AutomationProvider: React.FC<AutomationProviderProps> = ({ publicPa
       {children}
     </AutomationStateContext.Provider>
   );
-
-}
+};
 
 export function useAutomations() {
   const context = React.useContext<AutomationState>(AutomationStateContext);

@@ -89,6 +89,17 @@ template Service
           newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
+      nonconsuming RejectAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.Bid
+          newStatus : Bidding.Status
+        do
+          bid <- fetch bidCid
+
+          returnedDeposit <- exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = bid.depositCid
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
+          pure (newBidCid, returnedDeposit)
+
     nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction
       with
         issuer : Party

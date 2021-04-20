@@ -108,7 +108,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             // 'Asset',
             // 'Quantity',
             'Action',
-            'Details'
+            'Details',
           ]}
           loading={reduceRequestsLoading}
           rows={reduceRequests.map(c => {

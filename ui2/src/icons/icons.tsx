@@ -20,15 +20,15 @@ export const ArrowRightIcon = () => (
 );
 
 export const ArrowLeftIcon = () => (
-    <svg className="icon arrow-left-icon" viewBox="0 0 13 12">
-      <path
-        className="fill-blue"
-        d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
+  <svg className="icon arrow-left-icon" viewBox="0 0 13 12">
+    <path
+      className="fill-blue"
+      d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
               c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
               C6,1.5,6,2,6.3,2.3"
-      />
-    </svg>
-  );
+    />
+  </svg>
+);
 
 export const CogIcon = () => (
   <svg className="icon cog-icon" viewBox="0 0 19 20">

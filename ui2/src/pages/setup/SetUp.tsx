@@ -1,9 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Header } from 'semantic-ui-react';
-import { SetupAutomation } from './Automation';
-import { isHubDeployment } from '../../config';
-import { useUserState } from '../../context/UserContext';
+import { SetupAutomation } from './SetupAutomation';
+import { isHubDeployment, publicParty } from '../../config';
+import { AutomationProvider } from '../../context/AutomationContext';
 
 type SetupServiceProps = {
   name: string;
@@ -27,84 +27,94 @@ const SetupService: React.FC<SetupServiceProps> = ({ name, links, children }) =>
   </div>
 );
 
-const SetUp: React.FC = () => {
-  return (
-    <div className="set-up">
-      <SetupService
-        name="Custody"
-        links={[
-          {
-            label: 'Offer Custody Service',
-            path: '/app/setup/custody/offer',
-          },
-        ]}
-      />
+const SetUp: React.FC = () => (
+  <div className="set-up">
+    <SetupService
+      name="Custody"
+      links={[
+        {
+          label: 'Offer Custody Service',
+          path: '/app/setup/custody/offer',
+        },
+      ]}
+    />
 
-      <SetupService
-        name="Distributions"
-        links={[
-          {
-            label: 'Create New Auction',
-            path: '/app/setup/distribution/new/auction',
-          },
-        ]}
-      />
+    <SetupService
+      name="Clearing"
+      links={[
+        {
+          label: 'Offer Clearing Service',
+          path: '/app/setup/clearing/offer',
+        },
+      ]}
+    />
 
-      <SetupService
-        name="Instruments"
-        links={[
-          {
-            label: 'Create Base Instrument',
-            path: '/app/setup/instrument/new/base',
-          },
-          {
-            label: 'Create Binary Option',
-            path: '/app/setup/instrument/new/binaryoption',
-          },
-          {
-            label: 'Create Convertible Note',
-            path: '/app/setup/instrument/new/convertiblenote',
-          },
-        ]}
-      />
+    <SetupService
+      name="Distributions"
+      links={[
+        {
+          label: 'Create New Auction',
+          path: '/app/setup/distribution/new/auction',
+        },
+      ]}
+    />
 
-      <SetupService
-        name="Issuance"
-        links={[
-          {
-            label: 'Create New Issuance',
-            path: '/app/setup/issuance/new',
-          },
-        ]}
-      />
+    <SetupService
+      name="Instruments"
+      links={[
+        {
+          label: 'Create Base Instrument',
+          path: '/app/setup/instrument/new/base',
+        },
+        {
+          label: 'Create Binary Option',
+          path: '/app/setup/instrument/new/binaryoption',
+        },
+        {
+          label: 'Create Convertible Note',
+          path: '/app/setup/instrument/new/convertiblenote',
+        },
+      ]}
+    />
 
-      <SetupService
-        name="Listings"
-        links={[
-          {
-            label: 'Create New Listing',
-            path: '/app/setup/listing/new',
-          },
-        ]}
-      />
+    <SetupService
+      name="Issuance"
+      links={[
+        {
+          label: 'Create New Issuance',
+          path: '/app/setup/issuance/new',
+        },
+      ]}
+    />
 
-      <SetupService
-        name="Trading"
-        links={[
-          {
-            label: 'Offer Trading Service',
-            path: '/app/setup/trading/offer',
-          },
-        ]}
-      />
+    <SetupService
+      name="Listings"
+      links={[
+        {
+          label: 'Create New Listing',
+          path: '/app/setup/listing/new',
+        },
+      ]}
+    />
 
-      {isHubDeployment && (
+    <SetupService
+      name="Trading"
+      links={[
+        {
+          label: 'Offer Trading Service',
+          path: '/app/setup/trading/offer',
+        },
+      ]}
+    />
+
+    {isHubDeployment && (
+      <AutomationProvider publicParty={publicParty}>
         <SetupService name="Setup Automation" links={[]}>
           <SetupAutomation modalTrigger={<NavLink to="#">Setup Automation</NavLink>} />
         </SetupService>
-      )}
-    </div>
-  );
-};
+      </AutomationProvider>
+    )}
+  </div>
+);
 
 export default SetUp;

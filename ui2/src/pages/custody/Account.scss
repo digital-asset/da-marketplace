@@ -39,7 +39,7 @@
         justify-content: flex-end;
 
         .button.ghost {
-            margin-right: $spacing-s;
+          margin-right: $spacing-s;
         }
       }
 
@@ -49,14 +49,14 @@
         }
       }
 
-    @media screen and (max-width: 1050px) {
+      @media screen and (max-width: 1050px) {
         flex-direction: column;
         .details {
-            width: 100%;
-          }
+          width: 100%;
+        }
         .holdings {
-            width: 100%;
-            margin-left: 0px;
+          width: 100%;
+          margin-left: 0px;
         }
       }
     }

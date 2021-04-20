@@ -13,6 +13,7 @@ class EXBERRY:
     NewOrderRequest = 'Exberry.Integration:NewOrderRequest'
     NewOrderSuccess = 'Exberry.Integration:NewOrderSuccess'
     NewOrderFailure = 'Exberry.Integration:NewOrderFailure'
+    NewOrderCancelled = 'Exberry.Integration:NewOrderCancelled'
     CancelOrderRequest = 'Exberry.Integration:CancelOrderRequest'
     CancelOrderSuccess = 'Exberry.Integration:CancelOrderSuccess'
     CancelOrderFailure = 'Exberry.Integration:CancelOrderFailure'
@@ -86,6 +87,16 @@ def main():
                                 'RejectRequest', {
                                     'errorCode': event.cdata['errorCode'],
                                     'errorMessage': event.cdata['errorMessage']}
+                                ), exercise(event.cid, 'Archive', {})]
+
+    # Marketplace <-- Exberry
+    @client.ledger_created(EXBERRY.NewOrderCancelled)
+    async def handle_new_order_cancel(event):
+        return [exercise_by_key(MARKETPLACE.CreateOrderRequest,
+                                {'_1': client.party, '_2': event.cdata['mpOrderId']},
+                                'CancelRequest', {
+                                    'providerOrderId': event.cdata['orderId'],
+                                    'cancelledQuantity': event.cdata['cancelledQuantity']}
                                 ), exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry

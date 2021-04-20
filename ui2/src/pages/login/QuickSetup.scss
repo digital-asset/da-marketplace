@@ -1,110 +1,110 @@
 @use './themes/variables.scss' as *;
 
 @mixin quick-setup {
-    .quick-setup {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-        padding: $spacing-xl;
-        background-color: var(--cool-grey-20);
+  .quick-setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: $spacing-xl;
+    background-color: var(--cool-grey-20);
 
-        button.back-button {
-           margin: $spacing-xl;
-           width: fit-content;
-           position: absolute;
-           top: 0px;
-           left: 0px;
-        }
-
-        .custom-file-upload {
-            margin: $spacing-m;
-            height: 44px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            border-radius: 4px;
-            background-color: var(--cool-grey-30);
-
-            > input[type='file'] {
-              display: none;
-            }
-
-            i.white.icon {
-              color: var(--white);
-            }
-
-            .icon {
-              margin-right: $spacing-s;
-            }
-          }
-
-        .ui.loader {
-            position: static;
-            transform: translateX(-0%) translateY(-0%);
-        }
-
-        .setup-tile {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 70%;
-            padding: $spacing-m;
-            border-radius: 4px;
-            background-color: var(--cool-grey-10);
-
-            @media screen and (max-width: 900px) {
-                width: 100%;
-                margin: $spacing-l;
-            }
-
-            p.login-details {
-                padding: $spacing-s 0;
-            }
-
-            .ui.table tr td {
-                padding-left: $spacing-m;
-                border-top: 0px !important;
-
-                button {
-                    margin-left: auto;
-                }
-            }
-
-            .ui.table tr th {
-                padding-left: $spacing-m;
-                border-top: 0px !important;
-                max-height: 300px;
-            }
-
-            .party-registry-table {
-                margin-bottom: 0px;
-
-                tr:nth-of-type(odd){
-                    background-color: var(--blue-100);
-                }
-
-                tbody {
-                    display: block;
-                    max-height: 500px;
-                    overflow: auto;
-                    background-color: var(--white);
-                }
-                thead, tbody tr {
-                    display: table;
-                    width: 100%;
-                    table-layout: fixed;
-                }
-            }
-
-
-            .role-contract-setup {
-                tr td {
-                    overflow: visible;
-                }
-            }
-        }
+    button.back-button {
+      margin: $spacing-xl;
+      width: fit-content;
+      position: absolute;
+      top: 0px;
+      left: 0px;
     }
+
+    .custom-file-upload {
+      margin: $spacing-m;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      border-radius: 4px;
+      background-color: var(--cool-grey-30);
+
+      > input[type='file'] {
+        display: none;
+      }
+
+      i.white.icon {
+        color: var(--white);
+      }
+
+      .icon {
+        margin-right: $spacing-s;
+      }
+    }
+
+    .ui.loader {
+      position: static;
+      transform: translateX(-0%) translateY(-0%);
+    }
+
+    .setup-tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 70%;
+      padding: $spacing-m;
+      border-radius: 4px;
+      background-color: var(--cool-grey-10);
+
+      @media screen and (max-width: 900px) {
+        width: 100%;
+        margin: $spacing-l;
+      }
+
+      p.login-details {
+        padding: $spacing-s 0;
+      }
+
+      .ui.table tr td {
+        padding-left: $spacing-m;
+        border-top: 0px !important;
+
+        button {
+          margin-left: auto;
+        }
+      }
+
+      .ui.table tr th {
+        padding-left: $spacing-m;
+        border-top: 0px !important;
+        max-height: 300px;
+      }
+
+      .party-registry-table {
+        margin-bottom: 0px;
+
+        tr:nth-of-type(odd) {
+          background-color: var(--blue-100);
+        }
+
+        tbody {
+          display: block;
+          max-height: 500px;
+          overflow: auto;
+          background-color: var(--white);
+        }
+        thead,
+        tbody tr {
+          display: table;
+          width: 100%;
+          table-layout: fixed;
+        }
+      }
+
+      .role-contract-setup {
+        tr td {
+          overflow: visible;
+        }
+      }
+    }
+  }
 }

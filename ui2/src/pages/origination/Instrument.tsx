@@ -37,7 +37,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   return (
     <div>
       <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon/> back
+        <ArrowLeftIcon /> back
       </Button>
       <Tile header={<h3>{instrument.payload.description}</h3>}>
         <h5>Details</h5>
