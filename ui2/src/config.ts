@@ -1,8 +1,11 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { partyNameFromJwtToken } from '@daml/hub-react';
+import { useCallback, useMemo } from 'react';
 import { Credentials, isCredentials } from './Credentials';
+import { useStreamQueries } from './Main';
 import { retrieveParties } from './Parties';
 
 export enum DeploymentMode {
@@ -47,6 +50,27 @@ export const getName = (partyOrCreds: string | Credentials): string => {
 
     return details ? details.partyName : party;
   }
+};
+
+export const usePartyLegalName = (party: string) => {
+  const { contracts: verifiedIdentities, loading } = useStreamQueries(VerifiedIdentity);
+
+  const getLegalName = useCallback(
+    (party: string) => {
+      if (!loading) {
+        return (
+          verifiedIdentities.find(id => id.payload.customer === party)?.payload.legalName || party
+        );
+      } else {
+        return getName(party);
+      }
+    },
+    [verifiedIdentities, loading]
+  );
+
+  const legalName = useMemo(() => getLegalName(party), [party, getLegalName]);
+
+  return { legalName, getLegalName };
 };
 
 export function getTemplateId(t: string) {

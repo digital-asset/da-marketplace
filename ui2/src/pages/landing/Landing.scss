@@ -51,6 +51,19 @@
           vertical-align: middle;
         }
 
+        .id-text {
+          background-color: var(--cool-grey-90);
+          font-family: monospace;
+          color: var(--cool-grey-30);
+          border: 1px solid var(--cool-grey-70);
+          padding: $spacing-xs;
+          border-radius: 5px;
+          width: auto;
+          display: inline-block;
+          text-align: center;
+          margin-bottom: $spacing-s;
+        }
+
         .link > a {
           font-size: 14px;
         }

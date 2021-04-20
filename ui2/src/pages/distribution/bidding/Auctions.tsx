@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { useStreamQueries } from '../../../Main';
-import { getName } from '../../../config';
+import { usePartyLegalName } from '../../../config';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { Bid } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { getBidStatus, getBidAllocation } from '../Utils';
@@ -16,6 +16,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
     BiddingAuctionContract
   );
   const { contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
+  const { getLegalName } = usePartyLegalName('');
 
   return (
     <div className="bidding">
@@ -28,8 +29,8 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
             return {
               elements: [
                 c.payload.auctionId,
-                getName(c.payload.provider),
-                getName(c.payload.issuer),
+                getLegalName(c.payload.provider),
+                getLegalName(c.payload.issuer),
                 c.payload.asset.id.label,
                 c.payload.asset.quantity,
               ],
@@ -56,8 +57,8 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
             return {
               elements: [
                 c.payload.auctionId,
-                getName(c.payload.provider),
-                getName(c.payload.issuer),
+                getLegalName(c.payload.provider),
+                getLegalName(c.payload.issuer),
                 c.payload.assetId.label,
                 c.payload.details.quantity,
                 c.payload.details.price,
