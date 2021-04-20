@@ -569,6 +569,7 @@ const CreateRoleContract = (props: {
         await Promise.all(
           regulatorOffers.contracts.map(async c => {
             const [service] = await ledger.exercise(RegulatorOffer.Accept, c.contractId, args);
+
             if (service && legalName && location) {
               await ledger.exercise(RegulatorService.RequestIdentityVerification, service, {
                 legalName: legalName,
