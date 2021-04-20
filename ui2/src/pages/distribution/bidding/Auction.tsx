@@ -31,7 +31,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
 }: ServicePageProps<Service>) => {
   const party = useParty();
   const ledger = useLedger();
-  const history = useHistory()
+  const history = useHistory();
   const { contractId } = useParams<any>();
 
   const [quantity, setQuantity] = useState<number>(0);

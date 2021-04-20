@@ -88,7 +88,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       observers: [publicParty],
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
-    history.push('/app/listing/requests');
+    history.push('/app/manage/listings');
   };
 
   return (

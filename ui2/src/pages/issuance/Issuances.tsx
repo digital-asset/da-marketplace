@@ -9,17 +9,10 @@ import StripedTable from '../../components/Table/StripedTable';
 
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
-  const history = useHistory()
+  const history = useHistory();
   return (
     <StripedTable
-      headings={[
-        'Issuing Agent',
-        'Issuer',
-        'Issuance ID',
-        'Issuance Account',
-        'Asset',
-        'Quantity',
-      ]}
+      headings={['Issuing Agent', 'Issuer', 'Issuance ID', 'Issuance Account', 'Asset', 'Quantity']}
       loading={issuancesLoading}
       rowsClickable
       rows={issuances.map(c => {

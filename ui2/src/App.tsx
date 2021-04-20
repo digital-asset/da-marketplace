@@ -1,6 +1,5 @@
 import React from 'react';
 import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -20,13 +19,9 @@ import { Assets } from './pages/custody/Assets';
 import { New as DistributionNew } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { Instruments, InstrumentsTable } from './pages/origination/Instruments';
-import { New as InstrumentsNew } from './pages/origination/New';
-import { Requests as InstrumentsRequests } from './pages/origination/Requests';
 import { Issuances, IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
-import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
-import { Requests as ListingRequests } from './pages/listing/Requests';
 import { Listings, ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
@@ -41,7 +36,6 @@ import {
   ExchangeIcon,
   MegaphoneIcon,
   OrdersIcon,
-  PublicIcon,
   ToolIcon,
 } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
@@ -61,6 +55,7 @@ import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
 import { Header } from 'semantic-ui-react';
+import { TradingOrder } from './pages/trading/Order';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -208,6 +203,12 @@ const AppComponent = () => {
           icon: <ExchangeIcon />,
           children: [],
         })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/trading/order/:contractId',
+        render: () => <TradingOrder listings={listings} />,
       },
     ],
   });

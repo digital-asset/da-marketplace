@@ -40,7 +40,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
-        headings={['Asset', 'Account', 'Owner', 'Details']}
+        headings={['Asset', 'Account', 'Owner']}
         loading={accountsLoading || depositsLoading}
         rowsClickable
         rows={tradeableDeposits.map(c => {

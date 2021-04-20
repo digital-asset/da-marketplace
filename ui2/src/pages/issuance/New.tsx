@@ -71,7 +71,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       assetId: asset.payload.assetId,
       quantity,
     });
-    history.push('/app/issuance/requests');
+    history.push('/app/manage/issuance');
   };
 
   return (

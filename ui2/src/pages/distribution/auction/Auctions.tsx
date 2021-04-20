@@ -14,7 +14,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="auctions">
       <Header as="h2">Auctions</Header>
       <StripedTable
-        headings={['Provider', 'Client', 'Asset', 'Floor', 'Status', 'Details']}
+        headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}
         loading={auctionsLoading}
         rowsClickable
         rows={auctions.map(c => {
