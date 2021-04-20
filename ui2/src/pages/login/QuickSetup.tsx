@@ -53,6 +53,7 @@ import {
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import { CreateEvent } from '@daml/ledger';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
 
@@ -62,6 +63,7 @@ enum ServiceKind {
   TRADING = 'Trading',
   MATCHING = 'Matching',
   SETTLEMENT = 'Settlement',
+  REGULATOR = 'Regulator',
 }
 
 interface IVerifiedIdentityData {
@@ -96,10 +98,7 @@ const QuickSetupTable = (props: {
   const [marketSetupDataMap, setMarketSetupDataMap] = useState<Map<string, IQuickSetupData>>(
     new Map()
   );
-  const [verifiedIdentity, setVerifiedIdentity] = useState<{
-    legalName?: string;
-    location?: string;
-  }>();
+  const [verifiedIdentity, setVerifiedIdentity] = useState<IVerifiedIdentityData>();
 
   const ledger = useLedger();
   const operator = credentials.party;
@@ -122,7 +121,7 @@ const QuickSetupTable = (props: {
   const matchingOffers = useStreamQueries(MatchingOffer);
 
   const verifiedIdentities = useStreamQueries(VerifiedIdentity);
-  const verifiedIdeneityRequests = useStreamQueries(IdentityVerificationRequest);
+  const verifiedIdentityRequests = useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     setLoading(
@@ -157,7 +156,7 @@ const QuickSetupTable = (props: {
   useEffect(() => {
     const verifyIdentities = async () => {
       await Promise.all(
-        verifiedIdeneityRequests.contracts.map(async contract => {
+        verifiedIdentityRequests.contracts.map(async contract => {
           const regulatorService = regulatorServices.contracts.find(
             c => c.payload.customer === contract.payload.customer
           );
@@ -172,16 +171,16 @@ const QuickSetupTable = (props: {
     };
 
     if (
-      !verifiedIdeneityRequests.loading &&
+      !verifiedIdentityRequests.loading &&
       !regulatorServices.loading &&
       regulatorServices.contracts.length > 0 &&
-      verifiedIdeneityRequests.contracts.length > 0
+      verifiedIdentityRequests.contracts.length > 0
     ) {
       verifyIdentities();
     }
   }, [
-    verifiedIdeneityRequests.loading,
-    verifiedIdeneityRequests,
+    verifiedIdentityRequests.loading,
+    verifiedIdentityRequests,
     regulatorServices.loading,
     regulatorServices,
   ]);
@@ -273,6 +272,7 @@ const QuickSetupTable = (props: {
 
   const serviceOptions = Object.values(ServiceKind)
     .filter(s => !findExistingRole(s))
+    .filter(s => s !== ServiceKind.REGULATOR)
     .map(service => {
       return { text: service, value: service };
     });
@@ -408,10 +408,12 @@ const QuickSetupTable = (props: {
 
     const id = operatorServiceContract.contractId;
 
-    await ledger.exercise(OperatorService.OfferRegulatorService, id, {
-      provider: operator,
-      customer: provider,
-    });
+    if (!findExistingOffer(ServiceKind.REGULATOR)) {
+      await ledger.exercise(OperatorService.OfferRegulatorService, id, {
+        provider: operator,
+        customer: provider,
+      });
+    }
 
     Promise.all(
       services.map(async service => {
@@ -446,6 +448,8 @@ const QuickSetupTable = (props: {
       case ServiceKind.LISTING:
         return !!distributorOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.SETTLEMENT:
+        return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
+      case ServiceKind.REGULATOR:
         return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
     }
   }
