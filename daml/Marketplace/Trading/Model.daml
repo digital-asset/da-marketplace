@@ -73,7 +73,7 @@ template Order
     providerOrderId : Optional Text
     executions : [Execution]
     remainingQuantity : Decimal
-    depositCid : ContractId AssetDeposit
+    depositCid : Optional (ContractId AssetDeposit)
   where
     signatory operator, provider, customer
 

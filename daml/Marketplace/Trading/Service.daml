@@ -28,7 +28,7 @@ template Service
       nonconsuming RequestCreateOrder : (ContractId Order.T, ContractId CreateOrderRequest, ContractId AssetDeposit)
         with
           details : Order.Details
-          depositCid : ContractId AssetDeposit
+          depositCid : Optional (ContractId AssetDeposit)
         do
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
           -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
@@ -38,7 +38,9 @@ template Service
             executions = []
             remainingQuantity = details.asset.quantity
 
-          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
+          depositCid <- case depositCid of
+            (Some x) -> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with depositCid = x; ..
+            None              -> return $ None
           createOrderRequestCid <- create CreateOrderRequest with ..
           orderCid <- create Order.Order with ..
 
