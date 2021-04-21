@@ -24,6 +24,8 @@ export const deploymentMode: DeploymentMode =
     ? DeploymentMode.PROD_DABL
     : DeploymentMode.PROD_OTHER;
 
+export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DABL;
+
 // Decide the ledger ID based on the deployment mode first,
 // then an environment variable, falling back on the sandbox ledger ID.
 export const ledgerId: string =

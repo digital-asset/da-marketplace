@@ -16,8 +16,9 @@ const StripedTable = (props: {
   emptyLabel?: string;
   loading?: boolean;
   rowsClickable?: boolean;
+  showLabel?: boolean;
 }) => {
-  const { headings, rows, rowsPerPage, emptyLabel, loading, rowsClickable } = props;
+  const { headings, rows, rowsPerPage, emptyLabel, loading, rowsClickable, showLabel } = props;
 
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
@@ -69,7 +70,7 @@ const StripedTable = (props: {
                       key={j}
                       textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}
                     >
-                      <b className="label">{headings[j]}: </b> {item}
+                      {showLabel && <b className="label">{headings[j]}: </b>} {item}
                     </Table.Cell>
                   ))}
                 </Table.Row>
