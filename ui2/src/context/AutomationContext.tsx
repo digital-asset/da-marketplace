@@ -50,7 +50,7 @@ export const AutomationProvider: React.FC<AutomationProviderProps> = ({
 export function useAutomations() {
   const context = React.useContext<AutomationState>(AutomationStateContext);
   if (context === undefined) {
-    throw new Error('useCustomerServices must be used within an AutomationProvider');
+    throw new Error('useAutomations must be used within an AutomationProvider');
   }
   return context.automations;
 }
