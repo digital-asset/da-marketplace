@@ -11,6 +11,7 @@ import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing.Service as Listing
+import qualified Marketplace.Listing.Model as Listing
 import DA.List
 
 setup : Script ()
@@ -33,6 +34,7 @@ setup = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.Collateralized
     calendarId = "1"
     description = "Tesla Inc."
     tradedAssetId = shareAsset.id
@@ -75,7 +77,7 @@ setup = do
         depositCid = bobDepositCid
 
   -- Exchange matches the two orders
-  settlementInstructionCid <- submit exchange do
+  Some settlementInstructionCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -112,6 +114,7 @@ partialExecutionsTest = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.Collateralized
     calendarId = "1"
     description = "Tesla Inc."
     tradedAssetId = shareAsset.id
@@ -206,7 +209,7 @@ partialExecutionsTest = do
     )
 
   -- Exchange settles the instructed trade
-  forA_ settlementInstructionCids (\settlementInstructionCid ->
+  forA_ settlementInstructionCids (\(Some settlementInstructionCid) ->
     submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle)
 
   pure ()

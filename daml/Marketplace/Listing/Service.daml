@@ -3,7 +3,7 @@ module Marketplace.Listing.Service where
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
 import Marketplace.Trading.Error qualified as Error
-import Marketplace.Listing.Model (Listing(..), Status(..))
+import Marketplace.Listing.Model (ListingType, Listing(..), Status(..))
 
 template Service
   with
@@ -20,6 +20,7 @@ template Service
       nonconsuming RequestCreateListing : ContractId CreateListingRequest
         with
           listingId : Text
+          listingType : ListingType
           calendarId : Text
           description : Text
           tradedAssetId : Id
@@ -126,6 +127,7 @@ template CreateListingRequest
     provider : Party
     customer : Party
     listingId : Text
+    listingType : ListingType
     calendarId : Text
     description : Text
     tradedAssetId : Id

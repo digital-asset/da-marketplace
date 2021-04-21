@@ -8,7 +8,6 @@ import DA.Next.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
 -- import Marketplace.Trading.Listing (Listing)
 import Marketplace.Trading.Model qualified as Order
-import DA.Optional.Total (fromSome)
 
 -- TODO: Try to turn this into a service
 
@@ -69,14 +68,15 @@ template Confirmation
               getAllocationAccount = getAccount accounts (.allocationAccount)
               getTradingAccount    = getAccount accounts (.tradingAccount)
 
+            let (Order.Collateral depositCid) = order.collateral
             depositCid <- if isPartialFill
               then do
-                (depositCid :: depositRemainingCid :: _) <- exercise (fromSome order.depositCid) AssetDeposit_Split with ..
-                create order with executions, remainingQuantity, depositCid = Some depositRemainingCid, status = Order.PartiallyExecuted
+                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
+                create order with executions, remainingQuantity, collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
                 pure depositCid
               else do
                 create order with executions, remainingQuantity, status = Order.FullyExecuted
-                pure $ Some order.depositCid
+                pure depositCid
 
             pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
             )

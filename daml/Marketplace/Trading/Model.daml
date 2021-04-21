@@ -63,6 +63,12 @@ data Execution = Execution with
 
 type T = Order
 
+data TradeDeposit = Cleared | Collateral (ContractId AssetDeposit) deriving (Show,Eq)
+
+isClearedOrder : Order -> Bool
+isClearedOrder Order{collateral = Cleared} = True
+isClearedOrder _                           = False
+
 template Order
   with
     operator : Party
@@ -73,7 +79,7 @@ template Order
     providerOrderId : Optional Text
     executions : [Execution]
     remainingQuantity : Decimal
-    depositCid : Optional (ContractId AssetDeposit)
+    collateral : TradeDeposit -- Optional (ContractId AssetDeposit)
   where
     signatory operator, provider, customer
 

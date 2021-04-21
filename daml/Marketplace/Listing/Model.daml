@@ -10,11 +10,17 @@ data Status
     | Disabled
   deriving (Eq, Show)
 
+data ListingType
+    = Cleared
+    | Collateralized
+  deriving (Eq, Show)
+
 template Listing
   with
     operator : Party
     provider : Party
     customer : Party
+    listingType : ListingType
     listingId : Text
     calendarId : Text
     description : Text

@@ -13,6 +13,7 @@ import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches orderCid party status = do
@@ -37,6 +38,7 @@ tradingEndToEndTest = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.Collateralized
     calendarId = "1261007448"
     description = "Tesla Inc."
     tradedAssetId = tsla.id
@@ -99,7 +101,7 @@ tradingEndToEndTest = do
         price = 100.0
         timestamp = "123456"
 
-  settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+  Some settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
 
   aliceOrderCid <- fst . head <$> query @Order.T alice.customer
   checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted

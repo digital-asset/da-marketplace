@@ -53,9 +53,9 @@ traderCannotMoveAllocatedAsset = do
 
   -- Cancel order
   (aliceOrderCid, aliceCancelOrderRequestCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCancelOrder with orderCid = aliceOrderCid
-  (aliceOrderCid, aliceAssetDepositCid2) <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
+  (aliceOrderCid, Order.Collateral aliceAssetDepositCid2) <- submit exchange do exerciseCmd alice.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = aliceCancelOrderRequestCid
   (bobOrderCid, bobCancelOrderRequestCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCancelOrder with orderCid = bobOrderCid
-  (bobOrderCid, bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
+  (bobOrderCid, Order.Collateral bobAssetDepositCid2) <- submit exchange do exerciseCmd bob.tradingServiceCid Trading.CancelOrder with cancelOrderRequestCid = bobCancelOrderRequestCid
 
   -- Assert deposits are back in main account
   Some aliceDeposit <- queryContractId alice.customer aliceAssetDepositCid2
