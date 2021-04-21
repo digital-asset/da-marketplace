@@ -380,7 +380,7 @@ const QuickSetupTable = (props: {
 
         <Grid.Row>
           <Grid.Column width={6}>
-            {!isHubDeployment && (
+            {isHubDeployment && (
               <Form.Select
                 label={<h4 className="dark">Automation</h4>}
                 disabled={!party}
