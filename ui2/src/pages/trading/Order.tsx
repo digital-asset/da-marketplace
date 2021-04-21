@@ -1,11 +1,11 @@
 import React from 'react';
-import {useStreamQueries} from '../../Main';
-import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import {Order,} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import {CreateEvent} from '@daml/ledger';
-import {Button, Table} from 'semantic-ui-react';
+import { useStreamQueries } from '../../Main';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { CreateEvent } from '@daml/ledger';
+import { Button, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import {DateTime} from 'luxon';
+import { DateTime } from 'luxon';
 import {
   displayStatus,
   getFillPercentage,
@@ -17,9 +17,9 @@ import {
   getTimeInForceText,
   getVolume,
 } from './Utils';
-import {useHistory, useParams} from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import StripedTable from '../../components/Table/StripedTable';
-import {ArrowLeftIcon} from '../../icons/icons';
+import { ArrowLeftIcon } from '../../icons/icons';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
