@@ -23,7 +23,7 @@ import {
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyLegalName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
@@ -38,6 +38,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);
@@ -154,10 +155,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {c.payload.accountId.label}
                         </TableCell>
                         <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
+                          {getLegalName(c.payload.provider)}
                         </TableCell>
                         <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
+                          {getLegalName(c.payload.customer)}
                         </TableCell>
                         <TableCell key={3} className={classes.tableCell}>
                           {party === c.payload.provider ? 'Provider' : 'Client'}
@@ -236,10 +237,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {c.payload.accountId.label}
                         </TableCell>
                         <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
+                          {getLegalName(c.payload.provider)}
                         </TableCell>
                         <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
+                          {getLegalName(c.payload.customer)}
                         </TableCell>
                         <TableCell key={3} className={classes.tableCell}>
                           {party === c.payload.provider ? 'Provider' : 'Client'}
@@ -316,10 +317,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {c.payload.accountId.label}
                         </TableCell>
                         <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
+                          {getLegalName(c.payload.provider)}
                         </TableCell>
                         <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
+                          {getLegalName(c.payload.customer)}
                         </TableCell>
                         <TableCell key={3} className={classes.tableCell}>
                           {c.payload.accountId.label}
@@ -389,10 +390,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {c.payload.accountId.label}
                         </TableCell>
                         <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
+                          {getLegalName(c.payload.provider)}
                         </TableCell>
                         <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
+                          {getLegalName(c.payload.customer)}
                         </TableCell>
                         <TableCell key={3} className={classes.tableCell}>
                           {c.payload.accountId.label}
@@ -462,10 +463,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {c.payload.accountId.label}
                         </TableCell>
                         <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
+                          {getLegalName(c.payload.provider)}
                         </TableCell>
                         <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
+                          {getLegalName(c.payload.customer)}
                         </TableCell>
                         <TableCell key={3} className={classes.tableCell}>
                           {getTransferDepositDetail(c, d => d.asset.id.label)}

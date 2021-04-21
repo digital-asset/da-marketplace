@@ -11,7 +11,7 @@ import Tile from '../../components/Tile/Tile';
 import { Button, Header, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { getName } from '../../config';
+import { usePartyLegalName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
@@ -21,6 +21,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
   const { contractId } = useParams<any>();
 
@@ -198,13 +199,15 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                     <Table.Cell key={0}>
                       <b>Provider</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{getName(account.payload.account.provider)}</Table.Cell>
+                    <Table.Cell key={1}>
+                      {getLegalName(account.payload.account.provider)}
+                    </Table.Cell>
                   </Table.Row>
                   <Table.Row key={2}>
                     <Table.Cell key={0}>
                       <b>Owner</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{getName(account.payload.account.owner)}</Table.Cell>
+                    <Table.Cell key={1}>{getLegalName(account.payload.account.owner)}</Table.Cell>
                   </Table.Row>
                   <Table.Row key={3}>
                     <Table.Cell key={0}>

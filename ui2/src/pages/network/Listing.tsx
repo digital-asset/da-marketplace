@@ -18,7 +18,7 @@ import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyLegalName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
@@ -33,6 +33,7 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -177,13 +178,13 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.operator)}
+                        {getLegalName(c.payload.operator)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -247,10 +248,10 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -320,10 +321,10 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}

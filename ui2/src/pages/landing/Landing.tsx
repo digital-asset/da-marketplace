@@ -13,7 +13,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 import { getAbbreviation } from '../page/utils';
-import { getName, ledgerId } from '../../config';
+import { usePartyLegalName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
@@ -34,9 +34,9 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
-function hashUserName(name: string): number {
-  // Hash a user name to map to values in the range [1, 4], to determine profile pic color
-  return (name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
+function hashPartyId(party: string): number {
+  // Hash a party to map to values in the range [1, 4], to determine profile pic color
+  return (party.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
 }
 
 interface RelationshipProps {
@@ -44,19 +44,23 @@ interface RelationshipProps {
   services: ServiceKind[];
 }
 
-const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => (
-  <Tile className="relationship-tile">
-    <div className={`child profile-pic bg-color-${hashUserName(provider)}`}>
-      {getAbbreviation(provider)}
-    </div>
-    <div className="child provider">{getName(provider)}</div>
-    <div className="child">
-      {services.map(s => (
-        <Label key={s} content={s} />
-      ))}
-    </div>
-  </Tile>
-);
+const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
+  const { legalName } = usePartyLegalName(provider);
+
+  return (
+    <Tile className="relationship-tile">
+      <div className={`child profile-pic bg-color-${hashPartyId(provider)}`}>
+        {getAbbreviation(legalName)}
+      </div>
+      <div className="child provider">{legalName}</div>
+      <div className="child">
+        {services.map(s => (
+          <Label key={s} content={s} />
+        ))}
+      </div>
+    </Tile>
+  );
+};
 
 interface RequestInterface {
   customer: string;
@@ -118,8 +122,10 @@ const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
   } else if (partyIdentity) {
     return (
       <>
-        <p>Party ID: {customer}</p>
-        <p>Location: {partyIdentity.payload.location}</p>
+        <p>
+          <input readOnly className="id-text" value={customer} />
+        </p>
+        <p>{partyIdentity.payload.location}</p>
       </>
     );
   }
@@ -129,6 +135,7 @@ const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
 
 const Landing = () => {
   const party = useParty();
+  const { legalName } = usePartyLegalName(party);
   const providers = useProviderServices(party);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -239,7 +246,7 @@ const Landing = () => {
 
         <Tile>
           <div className="profile">
-            <div className="profile-name">@{getName(party)}</div>
+            <div className="profile-name">@{legalName}</div>
             <ProfileSection
               action={() => requestService(RegulatorRequest, ServiceKind.REGULATOR)}
             />

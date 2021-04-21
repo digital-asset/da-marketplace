@@ -2,7 +2,7 @@ import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
-import { getName } from '../../config';
+import { usePartyLegalName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
@@ -16,6 +16,7 @@ type Props = {
 
 export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
 
   const service = services.find(s => s.payload.customer === party);
@@ -43,8 +44,8 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
       rows={listings.map(c => {
         return {
           elements: [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
+            getLegalName(c.payload.provider),
+            getLegalName(c.payload.customer),
             c.payload.listingId,
             c.payload.calendarId,
             c.payload.tradedAssetId.label,

@@ -18,7 +18,7 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyLegalName } from '../../config';
 import {
   CreateListingRequest,
   DisableListingRequest,
@@ -38,6 +38,8 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
+
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);
@@ -133,10 +135,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                   {createRequests.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Client'}
@@ -228,10 +230,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                   {deleteEntries.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>
-                        {getName(c.request.payload.provider)}
+                        {getLegalName(c.request.payload.provider)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.request.payload.customer)}
+                        {getLegalName(c.request.payload.customer)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
                         {party === c.request.payload.provider ? 'Provider' : 'Client'}

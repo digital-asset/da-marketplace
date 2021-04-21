@@ -21,7 +21,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
 import { ServicePageProps } from '../../common';
 import StripedTable from '../../../components/Table/StripedTable';
-import { getName } from '../../../config';
+import { usePartyLegalName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { ArrowLeftIcon } from '../../../icons/icons';
@@ -30,6 +30,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,
 }: ServicePageProps<Service>) => {
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
   const history = useHistory();
   const { contractId } = useParams<any>();
@@ -132,13 +133,13 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
                   <Table.Cell key={0}>
                     <b>Issuer</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(biddingAuction.payload.issuer)}</Table.Cell>
+                  <Table.Cell key={1}>{getLegalName(biddingAuction.payload.issuer)}</Table.Cell>
                 </Table.Row>
                 <Table.Row key={1}>
                   <Table.Cell key={0}>
                     <b>Agent</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(biddingAuction.payload.provider)}</Table.Cell>
+                  <Table.Cell key={1}>{getLegalName(biddingAuction.payload.provider)}</Table.Cell>
                 </Table.Row>
                 <Table.Row key={2}>
                   <Table.Cell key={0}>
@@ -219,7 +220,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
                     <Table.Cell key={0}>
                       <b>Quantity</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{getName(bid.payload.details.quantity)}</Table.Cell>
+                    <Table.Cell key={1}>{getLegalName(bid.payload.details.quantity)}</Table.Cell>
                   </Table.Row>
                   <Table.Row key={1}>
                     <Table.Cell key={0}>

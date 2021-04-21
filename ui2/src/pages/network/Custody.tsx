@@ -17,7 +17,7 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyLegalName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -30,8 +30,8 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
-  const history = useHistory();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -44,9 +44,9 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
         return {
           elements: [
             getTemplateId(c.templateId),
-            getName(c.payload.operator),
-            getName(c.payload.provider),
-            getName(c.payload.customer),
+            getLegalName(c.payload.operator),
+            getLegalName(c.payload.provider),
+            getLegalName(c.payload.customer),
             party === c.payload.provider ? 'Provider' : 'Consumer',
             <Button className="ghost warning small" onClick={() => terminateService(c)}>
               Terminate
@@ -67,6 +67,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -214,10 +215,10 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -287,10 +288,10 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
+                        {getLegalName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
+                        {getLegalName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}

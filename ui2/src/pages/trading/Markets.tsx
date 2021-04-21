@@ -1,10 +1,9 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { getName } from '../../config';
+import { usePartyLegalName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
-import Tile from '../../components/Tile/Tile';
-import { Button, Header, Icon } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 
 type Props = {
@@ -15,6 +14,8 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   listings,
 }: RouteComponentProps & Props) => {
+  const { getLegalName } = usePartyLegalName('');
+
   return (
     <div>
       <Header as="h2">Markets</Header>
@@ -24,8 +25,8 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
         rows={listings.map(c => {
           return {
             elements: [
-              getName(c.payload.provider),
-              getName(c.payload.customer),
+              getLegalName(c.payload.provider),
+              getLegalName(c.payload.customer),
               c.payload.listingId,
               c.payload.tradedAssetId.label,
               c.payload.quotedAssetId.label,

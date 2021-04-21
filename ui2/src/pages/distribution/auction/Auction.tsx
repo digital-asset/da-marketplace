@@ -18,7 +18,7 @@ import { getAuctionStatus, getBidStatus, getBidAllocation } from '../Utils';
 import { DateTime } from 'luxon';
 import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { getName } from '../../../config';
+import { usePartyLegalName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import { ArrowLeftIcon } from '../../../icons/icons';
 
@@ -37,6 +37,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const cid = contractId.replace('_', '#');
 
   const party = useParty();
+  const { getLegalName } = usePartyLegalName(party);
   const ledger = useLedger();
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
   const isAuctionProvider = auctionProviderServices.length > 0;
@@ -182,13 +183,13 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
                   <Table.Cell key={0}>
                     <b>Issuer</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(auction.payload.customer)}</Table.Cell>
+                  <Table.Cell key={1}>{getLegalName(auction.payload.customer)}</Table.Cell>
                 </Table.Row>
                 <Table.Row key={1}>
                   <Table.Cell key={0}>
                     <b>Agent</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(auction.payload.provider)}</Table.Cell>
+                  <Table.Cell key={1}>{getLegalName(auction.payload.provider)}</Table.Cell>
                 </Table.Row>
                 <Table.Row key={2}>
                   <Table.Cell key={0}>
@@ -273,7 +274,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
                 .map(c => {
                   return {
                     elements: [
-                      getName(c.payload.customer),
+                      getLegalName(c.payload.customer),
                       getbiddingAuctionstatus(c.payload.customer),
                       isAuctionProvider && (
                         <Button
