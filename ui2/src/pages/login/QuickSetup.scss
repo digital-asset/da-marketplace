@@ -50,7 +50,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      max-width: 80%;
+      max-width: 60vw;
       padding: $spacing-m;
       border-radius: 4px;
       background-color: var(--cool-grey-10);
@@ -59,6 +59,32 @@
         width: 100%;
         margin: $spacing-l;
       }
+
+        h4.dark {
+            color: white;
+        }
+
+        .ui.grid {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background-color: var(--cool-grey-20);
+            border-radius: 4px;
+
+            .field {
+                display: flex;
+                flex-direction: column;
+
+                .ui.input > input {
+                    width: 198px;
+                }
+            }
+
+            >.row {
+                justify-content: center;
+                align-items: flex-end;
+            }
+        }
 
       p.login-details {
         padding: $spacing-s 0;
