@@ -21,7 +21,7 @@ import {
   CreateAuctionRequest,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { usePartyLegalName } from '../../../config';
+import { usePartyName } from '../../../config';
 import { ServicePageProps } from '../../common';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -30,7 +30,7 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const classes = useStyles();
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const requests = useStreamQueries(CreateAuctionRequest).contracts;
@@ -109,10 +109,10 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
                   {requests.map((c, i) => (
                     <TableRow key={i} className={classes.tableRow}>
                       <TableCell key={0} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
                         {c.payload.auctionId}

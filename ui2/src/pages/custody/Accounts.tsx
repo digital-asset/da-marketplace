@@ -17,7 +17,7 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
@@ -34,7 +34,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
@@ -160,10 +160,10 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
                         {c.payload.account.id.label}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.account.provider)}
+                        {getName(c.payload.account.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.account.owner)}
+                        {getName(c.payload.account.owner)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.account.provider ? 'Provider' : 'Client'}

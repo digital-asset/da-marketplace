@@ -3,7 +3,7 @@ import { useStreamQueries } from '../../Main';
 import { Button } from 'semantic-ui-react';
 
 import { useParams, RouteComponentProps, useHistory } from 'react-router-dom';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
@@ -15,7 +15,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   const el = useRef<HTMLDivElement>(null);
   const history = useHistory();
   const { contractId } = useParams<any>();
-  const { getLegalName } = usePartyLegalName('');
+  const { getName } = usePartyName('');
   const cid = contractId.replace('_', '#');
 
   const { contracts: instruments, loading: instrumentsLoading } = useStreamQueries(
@@ -48,9 +48,9 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
           rows={[
             {
               elements: [
-                getLegalName(instrument.payload.issuer),
+                getName(instrument.payload.issuer),
                 Object.keys(instrument.payload.assetId.signatories.textMap)
-                  .map(party => getLegalName(party))
+                  .map(party => getName(party))
                   .join(', '),
                 instrument.payload.assetId.label,
                 instrument.payload.assetId.version,
