@@ -57,7 +57,7 @@ import { CreateEvent } from '@daml/ledger';
 import { deployAutomation } from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
-// import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
+import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
@@ -110,8 +110,7 @@ const QuickSetupTable = (props: {
   const operator = credentials.party;
 
   const automations = useAutomations();
-  // const triggerOptions: DropdownItemProps[] = makeAutomationOptions(automations);
-  const triggerOptions: DropdownItemProps[] = [];
+  const triggerOptions: DropdownItemProps[] = makeAutomationOptions(automations);
 
   const handleDeployment = async (token: string) => {
     for (const auto of toDeploy) {
@@ -567,13 +566,13 @@ const MarketSetup = (props: {
               <Table.Cell>{marketSetupDataMap.get(p)?.services?.sort().join(', ')}</Table.Cell>
               {isHubDeployment && (
                 <Table.Cell>
-                  {/* <SetupAutomation
+                  <SetupAutomation
                     title={`Setup Automation: ${
                       parties.find(party => party.party === p)?.partyName
                     }`}
                     token={parties.find(party => party.party === p)?.token || ''}
                     modalTrigger={<NavLink to="#">Setup Automation</NavLink>}
-                  /> */}
+                  />
                 </Table.Cell>
               )}
               <Table.Cell>
