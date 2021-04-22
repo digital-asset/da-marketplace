@@ -314,7 +314,7 @@ const Landing = () => {
                   allocationAccount: {
                     label: 'Allocation Account',
                     type: 'selection',
-                    items: accountNames,
+                    items: allocationAccountNames,
                   },
                 })
               }

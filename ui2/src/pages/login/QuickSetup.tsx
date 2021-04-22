@@ -25,6 +25,10 @@ import { halfSecondPromise } from '../page/utils';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import {
+  Offer as ClearingOffer,
+  Role as ClearingRole,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import {
   Offer as CustodianOffer,
   Role as CustodianRole,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -60,9 +64,16 @@ import { useAutomations, AutomationProvider } from '../../context/AutomationCont
 import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
-type Offer = CustodianOffer | DistributorOffer | SettlementOffer | ExchangeOffer | MatchingOffer;
+type Offer =
+  | ClearingOffer
+  | CustodianOffer
+  | DistributorOffer
+  | SettlementOffer
+  | ExchangeOffer
+  | MatchingOffer;
 
 enum ServiceKind {
+  CLEARING = 'Clearing',
   CUSTODY = 'Custody',
   LISTING = 'Listing',
   TRADING = 'Trading',
@@ -124,6 +135,7 @@ const QuickSetupTable = (props: {
   const { party, services } = quickSetupData;
   const provider = party?.party;
 
+  const clearingRoles = useStreamQueries(ClearingRole);
   const custodianRoles = useStreamQueries(CustodianRole);
   const exchangeRoles = useStreamQueries(ExchangeRole);
   const distributorRoles = useStreamQueries(DistributorRole);
@@ -132,6 +144,7 @@ const QuickSetupTable = (props: {
   const operatorService = useStreamQueries(OperatorService);
   const regulatorServices = useStreamQueries(RegulatorService);
 
+  const clearingOffers = useStreamQueries(ClearingOffer);
   const custodianOffers = useStreamQueries(CustodianOffer);
   const distributorOffers = useStreamQueries(DistributorOffer);
   const settlementOffers = useStreamQueries(SettlementOffer);
@@ -144,11 +157,13 @@ const QuickSetupTable = (props: {
   useEffect(() => {
     setLoading(
       custodianRoles.loading ||
+        clearingRoles.loading ||
         distributorRoles.loading ||
         settlementServices.loading ||
         exchangeRoles.loading ||
         matchingServices.loading ||
         operatorService.loading ||
+        clearingOffers.loading ||
         custodianOffers.loading ||
         distributorOffers.loading ||
         settlementOffers.loading ||
@@ -158,11 +173,13 @@ const QuickSetupTable = (props: {
     );
   }, [
     custodianRoles.loading,
+    clearingRoles.loading,
     distributorRoles.loading,
     settlementServices.loading,
     exchangeRoles.loading,
     matchingServices.loading,
     operatorService.loading,
+    clearingOffers.loading,
     custodianOffers.loading,
     distributorOffers.loading,
     settlementOffers.loading,
@@ -234,6 +251,12 @@ const QuickSetupTable = (props: {
 
     let newMarketData: Map<string, IQuickSetupData> = new Map();
 
+    clearingRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.CLEARING));
+
+    // TODO: Add ability to create accounts
+    clearingOffers.contracts.forEach(c =>
+      addMarketData(c.payload.provider, ServiceKind.CLEARING + ' (Pending)')
+    );
     custodianRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.CUSTODY));
     distributorRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.LISTING));
     settlementServices.contracts.forEach(c =>
@@ -266,6 +289,7 @@ const QuickSetupTable = (props: {
     setMarketSetupDataMap(newMarketData);
   }, [
     loading,
+    clearingRoles.contracts.length,
     custodianRoles.contracts.length,
     distributorRoles.contracts.length,
     settlementServices.contracts.length,
@@ -469,6 +493,8 @@ const QuickSetupTable = (props: {
         switch (service) {
           case ServiceKind.CUSTODY:
             return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
+          case ServiceKind.CLEARING:
+            return await ledger.exercise(OperatorService.OfferClearingRole, id, { provider });
           case ServiceKind.TRADING:
             return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
           case ServiceKind.MATCHING:
@@ -485,6 +511,8 @@ const QuickSetupTable = (props: {
 
   function findExistingOffer(service: string) {
     switch (service) {
+      case ServiceKind.CLEARING:
+        return !!clearingOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.CUSTODY:
         return !!custodianOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.TRADING:
@@ -502,6 +530,8 @@ const QuickSetupTable = (props: {
 
   function findExistingRole(service: string) {
     switch (service) {
+      case ServiceKind.CLEARING:
+        return !!clearingRoles.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.CUSTODY:
         return !!custodianRoles.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.TRADING:
@@ -616,6 +646,7 @@ const CreateRoleContract = (props: {
   const ledger = useLedger();
 
   const custodianOffers = useStreamQueries(CustodianOffer);
+  const clearingOffers = useStreamQueries(ClearingOffer);
   const distributorOffers = useStreamQueries(DistributorOffer);
   const settlementOffers = useStreamQueries(SettlementOffer);
   const exhangeOffers = useStreamQueries(ExchangeOffer);
@@ -625,6 +656,7 @@ const CreateRoleContract = (props: {
   useEffect(() => {
     setLoading(
       custodianOffers.loading ||
+        clearingOffers.loading ||
         distributorOffers.loading ||
         settlementOffers.loading ||
         exhangeOffers.loading ||
@@ -632,6 +664,7 @@ const CreateRoleContract = (props: {
         regulatorOffers.loading
     );
   }, [
+    clearingOffers.loading,
     custodianOffers.loading,
     distributorOffers.loading,
     settlementOffers.loading,
@@ -682,6 +715,10 @@ const CreateRoleContract = (props: {
     await Promise.all(
       services.map(async service => {
         switch (service) {
+          case ServiceKind.CLEARING:
+            // TODO: this won't work...
+            // return acceptAllOffers(clearingOffers.contracts, ClearingOffer.Accept);
+            return;
           case ServiceKind.CUSTODY:
             return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
           case ServiceKind.TRADING:

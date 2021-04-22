@@ -6,14 +6,22 @@ import { publicParty } from '../../config';
 import {
   RequestOpenAccount,
   Service,
+  RequestOpenAllocationAccount,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, createDropdownProp } from '../common';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 import { IconClose } from '../../icons/icons';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+
+enum AccountType {
+  REGULAR = 'Regular',
+  ALLOCATION = 'Allocation',
+}
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -23,21 +31,35 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const ledger = useLedger();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
+  const allocationAccounts = useStreamQueries(AllocationAccountRule).contracts;
 
   const [operator, setOperator] = useState<Party>();
   const [provider, setProvider] = useState<Party>();
   const [accountName, setAccountName] = useState<string>('');
+  const [accountType, setAccountType] = useState(AccountType.REGULAR);
+  const [accountNominee, setAccountNominee] = useState<Party>();
+  console.log(accountType);
+
+  const identities = useStreamQueries(VerifiedIdentity).contracts;
 
   const canRequest =
     !!operator &&
     !!provider &&
     !!accountName &&
-    accounts.find(
-      a =>
-        a.payload.account.provider === provider &&
-        a.payload.account.owner === party &&
-        a.payload.account.id.label === accountName
-    ) === undefined;
+    !!accountType &&
+    (accountType === AccountType.REGULAR
+      ? accounts.find(
+          a =>
+            a.payload.account.provider === provider &&
+            a.payload.account.owner === party &&
+            a.payload.account.id.label === accountName
+        ) === undefined
+      : accounts.find(
+          a =>
+            a.payload.account.provider === provider &&
+            a.payload.account.owner === party &&
+            a.payload.account.id.label === accountName
+        ) === undefined && !!accountNominee);
 
   const requestAccount = async () => {
     const service = services.find(
@@ -47,19 +69,40 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         s.payload.customer === party
     );
     if (!service) return;
-    const request: RequestOpenAccount = {
-      accountId: {
-        signatories: {
-          textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} },
-        },
-        label: accountName,
-        version: '0',
-      },
-      observers: [publicParty],
-      ctrls: [service.payload.provider, service.payload.customer],
-    };
-    await ledger.exercise(Service.RequestOpenAccount, service.contractId, request);
-    history.push('/app/custody/requests');
+    switch (accountType) {
+      case AccountType.REGULAR:
+        const accountRequest: RequestOpenAccount = {
+          accountId: {
+            signatories: {
+              textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} },
+            },
+            label: accountName,
+            version: '0',
+          },
+          observers: [publicParty],
+          ctrls: [service.payload.provider, service.payload.customer],
+        };
+        await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
+        history.push('/app/custody/requests');
+      case AccountType.ALLOCATION:
+        const nomineeIdentity = identities.find(i => i.payload.customer === accountNominee);
+        console.log('going...');
+        if (!nomineeIdentity) return;
+        const request: RequestOpenAllocationAccount = {
+          accountId: {
+            signatories: {
+              textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} },
+            },
+            label: accountName,
+            version: '0',
+          },
+          // observers: { textMap: { publicParty } },
+          observers: { textMap: { } },
+          nominee: nomineeIdentity.payload.customer,
+        };
+        await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
+        history.push('/app/custody/requests');
+    }
   };
 
   const operators: DropdownItemProps[] = services.map((c, i) => ({
@@ -99,6 +142,23 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           required
           onChange={(_, change) => setAccountName(change.value as string)}
         />
+        <Form.Select
+          label="Account Type"
+          placeholder="Account Type..."
+          value={accountType}
+          options={Object.values(AccountType).map(at => createDropdownProp(at))}
+          required
+          onChange={(_, change) => setAccountType(change.value as AccountType)}
+        />
+        {accountType === AccountType.ALLOCATION && (
+          <Form.Select
+            label="Nominee"
+            placeholder="Select..."
+            required
+            options={identities.map(iden => createDropdownProp(iden.payload.legalName, iden.payload.customer))}
+            onChange={(_, change) => setAccountNominee(change.value as Party)}
+          />
+        )}
         <Form.Input
           label="Version"
           placeholder="0"
