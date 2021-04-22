@@ -34,6 +34,7 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @ListingService.Offer
     , registeredTemplate @RegulatorService.Offer
     , registeredTemplate @RegulatorService.Request -- TO-DO: Auto-approve requests
+    , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
     , registeredTemplate @SettlementService.Request

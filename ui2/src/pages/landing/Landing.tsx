@@ -40,10 +40,10 @@ function isDamlHubParty(party: string): party is DamlHubParty {
 }
 
 const RenderDamlHubParty: React.FC<{ party: string }> = ({ party }) => {
-  return isDamlHubParty(party) ? (
-    <input readOnly className="daml-hub-party id-text" value={party} />
-  ) : (
-    party
+  return (
+    <p className="daml-hub-party">
+      <input readOnly className="id-text" value={party} />
+    </p>
   );
 };
 
@@ -114,9 +114,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
 
   const damlHubParty =
     isDamlHubParty(customer) && name !== customer ? (
-      <p>
-        <RenderDamlHubParty party={customer} />
-      </p>
+      <RenderDamlHubParty party={customer} />
     ) : undefined;
 
   if (requestContract) {
