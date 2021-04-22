@@ -314,6 +314,7 @@ const QuickSetupTable = (props: {
 
   const serviceOptions = Object.values(ServiceKind)
     .filter(s => !findExistingRole(s))
+    .filter(s => !findExistingOffer(s))
     .filter(s => s !== ServiceKind.REGULATOR)
     .map(service => {
       return { text: service, value: service };
@@ -531,7 +532,11 @@ const QuickSetupTable = (props: {
   function findExistingRole(service: string) {
     switch (service) {
       case ServiceKind.CLEARING:
-        return !!clearingRoles.contracts.find(c => c.payload.provider === provider);
+        // TODO: once we can auto accept clearing roles we can remove this
+        return (
+          !!clearingRoles.contracts.find(c => c.payload.provider === provider) ||
+          !!clearingOffers.contracts.find(c => c.payload.provider === provider)
+        );
       case ServiceKind.CUSTODY:
         return !!custodianRoles.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.TRADING:
@@ -717,8 +722,7 @@ const CreateRoleContract = (props: {
         switch (service) {
           case ServiceKind.CLEARING:
             // TODO: this won't work...
-            // return acceptAllOffers(clearingOffers.contracts, ClearingOffer.Accept);
-            return;
+            return acceptAllOffers([], ClearingOffer.Accept);
           case ServiceKind.CUSTODY:
             return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
           case ServiceKind.TRADING:

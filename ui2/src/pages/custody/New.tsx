@@ -97,7 +97,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             version: '0',
           },
           // observers: { textMap: { publicParty } },
-          observers: { textMap: { } },
+          observers: { textMap: {} },
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
@@ -155,7 +155,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label="Nominee"
             placeholder="Select..."
             required
-            options={identities.map(iden => createDropdownProp(iden.payload.legalName, iden.payload.customer))}
+            options={identities.map(iden =>
+              createDropdownProp(iden.payload.legalName, iden.payload.customer)
+            )}
             onChange={(_, change) => setAccountNominee(change.value as Party)}
           />
         )}
