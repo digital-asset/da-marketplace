@@ -14,7 +14,6 @@ import Marketplace.Distribution.Bidding.Service qualified as BiddingService
 import Marketplace.Issuance.Service qualified as IssuanceService
 import Marketplace.Listing.Service qualified as ListingService
 import Marketplace.Regulator.Service qualified as RegulatorService
-import Marketplace.Regulator.Model qualified as Regulator
 import Marketplace.Settlement.Service qualified as SettlementService
 import Marketplace.Trading.Role qualified as TradingRole
 import Marketplace.Trading.Service qualified as TradingService
@@ -54,6 +53,8 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @IssuanceService.OriginationRequest
     , registeredTemplate @IssuanceService.CreateIssuanceRequest
     , registeredTemplate @IssuanceService.Service
+    , registeredTemplate @Custody.OpenAccountRequest
+    , registeredTemplate @Custody.OpenAllocationAccountRequest
     , registeredTemplate @Custody.CreditAccountRequest
     , registeredTemplate @CustodyService.Service
     , registeredTemplate @AuctionService.Service
@@ -143,10 +144,14 @@ handleApprovalRule party = do
   submitCommands $
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
-  creditRequests          <- queryByParty @Custody.CreditAccountRequest (.provider)
-  custodyServices         <- queryByParty @CustodyService.Service       (.provider)
+  creditRequests          <- queryByParty @Custody.CreditAccountRequest         (.provider)
+  openRequests            <- queryByParty @Custody.OpenAccountRequest           (.provider)
+  openAllocationRequests  <- queryByParty @Custody.OpenAllocationAccountRequest (.provider)
+  custodyServices         <- queryByParty @CustodyService.Service               (.provider)
   submitCommands $
-    generateServiceCommands CustodyService.CreditAccount creditRequests custodyServices
+    generateServiceCommands CustodyService.CreditAccount         creditRequests         custodyServices ++
+    generateServiceCommands CustodyService.OpenAccount           openRequests           custodyServices ++
+    generateServiceCommands CustodyService.OpenAllocationAccount openAllocationRequests custodyServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)
