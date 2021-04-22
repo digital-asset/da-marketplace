@@ -2,6 +2,9 @@
 
 @mixin manage {
   .manage {
+    table {
+      margin-bottom: $spacing-m;
+    }
     .auctions {
       .header {
         margin-top: $spacing-l;
