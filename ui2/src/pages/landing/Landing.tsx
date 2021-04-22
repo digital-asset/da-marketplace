@@ -13,7 +13,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 import { getAbbreviation } from '../page/utils';
-import { getName, ledgerId } from '../../config';
+import { usePartyName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
@@ -34,9 +34,31 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
-function hashUserName(name: string): number {
-  // Hash a user name to map to values in the range [1, 4], to determine profile pic color
-  return (name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
+type DamlHubParty = string;
+function isDamlHubParty(party: string): party is DamlHubParty {
+  return party.includes('ledger-party-');
+}
+
+const RenderDamlHubParty: React.FC<{ party: string }> = ({ party }) => {
+  return (
+    <p className="daml-hub-party">
+      <input readOnly className="id-text" value={party} />
+    </p>
+  );
+};
+
+function hashPartyId(party: string): number {
+  // Hash a party to map to values in the range [1, 4], to determine profile pic color
+  return (party.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
+}
+
+function getProfileAbbr(party: string): string {
+  if (isDamlHubParty(party)) {
+    // First 3 chars of a Daml Hub ledger party UUID string
+    return party.split('-').slice(2).join('').slice(0, 3);
+  } else {
+    return getAbbreviation(party);
+  }
 }
 
 interface RelationshipProps {
@@ -44,19 +66,23 @@ interface RelationshipProps {
   services: ServiceKind[];
 }
 
-const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => (
-  <Tile className="relationship-tile">
-    <div className={`child profile-pic bg-color-${hashUserName(provider)}`}>
-      {getAbbreviation(provider)}
-    </div>
-    <div className="child provider">{getName(provider)}</div>
-    <div className="child">
-      {services.map(s => (
-        <Label key={s} content={s} />
-      ))}
-    </div>
-  </Tile>
-);
+const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
+  const { name } = usePartyName(provider);
+
+  return (
+    <Tile className="relationship-tile">
+      <div className={`child profile-pic bg-color-${hashPartyId(provider)}`}>
+        {getProfileAbbr(name)}
+      </div>
+      <div className="child provider">{name}</div>
+      <div className="child">
+        {services.map(s => (
+          <Label key={s} content={s} />
+        ))}
+      </div>
+    </Tile>
+  );
+};
 
 interface RequestInterface {
   customer: string;
@@ -67,7 +93,7 @@ interface RequestInterface {
   marginAccount?: Account;
 }
 
-const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
+const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   const customer = useParty();
   const ledger = useLedger();
   const { parties, loading: operatorLoading } = useWellKnownParties();
@@ -86,21 +112,26 @@ const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
   const { contracts: identities, loading: identitiesLoading } = useStreamQueries(VerifiedIdentity);
   const partyIdentity = identities.find(id => id.payload.customer === customer);
 
+  const damlHubParty =
+    isDamlHubParty(customer) && name !== customer ? (
+      <RenderDamlHubParty party={customer} />
+    ) : undefined;
+
   if (requestContract) {
     return (
       <div>
+        {damlHubParty}
         <p>Regulator Request pending...</p>
       </div>
     );
   } else if (!regulatorCustomer && !regulatorLoading && !operatorLoading) {
     return (
       <div className="link">
+        {damlHubParty}
         <Button
           className="ghost"
           onClick={() => {
-            console.log('click');
             if (!operatorLoading) {
-              console.log('creating');
               ledger.create(RegulatorRequest, { customer, provider });
             }
           }}
@@ -112,14 +143,15 @@ const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
   } else if (!partyIdentity && !identitiesLoading && !regulatorLoading) {
     return (
       <div className="link">
+        {damlHubParty}
         <Link to="/app/setup/identity">Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {
     return (
       <>
-        <p>Party ID: {customer}</p>
-        <p>Location: {partyIdentity.payload.location}</p>
+        {damlHubParty}
+        <p>{partyIdentity.payload.location}</p>
       </>
     );
   }
@@ -129,6 +161,7 @@ const ProfileSection: React.FC<{ action: () => void }> = ({ action }) => {
 
 const Landing = () => {
   const party = useParty();
+  const { name } = usePartyName(party);
   const providers = useProviderServices(party);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -239,10 +272,8 @@ const Landing = () => {
 
         <Tile>
           <div className="profile">
-            <div className="profile-name">@{getName(party)}</div>
-            <ProfileSection
-              action={() => requestService(RegulatorRequest, ServiceKind.REGULATOR)}
-            />
+            <div className="profile-name">@{name}</div>
+            <ProfileSection name={name} />
           </div>
         </Tile>
 

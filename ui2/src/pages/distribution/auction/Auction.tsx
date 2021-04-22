@@ -18,7 +18,7 @@ import { getAuctionStatus, getBidStatus, getBidAllocation } from '../Utils';
 import { DateTime } from 'luxon';
 import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { getName } from '../../../config';
+import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import { ArrowLeftIcon } from '../../../icons/icons';
 
@@ -37,6 +37,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const cid = contractId.replace('_', '#');
 
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
   const isAuctionProvider = auctionProviderServices.length > 0;

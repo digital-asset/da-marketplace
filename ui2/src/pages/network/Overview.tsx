@@ -5,12 +5,13 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 import useStyles from '../styles';
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 
 const OverviewComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
   const entries = useStreamQueries(CustodyService).contracts;
+  const { getName } = usePartyName('');
 
   return (
     <Table size="small">

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { getName, publicParty } from '../../config';
+import { publicParty, usePartyName } from '../../config';
 import {
   RequestOpenAccount,
   Service,
@@ -20,6 +20,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
@@ -64,14 +65,18 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const operators: DropdownItemProps[] = services.map((c, i) => ({
     key: i,
-    text: c.payload.operator,
+    text: getName(c.payload.operator),
     value: c.payload.operator,
   }));
 
   const providerByOperator = (operator: string): DropdownItemProps[] =>
     services
       .filter(s => s.payload.operator === operator)
-      .map((c, i) => ({ key: i, text: c.payload.provider, value: c.payload.provider }));
+      .map((c, i) => ({
+        key: i,
+        text: getName(c.payload.provider),
+        value: c.payload.provider,
+      }));
 
   return (
     <div className="new-account">
@@ -92,7 +97,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           options={operator ? providerByOperator(operator) : []}
           onChange={(_, change) => setProvider(change.value as Party)}
         />
-        <Form.Input label="Customer" placeholder={party} readOnly />
+        <Form.Input label="Customer" placeholder={getName(party)} readOnly />
         <Form.Input
           label="Account Name"
           placeholder="Provide an Account Name"

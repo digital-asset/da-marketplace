@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { useStreamQueries } from '../../../Main';
-import { getName } from '../../../config';
+import { usePartyName } from '../../../config';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { Bid } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { getBidStatus, getBidAllocation } from '../Utils';
@@ -16,6 +16,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
     BiddingAuctionContract
   );
   const { contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
+  const { getName } = usePartyName('');
 
   return (
     <div className="bidding">

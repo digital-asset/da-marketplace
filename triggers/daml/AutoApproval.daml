@@ -14,6 +14,7 @@ import Marketplace.Distribution.Bidding.Service qualified as BiddingService
 import Marketplace.Issuance.Service qualified as IssuanceService
 import Marketplace.Listing.Service qualified as ListingService
 import Marketplace.Regulator.Service qualified as RegulatorService
+import Marketplace.Regulator.Model qualified as Regulator
 import Marketplace.Settlement.Service qualified as SettlementService
 import Marketplace.Trading.Role qualified as TradingRole
 import Marketplace.Trading.Service qualified as TradingService
@@ -32,6 +33,9 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @IssuanceService.Offer
     , registeredTemplate @ListingService.Offer
     , registeredTemplate @RegulatorService.Offer
+    , registeredTemplate @RegulatorService.Request -- TO-DO: Auto-approve requests
+    , registeredTemplate @RegulatorService.Service
+    , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
     , registeredTemplate @SettlementService.Request
     , registeredTemplate @TradingRole.Offer
@@ -133,6 +137,11 @@ handleApprovalRule party = do
   submitCommands $
     generateServiceCommands IssuanceService.Originate      originationRequests issuanceServices ++
     generateServiceCommands IssuanceService.CreateIssuance issuanceRequests issuanceServices
+
+  idVerificationRequests  <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
+  regulatorServices       <- queryByParty @RegulatorService.Service              (.provider)
+  submitCommands $
+    generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
   creditRequests          <- queryByParty @Custody.CreditAccountRequest (.provider)
   custodyServices         <- queryByParty @CustodyService.Service       (.provider)

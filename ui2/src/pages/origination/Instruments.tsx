@@ -1,9 +1,7 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, NavLink, useHistory } from 'react-router-dom';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
+import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
@@ -15,6 +13,7 @@ export const InstrumentsTable: React.FC = () => {
     AssetDescription
   );
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
+  const { getName } = usePartyName('');
 
   return (
     <StripedTable
@@ -25,7 +24,9 @@ export const InstrumentsTable: React.FC = () => {
         return {
           elements: [
             getName(c.payload.issuer),
-            Object.keys(c.payload.assetId.signatories.textMap).join(', '),
+            Object.keys(c.payload.assetId.signatories.textMap)
+              .map(party => getName(party))
+              .join(', '),
             c.payload.assetId.label,
             c.payload.assetId.version,
             c.payload.description,

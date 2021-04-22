@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps, useHistory, NavLink } from 'react-router-dom';
+import { withRouter, RouteComponentProps } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -16,11 +16,11 @@ import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { usePartyName, getTemplateId } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -28,6 +28,8 @@ import StripedTable from '../../components/Table/StripedTable';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
+  const { getName } = usePartyName(party);
+
   const { contracts: auctionServices, loading: auctionServicesLoading } = useStreamQueries(
     AuctionService
   );
@@ -59,6 +61,7 @@ export const DistributionServiceTable = () => {
 const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;

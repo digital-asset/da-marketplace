@@ -23,7 +23,7 @@ import {
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
@@ -38,6 +38,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);

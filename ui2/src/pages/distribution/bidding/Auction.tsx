@@ -21,7 +21,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
 import { ServicePageProps } from '../../common';
 import StripedTable from '../../../components/Table/StripedTable';
-import { getName } from '../../../config';
+import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { ArrowLeftIcon } from '../../../icons/icons';
@@ -30,6 +30,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,
 }: ServicePageProps<Service>) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const history = useHistory();
   const { contractId } = useParams<any>();

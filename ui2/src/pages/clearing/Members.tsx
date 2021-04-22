@@ -3,7 +3,7 @@ import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { MemberStanding } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
@@ -18,6 +18,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   services,
 }) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);

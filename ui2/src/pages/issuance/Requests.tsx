@@ -4,7 +4,7 @@ import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { ArrowRightIcon } from '../../icons/icons';
 import {
   Service,
@@ -13,7 +13,6 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { fromPairs } from 'lodash';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -24,6 +23,8 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   services,
 }: RouteComponentProps & Props) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
+
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);

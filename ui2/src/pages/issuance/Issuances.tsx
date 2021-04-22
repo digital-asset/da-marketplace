@@ -2,7 +2,7 @@ import React from 'react';
 import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
@@ -10,6 +10,8 @@ import StripedTable from '../../components/Table/StripedTable';
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
   const history = useHistory();
+  const { getName } = usePartyName('');
+
   return (
     <StripedTable
       headings={['Issuing Agent', 'Issuer', 'Issuance ID', 'Issuance Account', 'Asset', 'Quantity']}

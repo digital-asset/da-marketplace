@@ -1,10 +1,9 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
-import Tile from '../../components/Tile/Tile';
-import { Button, Header, Icon } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 
 type Props = {
@@ -15,6 +14,8 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   listings,
 }: RouteComponentProps & Props) => {
+  const { getName } = usePartyName('');
+
   return (
     <div>
       <Header as="h2">Markets</Header>

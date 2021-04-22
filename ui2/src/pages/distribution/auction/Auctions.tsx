@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { useStreamQueries } from '../../../Main';
-import { getName } from '../../../config';
+import { usePartyName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';
 import { Header, Icon } from 'semantic-ui-react';
@@ -9,6 +9,7 @@ import StripedTable from '../../../components/Table/StripedTable';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
+  const { getName } = usePartyName('');
 
   return (
     <div className="auctions">

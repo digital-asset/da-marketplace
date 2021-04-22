@@ -1,13 +1,10 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import {
   Service,
   OriginationRequest,
@@ -16,8 +13,8 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const services = useStreamQueries(Service).contracts;

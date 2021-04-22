@@ -4,11 +4,12 @@ import { Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/c
 import { useLayoutState } from '../../context/LayoutContext';
 import useStyles from '../../pages/styles';
 import { useStreamQueries } from '../../Main';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 
 export const BottomDrawer = () => {
   const classes = useStyles();
+  const { getName } = usePartyName('');
   // const theme = useTheme() as Theme;
 
   // const [ open, setOpen ] = useState(true);

@@ -13,11 +13,11 @@ import { useParty } from '@daml/react';
 import useStyles from './styles';
 import headerLogo from '../../images/lambdaLogo.png';
 import { useUserDispatch, signOut } from '../../context/UserContext';
-import { getName } from '../../config';
 import { ArrowBack, Menu } from '@material-ui/icons';
 import { useLayoutState, useLayoutDispatch, toggleSidebar } from '../../context/LayoutContext';
 import Switch from '@material-ui/core/Switch';
 import { ThemeContextDispatch, ThemeContextState } from '../../context/ThemeContext';
+import { usePartyName } from '../../config';
 
 interface HeaderProps {
   app: string;
@@ -26,6 +26,7 @@ interface HeaderProps {
 function Header({ history, app }: RouteComponentProps & HeaderProps) {
   const classes = useStyles();
   const party = useParty();
+  const { name } = usePartyName(party);
 
   var layoutState = useLayoutState();
   var layoutDispatch = useLayoutDispatch();
@@ -70,7 +71,7 @@ function Header({ history, app }: RouteComponentProps & HeaderProps) {
         <Box className={classes.userBox} style={{ width: '120px' }}>
           <Grid container direction="column" alignItems="center">
             <Grid item xs={12}>
-              <Typography variant="caption">{getName(party)}</Typography>
+              <Typography variant="caption">{name}</Typography>
             </Grid>
           </Grid>
         </Box>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button, Icon, Loader, Table, DropdownItemProps } from 'semantic-ui-react';
+import { Form, Button, Icon, Loader, Table, DropdownItemProps, Grid } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
@@ -301,113 +301,116 @@ const QuickSetupTable = (props: {
 
   return (
     <div className="setup-tile">
-      <Table fixed  className="role-contract-setup">
-        <Table.Header>
-          <Table.Row>
-            <Table.HeaderCell>Party</Table.HeaderCell>
-            <Table.HeaderCell>Legal Name</Table.HeaderCell>
-            <Table.HeaderCell>Location</Table.HeaderCell>
-            <Table.HeaderCell>Services</Table.HeaderCell>
-            {!isHubDeployment && <Table.HeaderCell>Automation</Table.HeaderCell>}
-            <Table.HeaderCell></Table.HeaderCell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-          <Table.Row>
-            <Table.Cell>
-              {isHubDeployment ? (
-                <Form.Select
-                  value={party ? partyOptions.find(p => party.party === p.value)?.value : ''}
-                  placeholder="Select..."
-                  onChange={(_, data: any) => handleChangeParty(data.value)}
-                  options={partyOptions}
-                />
-              ) : (
-                <Form.Input
-                  placeholder="Username"
-                  onChange={e => handleChangeParty(e.currentTarget.value)}
-                />
-              )}
-            </Table.Cell>
-            <Table.Cell>
-              {verifiedIdentity?.legalName ? (
-                <p>{verifiedIdentity?.legalName}</p>
-              ) : (
-                <Form.Input
-                  placeholder="Legal Name"
-                  onChange={e =>
-                    setQuickSetupData({ ...quickSetupData, legalName: e.currentTarget.value })
-                  }
-                />
-              )}
-            </Table.Cell>
-            <Table.Cell>
-              {verifiedIdentity?.location ? (
-                <p>{verifiedIdentity.location}</p>
-              ) : (
-                <Form.Input
-                  placeholder="Location"
-                  onChange={e =>
-                    setQuickSetupData({ ...quickSetupData, location: e.currentTarget.value })
-                  }
-                />
-              )}
-            </Table.Cell>
-            <Table.Cell>
-              {serviceOptions.length > 0 ? (
-                <Form.Select
-                  multiple
-                  value={services}
-                  disabled={!party}
-                  placeholder="Select..."
-                  onChange={(_, data: any) =>
-                    setQuickSetupData({
-                      ...quickSetupData,
-                      services: data.value,
-                    })
-                  }
-                  options={serviceOptions}
-                />
-              ) : (
-                <p>All services added</p>
-              )}
-            </Table.Cell>
-            {!isHubDeployment && (
-              <Table.Cell>
-                <Form.Select
-                  disabled={!party}
-                  placeholder="Select..."
-                  multiple
-                  value={toDeploy}
-                  onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
-                  options={triggerOptions}
-                />
-              </Table.Cell>
+      <Grid>
+        <Grid.Row>
+          <Grid.Column width={6}>
+            {isHubDeployment ? (
+              <Form.Select
+                label={<h4 className="dark">Party</h4>}
+                value={party ? partyOptions.find(p => party.party === p.value)?.value : ''}
+                placeholder="Select..."
+                onChange={(_, data: any) => handleChangeParty(data.value)}
+                options={partyOptions}
+              />
+            ) : (
+              <Form.Input
+                label={<h4 className="dark">Party</h4>}
+                placeholder="Username"
+                onChange={e => handleChangeParty(e.currentTarget.value)}
+              />
             )}
-            <Table.Cell>
-              {creatingRoleContracts ? (
-                <Button disabled className="ghost" content={<p>Adding...</p>} />
-              ) : (
-                <Button
-                  disabled={
-                    !party ||
-                    (services?.length === 0 && toDeploy.length === 0) ||
-                    !!status
-                  }
-                  className="ghost"
-                  onClick={() => createRoleContract()}
-                  content={<p>Add</p>}
-                />
-              )}
-            </Table.Cell>
-          </Table.Row>
-          {!!status && (
-            <Table.Row>
-              <Table.Cell colSpan={3}>{status}</Table.Cell>
-            </Table.Row>
-          )}
-        </Table.Body>
-      </Table>
+          </Grid.Column>
+          <Grid.Column width={6}>
+            {verifiedIdentity?.legalName ? (
+              <Form.Input
+                label={<h4 className="dark">Legal Name</h4>}
+                value={verifiedIdentity?.legalName}
+                disabled={true}
+              />
+            ) : (
+              <Form.Input
+                label={<h4 className="dark">Legal Name</h4>}
+                placeholder="Legal Name"
+                onChange={e =>
+                  setQuickSetupData({ ...quickSetupData, legalName: e.currentTarget.value })
+                }
+              />
+            )}
+          </Grid.Column>
+        </Grid.Row>
+        <Grid.Row>
+          <Grid.Column width={6}>
+            {verifiedIdentity?.location ? (
+              <Form.Input
+                label={<h4 className="dark">Location</h4>}
+                value={verifiedIdentity?.location}
+                disabled={true}
+              />
+            ) : (
+              <Form.Input
+                label={<h4 className="dark">Location</h4>}
+                placeholder="Location"
+                onChange={e =>
+                  setQuickSetupData({ ...quickSetupData, location: e.currentTarget.value })
+                }
+              />
+            )}
+          </Grid.Column>
+          <Grid.Column width={6}>
+            {serviceOptions.length > 0 ? (
+              <Form.Select
+                label={<h4 className="dark">Services</h4>}
+                multiple
+                value={services}
+                disabled={!party}
+                placeholder="Select..."
+                onChange={(_, data: any) =>
+                  setQuickSetupData({
+                    ...quickSetupData,
+                    services: data.value,
+                  })
+                }
+                options={serviceOptions}
+              />
+            ) : (
+              <p>All services added</p>
+            )}
+          </Grid.Column>
+        </Grid.Row>
+
+        <Grid.Row>
+          <Grid.Column width={6}>
+            {isHubDeployment && (
+              <Form.Select
+                label={<h4 className="dark">Automation</h4>}
+                disabled={!party}
+                placeholder="Select..."
+                multiple
+                value={toDeploy}
+                onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
+                options={triggerOptions}
+              />
+            )}
+          </Grid.Column>
+          <Grid.Column width={6}>
+            {creatingRoleContracts ? (
+              <Button disabled className="ghost" content={<p>Adding...</p>} />
+            ) : (
+              <Button
+                disabled={!party || (services?.length === 0 && toDeploy.length === 0) || !!status}
+                className="ghost"
+                onClick={() => createRoleContract()}
+                content={<p>Add</p>}
+              />
+            )}
+          </Grid.Column>
+        </Grid.Row>
+        {!!status && (
+          <Grid.Row>
+            <Grid.Column width={12}>{status}</Grid.Column>
+          </Grid.Row>
+        )}
+      </Grid>
       <MarketSetup parties={parties} loading={loading} marketSetupDataMap={marketSetupDataMap} />
     </div>
   );
@@ -532,12 +535,27 @@ const MarketSetup = (props: {
     <Table className="party-registry-table" fixed>
       <Table.Header>
         <Table.Row>
-          <Table.HeaderCell>Party</Table.HeaderCell>
-          <Table.HeaderCell>Services</Table.HeaderCell>
-          {isHubDeployment && <Table.HeaderCell>Setup Automation</Table.HeaderCell>}
+          <Table.HeaderCell>
+            <h4>Party</h4>
+          </Table.HeaderCell>
+          <Table.HeaderCell>
+            <h4>Legal Name</h4>
+          </Table.HeaderCell>
+          <Table.HeaderCell>
+            <h4>Location</h4>
+          </Table.HeaderCell>
+          <Table.HeaderCell>
+            <h4>Services</h4>
+          </Table.HeaderCell>
+          {isHubDeployment && (
+            <Table.HeaderCell>
+              <h4>Setup Automation</h4>
+            </Table.HeaderCell>
+          )}
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>
       </Table.Header>
+
       <Table.Body>
         {marketSetupDataMap.size > 0 ? (
           marketDataParties.map((p, i) => (

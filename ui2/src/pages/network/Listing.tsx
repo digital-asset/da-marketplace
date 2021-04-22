@@ -18,7 +18,7 @@ import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { Service, Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
@@ -33,6 +33,7 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;

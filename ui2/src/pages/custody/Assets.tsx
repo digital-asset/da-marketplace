@@ -5,7 +5,7 @@ import { useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { ServicePageProps } from '../common';
@@ -18,6 +18,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);

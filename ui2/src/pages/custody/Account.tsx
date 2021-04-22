@@ -11,7 +11,7 @@ import Tile from '../../components/Tile/Tile';
 import { Button, Header, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
@@ -21,6 +21,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contractId } = useParams<any>();
 

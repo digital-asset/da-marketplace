@@ -17,7 +17,7 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -30,8 +30,8 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
-  const history = useHistory();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -67,6 +67,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
