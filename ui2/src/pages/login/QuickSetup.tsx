@@ -70,6 +70,7 @@ type Offer =
   | DistributorOffer
   | SettlementOffer
   | ExchangeOffer
+  | RegulatorOffer
   | MatchingOffer;
 
 enum ServiceKind {

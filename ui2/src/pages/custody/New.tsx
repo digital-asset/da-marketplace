@@ -55,7 +55,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             a.payload.account.owner === party &&
             a.payload.account.id.label === accountName
         ) === undefined
-      : accounts.find(
+      : allocationAccounts.find(
           a =>
             a.payload.account.provider === provider &&
             a.payload.account.owner === party &&
@@ -87,7 +87,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         history.push('/app/custody/requests');
       case AccountType.ALLOCATION:
         const nomineeIdentity = identities.find(i => i.payload.customer === accountNominee);
-        console.log('going...');
         if (!nomineeIdentity) return;
         const request: RequestOpenAllocationAccount = {
           accountId: {
@@ -97,8 +96,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          // observers: { textMap: { publicParty } },
-          observers: { textMap: {} },
+          observers: { textMap: {} }, // TODO: Add public party?
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
