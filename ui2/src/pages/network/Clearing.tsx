@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { getTemplateId, usePartyLegalName } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import StripedTable from '../../components/Table/StripedTable';
@@ -18,7 +18,7 @@ type Props = {
 
 export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
@@ -91,9 +91,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.operator),
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
               <Button
                 size="small"
@@ -115,7 +115,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.customer),
+              getName(c.payload.customer),
               <Button.Group>
                 {c.payload.customer === party ? (
                   <>
@@ -161,7 +161,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.customer),
+              getName(c.payload.customer),
               <Button.Group>
                 {c.payload.customer === party ? (
                   <>

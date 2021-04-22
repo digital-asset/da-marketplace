@@ -17,7 +17,7 @@ import { ArrowBack, Menu } from '@material-ui/icons';
 import { useLayoutState, useLayoutDispatch, toggleSidebar } from '../../context/LayoutContext';
 import Switch from '@material-ui/core/Switch';
 import { ThemeContextDispatch, ThemeContextState } from '../../context/ThemeContext';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 
 interface HeaderProps {
   app: string;
@@ -26,7 +26,7 @@ interface HeaderProps {
 function Header({ history, app }: RouteComponentProps & HeaderProps) {
   const classes = useStyles();
   const party = useParty();
-  const { legalName } = usePartyLegalName(party);
+  const { name } = usePartyName(party);
 
   var layoutState = useLayoutState();
   var layoutDispatch = useLayoutDispatch();
@@ -71,7 +71,7 @@ function Header({ history, app }: RouteComponentProps & HeaderProps) {
         <Box className={classes.userBox} style={{ width: '120px' }}>
           <Grid container direction="column" alignItems="center">
             <Grid item xs={12}>
-              <Typography variant="caption">{legalName}</Typography>
+              <Typography variant="caption">{name}</Typography>
             </Grid>
           </Grid>
         </Box>

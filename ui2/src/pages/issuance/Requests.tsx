@@ -4,7 +4,7 @@ import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { ArrowRightIcon } from '../../icons/icons';
 import {
   Service,
@@ -23,7 +23,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   services,
 }: RouteComponentProps & Props) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
 
   const ledger = useLedger();
 
@@ -76,8 +76,8 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
           rows={createRequests.map(c => {
             return {
               elements: [
-                getLegalName(c.payload.provider),
-                getLegalName(c.payload.customer),
+                getName(c.payload.provider),
+                getName(c.payload.customer),
                 c.payload.issuanceId,
                 c.payload.accountId.label,
                 c.payload.assetId.label,
@@ -115,8 +115,8 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
           rows={reduceRequests.map(c => {
             return {
               elements: [
-                getLegalName(c.payload.provider),
-                getLegalName(c.payload.customer),
+                getName(c.payload.provider),
+                getName(c.payload.customer),
                 party === c.payload.provider ? 'Provider' : 'Client',
                 c.payload.issuanceId,
                 c.payload.accountId.label,

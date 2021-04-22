@@ -5,7 +5,7 @@ import { useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { ServicePageProps } from '../common';
@@ -18,7 +18,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
@@ -51,7 +51,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}
               </>,
               c.payload.account.id.label,
-              getLegalName(c.payload.account.owner),
+              getName(c.payload.account.owner),
             ],
             onClick: () =>
               history.push(
@@ -79,8 +79,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           return {
             elements: [
               c.payload.account.id.label,
-              getLegalName(c.payload.account.provider),
-              getLegalName(c.payload.account.owner),
+              getName(c.payload.account.provider),
+              getName(c.payload.account.owner),
               party === c.payload.account.provider ? 'Provider' : 'Client',
               Object.keys(c.payload.ctrls.textMap).join(', '),
             ],

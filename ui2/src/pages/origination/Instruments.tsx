@@ -1,7 +1,7 @@
 import React from 'react';
 import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
@@ -13,7 +13,7 @@ export const InstrumentsTable: React.FC = () => {
     AssetDescription
   );
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
-  const { getLegalName } = usePartyLegalName('');
+  const { getName } = usePartyName('');
 
   return (
     <StripedTable
@@ -23,9 +23,9 @@ export const InstrumentsTable: React.FC = () => {
       rows={instruments.map(c => {
         return {
           elements: [
-            getLegalName(c.payload.issuer),
+            getName(c.payload.issuer),
             Object.keys(c.payload.assetId.signatories.textMap)
-              .map(party => getLegalName(party))
+              .map(party => getName(party))
               .join(', '),
             c.payload.assetId.label,
             c.payload.assetId.version,
