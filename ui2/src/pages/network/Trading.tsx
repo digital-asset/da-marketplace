@@ -23,7 +23,7 @@ import {
   Offer,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import useStyles from '../styles';
-import { usePartyLegalName, getTemplateId } from '../../config';
+import { usePartyName, getTemplateId } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -36,7 +36,7 @@ type Props = {
 
 export const TradingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const terminateService = async (c: CreateEvent<Service>) => {
@@ -60,9 +60,9 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
         return {
           elements: [
             getTemplateId(c.templateId),
-            getLegalName(c.payload.operator),
-            getLegalName(c.payload.provider),
-            getLegalName(c.payload.customer),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
             party === c.payload.provider ? 'Provider' : 'Consumer',
             c.payload.tradingAccount.id.label,
             c.payload.allocationAccount.id.label,
@@ -85,7 +85,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -283,10 +283,10 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -364,10 +364,10 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}

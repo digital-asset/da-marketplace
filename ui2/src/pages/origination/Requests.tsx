@@ -4,7 +4,7 @@ import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import {
   Service,
   OriginationRequest,
@@ -14,7 +14,7 @@ import StripedTable from '../../components/Table/StripedTable';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const services = useStreamQueries(Service).contracts;
@@ -53,8 +53,8 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
           rows={requests.map(c => {
             return {
               elements: [
-                getLegalName(c.payload.provider),
-                getLegalName(c.payload.customer),
+                getName(c.payload.provider),
+                getName(c.payload.customer),
                 c.payload.assetLabel,
                 c.payload.description,
                 c.payload.safekeepingAccountId.label,

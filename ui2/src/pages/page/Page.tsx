@@ -9,7 +9,7 @@ import WelcomeHeader from './WelcomeHeader';
 import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
 import _ from 'lodash';
 import { CogIcon } from '../../icons/icons';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 
 type Props = {
   className?: string;
@@ -28,7 +28,7 @@ const Page: React.FC<Props> = ({
   sideBarItems,
 }) => {
   const user = useParty();
-  const { legalName } = usePartyLegalName(user);
+  const { name } = usePartyName(user);
   const history = useHistory();
 
   const groupSideBarItems = Array.from(
@@ -73,7 +73,7 @@ const Page: React.FC<Props> = ({
           <Menu.Menu>
             <Menu.Item as={NavLink} to="/app/" exact className="home-item">
               <Header as="h1" className="dark">
-                @{legalName}
+                @{name}
               </Header>
               <CogIcon />
             </Menu.Item>

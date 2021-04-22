@@ -17,16 +17,11 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { getTemplateId, usePartyLegalName } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {
-  Offer,
-  Service,
-  Request,
-  OpenAllocationAccount,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Requests as AccountRequests } from '../custody/Requests';
 import {
@@ -40,7 +35,7 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const terminateService = async (c: CreateEvent<Service>) => {
@@ -56,9 +51,9 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.operator),
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
               <Button className="ghost warning small" onClick={() => terminateService(c)}>
                 Terminate
@@ -75,7 +70,7 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
 export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contracts: openRequests, loading } = useStreamQueries(OpenAccountRequest);
 
@@ -97,8 +92,8 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               c.payload.accountId.label,
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Client',
               Object.keys(c.payload.ctrls.textMap).join(', '),
               party === c.payload.provider && (
@@ -118,7 +113,7 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
 
 export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contracts: openRequests, loading } = useStreamQueries(OpenAllocationAccountRequest);
 
@@ -140,8 +135,8 @@ export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) =>
           return {
             elements: [
               c.payload.accountId.label,
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Client',
               c.payload.nominee,
               party === c.payload.provider && (
@@ -165,7 +160,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -313,10 +308,10 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -386,10 +381,10 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
