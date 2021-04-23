@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { getTemplateId, usePartyLegalName } from '../../config';
-import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { getTemplateId, usePartyName } from '../../config';
+import { Role, Offer as RoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Header, Button, Form, DropdownItemProps } from 'semantic-ui-react';
@@ -18,9 +18,10 @@ type Props = {
 
 export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
+  const { contracts: roleOffers, loading: roleOffersLoading } = useStreamQueries(RoleOffer);
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
   const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
 
@@ -33,6 +34,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const [clearingAccountName, setClearingAccountName] = useState('');
   const [marginAccountName, setMarginAccountName] = useState('');
+  const [ccpAccountName, setCcpAccountName] = useState('');
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
   const allocationAccounts = allocationAccountRules
     .filter(c => c.payload.account.owner === party)
@@ -82,6 +84,16 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(Offer.Decline, c.contractId, {});
   };
 
+  const acceptRoleOffer = async (c: CreateEvent<RoleOffer>) => {
+    const ccpAccount = accounts.find(a => a.id.label === ccpAccountName);
+    if (!ccpAccount) return;
+    await ledger.exercise(RoleOffer.Accept, c.contractId, { ccpAccount });
+  };
+
+  const declineRoleOffer = async (c: CreateEvent<RoleOffer>) => {
+    await ledger.exercise(RoleOffer.Decline, c.contractId, {});
+  };
+
   return (
     <div className="assets">
       <Header as="h3">Current Services</Header>
@@ -91,9 +103,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.operator),
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
               <Button
                 size="small"
@@ -115,7 +127,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.customer),
+              getName(c.payload.customer),
               <Button.Group>
                 {c.payload.customer === party ? (
                   <>
@@ -161,7 +173,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           return {
             elements: [
               getTemplateId(c.templateId),
-              getLegalName(c.payload.customer),
+              getName(c.payload.customer),
               <Button.Group>
                 {c.payload.customer === party ? (
                   <>
@@ -205,6 +217,40 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                     </Button>
                   </>
                 )}
+              </Button.Group>,
+            ],
+          };
+        })}
+      />
+      <Header as="h3">Role Offers</Header>
+      <StripedTable
+        headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
+        loading={roleOffersLoading}
+        rows={roleOffers.map((c, i) => {
+          return {
+            elements: [
+              getTemplateId(c.templateId),
+              getName(c.payload.provider),
+              <Button.Group>
+                <ModalFormErrorHandled onSubmit={() => acceptRoleOffer(c)} title="Accept Offer">
+                  <Form.Select
+                    label="Clearing Account"
+                    placeholder="Select..."
+                    required
+                    min={1}
+                    options={accountNames}
+                    value={ccpAccountName}
+                    onChange={(_, change) => setCcpAccountName(change.value as string)}
+                  />
+                </ModalFormErrorHandled>
+                <Button
+                  size="small"
+                  className="ghost"
+                  variant="contained"
+                  onClick={() => declineRoleOffer(c)}
+                >
+                  Decline
+                </Button>
               </Button.Group>,
             ],
           };

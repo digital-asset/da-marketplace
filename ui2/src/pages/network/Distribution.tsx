@@ -20,7 +20,7 @@ import { Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import useStyles from '../styles';
-import { usePartyLegalName, getTemplateId } from '../../config';
+import { usePartyName, getTemplateId } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -28,7 +28,7 @@ import StripedTable from '../../components/Table/StripedTable';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
 
   const { contracts: auctionServices, loading: auctionServicesLoading } = useStreamQueries(
     AuctionService
@@ -47,9 +47,9 @@ export const DistributionServiceTable = () => {
         return {
           elements: [
             getTemplateId(c.templateId).split('.')[2],
-            getLegalName(c.payload.operator),
-            getLegalName(c.payload.provider),
-            getLegalName(c.payload.customer),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
             party === c.payload.provider ? 'Provider' : 'Consumer',
           ],
         };
@@ -61,7 +61,7 @@ export const DistributionServiceTable = () => {
 const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
   const party = useParty();
-  const { getLegalName } = usePartyLegalName(party);
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -221,10 +221,10 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}
@@ -306,10 +306,10 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
                         {getTemplateId(c.templateId)}
                       </TableCell>
                       <TableCell key={1} className={classes.tableCell}>
-                        {getLegalName(c.payload.provider)}
+                        {getName(c.payload.provider)}
                       </TableCell>
                       <TableCell key={2} className={classes.tableCell}>
-                        {getLegalName(c.payload.customer)}
+                        {getName(c.payload.customer)}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
                         {party === c.payload.provider ? 'Provider' : 'Consumer'}

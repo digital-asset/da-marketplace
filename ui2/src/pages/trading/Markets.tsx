@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { usePartyLegalName } from '../../config';
+import { usePartyName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
 import { Header } from 'semantic-ui-react';
@@ -14,7 +14,7 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   listings,
 }: RouteComponentProps & Props) => {
-  const { getLegalName } = usePartyLegalName('');
+  const { getName } = usePartyName('');
 
   return (
     <div>
@@ -25,8 +25,8 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
         rows={listings.map(c => {
           return {
             elements: [
-              getLegalName(c.payload.provider),
-              getLegalName(c.payload.customer),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
               c.payload.listingId,
               c.payload.tradedAssetId.label,
               c.payload.quotedAssetId.label,

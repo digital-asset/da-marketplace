@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { partyNameFromJwtToken } from '@daml/hub-react';
+import { partyNameFromJwtToken, useWellKnownParties } from '@daml/hub-react';
+import { Parties } from '@daml/hub-react/lib/WellKnownParties';
 import { useCallback, useMemo } from 'react';
-import { Credentials, isCredentials } from './Credentials';
+import { retrieveCredentials } from './Credentials';
 import { useStreamQueries } from './Main';
 import { retrieveParties } from './Parties';
 
@@ -41,38 +42,56 @@ export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost
 
 export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
-export const getName = (partyOrCreds: string | Credentials): string => {
-  if (isCredentials(partyOrCreds)) {
-    const creds = partyOrCreds;
-    return partyNameFromJwtToken(creds.token) || creds.party;
-  } else {
-    const party = partyOrCreds;
-    const importedParties = retrieveParties();
-    const details = importedParties?.find(p => p.party === party);
+const inferPartyName = (party: string, wellKnownParties: Parties | null): string | undefined => {
+  // Check if we can extract a readable party name from any data we have client-side.
+  // Inspect token claims, parties.json, and cross-reference Daml Hub's well-known parties.
 
-    return details ? details.partyName : party;
+  const creds = retrieveCredentials();
+
+  if (party === creds?.party) {
+    return partyNameFromJwtToken(creds.token) || undefined;
   }
+
+  if (party === wellKnownParties?.userAdminParty) {
+    return 'Operator';
+  }
+
+  if (party === wellKnownParties?.publicParty) {
+    return 'Public';
+  }
+
+  return retrieveParties()?.find(p => p.party === party)?.partyName;
 };
 
-export const usePartyLegalName = (party: string) => {
+export const usePartyName = (party: string) => {
   const { contracts: verifiedIdentities, loading } = useStreamQueries(VerifiedIdentity);
+  const { parties: wellKnownParties } = useWellKnownParties();
 
-  const getLegalName = useCallback(
-    (party: string) => {
-      if (!loading) {
-        return (
-          verifiedIdentities.find(id => id.payload.customer === party)?.payload.legalName || party
-        );
-      } else {
-        return getName(party);
+  const getName = useCallback(
+    (party: string): string => {
+      const legalName: string | undefined = verifiedIdentities.find(
+        id => id.payload.customer === party
+      )?.payload.legalName;
+
+      if (legalName) {
+        return legalName;
       }
+
+      const inferredName: string | undefined = inferPartyName(party, wellKnownParties);
+
+      if (inferredName) {
+        return inferredName;
+      }
+
+      // Cannot find an identity contract or infer the party name, so fallback to party ID
+      return party;
     },
     [verifiedIdentities, loading]
   );
 
-  const legalName = useMemo(() => getLegalName(party), [party, getLegalName]);
+  const name = useMemo(() => getName(party), [party, getName]);
 
-  return { legalName, getLegalName };
+  return { name, getName };
 };
 
 export function getTemplateId(t: string) {

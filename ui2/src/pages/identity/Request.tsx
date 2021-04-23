@@ -4,6 +4,8 @@ import { CircularProgress } from '@material-ui/core';
 import classNames from 'classnames';
 
 import { useLedger, useParty } from '@daml/react';
+import { useHistory } from 'react-router';
+
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
@@ -13,6 +15,7 @@ import { useStreamQueries } from '../../Main';
 import { publicParty } from '../../config';
 
 const Request = () => {
+  const history = useHistory();
   const party = useParty();
   const ledger = useLedger();
 
@@ -52,6 +55,8 @@ const Request = () => {
       location,
       observers,
     });
+
+    history.goBack();
   };
 
   const FormLabel = (props: { label: string; subLabel?: string }) => (

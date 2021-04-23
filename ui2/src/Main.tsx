@@ -136,13 +136,20 @@ export function useStreamQueries<T extends object, K, I extends string>(
   const contractsAsPublic = usqp(template, queryFactory, queryDeps, closeHandler);
   const contractsAsParty = usq(template, queryFactory, queryDeps, closeHandler);
 
-  const result = useMemo(
-    () => ({
-      contracts: [...contractsAsParty.contracts, ...contractsAsPublic.contracts],
+  const result = useMemo(() => {
+    const mergedContracts = [...contractsAsParty.contracts, ...contractsAsPublic.contracts];
+
+    // deduplication for when a contract appears in both streams
+    // ex., the current party is a signatory to a contract also visible to public
+    const contracts = mergedContracts.filter(
+      (c1, index) => mergedContracts.findIndex(c2 => c2.contractId === c1.contractId) === index
+    );
+
+    return {
+      contracts,
       loading: contractsAsParty.loading && contractsAsPublic.loading,
-    }),
-    [contractsAsPublic, contractsAsParty]
-  );
+    };
+  }, [contractsAsPublic, contractsAsParty]);
 
   return result;
 }
