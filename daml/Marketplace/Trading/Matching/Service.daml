@@ -19,7 +19,7 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : MatchResult ()
+      nonconsuming MatchOrders : MatchResult (ContractId Order.ClearedTrade)
                                              (ContractId Settlement.SettlementInstruction)
         with
           execution : Order.Execution
@@ -40,8 +40,8 @@ template Service
 
               Collateralized <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
           else do
-            let clearinghouse = makerOrder.collateral.clearinghouse
-            return $ Cleared ()
+              let clearinghouse = makerOrder.collateral.clearinghouse
+              Cleared <$> create Order.ClearedTrade with ..
 
 template Offer
   with

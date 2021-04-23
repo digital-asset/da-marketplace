@@ -67,7 +67,7 @@ data TradeDeposit = Cleared { clearinghouse: Party} | Collateral (ContractId Ass
 
 isClearedOrder : Order -> Bool
 isClearedOrder Order{collateral = Cleared _} = True
-isClearedOrder _                            = False
+isClearedOrder _                             = False
 
 template Order
   with
@@ -96,7 +96,57 @@ template ClearedTrade
     clearinghouse : Party
     makerOrderCid : ContractId Order
     takerOrderCid : ContractId Order
+    execution : Execution
   where
     signatory provider
     observer clearinghouse
 
+    controller clearinghouse can
+      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+        with
+          buyerAccountId : Id
+          sellerAccountId : Id
+        do
+          timeNovated <- getTime
+          makerOrder <- fetch makerOrderCid
+          takerOrder <- fetch takerOrderCid
+          let Execution{..} = execution
+
+          makerCid <- create ClearedTradeSide with
+            exchange = provider
+            order = makerOrder
+            participant = makerOrder.customer
+            timeMatched = timestamp
+            ..
+
+          takerCid <- create ClearedTradeSide with
+            exchange = provider
+            order = takerOrder
+            participant = takerOrder.customer
+            timeMatched = timestamp
+            ..
+
+          return (makerCid, takerCid)
+
+template ClearedTradeSide
+  with
+    clearinghouse : Party
+    exchange : Party
+    participant : Party
+    order : Order
+    quantity : Decimal
+    price : Decimal
+    timeMatched : Text -- Should this be an Int so we can order if necessary?
+    timeNovated : Time -- previously timestamp
+  where
+    signatory clearinghouse, exchange
+    observer exchange, participant
+
+-- template ClearedTradeSide
+--   with
+--     operator : Party
+--     provider : Party
+--     clearinghouse : Party
+--   where
+--     signatory clearinghouse
+--
