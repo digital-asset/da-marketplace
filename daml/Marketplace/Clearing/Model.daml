@@ -1,6 +1,8 @@
 module Marketplace.Clearing.Model where
 
 import DA.Finance.Types
+import DA.Next.Set (Set)
+import qualified DA.Next.Set as Set
 
 template MemberStanding
   with
@@ -8,9 +10,10 @@ template MemberStanding
     customer : Party
     marginSatisfied : Bool
     mtmSatisfied : Bool
+    observers : Set Party
   where
     signatory provider
-    observer customer
+    observer Set.insert customer observers
     key (provider, customer) : (Party, Party)
     maintainer key._1
 
@@ -26,6 +29,12 @@ template MemberStanding
           newMtmSatisied : Bool
         do
           create this with mtmSatisfied = newMtmSatisied
+
+      MemberStanding_AddObservers : ContractId MemberStanding
+        with
+          newObservers : Set Party
+        do
+          create this with observers = observers <> newObservers
 
 template MarginCalculation
   with

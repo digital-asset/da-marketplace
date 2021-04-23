@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
+import { v4 as uuidv4 } from 'uuid';
 import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
@@ -8,13 +9,20 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import {
   RequestCreateListing,
   Service,
+  ListingTypeRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import {
+  Service as ClearedMarketService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { publicParty } from '../../config';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, createDropdownProp } from '../common';
 import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
+import {Party} from '@daml/types';
+
+const COLLATERALIZED_VALUE = "COLLATERALIED_MARKET"
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -35,9 +43,11 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [listingId, setListingId] = useState('');
   const [description, setDescription] = useState('');
   const [calendarId] = useState('1261007448');
+  const [clearedBy, setClearedBy] = useState<string>(COLLATERALIZED_VALUE)
 
   const ledger = useLedger();
   const party = useParty();
+  const clearedMarketServices = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
@@ -75,8 +85,11 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;
+    const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
+    const listingType: ListingTypeRequest = isCollateralized ? { tag: 'CollateralizedRequest', value: {} } : { tag: 'ClearedRequest', value: clearedBy }
     const request: RequestCreateListing = {
       listingId,
+      listingType,
       calendarId,
       description,
       tradedAssetId: tradedAsset.payload.assetId,
@@ -172,9 +185,21 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             required
             onChange={(_, change) => setDescription(change.value as string)}
           />
+            <Form.Select
+              className="select"
+              label="Cleared by"
+              placeholder="Select..."
+              required
+              value={clearedBy}
+              options={[
+                createDropdownProp("-- Collateralized Market --",COLLATERALIZED_VALUE),
+                ...clearedMarketServices.map(cms => createDropdownProp(cms.payload.provider)),
+              ]}
+              onChange={(_, change) => setClearedBy(change.value as string)}
+            />
           <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
           <div className="submit">
-            <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
+            <Button type="submit" className="ghost" disabled={false} content="Submit" />
             <a className="a2" onClick={() => history.goBack()}>
               <IconClose /> Cancel
             </a>

@@ -6,6 +6,8 @@ import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 
+data MatchResult a b = Cleared a | Collateralized b
+
 template Service
   with
     operator : Party
@@ -17,7 +19,8 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : Optional (ContractId Settlement.SettlementInstruction)
+      nonconsuming MatchOrders : MatchResult ()
+                                             (ContractId Settlement.SettlementInstruction)
         with
           execution : Order.Execution
         do
@@ -35,9 +38,10 @@ template Service
                 >>= signConfirmation buy.customer
                 >>= signConfirmation sell.customer
 
-              Some <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
-          else
-            return None
+              Collateralized <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
+          else do
+            let clearinghouse = makerOrder.collateral.clearinghouse
+            return $ Cleared ()
 
 template Offer
   with

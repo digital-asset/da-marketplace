@@ -1,3 +1,4 @@
+
 module Marketplace.Trading.Service where
 
 import DA.Foldable (sequence_)
@@ -5,6 +6,7 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Model qualified as Order
+import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Trading.Error (Error (..))
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
@@ -25,10 +27,17 @@ template Service
     maintainer key._1
 
     controller customer can
-      nonconsuming RequestCreateClearedOrder : (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeDeposit)
+      nonconsuming RequestCreateClearedOrder : Either (ContractId Order.T)
+                                                      (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeDeposit)
         with
+          clearinghouse : Party
           details : Order.Details
         do
+          -- TODO: does there need to be an extra approval step by the clearinghouse or the listing service???
+
+          -- Listing.Listing{listingType} <- snd <$> fetchByKey @Listing.T (operator,provider,details.symbol)
+          -- x <- (.clearinghouse) <$> fetch listingType.approvalCid
+
           -- TODO: Check that price and quantity conform to the precision requirements of the Listing
           -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
           let
@@ -36,12 +45,23 @@ template Service
             providerOrderId = None
             executions = []
             remainingQuantity = details.asset.quantity
+            collateral = Order.Cleared clearinghouse
 
-          let collateral = Order.Cleared
-          createOrderRequestCid <- create CreateOrderRequest with ..
-          orderCid <- create Order.Order with ..
+          optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
 
-          return (orderCid, createOrderRequestCid, collateral)
+          case optClearingService of
+            (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
+                True -> do
+                    createOrderRequestCid <- create CreateOrderRequest with ..
+                    orderCid <- create Order.Order with ..
+                    return $ Right (orderCid, createOrderRequestCid, collateral)
+                False -> do
+                  let reason = Error with code = "1234"; message = "Rejected by Clearinghouse"
+                  Left <$> create Order.Order with status = Order.Rejected{reason}; ..
+
+            None -> do
+              let reason = Error with code = "1234"; message = "Customer is not a member of clearinghouse"
+              Left <$> create Order.Order with status = Order.Rejected{reason}; ..
 
       nonconsuming RequestCreateOrder : (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeDeposit)
         with
@@ -103,7 +123,7 @@ template Service
           let reason = Error with code = show errorCode; message = errorMessage
           orderCid <- create order with status = Order.Rejected with reason
           collateral <- case collateral of
-            Order.Cleared -> return Order.Cleared
+            Order.Cleared x -> return $ Order.Cleared x
             (Order.Collateral x) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = x; ..
 
           return (orderCid, collateral)
@@ -126,7 +146,7 @@ template Service
               sequence_ [archive orderCid, archive createOrderRequestCid]
               orderCid <- create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
               depositCid <- case order.collateral of
-                Order.Cleared -> return Order.Cleared
+                Order.Cleared x -> return $ Order.Cleared x
                 (Order.Collateral x) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = x
 
               return (orderCid, depositCid)
@@ -142,7 +162,7 @@ template Service
 
           orderCid <- create order with status = Order.Cancelled
           depositCid <- case order.collateral of
-            Order.Cleared -> return Order.Cleared
+            Order.Cleared x -> return $ Order.Cleared x
             (Order.Collateral x ) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = x; ..
 
           return (orderCid, depositCid)

@@ -1,7 +1,9 @@
 module Marketplace.Listing.Model where
 
+-- import Marketplace.Clearing.Market.Service qualified as Market
 import DA.Finance.Types (Id)
 import DA.Next.Set (Set)
+import DA.Optional.Total (optionalToList)
 
 type T = Listing
 
@@ -11,9 +13,13 @@ data Status
   deriving (Eq, Show)
 
 data ListingType
-    = Cleared
+    = Cleared { approvalCid : (ContractId ClearedListingApproval) }
     | Collateralized
   deriving (Eq, Show)
+-- data ListingType
+--     = Cleared Party
+--     | Collateralized
+--   deriving (Eq, Show)
 
 template Listing
   with
@@ -39,4 +45,59 @@ template Listing
 
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
     key (operator, provider, listingId) : (Party, Party, Text)
+    maintainer key._1
+--
+-- template Listing
+--   with
+--     operator : Party
+--     provider : Party
+--     customer : Party
+--     listingType : ListingType
+--     listingId : Text
+--     calendarId : Text
+--     description : Text
+--     tradedAssetId : Id
+--     quotedAssetId : Id
+--     tradedAssetPrecision : Int
+--     quotedAssetPrecision : Int
+--     minimumTradableQuantity : Decimal
+--     maximumTradableQuantity : Decimal
+--     providerId : Text
+--     status : Status
+--     observers : Set Party
+--   where
+--     signatory [operator, provider, customer] <> optClearingParty
+--     observer observers
+--
+--     let optClearingParty = case listingType of
+--             Collateralized -> []
+--             Cleared p      -> [p]
+--
+--     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
+--     key (operator, provider, listingId) : (Party, Party, Text)
+--     maintainer key._1
+
+template Testing
+  with
+    provider : Party
+    clearinghouse : Party
+    optHouse : Optional Party
+  where
+    signatory [provider, clearinghouse] <> optionalToList optHouse
+
+    key (provider, clearinghouse) : (Party, Party)
+    maintainer key._1
+
+template ClearedListingApproval
+  with
+    provider : Party
+    clearinghouse : Party
+    -- marketServiceCid : ContractId Market.Service
+    listingId : Text
+    observers : Set Party
+  where
+    signatory provider, clearinghouse
+    observer observers
+
+    key (provider, clearinghouse, listingId) : (Party, Party, Text)
     maintainer key._1

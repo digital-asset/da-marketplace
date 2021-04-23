@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Listing, ClearedListingApproval } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Details,
   Order,
@@ -209,7 +209,13 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           : { tag: timeInForce, value: {} },
     };
     clearOrderForm();
-    await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
+    if (listing.payload.listingType.tag === "Collateralized") {
+      await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
+    } else {
+      const approval = await ledger.fetch(ClearedListingApproval, listing.payload.listingType.value.approvalCid)
+      if (!approval) return;
+      await ledger.exercise(Service.RequestCreateClearedOrder, service.contractId, { details, clearinghouse: approval.payload.clearinghouse})
+    }
   };
 
   return (

@@ -2,8 +2,11 @@ module Marketplace.Listing.Service where
 
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
+import Marketplace.Clearing.Market.Service qualified as Clearing
 import Marketplace.Trading.Error qualified as Error
-import Marketplace.Listing.Model (ListingType, Listing(..), Status(..))
+import Marketplace.Listing.Model ( ListingType(..), Listing(..), Status(..))
+
+data ListingTypeRequest = CollateralizedRequest | ClearedRequest Party deriving (Show, Eq)
 
 template Service
   with
@@ -19,8 +22,8 @@ template Service
     controller customer can
       nonconsuming RequestCreateListing : ContractId CreateListingRequest
         with
+          listingType : ListingTypeRequest
           listingId : Text
-          listingType : ListingType
           calendarId : Text
           description : Text
           tradedAssetId : Id
@@ -46,6 +49,9 @@ template Service
           providerId : Text
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
+          listingType <- case listingType of
+            CollateralizedRequest -> return Collateralized
+            (ClearedRequest p)    -> Cleared <$> exerciseByKey @Clearing.Service (operator,p,provider) Clearing.ApproveClearedListing with ..
           archive createListingRequestCid
           create Listing with ..
 
@@ -127,7 +133,7 @@ template CreateListingRequest
     provider : Party
     customer : Party
     listingId : Text
-    listingType : ListingType
+    listingType : ListingTypeRequest
     calendarId : Text
     description : Text
     tradedAssetId : Id

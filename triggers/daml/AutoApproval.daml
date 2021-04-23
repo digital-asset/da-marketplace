@@ -13,6 +13,7 @@ import Marketplace.Distribution.Auction.Service qualified as AuctionService
 import Marketplace.Distribution.Bidding.Service qualified as BiddingService
 import Marketplace.Issuance.Service qualified as IssuanceService
 import Marketplace.Listing.Service qualified as ListingService
+import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Regulator.Service qualified as RegulatorService
 import Marketplace.Regulator.Model qualified as Regulator
 import Marketplace.Settlement.Service qualified as SettlementService
@@ -50,6 +51,7 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @DistributionRole.Role
     , registeredTemplate @TradingService.Request
     , registeredTemplate @ListingService.Request
+    , registeredTemplate @ListingService.CreateListingRequest
     , registeredTemplate @TradingRole.Role
     , registeredTemplate @IssuanceService.OriginationRequest
     , registeredTemplate @IssuanceService.CreateIssuanceRequest
@@ -147,6 +149,11 @@ handleApprovalRule party = do
   custodyServices         <- queryByParty @CustodyService.Service       (.provider)
   submitCommands $
     generateServiceCommands CustodyService.CreditAccount creditRequests custodyServices
+
+  listingRequests          <- queryByParty @ListingService.CreateListingRequest (.provider)
+  listingServices          <- queryByParty @ListingService.Service              (.provider)
+  submitCommands $
+    generateServiceCommands ListingService.CreateListing listingRequests listingServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)

@@ -63,11 +63,11 @@ data Execution = Execution with
 
 type T = Order
 
-data TradeDeposit = Cleared | Collateral (ContractId AssetDeposit) deriving (Show,Eq)
+data TradeDeposit = Cleared { clearinghouse: Party} | Collateral (ContractId AssetDeposit) deriving (Show,Eq)
 
 isClearedOrder : Order -> Bool
-isClearedOrder Order{collateral = Cleared} = True
-isClearedOrder _                           = False
+isClearedOrder Order{collateral = Cleared _} = True
+isClearedOrder _                            = False
 
 template Order
   with
@@ -82,6 +82,21 @@ template Order
     collateral : TradeDeposit -- Optional (ContractId AssetDeposit)
   where
     signatory operator, provider, customer
+    observer case collateral of
+      (Cleared ch) -> [ch]
+      _            -> []
 
     key (provider, details.id.label) : (Party, Text)
     maintainer key._1
+
+template ClearedTrade
+  with
+    operator : Party
+    provider : Party
+    clearinghouse : Party
+    makerOrderCid : ContractId Order
+    takerOrderCid : ContractId Order
+  where
+    signatory provider
+    observer clearinghouse
+
