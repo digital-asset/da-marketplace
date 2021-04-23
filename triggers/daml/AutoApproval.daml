@@ -174,7 +174,7 @@ getCommandWithCid : forall t c r t2. Choice t c r => (ContractId t2 -> c) -> Con
 getCommandWithCid toChoice requestCid (cid, _) = (toAnyContractId cid, exerciseCmd cid $ toChoice requestCid)
 
 -- | Finds the contract in the first list (ie, role or service contracts), based off matching details contained on contracts from a second list (ie, triggered contracts)
-findFirstMatch : forall t t2. (Template t, Template t2) => t2 -> [(ContractId t, t)] -> (t2 -> t -> Bool) -> Optional (ContractId t, t)
+findFirstMatch : t2 -> [(ContractId t, t)] -> (t2 -> t -> Bool) -> Optional (ContractId t, t)
 findFirstMatch _ [] _ = None
 findFirstMatch request (target@(_, x) :: xs) pred = if pred request x then Some target else findFirstMatch request xs pred
 
