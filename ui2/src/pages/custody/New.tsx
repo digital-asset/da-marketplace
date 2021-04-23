@@ -62,6 +62,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             a.payload.account.id.label === accountName
         ) === undefined && !!accountNominee);
 
+  const custodyService = services.filter(s => s.payload.customer === party);
+  if (custodyService.length === 0) return <>Not a custody service customer</>
+
   const requestAccount = async () => {
     const service = services.find(
       s =>
@@ -84,7 +87,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           ctrls: [service.payload.provider, service.payload.customer],
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
-        history.push('/app/custody/requests');
+        history.push('/app/custody/assets');
       case AccountType.ALLOCATION:
         const nomineeIdentity = identities.find(i => i.payload.customer === accountNominee);
         if (!nomineeIdentity) return;
@@ -100,7 +103,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
-        history.push('/app/custody/requests');
+        history.push('/app/custody/assets');
     }
   };
 
