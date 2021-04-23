@@ -5,6 +5,11 @@ import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
 import { Role, Offer as RoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {
+  Offer as MarketOffer,
+  Service as MarketService,
+  Request as MarketRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Header, Button, Form, DropdownItemProps } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -23,13 +28,22 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const { contracts: roleOffers, loading: roleOffersLoading } = useStreamQueries(RoleOffer);
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
+  const { contracts: marketOffers, loading: marketOffersLoading } = useStreamQueries(MarketOffer);
   const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
+
+  const { contracts: marketServices, loading: marketServicesLoading } = useStreamQueries(
+    MarketService
+  );
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
 
-  const terminateService = async (c: CreateEvent<Service>) => {
-    await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
+  const terminateService = async (c: CreateEvent<Service> | CreateEvent<MarketService>) => {
+    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Service') {
+      await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
+    } else {
+      await ledger.exercise(MarketService.Terminate, c.contractId, { ctrl: party });
+    }
   };
 
   const [clearingAccountName, setClearingAccountName] = useState('');
@@ -69,11 +83,15 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(Request.Cancel, c.contractId, {});
   };
 
-  const acceptOffer = async (c: CreateEvent<Offer>) => {
-    const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
-    const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
-    if (!clearingAccount || !marginAccount) return;
-    await ledger.exercise(Offer.Accept, c.contractId, { marginAccount, clearingAccount });
+  const acceptOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
+    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Offer') {
+      const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
+      const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
+      if (!clearingAccount || !marginAccount) return;
+      await ledger.exercise(Offer.Accept, c.contractId, { marginAccount, clearingAccount });
+    } else {
+      await ledger.exercise(MarketOffer.Accept, c.contractId, {});
+    }
   };
 
   const withdrawOffer = async (c: CreateEvent<Offer>) => {
@@ -99,7 +117,8 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action' /* 'Details' */]}
-        rows={services.map((c, i) => {
+        loading={marketServicesLoading}
+        rows={[...services, ...marketServices].map((c, i) => {
           return {
             elements: [
               getTemplateId(c.templateId),
@@ -169,7 +188,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
         loading={offersLoading}
-        rows={offers.map((c, i) => {
+        rows={[...offers.map((c, i) => {
           return {
             elements: [
               getTemplateId(c.templateId),
@@ -220,7 +239,33 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               </Button.Group>,
             ],
           };
-        })}
+        }),
+        ...marketOffers.map((c, i) => {
+          return {
+            elements: [
+              getTemplateId(c.templateId),
+              getName(c.payload.customer),
+              <Button.Group>
+                {c.payload.customer === party ? (
+                  <>
+                    <Button
+                      size="small"
+                      className="ghost"
+                      variant="contained"
+                      onClick={() => acceptOffer(c)}
+                    >
+                      Accept
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                  </>
+                )}
+              </Button.Group>,
+            ],
+          };
+        }),
+        ]}
       />
       <Header as="h3">Role Offers</Header>
       <StripedTable

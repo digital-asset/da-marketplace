@@ -188,10 +188,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
+    const isCollateralized = listing.payload.listingType.tag === "Collateralized";
     const depositCid = isBuy
       ? await getAsset(quotedAssets, price * quantity)
       : await getAsset(tradedAssets, quantity);
-    if (!depositCid) return;
 
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
@@ -209,12 +209,13 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           : { tag: timeInForce, value: {} },
     };
     clearOrderForm();
+    console.log(listing.payload.listingType);
     if (listing.payload.listingType.tag === "Collateralized") {
+      if (!depositCid) return;
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
     } else {
-      const approval = await ledger.fetch(ClearedListingApproval, listing.payload.listingType.value.approvalCid)
-      if (!approval) return;
-      await ledger.exercise(Service.RequestCreateClearedOrder, service.contractId, { details, clearinghouse: approval.payload.clearinghouse})
+      const clearinghouse = listing.payload.listingType.value.clearinghouse
+      await ledger.exercise(Service.RequestCreateClearedOrder, service.contractId, { details, clearinghouse})
     }
   };
 

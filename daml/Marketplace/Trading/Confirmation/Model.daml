@@ -1,6 +1,7 @@
 module Marketplace.Trading.Confirmation.Model where
 
 import DA.List (head)
+import DA.Foldable (forA_)
 import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
@@ -47,6 +48,29 @@ template Confirmation
           accounts = (CustomerAccounts with customer = ctrl; ..) :: accounts
 
     controller provider can
+      ProcessCleared : ()
+        with
+          buyCid : ContractId Order.T
+          sellCid : ContractId Order.T
+        do
+          [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
+
+          forA_ [buyOrder, sellOrder] (\order -> do
+            let
+              isPartialFill = execution.quantity < order.remainingQuantity
+              executions = execution :: order.executions
+              remainingQuantity = order.remainingQuantity - execution.quantity
+              quantities = [case order.details.side of
+                Order.Buy  -> execution.quantity * execution.price
+                Order.Sell -> execution.quantity]
+
+            if isPartialFill
+              then do
+                create order with executions, remainingQuantity, collateral = order.collateral, status = Order.PartiallyExecuted
+              else do
+                create order with executions, remainingQuantity, status = Order.FullyExecuted
+            return ())
+
       Process : ContractId Settlement.SettlementInstruction
         with
           buyCid : ContractId Order.T

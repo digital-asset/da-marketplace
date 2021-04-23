@@ -51,7 +51,7 @@ template Service
           CreateListingRequest{..} <- fetch createListingRequestCid
           listingType <- case listingType of
             CollateralizedRequest -> return Collateralized
-            (ClearedRequest p)    -> Cleared <$> exerciseByKey @Clearing.Service (operator,p,provider) Clearing.ApproveClearedListing with ..
+            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator,p,provider) Clearing.ApproveClearedListing with ..)
           archive createListingRequestCid
           create Listing with ..
 

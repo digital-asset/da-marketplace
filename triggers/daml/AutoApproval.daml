@@ -6,6 +6,7 @@ import Daml.Trigger
 import DA.Optional (mapOptional)
 import DA.Record (HasField)
 import Marketplace.Custody.Service qualified as CustodyService
+import Marketplace.Clearing.Market.Service qualified as MarketClearingService
 import Marketplace.Custody.Role qualified as CustodyRole
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Role qualified as DistributionRole
@@ -28,6 +29,7 @@ autoApprovalTrigger = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
     , registeredTemplate @CustodyRole.Request
     , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @MarketClearingService.Offer
     , registeredTemplate @DistributionRole.Offer
     , registeredTemplate @DistributionRole.Request
     , registeredTemplate @IssuanceService.Offer
@@ -80,20 +82,21 @@ handleApprovalRule party = do
       generateServiceCommands = generateCommandsWithCid (\req service -> service.operator == req.operator && service.provider == req.provider && service.customer == req.customer)
 
   -- [Service Offers/Requests] Exercise Accept/Approve choice on the triggered contract
-  custodyRoleOffers         <- generateCommands CustodyRole.Accept        <$> queryByParty @CustodyRole.Offer         (.provider)
-  custodyRoleRequests       <- generateCommands CustodyRole.Approve       <$> queryByParty @CustodyRole.Request       (.operator)
-  custodyServicesOffers     <- generateCommands CustodyService.Accept     <$> queryByParty @CustodyService.Offer      (.customer)
-  distributionRoleOffers    <- generateCommands DistributionRole.Accept   <$> queryByParty @DistributionRole.Offer    (.provider)
-  distributionRoleRequests  <- generateCommands DistributionRole.Approve  <$> queryByParty @DistributionRole.Request  (.operator)
-  issuanceServiceOffers     <- generateCommands IssuanceService.Accept    <$> queryByParty @IssuanceService.Offer     (.customer)
-  listingServiceOffers      <- generateCommands ListingService.Accept     <$> queryByParty @ListingService.Offer      (.customer)
-  regulatorServiceOffers    <- generateCommands RegulatorService.Accept   <$> queryByParty @RegulatorService.Offer    (.customer)
-  settlementServiceOffers   <- generateCommands SettlementService.Accept  <$> queryByParty @SettlementService.Offer   (.provider)
-  settlementServiceRequests <- generateCommands SettlementService.Approve <$> queryByParty @SettlementService.Request (.operator)
-  tradingRoleOffers         <- generateCommands TradingRole.Accept        <$> queryByParty @TradingRole.Offer         (.provider)
-  tradingRoleRequests       <- generateCommands TradingRole.Approve       <$> queryByParty @TradingRole.Request       (.operator)
-  matchingserviceOffers     <- generateCommands MatchingService.Accept    <$> queryByParty @MatchingService.Offer     (.provider)
-  matchingserviceRequests   <- generateCommands MatchingService.Approve   <$> queryByParty @MatchingService.Request   (.operator)
+  custodyRoleOffers           <- generateCommands CustodyRole.Accept           <$> queryByParty @CustodyRole.Offer           (.provider)
+  custodyRoleRequests         <- generateCommands CustodyRole.Approve          <$> queryByParty @CustodyRole.Request         (.operator)
+  custodyServicesOffers       <- generateCommands CustodyService.Accept        <$> queryByParty @CustodyService.Offer        (.customer)
+  marketClearingServiceOffers <- generateCommands MarketClearingService.Accept <$> queryByParty @MarketClearingService.Offer (.customer)
+  distributionRoleOffers      <- generateCommands DistributionRole.Accept      <$> queryByParty @DistributionRole.Offer      (.provider)
+  distributionRoleRequests    <- generateCommands DistributionRole.Approve     <$> queryByParty @DistributionRole.Request    (.operator)
+  issuanceServiceOffers       <- generateCommands IssuanceService.Accept       <$> queryByParty @IssuanceService.Offer       (.customer)
+  listingServiceOffers        <- generateCommands ListingService.Accept        <$> queryByParty @ListingService.Offer        (.customer)
+  regulatorServiceOffers      <- generateCommands RegulatorService.Accept      <$> queryByParty @RegulatorService.Offer      (.customer)
+  settlementServiceOffers     <- generateCommands SettlementService.Accept     <$> queryByParty @SettlementService.Offer     (.provider)
+  settlementServiceRequests   <- generateCommands SettlementService.Approve    <$> queryByParty @SettlementService.Request   (.operator)
+  tradingRoleOffers           <- generateCommands TradingRole.Accept           <$> queryByParty @TradingRole.Offer           (.provider)
+  tradingRoleRequests         <- generateCommands TradingRole.Approve          <$> queryByParty @TradingRole.Request         (.operator)
+  matchingserviceOffers       <- generateCommands MatchingService.Accept       <$> queryByParty @MatchingService.Offer       (.provider)
+  matchingserviceRequests     <- generateCommands MatchingService.Approve      <$> queryByParty @MatchingService.Request     (.operator)
 
   submitCommands $
     custodyRoleOffers ++
@@ -109,7 +112,8 @@ handleApprovalRule party = do
     tradingRoleOffers ++
     tradingRoleRequests ++
     matchingserviceOffers ++
-    matchingserviceRequests
+    matchingserviceRequests ++
+    marketClearingServiceOffers
 
   -- [Service Offers/Requests] Exercise a choice on a contract (ie, a role contract) based off triggered contract id
   custodyServicesRequests <- queryByParty @CustodyService.Request  (.provider)
@@ -155,10 +159,10 @@ handleApprovalRule party = do
     generateServiceCommands CustodyService.OpenAccount           openRequests           custodyServices ++
     generateServiceCommands CustodyService.OpenAllocationAccount openAllocationRequests custodyServices
 
-  listingRequests          <- queryByParty @ListingService.CreateListingRequest (.provider)
-  listingServices          <- queryByParty @ListingService.Service              (.provider)
-  submitCommands $
-    generateServiceCommands ListingService.CreateListing listingRequests listingServices
+  -- listingRequests          <- queryByParty @ListingService.CreateListingRequest (.provider)
+  -- listingServices          <- queryByParty @ListingService.Service              (.provider)
+  -- submitCommands $
+  --   generateServiceCommands ListingService.CreateListing listingRequests listingServices
 
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)

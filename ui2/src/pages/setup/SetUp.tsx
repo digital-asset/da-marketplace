@@ -46,6 +46,10 @@ const SetUp: React.FC = () => (
           label: 'Offer Clearing Service',
           path: '/app/setup/clearing/offer',
         },
+        {
+          label: 'Offer Market Clearing Service',
+          path: '/app/setup/clearing/market/offer',
+        },
       ]}
     />
 

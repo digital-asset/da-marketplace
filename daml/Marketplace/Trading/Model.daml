@@ -94,6 +94,8 @@ template ClearedTrade
     operator : Party
     provider : Party
     clearinghouse : Party
+    makerOrder : Order
+    takerOrder : Order
     makerOrderCid : ContractId Order
     takerOrderCid : ContractId Order
     execution : Execution
@@ -103,13 +105,10 @@ template ClearedTrade
 
     controller clearinghouse can
       ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
-        with
-          buyerAccountId : Id
-          sellerAccountId : Id
         do
           timeNovated <- getTime
-          makerOrder <- fetch makerOrderCid
-          takerOrder <- fetch takerOrderCid
+          -- makerOrder <- fetch makerOrderCid
+          -- takerOrder <- fetch takerOrderCid
           let Execution{..} = execution
 
           makerCid <- create ClearedTradeSide with

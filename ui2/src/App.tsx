@@ -332,6 +332,10 @@ const AppComponent = () => {
         render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
+        path: '/app/setup/clearing/market/offer',
+        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
+      },
+      {
         path: '/app/setup/distribution/new/auction',
         render: () => <NewAuction services={auctionService} />,
       },
