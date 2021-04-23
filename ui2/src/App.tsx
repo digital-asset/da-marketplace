@@ -190,7 +190,7 @@ const AppComponent = () => {
     ],
   });
   entries.push({
-    displayEntry: () => biddingService.length > 0,
+    displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
     sidebar: [
       {
         label: 'Bidding Auctions',
