@@ -159,21 +159,21 @@ handleApprovalRule party = do
     generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
 
 
--- | Generates commands in the expected format expected by the trigger for a contract / choice combination
+-- | Generates exersise commands for a specific choice on multiple contracts which expose that choice
 generateCommands : forall t c r. Choice t c r => c -> [(ContractId t, t)] -> [(AnyContractId, Command)]
 generateCommands choiceArg queryResults = map (\(cid, _) -> (toAnyContractId cid, exerciseCmd cid choiceArg)) queryResults
 
--- | Generates commands in the expected format based off exercising a nonconsuming choice on one contract (ie, a role contract) with the contract id of another contract
+-- | Generates commands where a contract id is required as part of a choice parameter on another related contract (ie., such as a service contract)
 generateCommandsWithCid : forall t c r t2. (Choice t c r, Template t2) => (t2 -> t -> Bool) -> (ContractId t2 -> c) -> [(ContractId t2, t2)] -> [(ContractId t, t)] -> [(AnyContractId, Command)]
 generateCommandsWithCid _ _ [] _ = []
 generateCommandsWithCid _ _ _ [] = []
 generateCommandsWithCid pred toChoice requests targets = mapOptional (\(reqCid, req) -> getCommandWithCid toChoice reqCid <$> findFirstMatch req targets pred) requests
 
--- | Takes a choice and a contract id which is a parameter of that choice, the contract which exposes this choice and builds up a command
+-- | Takes a choice, a contract id which is a parameter of that choice and a seperate contract which exposes this choice and builds up a command
 getCommandWithCid : forall t c r t2. Choice t c r => (ContractId t2 -> c) -> ContractId t2 -> (ContractId t, t) -> (AnyContractId, Command)
 getCommandWithCid toChoice requestCid (cid, _) = (toAnyContractId cid, exerciseCmd cid $ toChoice requestCid)
 
--- | Finds the contract in the first list (ie, role or service contracts), based off matching details contained on contracts from a second list (ie, triggered contracts)
+-- | Matches a contract in a list to another contract and returns the first contract in the list that matches
 findFirstMatch : t2 -> [(ContractId t, t)] -> (t2 -> t -> Bool) -> Optional (ContractId t, t)
 findFirstMatch _ [] _ = None
 findFirstMatch request (target@(_, x) :: xs) pred = if pred request x then Some target else findFirstMatch request xs pred
