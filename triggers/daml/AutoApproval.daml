@@ -153,7 +153,11 @@ generateCommands choiceArg queryResults = map (\(cid, _) -> (toAnyContractId cid
 generateCommandsWithCid : forall t c r t2. (Template t, Choice t c r, Template t2) => (t2 -> t -> Bool) -> (ContractId t2 -> c) -> [(ContractId t2, t2)] -> [(ContractId t, t)] -> [(AnyContractId, Command)]
 generateCommandsWithCid _ _ [] _ = []
 generateCommandsWithCid _ _ _ [] = []
-generateCommandsWithCid pred toChoice requests targets = mapOptional (\(reqCid, req) -> (\(cid, _) -> (toAnyContractId cid, exerciseCmd cid $ toChoice reqCid)) <$> findFirstMatch req targets pred) requests
+generateCommandsWithCid pred toChoice requests targets = mapOptional (\(reqCid, req) -> getCommandWithCid toChoice reqCid <$> findFirstMatch req targets pred) requests
+
+-- | Takes a choice and a contract id which is a parameter of that choice, the contract which exposes this choice and builds up a command
+getCommandWithCid : forall t c r t2. (Template t, Choice t c r, Template t2) => (ContractId t2 -> c) -> ContractId t2 -> (ContractId t, t) -> (AnyContractId, Command)
+getCommandWithCid toChoice requestCid (cid, _) = (toAnyContractId cid, exerciseCmd cid $ toChoice requestCid)
 
 -- | Finds the contract in the first list (ie, role or service contracts), based off matching details contained on contracts from a second list (ie, triggered contracts)
 findFirstMatch : forall t t2. (Template t, Template t2) => t2 -> [(ContractId t, t)] -> (t2 -> t -> Bool) -> Optional (ContractId t, t)
