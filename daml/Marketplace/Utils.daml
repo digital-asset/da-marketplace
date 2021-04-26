@@ -67,3 +67,14 @@ headNote : Text -> [a] -> a
 headNote msg [] = error ("headNote: " <> msg)
 headNote _   xs = head xs
 
+type OptionalCreate a = Optional (ContractId a)
+
+createWhenNotExists : forall t k. (Template t, TemplateKey t k) => t -> Update (OptionalCreate t)
+createWhenNotExists t = visibleByKey @t (key t) >>= \case
+    True  -> Some <$> create t
+    False -> return None
+
+createOrLookup : forall t k. (Template t, TemplateKey t k) => t -> Update (ContractId t)
+createOrLookup t = lookupByKey @t (key t) >>= \case
+    (Some cid) -> return cid
+    None       -> create t

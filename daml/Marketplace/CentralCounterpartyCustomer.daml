@@ -39,7 +39,7 @@ template CCPCustomerInvitation
           create DismissibleNotification with
             sender = ccpCustomer, senderRole = Some InvestorRole
             receiver = ccp, text = "CCP customer invitation accepted."
-          create CCPCustomer with inGoodStanding = True, marginDepositCids = [], ..
+          createOrLookup CCPCustomer with inGoodStanding = True, marginDepositCids = [], ..
 
       CCPCustomerInvitation_Reject : ()
         do

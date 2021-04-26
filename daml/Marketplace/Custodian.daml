@@ -46,7 +46,7 @@ template CustodianRelationshipRequest
           create DismissibleNotification with
             sender = custodian, senderRole = Some CustodianRole
             receiver = requester, text = "Relationship request accepted."
-          create CustodianRelationship with party = requester, ..
+          createOrLookup CustodianRelationship with party = requester, ..
 
       CustodianRelationshipRequest_Reject : ()
         do
@@ -73,8 +73,8 @@ template CustodianInvitation
           name : Text
           location : Text
         do
-          create RegisteredCustodian with ..
-          create Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
+          createOrLookup RegisteredCustodian with ..
+          createOrLookup Custodian with investors = [], exchanges = [], brokers = [], issuers = [], ..
 
 
 template Custodian

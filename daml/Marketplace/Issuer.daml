@@ -31,8 +31,8 @@ template IssuerInvitation
           title : Text
           issuerID : Text
         do
-          create RegisteredIssuer with ..
-          create Issuer with ..
+          createOrLookup RegisteredIssuer with ..
+          createOrLookup Issuer with ..
 
 
 template Issuer
@@ -57,7 +57,7 @@ template Issuer
         do
           let tokenId = Id with signatories = fromList [issuer], label = name, version = 0
           let tokenObservers = if isPublic then (public :: operator :: observers) else observers
-          create Token with id = tokenId, observers = fromList tokenObservers, ..
+          createOrLookup Token with id = tokenId, observers = fromList tokenObservers, ..
 
       nonconsuming Issuer_IssueBinaryOption : ContractId BinaryOption
         with
@@ -70,7 +70,7 @@ template Issuer
         do
           let binOptionId = Id with signatories = fromList [issuer], label = name, version = 0
           let binOptionObservers = if isPublic then (public :: observers) else observers
-          create BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
+          createOrLookup BinaryOption with id = binOptionId, observers = fromList binOptionObservers, ..
 
       nonconsuming Issuer_IssueDerivative : (Id, ContractId Derivative)
         with
@@ -98,4 +98,4 @@ template Issuer
       nonconsuming Issuer_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = issuer, role = IssuerRole, ..
+        do createOrLookup CustodianRelationshipRequest with requester = issuer, role = IssuerRole, ..

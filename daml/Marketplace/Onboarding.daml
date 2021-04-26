@@ -69,7 +69,7 @@ template UserSession
     controller operator can
       UserSession_Ack : ()
         do
-          create User with currentRole = role, ..
+          createOrLookup User with currentRole = role, ..
           onboardRole role operator user
 
 template User

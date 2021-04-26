@@ -30,8 +30,8 @@ template InvestorInvitation
           name : Text
           location : Text
         do
-          create RegisteredInvestor with ..
-          create Investor with ..
+          createOrLookup RegisteredInvestor with ..
+          createOrLookup Investor with ..
 
 
 template Investor
@@ -50,13 +50,13 @@ template Investor
       nonconsuming Investor_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
+        do createOrLookup CustodianRelationshipRequest with requester = investor, role = InvestorRole, ..
 
       nonconsuming Investor_RequestExchangeParticipantInvitation : ContractId ExchangeParticipantInvitationRequest
         with
           exchange : Party
         do
-          create ExchangeParticipantInvitationRequest with operator, exchange, participant = investor
+          createOrLookup ExchangeParticipantInvitationRequest with operator, exchange, participant = investor
 
       nonconsuming Investor_RequestDepositTransfer : ContractId DepositTransferRequest
         with
