@@ -21,9 +21,11 @@ import ManualFairValue from './ManualFairValue'
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
+const MarketPairs: React.FC<Props> = ({ sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const ledger = useLedger();
     const exchange = useParty();
     const operator = useOperator();
@@ -75,6 +77,8 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout }) => {
             sideNav={sideNav}
             onLogout={onLogout}
             menuTitle={<><PublicIcon size='24'/>Markets</>}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <CreateMarket/>

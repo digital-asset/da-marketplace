@@ -61,7 +61,9 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   useEffect(() => {
     const token = retrieveCredentials()?.token;
-    setPartyToken(token);
+    if (token) {
+      setPartyToken(token);
+    }
   }, []);
 
   const publicParty = useDablParties().parties.publicParty;
@@ -188,7 +190,6 @@ export function useConnectionActive() {
 
 export function useContractQuery<T extends object, K = unknown, I extends string = string>(template: Template<T,K,I>, asPublic?: boolean) {
   const queryStream: QueryStream<T> | undefined = React.useContext(QueryStreamContext);
-
   if (queryStream === undefined) {
     throw new Error("useContractQuery must be called within a QueryStreamProvider");
   }

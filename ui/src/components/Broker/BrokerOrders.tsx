@@ -24,10 +24,12 @@ type Props = {
     sideNav: React.ReactElement;
     deposits: DepositInfo[];
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 };
 
 
-const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
+const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const allExchangeOrders = useContractQuery(Order);
     const allBrokerOrderRequests = useContractQuery(BrokerOrderRequest);
     const allBrokerOrders = useContractQuery(BrokerOrder);
@@ -40,6 +42,8 @@ const BrokerOrders: React.FC<Props> = ({ sideNav, deposits, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<><OrdersIcon size='24'/>Orders</>}
             onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='broker-orders'>
