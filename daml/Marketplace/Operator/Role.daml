@@ -1,6 +1,6 @@
 module Marketplace.Operator.Role where
 
-import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Regulator.Role qualified as Regulator
 import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Distribution.Role qualified as Distributor
@@ -30,10 +30,10 @@ template Role
         do
           create Exchange.Offer with ..
 
-      nonconsuming OfferRegulatorService : ContractId Regulator.Offer
+
+      nonconsuming OfferRegulatorRole: ContractId Regulator.Offer
         with
           provider : Party
-          customer : Party
         do
           create Regulator.Offer with ..
 
