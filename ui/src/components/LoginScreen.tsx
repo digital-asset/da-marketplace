@@ -331,7 +331,7 @@ const DablLoginForm: React.FC<Props> = ({ onLogin }) => {
                 icon='right arrow blue'
                 labelPosition='right'
                 className='dabl-login-button'
-                content={<p className='bold'>Log in with DABL</p>}
+                content={<p className='bold'>Log in with Daml Hub</p>}
                 onClick={handleDablLogin}
             />
         </Form>

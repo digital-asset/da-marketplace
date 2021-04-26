@@ -33,8 +33,8 @@ template ExchangeInvitation
           name : Text
           location : Text
         do
-          create RegisteredExchange with ..
-          create Exchange with tokenPairs = [], clearedMarkets = [], binOptions = [], participants = [], ..
+          createOrLookup RegisteredExchange with ..
+          createOrLookup Exchange with tokenPairs = [], clearedMarkets = [], binOptions = [], participants = [], ..
 
 
 -- |Request from an investor or broker to be added to the exchange
@@ -55,7 +55,7 @@ template ExchangeParticipantInvitationRequest
             sender = exchange, senderRole = Some ExchangeRole
             receiver = participant, text = "Exchange participant request accepted."
           exerciseByKey @Exchange (operator,exchange) Exchange_AddParticipant with exchParticipant = participant
-          create ExchangeParticipant with exchParticipant = participant, ..
+          createOrLookup ExchangeParticipant with exchParticipant = participant, ..
 
       ExchangeInvtationRequest_Reject : ()
         do
@@ -86,13 +86,13 @@ template Exchange
       nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest
         with
           custodian : Party
-        do create CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
+        do createOrLookup CustodianRelationshipRequest with requester = exchange, role = ExchangeRole, ..
 
       nonconsuming Exchange_RequestCCPRelationship : ContractId CCPExchangeRelationshipRequest
         with
           ccp : Party
         do
-          create CCPExchangeRelationshipRequest with requester = exchange, party = ccp, requesterRole = ExchangeRole, ..
+          createOrLookup CCPExchangeRelationshipRequest with requester = exchange, party = ccp, requesterRole = ExchangeRole, ..
 
       Exchange_InviteParticipant : (ContractId Exchange, ContractId ExchangeParticipantInvitation)
         with

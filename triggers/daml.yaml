@@ -11,13 +11,13 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.1.17
+version: 0.1.18
 # trigger-dependencies-begin
 dependencies:
   - daml-prim
   - daml-stdlib
   - daml-trigger
 data-dependencies:
-  - ../.daml/dist/da-marketplace-0.1.17.dar
+  - ../.daml/dist/da-marketplace-0.1.18.dar
 sandbox-options:
   - --wall-clock-time
