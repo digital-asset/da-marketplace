@@ -5,6 +5,7 @@ import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
+import Marketplace.Utils
 
 template Service
   with
@@ -45,7 +46,7 @@ template Offer
     controller provider can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -61,7 +62,7 @@ template Request
     controller operator can
       Approve : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Reject : ()
         do

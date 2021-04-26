@@ -2,14 +2,14 @@
 
 module Marketplace.Clearing.Service where
 
-import DA.Functor
-
 import DA.Finance.Asset
 import DA.Finance.Types
 
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Utils
+
+import Marketplace.Utils
 
 data DepositWithRemaining = DepositWithRemaining {
    deposit   : ContractId AssetDeposit
@@ -189,8 +189,8 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
-          create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
-          create Service with ..
+          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -223,5 +223,5 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
-        create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
-        create Service with ..
+        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+        createOrLookup Service with ..
