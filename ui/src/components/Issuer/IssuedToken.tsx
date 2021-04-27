@@ -4,7 +4,6 @@ import { Header, List } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
 
-
 import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import {
@@ -36,11 +35,13 @@ type DepositInfo = {
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
-    providers: IPartyInfo[],
-    investors: IPartyInfo[]
+    providers: IPartyInfo[];
+    investors: IPartyInfo[];
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors }) => {
+const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors, showNotificationAlert, handleNotificationAlert }) => {
     const [ showParticipants, setShowParticipants ] = useState(false)
     const [ showAddRegisteredPartyModal, setShowAddRegisteredPartyModal ] = useState(false)
 
@@ -97,7 +98,10 @@ const IssuedToken: React.FC<Props> = ({ sideNav, onLogout, providers, investors 
         <Page
             sideNav={sideNav}
             menuTitle={<Header as='h2'>{token?.contractData.id.label}</Header>}
-            onLogout={onLogout}>
+            onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
+        >
             <PageSection>
                 <div className='issued-token'>
                     <div className='token-subheading'>
