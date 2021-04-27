@@ -29,9 +29,11 @@ type Props = {
     }[];
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
+const Members: React.FC<Props> = ({ members, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const allDeposits = useContractQuery(AssetDeposit);
     const ccp = useParty();
     const ledger = useLedger();
@@ -82,6 +84,8 @@ const Members: React.FC<Props> = ({ members, sideNav, onLogout }) => {
             sideNav={sideNav}
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/> Members</>}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='members'>

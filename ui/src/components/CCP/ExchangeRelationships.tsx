@@ -26,9 +26,11 @@ type Props = {
     }[];
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }) => {
+const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const ccp = useParty();
     const ledger = useLedger();
     const operator = useOperator();
@@ -64,6 +66,8 @@ const ExchangeRelationships: React.FC<Props> = ({ exchanges, sideNav, onLogout }
             sideNav={sideNav}
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/> Clients</>}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='members'>

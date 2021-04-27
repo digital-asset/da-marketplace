@@ -22,9 +22,11 @@ type Props = {
     instruments: MarketPairInfo[];
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const InstrumentList: React.FC<Props> = ({ exchanges, instruments, sideNav, onLogout }) => {
+const InstrumentList: React.FC<Props> = ({ exchanges, instruments, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
 
     const { exchangeMap } = useRegistryLookup();
     const tableHeadings = ['Description', 'Exchange', 'Current Fair Value']
@@ -43,6 +45,8 @@ const InstrumentList: React.FC<Props> = ({ exchanges, instruments, sideNav, onLo
             sideNav={sideNav}
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/>Instruments</>}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='members'>

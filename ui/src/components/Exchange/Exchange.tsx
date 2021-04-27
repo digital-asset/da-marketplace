@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 import { Header, Form } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -26,7 +26,6 @@ import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
 import { getAbbreviation } from '../common/utils';
 import { useRegistryLookup } from '../common/RegistryLookup'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import ExchangeProfile, { Profile, createField } from '../common/Profile'
 import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
@@ -35,6 +34,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import MarketPairs from './MarketPairs'
 import ExchangeParticipants from './ExchangeParticipants'
@@ -65,12 +65,16 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
         !exchangeParticipants.find(ep => ep.contractData.exchParticipant === ri.contractData.investor) &&
         !currentInvitations.find(invitation => invitation.contractData.exchParticipant === ri.contractData.investor));
 
-    const notifications = useDismissibleNotifications();
-
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
     });
+
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
 
     useEffect(() => {
         if (registeredExchange[0]) {
@@ -80,8 +84,23 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: reData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredExchange]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+        if (notifications.length === 0) setShowNotificationAlert(false);
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        const currentLocation = history.location.pathname;
+        history.push({ pathname: `${path}/notifications`, state: currentLocation });
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, exchange]);
@@ -183,21 +202,26 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                                 custodianRelationships={allCustodianRelationships}/>
                         }
                         sideNav={sideNav}
-                        notifications={notifications}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/market-pairs`}>
                     <MarketPairs
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/participants`}>
                     <ExchangeParticipants
                         sideNav={sideNav}
                         onLogout={onLogout}
-                        registeredInvestors={investorOptions}/>
+                        registeredInvestors={investorOptions}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/derivatives`}>
@@ -205,6 +229,14 @@ const Exchange: React.FC<Props> = ({ onLogout }) => {
                         sideNav={sideNav}
                         onLogout={onLogout}
                         derivatives={derivatives}/>
+                </Route>
+
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
             </Switch>
         </div>
