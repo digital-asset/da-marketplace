@@ -26,6 +26,7 @@ import { ServicesProvider } from './context/ServicesContext';
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from './config';
 import { Query, StreamCloseEvent } from '@daml/ledger';
 import { computeCredentials } from './Credentials';
+import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 
 type MainProps = {
   defaultPath: string;
@@ -122,22 +123,19 @@ const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
       publicParty={publicParty}
       defaultToken={computeCredentials(publicParty).token}
     >
-      {children}
+      <QueryStreamProvider>{children}</QueryStreamProvider>
     </PublicLedger>
   </DamlLedger>
 );
 
 export function useStreamQueries<T extends object, K, I extends string>(
-  template: Template<T, K, I>,
-  queryFactory?: () => Query<T>[],
-  queryDeps?: readonly unknown[],
-  closeHandler?: (e: StreamCloseEvent) => void
+  template: Template<T, K, I>
 ): QueryResult<T, K, I> {
-  const contractsAsPublic = usqp(template, queryFactory, queryDeps, closeHandler);
-  const contractsAsParty = usq(template, queryFactory, queryDeps, closeHandler);
+  const { contracts: contractsAsParty, loading: partyLoading } = useContractQuery(template, false);
+  const { contracts: contractsAsPublic, loading: publicLoading } = useContractQuery(template, true);
 
   const result = useMemo(() => {
-    const mergedContracts = [...contractsAsParty.contracts, ...contractsAsPublic.contracts];
+    const mergedContracts = [...contractsAsParty, ...contractsAsPublic];
 
     // deduplication for when a contract appears in both streams
     // ex., the current party is a signatory to a contract also visible to public
@@ -147,9 +145,9 @@ export function useStreamQueries<T extends object, K, I extends string>(
 
     return {
       contracts,
-      loading: contractsAsParty.loading && contractsAsPublic.loading,
+      loading: partyLoading || publicLoading,
     };
-  }, [contractsAsPublic, contractsAsParty]);
+  }, [contractsAsPublic, contractsAsParty, partyLoading, publicLoading]);
 
   return result;
 }
