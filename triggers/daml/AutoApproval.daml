@@ -32,6 +32,7 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @CustodyRole.Request
     , registeredTemplate @CustodyService.Offer
     , registeredTemplate @MarketClearingService.Offer
+    , registeredTemplate @MarketClearingService.Request
     , registeredTemplate @DistributionRole.Offer
     , registeredTemplate @DistributionRole.Request
     , registeredTemplate @IssuanceService.Offer

@@ -65,7 +65,6 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const approveRequest = async (c: CreateEvent<Request>) => {
     if (!hasRole) return; // TODO: Display error
-    console.log(roles[0].contractId);
     await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
       clearingRequestCid: c.contractId,
     });
@@ -73,7 +72,6 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const rejectRequest = async (c: CreateEvent<Request>) => {
     if (!hasRole) return; // TODO: Display error
-    console.log(roles[0].contractId);
     await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
       clearingRequestCid: c.contractId,
     });

@@ -51,16 +51,8 @@ handleMatchingRule party = do
   createListingRequests <- query @ListingService.CreateListingRequest
 
   forA_ createListingRequests \(cid,lr) -> do
-      case lr.listingType of
-        ListingService.CollateralizedRequest -> emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
-        ListingService.ClearedRequest p      -> do
-            let clearers = filter (\(_,cms)-> cms.provider == p) clearedMarketServices
-            if not $ null clearers
-            then emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
-            else emitExerciseCmd cid ListingService.ListingRequestFailure with message = "Exchange is not a customer of clearing provider"; name = "NoClearingProvider"; code="000"
-
-
-      debug "Acknowledging listing creation"
+    emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
+    debug "Acknowledging listing creation"
 
   -- Acknowledge all 'Order.CancelRequest'
   orderCancelRequests <- query @Service.CancelOrderRequest

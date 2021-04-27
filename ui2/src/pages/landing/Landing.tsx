@@ -19,6 +19,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
@@ -308,6 +309,10 @@ const Landing = () => {
             <OverflowMenuEntry
               label="Request Listing Service"
               onClick={() => requestService(ListingRequest, ServiceKind.LISTING)}
+            />
+            <OverflowMenuEntry
+              label="Request Market Clearing Service"
+              onClick={() => requestService(MarketClearingRequest, ServiceKind.MARKET_CLEARING)}
             />
             <OverflowMenuEntry
               label="Request Clearing Service"

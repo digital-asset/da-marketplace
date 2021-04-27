@@ -35,6 +35,9 @@ template Service
           maximumTradableQuantity : Decimal
           observers : [Party]
         do
+          listingType <- case listingType of
+            CollateralizedRequest -> return Collateralized
+            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator,p,customer) Clearing.ApproveClearedListing with observers = fromList observers; ..)
           create CreateListingRequest with status = Active; observers = fromList observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
@@ -50,9 +53,6 @@ template Service
           providerId : Text
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
-          listingType <- case listingType of
-            CollateralizedRequest -> return Collateralized
-            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator,p,provider) Clearing.ApproveClearedListing with ..)
           archive createListingRequestCid
           create Listing with ..
 
@@ -134,7 +134,7 @@ template CreateListingRequest
     provider : Party
     customer : Party
     listingId : Text
-    listingType : ListingTypeRequest
+    listingType : ListingType
     calendarId : Text
     description : Text
     tradedAssetId : Id

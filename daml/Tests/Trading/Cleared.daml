@@ -50,15 +50,15 @@ clearedTradingTest = do
 
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
-  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
-  -- !! Exchange cannot create listing without being a customer of the clearinghouse
-  listingCid <- exchange `submitMustFail` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  -- !! Alice cannot create listing without being a customer of the clearinghouse
+  alice.customer `submitMustFail` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
   -- Setup clearing market service
-  marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = exchange, ..
-  marketServiceCid <- submit exchange do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
+  marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = alice.customer, ..
+  marketServiceCid <- submit alice.customer do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
 
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
   -- Create orders
