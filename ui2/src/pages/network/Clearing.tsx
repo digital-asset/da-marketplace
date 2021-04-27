@@ -30,6 +30,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
   const { contracts: marketOffers, loading: marketOffersLoading } = useStreamQueries(MarketOffer);
   const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
+  const { contracts: marketRequests, loading: marketRequestsLoading } = useStreamQueries(MarketRequest);
 
   const { contracts: marketServices, loading: marketServicesLoading } = useStreamQueries(
     MarketService
@@ -63,22 +64,38 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     .map(c => c.payload.account);
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
-  const approveRequest = async (c: CreateEvent<Request>) => {
+  const approveRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
     if (!hasRole) return; // TODO: Display error
-    await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
-      clearingRequestCid: c.contractId,
-    });
+    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+      await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
+        clearingRequestCid: (c as CreateEvent<Request>).contractId,
+      });
+    } else {
+      await ledger.exercise(Role.ApproveMarketRequest, roles[0].contractId, {
+        marketRequestCid: (c as CreateEvent<MarketRequest>).contractId,
+      });
+    }
   };
 
-  const rejectRequest = async (c: CreateEvent<Request>) => {
+  const rejectRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
     if (!hasRole) return; // TODO: Display error
-    await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
-      clearingRequestCid: c.contractId,
-    });
+    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+      await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
+        clearingRequestCid: (c as CreateEvent<Request>).contractId,
+      });
+    } else {
+      await ledger.exercise(Role.RejectMarketRequest, roles[0].contractId, {
+        marketRequestCid: (c as CreateEvent<MarketRequest>).contractId,
+      });
+    }
   };
 
-  const cancelRequest = async (c: CreateEvent<Request>) => {
-    await ledger.exercise(Request.Cancel, c.contractId, {});
+  const cancelRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
+    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+      await ledger.exercise(Request.Cancel, c.contractId, {});
+    } else {
+      await ledger.exercise(MarketRequest.Cancel, c.contractId, {});
+    }
   };
 
   const acceptOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
@@ -140,7 +157,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
         loading={requestsLoading}
-        rows={requests.map((c, i) => {
+        rows={[...requests, ...marketRequests].map((c, i) => {
           return {
             elements: [
               getTemplateId(c.templateId),
@@ -154,7 +171,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                       variant="contained"
                       onClick={() => cancelRequest(c)}
                     >
-                      Approve
+                      Cancel
                     </Button>
                   </>
                 ) : (
