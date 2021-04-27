@@ -22,6 +22,7 @@ export type QueryStream = {
   partyLoading: boolean;
   publicToken?: string;
   subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
+  connectionActive: boolean;
 };
 
 export const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
@@ -63,7 +64,9 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
 
   useEffect(() => {
     const token = retrieveCredentials()?.token;
-    setPartyToken(token);
+    if (token) {
+      setPartyToken(token);
+    }
   }, []);
 
   const publicParty = useWellKnownParties()?.parties?.publicParty || 'Public';
@@ -83,6 +86,7 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     contracts: partyContracts,
     errors: partyStreamErrors,
     loading: partyLoading,
+    active: connectionActive,
   } = useDamlStreamQuery(partyTemplateIds, partyToken);
   const {
     contracts: publicContracts,
@@ -118,6 +122,7 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     publicLoading,
     partyLoading,
     publicToken,
+    connectionActive,
   });
 
   useEffect(() => {
@@ -127,6 +132,14 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
       publicLoading,
     }));
   }, [partyLoading, publicLoading]);
+
+  useEffect(() => {
+    console.log(`active changed: ${connectionActive}`);
+    setQueryStream(queryStream => ({
+      ...queryStream,
+      connectionActive,
+    }));
+  }, [connectionActive]);
 
   useEffect(() => {
     if (!_.isEqual(queryStream.partyContracts, partyContracts)) {
@@ -178,6 +191,11 @@ export function usePartyLoading() {
 export function useLoading() {
   const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
   return queryStream?.publicLoading || queryStream?.partyLoading;
+}
+
+export function useConnectionActive() {
+  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
+  return queryStream?.connectionActive;
 }
 
 export function useContractQuery<T extends object, K, I extends string = string>(
