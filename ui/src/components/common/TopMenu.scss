@@ -32,8 +32,7 @@
                 }
             }
 
-            .log-out-button {
-                padding: $spacing-m;
+            .notification-center-button {
                 margin-top: $spacing-gap;
                 align-self: flex-start;
                 height: 100%;
@@ -41,6 +40,22 @@
                 &.divider {
                     border-left: var(--cool-grey-90) 1px solid;
                 }
+
+                .notifications-active {
+                    background-color: var(--green-50);
+                    border-radius: 50%;
+                    padding: 4px;
+                    position: absolute;
+                    top: -1px;
+                    right: -1px;
+                }
+            }
+
+            .log-out-button {
+                padding: $spacing-m;
+                margin-top: $spacing-gap;
+                align-self: flex-start;
+                height: 100%;
 
                 .log-out {
                     display: flex;

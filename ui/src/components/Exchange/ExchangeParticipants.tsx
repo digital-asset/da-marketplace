@@ -25,10 +25,12 @@ import Page from '../common/Page'
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
-    registeredInvestors: ContractInfo<RegisteredInvestor>[]
+    registeredInvestors: ContractInfo<RegisteredInvestor>[];
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredInvestors }) => {
+const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredInvestors, showNotificationAlert, handleNotificationAlert }) => {
     const [ showAddRelationshipModal, setShowAddRelationshipModal ] = useState(false);
 
     const allDeposits = useContractQuery(AssetDeposit);
@@ -69,6 +71,8 @@ const ExchangeParticipants: React.FC<Props> = ({ sideNav, onLogout, registeredIn
             sideNav={sideNav}
             onLogout={onLogout}
             menuTitle={<><UserIcon size='24'/>Investors</>}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='exchange-participants'>

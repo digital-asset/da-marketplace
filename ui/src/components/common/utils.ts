@@ -31,6 +31,12 @@ export const groupDeposits = (deposits: DepositInfo[], getLabel: (deposit: Depos
     }, {} as StringKeyedObject<DepositInfo[]>);
 }
 
+export async function halfSecondPromise() {
+    await new Promise<void>((resolve, _) => {
+      setTimeout(() => resolve(), 500);
+    });
+  }
+
 export const groupDepositsByProvider = (deposits: DepositInfo[]): StringKeyedObject<DepositInfo[]> => {
     return groupDeposits(deposits, (deposit => deposit.contractData.account.provider))
 }
