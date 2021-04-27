@@ -131,8 +131,8 @@ const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
 export function useStreamQueries<T extends object, K, I extends string>(
   template: Template<T, K, I>
 ): QueryResult<T, K, I> {
-  const contractsAsParty = useContractQuery(template, false);
-  const contractsAsPublic = useContractQuery(template, true);
+  const { contracts: contractsAsParty, loading: partyLoading } = useContractQuery(template, false);
+  const { contracts: contractsAsPublic, loading: publicLoading } = useContractQuery(template, true);
 
   const result = useMemo(() => {
     const mergedContracts = [...contractsAsParty, ...contractsAsPublic];
@@ -145,9 +145,9 @@ export function useStreamQueries<T extends object, K, I extends string>(
 
     return {
       contracts,
-      loading: false,
+      loading: partyLoading || publicLoading,
     };
-  }, [contractsAsPublic, contractsAsParty]);
+  }, [contractsAsPublic, contractsAsParty, partyLoading, publicLoading]);
 
   return result;
 }

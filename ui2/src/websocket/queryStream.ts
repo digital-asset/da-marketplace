@@ -196,14 +196,22 @@ export function useContractQuery<T extends object, K, I extends string = string>
     publicContracts,
     partyTemplateIds,
     partyContracts,
+    partyLoading,
+    publicLoading,
     subscribeTemplate,
   } = queryStream;
 
   const filtered = useMemo(() => {
     if (!!asPublic) {
-      return publicContracts.filter(c => c.templateId === templateId);
+      return {
+        contracts: publicContracts.filter(c => c.templateId === templateId),
+        loading: publicLoading,
+      };
     } else {
-      return partyContracts.filter(c => c.templateId === templateId);
+      return {
+        contracts: partyContracts.filter(c => c.templateId === templateId),
+        loading: partyLoading,
+      };
     }
   }, [asPublic, templateId, publicContracts, partyContracts]);
 

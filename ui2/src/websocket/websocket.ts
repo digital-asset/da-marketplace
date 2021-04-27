@@ -56,11 +56,9 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   const messageHandlerScoped = useCallback(() => {
     return (message: { data: string }) => {
-      const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
+      setLoading(false);
 
-      if (data.offset !== undefined) {
-        setLoading(false);
-      }
+      const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
 
       if (isWarningMessage(data)) {
         console.warn('Warning emitted from DAML websocket: ', data.warnings);
