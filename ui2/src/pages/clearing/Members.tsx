@@ -168,9 +168,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               getName(c.payload.exchange),
               getName(c.payload.order.customer),
               c.payload.order.details.symbol,
-              c.payload.quantity,
-              c.payload.price,
-              c.payload.timeMatched,
+              c.payload.execution.quantity,
+              c.payload.execution.price,
+              c.payload.execution.timestamp,
             ],
             onClick: () => history.push(`/app/custody/account/${c.contractId.replace('#', '_')}`),
           };

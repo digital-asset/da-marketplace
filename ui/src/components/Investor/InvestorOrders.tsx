@@ -25,9 +25,11 @@ import ExchangeOrderCard from '../common/ExchangeOrderCard'
 type Props = {
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
+const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const allOrders = useContractQuery(Order);
     const allOrderRequests = useContractQuery(OrderRequest);
     const allClearedOrders = useContractQuery(ClearedOrder);
@@ -58,6 +60,8 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<><OrdersIcon size='24'/>Orders</>}
             onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection>
                 <div className='investor-orders'>

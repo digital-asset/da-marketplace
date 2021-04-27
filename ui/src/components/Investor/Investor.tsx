@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink} from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
 import { Label, Menu } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -19,7 +19,6 @@ import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator } from '../common/common'
 import { wrapDamlTuple, unwrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import InvestorProfile, { Profile, createField } from '../common/Profile'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -28,6 +27,7 @@ import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
 import RoleSideNav from '../common/RoleSideNav'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
 import { useCCPCustomerInviteNotifications } from './CCPInviteNotifications'
@@ -47,14 +47,11 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const ledger = useLedger();
     const loading = usePartyLoading();
 
-
-    const dismissibleNotifications = useDismissibleNotifications();
-    const notifications = [
+    const InvestorNotifications = [
         ...useCCPCustomerNotifications(),
         ...useCCPCustomerInviteNotifications(),
         ...useExchangeInviteNotifications(),
         ...useBrokerCustomerInviteNotifications(),
-        ...dismissibleNotifications
     ];
 
     const registeredInvestor = useContractQuery(RegisteredInvestor);
@@ -68,6 +65,12 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
         'location': createField('', 'Location', 'Your current location', 'text')
     });
 
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
+
     useEffect(() => {
         if (registeredInvestor[0]) {
             const riData = registeredInvestor[0].contractData;
@@ -76,8 +79,23 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: riData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredInvestor]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+        if (notifications.length === 0) setShowNotificationAlert(false);
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        const currentLocation = history.location.pathname;
+        history.push({ pathname: `${path}/notifications`, state: currentLocation });
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, investor]);
@@ -192,7 +210,7 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
     const investorScreen = <Switch>
         <Route exact path={path}>
             <LandingPage
-                notifications={notifications}
+                notifications={InvestorNotifications}
                 profile={
                     <FormErrorHandled onSubmit={updateProfile}>
                         <InvestorProfile
@@ -211,28 +229,45 @@ const Investor: React.FC<Props> = ({ onLogout }) => {
                     <MarketRelationships
                         relationshipRequestChoice={InvestorTemplate.Investor_RequestCustodianRelationship}
                         custodianRelationships={allCustodianRelationships}/>}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/wallet`}>
             <Wallet
                 role={MarketRole.InvestorRole}
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/orders`}>
             <InvestorOrders
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
 
         <Route path={`${path}/trade/:base-:quote`}>
             <InvestorTrade
                 deposits={allDeposits}
                 sideNav={sideNav}
-                onLogout={onLogout}/>
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
         </Route>
+
+        <Route path={`${path}/notifications`}>
+            <NotificationCenter
+                sideNav={sideNav}
+                onLogout={onLogout}
+                showNotificationAlert={showNotificationAlert}
+                handleNotificationAlert={handleNotificationAlert}/>
+        </Route>
+
     </Switch>
 
     const shouldLoad = loading || (registeredInvestor.length === 0 && invitation.length === 0);

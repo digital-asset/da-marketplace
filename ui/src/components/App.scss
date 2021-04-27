@@ -21,6 +21,7 @@
 @import './common/WalletTransaction.scss';
 @import './common/WelcomeHeader.scss';
 @import './common/MarketRelationships.scss';
+@import './common/NotificationCenter.scss';
 
 @import './LoginScreen.scss';
 @import './RoleSelectScreen.scss';
@@ -50,6 +51,7 @@
         @include loading-screen;
         @include market-relationships;
         @include notification;
+        @include notification-center;
         @include onboarding-tile;
         @include order-card;
         @include overflow-menu;
@@ -68,6 +70,7 @@
         @include login-screen;
         @include role-selector;
         @include setup-required;
+        @include quick-setup;
 
         /* role css */
         @include investor;

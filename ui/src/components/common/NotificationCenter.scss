@@ -1,0 +1,28 @@
+@mixin notification-center {
+  .return-link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--spacing-m);
+
+    a {
+      color: var(--textcolor);
+      margin-left: var(--spacing-xs);
+    }
+  }
+  .notification-center-notification {
+    .notification {
+      .message {
+        background-color: var(--white);
+
+        .header {
+          color: var(--textcolor);
+        }
+
+        .ui.button.ghost.warning {
+          border-color: solid var(--cool-grey-10);
+        }
+      }
+    }
+  }
+}
