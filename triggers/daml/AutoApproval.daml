@@ -16,6 +16,8 @@ import Marketplace.Issuance.Service qualified as IssuanceService
 import Marketplace.Listing.Service qualified as ListingService
 import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Regulator.Service qualified as RegulatorService
+import Marketplace.Regulator.Role qualified as RegulatorRole
+import Marketplace.Regulator.Model qualified as Regulator
 import Marketplace.Settlement.Service qualified as SettlementService
 import Marketplace.Trading.Role qualified as TradingRole
 import Marketplace.Trading.Service qualified as TradingService
@@ -34,8 +36,11 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @DistributionRole.Request
     , registeredTemplate @IssuanceService.Offer
     , registeredTemplate @ListingService.Offer
+    , registeredTemplate @RegulatorRole.Offer
+    , registeredTemplate @RegulatorRole.Request
+    , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorService.Offer
-    , registeredTemplate @RegulatorService.Request -- TO-DO: Auto-approve requests
+    , registeredTemplate @RegulatorService.Request
     , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
@@ -145,9 +150,12 @@ handleApprovalRule party = do
     generateServiceCommands IssuanceService.Originate      originationRequests issuanceServices ++
     generateServiceCommands IssuanceService.CreateIssuance issuanceRequests issuanceServices
 
-  idVerificationRequests  <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
-  regulatorServices       <- queryByParty @RegulatorService.Service              (.provider)
+  idVerificationRequests     <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
+  regulatorServicesRequests  <- queryByParty @RegulatorService.Request                     (.provider)
+  regulatorServices          <- queryByParty @RegulatorService.Service                     (.provider)
+  regulatorRoles             <- queryByParty @RegulatorRole.Role                           (.provider)
   submitCommands $
+    generateRoleCommands RegulatorRole.ApproveRegulatorRequest regulatorServicesRequests regulatorRoles ++
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
   creditRequests          <- queryByParty @Custody.CreditAccountRequest         (.provider)

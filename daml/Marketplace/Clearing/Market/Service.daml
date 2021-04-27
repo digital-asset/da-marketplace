@@ -3,6 +3,7 @@ module Marketplace.Clearing.Market.Service where
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Market.Model
 import Marketplace.Listing.Model
+import Marketplace.Utils
 
 import DA.Next.Set (Set)
 
@@ -58,7 +59,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()

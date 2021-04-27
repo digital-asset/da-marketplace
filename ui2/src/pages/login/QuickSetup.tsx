@@ -46,11 +46,16 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
   Offer as MatchingOffer,
-  Service as MarchingService,
+  Service as MatchingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
 import {
   Offer as RegulatorOffer,
+  Role as RegulatorRole,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+
+import {
+  Offer as RegulatorServiceOffer,
   Service as RegulatorService,
   IdentityVerificationRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
@@ -62,7 +67,6 @@ import { deployAutomation } from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
 import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Offer =
   | ClearingOffer
@@ -140,12 +144,15 @@ const QuickSetupTable = (props: {
   const custodianRoles = useStreamQueries(CustodianRole);
   const exchangeRoles = useStreamQueries(ExchangeRole);
   const distributorRoles = useStreamQueries(DistributorRole);
-  const settlementServices = useStreamQueries(SettlementService);
-  const matchingServices = useStreamQueries(MarchingService);
-  const operatorService = useStreamQueries(OperatorService);
+  const regulatorRoles = useStreamQueries(RegulatorRole);
   const regulatorServices = useStreamQueries(RegulatorService);
+  const settlementServices = useStreamQueries(SettlementService);
+  const matchingServices = useStreamQueries(MatchingService);
+  const operatorService = useStreamQueries(OperatorService);
 
   const clearingOffers = useStreamQueries(ClearingOffer);
+  const regulatorOffers = useStreamQueries(RegulatorOffer);
+  const regulatorServiceOffers = useStreamQueries(RegulatorServiceOffer);
   const custodianOffers = useStreamQueries(CustodianOffer);
   const distributorOffers = useStreamQueries(DistributorOffer);
   const settlementOffers = useStreamQueries(SettlementOffer);
@@ -159,6 +166,8 @@ const QuickSetupTable = (props: {
     setLoading(
       custodianRoles.loading ||
         clearingRoles.loading ||
+        regulatorRoles.loading ||
+        regulatorServices.loading ||
         distributorRoles.loading ||
         settlementServices.loading ||
         exchangeRoles.loading ||
@@ -176,6 +185,8 @@ const QuickSetupTable = (props: {
     custodianRoles.loading,
     clearingRoles.loading,
     distributorRoles.loading,
+    regulatorRoles.loading,
+    regulatorServices.loading,
     settlementServices.loading,
     exchangeRoles.loading,
     matchingServices.loading,
@@ -308,6 +319,19 @@ const QuickSetupTable = (props: {
       createOperatorService();
     }
   }, [operatorService.loading, operatorService]);
+
+  useEffect(() => {
+    const createRegulatorRole = async () => {
+      await ledger.create(RegulatorRole, {
+        operator: credentials.party,
+        provider: credentials.party,
+      });
+    };
+
+    if (!regulatorRoles.loading && regulatorRoles.contracts.length === 0) {
+      createRegulatorRole();
+    }
+  }, [regulatorRoles.loading, regulatorRoles]);
 
   const partyOptions = parties.map(party => {
     return { text: party.partyName, value: party.party };
@@ -481,8 +505,8 @@ const QuickSetupTable = (props: {
     const id = operatorServiceContract.contractId;
 
     if (!findExistingOffer(ServiceKind.REGULATOR)) {
-      await ledger.exercise(OperatorService.OfferRegulatorService, id, {
-        provider: operator,
+      const regId = regulatorRoles.contracts[0].contractId;
+      await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
         customer: provider,
       });
     }
@@ -526,7 +550,7 @@ const QuickSetupTable = (props: {
       case ServiceKind.SETTLEMENT:
         return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.REGULATOR:
-        return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
+        return !!regulatorServiceOffers.contracts.find(c => c.payload.provider === provider);
     }
   }
 
@@ -737,6 +761,8 @@ const CreateRoleContract = (props: {
             return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
           case ServiceKind.LISTING:
             return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
+          case ServiceKind.REGULATOR:
+            return acceptAllOffers(regulatorOffers.contracts, RegulatorOffer.Accept);
         }
       })
     );

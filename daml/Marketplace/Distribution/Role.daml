@@ -2,6 +2,7 @@ module Marketplace.Distribution.Role where
 
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Utils
 
 template Role
   with
@@ -60,7 +61,7 @@ template Offer
     controller provider can
       Accept : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Decline : ()
         do
@@ -76,7 +77,7 @@ template Request
     controller operator can
       Approve : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Reject : ()
         do
