@@ -12,8 +12,11 @@ import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import {ClearedTrade, ClearedTradeSide} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import {CreateEvent} from '@daml/ledger';
+import {
+  ClearedTrade,
+  ClearedTradeSide,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { CreateEvent } from '@daml/ledger';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -24,8 +27,12 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const ledger = useLedger();
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: clearedTrades, loading: clearedTradesLoading } = useStreamQueries(ClearedTrade);
-  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } = useStreamQueries(ClearedTradeSide);
+  const { contracts: clearedTrades, loading: clearedTradesLoading } = useStreamQueries(
+    ClearedTrade
+  );
+  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } = useStreamQueries(
+    ClearedTradeSide
+  );
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
   const ccpDeposits = deposits.filter(
@@ -34,7 +41,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   const handleNovation = async (c: CreateEvent<ClearedTrade>) => {
     await ledger.exercise(ClearedTrade.ClearedTrade_Novate, c.contractId, {});
-  }
+  };
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -128,14 +135,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <StripedTable
         loading={clearedTradesLoading}
         rowsClickable
-        headings={[
-          'Provider',
-          'Match Id',
-          'Maker Order Id',
-          'Taker Order Id',
-          'Quantity',
-          'Price',
-        ]}
+        headings={['Provider', 'Match Id', 'Maker Order Id', 'Taker Order Id', 'Quantity', 'Price']}
         rows={clearedTrades.map(c => {
           return {
             elements: [
@@ -153,7 +153,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               >
                 Novate Trade
               </Button>,
-            ]
+            ],
           };
         })}
       />
@@ -161,14 +161,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <StripedTable
         loading={clearedTradeSidesLoading}
         rowsClickable
-        headings={[
-          'Exchange',
-          'Member',
-          'Listing',
-          'Quantity',
-          'Price',
-          'Time Matched'
-        ]}
+        headings={['Exchange', 'Member', 'Listing', 'Quantity', 'Price', 'Time Matched']}
         rows={clearedTradeSides.map(c => {
           return {
             elements: [

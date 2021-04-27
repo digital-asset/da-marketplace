@@ -11,19 +11,17 @@ import {
   Service,
   ListingTypeRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import {
-  Service as MarketClearingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { publicParty } from '../../config';
 import { ServicePageProps, createDropdownProp } from '../common';
 import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
-import {Party} from '@daml/types';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Party } from '@daml/types';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-const COLLATERALIZED_VALUE = "COLLATERALIED_MARKET"
+const COLLATERALIZED_VALUE = 'COLLATERALIED_MARKET';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -44,7 +42,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [listingId, setListingId] = useState('');
   const [description, setDescription] = useState('');
   const [calendarId] = useState('1261007448');
-  const [clearedBy, setClearedBy] = useState<string>(COLLATERALIZED_VALUE)
+  const [clearedBy, setClearedBy] = useState<string>(COLLATERALIZED_VALUE);
 
   const identities = useStreamQueries(VerifiedIdentity);
   const legalNames = useMemo(() => identities.contracts.map(c => c.payload.legalName), [
@@ -92,8 +90,11 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;
     const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
-    const clearedByParty = identities.contracts.find(idn => idn.payload.legalName === clearedBy)?.payload.customer;
-    const listingType: ListingTypeRequest = isCollateralized ? { tag: 'CollateralizedRequest', value: {} } : { tag: 'ClearedRequest', value: clearedByParty || clearedBy}
+    const clearedByParty = identities.contracts.find(idn => idn.payload.legalName === clearedBy)
+      ?.payload.customer;
+    const listingType: ListingTypeRequest = isCollateralized
+      ? { tag: 'CollateralizedRequest', value: {} }
+      : { tag: 'ClearedRequest', value: clearedByParty || clearedBy };
     const request: RequestCreateListing = {
       listingId,
       listingType,
@@ -192,19 +193,19 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             required
             onChange={(_, change) => setDescription(change.value as string)}
           />
-            <Form.Select
-              className="select"
-              label="Cleared by"
-              placeholder="Select..."
-              required
-              value={clearedBy}
-              options={[
-                createDropdownProp("-- Collateralized Market --",COLLATERALIZED_VALUE),
-                ...legalNames.map(ln => createDropdownProp(ln)),
-                // ...clearedMarketServices.map(cms => createDropdownProp(cms.payload.provider)),
-              ]}
-              onChange={(_, change) => setClearedBy(change.value as string)}
-            />
+          <Form.Select
+            className="select"
+            label="Cleared by"
+            placeholder="Select..."
+            required
+            value={clearedBy}
+            options={[
+              createDropdownProp('-- Collateralized Market --', COLLATERALIZED_VALUE),
+              ...legalNames.map(ln => createDropdownProp(ln)),
+              // ...clearedMarketServices.map(cms => createDropdownProp(cms.payload.provider)),
+            ]}
+            onChange={(_, change) => setClearedBy(change.value as string)}
+          />
           <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
           <div className="submit">
             <Button type="submit" className="ghost" disabled={false} content="Submit" />

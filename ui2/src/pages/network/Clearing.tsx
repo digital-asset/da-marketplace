@@ -188,83 +188,83 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
         loading={offersLoading}
-        rows={[...offers.map((c, i) => {
-          return {
-            elements: [
-              getTemplateId(c.templateId),
-              getName(c.payload.customer),
-              <Button.Group>
-                {c.payload.customer === party ? (
-                  <>
-                    <ModalFormErrorHandled onSubmit={() => acceptOffer(c)} title="Accept Offer">
-                      <Form.Select
-                        label="Clearing Account"
-                        placeholder="Select..."
-                        required
-                        min={1}
-                        options={accountNames}
-                        value={clearingAccountName}
-                        onChange={(_, change) => setClearingAccountName(change.value as string)}
-                      />
-                      <Form.Select
-                        label="Margin Account"
-                        placeholder="Select..."
-                        required
-                        options={allocationAccountNames}
-                        value={marginAccountName}
-                        onChange={(_, change) => setMarginAccountName(change.value as string)}
-                      />
-                    </ModalFormErrorHandled>
-                    <Button
-                      size="small"
-                      className="ghost"
-                      variant="contained"
-                      onClick={() => rejectOffer(c)}
-                    >
-                      Reject
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      size="small"
-                      className="ghost"
-                      variant="contained"
-                      onClick={() => withdrawOffer(c)}
-                    >
-                      Withdraw
-                    </Button>
-                  </>
-                )}
-              </Button.Group>,
-            ],
-          };
-        }),
-        ...marketOffers.map((c, i) => {
-          return {
-            elements: [
-              getTemplateId(c.templateId),
-              getName(c.payload.customer),
-              <Button.Group>
-                {c.payload.customer === party ? (
-                  <>
-                    <Button
-                      size="small"
-                      className="ghost"
-                      variant="contained"
-                      onClick={() => acceptOffer(c)}
-                    >
-                      Accept
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                  </>
-                )}
-              </Button.Group>,
-            ],
-          };
-        }),
+        rows={[
+          ...offers.map((c, i) => {
+            return {
+              elements: [
+                getTemplateId(c.templateId),
+                getName(c.payload.customer),
+                <Button.Group>
+                  {c.payload.customer === party ? (
+                    <>
+                      <ModalFormErrorHandled onSubmit={() => acceptOffer(c)} title="Accept Offer">
+                        <Form.Select
+                          label="Clearing Account"
+                          placeholder="Select..."
+                          required
+                          min={1}
+                          options={accountNames}
+                          value={clearingAccountName}
+                          onChange={(_, change) => setClearingAccountName(change.value as string)}
+                        />
+                        <Form.Select
+                          label="Margin Account"
+                          placeholder="Select..."
+                          required
+                          options={allocationAccountNames}
+                          value={marginAccountName}
+                          onChange={(_, change) => setMarginAccountName(change.value as string)}
+                        />
+                      </ModalFormErrorHandled>
+                      <Button
+                        size="small"
+                        className="ghost"
+                        variant="contained"
+                        onClick={() => rejectOffer(c)}
+                      >
+                        Reject
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button
+                        size="small"
+                        className="ghost"
+                        variant="contained"
+                        onClick={() => withdrawOffer(c)}
+                      >
+                        Withdraw
+                      </Button>
+                    </>
+                  )}
+                </Button.Group>,
+              ],
+            };
+          }),
+          ...marketOffers.map((c, i) => {
+            return {
+              elements: [
+                getTemplateId(c.templateId),
+                getName(c.payload.customer),
+                <Button.Group>
+                  {c.payload.customer === party ? (
+                    <>
+                      <Button
+                        size="small"
+                        className="ghost"
+                        variant="contained"
+                        onClick={() => acceptOffer(c)}
+                      >
+                        Accept
+                      </Button>
+                    </>
+                  ) : (
+                    <></>
+                  )}
+                </Button.Group>,
+              ],
+            };
+          }),
         ]}
       />
       <Header as="h3">Role Offers</Header>
