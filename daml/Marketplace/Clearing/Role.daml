@@ -3,6 +3,7 @@ module Marketplace.Clearing.Role where
 import DA.Finance.Types
 
 import Marketplace.Clearing.Service qualified as Clearing
+import Marketplace.Utils
 
 template Role
   with
@@ -53,7 +54,7 @@ template Offer
         with
           ccpAccount : Account
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Decline : ()
         do
@@ -70,7 +71,7 @@ template Request
     controller operator can
       Approve : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Reject : ()
         do

@@ -7,6 +7,7 @@ import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Model as Settlement (SettlementDetails, SettlementInstruction(..))
 import Marketplace.Rule.AllocationAccount qualified as Allocation
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
+import Marketplace.Utils
 
 type S = Service
 
@@ -123,7 +124,7 @@ template Offer
           tradingAccount : Account
           allocationAccount : Account
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -156,4 +157,4 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..

@@ -4,6 +4,7 @@ import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
 import Marketplace.Trading.Error qualified as Error
 import Marketplace.Listing.Model (Listing(..), Status(..))
+import Marketplace.Utils
 
 template Service
   with
@@ -88,7 +89,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()
@@ -118,7 +119,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateListingRequest
   with

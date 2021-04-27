@@ -8,6 +8,7 @@ import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Trading.Error (Error (..))
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
+import Marketplace.Utils
 
 type T = Service
 
@@ -164,7 +165,7 @@ template Offer
           allocationAccount : Account
         do
           -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -196,7 +197,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateOrderRequest
   with

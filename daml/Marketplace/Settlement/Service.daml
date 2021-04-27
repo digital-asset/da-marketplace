@@ -2,6 +2,7 @@ module Marketplace.Settlement.Service where
 
 import DA.Finance.Asset (AssetDeposit)
 import Marketplace.Settlement.Model (SettlementInstruction(..), Settle(..))
+import Marketplace.Utils
 
 type T = Service
 
@@ -32,7 +33,7 @@ template Offer
     controller provider can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -48,7 +49,7 @@ template Request
     controller operator can
       Approve : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Reject : ()
         do

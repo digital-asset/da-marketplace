@@ -1,5 +1,6 @@
 module Marketplace.Regulator.Role where
 import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Utils
 
 template Role
   with
@@ -41,7 +42,7 @@ template Offer
     controller provider can
       Accept : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Decline : ()
         do
@@ -57,7 +58,7 @@ template Request
     controller operator can
       Approve : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Reject : ()
         do
