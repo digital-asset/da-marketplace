@@ -55,11 +55,16 @@ template Index
     maintainer key._1
 
     controller descriptionSignatories can
-      LookupOrInsert : (ContractId Index, Version) with claims : Claims
+      LookupOrInsert : (ContractId Index, Version, Optional (ContractId AssetDescription)) with
+          assetDescription : AssetDescription
+          newClaims : Claims
         do
-          case Map.lookup claims versions of
-             Some version -> return (self, version)
+          case Map.lookup newClaims versions of
+             Some version ->
+               pure (self, version, None)
              None -> do
                let nextVersion = size versions
-               cid <- create this with versions = Map.insert claims nextVersion versions
-               return (cid, nextVersion)
+                   adjustedId = assetDescription.assetId with version = nextVersion
+               cid <- create this with versions = Map.insert newClaims nextVersion versions
+               assetDescriptionCid <- create assetDescription with assetId = adjustedId, claims = newClaims
+               return (cid, nextVersion, Some assetDescriptionCid)

@@ -113,7 +113,8 @@ template LifecycleRequest
               election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
               election _ _ = deserialize choice -- will throw if the claims don't match
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
-          (_, postAssetVersion) <- exercise versionsCid . AssetDescription.LookupOrInsert $ serialize remaining
+          (_, postAssetVersion, _) <- exercise versionsCid AssetDescription.LookupOrInsert with newClaims = serialize remaining, assetDescription = description
+          -- payoutPortionCids
           payoutCids <- forA pending \(qty, asset) -> do
             payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty * assetDeposit.asset.quantity]
             exerciseByKey @AssetSettlementRule assetDeposit.account.id $
