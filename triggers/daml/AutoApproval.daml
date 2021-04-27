@@ -167,11 +167,6 @@ handleApprovalRule party = do
     generateServiceCommands CustodyService.OpenAccount           openRequests           custodyServices ++
     generateServiceCommands CustodyService.OpenAllocationAccount openAllocationRequests custodyServices
 
-  -- listingRequests          <- queryByParty @ListingService.CreateListingRequest (.provider)
-  -- listingServices          <- queryByParty @ListingService.Service              (.provider)
-  -- submitCommands $
-  --   generateServiceCommands ListingService.CreateListing listingRequests listingServices
-
   auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)
   submitCommands $

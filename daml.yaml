@@ -19,7 +19,7 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
-start-navigator: yes
+start-navigator: no
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox

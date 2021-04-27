@@ -4,7 +4,6 @@ import DA.Finance.Types
 
 import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as Market
-import Marketplace.Clearing.Market.Model
 import Marketplace.Utils
 
 template Role
@@ -50,7 +49,7 @@ template Role
         do
           create Market.Offer with ..
 
-      nonconsuming ApproveMarketRequest : (ContractId StandingObservationAddRequest,ContractId Market.Service)
+      nonconsuming ApproveMarketRequest : ContractId Market.Service
         with
           marketRequestCid : ContractId Market.Request
         do

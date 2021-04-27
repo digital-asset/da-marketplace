@@ -1,7 +1,5 @@
 module Marketplace.Clearing.Market.Service where
 
-import Marketplace.Clearing.Model
-import Marketplace.Clearing.Market.Model
 import Marketplace.Listing.Model
 import Marketplace.Utils
 
@@ -20,13 +18,6 @@ template Service
 
     controller customer can
 
-      nonconsuming RequestMemberStanding : Bool
-        with
-          member : Party
-        do
-          (_,ms) <- fetchByKey @MemberStanding (provider,member)
-          return True
-
       nonconsuming ApproveClearedListing : ContractId ClearedListingApproval
         with
           listingId : Text
@@ -34,18 +25,11 @@ template Service
         do
           create ClearedListingApproval with provider = customer; clearinghouse = provider; ..
 
-      nonconsuming ApproveTrade : ()
-        with
-          member : Party
-        do
-          return ()
-
     choice Terminate : ()
       with
         ctrl : Party
       controller ctrl
       do
-        create StandingObservationRemoveRequest with ..
         pure ()
 
 template Offer
@@ -84,10 +68,9 @@ template Request
       Reject : ()
         do pure ()
 
-    choice Approve : (ContractId StandingObservationAddRequest, ContractId Service)
+    choice Approve : ContractId Service
       with
         operator : Party
       controller operator, provider
       do
-        obsCid <- create StandingObservationAddRequest with ..
-        (,) obsCid <$> create Service with ..
+        create Service with ..

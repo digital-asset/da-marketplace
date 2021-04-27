@@ -195,13 +195,8 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
-<<<<<<< HEAD
-          create MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
-          create Service with ..
-=======
-          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
           createOrLookup Service with ..
->>>>>>> ab5d0739915e9d352f6a8220d6933ff317353730
 
       Decline : ()
         do
@@ -234,5 +229,5 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
-        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
         createOrLookup Service with ..

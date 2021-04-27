@@ -55,8 +55,6 @@ handleMatchingRule party = do
         ListingService.CollateralizedRequest -> emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
         ListingService.ClearedRequest p      -> do
             let clearers = filter (\(_,cms)-> cms.provider == p) clearedMarketServices
-            debug clearedMarketServices
-            debug clearers
             if not $ null clearers
             then emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
             else emitExerciseCmd cid ListingService.ListingRequestFailure with message = "Exchange is not a customer of clearing provider"; name = "NoClearingProvider"; code="000"

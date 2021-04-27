@@ -493,11 +493,11 @@ const QuickSetupTable = (props: {
     const operatorServiceContract = operatorService.contracts[0];
 
     if (!!party) {
-      // const token = party.token;
-      // await handleDeployment(token).then(_ => {
-      //   if (services?.length === 0) onComplete();
-      //   setToDeploy([]);
-      // });
+      const token = party.token;
+      await handleDeployment(token).then(_ => {
+        if (services?.length === 0) onComplete();
+        setToDeploy([]);
+      });
     }
 
     if (!provider || !operatorServiceContract || !services) return undefined;
@@ -721,9 +721,6 @@ const CreateRoleContract = (props: {
         await Promise.all(
           regulatorOffers.contracts.map(async c => {
             const [service] = await ledger.exercise(RegulatorOffer.Accept, c.contractId, args);
-            console.log(service);
-            console.log(legalName);
-            console.log(location);
 
             if (service && legalName && location) {
               await ledger.exercise(RegulatorService.RequestIdentityVerification, service, {

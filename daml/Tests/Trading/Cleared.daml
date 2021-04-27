@@ -6,15 +6,13 @@ import DA.Assert ((===))
 import DA.Either
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
-import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Clearing.Role qualified as Clearing
-import Marketplace.Clearing.Model qualified as Clearing
 import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as ClearedMarket
+import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 
 import DA.Finance.Types
-import DA.Foldable (mapA_)
 import DA.Next.Set qualified as Set
 import DA.List (head)
 
@@ -36,9 +34,6 @@ clearedTradingTest = do
   bob <- onboardCustomer providers "Bob"
   carl <- onboardCustomer providers "Carl"
 
-  -- Terminate Carl's relationship with the clearing house for further testing
-  submit carl.customer $ exerciseCmd carl.clearingServiceCid Clearing.Terminate with ctrl = carl.customer
-
   let
     listingId = "TSLAUSD"
     listingType = Listing.ClearedRequest clearinghouse
@@ -57,24 +52,18 @@ clearedTradingTest = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
 
-  -- !!>> Exchange cannot create listing without being a customer of the clearinghouse
+  -- !! Exchange cannot create listing without being a customer of the clearinghouse
   listingCid <- exchange `submitMustFail` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  -- > Setup clearing market service
+  -- Setup clearing market service
   marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = exchange, ..
   marketServiceCid <- submit exchange do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
 
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
-  -- t>> trigger adds standing
-  mssCids <- map fst <$> query @Clearing.MemberStanding clearinghouse
-  mapA_ (\cid -> submit clearinghouse $ exerciseCmd cid Clearing.MemberStanding_AddObservers  with newObservers = Set.fromList [exchange]) mssCids
-
-  standing <- submit exchange do exerciseCmd marketServiceCid ClearedMarket.RequestMemberStanding with member = alice.customer
-
   -- Create orders
   let aliceOrderId = Id with signatories = Set.fromList [ alice.customer ], label = "1", version = 0
-  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateClearedOrder with
         clearinghouse = clearinghouse
         details = Order.Details with
@@ -86,18 +75,8 @@ clearedTradingTest = do
             orderType = Order.Limit with price = 100.0
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
-  -- Have Bob fail a margin call
-  calculationCid <- submit clearinghouse $
-    exerciseCmd bob.clearingServiceCid Clearing.CreateMarginCalculation with
-      currency = "USD"; targetAmount = 50_000.0; calculationId = "34556"
-
-  submit clearinghouse $
-    exerciseByKeyCmd @Clearing.Service (operator,clearinghouse,bob.customer) Clearing.PerformMarginFill
-      with depositCids = []; marginDepositCids = []; ..
-
-  -- !!>> Bob is in bad standing, so the order should fail
   let bobOrderId = Id with signatories = Set.fromList [ bob.customer ], label = "2", version = 0
-  bobOrderResult <- bob.customer `submit` do
+  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateClearedOrder with
         clearinghouse = clearinghouse
         details = Order.Details with
@@ -107,10 +86,69 @@ clearedTradingTest = do
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
+  checkOrderStatusMatches bobOrderCid bob.customer Order.New
+
+  -- Acknowledge Orders
+  aliceOrderCid <- exchange `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = aliceCreateOrderRequestCid
+        providerOrderId = "alice's exchange order id"
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+
+  bobOrderCid <- exchange `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = bobCreateOrderRequestCid
+        providerOrderId = "bob's exchange order id"
+  checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
+
+  -- Confirm order matches
+  let execution = Order.Execution with
+        matchId = "1"
+        makerOrderId = aliceOrderId.label
+        takerOrderId = bobOrderId.label
+        quantity = 200.0
+        price = 100.0
+        timestamp = "123456"
+
+  Matching.Cleared clearedTradeCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+
+  aliceOrderCid <- fst . head <$> query @Order.T alice.customer
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
+  bobOrderCid <- fst . head <$> query @Order.T bob.customer
+  checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
+
+  (aliceClearedTradeSideCid, bobClearedTradeSideCid) <- clearinghouse `submit` exerciseCmd clearedTradeCid Order.ClearedTrade_Novate
+
+  -- Failed trades
+
+  -- Have Bob fail a margin call
+  calculationCid <- submit clearinghouse $
+    exerciseCmd bob.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = "USD"; targetAmount = 50_000.0; calculationId = "34556"
+
+  submit clearinghouse $
+    exerciseByKeyCmd @Clearing.Service (operator,clearinghouse,bob.customer) Clearing.PerformMarginFill
+      with depositCids = []; marginDepositCids = []; ..
+
+  -- !! Bob is in bad standing, so the new order should fail
+  let bobOrderId2 = Id with signatories = Set.fromList [ bob.customer ], label = "3", version = 0
+  bobOrderResult <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateClearedOrder with
+        clearinghouse = clearinghouse
+        details = Order.Details with
+            id = bobOrderId2
+            symbol = listingId
+            asset = shareAsset
+            side = Order.Buy
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
   assert $ isLeft bobOrderResult
 
-  -- !!>> Carl is not a member of the clearinghouse, so Carl should not be able to place an order
-  let carlOrderId = Id with signatories = Set.fromList [ carl.customer ], label = "3", version = 0
+  -- Terminate Carl's relationship with the clearing house for further testing
+  submit carl.customer $ exerciseCmd carl.clearingServiceCid Clearing.Terminate with ctrl = carl.customer
+
+  -- !! Carl is not a member of the clearinghouse, so Carl should not be able to place an order
+  let carlOrderId = Id with signatories = Set.fromList [ carl.customer ], label = "4", version = 0
   carlOrderResult <- carl.customer `submit` do
     exerciseCmd carl.tradingServiceCid Trading.RequestCreateClearedOrder with
         clearinghouse = clearinghouse

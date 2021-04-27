@@ -53,9 +53,8 @@ template Confirmation
           buyCid : ContractId Order.T
           sellCid : ContractId Order.T
         do
-          [buyOrder, sellOrder] <- forA [buyCid, sellCid] fetchAndArchive
-
-          forA_ [buyOrder, sellOrder] (\order -> do
+          forA_ [buyCid, sellCid] $ \orderCid -> do
+            order <- fetchAndArchive orderCid
             let
               isPartialFill = execution.quantity < order.remainingQuantity
               executions = execution :: order.executions
@@ -69,7 +68,7 @@ template Confirmation
                 create order with executions, remainingQuantity, collateral = order.collateral, status = Order.PartiallyExecuted
               else do
                 create order with executions, remainingQuantity, status = Order.FullyExecuted
-            return ())
+            return ()
 
       Process : ContractId Settlement.SettlementInstruction
         with

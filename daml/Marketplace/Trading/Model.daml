@@ -63,7 +63,7 @@ data Execution = Execution with
 
 type T = Order
 
-data TradeDeposit = Cleared { clearinghouse: Party} | Collateral (ContractId AssetDeposit) deriving (Show,Eq)
+data TradeCollateral = Cleared { clearinghouse: Party } | Collateral (ContractId AssetDeposit) deriving (Show, Eq)
 
 isClearedOrder : Order -> Bool
 isClearedOrder Order{collateral = Cleared _} = True
@@ -79,7 +79,7 @@ template Order
     providerOrderId : Optional Text
     executions : [Execution]
     remainingQuantity : Decimal
-    collateral : TradeDeposit -- Optional (ContractId AssetDeposit)
+    collateral : TradeCollateral
   where
     signatory operator, provider, customer
     observer case collateral of
@@ -96,8 +96,6 @@ template ClearedTrade
     clearinghouse : Party
     makerOrder : Order
     takerOrder : Order
-    makerOrderCid : ContractId Order
-    takerOrderCid : ContractId Order
     execution : Execution
   where
     signatory provider
@@ -107,22 +105,17 @@ template ClearedTrade
       ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
         do
           timeNovated <- getTime
-          -- makerOrder <- fetch makerOrderCid
-          -- takerOrder <- fetch takerOrderCid
-          let Execution{..} = execution
 
           makerCid <- create ClearedTradeSide with
             exchange = provider
             order = makerOrder
             participant = makerOrder.customer
-            timeMatched = timestamp
             ..
 
           takerCid <- create ClearedTradeSide with
             exchange = provider
             order = takerOrder
             participant = takerOrder.customer
-            timeMatched = timestamp
             ..
 
           return (makerCid, takerCid)
@@ -133,19 +126,8 @@ template ClearedTradeSide
     exchange : Party
     participant : Party
     order : Order
-    quantity : Decimal
-    price : Decimal
-    timeMatched : Text -- Should this be an Int so we can order if necessary?
-    timeNovated : Time -- previously timestamp
+    execution : Execution
+    timeNovated : Time
   where
     signatory clearinghouse, exchange
     observer exchange, participant
-
--- template ClearedTradeSide
---   with
---     operator : Party
---     provider : Party
---     clearinghouse : Party
---   where
---     signatory clearinghouse
---

@@ -132,12 +132,6 @@ start_exchange: $(exchange_pid)
 stop_exchange:
 	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
 
-$(exchange_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name AutoApproval:autoApprovalTrigger \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > $(exchange_log) & echo "$$!" > $(exchange_pid))
-
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
 	cd exberry_adapter && $(PYTHON) setup.py sdist
