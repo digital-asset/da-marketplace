@@ -49,10 +49,7 @@ import {
   Service as MatchingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import {
-  Offer as RegulatorOffer,
-  Role as RegulatorRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import {
   Offer as RegulatorServiceOffer,
@@ -61,19 +58,15 @@ import {
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { deployAutomation } from '../../automation';
+import {
+  deployAutomation,
+  getPublicAutomation,
+  MarketplaceTrigger,
+  TRIGGER_HASH,
+} from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
 import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
-
-type Offer =
-  | ClearingOffer
-  | CustodianOffer
-  | DistributorOffer
-  | SettlementOffer
-  | ExchangeOffer
-  | RegulatorOffer
-  | MatchingOffer;
 
 enum ServiceKind {
   CLEARING = 'Clearing',
@@ -712,6 +705,32 @@ const QuickSetup = () => {
       setAdminCredentials(localCreds);
     }
   }, []);
+
+  useEffect(() => {
+    // deploy auto-trigger for all parties
+    async function deployAllTriggers() {
+      if (isHubDeployment && parties.length > 0) {
+        const artifactHash = TRIGGER_HASH;
+
+        if (!artifactHash) {
+          return;
+        }
+
+        Promise.all(
+          parties.map(p => {
+            return deployAutomation(
+              artifactHash,
+              MarketplaceTrigger.AutoApproveTrigger,
+              p.token,
+              publicParty
+            );
+          })
+        );
+      }
+    }
+
+    deployAllTriggers();
+  }, [parties]);
 
   const handleLoad = async (newParties: PartyDetails[]) => {
     storeParties(newParties);
