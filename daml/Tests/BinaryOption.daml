@@ -25,8 +25,10 @@ aboveStrike : Decimal = 920.0
 belowStrike : Decimal = 630.0
 optionAssetLabel = "TSLA Oct22 700.0"
 
+
 endToEnd = script do
   requestExercise 920.0 $ date 2020 Mar 18
+
 
 testNotExercisedWhenFixingDateIsNotExpiry = script do
   (alice, bob) <- requestExercise aboveStrike notExpiry
@@ -38,6 +40,7 @@ testNotExercisedWhenFixingDateIsNotExpiry = script do
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 3000.0
 
+
 testNotExercisedWhenPriceIsBelowStrikeAtExpiry = script do
   (alice, bob) <- requestExercise belowStrike expiry
 
@@ -47,6 +50,7 @@ testNotExercisedWhenPriceIsBelowStrikeAtExpiry = script do
   bobsMoneyAssets === []
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 3000.0
+
 
 testExercisedOnExpiry = script do
   (alice, bob) <- requestExercise aboveStrike expiry
@@ -58,8 +62,10 @@ testExercisedOnExpiry = script do
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
   alicesMoney.asset.quantity === 2000.0
 
+
 getMoneyAssetsFor party = do
   queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
+
 
 requestExercise: Decimal -> Date -> Script (Party, Party)
 requestExercise underlyingPrice observationDate = script do

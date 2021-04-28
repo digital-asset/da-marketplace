@@ -116,6 +116,7 @@ template LifecycleRequest
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
           (_, postAssetVersion, _) <- exercise versionsCid AssetDescription.LookupOrInsert with newClaims = serialize remaining, assetDescription = description
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
+          -- Next step could be:
           -- create SettlementInstruction with buyer = customer; seller = issuer; ..
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
