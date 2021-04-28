@@ -13,6 +13,7 @@ import DA.Next.Set
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import DA.List (init)
 
 template OpenAccountRequest
   with
@@ -114,9 +115,11 @@ template LifecycleRequest
               election _ _ = deserialize choice -- will throw if the claims don't match
           Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
           (_, postAssetVersion, _) <- exercise versionsCid AssetDescription.LookupOrInsert with newClaims = serialize remaining, assetDescription = description
-          -- payoutPortionCids
-          payoutCids <- forA pending \(qty, asset) -> do
-            payoutDepositCid :: _ <- exercise safekeepingDepositCid $ AssetDeposit_Split [qty * assetDeposit.asset.quantity]
+          let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
+          -- create SettlementInstruction with buyer = customer; seller = issuer; ..
+          splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
+          let payoutCids = init splitResultDeposits
+          payoutCids <- forA payoutCids \payoutDepositCid -> do
             exerciseByKey @AssetSettlementRule assetDeposit.account.id $
                AssetSettlement_AddController description.issuer
             cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (

@@ -24,13 +24,13 @@ testBond = script do
       date2 = date 2002 Oct 31
   (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid) <- requestExerciseBond [date1, date2]
 
-  -- Lifecycle
+  -- First lifecycle
   setTime $ time date1 16 30 00
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = bondCid
-    choice = bobsDesc.claims -- TODO: How do we get this in practice? From a UI?
+    choice = bobsDesc.claims
   bondCid :: _ <- submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
-    safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
+    safekeepingDepositCid = corpActDepositCid
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList []
 
@@ -41,23 +41,22 @@ testBond = script do
   [(corpActDepositCid, alicesMoney)] <- getMoneyAssetsFor alice
   2990.0 === alicesMoney.asset.quantity
 
-  -- Second lifecycle fails. It should not, I think.
+  -- Second lifecycle
   setTime $ time date2 16 30 00
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = bondCid
-    choice = bobsDesc.claims -- TODO: How do we get this in practice? From a UI?
-  submitMustFail providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
-    safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
+    choice = bobsDesc.claims
+  submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
+    safekeepingDepositCid = corpActDepositCid
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList []
 
--- This is not even reached.
---   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
---   2 === bobsOption.asset.id.version
---   [(_, bobsMoney)] <- getMoneyAssetsFor bob.customer
---   110.0 === bobsMoney.asset.quantity
---   [(_, alicesMoney)] <- getMoneyAssetsFor alice
---   2880.0 === alicesMoney.asset.quantity
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
+  2 === bobsOption.asset.id.version
+  bobsMoneyWithCids <- getMoneyAssetsFor bob.customer
+  10.0 + 100.0 + 10.0 === sum (map (\(_, money) -> money.asset.quantity) bobsMoneyWithCids)
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  2880.0 === alicesMoney.asset.quantity
 
 getMoneyAssetsFor party = do
   queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
