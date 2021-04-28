@@ -13,6 +13,7 @@ import DA.Next.Set
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import DA.Finance.Trade.SettlementInstruction
 import DA.List (init)
 import DA.Action (void, when)
 
@@ -97,7 +98,7 @@ template LifecycleRequest
     signatory operator, provider, customer
 
     -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
-    choice Process : [ ContractId AssetDeposit ]
+    choice Process : (ContractId AssetDeposit, [ContractId SettlementInstruction])
       with
           investor: Party
           safekeepingDepositCid: ContractId AssetDeposit
@@ -120,23 +121,28 @@ template LifecycleRequest
           when (postAssetVersion /= assetDeposit.asset.id.version) $
             createNewVersionOfDescription description postAssetVersion serializedRemaining
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
-          -- Next step could be:
-          -- create SettlementInstruction with buyer = customer; seller = issuer; ..
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
-          payoutCids <- forA payoutCids \payoutDepositCid -> do
-            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-               AssetSettlement_AddController description.issuer
-            cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
-              AssetSettlement_Transfer with
-                receiverAccountId = assetDeposit.account.id
-                depositCid = payoutDepositCid)
-            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-              AssetSettlement_RemoveController description.issuer
-            pure cid
+              indexedPayoutCids = zip [1..length payoutCids] payoutCids
+          settlementInstructions <- forA indexedPayoutCids \(index, payoutDepositCid) ->
+            let settlementDetails = SettlementDetails with
+                  senderAccount = description.safekeepingAccount
+                  receiverAccount = assetDeposit.account
+                  depositCid = Some payoutDepositCid in
+            create SettlementInstruction with
+              asset = assetDeposit.asset
+              steps = [settlementDetails]
+              masterAgreement = MasterAgreement with
+                id = assetDeposit.asset.id with signatories = fromList [provider, customer, investor]
+                party1 = description.safekeepingAccount.owner
+                party2 = assetDeposit.account.owner
+              tradeId = createTradeId assetDeposit.asset.id index
+              observers = fromList [operator, provider, customer, investor]
+              ..
+          debug settlementInstructions
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
-          return $ assetDepositCid' :: payoutCids
+          return (assetDepositCid', settlementInstructions)
 
 createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
 createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
@@ -145,3 +151,11 @@ createNewVersionOfDescription description postAssetVersion serializedRemainingCl
     claims = serializedRemainingClaims
  where
   adjustedId = description.assetId with version = postAssetVersion
+
+-- TODO this is still not unique e.g. if I have two asset deposits with the same asset
+createTradeId : Id -> Int -> Id
+createTradeId assetId transferNumber =
+  Id with
+    signatories = assetId.signatories
+    label = assetId.label <> " " <> show transferNumber <> "th transfer"
+    version = assetId.version

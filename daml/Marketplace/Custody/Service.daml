@@ -4,6 +4,7 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Finance.Trade.SettlementInstruction
 import DA.Map (Map)
 import DA.Next.Set
 import Marketplace.Issuance.AssetDescription (Claims)
@@ -129,7 +130,7 @@ template Service
           Custody.TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
           exerciseByKey @AssetSettlementRule accountId transfer
 
-      nonconsuming Lifecycle : [ContractId AssetDeposit]
+      nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
         with
           lifecycleRequestCid : ContractId Custody.LifecycleRequest
           safekeepingDepositCid: ContractId AssetDeposit
