@@ -5,17 +5,13 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { MemberStanding } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
+import { MemberStanding, ClearedTrade, ClearedTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
 import { Header, Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import {
-  ClearedTrade,
-  ClearedTradeSide,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { CreateEvent } from '@daml/ledger';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -109,7 +105,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <Header as="h2">Accounts</Header>
       <StripedTable
         loading={accountsLoading}
-        rowsClickable
         headings={[
           'Account',
           'Provider',
@@ -127,14 +122,12 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               party === c.payload.account.provider ? 'Provider' : 'Client',
               Object.keys(c.payload.ctrls.textMap).join(', '),
             ],
-            onClick: () => history.push(`/app/custody/account/${c.contractId.replace('#', '_')}`),
           };
         })}
       />
       <Header as="h2">Cleared Trades</Header>
       <StripedTable
         loading={clearedTradesLoading}
-        rowsClickable
         headings={['Provider', 'Match Id', 'Maker Order Id', 'Taker Order Id', 'Quantity', 'Price']}
         rows={clearedTrades.map(c => {
           return {
@@ -160,7 +153,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <Header as="h2">Cleared Trade Sides</Header>
       <StripedTable
         loading={clearedTradeSidesLoading}
-        rowsClickable
         headings={['Exchange', 'Member', 'Listing', 'Quantity', 'Price', 'Time Matched']}
         rows={clearedTradeSides.map(c => {
           return {
@@ -172,7 +164,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               c.payload.execution.price,
               c.payload.execution.timestamp,
             ],
-            onClick: () => history.push(`/app/custody/account/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

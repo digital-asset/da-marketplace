@@ -261,13 +261,10 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               elements: [
                 getTemplateId(c.templateId),
                 getName(c.payload.customer),
-                <Button.Group>
                   {c.payload.customer === party ? (
                     <>
                       <Button
-                        size="small"
                         className="ghost"
-                        variant="contained"
                         onClick={() => acceptOffer(c)}
                       >
                         Accept
@@ -276,7 +273,6 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                   ) : (
                     <></>
                   )}
-                </Button.Group>,
               ],
             };
           }),

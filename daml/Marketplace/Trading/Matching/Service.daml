@@ -1,6 +1,7 @@
 module Marketplace.Trading.Matching.Service where
 
 import DA.Next.Set (fromList)
+import Marketplace.Clearing.Model qualified as Clearing
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
@@ -8,7 +9,7 @@ import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Utils
 
 data MatchResult
-  = Cleared (ContractId Order.ClearedTrade)
+  = Cleared (ContractId Clearing.ClearedTrade)
   | Collateralized (ContractId Settlement.SettlementInstruction)
 
 template Service
@@ -43,7 +44,7 @@ template Service
           else do
             exercise confirmationCid Confirmation.ProcessCleared with buyCid; sellCid
             let clearinghouse = makerOrder.collateral.clearinghouse
-            Cleared <$> create Order.ClearedTrade with ..
+            Cleared <$> create Clearing.ClearedTrade with ..
 
 template Offer
   with

@@ -18,7 +18,7 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
 
-const COLLATERALIZED_VALUE = 'COLLATERALIED_MARKET';
+const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -198,7 +198,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           />
           <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
           <div className="submit">
-            <Button type="submit" className="ghost" disabled={false} content="Submit" />
+            <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
             <a className="a2" onClick={() => history.goBack()}>
               <IconClose /> Cancel
             </a>

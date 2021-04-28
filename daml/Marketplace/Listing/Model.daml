@@ -12,7 +12,9 @@ data Status
   deriving (Eq, Show)
 
 data ListingType
-    = Cleared { clearinghouse: Party, approvalCid : (ContractId ClearedListingApproval) }
+    = Cleared with
+        clearinghouse: Party
+        approvalCid : (ContractId ClearedListingApproval)
     | Collateralized
   deriving (Eq, Show)
 

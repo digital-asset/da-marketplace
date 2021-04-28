@@ -28,10 +28,10 @@ traderCannotMoveAllocatedAsset = do
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
-  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with depositCid = aliceDepositCid; details = Order.Details with id = aliceOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Sell, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- submit alice.customer do exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with collateral = Order.Collateral aliceDepositCid; details = Order.Details with id = aliceOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Sell, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
-  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with depositCid = bobDepositCid; details = Order.Details with id = bobOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- submit bob.customer do exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with collateral = Order.Collateral bobDepositCid; details = Order.Details with id = bobOrderId, symbol = "TSLAUSD", asset = shareAsset, side = Order.Buy, timeInForce = Order.GTC, orderType = Order.Limit with price = 100.0
 
   -- Account owners can't move asset pledged as order collateral
   submitMustFail alice.customer do exerciseByKeyCmd @AllocationAccountRule alice.exchangeLockedAccount.id Transfer with depositCid = aliceDepositCid; transferTo = alice.mainAccount

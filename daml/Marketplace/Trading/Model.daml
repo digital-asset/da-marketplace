@@ -63,7 +63,11 @@ data Execution = Execution with
 
 type T = Order
 
-data TradeCollateral = Cleared { clearinghouse: Party } | Collateral (ContractId AssetDeposit) deriving (Show, Eq)
+data TradeCollateral
+    = Cleared with
+        clearinghouse: Party
+    | Collateral (ContractId AssetDeposit)
+  deriving (Show, Eq)
 
 isClearedOrder : Order -> Bool
 isClearedOrder Order{collateral = Cleared _} = True
@@ -89,45 +93,3 @@ template Order
     key (provider, details.id.label) : (Party, Text)
     maintainer key._1
 
-template ClearedTrade
-  with
-    operator : Party
-    provider : Party
-    clearinghouse : Party
-    makerOrder : Order
-    takerOrder : Order
-    execution : Execution
-  where
-    signatory provider
-    observer clearinghouse
-
-    controller clearinghouse can
-      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
-        do
-          timeNovated <- getTime
-
-          makerCid <- create ClearedTradeSide with
-            exchange = provider
-            order = makerOrder
-            participant = makerOrder.customer
-            ..
-
-          takerCid <- create ClearedTradeSide with
-            exchange = provider
-            order = takerOrder
-            participant = takerOrder.customer
-            ..
-
-          return (makerCid, takerCid)
-
-template ClearedTradeSide
-  with
-    clearinghouse : Party
-    exchange : Party
-    participant : Party
-    order : Order
-    execution : Execution
-    timeNovated : Time
-  where
-    signatory clearinghouse, exchange
-    observer exchange, participant

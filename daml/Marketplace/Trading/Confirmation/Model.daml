@@ -65,7 +65,7 @@ template Confirmation
 
             if isPartialFill
               then do
-                create order with executions, remainingQuantity, collateral = order.collateral, status = Order.PartiallyExecuted
+                create order with executions, remainingQuantity, status = Order.PartiallyExecuted
               else do
                 create order with executions, remainingQuantity, status = Order.FullyExecuted
             return ()

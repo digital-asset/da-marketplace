@@ -33,61 +33,46 @@ template Service
 
     let
       withdrawFromAllocationAccount : Order.TradeCollateral -> Update Order.TradeCollateral
-      withdrawFromAllocationAccount = \tc -> case tc of
+      withdrawFromAllocationAccount = \case
         (Order.Cleared party)         -> return $ Order.Cleared party
         (Order.Collateral depositCid) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
     controller customer can
-      nonconsuming RequestCreateClearedOrder : Either (ContractId Order.T)
-                                                      (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
+      nonconsuming RequestCreateOrder : Either (ContractId Order.T)
+                                               (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
         with
-          clearinghouse : Party
+          collateral : Order.TradeCollateral
           details : Order.Details
         do
-          -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
           let
             status = Order.New
             providerOrderId = None
             executions = []
             remainingQuantity = details.asset.quantity
-            collateral = Order.Cleared clearinghouse
 
-          optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
+          case collateral of
+            (Order.Collateral depositCid) -> do
+                collateral <- Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
+                createOrderRequestCid <- create CreateOrderRequest with ..
+                orderCid <- create Order.Order with ..
 
-          case optClearingService of
-            None -> do
-              let reason = Error with code = "1234"; message = "Customer is not a member of clearinghouse"
-              Left <$> create Order.Order with status = Order.Rejected{reason}; ..
+                return $ Right (orderCid, createOrderRequestCid, collateral)
 
-            (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
-                True -> do
-                    createOrderRequestCid <- create CreateOrderRequest with ..
-                    orderCid <- create Order.Order with ..
-                    return $ Right (orderCid, createOrderRequestCid, collateral)
-                False -> do
-                  let reason = Error with code = "1234"; message = "Rejected by Clearinghouse"
+            (Order.Cleared clearinghouse) -> do
+              optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
+              case optClearingService of
+                None -> do
+                  let reason = Error with code = "3001"; message = "Customer is not a member of clearinghouse"
                   Left <$> create Order.Order with status = Order.Rejected{reason}; ..
 
-
-      nonconsuming RequestCreateOrder : (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
-        with
-          details : Order.Details
-          depositCid : ContractId AssetDeposit
-        do
-          -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
-          let
-            status = Order.New
-            providerOrderId = None
-            executions = []
-            remainingQuantity = details.asset.quantity
-
-          collateral <- Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
-          createOrderRequestCid <- create CreateOrderRequest with ..
-          orderCid <- create Order.Order with ..
-
-          return (orderCid, createOrderRequestCid, collateral)
+                (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
+                    True -> do
+                        createOrderRequestCid <- create CreateOrderRequest with ..
+                        orderCid <- create Order.Order with ..
+                        return $ Right (orderCid, createOrderRequestCid, collateral)
+                    False -> do
+                      let reason = Error with code = "3002"; message = "Rejected by Clearinghouse"
+                      Left <$> create Order.Order with status = Order.Rejected{reason}; ..
 
       nonconsuming RequestCancelOrder : (ContractId Order.T, ContractId CancelOrderRequest)
         with

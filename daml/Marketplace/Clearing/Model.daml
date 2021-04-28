@@ -1,5 +1,8 @@
 module Marketplace.Clearing.Model where
 
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Model (Order(..))
+
 import DA.Finance.Types
 import DA.Next.Set (Set)
 import qualified DA.Next.Set as Set
@@ -171,3 +174,46 @@ template FulfilledMarkToMarketCalculation
 
     key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
+
+template ClearedTrade
+  with
+    operator : Party
+    provider : Party
+    clearinghouse : Party
+    makerOrder : Order
+    takerOrder : Order
+    execution : Order.Execution
+  where
+    signatory provider
+    observer clearinghouse
+
+    controller clearinghouse can
+      ClearedTrade_Novate : (ContractId ClearedTradeSide, ContractId ClearedTradeSide)
+        do
+          timeNovated <- getTime
+
+          makerCid <- create ClearedTradeSide with
+            exchange = provider
+            order = makerOrder
+            participant = makerOrder.customer
+            ..
+
+          takerCid <- create ClearedTradeSide with
+            exchange = provider
+            order = takerOrder
+            participant = takerOrder.customer
+            ..
+
+          return (makerCid, takerCid)
+
+template ClearedTradeSide
+  with
+    clearinghouse : Party
+    exchange : Party
+    participant : Party
+    order : Order
+    execution : Order.Execution
+    timeNovated : Time
+  where
+    signatory clearinghouse, exchange
+    observer exchange, participant
