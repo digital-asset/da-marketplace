@@ -1,4 +1,14 @@
-module Marketplace.Custody.Model where
+module Marketplace.Custody.Model (
+    OpenAccountRequest(..)
+  , OpenAllocationAccountRequest(..)
+  , CloseAccountRequest(..)
+  , CloseAllocationAccountRequest(..)
+  , CreditAccountRequest(..)
+  , DebitAccountRequest(..)
+  , TransferDepositRequest(..)
+  , LifecycleRequest(..)
+  , Process(..)
+) where
 
 import ContingentClaims.Claim (Claim, deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
