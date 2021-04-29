@@ -123,25 +123,39 @@ template LifecycleRequest
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
-              indexedPayoutCids = zip [1..length payoutCids] payoutCids
-          settlementInstructions <- forA indexedPayoutCids \(index, payoutDepositCid) ->
-            let settlementDetails = SettlementDetails with
-                  senderAccount = description.safekeepingAccount
-                  receiverAccount = assetDeposit.account
-                  depositCid = Some payoutDepositCid in
-            create SettlementInstruction with
-              asset = assetDeposit.asset
-              steps = [settlementDetails]
-              masterAgreement = MasterAgreement with
-                id = assetDeposit.asset.id with signatories = fromList [provider, customer, investor]
-                party1 = description.safekeepingAccount.owner
-                party2 = assetDeposit.account.owner
-              tradeId = createTradeId assetDeposit.asset.id index
-              observers = fromList [operator, provider, customer, investor]
-              ..
+              masterAgreementSignatories = [provider, customer, investor]
+          payoutInstructions <- createPayoutInstructions payoutCids description assetDeposit operator masterAgreementSignatories
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
-          return (assetDepositCid', settlementInstructions)
+          return (assetDepositCid', payoutInstructions)
+
+createPayoutInstructions : [ContractId AssetDeposit] -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids assetDescription assetDeposit operator masterAgreementSignatories =
+  forA indexedPayoutCids
+    \(index, payoutDepositCid) ->
+      create SettlementInstruction with
+        asset = assetDeposit.asset
+        steps = [createSettlementDetails payoutDepositCid]
+        masterAgreement = masterAgreement
+        tradeId = createTradeId assetDeposit.asset.id index
+        observers = fromList $ operator :: masterAgreementSignatories
+        ..
+  where
+    indexedPayoutCids = zip [1..length payoutCids] payoutCids
+    masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
+    createSettlementDetails payoutDepositCid =
+      SettlementDetails with
+        senderAccount = assetDescription.safekeepingAccount
+        receiverAccount = assetDeposit.account
+        depositCid = Some payoutDepositCid
+
+createMasterAgreement : AssetDescription -> AssetDeposit -> [Party] -> MasterAgreement
+createMasterAgreement assetDescription assetDeposit masterAgreementSignatories =
+  MasterAgreement with
+    id = assetDeposit.asset.id with
+      signatories = fromList masterAgreementSignatories
+    party1 = assetDescription.safekeepingAccount.owner
+    party2 = assetDeposit.account.owner
 
 createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
 createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
