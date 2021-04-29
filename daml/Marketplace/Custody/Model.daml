@@ -118,8 +118,7 @@ template LifecycleRequest
           let serializedRemaining = serialize remaining
           (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
           when (postAssetVersion /= assetDeposit.asset.id.version) $
-            let adjustedId = description.assetId with version = postAssetVersion in
-            void $ create description with assetId = adjustedId, claims = serializedRemaining
+            createNewVersionOfDescription description postAssetVersion serializedRemaining
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
           -- Next step could be:
           -- create SettlementInstruction with buyer = customer; seller = issuer; ..
@@ -138,3 +137,11 @@ template LifecycleRequest
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return $ assetDepositCid' :: payoutCids
+
+createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
+createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
+  void $ create description with
+    assetId = adjustedId
+    claims = serializedRemainingClaims
+ where
+  adjustedId = description.assetId with version = postAssetVersion
