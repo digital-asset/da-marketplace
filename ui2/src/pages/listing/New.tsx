@@ -192,7 +192,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             value={clearedBy}
             options={[
               createDropdownProp('-- Collateralized Market --', COLLATERALIZED_VALUE),
-              ...clearedMarketServices.map(cms => createDropdownProp(getName(cms.payload.provider), cms.payload.provider)),
+              ...clearedMarketServices.map(cms =>
+                createDropdownProp(getName(cms.payload.provider), cms.payload.provider)
+              ),
             ]}
             onChange={(_, change) => setClearedBy(change.value as string)}
           />

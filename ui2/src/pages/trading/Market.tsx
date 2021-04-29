@@ -216,13 +216,13 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       if (!depositCid) return;
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
         details,
-        collateral: {tag: "Collateral", value: depositCid},
+        collateral: { tag: 'Collateral', value: depositCid },
       });
     } else {
       const clearinghouse = listing.payload.listingType.value.clearinghouse;
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
         details,
-        collateral: {tag: "Cleared", value: { clearinghouse }}
+        collateral: { tag: 'Cleared', value: { clearinghouse } },
       });
     }
   };

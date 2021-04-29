@@ -5,7 +5,11 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { MemberStanding, ClearedTrade, ClearedTradeSide } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
+import {
+  MemberStanding,
+  ClearedTrade,
+  ClearedTradeSide,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
 import { Header, Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
