@@ -139,7 +139,6 @@ template LifecycleRequest
               tradeId = createTradeId assetDeposit.asset.id index
               observers = fromList [operator, provider, customer, investor]
               ..
-          debug settlementInstructions
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return (assetDepositCid', settlementInstructions)
