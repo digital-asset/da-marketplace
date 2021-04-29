@@ -113,6 +113,7 @@ template LifecycleRequest
           investor: Party
           safekeepingDepositCid: ContractId AssetDeposit
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          uniquePayoutId: Text
       controller investor
         do
           t <- toDateUTC <$> getTime
@@ -134,13 +135,13 @@ template LifecycleRequest
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
               masterAgreementSignatories = [provider, customer, investor]
-          payoutInstructions <- createPayoutInstructions payoutCids description assetDeposit operator masterAgreementSignatories
+          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator masterAgreementSignatories
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
           return (assetDepositCid', payoutInstructions)
 
-createPayoutInstructions : [ContractId AssetDeposit] -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
-createPayoutInstructions payoutCids assetDescription assetDeposit operator masterAgreementSignatories =
+createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator masterAgreementSignatories =
     snd <$> foldlA createSI (1, []) payoutCids
   where
     masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
@@ -154,7 +155,7 @@ createPayoutInstructions payoutCids assetDescription assetDeposit operator maste
         asset = assetDeposit.asset
         steps = [createSettlementDetails payoutDepositCid]
         masterAgreement = masterAgreement
-        tradeId = createTradeId assetDeposit.asset.id index
+        tradeId = createTradeId assetDeposit.asset.id index uniqueId
         observers = fromList $ operator :: masterAgreementSignatories
       pure (index + 1, siCid :: accumulator)
 
@@ -175,9 +176,9 @@ createNewVersionOfDescription description postAssetVersion serializedRemainingCl
   adjustedId = description.assetId with version = postAssetVersion
 
 -- TODO this is still not unique e.g. if I have two asset deposits with the same asset
-createTradeId : Id -> Int -> Id
-createTradeId assetId transferNumber =
+createTradeId : Id -> Int -> Text -> Id
+createTradeId assetId transferNumber uniqueId =
   Id with
     signatories = assetId.signatories
-    label = assetId.label <> " " <> show transferNumber <> "th transfer"
+    label = assetId.label <> " " <> show transferNumber <> "th transfer, ID: " <> uniqueId
     version = assetId.version

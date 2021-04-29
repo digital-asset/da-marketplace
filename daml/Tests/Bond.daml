@@ -34,6 +34,7 @@ testBond = script do
     safekeepingDepositCid = corpActDepositCid
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList []
+    uniquePayoutId = show date1
 
   submitMulti [alice, bob.customer, providers.bank] [] $
     exerciseCmd settlementInstructionCid SettlementInstruction_Process
@@ -55,6 +56,7 @@ testBond = script do
       safekeepingDepositCid = corpActDepositCid
       lifecycleRequestCid = lifecycleReqCid
       fixings = Map.fromList []
+      uniquePayoutId = show date2
 
   submitMulti [alice, bob.customer, providers.bank] [] $
     exerciseCmd settlementInstructionCid1 SettlementInstruction_Process

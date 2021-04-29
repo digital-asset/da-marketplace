@@ -130,6 +130,7 @@ requestExercise underlyingPrice observationDate = script do
       safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
       lifecycleRequestCid = lifecycleReqCid
       fixings = Map.fromList [ ("TSLA", Map.insert observationDate underlyingPrice Map.empty) ]
+      uniquePayoutId = "ABC-111"
 
   forA_ settlementInstructionCids $
     \settlementInstructionCid ->
