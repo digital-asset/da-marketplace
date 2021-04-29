@@ -17,6 +17,10 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 
+const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
+const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
+const CLEARING_OFFER_TEMPLATE = 'Marketplace.Clearing.Service.Offer';
+
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
 };
@@ -30,7 +34,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
   const { contracts: marketOffers, loading: marketOffersLoading } = useStreamQueries(MarketOffer);
   const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
-  const { contracts: marketRequests, loading: marketRequestsLoading } = useStreamQueries(MarketRequest);
+  const { contracts: marketRequests, loading: marketRequestsLoading } = useStreamQueries(
+    MarketRequest
+  );
 
   const { contracts: marketServices, loading: marketServicesLoading } = useStreamQueries(
     MarketService
@@ -40,7 +46,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
 
   const terminateService = async (c: CreateEvent<Service> | CreateEvent<MarketService>) => {
-    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Service') {
+    if (getTemplateId(c.templateId) === CLEARING_SERVICE_TEMPLATE) {
       await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
     } else {
       await ledger.exercise(MarketService.Terminate, c.contractId, { ctrl: party });
@@ -66,7 +72,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const approveRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
     if (!hasRole) return; // TODO: Display error
-    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+    if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,
       });
@@ -79,7 +85,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
 
   const rejectRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
     if (!hasRole) return; // TODO: Display error
-    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+    if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,
       });
@@ -91,7 +97,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   const cancelRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
-    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Request') {
+    if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Request.Cancel, c.contractId, {});
     } else {
       await ledger.exercise(MarketRequest.Cancel, c.contractId, {});
@@ -99,7 +105,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   const acceptOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
-    if (getTemplateId(c.templateId) === 'Marketplace.Clearing.Service.Offer') {
+    if (getTemplateId(c.templateId) === CLEARING_OFFER_TEMPLATE) {
       const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
       const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
       if (!clearingAccount || !marginAccount) return;
@@ -261,18 +267,15 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               elements: [
                 getTemplateId(c.templateId),
                 getName(c.payload.customer),
+                <>
                   {c.payload.customer === party ? (
-                    <>
-                      <Button
-                        className="ghost"
-                        onClick={() => acceptOffer(c)}
-                      >
-                        Accept
-                      </Button>
-                    </>
+                    <Button className="ghost" onClick={() => acceptOffer(c)}>
+                      Accept
+                    </Button>
                   ) : (
                     <></>
                   )}
+                </>,
               ],
             };
           }),
