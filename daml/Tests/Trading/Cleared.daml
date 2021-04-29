@@ -1,0 +1,169 @@
+module Tests.Trading.Cleared where
+
+import Daml.Script
+import Common
+import DA.Assert ((===))
+import DA.Either
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Clearing.Role qualified as Clearing
+import Marketplace.Clearing.Model qualified as Clearing
+import Marketplace.Clearing.Service qualified as Clearing
+import Marketplace.Clearing.Market.Service qualified as ClearedMarket
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Listing.Service qualified as Listing
+
+import DA.Finance.Types
+import DA.Next.Set qualified as Set
+import DA.List (head)
+
+checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
+checkOrderStatusMatches orderCid party status = do
+  Some order <- queryContractId @Order.T party orderCid
+  order.status === status
+  pure ()
+
+clearedTradingTest : Script ()
+clearedTradingTest = do
+  providers@Providers{operator; exchange; matchingServiceCid; clearinghouse, clearingRoleCid, bank, public} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
+
+  let
+    submit : Party -> Commands t -> Script t
+    submit p = submitMulti [p] [public]
+
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  carl <- onboardCustomer providers "Carl"
+
+  let
+    listingId = "TSLAUSD"
+    listingType = Listing.ClearedRequest clearinghouse
+    calendarId = "1261007448"
+    description = "Tesla Inc."
+    tradedAssetId = tsla.id
+    quotedAssetId = usd.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "123"
+    observers = [public]
+
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+
+  -- !! Alice cannot create listing without being a customer of the clearinghouse
+  alice.customer `submitMustFail` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+
+  -- Setup clearing market service
+  marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = alice.customer, ..
+  marketServiceCid <- submit alice.customer do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
+
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+
+  -- Create orders
+  let aliceOrderId = Id with signatories = Set.fromList [ alice.customer ], label = "1", version = 0
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Cleared clearinghouse
+        details = Order.Details with
+            id = aliceOrderId
+            symbol = listingId
+            asset = tsla with quantity = 200.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.New
+
+  let bobOrderId = Id with signatories = Set.fromList [ bob.customer ], label = "2", version = 0
+  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submitMulti [bob.customer] [public] $ do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Cleared clearinghouse
+        details = Order.Details with
+            id = bobOrderId
+            symbol = listingId
+            asset = shareAsset
+            side = Order.Buy
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+  checkOrderStatusMatches bobOrderCid bob.customer Order.New
+
+  -- Acknowledge Orders
+  aliceOrderCid <- exchange `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = aliceCreateOrderRequestCid
+        providerOrderId = "alice's exchange order id"
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+
+  bobOrderCid <- exchange `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = bobCreateOrderRequestCid
+        providerOrderId = "bob's exchange order id"
+  checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
+
+  -- Confirm order matches
+  let execution = Order.Execution with
+        matchId = "1"
+        makerOrderId = aliceOrderId.label
+        takerOrderId = bobOrderId.label
+        quantity = 200.0
+        price = 100.0
+        timestamp = "123456"
+
+  Matching.Cleared clearedTradeCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+
+  aliceOrderCid <- fst . head <$> query @Order.T alice.customer
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
+  bobOrderCid <- fst . head <$> query @Order.T bob.customer
+  checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
+
+  (aliceClearedTradeSideCid, bobClearedTradeSideCid) <- clearinghouse `submit` exerciseCmd clearedTradeCid Clearing.ClearedTrade_Novate
+
+  -- Failed trades
+
+  -- Have Bob fail a margin call
+  calculationCid <- submit clearinghouse $
+    exerciseCmd bob.clearingServiceCid Clearing.CreateMarginCalculation with
+      currency = "USD"; targetAmount = 50_000.0; calculationId = "34556"
+
+  submit clearinghouse $
+    exerciseByKeyCmd @Clearing.Service (operator,clearinghouse,bob.customer) Clearing.PerformMarginFill
+      with depositCids = []; marginDepositCids = []; ..
+
+  -- !! Bob is in bad standing, so the new order should fail
+  let bobOrderId2 = Id with signatories = Set.fromList [ bob.customer ], label = "3", version = 0
+  bobOrderResult <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Cleared clearinghouse
+        details = Order.Details with
+            id = bobOrderId2
+            symbol = listingId
+            asset = shareAsset
+            side = Order.Buy
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+  assert $ isLeft bobOrderResult
+
+  -- Terminate Carl's relationship with the clearing house for further testing
+  submit carl.customer $ exerciseCmd carl.clearingServiceCid Clearing.Terminate with ctrl = carl.customer
+
+  -- !! Carl is not a member of the clearinghouse, so Carl should not be able to place an order
+  let carlOrderId = Id with signatories = Set.fromList [ carl.customer ], label = "4", version = 0
+  carlOrderResult <- carl.customer `submit` do
+    exerciseCmd carl.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Cleared clearinghouse
+        details = Order.Details with
+            id = carlOrderId
+            symbol = listingId
+            asset = shareAsset
+            side = Order.Buy
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+  assert $ isLeft carlOrderResult
+
+  return ()

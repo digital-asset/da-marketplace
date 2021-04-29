@@ -1,5 +1,6 @@
 module Marketplace.Listing.Model where
 
+-- import Marketplace.Clearing.Market.Service qualified as Market
 import DA.Finance.Types (Id)
 import DA.Next.Set (Set)
 
@@ -10,11 +11,19 @@ data Status
     | Disabled
   deriving (Eq, Show)
 
+data ListingType
+    = Cleared with
+        clearinghouse: Party
+        approvalCid : (ContractId ClearedListingApproval)
+    | Collateralized
+  deriving (Eq, Show)
+
 template Listing
   with
     operator : Party
     provider : Party
     customer : Party
+    listingType : ListingType
     listingId : Text
     calendarId : Text
     description : Text
@@ -33,4 +42,17 @@ template Listing
 
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
     key (operator, provider, listingId) : (Party, Party, Text)
+    maintainer key._1
+
+template ClearedListingApproval
+  with
+    provider : Party
+    clearinghouse : Party
+    listingId : Text
+    observers : Set Party
+  where
+    signatory provider, clearinghouse
+    observer observers
+
+    key (provider, clearinghouse, listingId) : (Party, Party, Text)
     maintainer key._1

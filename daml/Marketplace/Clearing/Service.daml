@@ -54,6 +54,12 @@ template Service
             newMarginSatisfied = False; ..
         exercise calculationCid MarginCalculation_Resolve with note = ""; ..
 
+    controller customer can
+      nonconsuming ApproveTrade : Bool
+        do
+          (_,memberStanding) <- fetchByKey @MemberStanding (provider,customer)
+          return $ memberStanding.marginSatisfied && memberStanding.mtmSatisfied
+
     controller provider can
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
         with
@@ -189,7 +195,7 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
-          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
           createOrLookup Service with ..
 
       Decline : ()
@@ -223,5 +229,5 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
-        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
+        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
         createOrLookup Service with ..

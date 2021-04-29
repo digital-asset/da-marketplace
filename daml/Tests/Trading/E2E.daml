@@ -37,6 +37,7 @@ tradingEndToEndTest = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
     calendarId = "1261007448"
     description = "Tesla Inc."
     tradedAssetId = tsla.id
@@ -52,9 +53,9 @@ tradingEndToEndTest = do
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
-  (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = aliceDepositCid
+        collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
             symbol = listingId
@@ -65,9 +66,9 @@ tradingEndToEndTest = do
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
   let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
-  (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
             symbol = listingId
@@ -99,7 +100,7 @@ tradingEndToEndTest = do
         price = 100.0
         timestamp = "123456"
 
-  settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+  Matching.Collateralized settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
 
   aliceOrderCid <- fst . head <$> query @Order.T alice.customer
   checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted

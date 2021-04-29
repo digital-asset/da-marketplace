@@ -10,6 +10,8 @@ import Daml.Trigger
 
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as Service
+import qualified Marketplace.Listing.Service as ListingService
+import qualified Marketplace.Clearing.Market.Service as MarketClearingService
 import qualified Marketplace.Trading.Matching.Service as Matching
 
 import Utils
@@ -21,7 +23,10 @@ handleMatching = Trigger
   { initialize = return 0
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Service.CreateOrderRequest
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @ListingService.Service
+                                              , registeredTemplate @ListingService.CreateListingRequest
+                                              , registeredTemplate @MarketClearingService.Service
+                                              , registeredTemplate @Service.CreateOrderRequest
                                               , registeredTemplate @Service.CancelOrderRequest
                                               , registeredTemplate @Order.T ]
   , heartbeat = None
@@ -38,6 +43,16 @@ handleMatchingRule party = do
     emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show currentOrderId
     debug "Acknowledging order"
     modify (+1)
+
+  time <- getTime
+  -- Acknowledge all 'Order.CancelRequest'
+  listingServices <- query @ListingService.Service
+  clearedMarketServices <- query @MarketClearingService.Service
+  createListingRequests <- query @ListingService.CreateListingRequest
+
+  forA_ createListingRequests \(cid,lr) -> do
+    emitExerciseCmd cid ListingService.ListingRequestSuccess with providerId = show time
+    debug "Acknowledging listing creation"
 
   -- Acknowledge all 'Order.CancelRequest'
   orderCancelRequests <- query @Service.CancelOrderRequest

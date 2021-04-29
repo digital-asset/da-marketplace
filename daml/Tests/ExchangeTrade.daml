@@ -33,6 +33,7 @@ setup = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
     calendarId = "1"
     description = "Tesla Inc."
     tradedAssetId = shareAsset.id
@@ -47,7 +48,7 @@ setup = do
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
   -- > Alice places a bid for shares
-  (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -58,10 +59,10 @@ setup = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        depositCid = aliceDepositCid
+        collateral = Order.Collateral aliceDepositCid
 
   -- > Bob places a new offer for shares
-  (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -72,10 +73,10 @@ setup = do
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   -- Exchange matches the two orders
-  settlementInstructionCid <- submit exchange do
+  Matching.Collateralized settlementInstructionCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -112,6 +113,7 @@ partialExecutionsTest = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
     calendarId = "1"
     description = "Tesla Inc."
     tradedAssetId = shareAsset.id
@@ -136,7 +138,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        depositCid = aliceDepositCid
+        collateral = Order.Collateral aliceDepositCid
 
   -- > Bob places 4 offers for his shares
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobDepositCid AssetDeposit_Split with quantities = [50.0]
@@ -150,7 +152,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -163,7 +165,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -176,7 +178,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
   submit bob.customer do
@@ -189,7 +191,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   -- Exchange matches the the buy order to the 4 sell orders
   settlementInstructionCids <- forA ["100", "101", "102", "103"] (\orderId ->
@@ -206,7 +208,7 @@ partialExecutionsTest = do
     )
 
   -- Exchange settles the instructed trade
-  forA_ settlementInstructionCids (\settlementInstructionCid ->
+  forA_ settlementInstructionCids (\(Matching.Collateralized settlementInstructionCid) ->
     submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle)
 
   pure ()
