@@ -5,7 +5,7 @@ export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
 export const EXBERRY_HASH = process.env.REACT_APP_EXBERRY_HASH;
 
 export enum MarketplaceTrigger {
-  AutoApproveTrigger = 'AutoApproval:handleApprovalTrigger',
+  AutoApproveTrigger = 'AutoApproval:autoApprovalTrigger',
   ClearingTrigger = 'ClearingTrigger:handleClearing',
   MatchingEngine = 'MatchingEngine:handleMatching',
   SettlementInstructionTrigger = 'SettlementInstructionTrigger:handleSettlementInstruction',

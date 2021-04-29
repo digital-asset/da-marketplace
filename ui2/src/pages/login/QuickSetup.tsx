@@ -49,33 +49,24 @@ import {
   Service as MatchingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import {
-  Offer as RegulatorOffer,
-  Role as RegulatorRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import {
   Offer as RegulatorServiceOffer,
   Service as RegulatorService,
-  IdentityVerificationRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { CreateEvent } from '@daml/ledger';
-import { deployAutomation } from '../../automation';
+import {
+  deployAutomation,
+  getPublicAutomation,
+  MarketplaceTrigger,
+  TRIGGER_HASH,
+} from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
 import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
-
-type Offer =
-  | ClearingOffer
-  | CustodianOffer
-  | DistributorOffer
-  | SettlementOffer
-  | ExchangeOffer
-  | RegulatorOffer
-  | MatchingOffer;
 
 enum ServiceKind {
   CLEARING = 'Clearing',
@@ -151,7 +142,6 @@ const QuickSetupTable = (props: {
   const operatorService = useStreamQueries(OperatorService);
 
   const clearingOffers = useStreamQueries(ClearingOffer);
-  const regulatorOffers = useStreamQueries(RegulatorOffer);
   const regulatorServiceOffers = useStreamQueries(RegulatorServiceOffer);
   const custodianOffers = useStreamQueries(CustodianOffer);
   const distributorOffers = useStreamQueries(DistributorOffer);
@@ -160,7 +150,6 @@ const QuickSetupTable = (props: {
   const matchingOffers = useStreamQueries(MatchingOffer);
 
   const verifiedIdentities = useStreamQueries(VerifiedIdentity);
-  const verifiedIdentityRequests = useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     setLoading(
@@ -198,38 +187,6 @@ const QuickSetupTable = (props: {
     exhangeOffers.loading,
     matchingOffers.loading,
     verifiedIdentities.loading,
-  ]);
-
-  useEffect(() => {
-    const verifyIdentities = async () => {
-      await Promise.all(
-        verifiedIdentityRequests.contracts.map(async contract => {
-          const regulatorService = regulatorServices.contracts.find(
-            c => c.payload.customer === contract.payload.customer
-          );
-
-          if (regulatorService) {
-            await ledger.exercise(RegulatorService.VerifyIdentity, regulatorService.contractId, {
-              identityVerificationRequestCid: contract.contractId,
-            });
-          }
-        })
-      );
-    };
-
-    if (
-      !verifiedIdentityRequests.loading &&
-      !regulatorServices.loading &&
-      regulatorServices.contracts.length > 0 &&
-      verifiedIdentityRequests.contracts.length > 0
-    ) {
-      verifyIdentities();
-    }
-  }, [
-    verifiedIdentityRequests.loading,
-    verifiedIdentityRequests,
-    regulatorServices.loading,
-    regulatorServices,
   ]);
 
   useEffect(() => {
@@ -374,12 +331,13 @@ const QuickSetupTable = (props: {
             {verifiedIdentity?.legalName ? (
               <Form.Input
                 label={<h4 className="dark">Legal Name</h4>}
-                value={verifiedIdentity?.legalName}
+                value={verifiedIdentity?.legalName || ''}
                 disabled={true}
               />
             ) : (
               <Form.Input
                 label={<h4 className="dark">Legal Name</h4>}
+                value={quickSetupData?.legalName || ''}
                 placeholder="Legal Name"
                 onChange={e =>
                   setQuickSetupData({ ...quickSetupData, legalName: e.currentTarget.value })
@@ -393,12 +351,13 @@ const QuickSetupTable = (props: {
             {verifiedIdentity?.location ? (
               <Form.Input
                 label={<h4 className="dark">Location</h4>}
-                value={verifiedIdentity?.location}
+                value={verifiedIdentity?.location || ''}
                 disabled={true}
               />
             ) : (
               <Form.Input
                 label={<h4 className="dark">Location</h4>}
+                value={quickSetupData?.location || ''}
                 placeholder="Location"
                 onChange={e =>
                   setQuickSetupData({ ...quickSetupData, location: e.currentTarget.value })
@@ -505,10 +464,12 @@ const QuickSetupTable = (props: {
     const id = operatorServiceContract.contractId;
 
     if (!findExistingOffer(ServiceKind.REGULATOR)) {
-      const regId = regulatorRoles.contracts[0].contractId;
-      await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
-        customer: provider,
-      });
+      if (!regulatorServices.contracts.find(c => c.payload.customer === provider)) {
+        const regId = regulatorRoles.contracts[0].contractId;
+        await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
+          customer: provider,
+        }); // trigger auto-approves
+      }
     }
 
     Promise.all(
@@ -668,126 +629,55 @@ const CreateRoleContract = (props: {
   operator: string;
   onFinish: () => void;
 }) => {
-  const { quickSetupData, operator, onFinish } = props;
-  const { party, services, legalName, location } = quickSetupData;
+  const { quickSetupData, onFinish } = props;
+  const { legalName, location } = quickSetupData;
 
   const [loading, setLoading] = useState<boolean>(false);
 
   const ledger = useLedger();
 
-  const custodianOffers = useStreamQueries(CustodianOffer);
-  const clearingOffers = useStreamQueries(ClearingOffer);
-  const distributorOffers = useStreamQueries(DistributorOffer);
-  const settlementOffers = useStreamQueries(SettlementOffer);
-  const exhangeOffers = useStreamQueries(ExchangeOffer);
-  const matchingOffers = useStreamQueries(MatchingOffer);
-  const regulatorOffers = useStreamQueries(RegulatorOffer);
+  const regulatorServices = useStreamQueries(RegulatorService);
 
   useEffect(() => {
-    setLoading(
-      custodianOffers.loading ||
-        clearingOffers.loading ||
-        distributorOffers.loading ||
-        settlementOffers.loading ||
-        exhangeOffers.loading ||
-        matchingOffers.loading ||
-        regulatorOffers.loading
-    );
-  }, [
-    clearingOffers.loading,
-    custodianOffers.loading,
-    distributorOffers.loading,
-    settlementOffers.loading,
-    exhangeOffers.loading,
-    matchingOffers.loading,
-    regulatorOffers.loading,
-  ]);
+    setLoading(regulatorServices.loading);
+  }, [regulatorServices.loading]);
 
   useEffect(() => {
     if (loading) {
       return;
     }
-    handleVerifiedIdentity();
-    handleOffers();
-  }, [loading]);
 
-  async function handleVerifiedIdentity() {
-    let retries = 0;
+    async function handleVerifiedIdentity() {
+      let retries = 0;
 
-    const args = { operator, provider: operator, customer: party };
-
-    while (retries < 3) {
-      if (regulatorOffers.contracts.length > 0) {
-        await Promise.all(
-          regulatorOffers.contracts.map(async c => {
-            const [service] = await ledger.exercise(RegulatorOffer.Accept, c.contractId, args);
-
-            if (service && legalName && location) {
-              await ledger.exercise(RegulatorService.RequestIdentityVerification, service, {
-                legalName: legalName,
-                location: location,
-                observers: [publicParty],
-              });
-            }
-          })
-        );
-        break;
-      } else {
-        await halfSecondPromise();
-        retries++;
-      }
-    }
-  }
-
-  async function handleOffers() {
-    if (!services) return;
-
-    await Promise.all(
-      services.map(async service => {
-        switch (service) {
-          case ServiceKind.CLEARING:
-            // TODO: this won't work...
-            return acceptAllOffers([], ClearingOffer.Accept);
-          case ServiceKind.CUSTODY:
-            return acceptAllOffers(custodianOffers.contracts, CustodianOffer.Accept);
-          case ServiceKind.TRADING:
-            return acceptAllOffers(exhangeOffers.contracts, ExchangeOffer.Accept);
-          case ServiceKind.MATCHING:
-            return acceptAllOffers(matchingOffers.contracts, MatchingOffer.Accept);
-          case ServiceKind.SETTLEMENT:
-            return acceptAllOffers(settlementOffers.contracts, SettlementOffer.Accept);
-          case ServiceKind.LISTING:
-            return acceptAllOffers(distributorOffers.contracts, DistributorOffer.Accept);
-          case ServiceKind.REGULATOR:
-            return acceptAllOffers(regulatorOffers.contracts, RegulatorOffer.Accept);
+      while (retries < 3) {
+        if (regulatorServices.contracts.length > 0) {
+          await Promise.all(
+            regulatorServices.contracts.map(async service => {
+              if (legalName && location) {
+                await ledger.exercise(
+                  RegulatorService.RequestIdentityVerification,
+                  service.contractId,
+                  {
+                    legalName,
+                    location,
+                    observers: [publicParty],
+                  }
+                );
+              }
+            })
+          );
+          break;
+        } else {
+          await halfSecondPromise();
+          retries++;
         }
-      })
-    );
-    onFinish();
-  }
-
-  const acceptAllOffers = async (
-    contracts: readonly CreateEvent<Offer, undefined, any>[],
-    choice: any
-  ) => {
-    const args = { operator, provider: party };
-
-    let retries = 0;
-
-    while (retries < 3) {
-      if (contracts.length > 0) {
-        await Promise.all(
-          contracts.map(async c => {
-            return await ledger.exercise(choice, c.contractId, args);
-          })
-        );
-        break;
-      } else {
-        await halfSecondPromise();
-        retries++;
       }
+      onFinish();
     }
-  };
+
+    handleVerifiedIdentity();
+  }, [loading, regulatorServices.contracts]);
 
   return null;
 };
@@ -816,6 +706,32 @@ const QuickSetup = () => {
     }
   }, []);
 
+  useEffect(() => {
+    // deploy auto-trigger for all parties
+    async function deployAllTriggers() {
+      if (isHubDeployment && parties.length > 0) {
+        const artifactHash = TRIGGER_HASH;
+
+        if (!artifactHash) {
+          return;
+        }
+
+        Promise.all(
+          parties.map(p => {
+            return deployAutomation(
+              artifactHash,
+              MarketplaceTrigger.AutoApproveTrigger,
+              p.token,
+              publicParty
+            );
+          })
+        );
+      }
+    }
+
+    deployAllTriggers();
+  }, [parties]);
+
   const handleLoad = async (newParties: PartyDetails[]) => {
     storeParties(newParties);
     handleNewParties(newParties);
@@ -835,8 +751,8 @@ const QuickSetup = () => {
       <div className="quick-setup">
         <div className="setup-tile">
           <span className="login-details dark">
-            To get started, add the UserAdmin party found in the DABL Console Users tab, download
-            the <code className="link">parties.json</code> file, and upload it here:
+            To get started, add the UserAdmin party found in the Daml Hub Console Users tab,
+            download the <code className="link">parties.json</code> file, and upload it here:
           </span>
           <label className="custom-file-upload button ui">
             <DablPartiesInput
@@ -877,7 +793,7 @@ const QuickSetup = () => {
           />
         </AutomationProvider>
       </DamlLedger>
-      {quickSetupData && quickSetupData.party && quickSetupData.services && submitSetupData && (
+      {quickSetupData.party && quickSetupData.services && submitSetupData && (
         <DamlLedger
           party={quickSetupData.party.party}
           token={quickSetupData.party.token}
@@ -896,7 +812,7 @@ const QuickSetup = () => {
       )}
     </div>
   ) : (
-    <LoadingWheel label={'Loading credentials...'} />
+    <LoadingWheel label="Loading credentials..." />
   );
 };
 
