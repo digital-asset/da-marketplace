@@ -15,7 +15,7 @@ import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import DA.Finance.Trade.SettlementInstruction
 import DA.List (init)
-import DA.Action (void, when)
+import DA.Action (void, when, foldlA)
 
 template OpenAccountRequest
   with
@@ -131,23 +131,22 @@ template LifecycleRequest
 
 createPayoutInstructions : [ContractId AssetDeposit] -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
 createPayoutInstructions payoutCids assetDescription assetDeposit operator masterAgreementSignatories =
-  forA indexedPayoutCids
-    \(index, payoutDepositCid) ->
-      create SettlementInstruction with
-        asset = assetDeposit.asset
-        steps = [createSettlementDetails payoutDepositCid]
-        masterAgreement = masterAgreement
-        tradeId = createTradeId assetDeposit.asset.id index
-        observers = fromList $ operator :: masterAgreementSignatories
-        ..
+    snd <$> foldlA createSI (1, []) payoutCids
   where
-    indexedPayoutCids = zip [1..length payoutCids] payoutCids
     masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
     createSettlementDetails payoutDepositCid =
       SettlementDetails with
         senderAccount = assetDescription.safekeepingAccount
         receiverAccount = assetDeposit.account
         depositCid = Some payoutDepositCid
+    createSI (index, accumulator) payoutDepositCid = do
+      siCid <- create SettlementInstruction with
+        asset = assetDeposit.asset
+        steps = [createSettlementDetails payoutDepositCid]
+        masterAgreement = masterAgreement
+        tradeId = createTradeId assetDeposit.asset.id index
+        observers = fromList $ operator :: masterAgreementSignatories
+      pure (index + 1, siCid :: accumulator)
 
 createMasterAgreement : AssetDescription -> AssetDeposit -> [Party] -> MasterAgreement
 createMasterAgreement assetDescription assetDeposit masterAgreementSignatories =
