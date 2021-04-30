@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { Template } from '@daml/types';
 
 import { computeCredentials, retrieveCredentials } from '../Credentials';
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId, dablHostname } from '../config';
+import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config';
 
 import useDamlStreamQuery, { StreamErrors } from './websocket';
 import { CreateEvent } from '@daml/ledger';
@@ -52,7 +52,7 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
   return publicToken;
 };
 
-const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) => {
+const QueryStreamProvider = (props: PropsWithChildren<any>) => {
   const { children } = props;
   const [publicTemplateIds, setPublicTemplateIds] = useState<string[]>([]);
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
@@ -88,6 +88,7 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
     loading: partyLoading,
     active: connectionActive,
   } = useDamlStreamQuery(partyTemplateIds, partyToken);
+
   const {
     contracts: publicContracts,
     errors: publicStreamErrors,
@@ -134,7 +135,6 @@ const QueryStreamProvider = <T extends object>(props: PropsWithChildren<any>) =>
   }, [partyLoading, publicLoading]);
 
   useEffect(() => {
-    console.log(`active changed: ${connectionActive}`);
     setQueryStream(queryStream => ({
       ...queryStream,
       connectionActive,
@@ -231,7 +231,7 @@ export function useContractQuery<T extends object, K, I extends string = string>
         loading: partyLoading,
       };
     }
-  }, [asPublic, templateId, publicContracts, partyContracts]);
+  }, [asPublic, templateId, publicLoading, partyLoading, publicContracts, partyContracts]);
 
   useEffect(() => {
     if (asPublic === AS_PUBLIC) {
