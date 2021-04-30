@@ -38,7 +38,9 @@ template Service
           listingType <- case listingType of
             CollateralizedRequest -> return Collateralized
             (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator, p, customer) Clearing.ApproveClearedListing with observers = fromList observers; ..)
-          create CreateListingRequest with status = Active; observers = fromList observers; ..
+
+          let extraObservers = case listingType of (Cleared p _) -> [p]; _ -> []
+          create CreateListingRequest with status = Active; observers = fromList $ extraObservers <> observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
         with

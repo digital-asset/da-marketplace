@@ -1,9 +1,13 @@
 module Marketplace.Clearing.Market.Service where
 
+import DA.Finance.Types
+
+import Marketplace.Clearing.Market.Model
 import Marketplace.Listing.Model
 import Marketplace.Utils
 
 import DA.Next.Set (Set)
+import DA.Next.Set qualified as Set
 
 template Service
   with
@@ -16,8 +20,18 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    controller customer can
+    nonconsuming choice RequestFairValues : ContractId FairValueCalculationRequest
+      with
+        party : Party
+        listingId : Text
+        currency : Id
+      controller party
+      do
+        upTo <- getTime
+        assert $ Set.member party $ Set.fromList [provider, customer]
+        create FairValueCalculationRequest with ..
 
+    controller customer can
       nonconsuming ApproveClearedListing : ContractId ClearedListingApproval
         with
           listingId : Text

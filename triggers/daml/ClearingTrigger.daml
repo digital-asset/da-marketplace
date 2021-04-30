@@ -8,12 +8,17 @@ import Daml.Trigger
 import DA.Finance.Asset
 import DA.Finance.Types
 
+import qualified Marketplace.Listing.Model as Listing
+import qualified Marketplace.Clearing.Market.Model as Clearing
 import qualified Marketplace.Clearing.Model as Clearing
 import qualified Marketplace.Clearing.Role as Clearing
 import qualified Marketplace.Clearing.Service as Clearing
 import  Marketplace.Clearing.Service
 
 import Utils
+import DA.List (head)
+import DA.List.Total (sortOn)
+import DA.Time (seconds, subTime)
 
 data ClearingState = ClearingState {
    operatorParty : Party
@@ -26,7 +31,10 @@ handleClearing = Trigger
   , rule = handleCCPRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @Clearing.Role
                                                , registeredTemplate @Clearing.Service
+                                               , registeredTemplate @Listing.T
                                                , registeredTemplate @AssetDeposit
+                                               , registeredTemplate @Clearing.FairValueCalculationRequest
+                                               , registeredTemplate @Clearing.ClearedTradeSide
                                                , registeredTemplate @Clearing.MarginCalculation
                                                , registeredTemplate @Clearing.MarkToMarketCalculation ]
   , heartbeat = None
@@ -146,3 +154,46 @@ collectDeposits restFunds (used, (nextDeposit::remaining))
                                 ((nextDeposit :: used), remaining)
   where
     nextAmount  = (.asset.quantity) . snd $ nextDeposit
+
+
+-- |Calculates the FairValue for all Derivatives known to Exchange
+handleCalculationRequests : Party -> ContractPair Clearing.FairValueCalculationRequest -> TriggerA () ()
+handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationRequest{..}) = do
+  debug "handling calculation requests..."
+  listings <- query @Listing.T
+  forA_ listings (handleFairValueCalculation party currency upTo)
+  emitExerciseCmd requestCid Clearing.FairValueCalculationRequest_Ack
+  return ()
+
+
+-- |Calculates a FairValue for a single derivative.
+-- Order of precedence:
+--    1. The price of the most recent trade before the specified 'upTo'
+--    2. If there are no trades, the most recent 'FairValue'
+--    3. If there are no 'FairValue', request manual calculation
+--
+-- TODO: Allow user to specify a 'from' Time interval before which trades and
+-- fairvalues will be ignored.
+handleFairValueCalculation : Party -> Id -> Time -> ContractPair Listing.T -> TriggerA () ()
+handleFairValueCalculation party currency upTo (marketPairCid,l@(Listing.Listing{..})) = do
+  debug ("calculating FVR: " <> l.listingId)
+  fairValues <- sortOn ((.upTo) . snd) . filter (\(_,fv) -> fv.listingId == l.listingId) <$> query @Clearing.FairValue
+  trades <- sortOn (Down . (.timeNovated) . snd) . filter (\(_,cts) -> cts.order.details.symbol == l.listingId) <$> query @Clearing.ClearedTradeSide
+
+  let relevantTrades = filter (\(_,ct) -> (subTime ct.timeNovated upTo) < (seconds 0)) trades
+  timestamp <- getTime
+
+  case getBestPrice relevantTrades fairValues of
+    (Some bp) -> dedupCreate $ Clearing.FairValue with
+        provider = party, price = bp; ..
+    None      -> dedupCreate $ Clearing.ManualFairValueCalculation
+        with provider = party,  ..
+
+  return ()
+
+  where
+    getBestPrice : [ContractPair Clearing.ClearedTradeSide] -> [ContractPair Clearing.FairValue] -> Optional Decimal
+    getBestPrice ts fvs
+      | not (null ts)  = Some . (.price) . (.execution) . snd . head $ ts
+      | not (null fvs) = Some . (.price) . snd . head $ fvs
+      | otherwise      = None
