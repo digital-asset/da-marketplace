@@ -62,6 +62,7 @@ export enum ServiceKind {
   CLEARING = 'Clearing',
   MATCHING = 'Matching',
   SETTLEMENT = 'Settlement',
+  DISTRIBUTOR = 'Distributor',
   REGULATOR = 'Regulator',
 }
 

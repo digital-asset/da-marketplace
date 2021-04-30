@@ -19,6 +19,7 @@
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
+@use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
 @use 'pages/distribution/bidding/Bidding';
 @use 'pages/listing/Listing';
@@ -209,6 +210,7 @@ html {
         @include Bidding.bidding();
         @include Listing.listing();
         @include Market.market();
+        @include Notifications.notifications();
       }
     }
   }
