@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { Template } from '@daml/types';
 
 import { computeCredentials, retrieveCredentials } from '../Credentials';
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId, dablHostname } from '../config';
+import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config';
 
 import useDamlStreamQuery, { StreamErrors } from './websocket';
 import { CreateEvent } from '@daml/ledger';
