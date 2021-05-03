@@ -36,6 +36,7 @@ handleClearing = Trigger
                                                , registeredTemplate @AssetDeposit
                                                , registeredTemplate @Clearing.FairValue
                                                , registeredTemplate @Clearing.FairValueCalculationRequest
+                                               , registeredTemplate @Clearing.ClearedTrade
                                                , registeredTemplate @Clearing.ClearedTradeSide
                                                , registeredTemplate @Clearing.MarginCalculation
                                                , registeredTemplate @Clearing.MarkToMarketCalculation ]
@@ -70,6 +71,9 @@ handleCCPRule party = do
 
   fvRequests <- query @Clearing.FairValueCalculationRequest
   forA_ fvRequests (handleCalculationRequests party)
+
+  clearedTrades <- query @Clearing.ClearedTrade
+  mapExercise Clearing.ClearedTrade_Novate (.execution.matchId) clearedTrades
 
 
 -- |Find all 'AssetDeposit' that a CCP Customer has with the CCP in a specific account
@@ -189,8 +193,8 @@ handleFairValueCalculation party currency upTo (marketPairCid,l@(Listing.Listing
   fairValues <- sortOn ((.upTo) . snd)
             <$> filterQuery @Clearing.FairValue (.listingId) (== l.listingId)
 
-  trades <- sortOn (Down . (.timeNovated) . snd)
-        <$> filterQuery @Clearing.ClearedTradeSide (.order.details.symbol) (== l.listingId)
+  trades     <- sortOn (Down . (.timeNovated) . snd)
+            <$> filterQuery @Clearing.ClearedTradeSide (.order.details.symbol) (== l.listingId)
 
   let relevantTrades = filter (\(_,ct) -> (subTime ct.timeNovated upTo) < (seconds 0)) trades
   timestamp <- getTime
