@@ -175,7 +175,6 @@ createNewVersionOfDescription description postAssetVersion serializedRemainingCl
  where
   adjustedId = description.assetId with version = postAssetVersion
 
--- TODO this is still not unique e.g. if I have two asset deposits with the same asset
 createTradeId : Id -> Int -> Text -> Id
 createTradeId assetId transferNumber uniqueId =
   Id with
