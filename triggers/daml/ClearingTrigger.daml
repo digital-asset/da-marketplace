@@ -60,11 +60,10 @@ handleCCPRule party = do
 
   -- > Handle MarkToMarketCalculation
   markToMarketCalculations <- query @Clearing.MarkToMarketCalculation
-  let incomingMarkToMarkets = filterSnd (\mtm -> mtm.mtmAmount < 0.0) markToMarketCalculations
-      outgoingMarkToMarkets = filterSnd (\mtm -> mtm.mtmAmount > 0.0) markToMarketCalculations
+  let incomingMarkToMarkets = filterField (.mtmAmount) (< 0.0) markToMarketCalculations
+      outgoingMarkToMarkets = filterField (.mtmAmount) (> 0.0) markToMarketCalculations
 
-  assetDeposits <- query @AssetDeposit
-  let ownedAssetDeposits = filterSnd (\ad -> ad.account.owner == party) assetDeposits
+  ownedAssetDeposits <- filterQuery @AssetDeposit (.account.owner) (== party)
 
   forA_ incomingMarkToMarkets (handleIncomingMarkToMarketCalculation party)
   handleOutgoingMTMCalculations party ownedAssetDeposits outgoingMarkToMarkets
@@ -168,7 +167,7 @@ handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationReq
   allListings <- query @Listing.T
   let optListingIdSet = Set.fromList <$> optListingIds
   let listings = case optListingIdSet of
-        (Some ids) -> filterSnd (\lst -> Set.member lst.listingId ids) allListings
+        (Some ids) -> filterField (.listingId) (`Set.member` ids) allListings
         None       -> allListings
 
   forA_ listings (handleFairValueCalculation party currency upTo)
@@ -188,10 +187,10 @@ handleFairValueCalculation party currency upTo (marketPairCid,l@(Listing.Listing
   debug ("calculating FVR: " <> l.listingId)
 
   fairValues <- sortOn ((.upTo) . snd)
-              . filterSnd  ((== l.listingId) . (.listingId)) <$> query @Clearing.FairValue
+            <$> filterQuery @Clearing.FairValue (.listingId) (== l.listingId)
 
   trades <- sortOn (Down . (.timeNovated) . snd)
-          . filterSnd ((== l.listingId) . (.order.details.symbol)) <$> query @Clearing.ClearedTradeSide
+        <$> filterQuery @Clearing.ClearedTradeSide (.order.details.symbol) (== l.listingId)
 
   let relevantTrades = filter (\(_,ct) -> (subTime ct.timeNovated upTo) < (seconds 0)) trades
   timestamp <- getTime
