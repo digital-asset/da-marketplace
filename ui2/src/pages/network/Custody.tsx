@@ -55,7 +55,11 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
-              <Button className="ghost warning small" onClick={() => terminateService(c)}>
+              <Button
+                className="ghost warning small"
+                onClick={() => terminateService(c)}
+                floated="right"
+              >
                 Terminate
               </Button>,
             ],

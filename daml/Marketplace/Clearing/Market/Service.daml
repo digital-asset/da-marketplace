@@ -23,7 +23,7 @@ template Service
     nonconsuming choice RequestFairValues : ContractId FairValueCalculationRequest
       with
         party : Party
-        listingId : Text
+        optListingIds : Optional [Text]
         currency : Id
       controller party
       do

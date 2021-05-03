@@ -8,7 +8,7 @@ template FairValueCalculationRequest
     operator : Party
     provider : Party
     customer : Party
-    listingId : Text
+    optListingIds : Optional [Text]
     currency : Id
     upTo : Time
   where
@@ -48,4 +48,4 @@ template FairValue
     observers : Set Party
   where
     signatory provider
-    observer observers
+    observer customer, observers

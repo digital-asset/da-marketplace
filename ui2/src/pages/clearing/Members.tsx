@@ -143,9 +143,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               c.payload.execution.quantity,
               c.payload.execution.price,
               <Button
-                size="small"
+                aligned="right"
                 className="ghost"
-                variant="contained"
                 onClick={() => handleNovation(c)}
               >
                 Novate Trade

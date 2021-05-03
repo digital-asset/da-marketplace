@@ -19,3 +19,7 @@ doOrDefer True txt fn = debug txt >> void $ fn
 mapExercise
   : (Choice t c r, Eq c, Show c, Show n) => c -> (t -> n) -> [(ContractId t,t)] -> TriggerA s ()
 mapExercise c acc = mapA_ (\(cid,t) -> emitExerciseCmd cid c >> debug (show c <> ": " <> show (acc t)))
+
+filterSnd : (b -> Bool) -> [(a,b)] -> [(a,b)]
+filterSnd pred = filter (\(_,x) -> pred x)
+
