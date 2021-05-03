@@ -16,7 +16,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { FairValueRequest } from '../listing/Listing';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
@@ -42,10 +42,6 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const { contracts: marketServices, loading: marketServicesLoading } = useStreamQueries(
     MarketService
   );
-
-  const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(c => c.payload.assetId.version === '0');
-  const [currencyLabel, setCurrencyLabel] = useState('');
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
@@ -138,16 +134,6 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(RoleOffer.Decline, c.contractId, {});
   };
 
-  const requestFairValues = async (c: CreateEvent<MarketService>) => {
-    const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
-    if (!currencyAsset) return;
-    await ledger.exercise(MarketService.RequestFairValues, c.contractId, {
-      party,
-      currency: currencyAsset.payload.assetId,
-      optListingIds: null
-    });
-  };
-
   return (
     <div className="assets">
       <Header as="h3">Current Services</Header>
@@ -164,22 +150,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               party === c.payload.provider ? 'Provider' : 'Consumer',
               <Button.Group floated="right">
                 {getTemplateId(c.templateId) !== CLEARING_SERVICE_TEMPLATE && (
-                  <ModalFormErrorHandled onSubmit={() => requestFairValues(c)} title="Request FV">
-                    <Form.Select
-                      label="Currency"
-                      placeholder="Select..."
-                      required
-                      options={assets.map(a => createDropdownProp(a.payload.assetId.label))}
-                      value={currencyLabel}
-                      onChange={(_, change) => setCurrencyLabel(change.value as string)}
-                    />
-                  </ModalFormErrorHandled>
+                  <FairValueRequest service={c} />
                 )}
-                <Button
-                  negative
-                  className="ghost warning"
-                  onClick={() => terminateService(c)}
-                >
+                <Button negative className="ghost warning" onClick={() => terminateService(c)}>
                   Terminate
                 </Button>
                 ,
@@ -191,7 +164,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Requests</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        loading={requestsLoading}
+        loading={requestsLoading || marketRequestsLoading}
         rows={[...requests, ...marketRequests].map((c, i) => {
           return {
             elements: [
@@ -237,7 +210,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Offers</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        loading={offersLoading}
+        loading={offersLoading || marketOffersLoading}
         rows={[
           ...offers.map((c, i) => {
             return {

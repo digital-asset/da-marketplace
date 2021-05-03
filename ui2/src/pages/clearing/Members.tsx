@@ -142,11 +142,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               c.payload.execution.takerOrderId,
               c.payload.execution.quantity,
               c.payload.execution.price,
-              <Button
-                aligned="right"
-                className="ghost"
-                onClick={() => handleNovation(c)}
-              >
+              <Button aligned="right" className="ghost" onClick={() => handleNovation(c)}>
                 Novate Trade
               </Button>,
             ],

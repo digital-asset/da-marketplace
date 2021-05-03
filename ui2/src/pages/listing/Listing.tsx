@@ -13,9 +13,52 @@ import {
 import { Header, Button, Form } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import {FairValueCalculationRequests} from './ManualCalculationRequests';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { FairValueCalculationRequests } from './ManualCalculationRequests';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { CreateEvent } from '@daml/ledger';
+
+type FairValueRequestProps = {
+  service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
+  listingId?: string;
+  selectListings?: boolean;
+};
+
+export const FairValueRequest: React.FC<FairValueRequestProps> = ({
+  listingId,
+  selectListings,
+  service,
+}) => {
+  const ledger = useLedger();
+  const party = useParty();
+  const allAssets = useStreamQueries(AssetDescription).contracts;
+  const assets = allAssets.filter(c => c.payload.assetId.version === '0');
+  const [currencyLabel, setCurrencyLabel] = useState('');
+  const selectedListingIds = !!listingId ? [listingId] : null;
+
+  const requestFairValues = async () => {
+    if (!service) return; // TODO: Display error
+    const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
+    if (!currencyAsset) return;
+    await ledger.exercise(ClearedMarketService.RequestFairValues, service.contractId, {
+      party,
+      currency: currencyAsset.payload.assetId,
+      optListingIds: selectedListingIds,
+    });
+  };
+  return (
+    <ModalFormErrorHandled onSubmit={() => requestFairValues()} title="Request FV">
+      <Form.Select
+        label="Currency"
+        placeholder="Select..."
+        required
+        options={assets.map(a => createDropdownProp(a.payload.assetId.label))}
+        value={currencyLabel}
+        onChange={(_, change) => setCurrencyLabel(change.value as string)}
+      />
+    </ModalFormErrorHandled>
+  );
+};
 
 const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   services,
@@ -33,17 +76,15 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const service = services.find(s => s.payload.customer === party);
 
   const { contracts: fairValueContracts, loading: fairValuesLoading } = useStreamQueries(FairValue);
-  const { contracts: clearedMarketServices, loading: clearedMarketServicesLoading } = useStreamQueries(ClearedMarketService);
-  const clearedMarketService = clearedMarketServices.find(cms => cms.payload.customer === listing?.payload.customer);
+  const { contracts: clearedMarketServices } = useStreamQueries(ClearedMarketService);
+  const clearedMarketService = clearedMarketServices.find(
+    cms => cms.payload.customer === listing?.payload.customer
+  );
   console.log(clearedMarketService);
 
   const fairValues = fairValueContracts.filter(
     fv => fv.payload.listingId === listing?.payload.listingId
   );
-
-  const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(c => c.payload.assetId.version === '0');
-  const [currencyLabel, setCurrencyLabel] = useState('');
 
   const {
     contracts: manualFVRequestContracts,
@@ -60,18 +101,6 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const requestFairValues = async () => {
-    if (!clearedMarketService || !listing) return; // TODO: Display error
-    const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
-    if (!currencyAsset) return;
-    await ledger.exercise(ClearedMarketService.RequestFairValues, clearedMarketService.contractId, {
-      party,
-      currency: currencyAsset.payload.assetId,
-      optListingIds: [listing.payload.listingId]
-    });
-  };
-
-
   return (
     <div className="listing">
       <Header as="h2">{listing?.payload.listingId}</Header>
@@ -80,24 +109,16 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <Tile header={<h4>Actions</h4>}>
         <div className="action-row">
           <Button.Group>
-
-    {!!clearedMarketService &&
-      (
-                  <ModalFormErrorHandled onSubmit={() => requestFairValues()} title="Request FV">
-                    <Form.Select
-                      label="Currency"
-                      placeholder="Select..."
-                      required
-                      options={assets.map(a => createDropdownProp(a.payload.assetId.label))}
-                      value={currencyLabel}
-                      onChange={(_, change) => setCurrencyLabel(change.value as string)}
-                    />
-                  </ModalFormErrorHandled>
-      )}
-      <Button floated="left" className="ghost" onClick={() => requestDisableDelisting()}>
-            Disable
-          </Button>
-        </Button.Group>
+            {!!clearedMarketService && (
+              <FairValueRequest
+                listingId={listing?.payload.listingId}
+                service={clearedMarketService}
+              />
+            )}
+            <Button floated="left" className="ghost" onClick={() => requestDisableDelisting()}>
+              Disable
+            </Button>
+          </Button.Group>
         </div>
       </Tile>
       {!!listing && (
@@ -132,7 +153,10 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       )}
       {!!manualFVRequests.length && party === listing?.payload.customer && (
         <Tile header={<h4>Manual Fair Requests</h4>}>
-          <FairValueCalculationRequests requests={manualFVRequests} loading={manualFVRequestsLoading}/>
+          <FairValueCalculationRequests
+            requests={manualFVRequests}
+            loading={manualFVRequestsLoading}
+          />
         </Tile>
       )}
       <Tile header={<h4>Fair Values</h4>}>

@@ -9,7 +9,10 @@ import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
 import { Button, Header, Form } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
-import { ManualFairValueCalculation, FairValue } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
+import {
+  ManualFairValueCalculation,
+  FairValue,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 
@@ -66,7 +69,9 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         ]}
         rowsClickable
         rows={listings.map(c => {
-          const fairValues = fairValueContracts.filter(fv => fv.payload.listingId === c.payload.listingId);
+          const fairValues = fairValueContracts.filter(
+            fv => fv.payload.listingId === c.payload.listingId
+          );
           return {
             elements: [
               getName(c.payload.provider),
@@ -78,7 +83,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               c.payload.tradedAssetPrecision,
               c.payload.quotedAssetId.label,
               c.payload.quotedAssetPrecision,
-              fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : "None",
+              fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
               party === c.payload.customer && (
                 <Button
                   floated="right"
