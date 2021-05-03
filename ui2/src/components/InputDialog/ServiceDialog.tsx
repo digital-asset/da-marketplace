@@ -60,6 +60,16 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
 
     switch (service) {
       case ServiceKind.TRADING:
+      case ServiceKind.MARKET_CLEARING: {
+        if (!clearingRole || !choice) {
+          setError(`You can not offer ${service} services without a Clearing Role contract.`);
+          return;
+        } else {
+          await ledger.exercise(choice, clearingRole.contractId, params);
+          onClose(false);
+          return;
+        }
+      }
       case ServiceKind.CLEARING: {
         if (!clearingRole || !choice) {
           setError(`You can not offer ${service} services without a Clearing Role contract.`);

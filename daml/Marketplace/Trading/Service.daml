@@ -1,3 +1,4 @@
+
 module Marketplace.Trading.Service where
 
 import DA.Foldable (sequence_)
@@ -5,11 +6,17 @@ import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Model qualified as Order
+import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
 import Marketplace.Trading.Error (Error (..))
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
+import Marketplace.Utils
 
 type T = Service
+
+whenCollateral : Order.TradeCollateral -> (ContractId AssetDeposit -> Update (ContractId AssetDeposit)) -> Update Order.TradeCollateral
+whenCollateral (Order.Cleared x) _ = return $ Order.Cleared x
+whenCollateral (Order.Collateral depositCid) fn = Order.Collateral <$> fn depositCid
 
 template Service
   with
@@ -24,25 +31,48 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
+    let
+      withdrawFromAllocationAccount : Order.TradeCollateral -> Update Order.TradeCollateral
+      withdrawFromAllocationAccount = \case
+        (Order.Cleared party)         -> return $ Order.Cleared party
+        (Order.Collateral depositCid) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
+
     controller customer can
-      nonconsuming RequestCreateOrder : (ContractId Order.T, ContractId CreateOrderRequest, ContractId AssetDeposit)
+      nonconsuming RequestCreateOrder : Either (ContractId Order.T)
+                                               (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
         with
+          collateral : Order.TradeCollateral
           details : Order.Details
-          depositCid : ContractId AssetDeposit
         do
-          -- TODO: Check that price and quantity conform to the precision requirements of the Listing
-          -- TODO: Check order valid for exberry with the market/limit and timeInForce combos (also, if GTD if expiry date is less than one year)
           let
             status = Order.New
             providerOrderId = None
             executions = []
             remainingQuantity = details.asset.quantity
 
-          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
-          createOrderRequestCid <- create CreateOrderRequest with ..
-          orderCid <- create Order.Order with ..
+          case collateral of
+            (Order.Collateral depositCid) -> do
+                collateral <- Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
+                createOrderRequestCid <- create CreateOrderRequest with ..
+                orderCid <- create Order.Order with ..
 
-          return (orderCid, createOrderRequestCid, depositCid)
+                return $ Right (orderCid, createOrderRequestCid, collateral)
+
+            (Order.Cleared clearinghouse) -> do
+              optClearingService <- lookupByKey @Clearing.Service (operator,clearinghouse,customer)
+              case optClearingService of
+                None -> do
+                  let reason = Error with code = "3001"; message = "Customer is not a member of clearinghouse"
+                  Left <$> create Order.Order with status = Order.Rejected{reason}; ..
+
+                (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
+                    True -> do
+                        createOrderRequestCid <- create CreateOrderRequest with ..
+                        orderCid <- create Order.Order with ..
+                        return $ Right (orderCid, createOrderRequestCid, collateral)
+                    False -> do
+                      let reason = Error with code = "3002"; message = "Rejected by Clearinghouse"
+                      Left <$> create Order.Order with status = Order.Rejected{reason}; ..
 
       nonconsuming RequestCancelOrder : (ContractId Order.T, ContractId CancelOrderRequest)
         with
@@ -72,23 +102,23 @@ template Service
               create order with status = Order.PendingExecution; providerOrderId = Some providerOrderId
             _ -> return orderCid
 
-      nonconsuming RejectOrderRequest : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming RejectOrderRequest : (ContractId Order.T, Order.TradeCollateral)
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           errorCode : Int
           errorMessage : Text
         do
-          CreateOrderRequest{details, depositCid} <- fetch createOrderRequestCid
+          CreateOrderRequest{details, collateral} <- fetch createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
           archive orderCid
 
           let reason = Error with code = show errorCode; message = errorMessage
           orderCid <- create order with status = Order.Rejected with reason
-          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
+          collateral <- withdrawFromAllocationAccount collateral
 
-          return (orderCid, depositCid)
+          return (orderCid, collateral)
 
-      nonconsuming MarketOrderCancelRequest : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming MarketOrderCancelRequest : (ContractId Order.T, Order.TradeCollateral)
         with
           createOrderRequestCid : ContractId CreateOrderRequest
           providerOrderId : Text
@@ -105,12 +135,12 @@ template Service
             then do
               sequence_ [archive orderCid, archive createOrderRequestCid]
               orderCid <- create order with status = Order.Cancelled, providerOrderId = Some providerOrderId
-              depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, depositCid = order.depositCid
+              collateral <- withdrawFromAllocationAccount order.collateral
 
-              return (orderCid, depositCid)
-            else return (orderCid, order.depositCid)
+              return (orderCid, collateral)
+            else return (orderCid, order.collateral)
 
-      nonconsuming CancelOrder : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming CancelOrder : (ContractId Order.T, Order.TradeCollateral)
         with
           cancelOrderRequestCid : ContractId CancelOrderRequest
         do
@@ -119,9 +149,9 @@ template Service
           archive orderCid
 
           orderCid <- create order with status = Order.Cancelled
-          depositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
+          collateral <- withdrawFromAllocationAccount order.collateral
 
-          return (orderCid, depositCid)
+          return (orderCid, collateral)
 
       nonconsuming RejectCancellation : ContractId Order.T
         with
@@ -164,7 +194,7 @@ template Offer
           allocationAccount : Account
         do
           -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -196,7 +226,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateOrderRequest
   with
@@ -204,7 +234,7 @@ template CreateOrderRequest
     customer : Party
     operator : Party
     details : Order.Details
-    depositCid : ContractId AssetDeposit
+    collateral : Order.TradeCollateral
   where
     signatory provider, customer
 
@@ -220,14 +250,14 @@ template CreateOrderRequest
         do
           exerciseByKey @Service serviceKey AcknowledgeOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming RejectRequest : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming RejectRequest : (ContractId Order.T, Order.TradeCollateral)
         with
           errorCode : Int
           errorMessage : Text
         do
           exerciseByKey @Service serviceKey RejectOrderRequest with createOrderRequestCid = self, ..
 
-      nonconsuming CancelRequest : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming CancelRequest : (ContractId Order.T, Order.TradeCollateral)
         with
           providerOrderId : Text
           cancelledQuantity : Decimal
@@ -249,7 +279,7 @@ template CancelOrderRequest
     let serviceKey = (operator, provider, customer)
 
     controller provider can
-      nonconsuming AcknowledgeCancel : (ContractId Order.T, ContractId AssetDeposit)
+      nonconsuming AcknowledgeCancel : (ContractId Order.T, Order.TradeCollateral)
         do
           exerciseByKey @Service serviceKey CancelOrder with cancelOrderRequestCid = self
 

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {
+  Listing,
+  ClearedListingApproval,
+} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Details,
   Order,
@@ -188,10 +191,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
+    const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
     const depositCid = isBuy
       ? await getAsset(quotedAssets, price * quantity)
       : await getAsset(tradedAssets, quantity);
-    if (!depositCid) return;
 
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
@@ -209,7 +212,19 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           : { tag: timeInForce, value: {} },
     };
     clearOrderForm();
-    await ledger.exercise(Service.RequestCreateOrder, service.contractId, { details, depositCid });
+    if (listing.payload.listingType.tag === 'Collateralized') {
+      if (!depositCid) return;
+      await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
+        details,
+        collateral: { tag: 'Collateral', value: depositCid },
+      });
+    } else {
+      const clearinghouse = listing.payload.listingType.value.clearinghouse;
+      await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
+        details,
+        collateral: { tag: 'Cleared', value: { clearinghouse } },
+      });
+    }
   };
 
   return (

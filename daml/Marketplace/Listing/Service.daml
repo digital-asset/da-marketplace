@@ -2,8 +2,12 @@ module Marketplace.Listing.Service where
 
 import DA.Finance.Types
 import DA.Next.Set (Set, fromList)
+import Marketplace.Clearing.Market.Service qualified as Clearing
 import Marketplace.Trading.Error qualified as Error
-import Marketplace.Listing.Model (Listing(..), Status(..))
+import Marketplace.Listing.Model ( ListingType(..), Listing(..), Status(..))
+import Marketplace.Utils
+
+data ListingTypeRequest = CollateralizedRequest | ClearedRequest Party deriving (Show, Eq)
 
 template Service
   with
@@ -19,6 +23,7 @@ template Service
     controller customer can
       nonconsuming RequestCreateListing : ContractId CreateListingRequest
         with
+          listingType : ListingTypeRequest
           listingId : Text
           calendarId : Text
           description : Text
@@ -30,6 +35,9 @@ template Service
           maximumTradableQuantity : Decimal
           observers : [Party]
         do
+          listingType <- case listingType of
+            CollateralizedRequest -> return Collateralized
+            (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator, p, customer) Clearing.ApproveClearedListing with observers = fromList observers; ..)
           create CreateListingRequest with status = Active; observers = fromList observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
@@ -88,7 +96,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()
@@ -118,7 +126,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateListingRequest
   with
@@ -126,6 +134,7 @@ template CreateListingRequest
     provider : Party
     customer : Party
     listingId : Text
+    listingType : ListingType
     calendarId : Text
     description : Text
     tradedAssetId : Id

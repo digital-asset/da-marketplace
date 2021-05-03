@@ -3,6 +3,8 @@ module Marketplace.Clearing.Role where
 import DA.Finance.Types
 
 import Marketplace.Clearing.Service qualified as Clearing
+import Marketplace.Clearing.Market.Service qualified as Market
+import Marketplace.Utils
 
 template Role
   with
@@ -41,6 +43,30 @@ template Role
         do
           archive custodyServiceCid
 
+      nonconsuming OfferMarketService : ContractId Market.Offer
+        with
+          customer : Party
+        do
+          create Market.Offer with ..
+
+      nonconsuming ApproveMarketRequest : ContractId Market.Service
+        with
+          marketRequestCid : ContractId Market.Request
+        do
+          exercise marketRequestCid Market.Approve with ..
+
+      nonconsuming RejectMarketRequest : ()
+        with
+          marketRequestCid : ContractId Market.Request
+        do
+          exercise marketRequestCid Market.Reject
+
+      nonconsuming TerminateMarketService : ()
+        with
+          marketServiceCid : ContractId Market.Service
+        do
+          archive marketServiceCid
+
 template Offer
   with
     operator : Party
@@ -53,7 +79,7 @@ template Offer
         with
           ccpAccount : Account
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Decline : ()
         do
@@ -70,7 +96,7 @@ template Request
     controller operator can
       Approve : ContractId Role
         do
-          create Role with ..
+          createOrLookup Role with ..
 
       Reject : ()
         do

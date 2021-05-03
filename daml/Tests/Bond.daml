@@ -23,7 +23,12 @@ usd = "USD"
 testBond = script do
   let date1 = date 2001 Jan 1
       date2 = date 2002 Oct 31
-  (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid) <- requestExerciseBond [date1, date2]
+      notional = 100.0
+      coupon = 0.1
+      couponPayout = notional * coupon
+      usdAmount = 3000.0
+  (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid) <-
+    requestExerciseBond usdAmount notional coupon [date1, date2]
 
   -- First lifecycle
   setTime $ time date1 16 30 00
@@ -40,11 +45,11 @@ testBond = script do
     exerciseCmd settlementInstructionCid SettlementInstruction_Process
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
-  1 === bobsOption.asset.id.version
+  bobsOption.asset.id.version === 1
   [(_, bobsMoney)] <- getMoneyAssetsFor bob.customer
-  10.0 === bobsMoney.asset.quantity
+  bobsMoney.asset.quantity === couponPayout
   [(corpActDepositCid, alicesMoney)] <- getMoneyAssetsFor alice
-  2990.0 === alicesMoney.asset.quantity
+  alicesMoney.asset.quantity === usdAmount - couponPayout
 
   -- Second lifecycle
   setTime $ time date2 16 30 00
@@ -64,30 +69,32 @@ testBond = script do
     exerciseCmd settlementInstructionCid2 SettlementInstruction_Process
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
-  2 === bobsOption.asset.id.version
+  bobsOption.asset.id.version === 2
   bobsMoneyWithCids <- getMoneyAssetsFor bob.customer
-  10.0 + 100.0 + 10.0 === sum (map (\(_, money) -> money.asset.quantity) bobsMoneyWithCids)
+  sum (map (\(_, money) -> money.asset.quantity) bobsMoneyWithCids)
+    === couponPayout + notional + couponPayout
   [(_, alicesMoney)] <- getMoneyAssetsFor alice
-  2880.0 === alicesMoney.asset.quantity
+  alicesMoney.asset.quantity === usdAmount - couponPayout - notional - couponPayout
 
-getMoneyAssetsFor party = do
+getMoneyAssetsFor : Party -> Script [(ContractId AssetDeposit, AssetDeposit)]
+getMoneyAssetsFor party =
   queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
 
-requestExerciseBond: [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit)
-requestExerciseBond dates = script do
+requestExerciseBond: Decimal -> Decimal -> Decimal -> [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit)
+requestExerciseBond usdAmount notional coupon dates = script do
   providers <- onboardProviders
 
   let usdId = Id with
                 signatories = Set.singleton providers.bank
                 label = usd
                 version = 0
-      usdAsset = Asset with id = usdId, quantity = 3000.0
+      usdAsset = Asset with id = usdId, quantity = usdAmount
 
   alice <- onboardCustomer providers "Alice"
   bob <- onboardCustomer providers "Bob"
 
   -- Alice originates the bond
-  let boClaims = bond usdId 100.0 0.1 dates-- ccy notional coupon dates
+  let boClaims = bond usdId notional coupon dates
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = "BondLabel"
       description = "TestBond"
@@ -103,7 +110,7 @@ requestExerciseBond dates = script do
       accountId = Id (Set.fromList [alice.customer, providers.bank]) alice.mainAccount.id.label 0
       assetId = optionDesc.assetId
       quantity = 1.0
-  (_issuanceCid, bondCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
+  (_, bondCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
 
   -- Alice gifts the bond to Bob
   submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.mainAccount.id AssetSettlement_AddController with ctrl = alice.customer

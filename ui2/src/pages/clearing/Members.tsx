@@ -1,17 +1,22 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty, useStreamQueries, useLedger } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { MemberStanding } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
+import {
+  MemberStanding,
+  ClearedTrade,
+  ClearedTradeSide,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header } from 'semantic-ui-react';
+import { Header, Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
+import { CreateEvent } from '@daml/ledger';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -19,13 +24,24 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
+  const ledger = useLedger();
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: clearedTrades, loading: clearedTradesLoading } = useStreamQueries(
+    ClearedTrade
+  );
+  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } = useStreamQueries(
+    ClearedTradeSide
+  );
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
   const ccpDeposits = deposits.filter(
     d => d.payload.account.id.label === services[0]?.payload.ccpAccount.id.label
   );
+
+  const handleNovation = async (c: CreateEvent<ClearedTrade>) => {
+    await ledger.exercise(ClearedTrade.ClearedTrade_Novate, c.contractId, {});
+  };
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -93,7 +109,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <Header as="h2">Accounts</Header>
       <StripedTable
         loading={accountsLoading}
-        rowsClickable
         headings={[
           'Account',
           'Provider',
@@ -111,7 +126,48 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               party === c.payload.account.provider ? 'Provider' : 'Client',
               Object.keys(c.payload.ctrls.textMap).join(', '),
             ],
-            onClick: () => history.push(`/app/custody/account/${c.contractId.replace('#', '_')}`),
+          };
+        })}
+      />
+      <Header as="h2">Cleared Trades</Header>
+      <StripedTable
+        loading={clearedTradesLoading}
+        headings={['Provider', 'Match Id', 'Maker Order Id', 'Taker Order Id', 'Quantity', 'Price']}
+        rows={clearedTrades.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              c.payload.execution.matchId,
+              c.payload.execution.makerOrderId,
+              c.payload.execution.takerOrderId,
+              c.payload.execution.quantity,
+              c.payload.execution.price,
+              <Button
+                size="small"
+                className="ghost"
+                variant="contained"
+                onClick={() => handleNovation(c)}
+              >
+                Novate Trade
+              </Button>,
+            ],
+          };
+        })}
+      />
+      <Header as="h2">Cleared Trade Sides</Header>
+      <StripedTable
+        loading={clearedTradeSidesLoading}
+        headings={['Exchange', 'Member', 'Listing', 'Quantity', 'Price', 'Time Matched']}
+        rows={clearedTradeSides.map(c => {
+          return {
+            elements: [
+              getName(c.payload.exchange),
+              getName(c.payload.order.customer),
+              c.payload.order.details.symbol,
+              c.payload.execution.quantity,
+              c.payload.execution.price,
+              c.payload.execution.timestamp,
+            ],
           };
         })}
       />

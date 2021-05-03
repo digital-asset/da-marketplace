@@ -1,10 +1,16 @@
 module Marketplace.Trading.Matching.Service where
 
 import DA.Next.Set (fromList)
+import Marketplace.Clearing.Model qualified as Clearing
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Service qualified as TradingService
 import Marketplace.Trading.Confirmation.Model qualified as Confirmation
+import Marketplace.Utils
+
+data MatchResult
+  = Cleared (ContractId Clearing.ClearedTrade)
+  | Collateralized (ContractId Settlement.SettlementInstruction)
 
 template Service
   with
@@ -17,7 +23,7 @@ template Service
     maintainer key
 
     controller provider can
-      nonconsuming MatchOrders : ContractId Settlement.SettlementInstruction
+      nonconsuming MatchOrders : MatchResult
         with
           execution : Order.Execution
         do
@@ -33,7 +39,12 @@ template Service
             >>= signConfirmation buy.customer
             >>= signConfirmation sell.customer
 
-          exercise confirmationCid Confirmation.Process with buyCid; sellCid
+          if not $ Order.isClearedOrder makerOrder
+          then Collateralized <$> exercise confirmationCid Confirmation.Process with buyCid; sellCid
+          else do
+            exercise confirmationCid Confirmation.ProcessCleared with buyCid; sellCid
+            let clearinghouse = makerOrder.collateral.clearinghouse
+            Cleared <$> create Clearing.ClearedTrade with ..
 
 template Offer
   with
@@ -45,7 +56,7 @@ template Offer
     controller provider can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -61,7 +72,7 @@ template Request
     controller operator can
       Approve : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Reject : ()
         do

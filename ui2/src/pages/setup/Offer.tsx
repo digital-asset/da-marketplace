@@ -5,6 +5,7 @@ import { useStreamQueries } from '@daml/react';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Offer as IssuanceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -53,6 +54,11 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       case ServiceKind.CUSTODY: {
         setOffer(CustodyOffer);
         setChoice(CustodyRole.OfferCustodyService);
+      }
+      case ServiceKind.MARKET_CLEARING: {
+        setOffer(MarketClearingOffer);
+        setChoice(ClearingRole.OfferMarketService);
+        return;
       }
       case ServiceKind.ISSUANCE: {
         setOffer(IssuanceOffer);

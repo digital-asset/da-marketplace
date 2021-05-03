@@ -19,6 +19,7 @@ import { RegistryLookupProvider } from './common/RegistryLookup'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'
+import QuickSetup from './QuickSetup'
 
 /**
  * React component for the entry point into the application.
@@ -43,6 +44,10 @@ const App: React.FC = () => {
                 </QueryStreamProvider>
             </WellKnownPartiesProvider>
           </Route>
+          <Route exact path='/quick-setup'>
+            <QuickSetup onLogin={handleCredentials}/>
+          </Route>
+
 
           <Route path='/role' render={() => {
             return credentials

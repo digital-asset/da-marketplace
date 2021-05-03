@@ -2,14 +2,14 @@
 
 module Marketplace.Clearing.Service where
 
-import DA.Functor
-
 import DA.Finance.Asset
 import DA.Finance.Types
 
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Utils
+
+import Marketplace.Utils
 
 data DepositWithRemaining = DepositWithRemaining {
    deposit   : ContractId AssetDeposit
@@ -53,6 +53,12 @@ template Service
         exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
             newMarginSatisfied = False; ..
         exercise calculationCid MarginCalculation_Resolve with note = ""; ..
+
+    controller customer can
+      nonconsuming ApproveTrade : Bool
+        do
+          (_,memberStanding) <- fetchByKey @MemberStanding (provider,customer)
+          return $ memberStanding.marginSatisfied && memberStanding.mtmSatisfied
 
     controller provider can
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
@@ -189,8 +195,8 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
-          create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
-          create Service with ..
+          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -223,5 +229,5 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
-        create MemberStanding with marginSatisfied = True, mtmSatisfied = True, ..
-        create Service with ..
+        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
+        createOrLookup Service with ..

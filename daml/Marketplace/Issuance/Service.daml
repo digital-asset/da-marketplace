@@ -8,6 +8,7 @@ import DA.Next.Set (Set, fromList)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Utils
 
 template Service
   with
@@ -115,7 +116,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()
@@ -145,7 +146,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateIssuanceRequest
   with

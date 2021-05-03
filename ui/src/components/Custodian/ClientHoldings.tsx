@@ -20,9 +20,11 @@ type Props = {
         party: string;
         label: string;
     }[];
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
-const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
+const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients, showNotificationAlert, handleNotificationAlert }) => {
     const { investorId } = useParams<{investorId: string}>()
 
     const allDeposits = useContractQuery(AssetDeposit);
@@ -37,7 +39,10 @@ const ClientHoldings: React.FC<Props> = ({ sideNav, onLogout, clients }) => {
         <Page
             sideNav={sideNav}
             menuTitle={<Header as='h1'>{client?.label.substring(0, client.label.lastIndexOf('|'))}</Header>}
-            onLogout={onLogout}>
+            onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
+        >
             <PageSection className='clients'>
                 <div className='client-list'>
                     <Header as='h2'>Client Holdings</Header>

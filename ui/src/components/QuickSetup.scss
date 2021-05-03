@@ -1,0 +1,130 @@
+@mixin quick-setup {
+    .quick-setup {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        background-color: var(--cool-grey-20);
+
+        .quick-setup-tiles {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: center;
+            position: relative;
+
+            @media screen and (max-width: 900px) {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        button.back-button {
+           margin: $spacing-xl;
+           width: fit-content;
+           position: absolute;
+           top: 0px;
+           left: 0px;
+        }
+
+        .party-registry-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-left: $spacing-l;
+            padding: $spacing-m;
+            width: 60%;
+            border-radius: 4px;
+            background-color: var(--cool-grey-10);
+
+            @media screen and (max-width: 900px) {
+                width: 100%;
+                margin: $spacing-l;
+            }
+
+            .ui.table tr td {
+                border-top: 0px !important;
+            }
+
+            .party-registry-table {
+                tr.odd-row {
+                    background-color: var(--blue-100);
+                }
+
+                tbody {
+                    display: block;
+                    max-height: 500px;
+                    overflow: auto;
+                    background-color: var(--white);
+
+                }
+
+                thead, tbody tr {
+                    display: table;
+                    width: 100%;
+                    table-layout: fixed;
+                }
+            }
+        }
+
+        .assign-role-tile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 500px;
+            padding: $spacing-m;
+            border-radius: 4px;
+            background-color: var(--cool-grey-10);
+
+            @media screen and (max-width: 900px) {
+                width: 100%;
+                margin: $spacing-l;
+            }
+
+            .ui.loader {
+                position: static;
+                transform: translateX(-0%) translateY(-0%);
+            }
+
+            p.input-label {
+                padding-bottom: $spacing-xs;
+            }
+
+            p.login-details {
+                padding: $spacing-s 0;
+            }
+
+            button.submit-button {
+                margin: $spacing-s;
+                text-align: left;
+                height: auto;
+            }
+
+            .login-status {
+                padding: $spacing-l;
+
+                .ui.loader {
+                    position: static;
+                    transform: translateX(-0%) translateY(-0%);
+                }
+            }
+
+            .ui.grid {
+                display: flex;
+                flex-direction: column;
+
+                .field {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+
+                    .ui.input > input {
+                        width: 198px;
+                    }
+                }
+            }
+        }
+    }
+}

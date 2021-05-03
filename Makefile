@@ -92,6 +92,14 @@ start_ccp: $(ccp_pid)
 stop_ccp:
 	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
 
+### DA Marketplace Auto-Approve Triggers (all parties)
+
+start_autoapprove: |$(state_dir) $(trigger_build)
+	./scripts/run-triggers.sh $(trigger_build) $(state_dir)
+
+stop_autoapprove: |$(state_dir)
+	./scripts/stop-triggers.sh $(state_dir)
+
 ### DA Marketplace Custodian Bot
 
 $(custodian_pid): |$(state_dir) $(trigger_build)
@@ -123,7 +131,7 @@ stop_broker:
 
 $(exchange_pid): |$(state_dir) $(trigger_build)
 	(daml trigger --dar $(trigger_build) \
-	    --trigger-name ExchangeTrigger:handleExchange \
+	    --trigger-name AutoApproval:autoApprovalTrigger \
 	    --ledger-host localhost --ledger-port 6865 \
 	    --ledger-party Exchange > $(exchange_log) & echo "$$!" > $(exchange_pid))
 
@@ -131,7 +139,6 @@ start_exchange: $(exchange_pid)
 
 stop_exchange:
 	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
-
 
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):

@@ -6,6 +6,7 @@ import marketplaceLogo from './marketplace.svg';
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
   color?: 'green' | 'blue';
+  strokeColor?: string;
 };
 
 export const ArrowRightIcon = () => (
@@ -494,5 +495,23 @@ export const MegaphoneIcon = () => (
       id="path835"
     />
     <path d="m 5.16667,3.8331575 v 3.33333" stroke="#b4f5a3" id="path837" />
+  </svg>
+);
+
+export const NotificationIcon: React.FC<IconProps> = ({ size, strokeColor }) => (
+  <svg className={`icon notification-icon icon-size-${size}`}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M9 1.125C12.2619 1.125 14.9062 3.76948 14.9062 7.03141C14.9062 8.57957 14.9062 10.0787 14.9062 11.025C14.9062 13.725 16.875 14.625 16.875 14.625L1.125 14.625C1.125 14.625 3.09375 13.725 3.09375 11.025C3.09375 10.0787 3.09375 8.57957 3.09375 7.03142C3.09375 3.76948 5.73807 1.125 9 1.125V1.125Z"
+      stroke={strokeColor ? strokeColor : '#22252A'}
+      fill="none"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.75 14.625C6.75 15.8676 7.75736 16.875 9 16.875C10.2426 16.875 11.25 15.8676 11.25 14.625"
+      fill="none"
+      stroke={strokeColor ? strokeColor : '#22252A'}
+    />
   </svg>
 );

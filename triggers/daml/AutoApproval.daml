@@ -6,6 +6,7 @@ import Daml.Trigger
 import DA.Optional (mapOptional)
 import DA.Record (HasField)
 import Marketplace.Custody.Service qualified as CustodyService
+import Marketplace.Clearing.Market.Service qualified as MarketClearingService
 import Marketplace.Custody.Role qualified as CustodyRole
 import Marketplace.Custody.Model qualified as Custody
 import Marketplace.Distribution.Role qualified as DistributionRole
@@ -13,7 +14,10 @@ import Marketplace.Distribution.Auction.Service qualified as AuctionService
 import Marketplace.Distribution.Bidding.Service qualified as BiddingService
 import Marketplace.Issuance.Service qualified as IssuanceService
 import Marketplace.Listing.Service qualified as ListingService
+import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Regulator.Service qualified as RegulatorService
+import Marketplace.Regulator.Role qualified as RegulatorRole
+import Marketplace.Regulator.Model qualified as Regulator
 import Marketplace.Settlement.Service qualified as SettlementService
 import Marketplace.Trading.Role qualified as TradingRole
 import Marketplace.Trading.Service qualified as TradingService
@@ -27,12 +31,17 @@ autoApprovalTrigger = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
     , registeredTemplate @CustodyRole.Request
     , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @MarketClearingService.Offer
+    , registeredTemplate @MarketClearingService.Request
     , registeredTemplate @DistributionRole.Offer
     , registeredTemplate @DistributionRole.Request
     , registeredTemplate @IssuanceService.Offer
     , registeredTemplate @ListingService.Offer
+    , registeredTemplate @RegulatorRole.Offer
+    , registeredTemplate @RegulatorRole.Request
+    , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorService.Offer
-    , registeredTemplate @RegulatorService.Request -- TO-DO: Auto-approve requests
+    , registeredTemplate @RegulatorService.Request
     , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
@@ -49,6 +58,7 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @DistributionRole.Role
     , registeredTemplate @TradingService.Request
     , registeredTemplate @ListingService.Request
+    , registeredTemplate @ListingService.CreateListingRequest
     , registeredTemplate @TradingRole.Role
     , registeredTemplate @IssuanceService.OriginationRequest
     , registeredTemplate @IssuanceService.CreateIssuanceRequest
@@ -78,20 +88,21 @@ handleApprovalRule party = do
       generateServiceCommands = generateCommandsWithCid (\req service -> service.operator == req.operator && service.provider == req.provider && service.customer == req.customer)
 
   -- [Service Offers/Requests] Exercise Accept/Approve choice on the triggered contract
-  custodyRoleOffers         <- generateCommands CustodyRole.Accept        <$> queryByParty @CustodyRole.Offer         (.provider)
-  custodyRoleRequests       <- generateCommands CustodyRole.Approve       <$> queryByParty @CustodyRole.Request       (.operator)
-  custodyServicesOffers     <- generateCommands CustodyService.Accept     <$> queryByParty @CustodyService.Offer      (.customer)
-  distributionRoleOffers    <- generateCommands DistributionRole.Accept   <$> queryByParty @DistributionRole.Offer    (.provider)
-  distributionRoleRequests  <- generateCommands DistributionRole.Approve  <$> queryByParty @DistributionRole.Request  (.operator)
-  issuanceServiceOffers     <- generateCommands IssuanceService.Accept    <$> queryByParty @IssuanceService.Offer     (.customer)
-  listingServiceOffers      <- generateCommands ListingService.Accept     <$> queryByParty @ListingService.Offer      (.customer)
-  regulatorServiceOffers    <- generateCommands RegulatorService.Accept   <$> queryByParty @RegulatorService.Offer    (.customer)
-  settlementServiceOffers   <- generateCommands SettlementService.Accept  <$> queryByParty @SettlementService.Offer   (.provider)
-  settlementServiceRequests <- generateCommands SettlementService.Approve <$> queryByParty @SettlementService.Request (.operator)
-  tradingRoleOffers         <- generateCommands TradingRole.Accept        <$> queryByParty @TradingRole.Offer         (.provider)
-  tradingRoleRequests       <- generateCommands TradingRole.Approve       <$> queryByParty @TradingRole.Request       (.operator)
-  matchingserviceOffers     <- generateCommands MatchingService.Accept    <$> queryByParty @MatchingService.Offer     (.provider)
-  matchingserviceRequests   <- generateCommands MatchingService.Approve   <$> queryByParty @MatchingService.Request   (.operator)
+  custodyRoleOffers           <- generateCommands CustodyRole.Accept           <$> queryByParty @CustodyRole.Offer           (.provider)
+  custodyRoleRequests         <- generateCommands CustodyRole.Approve          <$> queryByParty @CustodyRole.Request         (.operator)
+  custodyServicesOffers       <- generateCommands CustodyService.Accept        <$> queryByParty @CustodyService.Offer        (.customer)
+  marketClearingServiceOffers <- generateCommands MarketClearingService.Accept <$> queryByParty @MarketClearingService.Offer (.customer)
+  distributionRoleOffers      <- generateCommands DistributionRole.Accept      <$> queryByParty @DistributionRole.Offer      (.provider)
+  distributionRoleRequests    <- generateCommands DistributionRole.Approve     <$> queryByParty @DistributionRole.Request    (.operator)
+  issuanceServiceOffers       <- generateCommands IssuanceService.Accept       <$> queryByParty @IssuanceService.Offer       (.customer)
+  listingServiceOffers        <- generateCommands ListingService.Accept        <$> queryByParty @ListingService.Offer        (.customer)
+  regulatorServiceOffers      <- generateCommands RegulatorService.Accept      <$> queryByParty @RegulatorService.Offer      (.customer)
+  settlementServiceOffers     <- generateCommands SettlementService.Accept     <$> queryByParty @SettlementService.Offer     (.provider)
+  settlementServiceRequests   <- generateCommands SettlementService.Approve    <$> queryByParty @SettlementService.Request   (.operator)
+  tradingRoleOffers           <- generateCommands TradingRole.Accept           <$> queryByParty @TradingRole.Offer           (.provider)
+  tradingRoleRequests         <- generateCommands TradingRole.Approve          <$> queryByParty @TradingRole.Request         (.operator)
+  matchingserviceOffers       <- generateCommands MatchingService.Accept       <$> queryByParty @MatchingService.Offer       (.provider)
+  matchingserviceRequests     <- generateCommands MatchingService.Approve      <$> queryByParty @MatchingService.Request     (.operator)
 
   submitCommands $
     custodyRoleOffers ++
@@ -107,7 +118,8 @@ handleApprovalRule party = do
     tradingRoleOffers ++
     tradingRoleRequests ++
     matchingserviceOffers ++
-    matchingserviceRequests
+    matchingserviceRequests ++
+    marketClearingServiceOffers
 
   -- [Service Offers/Requests] Exercise a choice on a contract (ie, a role contract) based off triggered contract id
   custodyServicesRequests <- queryByParty @CustodyService.Request  (.provider)
@@ -139,9 +151,12 @@ handleApprovalRule party = do
     generateServiceCommands IssuanceService.Originate      originationRequests issuanceServices ++
     generateServiceCommands IssuanceService.CreateIssuance issuanceRequests issuanceServices
 
-  idVerificationRequests  <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
-  regulatorServices       <- queryByParty @RegulatorService.Service              (.provider)
+  idVerificationRequests     <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
+  regulatorServicesRequests  <- queryByParty @RegulatorService.Request                     (.provider)
+  regulatorServices          <- queryByParty @RegulatorService.Service                     (.provider)
+  regulatorRoles             <- queryByParty @RegulatorRole.Role                           (.provider)
   submitCommands $
+    generateRoleCommands RegulatorRole.ApproveRegulatorRequest regulatorServicesRequests regulatorRoles ++
     generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
 
   creditRequests          <- queryByParty @Custody.CreditAccountRequest         (.provider)

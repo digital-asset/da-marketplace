@@ -1,18 +1,17 @@
 import React from 'react';
 import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { Account } from './pages/custody/Account';
 import { useParty } from '@daml/react';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
-import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
-import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
-import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
-import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
-import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
-import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
+import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
+import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
+import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
+import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
 import { CircularProgress } from '@material-ui/core';
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
@@ -64,6 +63,7 @@ import { DistributionServiceTable } from './pages/network/Distribution';
 import { Header } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
+import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -332,6 +332,10 @@ const AppComponent = () => {
         render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
+        path: '/app/setup/clearing/market/offer',
+        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
+      },
+      {
         path: '/app/setup/distribution/new/auction',
         render: () => <NewAuction services={auctionService} />,
       },
@@ -366,6 +370,20 @@ const AppComponent = () => {
     ],
   });
 
+  const notifications = useAllNotifications(party);
+  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [],
+    additionalRoutes: [
+      {
+        path: '/app/notifications',
+        render: () => <Notifications notifications={notifications} />,
+      },
+    ],
+  });
+
   const entriesToDisplay = entries.filter(e => e.displayEntry()).flatMap(e => e.sidebar);
   const additionRouting: RouteProps[] = _.compact(
     entries.filter(e => e.displayEntry()).flatMap(e => e.additionalRoutes)
@@ -381,7 +399,7 @@ const AppComponent = () => {
   };
 
   return (
-    <Page sideBarItems={entriesToDisplay}>
+    <Page sideBarItems={entriesToDisplay} showNotificationAlert={notifCount > 0}>
       {servicesLoading ? (
         <div>
           <CircularProgress color="secondary" />

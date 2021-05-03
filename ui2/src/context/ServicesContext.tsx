@@ -15,6 +15,11 @@ import {
   Request as ClearingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
 import {
+  Service as MarketClearingService,
+  Offer as MarketClearingOffer,
+  Request as MarketClearingRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import {
   Service as AuctionService,
   Request as AuctionRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
@@ -48,6 +53,7 @@ import { useStreamQueries } from '../Main';
 
 export enum ServiceKind {
   CUSTODY = 'Custody',
+  MARKET_CLEARING = 'Market Clearing',
   AUCTION = 'Auction',
   BIDDING = 'Bidding',
   ISSUANCE = 'Issuance',
@@ -56,11 +62,13 @@ export enum ServiceKind {
   CLEARING = 'Clearing',
   MATCHING = 'Matching',
   SETTLEMENT = 'Settlement',
+  DISTRIBUTOR = 'Distributor',
   REGULATOR = 'Regulator',
 }
 
 export type ServiceRoleOfferChoice =
   | typeof ClearingRole.OfferClearingService
+  | typeof ClearingRole.OfferMarketService
   | typeof TradingRole.OfferTradingService
   | typeof TradingRole.OfferListingService
   | typeof CustodyRole.OfferIssuanceService
@@ -71,6 +79,7 @@ export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string
 export type ServiceRequestTemplates =
   | CustodyRequest
   | ClearingRequest
+  | MarketClearingRequest
   | AuctionRequest
   | BiddingRequest
   | IssuanceRequest
@@ -83,6 +92,7 @@ export type ServiceOfferTemplates = TradingOffer;
 type ServiceContract =
   | CreateEvent<CustodyService>
   | CreateEvent<ClearingService>
+  | CreateEvent<MarketClearingService>
   | CreateEvent<AuctionService>
   | CreateEvent<BiddingService>
   | CreateEvent<IssuanceService>
@@ -108,6 +118,9 @@ const ServicesProvider: React.FC = ({ children }) => {
   const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
     ClearingService
   );
+  const { contracts: marketClearingService, loading: marketClearingLoading } = useStreamQueries(
+    MarketClearingService
+  );
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
@@ -125,6 +138,7 @@ const ServicesProvider: React.FC = ({ children }) => {
       setLoading(
         custodyLoading ||
           clearingLoading ||
+          marketClearingLoading ||
           auctionLoading ||
           biddingLoading ||
           issuanceLoading ||
@@ -135,6 +149,7 @@ const ServicesProvider: React.FC = ({ children }) => {
     [
       custodyLoading,
       clearingLoading,
+      marketClearingLoading,
       auctionLoading,
       biddingLoading,
       issuanceLoading,
@@ -148,6 +163,7 @@ const ServicesProvider: React.FC = ({ children }) => {
     () =>
       setServices([
         ...clearingService.map(c => ({ contract: c, service: ServiceKind.CLEARING })),
+        ...marketClearingService.map(c => ({ contract: c, service: ServiceKind.MARKET_CLEARING })),
         ...custodyService.map(c => ({ contract: c, service: ServiceKind.CUSTODY })),
         ...auctionService.map(c => ({ contract: c, service: ServiceKind.AUCTION })),
         ...biddingService.map(c => ({ contract: c, service: ServiceKind.BIDDING })),
@@ -158,6 +174,7 @@ const ServicesProvider: React.FC = ({ children }) => {
       ]),
     [
       clearingService,
+      marketClearingService,
       custodyService,
       auctionService,
       biddingService,

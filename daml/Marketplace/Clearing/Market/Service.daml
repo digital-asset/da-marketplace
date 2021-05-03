@@ -1,0 +1,76 @@
+module Marketplace.Clearing.Market.Service where
+
+import Marketplace.Listing.Model
+import Marketplace.Utils
+
+import DA.Next.Set (Set)
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+
+      nonconsuming ApproveClearedListing : ContractId ClearedListingApproval
+        with
+          listingId : Text
+          observers : Set Party
+        do
+          create ClearedListingApproval with provider = customer; clearinghouse = provider; ..
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do
+        pure ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        do
+          createOrLookup Service with ..
+
+      Decline : ()
+        do pure ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        create Service with ..
