@@ -57,7 +57,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
                 getName(c.payload.customer),
                 c.payload.assetLabel,
                 c.payload.description,
-                c.payload.safekeepingAccountId.label,
+                c.payload.safekeepingAccount.id.label,
                 <>
                   {party === c.payload.provider && (
                     <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
