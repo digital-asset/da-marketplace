@@ -15,6 +15,7 @@ type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
   activeMenuTitle?: boolean;
+  showNotificationAlert?: boolean;
   sideBarItems?: SidebarEntry[];
   topMenuButtons?: ITopMenuButtonInfo[];
 };
@@ -25,6 +26,7 @@ const Page: React.FC<Props> = ({
   menuTitle,
   topMenuButtons,
   activeMenuTitle,
+  showNotificationAlert,
   sideBarItems,
 }) => {
   const user = useParty();
@@ -98,6 +100,7 @@ const Page: React.FC<Props> = ({
           title={!!menuTitle ? menuTitle : <WelcomeHeader />}
           buttons={topMenuButtons}
           activeMenuTitle={activeMenuTitle}
+          showNotificationAlert={showNotificationAlert}
         />
 
         <PageSection className={className}>{children}</PageSection>

@@ -1,8 +1,8 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import { Button, Menu, Header } from 'semantic-ui-react';
 
-import { LogoutIcon } from '../../icons/icons';
+import { LogoutIcon, NotificationIcon } from '../../icons/icons';
 
 import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu';
 
@@ -18,11 +18,18 @@ export type ITopMenuButtonInfo = {
 type Props = {
   title?: React.ReactElement;
   activeMenuTitle?: boolean;
+  showNotificationAlert?: boolean;
   buttons?: ITopMenuButtonInfo[];
   buttonDivider?: boolean;
 };
 
-const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, buttonDivider }) => {
+const TopMenu: React.FC<Props> = ({
+  title,
+  buttons,
+  activeMenuTitle,
+  buttonDivider,
+  showNotificationAlert,
+}) => {
   const history = useHistory();
   const userDispatch = useUserDispatch();
 
@@ -57,6 +64,14 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, buttonDivid
               </OverflowMenu>
             </Menu.Item>
           )}
+          <Menu.Item className="notification-button">
+            <Link className="ghost smaller" to="/app/notifications">
+              <div>
+                <NotificationIcon />
+              </div>
+              <div className={classNames({ 'notifications-active': showNotificationAlert })}></div>
+            </Link>
+          </Menu.Item>
           <Menu.Item className={classNames('log-out-button', { divider: buttonDivider !== false })}>
             <Button className="ghost smaller" onClick={() => signOut(userDispatch, history)}>
               <div className="log-out">

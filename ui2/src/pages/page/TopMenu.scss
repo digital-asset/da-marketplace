@@ -59,6 +59,22 @@
       }
     }
 
+    .notification-button {
+      margin-top: $spacing-gap;
+      align-self: flex-start;
+      height: 100%;
+
+      .notifications-active {
+        position: relative;
+          background-color: var(--green-50);
+          border-radius: 100%;
+          width: 8px;
+          height: 8px;
+          top: -29px;
+          right: -14px;
+      }
+    }
+
     .notifications {
       padding: 0px $spacing-m;
     }

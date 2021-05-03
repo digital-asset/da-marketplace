@@ -712,12 +712,17 @@ const QuickSetup = () => {
       if (isHubDeployment && parties.length > 0) {
         const artifactHash = TRIGGER_HASH;
 
-        if (!artifactHash) {
+        if (!artifactHash || !adminCredentials) {
           return;
         }
 
         Promise.all(
-          parties.map(p => {
+          [
+            ...parties,
+            {
+              ...adminCredentials,
+            },
+          ].map(p => {
             return deployAutomation(
               artifactHash,
               MarketplaceTrigger.AutoApproveTrigger,
@@ -730,7 +735,7 @@ const QuickSetup = () => {
     }
 
     deployAllTriggers();
-  }, [parties]);
+  }, [parties, adminCredentials]);
 
   const handleLoad = async (newParties: PartyDetails[]) => {
     storeParties(newParties);
