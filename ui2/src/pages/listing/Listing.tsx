@@ -40,11 +40,18 @@ export const FairValueRequest: React.FC<FairValueRequestProps> = ({
     if (!service) return; // TODO: Display error
     const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
     if (!currencyAsset) return;
-    await ledger.exercise(ClearedMarketService.RequestFairValues, service.contractId, {
-      party,
-      currency: currencyAsset.payload.assetId,
-      optListingIds: selectedListingIds,
-    });
+    if (selectedListingIds == null) {
+      await ledger.exercise(ClearedMarketService.RequestAllFairValues, service.contractId, {
+        party,
+        currency: currencyAsset.payload.assetId,
+      });
+    } else {
+      await ledger.exercise(ClearedMarketService.RequestFairValues, service.contractId, {
+        party,
+        currency: currencyAsset.payload.assetId,
+        listingIds: selectedListingIds,
+      });
+    }
   };
   return (
     <ModalFormErrorHandled onSubmit={() => requestFairValues()} title="Request FV">

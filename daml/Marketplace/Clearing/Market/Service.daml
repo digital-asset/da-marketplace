@@ -20,16 +20,26 @@ template Service
     key (operator, provider, customer) : (Party, Party, Party)
     maintainer key._1
 
-    nonconsuming choice RequestFairValues : ContractId FairValueCalculationRequest
+    nonconsuming choice RequestAllFairValues : ContractId FairValueCalculationRequest
       with
         party : Party
-        optListingIds : Optional [Text]
         currency : Id
       controller party
       do
         upTo <- getTime
         assert $ Set.member party $ Set.fromList [provider, customer]
-        create FairValueCalculationRequest with ..
+        create FairValueCalculationRequest with optListingIds = None; ..
+
+    nonconsuming choice RequestFairValues : ContractId FairValueCalculationRequest
+      with
+        party : Party
+        listingIds : [Text]
+        currency : Id
+      controller party
+      do
+        upTo <- getTime
+        assert $ Set.member party $ Set.fromList [provider, customer]
+        create FairValueCalculationRequest with optListingIds = Some listingIds; ..
 
     controller customer can
       nonconsuming ApproveClearedListing : ContractId ClearedListingApproval
