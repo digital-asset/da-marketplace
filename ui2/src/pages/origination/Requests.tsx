@@ -11,6 +11,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const party = useParty();
@@ -50,6 +51,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
           ]}
           loading={requestsLoading}
           rowsClickable
+          clickableIcon={<ArrowRightIcon />}
           rows={requests.map(c => {
             return {
               elements: [

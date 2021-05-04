@@ -11,6 +11,7 @@ import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -51,6 +52,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
         headings={['Asset', 'Account', 'Owner']}
         loading={depositsLoading}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         rows={deposits.map(c => {
           return {
             elements: [
@@ -74,6 +76,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <StripedTable
         headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         loading={accountsLoading || allocatedAccountsLoading}
         rows={allAccounts.map(a => {
           return {
