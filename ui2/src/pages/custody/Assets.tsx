@@ -1,17 +1,16 @@
 import React, { useMemo } from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { IconButton } from '@material-ui/core';
 import { useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { ServicePageProps } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -21,15 +20,16 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
-  const tradeableDeposits = useMemo(
-    () =>
-      deposits.filter(
-        d =>
-          accounts.findIndex(s => s.payload.account.id.label === d.payload.account.id.label) !== -1
-      ),
-    [deposits, accounts, party]
+  const allAccounts = useMemo(
+    () => accounts.map(a => {
+      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
+    }).concat(allocatedAccounts.map(a => {
+      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
+    }))
+    , [accounts, allocatedAccounts]
   );
 
   return (
@@ -42,9 +42,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Asset', 'Account', 'Owner']}
-        loading={accountsLoading || depositsLoading}
+        loading={depositsLoading}
         rowsClickable
-        rows={tradeableDeposits.map(c => {
+        rows={deposits.map(c => {
           return {
             elements: [
               <>
@@ -56,8 +56,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             onClick: () =>
               history.push(
                 '/app/custody/account/' +
-                  accounts
-                    .find(a => a.payload.account.id.label === c.payload.account.id.label)
+                allAccounts
+                    .find(a => a.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
               ),
           };
@@ -67,24 +67,23 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       <StripedTable
         headings={[
           'Account',
+          'Type',
           'Provider',
           'Owner',
-          'Role',
-          'Controllers',
-          // 'Requests',
+          'Role'
         ]}
         rowsClickable
-        loading={accountsLoading}
-        rows={accounts.map(c => {
+        loading={accountsLoading || allocatedAccountsLoading}
+        rows={allAccounts.map(a => {
           return {
             elements: [
-              c.payload.account.id.label,
-              getName(c.payload.account.provider),
-              getName(c.payload.account.owner),
-              party === c.payload.account.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap).join(', '),
+              a.account.id.label,
+              accounts.find(b => b.contractId === a.contractId) ? 'Normal' : 'Allocation',
+              getName(a.account.provider),
+              getName(a.account.owner),
+              party === a.account.provider ? 'Provider' : 'Client'
             ],
-            onClick: () => history.push('/app/custody/account/' + c.contractId.replace('#', '_')),
+            onClick: () => history.push('/app/custody/account/' + a.contractId)
           };
         })}
       />
