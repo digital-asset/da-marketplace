@@ -37,6 +37,7 @@ import {
 } from './Utils';
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
+import { ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   cid: string;
@@ -304,6 +305,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               ]}
               loading={allOrders.loading}
               rowsClickable
+              clickableIcon={<ArrowRightIcon />}
               rows={orders.map(c => {
                 return {
                   elements: [

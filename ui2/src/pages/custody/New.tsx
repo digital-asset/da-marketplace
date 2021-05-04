@@ -83,7 +83,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          observers: [publicParty],
+          observers: [],
           ctrls: [service.payload.provider, service.payload.customer],
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
@@ -99,7 +99,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          observers: { textMap: {} }, // TODO: Add public party?
+          observers: { textMap: {} },
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
