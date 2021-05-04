@@ -58,12 +58,7 @@ import {
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import {
-  deployAutomation,
-  getPublicAutomation,
-  MarketplaceTrigger,
-  TRIGGER_HASH,
-} from '../../automation';
+import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 import { handleSelectMultiple } from '../common';
 import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
 import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
@@ -71,11 +66,11 @@ import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation
 enum ServiceKind {
   CLEARING = 'Clearing',
   CUSTODY = 'Custody',
-  LISTING = 'Listing',
   TRADING = 'Trading',
   MATCHING = 'Matching',
   SETTLEMENT = 'Settlement',
   REGULATOR = 'Regulator',
+  DISTRIBUTION = 'Distribution',
 }
 
 interface IVerifiedIdentityData {
@@ -227,7 +222,9 @@ const QuickSetupTable = (props: {
       addMarketData(c.payload.provider, ServiceKind.CLEARING + ' (Pending)')
     );
     custodianRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.CUSTODY));
-    distributorRoles.contracts.forEach(c => addMarketData(c.payload.provider, ServiceKind.LISTING));
+    distributorRoles.contracts.forEach(c =>
+      addMarketData(c.payload.provider, ServiceKind.DISTRIBUTION)
+    );
     settlementServices.contracts.forEach(c =>
       addMarketData(c.payload.provider, ServiceKind.SETTLEMENT)
     );
@@ -488,8 +485,10 @@ const QuickSetupTable = (props: {
             return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
           case ServiceKind.SETTLEMENT:
             return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
-          case ServiceKind.LISTING:
+          case ServiceKind.DISTRIBUTION:
             return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
+          default:
+            throw new Error(`Unsupported service: ${service}`);
         }
       })
     );
@@ -506,12 +505,14 @@ const QuickSetupTable = (props: {
         return !!exhangeOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.MATCHING:
         return !!matchingOffers.contracts.find(c => c.payload.provider === provider);
-      case ServiceKind.LISTING:
+      case ServiceKind.DISTRIBUTION:
         return !!distributorOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.SETTLEMENT:
         return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.REGULATOR:
         return !!regulatorServiceOffers.contracts.find(c => c.payload.provider === provider);
+      default:
+        throw new Error(`Unsupported service: ${service}`);
     }
   }
 
@@ -529,7 +530,7 @@ const QuickSetupTable = (props: {
         return !!exchangeRoles.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.MATCHING:
         return !!matchingServices.contracts.find(c => c.payload.provider === provider);
-      case ServiceKind.LISTING:
+      case ServiceKind.DISTRIBUTION:
         return !!distributorRoles.contracts.find(c => c.payload.provider === provider);
       case ServiceKind.SETTLEMENT:
         return !!settlementServices.contracts.find(c => c.payload.provider === provider);
