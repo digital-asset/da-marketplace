@@ -22,33 +22,33 @@
 
 ## Issuing new assets
 
-10. Login as `Issuer`
-11. `Issuer`: Request `Custody` service from the `Bank`
-12. `Issuer`: Request `Issuance` service from the `Bank`
-13. `Issuer`: go to Wallet and create a regular account
-14. `Issuer`: go to Wallet and create an allocation account
+11. Login as `Issuer`
+12. `Issuer`: Request `Custody` service from the `Bank`
+13. `Issuer`: Request `Issuance` service from the `Bank`
+14. `Issuer`: go to Wallet and create a regular account
+15. `Issuer`: go to Wallet and create an allocation account
     - **Nominee**: `Bank`
-15. `Issuer`: go to Setup and create a base instrument called USD
-16. `Issuer`: go to Setup and create a base instrument called BTC
-17. `Issuer`: go to Setup and create an issuance of 2000 USD (give arbitrary ID)
-18. `Issuer`: go to Setup and create an issuance of 500 BTC (give arbitrary ID)
+16. `Issuer`: go to Setup and create a base instrument called USD
+17. `Issuer`: go to Setup and create a base instrument called BTC
+18. `Issuer`: go to Setup and create an issuance of 2000 USD (give arbitrary ID)
+19. `Issuer`: go to Setup and create an issuance of 500 BTC (give arbitrary ID)
 
 ## Primary distribution
 
 Auctioning off assets
 
-19. `Issuer`: on Landing, request `Auction` service from the `Bank`
-20. `Issuer`: go to Setup and create a new auction
+20. `Issuer`: on Landing, request `Auction` service from the `Bank`
+21. `Issuer`: go to Setup and create a new auction
     - **Auctioned Asset** : `BTC`
     - **Quoted Asset** : `USD`
     - **Quantity** : `500`
     - **Floor Price** : `1000`
     - **Auction ID** : `123` (any arbitrary number)
-21. Login as `Exchange`
-22. `Exchange`: Request `Custody` service from `Bank`
-23. `Exchange`: Go to Wallet, create a regular account with `Bank`
-24. `Exchange`: Click on newly created account row
-25. `Exchange`: Deposit 5000 US Dollars to account
+22. Login as `Exchange`
+23. `Exchange`: Request `Custody` service from `Bank`
+24. `Exchange`: Go to Wallet, create a regular account with `Bank`
+25. `Exchange`: Click on newly created account row
+26. `Exchange`: Deposit 5000 US Dollars to account
     <!-- 26. `Exchange`: Request Auction service from `Bank`. -->
     <!-- TODO: complete primary distribution flow from UI -->
 
