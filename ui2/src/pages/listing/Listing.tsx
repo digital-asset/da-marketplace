@@ -17,10 +17,11 @@ import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { CreateEvent } from '@daml/ledger';
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
-  listingId?: string;
+  listingId?: Id;
   selectListings?: boolean;
 };
 
@@ -89,7 +90,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const fairValues = fairValueContracts.filter(
-    fv => fv.payload.listingId === listing?.payload.listingId
+    fv => fv.payload.listingId.label === listing?.payload.listingId.label
   );
 
   const {
@@ -97,7 +98,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     loading: manualFVRequestsLoading,
   } = useStreamQueries(ManualFairValueCalculation);
   const manualFVRequests = manualFVRequestContracts.filter(
-    fv => fv.payload.listingId === listing?.payload.listingId
+    fv => fv.payload.listingId.label === listing?.payload.listingId.label
   );
 
   const requestDisableDelisting = async () => {
@@ -110,7 +111,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <div className="listing">
-      <Header as="h2">{listing?.payload.listingId}</Header>
+      <Header as="h2">{listing?.payload.listingId.label}</Header>
       <br />
       <br />
       <Tile header={<h4>Actions</h4>}>
@@ -147,7 +148,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                 elements: [
                   getName(listing.payload.provider),
                   getName(listing.payload.customer),
-                  listing.payload.listingId,
+                  listing.payload.listingId.label,
                   listing.payload.calendarId,
                   listing.payload.tradedAssetId.label,
                   listing.payload.tradedAssetPrecision,
@@ -177,7 +178,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               elements: [
                 getName(fv.payload.provider),
                 getName(fv.payload.customer),
-                fv.payload.listingId,
+                fv.payload.listingId.label,
                 fv.payload.price,
                 fv.payload.currency.label,
                 fv.payload.upTo,

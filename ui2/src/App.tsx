@@ -220,7 +220,7 @@ const AppComponent = () => {
         icon: <OrdersIcon />,
         groupBy: 'Secondary Market',
         children: listings.map(c => ({
-          label: c.payload.listingId,
+          label: c.payload.listingId.label,
           path: '/app/trading/markets/' + c.contractId.replace('#', '_'),
           render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
           icon: <ExchangeIcon />,

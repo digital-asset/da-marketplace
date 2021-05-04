@@ -61,14 +61,14 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         loading={fairValuesLoading}
         rows={listings.map(c => {
           const fairValues = fairValueContracts.filter(
-            fv => fv.payload.listingId === c.payload.listingId
+            fv => fv.payload.listingId.label === c.payload.listingId.label
           );
           return {
             elements: [
               getName(c.payload.provider),
               getName(c.payload.customer),
               getMarketType(c),
-              c.payload.listingId,
+              c.payload.listingId.label,
               c.payload.calendarId,
               c.payload.tradedAssetId.label,
               c.payload.tradedAssetPrecision,

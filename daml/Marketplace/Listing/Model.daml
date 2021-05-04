@@ -44,18 +44,18 @@ template Listing
             (Cleared p _) -> [p]; _ -> []
 
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
-    key (operator, provider, listingId) : (Party, Party, Text)
-    maintainer key._1
+    key listingId : Id
+    maintainer key.signatories
 
 template ClearedListingApproval
   with
     provider : Party
     clearinghouse : Party
-    listingId : Text
+    symbol : Text
     observers : Set Party
   where
     signatory provider, clearinghouse
     observer observers
 
-    key (provider, clearinghouse, listingId) : (Party, Party, Text)
+    key (provider, clearinghouse, symbol) : (Party, Party, Text)
     maintainer key._1

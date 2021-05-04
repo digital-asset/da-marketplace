@@ -127,7 +127,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const service = clientServices[0];
 
   const orders = allOrders.contracts.filter(
-    o => o.payload.details.symbol === listing.payload.listingId
+    o => o.payload.details.listingId.label === listing.payload.listingId.label
   );
   const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
   const isPendingLimitOrder = (status: Status) =>
@@ -200,7 +200,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
       id: { signatories: { textMap: {} }, label: orderId, version: '0' },
-      symbol: listing.payload.listingId,
+      listingId: listing.payload.listingId,
       asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,
       orderType: isLimit
@@ -307,7 +307,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               rows={orders.map(c => {
                 return {
                   elements: [
-                    c.payload.details.symbol,
+                    c.payload.details.listingId.label,
                     c.payload.details.id.label,
                     c.payload.details.orderType.tag,
                     <div style={{ color: getColor(c) }}>{c.payload.details.side}</div>,

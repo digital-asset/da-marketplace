@@ -87,7 +87,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       ? { tag: 'CollateralizedRequest', value: {} }
       : { tag: 'ClearedRequest', value: clearedBy };
     const request: RequestCreateListing = {
-      listingId,
+      symbol: listingId,
       listingType,
       calendarId,
       description,

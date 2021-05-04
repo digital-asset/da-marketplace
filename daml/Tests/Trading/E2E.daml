@@ -13,6 +13,7 @@ import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches orderCid party status = do
@@ -36,7 +37,7 @@ tradingEndToEndTest = do
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
-    listingId = "TSLAUSD"
+    symbol = "TSLAUSD"
     listingType = Listing.CollateralizedRequest
     calendarId = "1261007448"
     description = "Tesla Inc."
@@ -51,6 +52,8 @@ tradingEndToEndTest = do
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
+
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
   Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
@@ -58,7 +61,7 @@ tradingEndToEndTest = do
         collateral = Order.Collateral aliceDepositCid
         details = Order.Details with
             id = aliceOrderId
-            symbol = listingId
+            listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
@@ -71,7 +74,7 @@ tradingEndToEndTest = do
         collateral = Order.Collateral bobDepositCid
         details = Order.Details with
             id = bobOrderId
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
