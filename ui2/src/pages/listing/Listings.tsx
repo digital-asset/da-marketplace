@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Service as ClearedMarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
-import { Button, Header, Form } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
   ManualFairValueCalculation,
   FairValue,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 
 type Props = {
@@ -34,13 +32,6 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   );
 
   const { contracts: fairValueContracts, loading: fairValuesLoading } = useStreamQueries(FairValue);
-
-  const requestDisableDelisting = async (c: CreateEvent<Listing>) => {
-    if (!service) return; // TODO: Display error
-    await ledger.exercise(Service.RequestDisableListing, service.contractId, {
-      listingCid: c.contractId,
-    });
-  };
 
   const getMarketType = (c: CreateEvent<Listing>) => {
     const listingType = c.payload.listingType;
@@ -64,10 +55,10 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
           'Traded Asset Precision',
           'Quoted Asset',
           'Quoted Asset Precision',
-          'Fair Value',
-          'Action',
+          'Fair Value'
         ]}
         rowsClickable
+        loading={fairValuesLoading}
         rows={listings.map(c => {
           const fairValues = fairValueContracts.filter(
             fv => fv.payload.listingId === c.payload.listingId
@@ -84,15 +75,6 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               c.payload.quotedAssetId.label,
               c.payload.quotedAssetPrecision,
               fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
-              party === c.payload.customer && (
-                <Button
-                  floated="right"
-                  className="ghost"
-                  onClick={() => requestDisableDelisting(c)}
-                >
-                  Disable
-                </Button>
-              ),
             ],
             onClick: () => history.push('/app/manage/listing/' + c.contractId.replace('#', '_')),
           };

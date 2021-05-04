@@ -27,5 +27,3 @@ filterField accessor pred = filter (\(_,x) -> pred (accessor x))
 -- |Run a 'query' and filter on the specified field
 filterQuery : forall a b m. (Template a, ActionTriggerAny m, Functor m) => (a -> b) -> (b -> Bool) -> m [(ContractId a, a)]
 filterQuery accessor pred = filterField accessor pred <$> query @a
-
-

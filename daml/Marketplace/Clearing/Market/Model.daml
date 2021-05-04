@@ -12,13 +12,14 @@ template FairValueCalculationRequest
     currency : Id
     upTo : Time
   where
-    signatory provider
+    signatory operator, provider
     controller provider can
       FairValueCalculationRequest_Ack : ()
         do return ()
 
 template ManualFairValueCalculation
   with
+    operator : Party
     provider : Party
     customer : Party
     listingId : Text
@@ -26,7 +27,7 @@ template ManualFairValueCalculation
     upTo : Time
     observers : Set Party
   where
-    signatory provider
+    signatory operator, provider
 
     controller customer can
       ManualFairValueCalculation_Calculate : ContractId FairValue
@@ -38,6 +39,7 @@ template ManualFairValueCalculation
 
 template FairValue
   with
+    operator : Party
     provider : Party
     customer : Party
     listingId : Text
@@ -47,5 +49,5 @@ template FairValue
     upTo : Time
     observers : Set Party
   where
-    signatory provider
+    signatory operator, provider
     observer customer, observers

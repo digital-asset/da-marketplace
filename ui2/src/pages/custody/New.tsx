@@ -83,7 +83,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          observers: [],
+          observers: [publicParty],
           ctrls: [service.payload.provider, service.payload.customer],
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);

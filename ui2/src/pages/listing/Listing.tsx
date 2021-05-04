@@ -70,7 +70,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const cid = contractId.replace('_', '#');
 
-  const { contracts: listings } = useStreamQueries(ListingTemplate);
+  const { contracts: listings, loading } = useStreamQueries(ListingTemplate);
 
   const listing = listings.find(a => a.contractId === cid);
   const service = services.find(s => s.payload.customer === party);
@@ -80,7 +80,6 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const clearedMarketService = clearedMarketServices.find(
     cms => cms.payload.customer === listing?.payload.customer
   );
-  console.log(clearedMarketService);
 
   const fairValues = fairValueContracts.filter(
     fv => fv.payload.listingId === listing?.payload.listingId
@@ -95,6 +94,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const requestDisableDelisting = async () => {
+    console.log(service);
     if (!service || !listing) return; // TODO: Display error
     await ledger.exercise(Service.RequestDisableListing, service.contractId, {
       listingCid: listing.contractId,
@@ -124,6 +124,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       {!!listing && (
         <Tile header={<h4>Details</h4>}>
           <StripedTable
+            loading={loading}
             headings={[
               'Provider',
               'Client',

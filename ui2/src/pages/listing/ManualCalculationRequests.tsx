@@ -28,7 +28,6 @@ export const FairValueCalculationRequests: React.FC<Props> = ({ requests, loadin
   return (
     <StripedTable
       headings={['Provider', 'Client', 'Listing ID', 'Currency', 'Up To', 'Action']}
-      rowsClickable
       loading={loading}
       rows={requests.map(fv => {
         return {
