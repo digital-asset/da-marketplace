@@ -41,6 +41,27 @@ template Service
         assert $ Set.member party $ Set.fromList [provider, customer]
         create FairValueCalculationRequest with optListingIds = Some listingIds; ..
 
+    controller provider can
+      nonconsuming CreateFairValue : ContractId FairValue
+        with
+          listingId : Text
+          price : Decimal
+          currency : Id
+          timestamp : Time
+          upTo : Time
+          observers : Set Party
+        do
+          create FairValue with ..
+
+      nonconsuming CreateManualFairValueRequest : ContractId ManualFairValueCalculation
+        with
+          listingId : Text
+          currency : Id
+          upTo : Time
+          observers : Set Party
+        do
+          create ManualFairValueCalculation with ..
+
     controller customer can
       nonconsuming ApproveClearedListing : ContractId ClearedListingApproval
         with

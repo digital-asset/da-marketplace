@@ -13,6 +13,7 @@ import qualified Marketplace.Clearing.Market.Model as Clearing
 import qualified Marketplace.Clearing.Model as Clearing
 import qualified Marketplace.Clearing.Role as Clearing
 import qualified Marketplace.Clearing.Service as Clearing
+import qualified Marketplace.Clearing.Market.Service as MarketClearing
 import  Marketplace.Clearing.Service
 
 import Utils
@@ -32,6 +33,7 @@ handleClearing = Trigger
   , rule = handleCCPRule
   , registeredTemplates = RegisteredTemplates  [ registeredTemplate @Clearing.Role
                                                , registeredTemplate @Clearing.Service
+                                               , registeredTemplate @MarketClearing.Service
                                                , registeredTemplate @Listing.T
                                                , registeredTemplate @AssetDeposit
                                                , registeredTemplate @Clearing.FairValue
@@ -168,13 +170,14 @@ collectDeposits restFunds (used, (nextDeposit::remaining))
 handleCalculationRequests : Party -> ContractPair Clearing.FairValueCalculationRequest -> TriggerA ClearingState ()
 handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationRequest{..}) = do
   debug "handling calculation requests..."
+  service <- head <$> filterQuery @MarketClearing.Service (.customer) (== customer)
   allListings <- query @Listing.T
   let optListingIdSet = Set.fromList <$> optListingIds
   let listings = case optListingIdSet of
         (Some ids) -> filterField (.listingId) (`Set.member` ids) allListings
         None       -> allListings
 
-  forA_ listings (handleFairValueCalculation party currency upTo)
+  forA_ listings (handleFairValueCalculation party service currency upTo)
   emitExerciseCmd requestCid Clearing.FairValueCalculationRequest_Ack
   return ()
 
@@ -186,8 +189,8 @@ handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationReq
 --
 -- TODO: Allow user to specify a 'from' Time interval before which trades and
 -- fairvalues will be ignored.
-handleFairValueCalculation : Party -> Id -> Time -> ContractPair Listing.T -> TriggerA ClearingState ()
-handleFairValueCalculation party currency upTo (marketPairCid,l@(Listing.Listing{..})) = do
+handleFairValueCalculation : Party -> ContractPair MarketClearing.Service -> Id -> Time -> ContractPair Listing.T -> TriggerA ClearingState ()
+handleFairValueCalculation party (serviceCid,_) currency upTo (marketPairCid,l@(Listing.Listing{..})) = do
   debug ("calculating FVR: " <> l.listingId)
 
   fairValues <- sortOn ((.upTo) . snd)
@@ -200,8 +203,8 @@ handleFairValueCalculation party currency upTo (marketPairCid,l@(Listing.Listing
   timestamp <- getTime
 
   case getBestPrice relevantTrades fairValues of
-    (Some bp) -> dedupCreate $ Clearing.FairValue with provider = party, price = bp; ..
-    None      -> dedupCreate $ Clearing.ManualFairValueCalculation with provider = party,  ..
+    (Some bp) -> dedupExercise serviceCid MarketClearing.CreateFairValue with price = bp; ..
+    None      -> dedupExercise serviceCid $ MarketClearing.CreateManualFairValueRequest with ..
 
   return ()
 

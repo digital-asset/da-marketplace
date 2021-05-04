@@ -301,21 +301,21 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/listings',
+        path: '/app/manage/listings/:contractId?',
         render: () => (
           <Manage>
             <ListingsTable services={listingService} listings={listings} />
           </Manage>
         ),
       },
-      {
-        path: '/app/manage/listing/:contractId',
-        render: () => (
-          <Manage>
-            <ListingComponent services={listingService} />
-          </Manage>
-        ),
-      },
+      // {
+      //   path: '/app/manage/listings/:contractId',
+      //   render: () => (
+      //     <Manage>
+      //       <ListingComponent services={listingService} />
+      //     </Manage>
+      //   ),
+      // },
     ],
   });
 

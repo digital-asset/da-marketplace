@@ -25,7 +25,7 @@ template Listing
     provider : Party
     customer : Party
     listingType : ListingType
-    listingId : Id
+    listingId : Text
     calendarId : Text
     description : Text
     tradedAssetId : Id

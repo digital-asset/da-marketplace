@@ -54,7 +54,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
-      trigger={<Button className="ghost">{title}</Button>}
+      trigger={<Button className="ghost" onClick={e => e.stopPropagation()}>{title}</Button>}
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>

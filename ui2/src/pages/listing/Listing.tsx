@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { RouteComponentProps, useParams, withRouter, useHistory } from 'react-router-dom';
 import { useParty, useLedger, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -17,6 +17,7 @@ import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { CreateEvent } from '@daml/ledger';
+import {ArrowLeftIcon} from '../../icons/icons';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
@@ -74,6 +75,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contractId } = useParams<any>();
+  const history = useHistory();
 
   const cid = contractId.replace('_', '#');
 
@@ -110,6 +112,9 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <div className="listing">
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <Header as="h2">{listing?.payload.listingId}</Header>
       <br />
       <br />
@@ -170,7 +175,6 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <Tile header={<h4>Fair Values</h4>}>
         <StripedTable
           headings={['Provider', 'Client', 'Listing ID', 'Price', 'Currency', 'Up To']}
-          rowsClickable
           loading={fairValuesLoading}
           rows={fairValues.reverse().map(fv => {
             return {
