@@ -18,12 +18,13 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
-import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
-import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
@@ -32,7 +33,7 @@ import {
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
 type DamlHubParty = string;
@@ -90,6 +91,7 @@ interface RequestInterface {
   provider: string;
   tradingAccount?: Account;
   allocationAccount?: Account;
+  receivableAccount?: Account;
   clearingAccount?: Account;
   marginAccount?: Account;
 }
@@ -196,36 +198,54 @@ const Landing = () => {
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
 
-    if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
+    let params: RequestInterface = {
+      customer: party,
+      provider,
+    };
+
+    if (dialogState?.tradingAccount) {
       const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
-      const allocationAccount = accounts.find(a => a.id.label === dialogState.allocationAccount);
-
-      const params = {
-        provider,
+      params = {
+        ...params,
         tradingAccount,
-        allocationAccount,
-        customer: party,
       };
-
-      setRequestParams(params);
-    } else if (dialogState?.clearingAccount && dialogState?.marginAccount) {
-      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
-      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
-
-      const params = {
-        provider,
-        clearingAccount,
-        marginAccount,
-        customer: party,
-      };
-
-      setRequestParams(params);
-    } else {
-      setRequestParams({
-        provider,
-        customer: party,
-      });
     }
+
+    if (dialogState?.allocationAccount) {
+      const allocationAccount = allocationAccounts.find(
+        a => a.id.label === dialogState.allocationAccount
+      );
+      params = {
+        ...params,
+        allocationAccount,
+      };
+    }
+
+    if (dialogState?.clearingAccount) {
+      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
+      params = {
+        ...params,
+        clearingAccount,
+      };
+    }
+
+    if (dialogState?.marginAccount) {
+      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
+      params = {
+        ...params,
+        marginAccount,
+      };
+    }
+
+    if (dialogState?.receivableAccount) {
+      const receivableAccount = accounts.find(a => a.id.label === dialogState.receivableAccount);
+      params = {
+        ...params,
+        receivableAccount,
+      };
+    }
+
+    setRequestParams(params);
   }, [dialogState]);
 
   const formatter = new Intl.NumberFormat('en-US', {
@@ -344,6 +364,28 @@ const Landing = () => {
                     label: 'Allocation Account',
                     type: 'selection',
                     items: allocationAccountNames,
+                  },
+                })
+              }
+            />
+            <OverflowMenuEntry
+              label="Request Auction Service"
+              onClick={() =>
+                requestService(AuctionRequest, ServiceKind.AUCTION, {
+                  tradingAccount: {
+                    label: 'Trading Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  allocationAccount: {
+                    label: 'Allocation Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
+                  },
+                  receivableAccount: {
+                    label: 'Receivable Account',
+                    type: 'selection',
+                    items: accountNames,
                   },
                 })
               }
