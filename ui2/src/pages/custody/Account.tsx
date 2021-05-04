@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -15,7 +15,7 @@ import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
-import {AllocationAccountRule} from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -29,17 +29,24 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(AllocationAccountRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
+    AllocationAccountRule
+  );
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
 
   const allAccounts = useMemo(
-    () => accounts.map(a => {
-      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
-    }).concat(allocatedAccounts.map(a => {
-      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
-    }))
-    , [accounts, allocatedAccounts]
+    () =>
+      accounts
+        .map(a => {
+          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+        })
+        .concat(
+          allocatedAccounts.map(a => {
+            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+          })
+        ),
+    [accounts, allocatedAccounts]
   );
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
@@ -82,8 +89,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     return <h4>Could not find account.</h4>;
   }
 
-  const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId)
-  const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId)
+  const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId);
+  const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId);
 
   const accountDeposits = deposits.filter(
     d =>
@@ -186,18 +193,18 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...creditDialogProps} />
       <div className="account">
         <Header as="h2">{targetAccount.account.id.label}</Header>
-        {normalAccount &&
-        <Tile header={<h4>Actions</h4>}>
-          <div className="action-row">
-            <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
-              Deposit
-            </Button>
-            <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
-              Close
-            </Button>
-          </div>
-        </Tile>
-        }
+        {normalAccount && (
+          <Tile header={<h4>Actions</h4>}>
+            <div className="action-row">
+              <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
+                Deposit
+              </Button>
+              <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
+                Close
+              </Button>
+            </div>
+          </Tile>
+        )}
 
         <div className="account-overview">
           <div className="details">
@@ -236,26 +243,24 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                       {party === targetAccount.account.provider ? 'Provider' : 'Client'}
                     </Table.Cell>
                   </Table.Row>
-                  {normalAccount &&
+                  {normalAccount && (
                     <Table.Row key={5}>
-                        <Table.Cell key={0}>
-                            <b>Controllers</b>
-                        </Table.Cell>
-                        <Table.Cell key={1}>
-                          {Object.keys(normalAccount.payload.ctrls.textMap).join(', ')}
-                        </Table.Cell>
-                    </Table.Row>
-                  }
-                  {allocationAccount &&
-                  <Table.Row key={5}>
                       <Table.Cell key={0}>
-                          <b>Nominee</b>
+                        <b>Controllers</b>
                       </Table.Cell>
                       <Table.Cell key={1}>
-                        { allocationAccount.payload.nominee }
+                        {Object.keys(normalAccount.payload.ctrls.textMap).join(', ')}
                       </Table.Cell>
-                  </Table.Row>
-                  }
+                    </Table.Row>
+                  )}
+                  {allocationAccount && (
+                    <Table.Row key={5}>
+                      <Table.Cell key={0}>
+                        <b>Nominee</b>
+                      </Table.Cell>
+                      <Table.Cell key={1}>{allocationAccount.payload.nominee}</Table.Cell>
+                    </Table.Row>
+                  )}
                 </Table.Body>
               </Table>
             </Tile>

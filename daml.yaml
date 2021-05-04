@@ -6,9 +6,6 @@ parties:
   - Alice
   - Bob
   - Operator
-  - Custodian
-  - BtcIssuer
-  - UsdtIssuer
   - Public
   - Exchange
   - Ccp

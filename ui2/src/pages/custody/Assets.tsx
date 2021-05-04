@@ -10,7 +10,7 @@ import { ServicePageProps } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { AllocationAccountRule } from "@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module";
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -20,16 +20,23 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(AllocationAccountRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
+    AllocationAccountRule
+  );
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
   const allAccounts = useMemo(
-    () => accounts.map(a => {
-      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
-    }).concat(allocatedAccounts.map(a => {
-      return { account: a.payload.account, contractId: a.contractId.replace('#', '_') }
-    }))
-    , [accounts, allocatedAccounts]
+    () =>
+      accounts
+        .map(a => {
+          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+        })
+        .concat(
+          allocatedAccounts.map(a => {
+            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+          })
+        ),
+    [accounts, allocatedAccounts]
   );
 
   return (
@@ -56,7 +63,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             onClick: () =>
               history.push(
                 '/app/custody/account/' +
-                allAccounts
+                  allAccounts
                     .find(a => a.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
               ),
@@ -65,13 +72,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
-        headings={[
-          'Account',
-          'Type',
-          'Provider',
-          'Owner',
-          'Role'
-        ]}
+        headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}
         rowsClickable
         loading={accountsLoading || allocatedAccountsLoading}
         rows={allAccounts.map(a => {
@@ -81,9 +82,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
               accounts.find(b => b.contractId === a.contractId) ? 'Normal' : 'Allocation',
               getName(a.account.provider),
               getName(a.account.owner),
-              party === a.account.provider ? 'Provider' : 'Client'
+              party === a.account.provider ? 'Provider' : 'Client',
             ],
-            onClick: () => history.push('/app/custody/account/' + a.contractId)
+            onClick: () => history.push('/app/custody/account/' + a.contractId),
           };
         })}
       />
