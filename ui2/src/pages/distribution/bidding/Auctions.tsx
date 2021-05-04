@@ -8,6 +8,7 @@ import { getBidStatus, getBidAllocation } from '../Utils';
 import StripedTable from '../../../components/Table/StripedTable';
 import Tile from '../../../components/Tile/Tile';
 import { Icon } from 'semantic-ui-react';
+import { ArrowRightIcon } from '../../../icons/icons';
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
@@ -25,6 +26,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
           headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
           loading={biddingAuctionsLoading}
           rowsClickable
+          clickableIcon={<ArrowRightIcon />}
           rows={biddingAuctions.map(c => {
             return {
               elements: [
