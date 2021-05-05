@@ -1,7 +1,7 @@
 module Marketplace.Listing.Service where
 
 import DA.Finance.Types
-import DA.Next.Set (Set, fromList)
+import DA.Set (Set, fromList)
 import Marketplace.Clearing.Market.Service qualified as Clearing
 import Marketplace.Trading.Error qualified as Error
 import Marketplace.Listing.Model ( ListingType(..), Listing(..), Status(..))

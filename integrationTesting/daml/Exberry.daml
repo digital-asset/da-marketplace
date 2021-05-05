@@ -3,7 +3,7 @@ module Exberry where
 import Daml.Script
 import DA.Optional
 import DA.Finance.Types (Id(..), Asset(..))
-import DA.Next.Set (fromList)
+import DA.Set (fromList)
 import Marketplace.Trading.Model qualified as O
 import Marketplace.Trading.Service qualified as S
 import Marketplace.Listing.Service qualified as L

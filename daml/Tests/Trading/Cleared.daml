@@ -14,7 +14,7 @@ import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 
 import DA.Finance.Types
-import DA.Next.Set qualified as Set
+import DA.Set qualified as Set
 import DA.List (head)
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()

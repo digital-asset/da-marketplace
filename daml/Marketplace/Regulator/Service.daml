@@ -1,6 +1,6 @@
 module Marketplace.Regulator.Service where
 
-import DA.Next.Set (Set, fromList)
+import DA.Set (Set, fromList)
 import Marketplace.Regulator.Model (VerifiedIdentity(..))
 import Marketplace.Utils
 

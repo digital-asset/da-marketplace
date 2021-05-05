@@ -3,7 +3,7 @@ module Tests.Locking where
 import Daml.Script
 import DA.Assert ((===))
 import DA.Finance.Types (Id(..))
-import DA.Next.Set
+import DA.Set
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule, Transfer(..), Withdraw(..))
