@@ -100,6 +100,8 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
           onClose(false);
           return;
         }
+      default:
+        throw new Error(`Unsupported service: ${service}`);
     }
   };
 

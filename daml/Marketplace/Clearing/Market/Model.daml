@@ -28,8 +28,9 @@ template ManualFairValueCalculation
     observers : Set Party
   where
     signatory operator, provider
+    let exchange = customer
 
-    controller customer can
+    controller exchange can
       ManualFairValueCalculation_Calculate : ContractId FairValue
         with
           price : Decimal

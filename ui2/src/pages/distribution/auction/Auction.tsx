@@ -41,8 +41,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const ledger = useLedger();
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
   const isAuctionProvider = auctionProviderServices.length > 0;
-  const auctionCustomerServices = auctionServices.filter(s => s.payload.customer === party);
-  const isAuctionCustomer = auctionCustomerServices.length > 0;
   const biddingProviderServices = biddingServices.filter(s => s.payload.provider === party);
   const auctions = useStreamQueries(AuctionContract).contracts;
   const auction = auctions.find(c => c.contractId === cid);
@@ -50,7 +48,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
-  if (!auction || (!isAuctionProvider && !isAuctionCustomer)) return <></>; // TODO: Return 404 not found
+  if (!auction || !isAuctionProvider) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
 
   const biddingAuctions = allBiddingAuctions.filter(

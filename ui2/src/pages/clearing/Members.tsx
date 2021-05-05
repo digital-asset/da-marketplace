@@ -17,6 +17,7 @@ import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -59,6 +60,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer

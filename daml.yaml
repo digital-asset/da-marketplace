@@ -6,14 +6,12 @@ parties:
   - Alice
   - Bob
   - Operator
-  - Custodian
-  - BtcIssuer
-  - UsdtIssuer
   - Public
   - Exchange
   - Ccp
   - Broker
   - Bank
+  - Issuer
 version: 0.1.8
 dependencies:
   - daml-prim

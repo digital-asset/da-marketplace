@@ -1,11 +1,12 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useHistory, useParams } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
+import { Listing as ListingComponent } from './Listing';
 import { Button, Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
@@ -13,6 +14,7 @@ import {
   FairValue,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
+import {ArrowRightIcon} from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -26,6 +28,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const history = useHistory();
 
   const service = services.find(s => s.payload.customer === party);
+  const { contractId } = useParams<any>();
 
   const { contracts: manualFVRequests, loading: manualFVRequestsLoading } = useStreamQueries(
     ManualFairValueCalculation
@@ -42,7 +45,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     }
   };
 
-  return (
+  return !contractId ? (
     <>
       <StripedTable
         headings={[
@@ -58,6 +61,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
           'Fair Value'
         ]}
         rowsClickable
+        clickableIcon={<ArrowRightIcon/>}
         loading={fairValuesLoading}
         rows={listings.map(c => {
           const fairValues = fairValueContracts.filter(
@@ -76,11 +80,11 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               c.payload.quotedAssetPrecision,
               fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
             ],
-            onClick: () => history.push('/app/manage/listing/' + c.contractId.replace('#', '_')),
+            onClick: () => history.push('/app/manage/listings/' + c.contractId.replace('#', '_')),
           };
         })}
       />
-      {!manualFVRequests.length && (
+      {!!manualFVRequests.length && (
         <Tile header={<h4>Manual Fair Requests</h4>}>
           <FairValueCalculationRequests
             requests={manualFVRequests}
@@ -89,13 +93,11 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         </Tile>
       )}
     </>
-  );
+  ) : <ListingComponent services={services}/>
 };
 
 const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
-  services,
-  listings,
 }: RouteComponentProps & Props) => {
   return (
     <div>

@@ -19,7 +19,7 @@ import {
 } from './Utils';
 import { useHistory, useParams } from 'react-router-dom';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowLeftIcon } from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
@@ -176,6 +176,7 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
                 headings={['Match Id', 'Quantity', 'Price', 'Execution Date']}
                 loading={allOrders.loading}
                 rowsClickable
+                clickableIcon={<ArrowRightIcon />}
                 rows={order.payload.executions.map(e => {
                   return {
                     elements: [

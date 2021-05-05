@@ -466,7 +466,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       key={c.contractId}
                       contract={c.contractId}
                       serviceText={n.service + ' ' + n.kind}
-                      offerer={c.payload.operator}
+                      offerer={c.payload.provider}
                       acceptChoice={n.choices.accept}
                       declineChoice={n.choices.decline}
                     />

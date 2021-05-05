@@ -16,9 +16,19 @@ const StripedTable = (props: {
   emptyLabel?: string;
   loading?: boolean;
   rowsClickable?: boolean;
+  clickableIcon?: JSX.Element;
   showLabel?: boolean;
 }) => {
-  const { headings, rows, rowsPerPage, emptyLabel, loading, rowsClickable, showLabel } = props;
+  const {
+    headings,
+    rows,
+    rowsPerPage,
+    emptyLabel,
+    loading,
+    rowsClickable,
+    showLabel,
+    clickableIcon,
+  } = props;
 
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
@@ -46,6 +56,7 @@ const StripedTable = (props: {
                 {heading}
               </Table.HeaderCell>
             ))}
+            {!!clickableIcon && <Table.HeaderCell></Table.HeaderCell>}
           </Table.Row>
         </Table.Header>
         {loading ? (
@@ -73,6 +84,11 @@ const StripedTable = (props: {
                       {showLabel && <b className="label">{headings[j]}: </b>} {item}
                     </Table.Cell>
                   ))}
+                  {!!clickableIcon && (
+                    <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
+                      {clickableIcon}
+                    </Table.Cell>
+                  )}
                 </Table.Row>
               ))
             ) : (

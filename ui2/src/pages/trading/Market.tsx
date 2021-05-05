@@ -37,6 +37,7 @@ import {
 } from './Utils';
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
+import { ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   cid: string;
@@ -125,6 +126,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
+  const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
     o => o.payload.details.listingId.label === listing.payload.listingId.label
@@ -191,7 +193,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
-    const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
     const depositCid = isBuy
       ? await getAsset(quotedAssets, price * quantity)
       : await getAsset(tradedAssets, quantity);
@@ -304,6 +305,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               ]}
               loading={allOrders.loading}
               rowsClickable
+              clickableIcon={<ArrowRightIcon />}
               rows={orders.map(c => {
                 return {
                   elements: [
@@ -362,7 +364,12 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <Button type="button" active={isLimit} onClick={() => handleLimitChange(true)}>
                   Limit
                 </Button>
-                <Button type="button" active={!isLimit} onClick={() => handleLimitChange(false)}>
+                <Button
+                  type="button"
+                  active={!isLimit}
+                  disabled={isCollateralized}
+                  onClick={() => handleLimitChange(false)}
+                >
                   Market
                 </Button>
               </Button.Group>
