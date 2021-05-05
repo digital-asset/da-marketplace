@@ -126,6 +126,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
+  const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
     o => o.payload.details.symbol === listing.payload.listingId
@@ -192,7 +193,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
-    const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
     const depositCid = isBuy
       ? await getAsset(quotedAssets, price * quantity)
       : await getAsset(tradedAssets, quantity);
@@ -364,7 +364,12 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <Button type="button" active={isLimit} onClick={() => handleLimitChange(true)}>
                   Limit
                 </Button>
-                <Button type="button" active={!isLimit} onClick={() => handleLimitChange(false)}>
+                <Button
+                  type="button"
+                  active={!isLimit}
+                  disabled={isCollateralized}
+                  onClick={() => handleLimitChange(false)}
+                >
                   Market
                 </Button>
               </Button.Group>
