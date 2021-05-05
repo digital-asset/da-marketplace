@@ -34,12 +34,14 @@ commands:
     description: "Install Pipenv"
     steps:
       - run:
-          name: Install Pipenv
+          name: Install Pipenv for 3.7
           command: |
+            sudo add-apt-repository --yes ppa:deadsnakes/ppa
             sudo apt-get update || sudo apt-get update
+            sudo apt-get install python3.7
             sudo apt-get install python3-pip
             pip3 install pipenv
-            pipenv --python /usr/bin/python3
+            pipenv --python /usr/bin/python3.7
 
 jobs:
   daml_test:
