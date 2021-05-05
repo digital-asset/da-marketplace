@@ -14,17 +14,17 @@ import { useUserState } from './context/UserContext';
 import Login from './pages/login/Login';
 // import Apps from "./Apps";
 import { App } from './App';
-import { Network } from './apps/Network';
-import { Custody } from './apps/Custody';
-import { Issuance } from './apps/Issuance';
-import { Distribution } from './apps/Distribution';
-import { Listing } from './apps/Listing';
-import { Trading } from './apps/Trading';
-import { Registry } from './apps/Registry';
-import QuickSetup from './pages/login/QuickSetup';
+// import { Network } from './apps/Network';
+// import { Custody } from './apps/Custody';
+// import { Issuance } from './apps/Issuance';
+// import { Distribution } from './apps/Distribution';
+// import { Listing } from './apps/Listing';
+// import { Trading } from './apps/Trading';
+// import { Registry } from './apps/Registry';
+import QuickSetup from './pages/QuickSetup/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from './config';
-import { Query, StreamCloseEvent } from '@daml/ledger';
+// import { Query, StreamCloseEvent } from '@daml/ledger';
 import { computeCredentials } from './Credentials';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 
@@ -110,7 +110,7 @@ type PublicDamlProviderProps = {
   wsBaseUrl?: string;
 };
 
-const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
+export const PublicDamlProvider: React.FC<PublicDamlProviderProps> = ({
   children,
   party,
   token,

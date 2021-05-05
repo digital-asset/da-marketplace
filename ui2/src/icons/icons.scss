@@ -55,7 +55,7 @@
 
     &.fill-blue,
     path.fill-blue {
-      fill: var(--blue-50);
+      fill: var(--blue-60);
     }
 
     &.fill-green,
@@ -63,6 +63,15 @@
       fill: var(--green-50);
     }
 
+    &.fill-white,
+    path.fill-white {
+      fill: var(--white);
+    }
+
+    &.fill-black,
+    path.fill-black {
+      fill: var(--textcolor);
+    }
     &.circled-check-icon {
       position: absolute;
       top: -8px;
