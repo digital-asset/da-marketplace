@@ -30,6 +30,15 @@ commands:
           name: Init submodules
           command: |
             git submodule update --init --recursive
+  install_pipenv:
+    description: "Install Pipenv"
+    steps:
+      - run:
+          name: Install Pipenv
+          command: |
+            sudo apt-get update || sudo apt-get update
+            sudo apt-get install python3-pip
+            pip3 install pipenv
 
 jobs:
   daml_test:
@@ -71,6 +80,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
+      - install_pipenv
       - run:
           name: UI build
           command: |
