@@ -228,7 +228,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   return (
     <div>
       <Header as="h2" textAlign="center">
-        <b>{listing.payload.listingId}</b>
+        <b>{listing.payload.listingId.label}</b>
       </Header>
       <div className="market">
         <div className="orders">
