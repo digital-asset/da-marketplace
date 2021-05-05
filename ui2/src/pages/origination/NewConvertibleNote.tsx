@@ -134,10 +134,10 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   if (!service) return <></>;
 
   const requestOrigination = async () => {
-    const safekeepingAccountId = accounts.find(
+    const safekeepingAccount = accounts.find(
       a => a.provider === service.payload.provider && a.id.label === account
-    )?.id;
-    if (!safekeepingAccountId) {
+    );
+    if (!safekeepingAccount) {
       console.log(
         `Couldn't find account from provider ${service.payload.provider} with label ${account}`
       );
@@ -147,7 +147,7 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
       assetLabel: label,
       description,
       claims,
-      safekeepingAccountId,
+      safekeepingAccount,
       observers: [service.payload.provider, party],
     });
     history.push('/app/instrument/requests');

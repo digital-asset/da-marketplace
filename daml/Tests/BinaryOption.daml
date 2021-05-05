@@ -12,9 +12,11 @@ import DA.Next.Set qualified as Set
 import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
+import DA.Finance.Trade.SettlementInstruction
 import Tests.Utils (binaryCallOption)
 import DA.Time (time)
 import DA.Assert
+import DA.Foldable
 
 
 expiry = date 2022 Oct 22
@@ -89,7 +91,7 @@ requestExercise underlyingPrice observationDate = script do
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = optionAssetLabel
       description = "Tesla Binary Option"
-      safekeepingAccountId = alice.mainAccount.id
+      safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
       observers = []
   (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
@@ -123,9 +125,16 @@ requestExercise underlyingPrice observationDate = script do
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = optionDepositCid
     choice = optionDesc.claims.claim.lhs -- TODO: How do we get this in practice? From a UI?
-  submit providers.bank $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
-    safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
-    lifecycleRequestCid = lifecycleReqCid
-    fixings = Map.fromList [ ("TSLA", Map.insert observationDate underlyingPrice Map.empty) ]
+  (_, settlementInstructionCids) <-
+    submit providers.bank $ exerciseCmd alice.custodyServiceCid $ Lifecycle with
+      safekeepingDepositCid = corpActDepositCid -- TODO: how do we get this in practice?
+      lifecycleRequestCid = lifecycleReqCid
+      fixings = Map.fromList [ ("TSLA", Map.insert observationDate underlyingPrice Map.empty) ]
+      uniquePayoutId = "ABC-111"
+
+  forA_ settlementInstructionCids $
+    \settlementInstructionCid ->
+      submitMulti [alice.customer, bob.customer, providers.bank] [] $
+        exerciseCmd settlementInstructionCid SettlementInstruction_Process
 
   return (alice.customer, bob.customer)
