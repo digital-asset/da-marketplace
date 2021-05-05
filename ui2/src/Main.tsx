@@ -1,20 +1,20 @@
-import React, { useMemo } from 'react';
-import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
+import React, {useMemo} from 'react';
+import {HashRouter, Redirect, Route, Switch} from 'react-router-dom';
 
-import DamlLedger, { QueryResult } from '@daml/react';
-import { PublicLedger, WellKnownPartiesProvider } from '@daml/hub-react/lib';
-import { Template } from '@daml/types';
+import DamlLedger, {QueryResult} from '@daml/react';
+import {PublicLedger, WellKnownPartiesProvider} from '@daml/hub-react/lib';
+import {Template} from '@daml/types';
 
 import ErrorComponent from './pages/error/Error';
-import { useUserState } from './context/UserContext';
+import {useUserState} from './context/UserContext';
 import Login from './pages/login/Login';
 // import Apps from "./Apps";
-import { App } from './App';
+import {App} from './App';
 import QuickSetup from './pages/login/QuickSetup';
-import { ServicesProvider } from './context/ServicesContext';
-import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
-import { computeCredentials } from './Credentials';
-import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
+import {ServicesProvider} from './context/ServicesContext';
+import {httpBaseUrl, ledgerId, publicParty, wsBaseUrl} from './config';
+import {computeCredentials} from './Credentials';
+import QueryStreamProvider, {useContractQuery} from './websocket/queryStream';
 
 type MainProps = {
   defaultPath: string;

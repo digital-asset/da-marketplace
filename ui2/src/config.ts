@@ -1,13 +1,13 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { partyNameFromJwtToken, useWellKnownParties } from '@daml/hub-react';
-import { Parties } from '@daml/hub-react/lib/WellKnownParties';
-import { useCallback, useMemo } from 'react';
-import { retrieveCredentials } from './Credentials';
-import { useStreamQueries } from './Main';
-import { retrieveParties } from './Parties';
+import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {partyNameFromJwtToken, useWellKnownParties} from '@daml/hub-react';
+import {Parties} from '@daml/hub-react/lib/WellKnownParties';
+import {useCallback, useMemo} from 'react';
+import {retrieveCredentials} from './Credentials';
+import {useStreamQueries} from './Main';
+import {retrieveParties} from './Parties';
 
 export enum DeploymentMode {
   DEV,

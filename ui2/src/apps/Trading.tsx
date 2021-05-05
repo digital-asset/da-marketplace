@@ -1,10 +1,10 @@
 import React from 'react';
-import { Route, Switch, withRouter } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
-import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { Market } from '../pages/trading/Market';
-import { useStreamQueries } from '../Main';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {Route, Switch, withRouter} from 'react-router-dom';
+import {PlayArrow} from '@material-ui/icons';
+import {SidebarEntry} from '../components/Sidebar/SidebarEntry';
+import {Market} from '../pages/trading/Market';
+import {useStreamQueries} from '../Main';
+import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Page from '../pages/page/Page';
 
 const TradingApp = () => {

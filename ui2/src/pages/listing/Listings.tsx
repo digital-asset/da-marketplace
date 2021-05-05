@@ -1,13 +1,20 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty } from '@daml/react';
-import { usePartyName } from '../../config';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {RouteComponentProps, useHistory, useParams, withRouter} from 'react-router-dom';
+import {CreateEvent} from '@daml/ledger';
+import {useLedger, useParty, useStreamQueries} from '@daml/react';
+import {usePartyName} from '../../config';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
-import { Button, Header } from 'semantic-ui-react';
+import {Listing as ListingComponent} from './Listing';
+import {Button, Header} from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
+import {
+  FairValue,
+  ManualFairValueCalculation,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
+import {FairValueCalculationRequests} from './ManualCalculationRequests';
+import {ArrowRightIcon} from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -18,56 +25,79 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const history = useHistory();
 
   const service = services.find(s => s.payload.customer === party);
+  const { contractId } = useParams<any>();
 
-  const requestDisableDelisting = async (c: CreateEvent<Listing>) => {
-    if (!service) return; // TODO: Display error
-    await ledger.exercise(Service.RequestDisableListing, service.contractId, {
-      listingCid: c.contractId,
-    });
+  const { contracts: manualFVRequests, loading: manualFVRequestsLoading } = useStreamQueries(
+    ManualFairValueCalculation
+  );
+
+  const { contracts: fairValueContracts, loading: fairValuesLoading } = useStreamQueries(FairValue);
+
+  const getMarketType = (c: CreateEvent<Listing>) => {
+    const listingType = c.payload.listingType;
+    if (listingType.tag === 'Collateralized') {
+      return 'Collateralized';
+    } else {
+      return getName(listingType.value.clearinghouse);
+    }
   };
 
-  return (
-    <StripedTable
-      headings={[
-        'Provider',
-        'Client',
-        'Listing ID',
-        'Calendar ID',
-        'Traded Asset',
-        'Traded Asset Precision',
-        'Quoted Asset',
-        'Quoted Asset Precision',
-        'Action',
-      ]}
-      rows={listings.map(c => {
-        return {
-          elements: [
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            c.payload.listingId,
-            c.payload.calendarId,
-            c.payload.tradedAssetId.label,
-            c.payload.tradedAssetPrecision,
-            c.payload.quotedAssetId.label,
-            c.payload.quotedAssetPrecision,
-            party === c.payload.customer && (
-              <Button floated="right" className="ghost" onClick={() => requestDisableDelisting(c)}>
-                Disable
-              </Button>
-            ),
-          ],
-        };
-      })}
-    />
-  );
+  return !contractId ? (
+    <>
+      <StripedTable
+        headings={[
+          'Provider',
+          'Client',
+          'Cleared By',
+          'Listing ID',
+          'Calendar ID',
+          'Traded Asset',
+          'Traded Asset Precision',
+          'Quoted Asset',
+          'Quoted Asset Precision',
+          'Fair Value'
+        ]}
+        rowsClickable
+        clickableIcon={<ArrowRightIcon/>}
+        loading={fairValuesLoading}
+        rows={listings.map(c => {
+          const fairValues = fairValueContracts.filter(
+            fv => fv.payload.listingId === c.payload.listingId
+          );
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              getMarketType(c),
+              c.payload.listingId,
+              c.payload.calendarId,
+              c.payload.tradedAssetId.label,
+              c.payload.tradedAssetPrecision,
+              c.payload.quotedAssetId.label,
+              c.payload.quotedAssetPrecision,
+              fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
+            ],
+            onClick: () => history.push('/app/manage/listings/' + c.contractId.replace('#', '_')),
+          };
+        })}
+      />
+      {!!manualFVRequests.length && (
+        <Tile header={<h4>Manual Fair Requests</h4>}>
+          <FairValueCalculationRequests
+            requests={manualFVRequests}
+            loading={manualFVRequestsLoading}
+          />
+        </Tile>
+      )}
+    </>
+  ) : <ListingComponent services={services}/>
 };
 
 const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
-  services,
-  listings,
 }: RouteComponentProps & Props) => {
   return (
     <div>
@@ -77,7 +107,6 @@ const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
         </Button>
       </Tile>
       <Header as="h2">Listings</Header>
-      <ListingsTable services={services} listings={listings} />
     </div>
   );
 };

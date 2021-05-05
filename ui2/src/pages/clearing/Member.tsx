@@ -1,8 +1,8 @@
 import React from 'react';
-import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {RouteComponentProps, useParams, withRouter} from 'react-router-dom';
+import {useLedger, useParty, useStreamQueries} from '@daml/react';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   FulfilledMarginCalculation,
   FulfilledMarkToMarketCalculation,
@@ -12,14 +12,14 @@ import {
   RejectedMarginCalculation,
   RejectedMarkToMarketCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps } from '../common';
-import { Button, Header } from 'semantic-ui-react';
+import {ServicePageProps} from '../common';
+import {Button, Header} from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import { ContractId } from '@daml/types';
-import { ArrowLeftIcon } from '../../icons/icons';
+import {ContractId} from '@daml/types';
+import {ArrowLeftIcon} from '../../icons/icons';
 
 type Props = {
   member?: boolean;

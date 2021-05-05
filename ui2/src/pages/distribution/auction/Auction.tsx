@@ -1,26 +1,23 @@
 import React from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../../Main';
-import { RouteComponentProps, useParams } from 'react-router-dom';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../../Main';
+import {RouteComponentProps, useParams} from 'react-router-dom';
 import useStyles from '../../styles';
 import {
   Auction as AuctionContract,
   Status as AuctionStatus,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
-import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import {
-  Auction as BiddingAuction,
-  Bid,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { CreateEvent } from '@daml/ledger';
-import { getAuctionStatus, getBidAllocation, getBidStatus } from '../Utils';
-import { DateTime } from 'luxon';
-import { Button, Table } from 'semantic-ui-react';
+import {Service as AuctionService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import {Service as BiddingService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import {Auction as BiddingAuction, Bid,} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
+import {CreateEvent} from '@daml/ledger';
+import {getAuctionStatus, getBidAllocation, getBidStatus} from '../Utils';
+import {DateTime} from 'luxon';
+import {Button, Table} from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { usePartyName } from '../../../config';
+import {usePartyName} from '../../../config';
 import Tile from '../../../components/Tile/Tile';
-import { ArrowLeftIcon } from '../../../icons/icons';
+import {ArrowLeftIcon} from '../../../icons/icons';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;

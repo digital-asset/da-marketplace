@@ -1,5 +1,5 @@
-import { CreateEvent } from '@daml/ledger';
-import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
+import {CreateEvent} from '@daml/ledger';
+import {DropdownItemProps, DropdownProps} from 'semantic-ui-react';
 
 export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;

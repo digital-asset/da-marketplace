@@ -1,14 +1,14 @@
-import React, { createContext, PropsWithChildren, useEffect, useMemo, useState } from 'react';
+import React, {createContext, PropsWithChildren, useEffect, useMemo, useState} from 'react';
 import _ from 'lodash';
 
-import { Template } from '@daml/types';
+import {Template} from '@daml/types';
 
-import { computeCredentials, retrieveCredentials } from '../Credentials';
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId } from '../config';
+import {computeCredentials, retrieveCredentials} from '../Credentials';
+import {DeploymentMode, deploymentMode, httpBaseUrl, ledgerId} from '../config';
 
-import useDamlStreamQuery, { StreamErrors } from './websocket';
-import { CreateEvent } from '@daml/ledger';
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import useDamlStreamQuery, {StreamErrors} from './websocket';
+import {CreateEvent} from '@daml/ledger';
+import {useWellKnownParties} from '@daml/hub-react/lib';
 
 export const AS_PUBLIC = true;
 

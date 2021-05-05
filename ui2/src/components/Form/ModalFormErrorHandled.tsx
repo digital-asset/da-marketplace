@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Form, Message, Modal } from 'semantic-ui-react';
+import React, {useState} from 'react';
+import {Button, Form, Message, Modal} from 'semantic-ui-react';
 
-import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
+import {ErrorMessage, parseError} from '../../pages/error/errorTypes';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;
@@ -53,7 +53,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
-      trigger={<Button className="ghost">{title}</Button>}
+      trigger={<Button className="ghost" onClick={e => e.stopPropagation()}>{title}</Button>}
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>

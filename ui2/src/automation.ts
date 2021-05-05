@@ -1,5 +1,5 @@
-import { dablHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from './config';
-import { computeCredentials } from './Credentials';
+import {dablHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId} from './config';
+import {computeCredentials} from './Credentials';
 
 export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
 export const EXBERRY_HASH = process.env.REACT_APP_EXBERRY_HASH;

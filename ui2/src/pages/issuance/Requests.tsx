@@ -1,11 +1,11 @@
 import React from 'react';
-import { NavLink, RouteComponentProps, withRouter } from 'react-router-dom';
-import { Button } from 'semantic-ui-react';
-import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
-import { ArrowRightIcon } from '../../icons/icons';
+import {NavLink, RouteComponentProps, withRouter} from 'react-router-dom';
+import {Button} from 'semantic-ui-react';
+import {CreateEvent} from '@daml/ledger';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {usePartyName} from '../../config';
+import {ArrowRightIcon} from '../../icons/icons';
 import {
   CreateIssuanceRequest,
   ReduceIssuanceRequest,

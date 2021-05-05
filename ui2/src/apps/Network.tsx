@@ -1,6 +1,6 @@
 import React from 'react';
-import { Route, Switch, withRouter } from 'react-router-dom';
-import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
+import {Route, Switch, withRouter} from 'react-router-dom';
+import {SidebarEntry} from '../components/Sidebar/SidebarEntry';
 import Page from '../pages/page/Page';
 
 const NetworkApp = () => {

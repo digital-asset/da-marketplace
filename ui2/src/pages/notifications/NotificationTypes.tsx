@@ -128,9 +128,9 @@ import {
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
-import { CreateEvent } from '@daml/ledger';
-import { Choice, ContractId } from '@daml/types';
-import { ServiceKind } from '../../context/ServicesContext';
+import {CreateEvent} from '@daml/ledger';
+import {Choice, ContractId} from '@daml/types';
+import {ServiceKind} from '../../context/ServicesContext';
 
 export type OfferTemplates =
   | CustodyRoleOffer

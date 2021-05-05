@@ -1,21 +1,21 @@
-import React, { useMemo, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
-import { CreateEvent } from '@daml/ledger';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import React, {useMemo, useState} from 'react';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {RouteComponentProps, useParams, withRouter} from 'react-router-dom';
+import {CreateEvent} from '@daml/ledger';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
 import Tile from '../../components/Tile/Tile';
-import { Button, Header, Table } from 'semantic-ui-react';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { usePartyName } from '../../config';
+import {Button, Header, Table} from 'semantic-ui-react';
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import {usePartyName} from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
-import { ServicePageProps } from '../common';
-import { ArrowLeftIcon } from '../../icons/icons';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import {ServicePageProps} from '../common';
+import {ArrowLeftIcon} from '../../icons/icons';
+import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

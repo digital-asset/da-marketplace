@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
+import React, {useState} from 'react';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {usePartyName} from '../../config';
 import {
   RequestOpenAccount,
   RequestOpenAllocationAccount,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Party } from '@daml/types';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { createDropdownProp, ServicePageProps } from '../common';
+import {Party} from '@daml/types';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {createDropdownProp, ServicePageProps} from '../common';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form, Header } from 'semantic-ui-react';
-import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
-import { IconClose } from '../../icons/icons';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {Button, Form, Header} from 'semantic-ui-react';
+import {DropdownItemProps} from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
+import {IconClose} from '../../icons/icons';
+import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 enum AccountType {
   REGULAR = 'Regular',

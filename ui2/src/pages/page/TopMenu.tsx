@@ -1,13 +1,13 @@
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { Button, Header, Menu } from 'semantic-ui-react';
+import {Link, useHistory} from 'react-router-dom';
+import {Button, Header, Menu} from 'semantic-ui-react';
 
-import { LogoutIcon, NotificationIcon } from '../../icons/icons';
+import {LogoutIcon, NotificationIcon} from '../../icons/icons';
 
-import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu';
+import OverflowMenu, {OverflowMenuEntry} from './OverflowMenu';
 
 import classNames from 'classnames';
-import { signOut, useUserDispatch } from '../../context/UserContext';
+import {signOut, useUserDispatch} from '../../context/UserContext';
 
 export type ITopMenuButtonInfo = {
   disabled?: boolean;

@@ -1,63 +1,56 @@
 import React from 'react';
-import { Redirect, Route, RouteProps, Switch, withRouter } from 'react-router-dom';
-import { SidebarEntry } from './components/Sidebar/SidebarEntry';
-import { New as CustodyNew } from './pages/custody/New';
-import { Requests as CustodyRequests } from './pages/custody/Requests';
-import { Account } from './pages/custody/Account';
-import { useParty } from '@daml/react';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
-import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
-import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
-import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
-import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
-import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
-import { CircularProgress } from '@material-ui/core';
-import { Auctions } from './pages/distribution/auction/Auctions';
-import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
-import { Assets } from './pages/custody/Assets';
-import { New as DistributionNew, New as NewAuction } from './pages/distribution/auction/New';
-import { BiddingAuction } from './pages/distribution/bidding/Auction';
-import { InstrumentsTable } from './pages/origination/Instruments';
-import { IssuancesTable } from './pages/issuance/Issuances';
-import { New as IssuanceNew } from './pages/issuance/New';
-import { New as ListingNew } from './pages/listing/New';
-import { ListingsTable } from './pages/listing/Listings';
-import { Auction } from './pages/distribution/auction/Auction';
-import { Market } from './pages/trading/Market';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import { Markets } from './pages/trading/Markets';
-import { ClearingServiceTable } from './pages/network/Clearing';
-import { CustodyServiceTable } from './pages/network/Custody';
-import { TradingServiceTable } from './pages/network/Trading';
-import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
+import {Redirect, Route, RouteProps, Switch, withRouter} from 'react-router-dom';
+import {SidebarEntry} from './components/Sidebar/SidebarEntry';
+import {New as CustodyNew} from './pages/custody/New';
+import {Requests as CustodyRequests} from './pages/custody/Requests';
+import {Account} from './pages/custody/Account';
+import {useParty} from '@daml/react';
+import {Service as CustodyService} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import {Service as ClearingService} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
+import {Service as AuctionService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
+import {Service as BiddingService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
+import {Service as IssuanceService} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
+import {Service as ListingService} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
+import {Service as TradingService} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
+import {CircularProgress} from '@material-ui/core';
+import {Auctions} from './pages/distribution/auction/Auctions';
+import {Requests as AuctionRequests} from './pages/distribution/auction/Requests';
+import {Assets} from './pages/custody/Assets';
+import {New as DistributionNew, New as NewAuction} from './pages/distribution/auction/New';
+import {BiddingAuction} from './pages/distribution/bidding/Auction';
+import {InstrumentsTable} from './pages/origination/Instruments';
+import {IssuancesTable} from './pages/issuance/Issuances';
+import {New as IssuanceNew} from './pages/issuance/New';
+import {New as ListingNew} from './pages/listing/New';
+import {ListingsTable} from './pages/listing/Listings';
+import {Auction} from './pages/distribution/auction/Auction';
+import {Market} from './pages/trading/Market';
+import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {Markets} from './pages/trading/Markets';
+import {ClearingServiceTable} from './pages/network/Clearing';
+import {CustodyServiceTable} from './pages/network/Custody';
+import {TradingServiceTable} from './pages/network/Trading';
+import {BiddingAuctions} from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
-import {
-  ControlsIcon,
-  ExchangeIcon,
-  MegaphoneIcon,
-  OrdersIcon,
-  ToolIcon,
-  WalletIcon,
-} from './icons/icons';
-import { Instrument } from './pages/origination/Instrument';
-import { ClearingMembers } from './pages/clearing/Members';
-import { ClearingMember } from './pages/clearing/Member';
+import {ControlsIcon, ExchangeIcon, MegaphoneIcon, OrdersIcon, ToolIcon, WalletIcon,} from './icons/icons';
+import {Instrument} from './pages/origination/Instrument';
+import {ClearingMembers} from './pages/clearing/Members';
+import {ClearingMember} from './pages/clearing/Member';
 import _ from 'lodash';
-import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
-import { NewBinaryOption } from './pages/origination/NewBinaryOption';
-import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
+import {NewConvertibleNote} from './pages/origination/NewConvertibleNote';
+import {NewBinaryOption} from './pages/origination/NewBinaryOption';
+import {NewBaseInstrument} from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
 import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
-import { useStreamQueries } from './Main';
-import { ServiceKind } from './context/ServicesContext';
-import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header } from 'semantic-ui-react';
+import {useStreamQueries} from './Main';
+import {ServiceKind} from './context/ServicesContext';
+import {DistributionServiceTable} from './pages/network/Distribution';
+import {Header} from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
-import { TradingOrder } from './pages/trading/Order';
-import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
+import {TradingOrder} from './pages/trading/Order';
+import Notifications, {useAllNotifications} from './pages/notifications/Notifications';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -294,13 +287,21 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/listings',
+        path: '/app/manage/listings/:contractId?',
         render: () => (
           <Manage>
             <ListingsTable services={listingService} listings={listings} />
           </Manage>
         ),
       },
+      // {
+      //   path: '/app/manage/listings/:contractId',
+      //   render: () => (
+      //     <Manage>
+      //       <ListingComponent services={listingService} />
+      //     </Manage>
+      //   ),
+      // },
     ],
   });
 

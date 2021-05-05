@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useReducer } from 'react';
+import React, {useEffect, useMemo, useReducer} from 'react';
 import ThemeProvider from '@material-ui/styles/ThemeProvider';
-import { createMuiTheme, Theme, ThemeOptions } from '@material-ui/core/styles';
-import { PaletteType } from '@material-ui/core';
+import {createMuiTheme, Theme, ThemeOptions} from '@material-ui/core/styles';
+import {PaletteType} from '@material-ui/core';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 
 type ThemeState = {

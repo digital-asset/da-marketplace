@@ -1,15 +1,15 @@
 import React from 'react';
-import { Grid, Header, Menu } from 'semantic-ui-react';
+import {Grid, Header, Menu} from 'semantic-ui-react';
 import classNames from 'classnames';
-import TopMenu, { ITopMenuButtonInfo } from './TopMenu';
-import { NavLink, useHistory } from 'react-router-dom';
-import { useParty } from '@daml/react';
+import TopMenu, {ITopMenuButtonInfo} from './TopMenu';
+import {NavLink, useHistory} from 'react-router-dom';
+import {useParty} from '@daml/react';
 import PageSection from './PageSection';
 import WelcomeHeader from './WelcomeHeader';
-import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
+import {SidebarEntry} from '../../components/Sidebar/SidebarEntry';
 import _ from 'lodash';
-import { CogIcon } from '../../icons/icons';
-import { usePartyName } from '../../config';
+import {CogIcon} from '../../icons/icons';
+import {usePartyName} from '../../config';
 
 type Props = {
   className?: string;

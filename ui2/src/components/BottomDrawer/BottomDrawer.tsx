@@ -1,11 +1,11 @@
 import React from 'react';
 import Drawer from '@material-ui/core/Drawer';
-import { Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
-import { useLayoutState } from '../../context/LayoutContext';
+import {Table, TableBody, TableCell, TableHead, TableRow} from '@material-ui/core';
+import {useLayoutState} from '../../context/LayoutContext';
 import useStyles from '../../pages/styles';
-import { useStreamQueries } from '../../Main';
-import { usePartyName } from '../../config';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {useStreamQueries} from '../../Main';
+import {usePartyName} from '../../config';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 
 export const BottomDrawer = () => {
   const classes = useStyles();

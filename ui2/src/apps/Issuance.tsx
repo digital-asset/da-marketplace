@@ -1,8 +1,8 @@
 import React from 'react';
-import { Route, Switch, withRouter } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
-import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { Issuances } from '../pages/issuance/Issuances';
+import {Route, Switch, withRouter} from 'react-router-dom';
+import {PlayArrow} from '@material-ui/icons';
+import {SidebarEntry} from '../components/Sidebar/SidebarEntry';
+import {Issuances} from '../pages/issuance/Issuances';
 import Page from '../pages/page/Page';
 
 const IssuanceApp = () => {

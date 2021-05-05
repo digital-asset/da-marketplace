@@ -1,7 +1,7 @@
-import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable/module';
-import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation/module';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
-import { Date } from '@daml/types';
+import {Claim} from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable/module';
+import {Observation} from '@daml.js/da-marketplace/lib/ContingentClaims/Observation/module';
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
+import {Date} from '@daml/types';
 
 export const transformObservation = (obs: Observation<Date, boolean>, linkText: string): any => {
   switch (obs.tag) {

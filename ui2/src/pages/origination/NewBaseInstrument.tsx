@@ -1,21 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { render } from '../../components/Claims/render';
-import { transformClaim } from '../../components/Claims/util';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import { Date as DamlDate } from '@daml/types';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import React, {useEffect, useRef, useState} from 'react';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import {render} from '../../components/Claims/render';
+import {transformClaim} from '../../components/Claims/util';
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import {Claim} from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
+import {Date as DamlDate} from '@daml/types';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form, Header } from 'semantic-ui-react';
+import {Button, Form, Header} from 'semantic-ui-react';
 import classNames from 'classnames';
-import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
-import { publicParty } from '../../config';
+import {IconCircledCheck, LockIcon, PublicIcon} from '../../icons/icons';
+import {publicParty} from '../../config';
 
 const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);

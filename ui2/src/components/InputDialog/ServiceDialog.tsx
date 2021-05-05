@@ -1,19 +1,15 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
-import { useLedger, useParty } from '@daml/react';
+import {useLedger, useParty} from '@daml/react';
 
-import { InputDialog } from './InputDialog';
-import {
-  ServiceKind,
-  ServiceOfferTemplates,
-  ServiceRequestTemplates,
-} from '../../context/ServicesContext';
+import {InputDialog} from './InputDialog';
+import {ServiceKind, ServiceOfferTemplates, ServiceRequestTemplates,} from '../../context/ServicesContext';
 
-import { Template } from '@daml/types';
-import { useStreamQueries } from '../../Main';
-import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import {Template} from '@daml/types';
+import {useStreamQueries} from '../../Main';
+import {Role as TradingRole} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import {Role as CustodyRole} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import {Role as ClearingRole} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 interface OfferProps<T extends ServiceOfferTemplates> {
   choice?: any;

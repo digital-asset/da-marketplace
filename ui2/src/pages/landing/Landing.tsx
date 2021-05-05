@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Label } from 'semantic-ui-react';
+import React, {useEffect, useState} from 'react';
+import {Button, Label} from 'semantic-ui-react';
 
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
 
 import {
   ServiceKind,
@@ -11,30 +11,30 @@ import {
   useProviderServices,
 } from '../../context/ServicesContext';
 import Tile from '../../components/Tile/Tile';
-import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
-import { getAbbreviation } from '../page/utils';
-import { usePartyName } from '../../config';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Link, NavLink } from 'react-router-dom';
-import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
+import OverflowMenu, {OverflowMenuEntry} from '../page/OverflowMenu';
+import {getAbbreviation} from '../page/utils';
+import {usePartyName} from '../../config';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {Link, NavLink} from 'react-router-dom';
+import {ServiceRequestDialog} from '../../components/InputDialog/ServiceDialog';
 
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {Request as CustodyRequest} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {Request as MarketClearingRequest} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import {Request as ClearingRequest} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {Request as IssuanceRequest} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import {Request as ListingRequest} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import {Request as TradingRequest} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import {Request as AuctionRequest} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
-import { Template } from '@daml/types';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { useWellKnownParties } from '@daml/hub-react/lib';
+import {Template} from '@daml/types';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {Account} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import {useWellKnownParties} from '@daml/hub-react/lib';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {

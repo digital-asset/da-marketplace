@@ -1,6 +1,6 @@
 import React from 'react';
-import { Grid } from 'semantic-ui-react';
-import Tile, { logoHeader } from './Tile';
+import {Grid} from 'semantic-ui-react';
+import Tile, {logoHeader} from './Tile';
 
 type TilePageProps = {
   tiles?: React.ReactElement[];

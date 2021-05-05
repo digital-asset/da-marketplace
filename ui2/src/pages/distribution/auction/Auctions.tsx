@@ -1,12 +1,12 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useStreamQueries } from '../../../Main';
-import { usePartyName } from '../../../config';
-import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
-import { getAuctionStatus } from '../Utils';
-import { Header } from 'semantic-ui-react';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {useStreamQueries} from '../../../Main';
+import {usePartyName} from '../../../config';
+import {Auction} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
+import {getAuctionStatus} from '../Utils';
+import {Header} from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { ArrowRightIcon } from '../../../icons/icons';
+import {ArrowRightIcon} from '../../../icons/icons';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);

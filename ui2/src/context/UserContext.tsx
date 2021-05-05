@@ -1,10 +1,6 @@
 import React from 'react';
-import { History } from 'history';
-import Credentials, {
-  clearCredentials,
-  retrieveCredentials,
-  storeCredentials,
-} from '../Credentials';
+import {History} from 'history';
+import Credentials, {clearCredentials, retrieveCredentials, storeCredentials,} from '../Credentials';
 
 const UserStateContext = React.createContext<UserState>({
   isAuthenticated: false,

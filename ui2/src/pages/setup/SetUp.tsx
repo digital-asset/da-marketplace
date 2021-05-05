@@ -1,9 +1,9 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { Header } from 'semantic-ui-react';
-import { SetupAutomation } from './SetupAutomation';
-import { isHubDeployment, publicParty } from '../../config';
-import { AutomationProvider } from '../../context/AutomationContext';
+import {NavLink} from 'react-router-dom';
+import {Header} from 'semantic-ui-react';
+import {SetupAutomation} from './SetupAutomation';
+import {isHubDeployment, publicParty} from '../../config';
+import {AutomationProvider} from '../../context/AutomationContext';
 
 type SetupServiceProps = {
   name: string;

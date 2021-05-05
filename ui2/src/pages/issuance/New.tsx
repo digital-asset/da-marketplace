@@ -1,18 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { IconButton } from '@material-ui/core';
+import React, {useEffect, useRef, useState} from 'react';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {IconButton} from '@material-ui/core';
 import useStyles from '../styles';
-import { render } from '../../components/Claims/render';
-import { transformClaim } from '../../components/Claims/util';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Visibility, VisibilityOff } from '@material-ui/icons';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import { CreateEvent } from '@daml/ledger';
+import {render} from '../../components/Claims/render';
+import {transformClaim} from '../../components/Claims/util';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {Visibility, VisibilityOff} from '@material-ui/icons';
+import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import {CreateEvent} from '@daml/ledger';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form } from 'semantic-ui-react';
+import {Button, Form} from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 
 type Props = {

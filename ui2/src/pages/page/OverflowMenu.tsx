@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import React, { FunctionComponent, useState } from 'react';
-import { useHistory } from 'react-router-dom';
-import { Button } from 'semantic-ui-react';
+import React, {FunctionComponent, useState} from 'react';
+import {useHistory} from 'react-router-dom';
+import {Button} from 'semantic-ui-react';
 
-import { OverflowIcon } from '../../icons/icons';
+import {OverflowIcon} from '../../icons/icons';
 
-import { useDismissableElement } from './utils';
+import {useDismissableElement} from './utils';
 
 export const OverflowMenuEntry: FunctionComponent<{
   label: React.ReactElement | string;

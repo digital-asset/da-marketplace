@@ -1,6 +1,6 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {v4 as uuidv4} from 'uuid';
 import {
   Button,
   Grid,
@@ -13,18 +13,18 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
-import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+import {KeyboardArrowRight} from '@material-ui/icons';
+import {CreateEvent} from '@daml/ledger';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
 import useStyles from '../styles';
-import { usePartyName } from '../../config';
+import {usePartyName} from '../../config';
 import {
   CreateListingRequest,
   DisableListingRequest,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

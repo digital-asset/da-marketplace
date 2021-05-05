@@ -1,5 +1,5 @@
-import React, { useContext } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import React, {useContext} from 'react';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -9,15 +9,15 @@ import Box from '@material-ui/core/Box';
 import ExitToApp from '@material-ui/icons/ExitToApp';
 import Apps from '@material-ui/icons/Apps';
 import classNames from 'classnames';
-import { useParty } from '@daml/react';
+import {useParty} from '@daml/react';
 import useStyles from './styles';
 import headerLogo from '../../images/lambdaLogo.png';
-import { signOut, useUserDispatch } from '../../context/UserContext';
-import { ArrowBack, Menu } from '@material-ui/icons';
-import { toggleSidebar, useLayoutDispatch, useLayoutState } from '../../context/LayoutContext';
+import {signOut, useUserDispatch} from '../../context/UserContext';
+import {ArrowBack, Menu} from '@material-ui/icons';
+import {toggleSidebar, useLayoutDispatch, useLayoutState} from '../../context/LayoutContext';
 import Switch from '@material-ui/core/Switch';
-import { ThemeContextDispatch, ThemeContextState } from '../../context/ThemeContext';
-import { usePartyName } from '../../config';
+import {ThemeContextDispatch, ThemeContextState} from '../../context/ThemeContext';
+import {usePartyName} from '../../config';
 
 interface HeaderProps {
   app: string;

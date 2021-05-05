@@ -1,7 +1,7 @@
 import React from 'react';
-import { Route, Switch, withRouter } from 'react-router-dom';
-import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { Account } from '../pages/custody/Account';
+import {Route, Switch, withRouter} from 'react-router-dom';
+import {SidebarEntry} from '../components/Sidebar/SidebarEntry';
+import {Account} from '../pages/custody/Account';
 import Page from '../pages/page/Page';
 
 const CustodyApp = () => {

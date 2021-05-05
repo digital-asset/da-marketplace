@@ -1,23 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../../Main';
-import { transformClaim } from '../../../components/Claims/util';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import React, {useEffect, useRef, useState} from 'react';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../../Main';
+import {transformClaim} from '../../../components/Claims/util';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import {
   CreateAuctionRequest,
   RequestCreateAuction,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { CreateEvent } from '@daml/ledger';
-import { ContractId, Party } from '@daml/types';
-import { render } from '../../../components/Claims/render';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { Button, Form, Header, Icon } from 'semantic-ui-react';
+import {CreateEvent} from '@daml/ledger';
+import {ContractId, Party} from '@daml/types';
+import {render} from '../../../components/Claims/render';
+import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import {Button, Form, Header, Icon} from 'semantic-ui-react';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
-import { IconClose } from '../../../icons/icons';
+import {IconClose} from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
-import { ServicePageProps } from '../../common';
+import {ServicePageProps} from '../../common';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

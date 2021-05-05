@@ -1,6 +1,6 @@
-import { convertPartiesJson, PartyDetails } from '@daml/hub-react';
+import {convertPartiesJson, PartyDetails} from '@daml/hub-react';
 
-import { ledgerId } from './config';
+import {ledgerId} from './config';
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 

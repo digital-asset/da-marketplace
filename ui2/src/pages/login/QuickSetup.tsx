@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
-import { Button, DropdownItemProps, Form, Grid, Icon, Loader, Table } from 'semantic-ui-react';
+import {Button, DropdownItemProps, Form, Grid, Icon, Loader, Table} from 'semantic-ui-react';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
-import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
+import DamlLedger, {useLedger, useStreamQueries} from '@daml/react';
+import {DablPartiesInput, PartyDetails} from '@daml/hub-react';
 
-import { loginUser, useUserDispatch } from '../../context/UserContext';
-import { NavLink, useHistory } from 'react-router-dom';
+import {loginUser, useUserDispatch} from '../../context/UserContext';
+import {NavLink, useHistory} from 'react-router-dom';
 
 import {
   DeploymentMode,
@@ -18,20 +18,14 @@ import {
   wsBaseUrl,
 } from '../../config';
 
-import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties, storeParties } from '../../Parties';
+import Credentials, {computeCredentials} from '../../Credentials';
+import {retrieveParties, storeParties} from '../../Parties';
 
-import { halfSecondPromise } from '../page/utils';
+import {halfSecondPromise} from '../page/utils';
 
-import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-import {
-  Offer as ClearingOffer,
-  Role as ClearingRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import {
-  Offer as CustodianOffer,
-  Role as CustodianRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import {Role as OperatorService} from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import {Offer as ClearingOffer, Role as ClearingRole,} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import {Offer as CustodianOffer, Role as CustodianRole,} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import {
   Offer as DistributorOffer,
   Role as DistributorRole,
@@ -40,28 +34,25 @@ import {
   Offer as SettlementOffer,
   Service as SettlementService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
-import {
-  Offer as ExchangeOffer,
-  Role as ExchangeRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import {Offer as ExchangeOffer, Role as ExchangeRole,} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
   Offer as MatchingOffer,
   Service as MatchingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import {Role as RegulatorRole} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import {
   Offer as RegulatorServiceOffer,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
-import { handleSelectMultiple } from '../common';
-import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
-import { makeAutomationOptions, SetupAutomation } from '../setup/SetupAutomation';
+import {deployAutomation, MarketplaceTrigger, TRIGGER_HASH} from '../../automation';
+import {handleSelectMultiple} from '../common';
+import {AutomationProvider, useAutomations} from '../../context/AutomationContext';
+import {makeAutomationOptions, SetupAutomation} from '../setup/SetupAutomation';
 
 enum ServiceKind {
   CLEARING = 'Clearing',

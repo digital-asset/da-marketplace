@@ -1,23 +1,17 @@
-import React, { useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import {
-  Details,
-  Order,
-  OrderType,
-  Side,
-  Status,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { CreateEvent } from '@daml/ledger';
-import { ContractId } from '@daml/types';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { ServicePageProps } from '../common';
-import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
+import React, {useState} from 'react';
+import {useLedger, useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {Listing} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import {Details, Order, OrderType, Side, Status,} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import {CreateEvent} from '@daml/ledger';
+import {ContractId} from '@daml/types';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {ServicePageProps} from '../common';
+import {Button, Form, Header, Label, Popup, Table} from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { DateTime } from 'luxon';
+import {DateTime} from 'luxon';
 import {
   displayStatus,
   getColor,
@@ -33,8 +27,8 @@ import {
   TimeInForces,
 } from './Utils';
 import StripedTable from '../../components/Table/StripedTable';
-import { useHistory } from 'react-router-dom';
-import { ArrowRightIcon } from '../../icons/icons';
+import {useHistory} from 'react-router-dom';
+import {ArrowRightIcon} from '../../icons/icons';
 
 type Props = {
   cid: string;

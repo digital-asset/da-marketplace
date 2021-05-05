@@ -1,17 +1,17 @@
-import React, { useMemo } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { usePartyName } from '../../config';
-import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { ServicePageProps } from '../common';
-import { Button, Header } from 'semantic-ui-react';
+import React, {useMemo} from 'react';
+import {RouteComponentProps, withRouter} from 'react-router-dom';
+import {useParty} from '@daml/react';
+import {useStreamQueries} from '../../Main';
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import {usePartyName} from '../../config';
+import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import {ServicePageProps} from '../common';
+import {Button, Header} from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { ArrowRightIcon } from '../../icons/icons';
+import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import {ArrowRightIcon} from '../../icons/icons';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

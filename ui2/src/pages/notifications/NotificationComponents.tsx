@@ -1,11 +1,11 @@
 import React from 'react';
-import { Button, Form, Message } from 'semantic-ui-react';
+import {Button, Form, Message} from 'semantic-ui-react';
 
-import { useLedger } from '@daml/react';
-import { ContractId } from '@daml/types';
+import {useLedger} from '@daml/react';
+import {ContractId} from '@daml/types';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { usePartyName } from '../../config';
+import {usePartyName} from '../../config';
 import {
   OfferAcceptChoice,
   OfferDeclineChoice,
