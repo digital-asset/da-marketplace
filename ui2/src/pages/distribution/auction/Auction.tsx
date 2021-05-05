@@ -156,7 +156,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
               rows={bids.map(c => {
                 return {
                   elements: [
-                    c.payload.customer,
+                    getName(c.payload.customer),
                     c.payload.details.quantity,
                     c.payload.details.price,
                     (

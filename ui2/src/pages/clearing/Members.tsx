@@ -18,6 +18,7 @@ import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { ArrowRightIcon } from '../../icons/icons';
+import { formatCurrency } from '../../util';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -43,11 +44,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const handleNovation = async (c: CreateEvent<ClearedTrade>) => {
     await ledger.exercise(ClearedTrade.ClearedTrade_Novate, c.contractId, {});
   };
-
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
 
   return (
     <div className="assets">
@@ -86,8 +82,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           return {
             elements: [
               <>{s.payload.customer}</>,
-              formatter.format(clearingAmount),
-              formatter.format(marginAmount),
+              formatCurrency(clearingAmount),
+              formatCurrency(marginAmount),
               standingText,
             ],
             onClick: () => history.push(`/app/clearing/member/${s.contractId.replace('#', '_')}`),
@@ -103,7 +99,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             elements: [
               c.payload.account.id.label,
               c.payload.asset.id.label,
-              formatter.format(Number(c.payload.asset.quantity)),
+              formatCurrency(c.payload.asset.quantity),
             ],
           };
         })}
