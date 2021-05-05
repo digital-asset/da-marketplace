@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, {useState} from 'react';
+import {useHistory} from 'react-router-dom';
 
-import { Button, Modal, Form } from 'semantic-ui-react'
+import {Button, Form, Modal} from 'semantic-ui-react'
 
-import { useStreamQueryAsPublic } from '@daml/dabl-react'
-import { useParty, useLedger } from '@daml/react'
+import {useStreamQueryAsPublic} from '@daml/dabl-react'
+import {useLedger, useParty} from '@daml/react'
 
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { Custodian as RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
-import { Issuer as RegisteredIssuer } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
-import { Investor as RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
-import { Exchange as RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
-import { Broker as RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
+import {Custodian as RegisteredCustodian} from '@daml.js/da-marketplace/lib/Marketplace/Registry/Custodian'
+import {Issuer as RegisteredIssuer} from '@daml.js/da-marketplace/lib/Marketplace/Registry/Issuer'
+import {Investor as RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry/Investor'
+import {Exchange as RegisteredExchange} from '@daml.js/da-marketplace/lib/Marketplace/Registry/Exchange'
+import {Broker as RegisteredBroker} from '@daml.js/da-marketplace/lib/Marketplace/Registry/Broker'
 
 import FormErrorHandled from '../common/FormErrorHandled'
-import { wrapTextMap } from '../common/damlTypes';
+import {wrapTextMap} from '../common/damlTypes';
 
 interface IProps {
     onRequestClose: () => void;

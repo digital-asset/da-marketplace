@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
-import classNames from 'classnames';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 
@@ -54,7 +53,11 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
-      trigger={<Button className="ghost" onClick={e => e.stopPropagation()}>{title}</Button>}
+      trigger={
+        <Button className="ghost" onClick={e => e.stopPropagation()}>
+          {title}
+        </Button>
+      }
     >
       <Modal.Header>{title}</Modal.Header>
       <Modal.Content>

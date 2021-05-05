@@ -1,32 +1,32 @@
-import React, { useState, useEffect } from 'react'
-import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
-import { Header, Form } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom'
+import {Form, Header} from 'semantic-ui-react'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
-import { RegisteredExchange, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {CustodianRelationship} from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {RegisteredExchange, RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Exchange as ExchangeTemplate, ExchangeInvitation} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
-    Exchange as ExchangeTemplate,
-    ExchangeInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { ExchangeParticipant, ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+  ExchangeParticipant,
+  ExchangeParticipantInvitation
+} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { AS_PUBLIC, useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery, usePartyLoading} from '../../websocket/queryStream'
 
-import { PublicIcon, UserIcon } from '../../icons/Icons'
+import {PublicIcon, UserIcon} from '../../icons/Icons'
 
-import { retrieveCredentials } from '../../Credentials'
-import { deploymentMode, DeploymentMode } from '../../config'
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+import {retrieveCredentials} from '../../Credentials'
+import {deploymentMode, DeploymentMode} from '../../config'
+import deployTrigger, {MarketplaceTrigger, TRIGGER_HASH} from '../../automation'
 
-import { useOperator, useDablParties } from '../common/common'
-import { wrapDamlTuple } from '../common/damlTypes'
-import { getAbbreviation } from '../common/utils';
-import { useRegistryLookup } from '../common/RegistryLookup'
-import ExchangeProfile, { Profile, createField } from '../common/Profile'
+import {useDablParties, useOperator} from '../common/common'
+import {wrapDamlTuple} from '../common/damlTypes'
+import {getAbbreviation} from '../common/utils';
+import {useRegistryLookup} from '../common/RegistryLookup'
+import ExchangeProfile, {createField, Profile} from '../common/Profile'
 import DerivativeList from '../common/DerivativeList'
 import MarketRelationships from '../common/MarketRelationships'
 import InviteAcceptTile from '../common/InviteAcceptTile'
@@ -34,7 +34,7 @@ import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
-import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
+import NotificationCenter, {useAllNotifications} from '../common/NotificationCenter'
 
 import MarketPairs from './MarketPairs'
 import ExchangeParticipants from './ExchangeParticipants'

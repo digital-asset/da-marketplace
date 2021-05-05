@@ -1,18 +1,18 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useEffect } from 'react'
-import { Switch, Route, useRouteMatch, Redirect } from 'react-router-dom'
-import { Message } from 'semantic-ui-react'
+import React, {useEffect} from 'react'
+import {Redirect, Route, Switch, useRouteMatch} from 'react-router-dom'
+import {Message} from 'semantic-ui-react'
 
-import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import {User} from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 
-import { QueryStream, QueryStreamContext, useContractQuery, useLoading } from '../websocket/queryStream'
-import { StreamErrors } from '../websocket/websocket'
+import {QueryStream, QueryStreamContext, useContractQuery, useLoading} from '../websocket/queryStream'
+import {StreamErrors} from '../websocket/websocket'
 
-import { useDablParties } from './common/common'
-import { roleRoute } from './common/utils'
-import { parseError } from './common/errorTypes'
+import {useDablParties} from './common/common'
+import {roleRoute} from './common/utils'
+import {parseError} from './common/errorTypes'
 import OnboardingTile from './common/OnboardingTile'
 
 import RoleSelectScreen from './RoleSelectScreen'

@@ -1,19 +1,19 @@
 import React from 'react'
-import { Button } from 'semantic-ui-react'
+import {Button} from 'semantic-ui-react'
 import _ from 'lodash'
 
-import { useParty, useLedger } from '@daml/react'
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
-import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {useLedger, useParty} from '@daml/react'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types'
+import {Exchange} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {ManualFairValueCalculation} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { PublicIcon, ExchangeIcon } from '../../icons/Icons'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import {PublicIcon} from '../../icons/Icons'
+import {unwrapDamlTuple, wrapDamlTuple} from '../common/damlTypes'
+import {useOperator} from '../common/common'
 import CardTable from '../common/CardTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
 import CreateMarket from './CreateMarket';
 import ManualFairValue from './ManualFairValue'

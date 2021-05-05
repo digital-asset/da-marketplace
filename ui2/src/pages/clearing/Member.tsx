@@ -1,20 +1,19 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useParams, NavLink } from 'react-router-dom';
-import { useStreamQueries, useLedger, useParty } from '@daml/react';
+import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Service, Cancel } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  MemberStanding,
-  MarginCalculation,
-  RejectedMarginCalculation,
   FulfilledMarginCalculation,
-  MarkToMarketCalculation,
-  RejectedMarkToMarketCalculation,
   FulfilledMarkToMarketCalculation,
-  RejectedMarkToMarketCalculation_CustomerRetry,
+  MarginCalculation,
+  MarkToMarketCalculation,
+  MemberStanding,
+  RejectedMarginCalculation,
+  RejectedMarkToMarketCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header, Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';

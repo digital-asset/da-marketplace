@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Button, Form} from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
-import { Exchange } from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
+import {useLedger, useParty} from '@daml/react'
+import {Exchange} from '@daml.js/da-marketplace/lib/Marketplace/Exchange'
 
-import { wrapDamlTuple, RegisteredInvestorInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import {RegisteredInvestorInfo, wrapDamlTuple} from '../common/damlTypes'
+import {useOperator} from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 

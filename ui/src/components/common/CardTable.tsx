@@ -1,5 +1,5 @@
 import React from 'react'
-import { Table, Header } from 'semantic-ui-react'
+import {Header, Table} from 'semantic-ui-react'
 
 type CellItem = string | React.ReactElement;
 

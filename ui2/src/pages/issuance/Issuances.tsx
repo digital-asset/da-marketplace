@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';

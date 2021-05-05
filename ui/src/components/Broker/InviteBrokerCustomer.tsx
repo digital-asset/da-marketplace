@@ -1,17 +1,14 @@
-import React, { useState } from 'react'
-import { Button, Form } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Button, Form} from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
-import { Broker } from '@daml.js/da-marketplace/lib/Marketplace/Broker'
-import {
-    BrokerCustomerInvitation,
-    BrokerCustomer
-} from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import {useLedger, useParty} from '@daml/react'
+import {Broker} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import {BrokerCustomer, BrokerCustomerInvitation} from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { wrapDamlTuple, RegisteredInvestorInfo } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import {RegisteredInvestorInfo, wrapDamlTuple} from '../common/damlTypes'
+import {useOperator} from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 

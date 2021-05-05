@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react'
-import { useHistory } from 'react-router-dom'
+import React, {useEffect, useState} from 'react'
+import {useHistory} from 'react-router-dom'
 
 import Page from '../common/Page'
 import PageSection from './PageSection'
-import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
-import { useCCPCustomerNotifications } from '../CCP/CCPCustomerNotifications'
-import { useBrokerCustomerInviteNotifications } from '../Investor/BrokerCustomerInviteNotifications'
-import { useCCPCustomerInviteNotifications } from '../Investor/CCPInviteNotifications'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
-import { useExchangeInviteNotifications } from '../Investor/ExchangeInviteNotifications'
+import {useRelationshipRequestNotifications} from '../common/RelationshipRequestNotifications'
+import {useCCPCustomerNotifications} from '../CCP/CCPCustomerNotifications'
+import {useBrokerCustomerInviteNotifications} from '../Investor/BrokerCustomerInviteNotifications'
+import {useCCPCustomerInviteNotifications} from '../Investor/CCPInviteNotifications'
+import {useDismissibleNotifications} from '../common/DismissibleNotifications'
+import {useExchangeInviteNotifications} from '../Investor/ExchangeInviteNotifications'
 
-import { NotificationCenterIcon, ArrowLeftIcon } from '../../icons/Icons'
+import {ArrowLeftIcon, NotificationCenterIcon} from '../../icons/Icons'
 
 type Props = {
   sideNav: React.ReactElement;

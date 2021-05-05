@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { NavLink, useHistory } from 'react-router-dom'
-import { Button, Form, Header, Loader } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {NavLink, useHistory} from 'react-router-dom'
+import {Button, Form, Header, Loader} from 'semantic-ui-react'
 import classNames from 'classnames'
 
-import { useLedger, useParty } from '@daml/react'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { User } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import {useLedger, useParty} from '@daml/react'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {User} from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
 
-import { ArrowRightIcon } from '../../icons/Icons'
+import {ArrowRightIcon} from '../../icons/Icons'
 
-import { roleLabel, roleRoute, StringKeyedObject } from './utils'
+import {roleLabel, roleRoute, StringKeyedObject} from './utils'
 import FormErrorHandled from './FormErrorHandled'
-import { useOperator } from './common'
-import { wrapDamlTuple } from './damlTypes'
+import {useOperator} from './common'
+import {wrapDamlTuple} from './damlTypes'
 
 type FieldType = 'text';
 

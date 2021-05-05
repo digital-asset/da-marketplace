@@ -1,30 +1,30 @@
-import React, { useState } from 'react'
-import { useParams, useHistory } from 'react-router-dom'
-import { Header, List } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {useHistory, useParams} from 'react-router-dom'
+import {Header, List} from 'semantic-ui-react'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 import {
-    RegisteredCustodian,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredExchange,
-    RegisteredBroker
+  RegisteredBroker,
+  RegisteredCustodian,
+  RegisteredExchange,
+  RegisteredInvestor,
+  RegisteredIssuer
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AddPlusIcon, GlobeIcon, IconChevronDown, IconChevronUp, LockIcon} from '../../icons/Icons'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
-import { ContractInfo, wrapTextMap } from '../common/damlTypes'
+import {ContractInfo, wrapTextMap} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
-import DonutChart, { getDonutChartColor, IDonutChartData } from '../common/DonutChart'
-import { IPartyInfo } from '../common/utils'
+import DonutChart, {getDonutChartColor, IDonutChartData} from '../common/DonutChart'
+import {IPartyInfo} from '../common/utils'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 import StripedTable from '../common/StripedTable'
-import { useRegistryLookup } from '../common/RegistryLookup'
+import {useRegistryLookup} from '../common/RegistryLookup'
 
 type DepositInfo = {
     investor: string,

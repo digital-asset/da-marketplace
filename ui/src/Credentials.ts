@@ -1,10 +1,10 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { encode } from 'jwt-simple'
-import { expiredToken } from '@daml/hub-react'
+import {encode} from 'jwt-simple'
+import {expiredToken} from '@daml/hub-react'
 
-import { ledgerId } from './config'
+import {ledgerId} from './config'
 
 export const APPLICATION_ID: string = 'da-marketplace';
 

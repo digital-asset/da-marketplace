@@ -1,37 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
-import { Menu } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {NavLink, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom'
+import {Menu} from 'semantic-ui-react'
 import _ from 'lodash'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { RegisteredCustodian, RegisteredInvestor, RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 import {
-    Custodian as CustodianModel,
-    CustodianInvitation,
-    CustodianRelationship
+  RegisteredBroker,
+  RegisteredCustodian,
+  RegisteredInvestor
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {
+  Custodian as CustodianModel,
+  CustodianInvitation,
+  CustodianRelationship
 } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
 
-import { UserIcon } from '../../icons/Icons'
+import {UserIcon} from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery, usePartyLoading} from '../../websocket/queryStream'
 
-import { retrieveCredentials } from '../../Credentials'
-import { deploymentMode, DeploymentMode } from '../../config'
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+import {retrieveCredentials} from '../../Credentials'
+import {deploymentMode, DeploymentMode} from '../../config'
+import deployTrigger, {MarketplaceTrigger, TRIGGER_HASH} from '../../automation'
 
-import { useOperator, useDablParties } from '../common/common'
-import { unwrapDamlTuple, wrapDamlTuple } from '../common/damlTypes'
-import CustodianProfile, { Profile, createField } from '../common/Profile'
+import {useDablParties, useOperator} from '../common/common'
+import {unwrapDamlTuple, wrapDamlTuple} from '../common/damlTypes'
+import CustodianProfile, {createField, Profile} from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import RoleSideNav from '../common/RoleSideNav'
-import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
+import NotificationCenter, {useAllNotifications} from '../common/NotificationCenter'
 
-import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
+import {useRelationshipRequestNotifications} from '../common/RelationshipRequestNotifications'
 import Clients from './Clients'
 import ClientHoldings from './ClientHoldings'
 

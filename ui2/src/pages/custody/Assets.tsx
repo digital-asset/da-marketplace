@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';

@@ -1,9 +1,9 @@
-import React, { useState, FunctionComponent } from 'react';
-import { useHistory } from 'react-router-dom';
+import React, {FunctionComponent, useState} from 'react';
+import {useHistory} from 'react-router-dom';
 
-import { OverflowIcon } from '../../icons/Icons';
+import {OverflowIcon} from '../../icons/Icons';
 
-import { useDismissableElement } from './utils';
+import {useDismissableElement} from './utils';
 
 export const OverflowMenuEntry : FunctionComponent<{
     label : React.ReactElement | string,

@@ -3,15 +3,15 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
-import { Role, Offer as RoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer as RoleOffer, Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Offer as MarketOffer,
-  Service as MarketService,
   Request as MarketRequest,
+  Service as MarketService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import { Header, Button, Form, DropdownItemProps } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';

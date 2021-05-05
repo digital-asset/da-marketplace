@@ -1,18 +1,18 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  Button,
+  Grid,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableRow,
   TableHead,
-  Button,
-  Grid,
-  Paper,
+  TableRow,
   Typography,
 } from '@material-ui/core';
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';

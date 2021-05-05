@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
+  Button,
+  Grid,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableRow,
   TableHead,
-  Button,
-  Grid,
-  Paper,
+  TableRow,
   Typography,
 } from '@material-ui/core';
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { Request, Offer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Offer, Request } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import useStyles from '../styles';
-import { usePartyName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';

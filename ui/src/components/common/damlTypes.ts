@@ -1,22 +1,22 @@
-import { CreateEvent } from '@daml/ledger'
+import {CreateEvent} from '@daml/ledger'
 
-import { Asset } from '@daml.js/da-marketplace/lib/DA/Finance'
+import {Asset} from '@daml.js/da-marketplace/lib/DA/Finance'
 import {
-    CentralCounterpartyCustomer,
-    Broker,
-    BrokerCustomer,
-    ExchangeParticipant,
-    Exchange,
-    Registry,
-    Custodian,
-    Clearing,
-    Investor,
-    Issuer,
-    Notification,
-    Token,
-    Derivative
+  Broker,
+  BrokerCustomer,
+  CentralCounterpartyCustomer,
+  Clearing,
+  Custodian,
+  Derivative,
+  Exchange,
+  ExchangeParticipant,
+  Investor,
+  Issuer,
+  Notification,
+  Registry,
+  Token
 } from '@daml.js/da-marketplace/lib/Marketplace'
-import { ContractId, List } from '@daml/types';
+import {ContractId, List} from '@daml/types';
 
 type DamlTuple<T> = {
     [key: string]: T;

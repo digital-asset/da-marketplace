@@ -1,5 +1,5 @@
 import React from 'react'
-import { Pagination } from 'semantic-ui-react'
+import {Pagination} from 'semantic-ui-react'
 
 const PaginationControls = (props: {
   totalPages: number,
