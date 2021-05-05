@@ -1,47 +1,69 @@
 import React from 'react';
-import { Route, Switch, withRouter, RouteProps } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
+import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { Account } from './pages/custody/Account';
-import { useParty, useStreamQueries } from '@daml/react';
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
-import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
-import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
-import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
-import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
-import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { useParty } from '@daml/react';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
+import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
+import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
+import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
+import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
+import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
 import { CircularProgress } from '@material-ui/core';
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
 import { New as DistributionNew } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
-import { Instruments } from './pages/origination/Instruments';
+import { Instruments, InstrumentsTable } from './pages/origination/Instruments';
 import { New as InstrumentsNew } from './pages/origination/New';
 import { Requests as InstrumentsRequests } from './pages/origination/Requests';
-import { Issuances } from './pages/issuance/Issuances';
+import { Issuances, IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
 import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
 import { Requests as ListingRequests } from './pages/listing/Requests';
-import { Listings } from './pages/listing/Listings';
+import { Listings, ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
-import { Custody as CustodyNetwork } from './pages/network/Custody';
-import { Trading as TradingNetwork } from './pages/network/Trading';
+import { ClearingServiceTable } from './pages/network/Clearing';
+import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
+import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
-import { ExchangeIcon, OrdersIcon, PublicIcon } from './icons/icons';
+import {
+  ControlsIcon,
+  ExchangeIcon,
+  MegaphoneIcon,
+  OrdersIcon,
+  PublicIcon,
+  ToolIcon,
+} from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { WalletIcon } from './icons/icons';
+import { ClearingMembers } from './pages/clearing/Members';
+import { ClearingMember } from './pages/clearing/Member';
 import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
+import { New as NewAuction } from './pages/distribution/auction/New';
+import Landing from './pages/landing/Landing';
+import Manage from './pages/manage/Manage';
+import SetUp from './pages/setup/SetUp';
+import Offer from './pages/setup/Offer';
+import { useStreamQueries } from './Main';
+import { ServiceKind } from './context/ServicesContext';
+import { DistributionServiceTable } from './pages/network/Distribution';
+import { Header } from 'semantic-ui-react';
+import RequestIdentityVerification from './pages/identity/Request';
+import { TradingOrder } from './pages/trading/Order';
+import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -53,11 +75,11 @@ const AppComponent = () => {
   const party = useParty();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
-  const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
-  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(
-    BiddingService,
-    () => [{ customer: party }]
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
+    ClearingService
   );
+  const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
+  const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
     IssuanceService
   );
@@ -67,6 +89,7 @@ const AppComponent = () => {
 
   const servicesLoading: boolean = [
     custodyLoading,
+    clearingLoading,
     auctionLoading,
     biddingLoading,
     issuanceLoading,
@@ -88,7 +111,10 @@ const AppComponent = () => {
       },
     ],
     additionalRoutes: [
-      { path: '/app/custody/accounts/new', render: () => <CustodyNew services={custodyService} /> },
+      {
+        path: '/app/custody/accounts/new',
+        render: () => <CustodyNew services={custodyService} />,
+      },
       {
         path: '/app/custody/account/:contractId',
         render: () => <Account services={custodyService} />,
@@ -99,40 +125,41 @@ const AppComponent = () => {
       },
     ],
   });
+
+  const clearingProvider = clearingService.filter(cs => cs.payload.provider === party);
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => clearingProvider.length > 0,
     sidebar: [
       {
-        label: 'Network',
-        path: '/app/network/custody',
-        render: () => <CustodyNetwork services={custodyService} />,
-        icon: <PlayArrow />,
-        children: [
-          {
-            label: 'Custody',
-            path: '/app/network/custody',
-            render: () => <CustodyNetwork services={custodyService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Trading',
-            path: '/app/network/trading',
-            render: () => <TradingNetwork services={tradingService} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-          {
-            label: 'Listing',
-            path: '/app/network/listing',
-            render: () => <MarketNetwork listings={listings} />,
-            icon: <PlayArrow />,
-            children: [],
-          },
-        ],
+        label: 'Members',
+        path: '/app/clearing/members',
+        render: () => <ClearingMembers services={clearingProvider} />,
+        icon: <WalletIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/clearing/member/:contractId',
+        render: () => <ClearingMember services={clearingProvider} />,
       },
     ],
   });
+
+  const clearingCustomer = clearingService.filter(cs => cs.payload.customer === party);
+  entries.push({
+    displayEntry: () => clearingCustomer.length > 0,
+    sidebar: [
+      {
+        label: 'Clearing',
+        path: `/app/clearing/member`,
+        render: () => <ClearingMember services={clearingProvider} member />,
+        icon: <WalletIcon />,
+        children: [],
+      },
+    ],
+  });
+
   entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
@@ -140,7 +167,7 @@ const AppComponent = () => {
         label: 'Auctions',
         path: '/app/distribution/auctions',
         render: () => <Auctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -163,13 +190,13 @@ const AppComponent = () => {
     ],
   });
   entries.push({
-    displayEntry: () => biddingService.length > 0,
+    displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
     sidebar: [
       {
-        label: 'Auctions',
+        label: 'Bidding Auctions',
         path: '/app/distribution/bidding',
         render: () => <BiddingAuctions />,
-        icon: <PlayArrow />,
+        icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
       },
@@ -181,60 +208,7 @@ const AppComponent = () => {
       },
     ],
   });
-  entries.push({
-    displayEntry: () => issuanceService.length > 0,
-    sidebar: [
-      {
-        label: 'Instruments',
-        path: '/app/instrument/instruments',
-        render: () => <Instruments />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-      {
-        label: 'Issuances',
-        path: '/app/issuance/issuances',
-        render: () => <Issuances />,
-        icon: <PublicIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      { path: '/app/registry/instruments/new/base', component: NewBaseInstrument },
-      { path: '/app/registry/instruments/new/convertiblenote', component: NewConvertibleNote },
-      { path: '/app/registry/instruments/new/binaryoption', component: NewBinaryOption },
-      { path: '/app/registry/instruments/:contractId', component: Instrument },
-      { path: '/app/instrument/requests', render: () => <InstrumentsRequests /> },
-      { path: '/app/instrument/new', component: InstrumentsNew },
-      { path: '/app/issuance/new', render: () => <IssuanceNew services={issuanceService} /> },
-      {
-        path: '/app/issuance/requests',
-        render: () => <IssuanceRequests services={issuanceService} />,
-      },
-    ],
-  });
-  entries.push({
-    displayEntry: () => listingService.length > 0,
-    sidebar: [
-      {
-        label: 'Listings',
-        path: '/app/listing/listings',
-        render: () => <Listings services={listingService} listings={listings} />,
-        icon: <PublicIcon />,
-        groupBy: 'Secondary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      { path: '/app/listing/new', render: () => <ListingNew services={listingService} /> },
-      {
-        path: '/app/listing/requests',
-        render: () => <ListingRequests services={listingService} listings={listings} />,
-      },
-    ],
-  });
+
   entries.push({
     displayEntry: () => tradingService.length > 0,
     sidebar: [
@@ -251,6 +225,161 @@ const AppComponent = () => {
           icon: <ExchangeIcon />,
           children: [],
         })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/trading/order/:contractId',
+        render: () => <TradingOrder listings={listings} />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Manage',
+        path: '/app/manage',
+        activeSubroutes: true,
+        render: () => <Redirect to="/app/manage/custody" />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/manage/clearing',
+        render: () => (
+          <Manage>
+            <ClearingServiceTable services={clearingService} />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/custody',
+        render: () => (
+          <Manage>
+            <CustodyServiceTable services={custodyService} />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/distributions',
+        render: () => (
+          <Manage>
+            <Header as="h2">Service</Header>
+            <DistributionServiceTable />
+            <Auctions />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/instruments',
+        render: () => (
+          <Manage>
+            <InstrumentsTable />
+          </Manage>
+        ),
+      },
+      { path: '/app/manage/instrument/:contractId', component: Instrument },
+      {
+        path: '/app/manage/issuance',
+        render: () => (
+          <Manage>
+            <IssuancesTable />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/trading',
+        render: () => (
+          <Manage>
+            <TradingServiceTable services={tradingService} />
+          </Manage>
+        ),
+      },
+      {
+        path: '/app/manage/listings',
+        render: () => (
+          <Manage>
+            <ListingsTable services={listingService} listings={listings} />
+          </Manage>
+        ),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Setup',
+        path: '/app/setup',
+        activeSubroutes: true,
+        render: () => <SetUp />,
+        icon: <ToolIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: '/app/setup/custody/offer',
+        render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+      {
+        path: '/app/setup/clearing/offer',
+        render: () => <Offer service={ServiceKind.CLEARING} />,
+      },
+      {
+        path: '/app/setup/clearing/market/offer',
+        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
+      },
+      {
+        path: '/app/setup/distribution/new/auction',
+        render: () => <NewAuction services={auctionService} />,
+      },
+      {
+        path: '/app/setup/identity',
+        render: () => <RequestIdentityVerification />,
+      },
+      {
+        path: '/app/setup/instrument/new/base',
+        component: NewBaseInstrument,
+      },
+      {
+        path: '/app/setup/instrument/new/convertiblenote',
+        component: NewConvertibleNote,
+      },
+      {
+        path: '/app/setup/instrument/new/binaryoption',
+        component: NewBinaryOption,
+      },
+      {
+        path: '/app/setup/issuance/new',
+        render: () => <IssuanceNew services={issuanceService} />,
+      },
+      {
+        path: '/app/setup/listing/new',
+        render: () => <ListingNew services={listingService} />,
+      },
+      {
+        path: '/app/setup/trading/offer',
+        render: () => <Offer service={ServiceKind.TRADING} />,
+      },
+    ],
+  });
+
+  const notifications = useAllNotifications(party);
+  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [],
+    additionalRoutes: [
+      {
+        path: '/app/notifications',
+        render: () => <Notifications notifications={notifications} />,
       },
     ],
   });
@@ -270,17 +399,18 @@ const AppComponent = () => {
   };
 
   return (
-    <Page sideBarItems={entriesToDisplay}>
+    <Page sideBarItems={entriesToDisplay} showNotificationAlert={notifCount > 0}>
       {servicesLoading ? (
         <div>
-          <CircularProgress color={'secondary'} />
+          <CircularProgress color="secondary" />
         </div>
       ) : (
         <div>
           <Switch>
+            <Route exact path="/app" component={Landing} />
             {routeEntries(entriesToDisplay)}
-            {additionRouting.map(routeProps => (
-              <Route {...routeProps} />
+            {additionRouting.map((routeProps, i) => (
+              <Route key={i} {...routeProps} />
             ))}
           </Switch>
         </div>

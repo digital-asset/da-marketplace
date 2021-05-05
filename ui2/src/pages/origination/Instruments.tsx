@@ -1,46 +1,55 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
-import { useStreamQueries } from '@daml/react';
-import { getName } from '../../config';
+import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
+import { useStreamQueries } from '../../Main';
+import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
+import { ArrowRightIcon } from '../../icons/icons';
 
-const InstrumentsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  const allInstruments = useStreamQueries(AssetDescription).contracts;
+export const InstrumentsTable: React.FC = () => {
+  const history = useHistory();
+  const { contracts: allInstruments, loading: allInstrumentsLoading } = useStreamQueries(
+    AssetDescription
+  );
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
+  const { getName } = usePartyName('');
 
   return (
+    <StripedTable
+      headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
+      loading={allInstrumentsLoading}
+      rowsClickable
+      clickableIcon={<ArrowRightIcon />}
+      rows={instruments.map(c => {
+        return {
+          elements: [
+            getName(c.payload.issuer),
+            Object.keys(c.payload.assetId.signatories.textMap)
+              .map(party => getName(party))
+              .join(', '),
+            c.payload.assetId.label,
+            c.payload.assetId.version,
+            c.payload.description,
+          ],
+          onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
+        };
+      })}
+    />
+  );
+};
+
+const InstrumentsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
+  return (
     <div className="instruments">
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
           New Instrument
         </Button>
       </Tile>
 
-      <StripedTable
-        headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description', 'Details']}
-        rows={instruments.map(c => [
-          getName(c.payload.issuer),
-          Object.keys(c.payload.assetId.signatories.textMap).join(', '),
-          c.payload.assetId.label,
-          c.payload.assetId.version,
-          c.payload.description,
-          <IconButton
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() =>
-              history.push('/app/registry/instruments/' + c.contractId.replace('#', '_'))
-            }
-          >
-            <KeyboardArrowRight fontSize="small" />
-          </IconButton>,
-        ])}
-      />
+      <InstrumentsTable />
     </div>
   );
 };

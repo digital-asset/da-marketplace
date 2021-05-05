@@ -1,34 +1,82 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
 import {
   Table,
   TableBody,
   TableCell,
   TableRow,
   TableHead,
-  Button,
   Grid,
   Paper,
   Typography,
 } from '@material-ui/core';
+import { Button } from 'semantic-ui-react';
+
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import {
   Service,
   Request,
   Offer,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import useStyles from '../styles';
-import { getName, getTemplateId } from '../../config';
+import { usePartyName, getTemplateId } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import StripedTable from '../../components/Table/StripedTable';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
+};
+
+export const TradingServiceTable: React.FC<Props> = ({ services }) => {
+  const party = useParty();
+  const { getName } = usePartyName(party);
+  const ledger = useLedger();
+
+  const terminateService = async (c: CreateEvent<Service>) => {
+    await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
+  };
+
+  return (
+    <StripedTable
+      headings={[
+        'Service',
+        'Operator',
+        'Provider',
+        'Consumer',
+        'Role',
+        'Trading Account',
+        'Allocation Account',
+        'Action',
+        // 'Details'
+      ]}
+      rows={services.map((c, i) => {
+        return {
+          elements: [
+            getTemplateId(c.templateId),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+            c.payload.tradingAccount.id.label,
+            c.payload.allocationAccount.id.label,
+            <Button className="ghost warning" onClick={() => terminateService(c)}>
+              Terminate
+            </Button>,
+            // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
+            //     <ArrowRightIcon/>
+            // </NavLink>
+          ],
+        };
+      })}
+    />
+  );
 };
 
 const TradingComponent: React.FC<RouteComponentProps & Props> = ({
@@ -37,6 +85,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
@@ -136,10 +185,6 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
     setAcceptDialogProps({ ...defaultAcceptDialogProps, open: true, onClose });
   };
 
-  const terminateService = async (c: CreateEvent<Service>) => {
-    await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
-  };
-
   const approveRequest = async (c: CreateEvent<Request>) => {
     if (!hasRole) return;
     await ledger.exercise(Role.ApproveTradingServiceRequest, roles[0].contractId, {
@@ -170,13 +215,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center">
                 <Grid item xs={6}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
-                      onClick={requestService}
-                    >
+                    <Button className="ghost" onClick={requestService}>
                       Request Trading Service
                     </Button>
                   </Grid>
@@ -184,13 +223,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                 <Grid item xs={6}>
                   <Grid container justify="center">
                     {hasRole && (
-                      <Button
-                        color="primary"
-                        size="large"
-                        className={classes.actionButton}
-                        variant="outlined"
-                        onClick={offerService}
-                      >
+                      <Button className="ghost" onClick={offerService}>
                         Offer Trading Service
                       </Button>
                     )}
@@ -204,91 +237,7 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center" className={classes.paperHeading}>
                 <Typography variant="h2">Services</Typography>
               </Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}>
-                      <b>Service</b>
-                    </TableCell>
-                    <TableCell key={1} className={classes.tableCell}>
-                      <b>Operator</b>
-                    </TableCell>
-                    <TableCell key={2} className={classes.tableCell}>
-                      <b>Provider</b>
-                    </TableCell>
-                    <TableCell key={3} className={classes.tableCell}>
-                      <b>Consumer</b>
-                    </TableCell>
-                    <TableCell key={4} className={classes.tableCell}>
-                      <b>Role</b>
-                    </TableCell>
-                    <TableCell key={5} className={classes.tableCell}>
-                      <b>Trading Account</b>
-                    </TableCell>
-                    <TableCell key={6} className={classes.tableCell}>
-                      <b>Allocation Account</b>
-                    </TableCell>
-                    <TableCell key={7} className={classes.tableCell}>
-                      <b>Action</b>
-                    </TableCell>
-                    <TableCell key={8} className={classes.tableCell}>
-                      <b>Details</b>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {services.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        {getTemplateId(c.templateId)}
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.operator)}
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        {party === c.payload.provider ? 'Provider' : 'Consumer'}
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        {c.payload.tradingAccount.id.label}
-                      </TableCell>
-                      <TableCell key={6} className={classes.tableCell}>
-                        {c.payload.allocationAccount.id.label}
-                      </TableCell>
-                      <TableCell key={7} className={classes.tableCell}>
-                        <Button
-                          color="primary"
-                          size="small"
-                          className={classes.choiceButton}
-                          variant="contained"
-                          onClick={() => terminateService(c)}
-                        >
-                          Terminate
-                        </Button>
-                      </TableCell>
-                      <TableCell key={8} className={classes.tableCell}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
-                          onClick={() =>
-                            history.push(
-                              '/app/network/trading/service/' + c.contractId.replace('#', '_')
-                            )
-                          }
-                        >
-                          <KeyboardArrowRight fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <TradingServiceTable services={services} />
             </Paper>
           </Grid>
         </Grid>
@@ -350,33 +299,19 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={6} className={classes.tableCell}>
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => cancelRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => cancelRequest(c)}>
                             Cancel
                           </Button>
                         )}
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => approveRequest(c)}
-                          >
+                          <Button className="ghost" onClick={() => approveRequest(c)}>
                             Approve
                           </Button>
                         )}
                       </TableCell>
                       <TableCell key={7} className={classes.tableCell}>
                         <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
+                          className="ghost"
                           onClick={() =>
                             history.push(
                               '/app/network/trading/request/' + c.contractId.replace('#', '_')
@@ -439,24 +374,12 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.provider === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => withdrawOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => withdrawOffer(c)}>
                             Withdraw
                           </Button>
                         )}
                         {c.payload.customer === party && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => acceptOffer(c)}
-                          >
+                          <Button className="ghost" onClick={() => acceptOffer(c)}>
                             Accept
                           </Button>
                         )}

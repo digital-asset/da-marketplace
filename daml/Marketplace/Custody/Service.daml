@@ -4,11 +4,13 @@ import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
+import DA.Finance.Trade.SettlementInstruction
 import DA.Map (Map)
 import DA.Next.Set
 import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Utils
 
 template Service
   with
@@ -129,11 +131,12 @@ template Service
           Custody.TransferDepositRequest{accountId; transfer} <- fetchAndArchive transferDepositRequestCid
           exerciseByKey @AssetSettlementRule accountId transfer
 
-      nonconsuming Lifecycle : [ContractId AssetDeposit]
+      nonconsuming Lifecycle : (ContractId AssetDeposit, [ContractId SettlementInstruction])
         with
           lifecycleRequestCid : ContractId Custody.LifecycleRequest
-          safekeepingDepositCid: ContractId AssetDeposit
-          fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          safekeepingDepositCid : ContractId AssetDeposit
+          fixings : Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          uniquePayoutId : Text
         do
           exercise lifecycleRequestCid Custody.Process with investor = customer; ..
 
@@ -154,7 +157,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()
@@ -184,4 +187,4 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..

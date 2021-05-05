@@ -1,42 +1,48 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useStreamQueries } from '@daml/react';
-import { getName } from '../../../config';
+import { useStreamQueries } from '../../../Main';
+import { usePartyName } from '../../../config';
 import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { Bid } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { getBidStatus, getBidAllocation } from '../Utils';
 import StripedTable from '../../../components/Table/StripedTable';
 import Tile from '../../../components/Tile/Tile';
 import { Icon } from 'semantic-ui-react';
+import { ArrowRightIcon } from '../../../icons/icons';
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
 }: RouteComponentProps) => {
-  const biddingAuctions = useStreamQueries(BiddingAuctionContract).contracts;
-  const bids = useStreamQueries(Bid).contracts;
+  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } = useStreamQueries(
+    BiddingAuctionContract
+  );
+  const { contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
+  const { getName } = usePartyName('');
 
   return (
     <div className="bidding">
-      <Tile header={<h2>Auctions</h2>}>
+      <Tile header={<h4>Auctions</h4>}>
         <StripedTable
-          headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity', 'Details']}
-          rows={biddingAuctions.map(c => [
-            c.payload.auctionId,
-            getName(c.payload.provider),
-            getName(c.payload.issuer),
-            c.payload.asset.id.label,
-            c.payload.asset.quantity,
-            <Icon
-              name="angle right"
-              link
-              onClick={() =>
-                history.push('/app/distribution/bidding/' + c.contractId.replace('#', '_'))
-              }
-            />,
-          ])}
+          headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
+          loading={biddingAuctionsLoading}
+          rowsClickable
+          clickableIcon={<ArrowRightIcon />}
+          rows={biddingAuctions.map(c => {
+            return {
+              elements: [
+                c.payload.auctionId,
+                getName(c.payload.provider),
+                getName(c.payload.issuer),
+                c.payload.asset.id.label,
+                c.payload.asset.quantity,
+              ],
+              onClick: () =>
+                history.push('/app/distribution/bidding/' + c.contractId.replace('#', '_')),
+            };
+          })}
         />
       </Tile>
-      <Tile header={<h2>Bids</h2>}>
+      <Tile header={<h4>Bids</h4>}>
         <StripedTable
           headings={[
             'Auction ID',
@@ -48,16 +54,21 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
             'Status',
             'Allocation',
           ]}
-          rows={bids.map(c => [
-            c.payload.auctionId,
-            getName(c.payload.provider),
-            getName(c.payload.issuer),
-            c.payload.assetId.label,
-            c.payload.details.quantity,
-            c.payload.details.price,
-            getBidStatus(c.payload.status),
-            getBidAllocation(c.payload),
-          ])}
+          loading={bidsLoading}
+          rows={bids.map(c => {
+            return {
+              elements: [
+                c.payload.auctionId,
+                getName(c.payload.provider),
+                getName(c.payload.issuer),
+                c.payload.assetId.label,
+                c.payload.details.quantity,
+                c.payload.details.price,
+                getBidStatus(c.payload.status),
+                getBidAllocation(c.payload),
+              ],
+            };
+          })}
         />
       </Tile>
     </div>

@@ -3,7 +3,9 @@ module Tests.ExchangeTrade where
 import Common
 import Daml.Script
 import DA.Finance.Types (Id(..))
+import DA.Finance.Asset (AssetDeposit_Split(..))
 import DA.Next.Set
+import DA.Foldable (forA_)
 import qualified Marketplace.Settlement.Model as Settlement
 import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Model as Order
@@ -31,6 +33,7 @@ setup = do
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
     listingId = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
     calendarId = "1"
     description = "Tesla Inc."
     tradedAssetId = shareAsset.id
@@ -45,7 +48,7 @@ setup = do
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
 
   -- > Alice places a bid for shares
-  (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -56,10 +59,10 @@ setup = do
             price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
-        depositCid = aliceDepositCid
+        collateral = Order.Collateral aliceDepositCid
 
   -- > Bob places a new offer for shares
-  (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
+  Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submit bob.customer do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
@@ -70,10 +73,10 @@ setup = do
             price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
-        depositCid = bobDepositCid
+        collateral = Order.Collateral bobDepositCid
 
   -- Exchange matches the two orders
-  settlementInstructionCid <- submit exchange do
+  Matching.Collateralized settlementInstructionCid <- submit exchange do
     exerciseCmd matchingServiceCid Matching.MatchOrders
       with
         execution = Order.Execution with
@@ -86,5 +89,126 @@ setup = do
 
   -- Exchange settles the instructed trade
   submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
+
+  pure ()
+
+partialExecutionsTest : Script ()
+partialExecutionsTest = do
+
+  providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders
+  Assets{usd; tsla} <- onboardAssets providers
+
+  -- Assets
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+    priceAsset = usd with quantity = 100.0
+
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
+
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    listingId = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
+    calendarId = "1"
+    description = "Tesla Inc."
+    tradedAssetId = shareAsset.id
+    quotedAssetId = cashAsset.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "12345"
+    observers = []
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+
+  -- > Alice places an order to buy shares
+  submit alice.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ alice.customer ]; label = "001"; version = 0
+          symbol = listingId
+          asset = shareAsset
+          orderType = Order.Limit with price = 100.0
+          side = Order.Buy
+          timeInForce = Order.GTC
+        collateral = Order.Collateral aliceDepositCid
+
+  -- > Bob places 4 offers for his shares
+  ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobDepositCid AssetDeposit_Split with quantities = [50.0]
+  submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ bob.customer ]; label = "100"; version = 0
+          symbol = listingId
+          asset = shareAsset with quantity = 50.0
+          orderType = Order.Limit with price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+        collateral = Order.Collateral bobDepositCid
+
+  ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
+  submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ bob.customer ]; label = "101"; version = 0
+          symbol = listingId
+          asset = shareAsset with quantity = 50.0
+          orderType = Order.Limit with price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+        collateral = Order.Collateral bobDepositCid
+
+  ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
+  submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ bob.customer ]; label = "102"; version = 0
+          symbol = listingId
+          asset = shareAsset with quantity = 50.0
+          orderType = Order.Limit with price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+        collateral = Order.Collateral bobDepositCid
+
+  ( bobDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
+  submit bob.customer do
+    exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
+      with
+        details = Order.Details with
+          id = Id with signatories = fromList [ bob.customer ]; label = "103"; version = 0
+          symbol = listingId
+          asset = shareAsset with quantity = 50.0
+          orderType = Order.Limit with price = 100.0
+          side = Order.Sell
+          timeInForce = Order.GTC
+        collateral = Order.Collateral bobDepositCid
+
+  -- Exchange matches the the buy order to the 4 sell orders
+  settlementInstructionCids <- forA ["100", "101", "102", "103"] (\orderId ->
+    submit exchange do
+      exerciseCmd matchingServiceCid Matching.MatchOrders
+        with
+          execution = Order.Execution with
+            matchId = "1"
+            makerOrderId = "001"
+            takerOrderId = orderId
+            quantity = 50.0
+            price = 100.0
+            timestamp = ""
+    )
+
+  -- Exchange settles the instructed trade
+  forA_ settlementInstructionCids (\(Matching.Collateralized settlementInstructionCid) ->
+    submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle)
 
   pure ()

@@ -1,0 +1,11 @@
+module Marketplace.Utils where
+
+createWhenNotExists : forall t k. (Template t, TemplateKey t k) => t -> Update (Optional (ContractId t))
+createWhenNotExists t = visibleByKey @t (key t) >>= \case
+    True  -> Some <$> create t
+    False -> return None
+
+createOrLookup : forall t k. (Template t, TemplateKey t k) => t -> Update (ContractId t)
+createOrLookup t = lookupByKey @t (key t) >>= \case
+    (Some cid) -> return cid
+    None       -> create t

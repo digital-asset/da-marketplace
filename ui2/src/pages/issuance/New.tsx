@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { IconButton } from '@material-ui/core';
 import useStyles from '../styles';
 import { render } from '../../components/Claims/render';
@@ -70,7 +71,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       assetId: asset.payload.assetId,
       quantity,
     });
-    history.push('/app/issuance/requests');
+    history.push('/app/manage/issuance');
   };
 
   return (

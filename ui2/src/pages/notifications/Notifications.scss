@@ -1,0 +1,9 @@
+@use '../../themes/variables.scss' as *;
+
+@mixin notifications {
+  .notifications {
+    .notification-content {
+      margin-top: $spacing-m;
+    }
+  }
+}

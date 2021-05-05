@@ -80,6 +80,9 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     <Tile dark thinGap key="login" header={logoHeader}>
       <LocalLoginForm onLogin={onLogin} />
     </Tile>,
+    <Tile dark thinGap key="quick-setup">
+      <QuickSetupButton />
+    </Tile>,
   ];
 
   const dablTiles = [
@@ -88,6 +91,9 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     </Tile>,
     <Tile dark thinGap key="parties">
       <PartiesLoginForm onLogin={onLogin} />
+    </Tile>,
+    <Tile dark thinGap key="quick-setup">
+      <QuickSetupButton />
     </Tile>,
     <Tile dark thinGap key="jwt">
       <JWTLoginForm onLogin={onLogin} />
@@ -103,6 +109,24 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     <div className="login-screen">
       <TilePage tiles={tiles} />
     </div>
+  );
+};
+
+const QuickSetupButton = () => {
+  const [parties, setParties] = useState<PartyDetails[]>();
+  const history = useHistory();
+
+  useEffect(() => {
+    const parties = retrieveParties();
+    if (parties) {
+      setParties(parties);
+    }
+  }, []);
+
+  return (
+    <Button className="ghost dark" onClick={() => history.push('/quick-setup')}>
+      Quick Setup
+    </Button>
   );
 };
 
@@ -292,7 +316,7 @@ const DablLoginForm: React.FC<Props> = () => {
         icon="right arrow blue"
         labelPosition="right"
         className="dabl-login-button"
-        content={<p className="bold">Log in with DABL</p>}
+        content={<p className="bold">Log in with Daml Hub</p>}
         onClick={handleDablLogin}
       />
     </Form>

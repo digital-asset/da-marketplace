@@ -14,9 +14,10 @@ import {
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
@@ -33,6 +34,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;

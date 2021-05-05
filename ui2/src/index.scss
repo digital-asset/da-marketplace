@@ -8,7 +8,10 @@
 @use 'components/Form/CalendarInput';
 
 @use 'pages/login/Login';
+@use 'pages/login/QuickSetup';
 @use 'pages/landing/Landing';
+@use 'pages/manage/Manage';
+@use 'pages/setup/SetUp';
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
@@ -16,6 +19,7 @@
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
+@use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
 @use 'pages/distribution/bidding/Bidding';
 @use 'pages/listing/Listing';
@@ -120,6 +124,10 @@ html {
     margin: 0px;
     color: var(--grey-10);
 
+    &.error {
+      color: var(--red-50);
+    }
+
     &.bold {
       font-weight: 600;
     }
@@ -187,10 +195,13 @@ html {
         @include StripedTable.striped-table();
         @include CalendarInput.calendar-input();
         @include App.app();
+        @include Manage.manage();
+        @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Login.login-screen();
+        @include QuickSetup.quick-setup();
         @include Landing.landing();
         @include Assets.assets();
         @include Account.account();
@@ -199,6 +210,7 @@ html {
         @include Bidding.bidding();
         @include Listing.listing();
         @include Market.market();
+        @include Notifications.notifications();
       }
     }
   }

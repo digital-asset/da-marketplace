@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
 import { Menu, Form } from 'semantic-ui-react'
 
 import { useLedger, useParty } from '@daml/react'
@@ -27,7 +27,6 @@ import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automatio
 
 import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import CCPProfile, { Profile, createField } from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -39,10 +38,11 @@ import DerivativeList from '../common/DerivativeList'
 import InstrumentList from '../common/InstrumentList'
 
 import IssuedDerivative from '../Issuer/IssuedDerivative'
-import { useRelationshipRequestNotifications } from './RelationshipRequestNotifications'
+import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
 import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 type Props = {
     onLogout: () => void;
@@ -96,7 +96,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             }
         })
 
-    const notifications = [...useRelationshipRequestNotifications(), ...useDismissibleNotifications()];
+    const relNotifications = useRelationshipRequestNotifications();
     const derivatives = useContractQuery(Derivative, AS_PUBLIC);
     const instruments = useContractQuery(MarketPair);
 
@@ -104,6 +104,12 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
     });
+
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
 
     useEffect(() => {
         if (registeredCCP[0]) {
@@ -113,8 +119,23 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: rcData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredCCP]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+        if (notifications.length === 0) setShowNotificationAlert(false);
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        const currentLocation = history.location.pathname;
+        history.push({ pathname: `${path}/notifications`, state: currentLocation });
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, ccp]);
@@ -208,7 +229,7 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
             <Switch>
                 <Route exact path={path}>
                     <LandingPage
-                        notifications={notifications}
+                        notifications={relNotifications}
                         profile={
                             <FormErrorHandled onSubmit={updateProfile}>
                                 <CCPProfile
@@ -222,33 +243,43 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                             </FormErrorHandled>
                         }
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
                 <Route path={`${path}/exchanges`}>
                     <ExchangeRelationships
                         exchanges={allExchanges}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/members`}>
                     <Members
                         members={allCustomers}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
                 <Route path={`${path}/member/:investorId`}>
                     <MemberAccounts
                         sideNav={sideNav}
                         members={allCustomers}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
                 <Route path={`${path}/instruments`}>
                     <InstrumentList
                         exchanges={allExchanges}
                         sideNav={sideNav}
                         instruments={instruments}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
                 <Route path={`${path}/derivatives`}>
                     <DerivativeList
@@ -260,6 +291,13 @@ const CCP: React.FC<Props> = ({ onLogout }) => {
                     <IssuedDerivative
                         sideNav={sideNav}
                         onLogout={onLogout}/>
+                </Route>
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
             </Switch>
         </div>

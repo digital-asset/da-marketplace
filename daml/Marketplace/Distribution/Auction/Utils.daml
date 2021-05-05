@@ -15,14 +15,19 @@ splitList p xs = foldr (\x acc -> if p x then Right x :: acc else Left x :: acc)
 
 -- | Returns a bidder's allocation to their trading account
 withdrawAllocation : Bidding.Bid -> Update (ContractId AssetDeposit)
-withdrawAllocation Bid{..} = do
+withdrawAllocation Bid{depositCid, tradingAccount, allocationAccount} = do
     exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Withdraw with transferTo = tradingAccount; ..
 
 -- | Updates a bid's status
 updateBidStatus : Bidding.Status -> Bidding.Bid -> Update (ContractId Bidding.Bid)
 updateBidStatus newStatus Bidding.Bid{customer, auctionId} =
-  do
     exerciseByKey @Bidding.Bid (customer, auctionId) Bidding.UpdateStatus with newStatus
+
+-- | Reject a bid
+rejectBid : Bidding.Status -> Bidding.Bid -> Update (ContractId Bidding.Bid, ContractId AssetDeposit)
+rejectBid newStatus Bidding.Bid{operator, provider, customer, auctionId} = do
+    (bidCid, _) <- fetchByKey @Bidding.Bid (customer, auctionId)
+    exerciseByKey @Bidding.Service (operator, provider, customer) Bidding.RejectAllocation with bidCid ; newStatus
 
 -- | A map/accumulator function for processing a submitted bid.
 -- Accepts the remaining quantity and price as an accululator along the current Bid as input

@@ -1,29 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import classnames from 'classnames';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
-import {
-  Typography,
-  Grid,
-  Paper,
-  Select,
-  MenuItem,
-  TextField,
-  Button as MUIButton,
-  MenuProps,
-  FormControl,
-  InputLabel,
-} from '@material-ui/core';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { MenuProps } from '@material-ui/core';
 import useStyles from '../styles';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
-import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
-import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
 import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate } from '@daml/types';
-import DateFnsUtils from '@date-io/date-fns';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -94,7 +80,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const choice: Claim<DamlDate, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
   const claims: Claim<DamlDate, Id> = {
     tag: 'When',
-    value: { predicate: obsEuropean, obligation: choice },
+    value: { predicate: obsEuropean, claim: choice },
   };
 
   useEffect(() => {
@@ -108,10 +94,10 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   if (!service) return <></>;
 
   const requestOrigination = async () => {
-    const safekeepingAccountId = accounts.find(
+    const safekeepingAccount = accounts.find(
       a => a.provider === service.payload.provider && a.id.label === account
-    )?.id;
-    if (!safekeepingAccountId) {
+    );
+    if (!safekeepingAccount) {
       console.log(
         `Couldn't find account from provider ${service.payload.provider} with label ${account}`
       );
@@ -121,7 +107,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       assetLabel: label,
       description,
       claims,
-      safekeepingAccountId,
+      safekeepingAccount,
       observers: [service.payload.provider, party],
     });
     history.push('/app/instrument/requests');

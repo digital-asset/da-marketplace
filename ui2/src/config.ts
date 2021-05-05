@@ -1,8 +1,12 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import { partyNameFromJwtToken } from '@daml/hub-react';
-import { Credentials, isCredentials } from './Credentials';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { partyNameFromJwtToken, useWellKnownParties } from '@daml/hub-react';
+import { Parties } from '@daml/hub-react/lib/WellKnownParties';
+import { useCallback, useMemo } from 'react';
+import { retrieveCredentials } from './Credentials';
+import { useStreamQueries } from './Main';
 import { retrieveParties } from './Parties';
 
 export enum DeploymentMode {
@@ -20,6 +24,8 @@ export const deploymentMode: DeploymentMode =
     ? DeploymentMode.PROD_DABL
     : DeploymentMode.PROD_OTHER;
 
+export const isHubDeployment = deploymentMode === DeploymentMode.PROD_DABL;
+
 // Decide the ledger ID based on the deployment mode first,
 // then an environment variable, falling back on the sandbox ledger ID.
 export const ledgerId: string =
@@ -36,17 +42,56 @@ export const wsBaseUrl = deploymentMode === DeploymentMode.DEV ? 'ws://localhost
 
 export const publicParty = deploymentMode === DeploymentMode.DEV ? 'Public' : `public-${ledgerId}`;
 
-export const getName = (partyOrCreds: string | Credentials): string => {
-  if (isCredentials(partyOrCreds)) {
-    const creds = partyOrCreds;
-    return partyNameFromJwtToken(creds.token) || creds.party;
-  } else {
-    const party = partyOrCreds;
-    const importedParties = retrieveParties();
-    const details = importedParties?.find(p => p.party === party);
+const inferPartyName = (party: string, wellKnownParties: Parties | null): string | undefined => {
+  // Check if we can extract a readable party name from any data we have client-side.
+  // Inspect token claims, parties.json, and cross-reference Daml Hub's well-known parties.
 
-    return details ? details.partyName : party;
+  const creds = retrieveCredentials();
+
+  if (party === creds?.party) {
+    return partyNameFromJwtToken(creds.token) || undefined;
   }
+
+  if (party === wellKnownParties?.userAdminParty) {
+    return 'Operator';
+  }
+
+  if (party === wellKnownParties?.publicParty) {
+    return 'Public';
+  }
+
+  return retrieveParties()?.find(p => p.party === party)?.partyName;
+};
+
+export const usePartyName = (party: string) => {
+  const { contracts: verifiedIdentities, loading } = useStreamQueries(VerifiedIdentity);
+  const { parties: wellKnownParties } = useWellKnownParties();
+
+  const getName = useCallback(
+    (party: string): string => {
+      const legalName: string | undefined = verifiedIdentities.find(
+        id => id.payload.customer === party
+      )?.payload.legalName;
+
+      if (legalName) {
+        return legalName;
+      }
+
+      const inferredName: string | undefined = inferPartyName(party, wellKnownParties);
+
+      if (inferredName) {
+        return inferredName;
+      }
+
+      // Cannot find an identity contract or infer the party name, so fallback to party ID
+      return party;
+    },
+    [verifiedIdentities, loading]
+  );
+
+  const name = useMemo(() => getName(party), [party, getName]);
+
+  return { name, getName };
 };
 
 export function getTemplateId(t: string) {

@@ -2,6 +2,24 @@
 
 @mixin manage {
   .manage {
+    table {
+      margin-bottom: $spacing-m;
+    }
+    .auctions {
+      .header {
+        margin-top: $spacing-l;
+      }
+    }
+
+    .field {
+      display: none;
+      margin-bottom: $spacing-s;
+
+      .ui.selection.dropdown {
+        width: 100%;
+      }
+    }
+
     .manage-menu {
       border-width: 1px;
       border-color: var(--cool-grey-80);
@@ -19,6 +37,16 @@
           margin-bottom: -1px;
           padding-bottom: calc(#{$spacing-s} - 2px); /* account for border displacement */
         }
+      }
+    }
+
+    @media screen and (max-width: 1050px) {
+      .manage-menu {
+        display: none;
+      }
+
+      .field {
+        display: flex;
       }
     }
   }

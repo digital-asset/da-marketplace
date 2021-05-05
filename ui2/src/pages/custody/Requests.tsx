@@ -14,7 +14,8 @@ import {
 import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import {
   CloseAccountRequest,
   DebitAccountRequest,
@@ -22,7 +23,7 @@ import {
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import useStyles from '../styles';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
@@ -37,6 +38,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   const classes = useStyles();
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);

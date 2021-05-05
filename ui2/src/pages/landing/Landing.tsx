@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Label } from 'semantic-ui-react';
+import { Button, Label } from 'semantic-ui-react';
 
-import { useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 
 import {
   ServiceKind,
@@ -12,23 +13,54 @@ import {
 import Tile from '../../components/Tile/Tile';
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 import { getAbbreviation } from '../page/utils';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { NavLink } from 'react-router-dom';
-import ServiceRequestDialog from '../../components/InputDialog/ServiceRequestDialog';
+import { Link, NavLink } from 'react-router-dom';
+import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 
-import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
-import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
-import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {
+  Request as RegulatorRequest,
+  Service as RegulatorService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
 import { Template } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { useWellKnownParties } from '@daml/hub-react/lib';
 
-function hashUserName(name: string): number {
-  // Hash a user name to map to values in the range [1, 4], to determine profile pic color
-  return (name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
+type DamlHubParty = string;
+function isDamlHubParty(party: string): party is DamlHubParty {
+  return party.includes('ledger-party-');
+}
+
+const RenderDamlHubParty: React.FC<{ party: string }> = ({ party }) => {
+  return (
+    <p className="daml-hub-party">
+      <input readOnly className="id-text" value={party} />
+    </p>
+  );
+};
+
+function hashPartyId(party: string): number {
+  // Hash a party to map to values in the range [1, 4], to determine profile pic color
+  return (party.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0) % 4) + 1;
+}
+
+function getProfileAbbr(party: string): string {
+  if (isDamlHubParty(party)) {
+    // First 3 chars of a Daml Hub ledger party UUID string
+    return party.split('-').slice(2).join('').slice(0, 3);
+  } else {
+    return getAbbreviation(party);
+  }
 }
 
 interface RelationshipProps {
@@ -36,33 +68,113 @@ interface RelationshipProps {
   services: ServiceKind[];
 }
 
-const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => (
-  <Tile className="relationship-tile">
-    <div className={`child profile-pic bg-color-${hashUserName(provider)}`}>
-      {getAbbreviation(provider)}
-    </div>
-    <div className="child provider">{getName(provider)}</div>
-    <div className="child">
-      {services.map(s => (
-        <Label key={s} content={s} />
-      ))}
-    </div>
-  </Tile>
-);
+const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
+  const { name } = usePartyName(provider);
+
+  return (
+    <Tile className="relationship-tile">
+      <div className={`child profile-pic bg-color-${hashPartyId(provider)}`}>
+        {getProfileAbbr(name)}
+      </div>
+      <div className="child provider">{name}</div>
+      <div className="child">
+        {services.map(s => (
+          <Label key={s} content={s} />
+        ))}
+      </div>
+    </Tile>
+  );
+};
 
 interface RequestInterface {
   customer: string;
   provider: string;
   tradingAccount?: Account;
   allocationAccount?: Account;
+  receivableAccount?: Account;
+  clearingAccount?: Account;
+  marginAccount?: Account;
 }
+
+const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
+  const customer = useParty();
+  const ledger = useLedger();
+  const { parties, loading: operatorLoading } = useWellKnownParties();
+  const provider = parties?.userAdminParty || 'Operator';
+
+  const { contracts: regulatorServices, loading: regulatorLoading } = useStreamQueries(
+    RegulatorService
+  );
+
+  const requestContract = useStreamQueries(RegulatorRequest).contracts.find(
+    r => r.payload.customer === customer
+  );
+
+  const regulatorCustomer = regulatorServices.find(r => r.payload.customer === customer);
+
+  const { contracts: identities, loading: identitiesLoading } = useStreamQueries(VerifiedIdentity);
+  const partyIdentity = identities.find(id => id.payload.customer === customer);
+
+  const damlHubParty =
+    isDamlHubParty(customer) && name !== customer ? (
+      <RenderDamlHubParty party={customer} />
+    ) : undefined;
+
+  if (requestContract) {
+    return (
+      <div>
+        {damlHubParty}
+        <p>Regulator Request pending...</p>
+      </div>
+    );
+  } else if (!regulatorCustomer && !regulatorLoading && !operatorLoading) {
+    return (
+      <div className="link">
+        {damlHubParty}
+        <Button
+          className="ghost"
+          onClick={() => {
+            if (!operatorLoading) {
+              ledger.create(RegulatorRequest, { customer, provider });
+            }
+          }}
+        >
+          Request Regulator Service
+        </Button>
+      </div>
+    );
+  } else if (!partyIdentity && !identitiesLoading && !regulatorLoading) {
+    return (
+      <div className="link">
+        {damlHubParty}
+        <Link to="/app/setup/identity">Request Identity Verification</Link>
+      </div>
+    );
+  } else if (partyIdentity) {
+    return (
+      <>
+        {damlHubParty}
+        <p>{partyIdentity.payload.location}</p>
+      </>
+    );
+  }
+
+  return <></>;
+};
 
 const Landing = () => {
   const party = useParty();
+  const { name } = usePartyName(party);
   const providers = useProviderServices(party);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
+
+  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
+  const allocationAccounts = allocationAccountRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
@@ -86,24 +198,54 @@ const Landing = () => {
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
 
-    if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
+    let params: RequestInterface = {
+      customer: party,
+      provider,
+    };
+
+    if (dialogState?.tradingAccount) {
       const tradingAccount = accounts.find(a => a.id.label === dialogState.tradingAccount);
-      const allocationAccount = accounts.find(a => a.id.label === dialogState.allocationAccount);
-
-      const params = {
-        provider,
+      params = {
+        ...params,
         tradingAccount,
-        allocationAccount,
-        customer: party,
       };
-
-      setRequestParams(params);
-    } else {
-      setRequestParams({
-        provider,
-        customer: party,
-      });
     }
+
+    if (dialogState?.allocationAccount) {
+      const allocationAccount = allocationAccounts.find(
+        a => a.id.label === dialogState.allocationAccount
+      );
+      params = {
+        ...params,
+        allocationAccount,
+      };
+    }
+
+    if (dialogState?.clearingAccount) {
+      const clearingAccount = accounts.find(a => a.id.label === dialogState.clearingAccount);
+      params = {
+        ...params,
+        clearingAccount,
+      };
+    }
+
+    if (dialogState?.marginAccount) {
+      const marginAccount = allocationAccounts.find(a => a.id.label === dialogState.marginAccount);
+      params = {
+        ...params,
+        marginAccount,
+      };
+    }
+
+    if (dialogState?.receivableAccount) {
+      const receivableAccount = accounts.find(a => a.id.label === dialogState.receivableAccount);
+      params = {
+        ...params,
+        receivableAccount,
+      };
+    }
+
+    setRequestParams(params);
   }, [dialogState]);
 
   const formatter = new Intl.NumberFormat('en-US', {
@@ -151,7 +293,8 @@ const Landing = () => {
 
         <Tile>
           <div className="profile">
-            <div className="profile-name">@{getName(party)}</div>
+            <div className="profile-name">@{name}</div>
+            <ProfileSection name={name} />
           </div>
         </Tile>
 
@@ -188,6 +331,27 @@ const Landing = () => {
               onClick={() => requestService(ListingRequest, ServiceKind.LISTING)}
             />
             <OverflowMenuEntry
+              label="Request Market Clearing Service"
+              onClick={() => requestService(MarketClearingRequest, ServiceKind.MARKET_CLEARING)}
+            />
+            <OverflowMenuEntry
+              label="Request Clearing Service"
+              onClick={() =>
+                requestService(ClearingRequest, ServiceKind.CLEARING, {
+                  clearingAccount: {
+                    label: 'Clearing Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  marginAccount: {
+                    label: 'Margin Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
+                  },
+                })
+              }
+            />
+            <OverflowMenuEntry
               label="Request Trading Service"
               onClick={() =>
                 requestService(TradingRequest, ServiceKind.TRADING, {
@@ -198,6 +362,28 @@ const Landing = () => {
                   },
                   allocationAccount: {
                     label: 'Allocation Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
+                  },
+                })
+              }
+            />
+            <OverflowMenuEntry
+              label="Request Auction Service"
+              onClick={() =>
+                requestService(AuctionRequest, ServiceKind.AUCTION, {
+                  tradingAccount: {
+                    label: 'Trading Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  allocationAccount: {
+                    label: 'Allocation Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
+                  },
+                  receivableAccount: {
+                    label: 'Receivable Account',
                     type: 'selection',
                     items: accountNames,
                   },

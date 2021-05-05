@@ -8,6 +8,7 @@
     background-color: var(--cool-grey-100);
     border-top: 1px var(--cool-grey-90) solid;
     border-radius: 0;
+    animation: fadeIn 0.5s;
 
     .order-forms > .ui.form {
       padding-bottom: $spacing-l;

@@ -14,7 +14,7 @@ import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Distribution.Auction.Model qualified as Auction
 import Marketplace.Distribution.Auction.Model (Auction(..))
-import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, updateBidStatus, withdrawAllocation, generateSettlementInstruction)
+import Marketplace.Distribution.Auction.Utils (dutchAuction, splitList, generateSettlementInstruction, rejectBid)
 import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Rule.AllocationAccount qualified as Allocation
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
@@ -83,8 +83,8 @@ template Service
             (allocatedBids, unallocatedBids) = partitionEithers $ splitList (\allocation -> allocation.quantity == 0.0) allocations
 
           -- Return assets of all invalid and unallocated bids. Also update their bid status accordingly
-          forA_ invalidBids $ withdrawAllocation *> updateBidStatus Bidding.Invalid
-          forA_ ((.bid) `map` unallocatedBids) $ withdrawAllocation *> updateBidStatus Bidding.NoAllocation
+          forA_ invalidBids $ rejectBid Bidding.Invalid
+          forA_ ((.bid) `map` unallocatedBids) $ rejectBid Bidding.NoAllocation
 
           -- Generate Settlement instructions for allocated bids
           let settleAllocations = (\allocation -> Auction.SettleAllocation with allocation; price = finalPrice; issuer = customer; issuerReceivableAccount = receivableAccount) <$> allocatedBids
@@ -136,6 +136,7 @@ template Request
     receivableAccount : Account
   where
     signatory customer
+    observer provider
 
     controller customer can
       Cancel : ()
