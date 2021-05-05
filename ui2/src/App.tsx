@@ -26,7 +26,8 @@ import { New as IssuanceNew } from './pages/issuance/New';
 import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
 import { Requests as ListingRequests } from './pages/listing/Requests';
-import { Listings, ListingsTable } from './pages/listing/Listings';
+import { ListingsTable } from './pages/listing/Listings';
+import { Listing as ListingComponent } from './pages/listing/Listing';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -300,13 +301,21 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/listings',
+        path: '/app/manage/listings/:contractId?',
         render: () => (
           <Manage>
             <ListingsTable services={listingService} listings={listings} />
           </Manage>
         ),
       },
+      // {
+      //   path: '/app/manage/listings/:contractId',
+      //   render: () => (
+      //     <Manage>
+      //       <ListingComponent services={listingService} />
+      //     </Manage>
+      //   ),
+      // },
     ],
   });
 
