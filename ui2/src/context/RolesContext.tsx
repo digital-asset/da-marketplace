@@ -124,12 +124,12 @@ const RolesProvider: React.FC = ({ children }) => {
   );
 };
 
-function useRoles() {
+function useRolesContext() {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
     throw new Error('useRoles must be used within a RolessProvider');
   }
-  return { roles: context.roles, loading: context.loading };
+  return context;
 }
 
-export { RolesProvider, useRoles };
+export { RolesProvider, useRolesContext };

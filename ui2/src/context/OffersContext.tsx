@@ -123,12 +123,12 @@ const OffersProvider: React.FC = ({ children }) => {
   );
 };
 
-function useOffers() {
+function useOffersContext() {
   const context = React.useContext<OffersState>(OffersStateContext);
   if (context === undefined) {
     throw new Error('useRoles must be used within a RolessProvider');
   }
-  return { offers: context.offers, loading: context.loading };
+  return context;
 }
 
-export { OffersProvider, useOffers };
+export { OffersProvider, useOffersContext };
