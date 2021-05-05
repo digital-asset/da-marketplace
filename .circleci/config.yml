@@ -85,6 +85,10 @@ jobs:
           version: << parameters.daml_sdk_version >>
       - install_pipenv
       - run:
+          name: Install YQ
+          command: |
+            pip3 install yq
+      - run:
           name: UI build
           command: |
             # TODO fix ts warnings and remove "CI="
