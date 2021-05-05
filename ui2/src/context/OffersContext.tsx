@@ -2,40 +2,15 @@ import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
 
 import { CreateEvent } from '@daml/ledger';
-import { Template } from '@daml/types';
 
-import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-import {
-  Offer as ClearingOffer,
-  Role as ClearingRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import {
-  Offer as CustodianOffer,
-  Role as CustodianRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {
-  Offer as DistributorOffer,
-  Role as DistributorRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-import {
-  Offer as SettlementOffer,
-  Service as SettlementService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
-import {
-  Offer as ExchangeOffer,
-  Role as ExchangeRole,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import {
-  Offer as MatchingOffer,
-  Service as MatchingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
+import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer as CustodianOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Offer as DistributorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
+import { Offer as SettlementOffer } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
+import { Offer as ExchangeOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Offer as MatchingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
-
-import {
-  Offer as RegulatorServiceOffer,
-  Service as RegulatorService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { Offer as RegulatorServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
@@ -102,10 +77,6 @@ const OffersProvider: React.FC = ({ children }) => {
     MatchingOffer
   );
 
-  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
-    VerifiedIdentity
-  );
-
   useEffect(() => {
     setLoading(
       clearingOffersLoading ||
@@ -114,7 +85,7 @@ const OffersProvider: React.FC = ({ children }) => {
         settlementOffersLoading ||
         exhangeOffersLoading ||
         matchingOffersLoading ||
-        verifiedIdentitiesLoading
+        regulatorServiceOffersLoading
     );
   }, [
     clearingOffersLoading,
@@ -123,7 +94,7 @@ const OffersProvider: React.FC = ({ children }) => {
     settlementOffersLoading,
     exhangeOffersLoading,
     matchingOffersLoading,
-    verifiedIdentitiesLoading,
+    regulatorServiceOffersLoading,
   ]);
 
   useEffect(
