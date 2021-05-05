@@ -28,6 +28,7 @@ export const InstrumentsTable: React.FC = () => {
             getName(c.payload.issuer),
             Object.keys(c.payload.assetId.signatories.textMap)
               .map(party => getName(party))
+              .sort()
               .join(', '),
             c.payload.assetId.label,
             c.payload.assetId.version,

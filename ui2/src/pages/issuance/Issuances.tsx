@@ -1,24 +1,20 @@
 import React from 'react';
-import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowRightIcon } from '../../icons/icons';
 
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
-  const history = useHistory();
   const { getName } = usePartyName('');
 
   return (
     <StripedTable
       headings={['Issuing Agent', 'Issuer', 'Issuance ID', 'Issuance Account', 'Asset', 'Quantity']}
       loading={issuancesLoading}
-      rowsClickable
-      clickableIcon={<ArrowRightIcon />}
       rows={issuances.map(c => {
         return {
           elements: [
@@ -29,7 +25,6 @@ export const IssuancesTable: React.FC = () => {
             c.payload.assetId.label,
             c.payload.quantity,
           ],
-          onClick: () => history.push(`/app/issuance/issuances/${c.contractId.replace('#', '_')}`),
         };
       })}
     />
