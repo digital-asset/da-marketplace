@@ -1,12 +1,12 @@
 import React from 'react'
 
-import { useLedger } from '@daml/react'
-import { ContractId } from '@daml/types'
-import { ExchangeParticipantInvitation } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import {useLedger} from '@daml/react'
+import {ContractId} from '@daml/types'
+import {ExchangeParticipantInvitation} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
 
-import { ExchParticipantInviteInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useContractQuery } from '../../websocket/queryStream'
+import {ExchParticipantInviteInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
+import {useContractQuery} from '../../websocket/queryStream'
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type ExchParticipantInviteProps = {

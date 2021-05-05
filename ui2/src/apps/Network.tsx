@@ -1,10 +1,6 @@
 import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { Custody } from '../pages/network/Custody';
-import { Trading } from '../pages/network/Trading';
-import { Listing } from '../pages/network/Listing';
 import Page from '../pages/page/Page';
 
 const NetworkApp = () => {

@@ -5,45 +5,39 @@ import { CreateEvent } from '@daml/ledger';
 import { Template } from '@daml/types';
 
 import {
-  Service as CustodyService,
-  Offer as CustodyOffer,
   Request as CustodyRequest,
+  Service as CustodyService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import {
-  Service as ClearingService,
-  Offer as ClearingOffer,
   Request as ClearingRequest,
+  Service as ClearingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
 import {
-  Service as MarketClearingService,
-  Offer as MarketClearingOffer,
   Request as MarketClearingRequest,
+  Service as MarketClearingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import {
-  Service as AuctionService,
   Request as AuctionRequest,
+  Service as AuctionService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
 import {
-  Service as BiddingService,
   Request as BiddingRequest,
+  Service as BiddingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
 import {
-  Service as IssuanceService,
   Request as IssuanceRequest,
+  Service as IssuanceService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
 import {
-  Service as ListingService,
   Request as ListingRequest,
+  Service as ListingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import {
-  Service as TradingService,
   Offer as TradingOffer,
   Request as TradingRequest,
+  Service as TradingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import {
-  Service as RegulatorService,
-  Request as RegulatorRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';

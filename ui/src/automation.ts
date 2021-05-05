@@ -1,5 +1,5 @@
-import { ledgerId, dablHostname } from "./config";
-import { getPublicToken } from "./websocket/queryStream";
+import {dablHostname, ledgerId} from "./config";
+import {getPublicToken} from "./websocket/queryStream";
 
 export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
 export const EXBERRY_HASH = process.env.REACT_APP_EXBERRY_HASH;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useHistory, useParams } from 'react-router-dom';
+import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
@@ -10,11 +10,11 @@ import { Listing as ListingComponent } from './Listing';
 import { Button, Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
-  ManualFairValueCalculation,
   FairValue,
+  ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
-import {ArrowRightIcon} from '../../icons/icons';
+import { ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -58,10 +58,10 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
           'Traded Asset Precision',
           'Quoted Asset',
           'Quoted Asset Precision',
-          'Fair Value'
+          'Fair Value',
         ]}
         rowsClickable
-        clickableIcon={<ArrowRightIcon/>}
+        clickableIcon={<ArrowRightIcon />}
         loading={fairValuesLoading}
         rows={listings.map(c => {
           const fairValues = fairValueContracts.filter(
@@ -93,7 +93,9 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         </Tile>
       )}
     </>
-  ) : <ListingComponent services={services}/>
+  ) : (
+    <ListingComponent services={services} />
+  );
 };
 
 const ListingsComponent: React.FC<RouteComponentProps & Props> = ({

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, createContext, useEffect, useState, useMemo } from 'react';
+import React, { createContext, PropsWithChildren, useEffect, useMemo, useState } from 'react';
 import _ from 'lodash';
 
 import { Template } from '@daml/types';

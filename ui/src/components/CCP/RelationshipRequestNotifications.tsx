@@ -1,15 +1,15 @@
 import React from 'react'
 
-import { useLedger } from '@daml/react'
-import { ContractId } from '@daml/types'
+import {useLedger} from '@daml/react'
+import {ContractId} from '@daml/types'
 
-import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {CustodianRelationshipRequest} from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { CustodianRelationshipRequestInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
+import {CustodianRelationshipRequestInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type RelationshipRequestNotificationProps = {

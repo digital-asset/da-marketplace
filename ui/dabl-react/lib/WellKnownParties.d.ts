@@ -1,4 +1,5 @@
-import React, { PropsWithChildren } from "react";
+import React, {PropsWithChildren} from "react";
+
 /**
  * @param userAdminParty ID of the UserAdmin party on a ledger.
  * @param publicParty ID of the Public party on a ledger.

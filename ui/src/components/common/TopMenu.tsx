@@ -1,10 +1,10 @@
 import React from 'react'
-import { useHistory } from 'react-router-dom'
-import { Button, Menu, Header } from 'semantic-ui-react'
+import {useHistory} from 'react-router-dom'
+import {Button, Header, Menu} from 'semantic-ui-react'
 
-import { LogoutIcon, NotificationCenterIcon } from '../../icons/Icons'
+import {LogoutIcon, NotificationCenterIcon} from '../../icons/Icons'
 
-import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu'
+import OverflowMenu, {OverflowMenuEntry} from './OverflowMenu'
 
 import classNames from 'classnames'
 

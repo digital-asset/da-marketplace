@@ -1,13 +1,13 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import {
-  Service,
   OriginationRequest,
+  Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';

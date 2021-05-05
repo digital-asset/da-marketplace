@@ -1,15 +1,15 @@
-import React, { useState} from 'react'
-import { useHistory } from 'react-router-dom'
-import { Button, Card } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {useHistory} from 'react-router-dom'
+import {Button, Card} from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
-import { UserSession } from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {useLedger, useParty} from '@daml/react'
+import {UserSession} from '@daml.js/da-marketplace/lib/Marketplace/Onboarding'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { useContractQuery } from '../websocket/queryStream'
+import {useContractQuery} from '../websocket/queryStream'
 
 import OnboardingTile from './common/OnboardingTile'
-import { roleRoute } from './common/utils'
+import {roleRoute} from './common/utils'
 
 type RoleSelectProps = {
     loading: boolean;

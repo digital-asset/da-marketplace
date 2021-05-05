@@ -1,43 +1,37 @@
-import React, { useEffect, useState } from "react"
-import { Form, Button, Grid, Loader, Table } from "semantic-ui-react"
-import { useHistory } from "react-router-dom"
+import React, {useEffect, useState} from "react"
+import {Button, Form, Grid, Loader, Table} from "semantic-ui-react"
+import {useHistory} from "react-router-dom"
 
-import DamlLedger, { useLedger, useParty } from "@daml/react"
+import DamlLedger, {useLedger, useParty} from "@daml/react"
 
 import Ledger from "@daml/ledger"
 
-import { PartyDetails, WellKnownPartiesProvider } from "@daml/hub-react"
-import { retrieveParties } from "../Parties"
+import {PartyDetails, WellKnownPartiesProvider} from "@daml/hub-react"
+import {retrieveParties} from "../Parties"
 
-import { BrokerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Broker"
-import { CustodianInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Custodian"
-import { ExchangeInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Exchange"
-import { InvestorInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Investor"
-import { IssuerInvitation } from "@daml.js/da-marketplace/lib/Marketplace/Issuer"
-import { CCPInvitation } from "@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty"
-import { RegisteredCustodian } from "@daml.js/da-marketplace/lib/Marketplace/Registry"
-import { MarketRole } from "@daml.js/da-marketplace/lib/Marketplace/Utils"
+import {BrokerInvitation} from "@daml.js/da-marketplace/lib/Marketplace/Broker"
+import {CustodianInvitation} from "@daml.js/da-marketplace/lib/Marketplace/Custodian"
+import {ExchangeInvitation} from "@daml.js/da-marketplace/lib/Marketplace/Exchange"
+import {InvestorInvitation} from "@daml.js/da-marketplace/lib/Marketplace/Investor"
+import {IssuerInvitation} from "@daml.js/da-marketplace/lib/Marketplace/Issuer"
+import {CCPInvitation} from "@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty"
+import {RegisteredCustodian} from "@daml.js/da-marketplace/lib/Marketplace/Registry"
+import {MarketRole} from "@daml.js/da-marketplace/lib/Marketplace/Utils"
 
-import { UserSession } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
-import { User } from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
+import {User, UserSession} from "@daml.js/da-marketplace/lib/Marketplace/Onboarding"
 
-import { RegistryLookupProvider, useRegistryLookup } from "./common/RegistryLookup"
-import { halfSecondPromise } from "./common/utils"
-import { roleLabel } from "./common/utils"
+import {RegistryLookupProvider, useRegistryLookup} from "./common/RegistryLookup"
+import {halfSecondPromise, roleLabel} from "./common/utils"
 
-import QueryStreamProvider, {
-    useContractQuery,
-    useLoading,
-    AS_PUBLIC,
-} from "../websocket/queryStream"
+import QueryStreamProvider, {AS_PUBLIC, useContractQuery, useLoading,} from "../websocket/queryStream"
 
-import { useDablParties, useOperator } from "../components/common/common"
+import {useDablParties, useOperator} from "../components/common/common"
 
-import Credentials, { retrieveCredentials } from "../Credentials"
+import Credentials, {retrieveCredentials} from "../Credentials"
 
-import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config"
+import {deploymentMode, DeploymentMode, httpBaseUrl} from "../config"
 
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from "../../src/automation"
+import deployTrigger, {MarketplaceTrigger, TRIGGER_HASH} from "../../src/automation"
 
 interface IPartyLoginData extends PartyDetails {
     role: MarketRole

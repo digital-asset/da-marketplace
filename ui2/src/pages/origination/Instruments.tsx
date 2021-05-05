@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';

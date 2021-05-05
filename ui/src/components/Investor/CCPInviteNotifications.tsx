@@ -1,12 +1,12 @@
 import React from 'react'
 
-import { useLedger } from '@daml/react'
-import { ContractId } from '@daml/types'
-import { CCPCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import {useLedger} from '@daml/react'
+import {ContractId} from '@daml/types'
+import {CCPCustomerInvitation} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
-import { CCPCustomerInviteInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useContractQuery } from '../../websocket/queryStream'
+import {CCPCustomerInviteInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
+import {useContractQuery} from '../../websocket/queryStream'
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type CCPCustomerInviteProps = {

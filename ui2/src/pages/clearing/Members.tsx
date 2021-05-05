@@ -1,17 +1,17 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useParty, useStreamQueries, useLedger } from '@daml/react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  MemberStanding,
   ClearedTrade,
   ClearedTradeSide,
+  MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header, Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';

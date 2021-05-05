@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react'
-import { useParty, useLedger } from '@daml/react'
-import { Button, Form, Header } from 'semantic-ui-react'
-import { useParams } from 'react-router-dom'
+import React, {useEffect, useState} from 'react'
+import {useLedger, useParty} from '@daml/react'
+import {Button, Form, Header} from 'semantic-ui-react'
+import {useParams} from 'react-router-dom'
 
-import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {CCP} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 import ContractSelect from '../common/ContractSelect'
 
-import { useOperator } from '../common/common'
+import {useOperator} from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { countDecimals, preciseInputSteps } from '../common/utils'
-import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import {countDecimals, preciseInputSteps} from '../common/utils'
+import {TokenInfo, wrapDamlTuple} from '../common/damlTypes'
 
 type Props = {
     allCustomers: {

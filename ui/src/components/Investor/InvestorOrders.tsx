@@ -1,22 +1,22 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
 import {
-    BrokerTrade,
-    ClearedOrder,
-    ClearedOrderRequest,
-    ClearedTradeSide,
-    Order,
-    OrderRequest,
-    SettledTradeSide
+  BrokerTrade,
+  ClearedOrder,
+  ClearedOrderRequest,
+  ClearedTradeSide,
+  Order,
+  OrderRequest,
+  SettledTradeSide
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { OrdersIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import {OrdersIcon} from '../../icons/Icons'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { BrokerTradeCard } from '../common/BrokerTradeCard'
-import { OrderCard } from '../common/OrderCard'
-import { TradeCard } from '../common/TradeCard'
+import {BrokerTradeCard} from '../common/BrokerTradeCard'
+import {OrderCard} from '../common/OrderCard'
+import {TradeCard} from '../common/TradeCard'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'

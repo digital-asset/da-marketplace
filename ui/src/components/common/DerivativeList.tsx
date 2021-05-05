@@ -1,9 +1,9 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
-import { UserIcon } from '../../icons/Icons'
+import {UserIcon} from '../../icons/Icons'
 
-import { DerivativeInfo } from './damlTypes'
+import {DerivativeInfo} from './damlTypes'
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'

@@ -1,19 +1,19 @@
 import React, {useState} from 'react'
-import { useParty, useLedger } from '@daml/react'
-import { Header, Form, Button } from 'semantic-ui-react'
+import {useLedger, useParty} from '@daml/react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { CCP } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import { RegisteredExchange } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {CCP} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import {RegisteredExchange} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { UserIcon, AddPlusIcon } from '../../icons/Icons'
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import {AddPlusIcon, UserIcon} from '../../icons/Icons'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import { useOperator } from '../common/common'
-import { wrapDamlTuple, TokenInfo } from '../common/damlTypes'
+import {useOperator} from '../common/common'
+import {TokenInfo, wrapDamlTuple} from '../common/damlTypes'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'
 
 import FormErrorHandled from '../common/FormErrorHandled'

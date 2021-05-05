@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import {
-  Listing,
-  ClearedListingApproval,
-} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Details,
   Order,

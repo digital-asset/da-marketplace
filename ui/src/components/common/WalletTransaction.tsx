@@ -1,25 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 
-import { Form, Button, Header } from 'semantic-ui-react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { useHistory } from 'react-router-dom';
+import {useHistory} from 'react-router-dom';
 
-import { useParty, useLedger } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { WalletIcon, IconClose} from '../../icons/Icons'
+import {IconClose, WalletIcon} from '../../icons/Icons'
 
-import { preciseInputSteps, groupDepositsByAsset, sumDepositArray } from './utils'
+import {groupDepositsByAsset, preciseInputSteps, sumDepositArray} from './utils'
 
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Investor } from '@daml.js/da-marketplace/lib/Marketplace/Investor'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Investor} from '@daml.js/da-marketplace/lib/Marketplace/Investor'
+import {RegisteredCustodian} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import {  wrapDamlTuple, ContractInfo, DepositInfo } from './damlTypes'
+import {ContractInfo, DepositInfo, wrapDamlTuple} from './damlTypes'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
-import { useOperator } from './common'
-import { AppError } from './errorTypes'
+import {useOperator} from './common'
+import {AppError} from './errorTypes'
 import FormErrorHandled from './FormErrorHandled'
 import ContractSelect from './ContractSelect'
 import PageSection from './PageSection'

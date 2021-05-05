@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Radio } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Radio} from 'semantic-ui-react'
 
 type Props = {
     className?: string;

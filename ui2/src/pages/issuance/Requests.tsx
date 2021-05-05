@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { NavLink, RouteComponentProps, withRouter } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -7,9 +7,9 @@ import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { ArrowRightIcon } from '../../icons/icons';
 import {
-  Service,
   CreateIssuanceRequest,
   ReduceIssuanceRequest,
+  Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';

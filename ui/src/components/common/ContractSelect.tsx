@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react'
-import { Form } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {Form} from 'semantic-ui-react'
 
-import { ContractInfo } from './damlTypes'
-import { parseError } from './errorTypes'
+import {ContractInfo} from './damlTypes'
+import {parseError} from './errorTypes'
 
 type DropdownOption = {
     key: string;

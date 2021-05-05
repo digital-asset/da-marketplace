@@ -1,11 +1,11 @@
 import React from 'react'
 
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { formatIndefiniteArticle, roleLabel } from './utils'
+import {formatIndefiniteArticle, roleLabel} from './utils'
 import TopMenu from './TopMenu'
 import FormErrorHandled from './FormErrorHandled'
-import OnboardingTile, { Tile } from './OnboardingTile'
+import OnboardingTile, {Tile} from './OnboardingTile'
 
 type Props = {
     role: MarketRole;

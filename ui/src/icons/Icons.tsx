@@ -1,7 +1,6 @@
 import React from 'react'
 
 import marketplaceLogo from './marketplace.svg'
-import lock from './lock.svg'
 
 type IconProps = {
     size?: '24' | '32' | '48' | '64';

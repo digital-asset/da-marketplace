@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PublicAutomation, getPublicAutomation } from '../automation';
+import { getPublicAutomation, PublicAutomation } from '../automation';
 import { isHubDeployment } from '../config';
 
 type AutomationState = {

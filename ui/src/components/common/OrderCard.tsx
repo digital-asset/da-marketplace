@@ -1,10 +1,10 @@
 import React from 'react'
-import { Card, Label } from 'semantic-ui-react'
+import {Card, Label} from 'semantic-ui-react'
 
-import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import {ClearedOrder, Order} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { ExchangeIcon } from '../../icons/Icons'
+import {unwrapDamlTuple} from '../common/damlTypes'
+import {ExchangeIcon} from '../../icons/Icons'
 
 export type OrderProps = {
     order: Order | ClearedOrder;
