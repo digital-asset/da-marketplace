@@ -44,7 +44,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - init_submodules:
+      - init_submodules
       - run:
           name: Daml tests
           command: |
@@ -70,7 +70,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - init_submodules:
+      - init_submodules
       - run:
           name: UI build
           command: |
