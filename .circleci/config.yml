@@ -23,6 +23,13 @@ commands:
             curl -sSL https://get.daml.com/ | sh /dev/stdin << parameters.version >>
             # idea from https://circleci.com/docs/2.0/env-vars/
             >> $BASH_ENV echo 'export PATH="$HOME/.daml/bin:$PATH"'
+  init_submodules:
+    description: "Init Git Submodules"
+    steps:
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init --recursive      - run:
 
 jobs:
   daml_test:
@@ -37,10 +44,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - run:
-          name: Init submodules
-          command: |
-            git submodule init && git submodule update
+      - init_submodules
       - run:
           name: Daml tests
           command: |
@@ -66,10 +70,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - run:
-          name: Init submodules
-          command: |
-            git submodule update --init --recursive
+      - init_submodules
       - run:
           name: UI build
           command: |
