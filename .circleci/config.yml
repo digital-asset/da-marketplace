@@ -78,6 +78,10 @@ jobs:
           name: Yarn test
           command: |
             cd ui2 && yarn test  -- --watchAll=false
+      - run:
+          name: Prettier check
+          command: |
+            cd ui2 && yarn format-check
       - save_cache:
           paths:
             - ~/.daml
@@ -91,4 +95,3 @@ workflows:
           daml_sdk_version: "1.10.0"
       - ui_test:
           daml_sdk_version: "1.10.0"
-
