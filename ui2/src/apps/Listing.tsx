@@ -1,10 +1,6 @@
 import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
-import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { New } from '../pages/listing/New';
-import { Requests } from '../pages/listing/Requests';
-import { Listings } from '../pages/listing/Listings';
 import Page from '../pages/page/Page';
 
 const ListingApp = () => {

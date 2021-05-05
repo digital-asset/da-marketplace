@@ -1,4 +1,4 @@
-import { ledgerId, dablHostname, deploymentMode, DeploymentMode, httpBaseUrl } from './config';
+import { dablHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from './config';
 import { computeCredentials } from './Credentials';
 
 export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;

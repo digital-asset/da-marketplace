@@ -1,13 +1,13 @@
 import React from 'react'
 
-import { useLedger } from '@daml/react'
-import { ContractId } from '@daml/types'
+import {useLedger} from '@daml/react'
+import {ContractId} from '@daml/types'
 
-import { BrokerCustomerInvitation } from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
+import {BrokerCustomerInvitation} from '@daml.js/da-marketplace/lib/Marketplace/BrokerCustomer'
 
-import { BrokerCustomerInviteInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
-import { useContractQuery } from '../../websocket/queryStream'
+import {BrokerCustomerInviteInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
+import {useContractQuery} from '../../websocket/queryStream'
 import AcceptRejectNotification from '../common/AcceptRejectNotification'
 
 type BrokerCustomerInviteProps = {

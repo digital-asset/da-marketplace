@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
-import { useParams, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, useParams } from 'react-router-dom';
 import useStyles from '../../styles';
 import {
   Auction as AuctionContract,
@@ -14,7 +14,7 @@ import {
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { CreateEvent } from '@daml/ledger';
-import { getAuctionStatus, getBidStatus, getBidAllocation } from '../Utils';
+import { getAuctionStatus, getBidAllocation, getBidStatus } from '../Utils';
 import { DateTime } from 'luxon';
 import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';

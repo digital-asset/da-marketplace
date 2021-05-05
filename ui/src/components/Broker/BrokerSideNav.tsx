@@ -1,8 +1,8 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
-import { Header, Menu } from 'semantic-ui-react'
+import {NavLink} from 'react-router-dom'
+import {Header, Menu} from 'semantic-ui-react'
 
-import { WalletIcon, OrdersIcon } from '../../icons/Icons'
+import {OrdersIcon, WalletIcon} from '../../icons/Icons'
 
 type Props = {
     url: string;

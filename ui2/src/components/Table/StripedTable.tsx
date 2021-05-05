@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
-import { Table, Loader } from 'semantic-ui-react';
+import { Loader, Table } from 'semantic-ui-react';
 
 import PaginationControls from './PaginationControls';
 

@@ -1,12 +1,12 @@
 import React from 'react'
-import { Button, Label } from 'semantic-ui-react'
+import {Button} from 'semantic-ui-react'
 
-import { useLedger } from '@daml/react'
-import { ClearedOrder, Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import {useLedger} from '@daml/react'
+import {ClearedOrder, Order} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
 
-import { wrapDamlTuple } from './damlTypes'
+import {wrapDamlTuple} from './damlTypes'
 import FormErrorHandled from './FormErrorHandled'
-import { OrderCard, OrderProps } from './OrderCard'
+import {OrderCard, OrderProps} from './OrderCard'
 
 
 const ExchangeOrderCard: React.FC<OrderProps> = ({ order, cleared }) => {

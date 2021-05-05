@@ -1,12 +1,12 @@
 import React from 'react'
 
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
-import { getAbbreviation } from '../common/utils';
+import {getAbbreviation} from '../common/utils';
 
-import { CustodianRelationshipInfo, RelationshipRequestChoice } from './damlTypes'
+import {CustodianRelationshipInfo, RelationshipRequestChoice} from './damlTypes'
 
-import { useRegistryLookup } from './RegistryLookup'
+import {useRegistryLookup} from './RegistryLookup'
 import RequestCustodianRelationship from './RequestCustodianRelationship'
 
 type Props = {

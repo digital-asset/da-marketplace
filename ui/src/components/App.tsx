@@ -1,21 +1,16 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 import React from 'react'
-import {
-  HashRouter as Router,
-  Route,
-  Redirect,
-  Switch
-} from 'react-router-dom'
+import {HashRouter as Router, Redirect, Route, Switch} from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { WellKnownPartiesProvider } from '@daml/hub-react'
+import {WellKnownPartiesProvider} from '@daml/hub-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
-import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
-import { httpBaseUrl } from '../config'
+import Credentials, {retrieveCredentials, storeCredentials} from '../Credentials'
+import {httpBaseUrl} from '../config'
 
-import { RegistryLookupProvider } from './common/RegistryLookup'
+import {RegistryLookupProvider} from './common/RegistryLookup'
 
 import LoginScreen from './LoginScreen'
 import MainScreen from './MainScreen'

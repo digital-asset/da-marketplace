@@ -5,9 +5,9 @@ import { transformClaim } from '../../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import {
-  Service,
-  RequestCreateAuction,
   CreateAuctionRequest,
+  RequestCreateAuction,
+  Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { CreateEvent } from '@daml/ledger';
 import { ContractId, Party } from '@daml/types';

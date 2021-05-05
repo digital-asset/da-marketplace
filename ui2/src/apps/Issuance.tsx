@@ -2,8 +2,6 @@ import React from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom';
 import { PlayArrow } from '@material-ui/icons';
 import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
-import { New } from '../pages/issuance/New';
-import { Requests } from '../pages/issuance/Requests';
 import { Issuances } from '../pages/issuance/Issuances';
 import Page from '../pages/page/Page';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { usePartyName } from '../../config';

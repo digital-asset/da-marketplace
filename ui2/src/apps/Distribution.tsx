@@ -5,12 +5,9 @@ import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
 import { BiddingAuctions } from '../pages/distribution/bidding/Auctions';
 import { Auctions } from '../pages/distribution/auction/Auctions';
 import { Auction } from '../pages/distribution/auction/Auction';
-import { New } from '../pages/distribution/auction/New';
 import { useParty } from '@daml/react';
 import { useStreamQueries } from '../Main';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Requests } from '../pages/distribution/auction/Requests';
-import { Assets } from '../pages/custody/Assets';
 import { BiddingAuction } from '../pages/distribution/bidding/Auction';
 import Page from '../pages/page/Page';
 

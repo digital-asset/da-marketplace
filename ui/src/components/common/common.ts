@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import {useEffect, useState} from 'react'
 
-import { useWellKnownParties } from '@daml/hub-react'
-import { deploymentMode, DeploymentMode } from '../../config'
+import {useWellKnownParties} from '@daml/hub-react'
+import {deploymentMode, DeploymentMode} from '../../config'
 
 export const useOperator = () => {
     const { parties } = useDablParties();

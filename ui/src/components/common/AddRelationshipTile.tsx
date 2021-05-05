@@ -1,7 +1,7 @@
 import React from 'react'
-import { Button } from 'semantic-ui-react'
+import {Button} from 'semantic-ui-react'
 
-import { AddPlusIcon } from '../../icons/Icons'
+import {AddPlusIcon} from '../../icons/Icons'
 
 const AddRelationshipTile = (props: {
     disabled: boolean;

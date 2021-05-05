@@ -1,18 +1,18 @@
 import React from 'react'
-import { Header, Divider } from 'semantic-ui-react'
-import { useParams } from 'react-router-dom'
+import {Divider, Header} from 'semantic-ui-react'
+import {useParams} from 'react-router-dom'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
+import {depositSummary} from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'
 
-import { useCCPCustomerNotifications } from './CCPCustomerNotifications'
+import {useCCPCustomerNotifications} from './CCPCustomerNotifications'
 import MarginCall from './MarginCall'
 import MarkToMarketCalc from './MarkToMarketCalc'
 

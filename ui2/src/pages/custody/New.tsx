@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { publicParty, usePartyName } from '../../config';
+import { usePartyName } from '../../config';
 import {
   RequestOpenAccount,
-  Service,
   RequestOpenAllocationAccount,
+  Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { ServicePageProps, createDropdownProp } from '../common';
+import { createDropdownProp, ServicePageProps } from '../common';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';

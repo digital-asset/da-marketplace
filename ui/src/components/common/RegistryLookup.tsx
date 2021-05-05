@@ -1,13 +1,13 @@
-import React, { PropsWithChildren, createContext, useEffect, useState } from 'react'
+import React, {createContext, PropsWithChildren, useEffect, useState} from 'react'
 import {
-    RegisteredExchange,
-    RegisteredCCP,
-    RegisteredCustodian,
-    RegisteredBroker,
-    RegisteredIssuer,
-    RegisteredInvestor
+  RegisteredBroker,
+  RegisteredCCP,
+  RegisteredCustodian,
+  RegisteredExchange,
+  RegisteredInvestor,
+  RegisteredIssuer
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
 export type RegistryLookup = {
     exchangeMap: Map<string, RegisteredExchange>;

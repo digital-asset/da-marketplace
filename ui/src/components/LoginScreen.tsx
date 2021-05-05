@@ -1,33 +1,25 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect } from "react"
-import { useHistory, useLocation } from "react-router-dom"
-import { Button, Form, Icon } from "semantic-ui-react"
+import React, {useEffect, useState} from "react"
+import {useHistory, useLocation, useRouteMatch} from "react-router-dom"
+import {Button, Form, Icon} from "semantic-ui-react"
 
-import { DablPartiesInput, PartyDetails } from "@daml/hub-react"
+import {DablPartiesInput, PartyDetails} from "@daml/hub-react"
 
-import { PublicAppInfo } from "@daml.js/da-marketplace/lib/Marketplace/Operator"
+import {PublicAppInfo} from "@daml.js/da-marketplace/lib/Marketplace/Operator"
 
-import QueryStreamProvider, {
-    useContractQuery,
-    AS_PUBLIC,
-    usePublicLoading,
-} from "../websocket/queryStream"
-import Credentials, { computeCredentials } from "../Credentials"
-import { retrieveParties, storeParties } from "../Parties"
-import { DeploymentMode, deploymentMode, ledgerId, dablHostname } from "../config"
+import {AS_PUBLIC, useContractQuery, usePublicLoading,} from "../websocket/queryStream"
+import Credentials, {computeCredentials} from "../Credentials"
+import {retrieveParties, storeParties} from "../Parties"
+import {dablHostname, deploymentMode, DeploymentMode, ledgerId} from "../config"
 
-import OnboardingTile, { Tile, logoHeader } from "./common/OnboardingTile"
-import { AppError } from "./common/errorTypes"
+import OnboardingTile, {logoHeader, Tile} from "./common/OnboardingTile"
+import {AppError} from "./common/errorTypes"
 import FormErrorHandled from "./common/FormErrorHandled"
 import LoadingScreen from "./common/LoadingScreen"
 import SetupRequired from "./SetupRequired"
-import { useDablParties } from "./common/common"
-import {
-    HashRouter as Router,
-    useRouteMatch,
-} from "react-router-dom"
+import {useDablParties} from "./common/common"
 
 function useQuery() {
     return new URLSearchParams(useLocation().search)

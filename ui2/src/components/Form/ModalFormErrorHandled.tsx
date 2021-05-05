@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
-import classNames from 'classnames';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 

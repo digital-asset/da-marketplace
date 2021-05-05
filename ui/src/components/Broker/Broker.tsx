@@ -1,27 +1,24 @@
-import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
+import React, {useEffect, useState} from 'react'
+import {Route, Switch, useHistory, useRouteMatch} from 'react-router-dom'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { RegisteredBroker } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import {
-    Broker as BrokerTemplate,
-    BrokerInvitation
-} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
-import { CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {RegisteredBroker} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Broker as BrokerTemplate, BrokerInvitation} from '@daml.js/da-marketplace/lib/Marketplace/Broker'
+import {CustodianRelationship} from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { retrieveCredentials } from '../../Credentials'
-import { deploymentMode, DeploymentMode } from '../../config'
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+import {retrieveCredentials} from '../../Credentials'
+import {deploymentMode, DeploymentMode} from '../../config'
+import deployTrigger, {MarketplaceTrigger, TRIGGER_HASH} from '../../automation'
 
-import { WalletIcon, OrdersIcon } from '../../icons/Icons'
-import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
+import {OrdersIcon, WalletIcon} from '../../icons/Icons'
+import {useContractQuery, usePartyLoading} from '../../websocket/queryStream'
 
-import { useOperator, useDablParties } from '../common/common'
-import { wrapDamlTuple } from '../common/damlTypes'
-import BrokerProfile, { Profile, createField } from '../common/Profile'
+import {useDablParties, useOperator} from '../common/common'
+import {wrapDamlTuple} from '../common/damlTypes'
+import BrokerProfile, {createField, Profile} from '../common/Profile'
 
 import MarketRelationships from '../common/MarketRelationships'
 import FormErrorHandled from '../common/FormErrorHandled'
@@ -30,7 +27,7 @@ import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
-import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
+import NotificationCenter, {useAllNotifications} from '../common/NotificationCenter'
 
 import BrokerOrders from './BrokerOrders'
 

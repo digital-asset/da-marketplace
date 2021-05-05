@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { Button, Menu, Header } from 'semantic-ui-react';
+import { Button, Header, Menu } from 'semantic-ui-react';
 
 import { LogoutIcon, NotificationIcon } from '../../icons/icons';
 
