@@ -13,6 +13,7 @@ import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (Service, RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
 import Marketplace.Issuance.AssetDescription
+import DA.Finance.Trade.SettlementInstruction
 import Tests.Utils (bond)
 import DA.Time (time)
 import DA.Assert
@@ -34,10 +35,14 @@ testBond = script do
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = bondCid
     choice = bobsDesc.claims
-  bondCid :: _ <- submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
+  (bondCid, [settlementInstructionCid]) <- submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
     safekeepingDepositCid = corpActDepositCid
     lifecycleRequestCid = lifecycleReqCid
     fixings = Map.fromList []
+    uniquePayoutId = show date1
+
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid SettlementInstruction_Process
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
   bobsOption.asset.id.version === 1
@@ -51,10 +56,17 @@ testBond = script do
   lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
     assetDepositCid = bondCid
     choice = bobsDesc.claims
-  submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
-    safekeepingDepositCid = corpActDepositCid
-    lifecycleRequestCid = lifecycleReqCid
-    fixings = Map.fromList []
+  (_, [settlementInstructionCid1, settlementInstructionCid2]) <-
+    submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
+      safekeepingDepositCid = corpActDepositCid
+      lifecycleRequestCid = lifecycleReqCid
+      fixings = Map.fromList []
+      uniquePayoutId = show date2
+
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid1 SettlementInstruction_Process
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid2 SettlementInstruction_Process
 
   [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
   bobsOption.asset.id.version === 2
@@ -86,7 +98,7 @@ requestExerciseBond usdAmount notional coupon dates = script do
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = "BondLabel"
       description = "TestBond"
-      safekeepingAccountId = alice.mainAccount.id
+      safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
       observers = []
   (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid

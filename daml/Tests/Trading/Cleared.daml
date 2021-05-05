@@ -12,6 +12,7 @@ import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as ClearedMarket
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
 
 import DA.Finance.Types
 import DA.Next.Set qualified as Set
@@ -23,24 +24,23 @@ checkOrderStatusMatches orderCid party status = do
   order.status === status
   pure ()
 
+
 clearedTradingTest : Script ()
 clearedTradingTest = do
+
   providers@Providers{operator; exchange; matchingServiceCid; clearinghouse, clearingRoleCid, bank, public} <- onboardProviders
   Assets{usd; tsla} <- onboardAssets providers
 
-  let
-    submit : Party -> Commands t -> Script t
-    submit p = submitMulti [p] [public]
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  charlie <- onboardCustomer providers "Charlie"
 
   let
     shareAsset = tsla with quantity = 200.0
     cashAsset = usd with quantity = 20000.0
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
-  carl <- onboardCustomer providers "Carl"
 
   let
-    listingId = "TSLAUSD"
+    symbol = "TSLAUSD"
     listingType = Listing.ClearedRequest clearinghouse
     calendarId = "1261007448"
     description = "Tesla Inc."
@@ -65,6 +65,7 @@ clearedTradingTest = do
 
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- Create orders
   let aliceOrderId = Id with signatories = Set.fromList [ alice.customer ], label = "1", version = 0
@@ -73,7 +74,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = aliceOrderId
-            symbol = listingId
+            listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
@@ -86,7 +87,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
@@ -142,28 +143,28 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId2
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
   assert $ isLeft bobOrderResult
 
-  -- Terminate Carl's relationship with the clearing house for further testing
-  submit carl.customer $ exerciseCmd carl.clearingServiceCid Clearing.Terminate with ctrl = carl.customer
+  -- Terminate Charlie's relationship with the clearing house for further testing
+  submit charlie.customer $ exerciseCmd charlie.clearingServiceCid Clearing.Terminate with ctrl = charlie.customer
 
-  -- !! Carl is not a member of the clearinghouse, so Carl should not be able to place an order
-  let carlOrderId = Id with signatories = Set.fromList [ carl.customer ], label = "4", version = 0
-  carlOrderResult <- carl.customer `submit` do
-    exerciseCmd carl.tradingServiceCid Trading.RequestCreateOrder with
+  -- !! Charlie is not a member of the clearinghouse, so Charlie should not be able to place an order
+  let charlieOrderId = Id with signatories = Set.fromList [ charlie.customer ], label = "4", version = 0
+  charlieOrderResult <- charlie.customer `submit` do
+    exerciseCmd charlie.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
-            id = carlOrderId
-            symbol = listingId
+            id = charlieOrderId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
-  assert $ isLeft carlOrderResult
+  assert $ isLeft charlieOrderResult
 
   return ()

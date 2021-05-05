@@ -1,12 +1,12 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
-import { useParams } from 'react-router-dom'
+import {Header} from 'semantic-ui-react'
+import {useParams} from 'react-router-dom'
 
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { depositSummary } from '../common/utils'
+import {depositSummary} from '../common/utils'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import StripedTable from '../common/StripedTable'

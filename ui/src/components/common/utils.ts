@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import {useEffect, useRef} from 'react'
 
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { DepositInfo } from './damlTypes'
+import {DepositInfo} from './damlTypes'
 
 const vowels = ['a', 'e', 'i', 'o', 'u'];
 

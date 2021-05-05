@@ -1,0 +1,54 @@
+module Marketplace.Clearing.Market.Model where
+
+import DA.Finance.Types
+import DA.Next.Set (Set)
+
+template FairValueCalculationRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    optListingIds : Optional [Id]
+    currency : Id
+    upTo : Time
+  where
+    signatory operator, provider
+    controller provider can
+      FairValueCalculationRequest_Ack : ()
+        do return ()
+
+template ManualFairValueCalculation
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    listingId : Id
+    currency : Id
+    upTo : Time
+    observers : Set Party
+  where
+    signatory operator, provider
+    let exchange = customer
+
+    controller exchange can
+      ManualFairValueCalculation_Calculate : ContractId FairValue
+        with
+          price : Decimal
+        do
+          timestamp <- getTime
+          create FairValue with ..
+
+template FairValue
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    listingId : Id
+    price : Decimal
+    currency : Id
+    timestamp : Time
+    upTo : Time
+    observers : Set Party
+  where
+    signatory operator, provider
+    observer customer, observers

@@ -19,7 +19,7 @@ import {
 } from './Utils';
 import { useHistory, useParams } from 'react-router-dom';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowLeftIcon } from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
@@ -32,7 +32,9 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
   const order = allOrders.contracts.find(o => o.contractId === contractId);
   if (!order) return <></>; // TODO: Return 404 not found
 
-  const listing = listings.find(c => c.payload.listingId === order.payload.details.symbol);
+  const listing = listings.find(
+    c => c.payload.listingId.label === order.payload.details.listingId.label
+  );
   if (!listing) return <></>; // TODO: Return 404 not found
 
   return (
@@ -176,6 +178,7 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
                 headings={['Match Id', 'Quantity', 'Price', 'Execution Date']}
                 loading={allOrders.loading}
                 rowsClickable
+                clickableIcon={<ArrowRightIcon />}
                 rows={order.payload.executions.map(e => {
                   return {
                     elements: [

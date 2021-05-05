@@ -1,12 +1,15 @@
 import React from 'react'
 
-import { useLedger } from '@daml/react'
-import { ContractId, Party } from '@daml/types'
-import { RejectedMarginCalculation, RejectedMarkToMarketCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Clearing'
+import {useLedger} from '@daml/react'
+import {ContractId, Party} from '@daml/types'
+import {
+  RejectedMarginCalculation,
+  RejectedMarkToMarketCalculation
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing'
 
-import { useContractQuery } from '../../websocket/queryStream'
-import { RejectedMarginCalculationInfo, RejectedMarkToMarketCalculationInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
+import {useContractQuery} from '../../websocket/queryStream'
+import {RejectedMarginCalculationInfo, RejectedMarkToMarketCalculationInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
 import ActionRequiredNotification from '../common/ActionRequiredNotification'
 
 type RejectedMarginCalculationProps = {

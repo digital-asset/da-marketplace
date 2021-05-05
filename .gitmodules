@@ -5,5 +5,5 @@
 
 [submodule "contingent-claims"]
 	path = contingent-claims
-	url = git@github.com:DACH-NY/contingent-claims.git
+	url = git@github.com:digital-asset/contingent-claims.git
 	branch = master

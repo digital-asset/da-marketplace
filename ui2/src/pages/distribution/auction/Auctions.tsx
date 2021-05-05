@@ -1,11 +1,12 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useStreamQueries } from '../../../Main';
 import { usePartyName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';
-import { Header, Icon } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
+import { ArrowRightIcon } from '../../../icons/icons';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
@@ -18,6 +19,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}
         loading={auctionsLoading}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         rows={auctions.map(c => {
           return {
             elements: [

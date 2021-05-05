@@ -1,26 +1,26 @@
 import React from 'react';
-import { withRouter, RouteComponentProps, useParams, NavLink } from 'react-router-dom';
-import { useStreamQueries, useLedger, useParty } from '@daml/react';
+import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { Service, Cancel } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  MemberStanding,
-  MarginCalculation,
-  RejectedMarginCalculation,
   FulfilledMarginCalculation,
-  MarkToMarketCalculation,
-  RejectedMarkToMarketCalculation,
   FulfilledMarkToMarketCalculation,
-  RejectedMarkToMarketCalculation_CustomerRetry,
+  MarginCalculation,
+  MarkToMarketCalculation,
+  MemberStanding,
+  RejectedMarginCalculation,
+  RejectedMarkToMarketCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header, Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
 import { ArrowLeftIcon } from '../../icons/icons';
+import { formatCurrency } from '../../util';
 
 type Props = {
   member?: boolean;
@@ -40,11 +40,6 @@ const ClearingMemberComponent: React.FC<
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const standings = useStreamQueries(MemberStanding).contracts;
-
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
 
   const standing = standings.find(standing => standing.payload.customer === customer);
   const clearingDeposits = deposits.filter(
@@ -127,9 +122,9 @@ const ClearingMemberComponent: React.FC<
         <br />
         <b>MTM:</b> {!!standing && standing?.payload.mtmSatisfied ? 'Yes' : 'No'}
         <br />
-        <b>Margin Amount:</b> {formatter.format(marginAmount)}
+        <b>Margin Amount:</b> {formatCurrency(marginAmount)}
         <br />
-        <b>Clearing Amount:</b> {formatter.format(clearingAmount)}
+        <b>Clearing Amount:</b> {formatCurrency(clearingAmount)}
       </Tile>
       <Header as="h2">Margin Calculations</Header>
       <Header as="h3">Pending Margin Calculations</Header>
@@ -143,7 +138,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculationTime,
-                formatter.format(Number(mc.payload.targetAmount)),
+                formatCurrency(mc.payload.targetAmount),
                 mc.payload.accountId.label,
               ],
             };
@@ -160,7 +155,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculation.calculationTime,
-                formatter.format(Number(mc.payload.calculation.targetAmount)),
+                formatCurrency(mc.payload.calculation.targetAmount),
                 mc.payload.calculation.accountId.label,
                 <Button.Group size="mini">
                   <Button className="ghost" onClick={() => handleMarginRetry(mc.contractId)}>
@@ -187,7 +182,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculation.calculationTime,
-                formatter.format(Number(mc.payload.calculation.targetAmount)),
+                formatCurrency(mc.payload.calculation.targetAmount),
                 mc.payload.calculation.accountId.label,
               ],
             };
@@ -206,7 +201,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculationTime,
-                formatter.format(Number(mc.payload.mtmAmount)),
+                formatCurrency(mc.payload.mtmAmount),
                 mc.payload.accountId.label,
               ],
             };
@@ -224,7 +219,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculation.calculationTime,
-                formatter.format(Number(mc.payload.calculation.mtmAmount)),
+                formatCurrency(mc.payload.calculation.mtmAmount),
                 mc.payload.calculation.accountId.label,
                 <Button.Group size="mini">
                   <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
@@ -251,7 +246,7 @@ const ClearingMemberComponent: React.FC<
             return {
               elements: [
                 mc.payload.calculation.calculationTime,
-                formatter.format(Number(mc.payload.calculation.mtmAmount)),
+                formatCurrency(mc.payload.calculation.mtmAmount),
                 mc.payload.calculation.accountId.label,
               ],
             };

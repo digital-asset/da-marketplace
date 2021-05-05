@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, {useEffect, useState} from 'react'
 import Ledger from '@daml/ledger';
-import { Form, Button, Loader } from 'semantic-ui-react';
+import {Button, Form, Loader} from 'semantic-ui-react';
 
-import { useWellKnownParties } from '@daml/hub-react/lib';
-import { Operator } from '@daml.js/da-marketplace/lib/Marketplace/Operator';
-import { httpBaseUrl, deploymentMode, DeploymentMode } from "../config";
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger, PublicAutomation, getPublicAutomation } from '../automation';
-import { Tile, logoHeader } from './common/OnboardingTile'
-import { useDablParties } from './common/common';
-import { parseError } from './common/errorTypes';
+import {useWellKnownParties} from '@daml/hub-react/lib';
+import {Operator} from '@daml.js/da-marketplace/lib/Marketplace/Operator';
+import {deploymentMode, DeploymentMode, httpBaseUrl} from "../config";
+import deployTrigger, {getPublicAutomation, MarketplaceTrigger, PublicAutomation, TRIGGER_HASH} from '../automation';
+import {logoHeader, Tile} from './common/OnboardingTile'
+import {useDablParties} from './common/common';
+import {parseError} from './common/errorTypes';
 
 const SetupRequired  = () => {
   const [ deploying, setDeploying ] = useState(false);

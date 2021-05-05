@@ -6,13 +6,13 @@ import { transformClaim } from '../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import {
+  ListingTypeRequest,
   RequestCreateListing,
   Service,
-  ListingTypeRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { publicParty, usePartyName } from '../../config';
-import { ServicePageProps, createDropdownProp } from '../common';
+import { createDropdownProp, ServicePageProps } from '../common';
 import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
@@ -87,7 +87,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       ? { tag: 'CollateralizedRequest', value: {} }
       : { tag: 'ClearedRequest', value: clearedBy };
     const request: RequestCreateListing = {
-      listingId,
+      symbol: listingId,
       listingType,
       calendarId,
       description,

@@ -24,7 +24,7 @@ template Service
       nonconsuming RequestCreateListing : ContractId CreateListingRequest
         with
           listingType : ListingTypeRequest
-          listingId : Text
+          symbol : Text
           calendarId : Text
           description : Text
           tradedAssetId : Id
@@ -38,6 +38,7 @@ template Service
           listingType <- case listingType of
             CollateralizedRequest -> return Collateralized
             (ClearedRequest p)    -> Cleared p <$> (exerciseByKey @Clearing.Service (operator, p, customer) Clearing.ApproveClearedListing with observers = fromList observers; ..)
+
           create CreateListingRequest with status = Active; observers = fromList observers; ..
 
       nonconsuming RequestDisableListing : ContractId DisableListingRequest
@@ -54,7 +55,8 @@ template Service
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
-          create Listing with ..
+          let id = Id with signatories = fromList [provider, customer]; label = symbol; version = 0
+          create Listing with listingId = id; ..
 
       nonconsuming ListingFailure : ContractId FailedListingCreation
         with
@@ -133,7 +135,7 @@ template CreateListingRequest
     operator : Party
     provider : Party
     customer : Party
-    listingId : Text
+    symbol : Text
     listingType : ListingType
     calendarId : Text
     description : Text
@@ -148,7 +150,7 @@ template CreateListingRequest
   where
     signatory operator, provider, customer
 
-    key (provider, listingId) : (Party, Text)
+    key (provider, symbol) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)
@@ -174,7 +176,7 @@ template FailedListingCreation
     provider : Party
     customer : Party
     error : Error.T
-    listingId : Text
+    symbol : Text
     calendarId : Text
     description : Text
     tradedAssetId : Id

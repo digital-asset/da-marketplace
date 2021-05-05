@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useParty } from '@daml/react';
-import { useStreamQueries } from '@daml/react';
+import { useParty, useStreamQueries } from '@daml/react';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import { Offer as ClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';

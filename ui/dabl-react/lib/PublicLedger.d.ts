@@ -1,7 +1,8 @@
-import { PropsWithChildren } from 'react';
-import { Party, Template } from '@daml/types';
-import Ledger, { Query } from '@daml/ledger';
-import { FetchResult, QueryResult } from '@daml/react';
+import {PropsWithChildren} from 'react';
+import {Party, Template} from '@daml/types';
+import Ledger, {Query} from '@daml/ledger';
+import {FetchResult, QueryResult} from '@daml/react';
+
 declare type PublicProp = {
     ledgerId: string;
     publicParty: string;

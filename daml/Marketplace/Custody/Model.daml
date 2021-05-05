@@ -1,4 +1,14 @@
-module Marketplace.Custody.Model where
+module Marketplace.Custody.Model (
+    OpenAccountRequest(..)
+  , OpenAllocationAccountRequest(..)
+  , CloseAccountRequest(..)
+  , CloseAllocationAccountRequest(..)
+  , CreditAccountRequest(..)
+  , DebitAccountRequest(..)
+  , TransferDepositRequest(..)
+  , LifecycleRequest(..)
+  , Process(..)
+) where
 
 import ContingentClaims.Claim (Claim, deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
@@ -13,8 +23,9 @@ import DA.Next.Set
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import DA.Finance.Trade.SettlementInstruction
 import DA.List (init)
-import DA.Action (void, when)
+import DA.Action (void, when, foldlA)
 
 template OpenAccountRequest
   with
@@ -97,11 +108,12 @@ template LifecycleRequest
     signatory operator, provider, customer
 
     -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
-    choice Process : [ ContractId AssetDeposit ]
+    choice Process : (ContractId AssetDeposit, [ContractId SettlementInstruction])
       with
           investor: Party
           safekeepingDepositCid: ContractId AssetDeposit
           fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          uniquePayoutId: Text
       controller investor
         do
           t <- toDateUTC <$> getTime
@@ -120,23 +132,40 @@ template LifecycleRequest
           when (postAssetVersion /= assetDeposit.asset.id.version) $
             createNewVersionOfDescription description postAssetVersion serializedRemaining
           let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
-          -- Next step could be:
-          -- create SettlementInstruction with buyer = customer; seller = issuer; ..
           splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
           let payoutCids = init splitResultDeposits
-          payoutCids <- forA payoutCids \payoutDepositCid -> do
-            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-               AssetSettlement_AddController description.issuer
-            cid <- exerciseByKey @AssetSettlementRule description.safekeepingAccountId (
-              AssetSettlement_Transfer with
-                receiverAccountId = assetDeposit.account.id
-                depositCid = payoutDepositCid)
-            exerciseByKey @AssetSettlementRule assetDeposit.account.id $
-              AssetSettlement_RemoveController description.issuer
-            pure cid
+              masterAgreementSignatories = [provider, customer, investor]
+          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator masterAgreementSignatories
           assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
           archive assetDepositCid
-          return $ assetDepositCid' :: payoutCids
+          return (assetDepositCid', payoutInstructions)
+
+createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator masterAgreementSignatories =
+    snd <$> foldlA createSI (1, []) payoutCids
+  where
+    masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
+    createSettlementDetails payoutDepositCid =
+      SettlementDetails with
+        senderAccount = assetDescription.safekeepingAccount
+        receiverAccount = assetDeposit.account
+        depositCid = Some payoutDepositCid
+    createSI (index, accumulator) payoutDepositCid = do
+      siCid <- create SettlementInstruction with
+        asset = assetDeposit.asset
+        steps = [createSettlementDetails payoutDepositCid]
+        masterAgreement = masterAgreement
+        tradeId = createTradeId assetDeposit.asset.id index uniqueId
+        observers = fromList $ operator :: masterAgreementSignatories
+      pure (index + 1, siCid :: accumulator)
+
+createMasterAgreement : AssetDescription -> AssetDeposit -> [Party] -> MasterAgreement
+createMasterAgreement assetDescription assetDeposit masterAgreementSignatories =
+  MasterAgreement with
+    id = assetDeposit.asset.id with
+      signatories = fromList masterAgreementSignatories
+    party1 = assetDescription.safekeepingAccount.owner
+    party2 = assetDeposit.account.owner
 
 createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
 createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
@@ -145,3 +174,10 @@ createNewVersionOfDescription description postAssetVersion serializedRemainingCl
     claims = serializedRemainingClaims
  where
   adjustedId = description.assetId with version = postAssetVersion
+
+createTradeId : Id -> Int -> Text -> Id
+createTradeId assetId transferNumber uniqueId =
+  Id with
+    signatories = assetId.signatories
+    label = assetId.label <> " " <> show transferNumber <> "th transfer, ID: " <> uniqueId
+    version = assetId.version

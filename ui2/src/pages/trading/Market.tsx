@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import {
-  Listing,
-  ClearedListingApproval,
-} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import {
   Details,
   Order,
@@ -37,6 +34,7 @@ import {
 } from './Utils';
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
+import { ArrowRightIcon } from '../../icons/icons';
 
 type Props = {
   cid: string;
@@ -125,9 +123,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
+  const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
-    o => o.payload.details.symbol === listing.payload.listingId
+    o => o.payload.details.listingId.label === listing.payload.listingId.label
   );
   const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
   const isPendingLimitOrder = (status: Status) =>
@@ -191,7 +190,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   };
 
   const requestCreateOrder = async () => {
-    const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
     const depositCid = isBuy
       ? await getAsset(quotedAssets, price * quantity)
       : await getAsset(tradedAssets, quantity);
@@ -200,7 +198,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
       id: { signatories: { textMap: {} }, label: orderId, version: '0' },
-      symbol: listing.payload.listingId,
+      listingId: listing.payload.listingId,
       asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,
       orderType: isLimit
@@ -230,7 +228,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   return (
     <div>
       <Header as="h2" textAlign="center">
-        <b>{listing.payload.listingId}</b>
+        <b>{listing.payload.listingId.label}</b>
       </Header>
       <div className="market">
         <div className="orders">
@@ -304,10 +302,11 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               ]}
               loading={allOrders.loading}
               rowsClickable
+              clickableIcon={<ArrowRightIcon />}
               rows={orders.map(c => {
                 return {
                   elements: [
-                    c.payload.details.symbol,
+                    c.payload.details.listingId.label,
                     c.payload.details.id.label,
                     c.payload.details.orderType.tag,
                     <div style={{ color: getColor(c) }}>{c.payload.details.side}</div>,
@@ -362,7 +361,12 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <Button type="button" active={isLimit} onClick={() => handleLimitChange(true)}>
                   Limit
                 </Button>
-                <Button type="button" active={!isLimit} onClick={() => handleLimitChange(false)}>
+                <Button
+                  type="button"
+                  active={!isLimit}
+                  disabled={isCollateralized}
+                  onClick={() => handleLimitChange(false)}
+                >
                   Market
                 </Button>
               </Button.Group>

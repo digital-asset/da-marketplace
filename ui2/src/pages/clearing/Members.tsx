@@ -1,22 +1,24 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useParty, useStreamQueries, useLedger } from '@daml/react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  MemberStanding,
   ClearedTrade,
   ClearedTradeSide,
+  MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header, Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
+import { ArrowRightIcon } from '../../icons/icons';
+import { formatCurrency } from '../../util';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -43,11 +45,6 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
     await ledger.exercise(ClearedTrade.ClearedTrade_Novate, c.contractId, {});
   };
 
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
-
   return (
     <div className="assets">
       <Tile header={<h4>Actions</h4>}>
@@ -59,6 +56,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
@@ -84,8 +82,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           return {
             elements: [
               <>{s.payload.customer}</>,
-              formatter.format(clearingAmount),
-              formatter.format(marginAmount),
+              formatCurrency(clearingAmount),
+              formatCurrency(marginAmount),
               standingText,
             ],
             onClick: () => history.push(`/app/clearing/member/${s.contractId.replace('#', '_')}`),
@@ -101,7 +99,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             elements: [
               c.payload.account.id.label,
               c.payload.asset.id.label,
-              formatter.format(Number(c.payload.asset.quantity)),
+              formatCurrency(c.payload.asset.quantity),
             ],
           };
         })}
@@ -142,12 +140,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               c.payload.execution.takerOrderId,
               c.payload.execution.quantity,
               c.payload.execution.price,
-              <Button
-                size="small"
-                className="ghost"
-                variant="contained"
-                onClick={() => handleNovation(c)}
-              >
+              <Button aligned="right" className="ghost" onClick={() => handleNovation(c)}>
                 Novate Trade
               </Button>,
             ],
@@ -163,7 +156,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             elements: [
               getName(c.payload.exchange),
               getName(c.payload.order.customer),
-              c.payload.order.details.symbol,
+              c.payload.order.details.listingId.label,
               c.payload.execution.quantity,
               c.payload.execution.price,
               c.payload.execution.timestamp,

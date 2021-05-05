@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useStreamQueries } from '../../Main';
 import { Button } from 'semantic-ui-react';
 
-import { useParams, RouteComponentProps, useHistory } from 'react-router-dom';
+import { RouteComponentProps, useHistory, useParams } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';

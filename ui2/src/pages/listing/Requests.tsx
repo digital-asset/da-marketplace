@@ -1,18 +1,18 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  Button,
+  Grid,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableRow,
   TableHead,
-  Button,
-  Grid,
-  Paper,
+  TableRow,
   Typography,
 } from '@material-ui/core';
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -144,7 +144,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                         {party === c.payload.provider ? 'Provider' : 'Client'}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
-                        {c.payload.listingId}
+                        {c.payload.symbol}
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.calendarId}

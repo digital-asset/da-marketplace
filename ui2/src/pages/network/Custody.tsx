@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
+  Grid,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableRow,
   TableHead,
-  Grid,
-  Paper,
+  TableRow,
   Typography,
 } from '@material-ui/core';
 import { Button, Header } from 'semantic-ui-react';
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -21,7 +21,7 @@ import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Requests as AccountRequests } from '../custody/Requests';
 import {
@@ -55,7 +55,11 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
-              <Button className="ghost warning small" onClick={() => terminateService(c)}>
+              <Button
+                className="ghost warning small"
+                onClick={() => terminateService(c)}
+                floated="right"
+              >
                 Terminate
               </Button>,
             ],

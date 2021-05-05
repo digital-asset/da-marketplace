@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
@@ -27,7 +27,7 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
             elements: [
               getName(c.payload.provider),
               getName(c.payload.customer),
-              c.payload.listingId,
+              c.payload.listingId.label,
               c.payload.tradedAssetId.label,
               c.payload.quotedAssetId.label,
             ],

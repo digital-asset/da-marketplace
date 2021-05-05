@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, {useState} from 'react'
 
-import { Button, Modal, Form, DropdownProps } from 'semantic-ui-react'
+import {Button, DropdownProps, Form, Modal} from 'semantic-ui-react'
 
 import FormErrorHandled from './FormErrorHandled'
 

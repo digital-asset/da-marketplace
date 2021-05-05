@@ -1,25 +1,25 @@
-import React, { useState } from 'react'
-import { Button, Form, Header} from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
-import { ContractId } from '@daml/types'
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
-import { ExchangeParticipant } from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
-import { AssetType } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {useLedger, useParty} from '@daml/react'
+import {ContractId} from '@daml/types'
+import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset'
+import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types/module'
+import {ExchangeParticipant} from '@daml.js/da-marketplace/lib/Marketplace/ExchangeParticipant'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {AssetType} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
 
-import { useContractQuery } from '../../websocket/queryStream'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { DepositInfo, wrapDamlTuple, TokenInfo, DerivativeInfo } from '../common/damlTypes'
-import { AppError } from '../common/errorTypes'
-import { useOperator } from '../common/common'
-import { preciseInputSteps } from '../common/utils'
+import {DepositInfo, DerivativeInfo, TokenInfo, wrapDamlTuple} from '../common/damlTypes'
+import {AppError} from '../common/errorTypes'
+import {useOperator} from '../common/common'
+import {preciseInputSteps} from '../common/utils'
 import FormErrorHandled from '../common/FormErrorHandled'
-import { useRegistryLookup } from '../common/RegistryLookup'
+import {useRegistryLookup} from '../common/RegistryLookup'
 
-import { OrderKind } from './InvestorTrade'
+import {OrderKind} from './InvestorTrade'
 
 type Props = {
     allowedToOrder: boolean;

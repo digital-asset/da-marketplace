@@ -1,19 +1,17 @@
 import React from 'react'
-import { Button, Form, Header } from 'semantic-ui-react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { useLedger, useParty } from '@daml/react'
-import { ContractId } from '@daml/types'
+import {useLedger, useParty} from '@daml/react'
+import {ContractId} from '@daml/types'
 
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import {
-    DismissibleNotification as DismissibleNotificationTemplate
-} from '@daml.js/da-marketplace/lib/Marketplace/Notification'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {DismissibleNotification as DismissibleNotificationTemplate} from '@daml.js/da-marketplace/lib/Marketplace/Notification'
 
-import { IconClose } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import {IconClose} from '../../icons/Icons'
+import {useContractQuery} from '../../websocket/queryStream'
 
-import { DismissibleNotificationInfo } from './damlTypes'
-import { useRegistryLookup } from './RegistryLookup'
+import {DismissibleNotificationInfo} from './damlTypes'
+import {useRegistryLookup} from './RegistryLookup'
 import NotificationComponent from './Notification'
 import FormErrorHandled from './FormErrorHandled'
 

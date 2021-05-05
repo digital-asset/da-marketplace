@@ -1,8 +1,8 @@
 import React from 'react'
-import { Grid, Menu } from 'semantic-ui-react'
+import {Grid, Menu} from 'semantic-ui-react'
 import classNames from 'classnames'
 
-import TopMenu, { ITopMenuButtonInfo } from './TopMenu'
+import TopMenu, {ITopMenuButtonInfo} from './TopMenu'
 
 type Props = {
     className?: string;

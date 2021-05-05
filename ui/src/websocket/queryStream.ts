@@ -1,14 +1,14 @@
-import React, {PropsWithChildren, createContext, useEffect, useState, useMemo } from "react"
+import React, {createContext, PropsWithChildren, useEffect, useMemo, useState} from "react"
 import _ from 'lodash'
 
-import { Template } from '@daml/types'
+import {Template} from '@daml/types'
 
-import { ContractInfo } from '../components/common/damlTypes'
-import { useDablParties } from '../components/common/common'
-import { computeCredentials, retrieveCredentials } from '../Credentials'
-import { DeploymentMode, deploymentMode, httpBaseUrl, ledgerId, dablHostname } from '../config'
+import {ContractInfo} from '../components/common/damlTypes'
+import {useDablParties} from '../components/common/common'
+import {computeCredentials, retrieveCredentials} from '../Credentials'
+import {DeploymentMode, deploymentMode, httpBaseUrl, ledgerId} from '../config'
 
-import useDamlStreamQuery, { StreamErrors } from './websocket'
+import useDamlStreamQuery, {StreamErrors} from './websocket'
 
 export const AS_PUBLIC = true;
 

@@ -1,12 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { HashRouter, Route, Switch, Redirect } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { HashRouter, Redirect, Route, Switch } from 'react-router-dom';
 
-import DamlLedger, { QueryResult, useStreamQueries as usq } from '@daml/react';
-import {
-  PublicLedger,
-  useStreamQueriesAsPublic as usqp,
-  WellKnownPartiesProvider,
-} from '@daml/hub-react/lib';
+import DamlLedger, { QueryResult } from '@daml/react';
+import { PublicLedger, WellKnownPartiesProvider } from '@daml/hub-react/lib';
 import { Template } from '@daml/types';
 
 import ErrorComponent from './pages/error/Error';
@@ -14,17 +10,9 @@ import { useUserState } from './context/UserContext';
 import Login from './pages/login/Login';
 // import Apps from "./Apps";
 import { App } from './App';
-// import { Network } from './apps/Network';
-// import { Custody } from './apps/Custody';
-// import { Issuance } from './apps/Issuance';
-// import { Distribution } from './apps/Distribution';
-// import { Listing } from './apps/Listing';
-// import { Trading } from './apps/Trading';
-// import { Registry } from './apps/Registry';
-import QuickSetup from './pages/QuickSetup/QuickSetup';
+import QuickSetup from './pages/login/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
-import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from './config';
-// import { Query, StreamCloseEvent } from '@daml/ledger';
+import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
 import { computeCredentials } from './Credentials';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 

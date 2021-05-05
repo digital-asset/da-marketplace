@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Button, DropdownItemProps, Divider } from 'semantic-ui-react';
-import { Form, Message, Modal } from 'semantic-ui-react';
+import React, { useEffect, useState } from 'react';
+import { Button, Divider, DropdownItemProps, Form, Modal } from 'semantic-ui-react';
 import { publicParty } from '../../config';
 import {
-  PublishedInstance,
-  PublicAutomation,
-  getAutomationInstances,
   deployAutomation,
+  getAutomationInstances,
+  PublicAutomation,
+  PublishedInstance,
   undeployAutomation,
 } from '../../automation';
 import { handleSelectMultiple } from '../common';
