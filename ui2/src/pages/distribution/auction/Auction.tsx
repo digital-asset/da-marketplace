@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
-import { useParams, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, useParams } from 'react-router-dom';
 import useStyles from '../../styles';
 import {
   Auction as AuctionContract,
@@ -14,7 +14,7 @@ import {
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { CreateEvent } from '@daml/ledger';
-import { getAuctionStatus, getBidStatus, getBidAllocation } from '../Utils';
+import { getAuctionStatus, getBidAllocation, getBidStatus } from '../Utils';
 import { DateTime } from 'luxon';
 import { Button, Table } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
@@ -41,8 +41,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const ledger = useLedger();
   const auctionProviderServices = auctionServices.filter(s => s.payload.provider === party);
   const isAuctionProvider = auctionProviderServices.length > 0;
-  const auctionCustomerServices = auctionServices.filter(s => s.payload.customer === party);
-  const isAuctionCustomer = auctionCustomerServices.length > 0;
   const biddingProviderServices = biddingServices.filter(s => s.payload.provider === party);
   const auctions = useStreamQueries(AuctionContract).contracts;
   const auction = auctions.find(c => c.contractId === cid);
@@ -50,7 +48,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
-  if (!auction || (!isAuctionProvider && !isAuctionCustomer)) return <></>; // TODO: Return 404 not found
+  if (!auction || !isAuctionProvider) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
 
   const biddingAuctions = allBiddingAuctions.filter(

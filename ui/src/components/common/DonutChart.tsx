@@ -1,8 +1,8 @@
 import React from 'react'
 
-import { PieChart } from 'react-minimal-pie-chart';
+import {PieChart} from 'react-minimal-pie-chart';
 
-import { Table } from 'semantic-ui-react'
+import {Table} from 'semantic-ui-react'
 
 export type IDonutChartData = {
     title: string,

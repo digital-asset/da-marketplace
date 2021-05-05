@@ -1,23 +1,23 @@
-import React, { useState } from 'react'
-import { useParams, useHistory } from 'react-router-dom'
-import { Header, List } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {useHistory, useParams} from 'react-router-dom'
+import {Header, List} from 'semantic-ui-react'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 import {
-    RegisteredCustodian,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredExchange,
-    RegisteredBroker
+  RegisteredBroker,
+  RegisteredCustodian,
+  RegisteredExchange,
+  RegisteredInvestor,
+  RegisteredIssuer
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { GlobeIcon, LockIcon, IconChevronDown, IconChevronUp, AddPlusIcon } from '../../icons/Icons'
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AddPlusIcon, GlobeIcon, IconChevronDown, IconChevronUp, LockIcon} from '../../icons/Icons'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
-import { wrapTextMap } from '../common/damlTypes'
+import {wrapTextMap} from '../common/damlTypes'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import AddRegisteredPartyModal from '../common/AddRegisteredPartyModal'

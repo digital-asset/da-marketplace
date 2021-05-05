@@ -1,33 +1,33 @@
-import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch, NavLink, useHistory } from 'react-router-dom'
-import { Menu, Form } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {NavLink, Route, Switch, useHistory, useRouteMatch} from 'react-router-dom'
+import {Form, Menu} from 'semantic-ui-react'
 
-import { useLedger, useParty } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { CCPCustomer } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
-import { CCPInvitation } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
-import { CCPExchangeRelationship } from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
+import {CCPCustomer} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterpartyCustomer'
+import {CCPExchangeRelationship, CCPInvitation} from '@daml.js/da-marketplace/lib/Marketplace/CentralCounterparty'
 import {
-    RegisteredInvestor,
-    RegisteredCCP,
-    RegisteredBroker,
-    RegisteredExchange,
-    RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { MarketRole } from '@daml.js/da-marketplace/lib/Marketplace/Utils'
-import { MarketPair } from '@daml.js/da-marketplace/lib/Marketplace/Token'
-import { Derivative } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+  RegisteredBroker,
+  RegisteredCCP,
+  RegisteredCustodian,
+  RegisteredExchange,
+  RegisteredInvestor
+} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {MarketRole} from '@daml.js/da-marketplace/lib/Marketplace/Utils'
+import {MarketPair} from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {Derivative} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { UserIcon, PublicIcon } from '../../icons/Icons'
+import {PublicIcon, UserIcon} from '../../icons/Icons'
 
-import { useContractQuery, AS_PUBLIC, usePartyLoading } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery, usePartyLoading} from '../../websocket/queryStream'
 
-import { retrieveCredentials } from '../../Credentials'
-import { deploymentMode, DeploymentMode } from '../../config'
-import deployTrigger, { TRIGGER_HASH, MarketplaceTrigger } from '../../automation'
+import {retrieveCredentials} from '../../Credentials'
+import {deploymentMode, DeploymentMode} from '../../config'
+import deployTrigger, {MarketplaceTrigger, TRIGGER_HASH} from '../../automation'
 
-import { useOperator, useDablParties } from '../common/common'
-import { wrapDamlTuple } from '../common/damlTypes'
-import CCPProfile, { Profile, createField } from '../common/Profile'
+import {useDablParties, useOperator} from '../common/common'
+import {wrapDamlTuple} from '../common/damlTypes'
+import CCPProfile, {createField, Profile} from '../common/Profile'
 import InviteAcceptTile from '../common/InviteAcceptTile'
 import FormErrorHandled from '../common/FormErrorHandled'
 import LandingPage from '../common/LandingPage'
@@ -38,11 +38,11 @@ import DerivativeList from '../common/DerivativeList'
 import InstrumentList from '../common/InstrumentList'
 
 import IssuedDerivative from '../Issuer/IssuedDerivative'
-import { useRelationshipRequestNotifications } from '../common/RelationshipRequestNotifications'
+import {useRelationshipRequestNotifications} from '../common/RelationshipRequestNotifications'
 import Members from './Members'
 import MemberAccounts from './MemberAccounts'
 import ExchangeRelationships from './ExchangeRelationships'
-import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
+import NotificationCenter, {useAllNotifications} from '../common/NotificationCenter'
 
 type Props = {
     onLogout: () => void;

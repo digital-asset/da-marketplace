@@ -1,13 +1,15 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useStreamQueries } from '../../../Main';
 import { usePartyName } from '../../../config';
-import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { Bid } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { getBidStatus, getBidAllocation } from '../Utils';
+import {
+  Auction as BiddingAuctionContract,
+  Bid,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
+import { getBidAllocation, getBidStatus } from '../Utils';
 import StripedTable from '../../../components/Table/StripedTable';
 import Tile from '../../../components/Tile/Tile';
-import { Icon } from 'semantic-ui-react';
+import { ArrowRightIcon } from '../../../icons/icons';
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
@@ -25,6 +27,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
           headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
           loading={biddingAuctionsLoading}
           rowsClickable
+          clickableIcon={<ArrowRightIcon />}
           rows={biddingAuctions.map(c => {
             return {
               elements: [

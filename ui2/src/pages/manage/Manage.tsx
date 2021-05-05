@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useHistory, useLocation } from 'react-router-dom';
-import { Menu, Form } from 'semantic-ui-react';
+import { Form, Menu } from 'semantic-ui-react';
 
 const Manage: React.FC = ({ children }) => {
   const history = useHistory();

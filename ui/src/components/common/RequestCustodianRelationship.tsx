@@ -1,14 +1,14 @@
-import React, { useState } from 'react'
+import React, {useState} from 'react'
 
-import { useParty, useLedger } from '@daml/react'
+import {useLedger, useParty} from '@daml/react'
 
-import { CustodianRelationshipRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredCustodian } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {CustodianRelationshipRequest} from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import {RegisteredCustodian} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { useContractQuery, AS_PUBLIC } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
-import { wrapDamlTuple, CustodianRelationshipInfo, RelationshipRequestChoice } from './damlTypes'
-import { useOperator } from './common'
+import {CustodianRelationshipInfo, RelationshipRequestChoice, wrapDamlTuple} from './damlTypes'
+import {useOperator} from './common'
 
 import AddRelationshipTile from '../common/AddRelationshipTile'
 

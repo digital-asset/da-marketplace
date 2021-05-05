@@ -41,7 +41,7 @@ examples : Providers -> Assets -> Customer -> Script ()
 examples Providers{..} Assets{..} issuer = do
 
   let
-    safekeepingAccountId = issuer.mainAccount.id
+    safekeepingAccount = issuer.mainAccount
     accountId = issuer.mainAccount.id
     observers = [public]
 

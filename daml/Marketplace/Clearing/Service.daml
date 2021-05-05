@@ -51,7 +51,7 @@ template Service
       fulfillMarginCalculation : ContractId MarginCalculation -> Update (ContractId FulfilledMarginCalculation)
       fulfillMarginCalculation = \calculationCid -> do
         exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
-            newMarginSatisfied = False; ..
+            newMarginSatisfied = True; ..
         exercise calculationCid MarginCalculation_Resolve with note = ""; ..
 
     controller customer can

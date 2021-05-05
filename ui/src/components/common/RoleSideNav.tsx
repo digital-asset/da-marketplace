@@ -1,6 +1,6 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
-import { Header, Menu, Loader } from 'semantic-ui-react'
+import {NavLink} from 'react-router-dom'
+import {Header, Loader, Menu} from 'semantic-ui-react'
 import {useConnectionActive} from '../../websocket/queryStream'
 
 type Props = {

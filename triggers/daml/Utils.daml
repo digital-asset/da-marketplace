@@ -19,3 +19,11 @@ doOrDefer True txt fn = debug txt >> void $ fn
 mapExercise
   : (Choice t c r, Eq c, Show c, Show n) => c -> (t -> n) -> [(ContractId t,t)] -> TriggerA s ()
 mapExercise c acc = mapA_ (\(cid,t) -> emitExerciseCmd cid c >> debug (show c <> ": " <> show (acc t)))
+
+-- |Helper to to run a filter on the specified field of a 'query'
+filterField : (b -> c) -> (c -> Bool) -> [(a,b)] -> [(a,b)]
+filterField accessor pred = filter (\(_,x) -> pred (accessor x))
+
+-- |Run a 'query' and filter on the specified field
+filterQuery : forall a b m. (Template a, ActionTriggerAny m, Functor m) => (a -> b) -> (b -> Bool) -> m [(ContractId a, a)]
+filterQuery accessor pred = filterField accessor pred <$> query @a

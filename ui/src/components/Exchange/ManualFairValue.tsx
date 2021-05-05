@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
-import { Button, Form, Header } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { useLedger } from '@daml/react'
+import {useLedger} from '@daml/react'
 
-import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {ManualFairValueCalculation} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { preciseInputSteps } from '../common/utils'
-import { ManualFairValueCalculationInfo } from '../common/damlTypes'
+import {preciseInputSteps} from '../common/utils'
+import {ManualFairValueCalculationInfo} from '../common/damlTypes'
 
 import FormErrorHandled from '../common/FormErrorHandled'
 

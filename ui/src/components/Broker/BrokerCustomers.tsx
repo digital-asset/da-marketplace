@@ -1,9 +1,9 @@
 import React from 'react'
 
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
-import { BrokerCustomerInfo, RegisteredInvestorInfo } from '../common/damlTypes'
-import { useRegistryLookup } from '../common/RegistryLookup'
+import {BrokerCustomerInfo, RegisteredInvestorInfo} from '../common/damlTypes'
+import {useRegistryLookup} from '../common/RegistryLookup'
 import InviteBrokerCustomer from './InviteBrokerCustomer'
 
 type Props = {

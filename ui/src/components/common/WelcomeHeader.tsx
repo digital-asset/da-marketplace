@@ -1,7 +1,7 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
-import { OpenMarketplaceLogo } from '../../icons/Icons'
+import {OpenMarketplaceLogo} from '../../icons/Icons'
 
 const WelcomeHeader: React.FC = () => (
     <div className="welcome-header">

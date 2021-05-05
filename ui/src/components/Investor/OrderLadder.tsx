@@ -1,8 +1,8 @@
 import React from 'react'
 
-import { OrderKind } from './InvestorTrade'
+import {OrderKind} from './InvestorTrade'
 
-import { StringKeyedObject } from '../common/utils'
+import {StringKeyedObject} from '../common/utils'
 
 type OrderCellProp = {
     value?: number;

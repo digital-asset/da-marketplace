@@ -3,6 +3,7 @@ module Marketplace.Listing.Model where
 -- import Marketplace.Clearing.Market.Service qualified as Market
 import DA.Finance.Types (Id)
 import DA.Next.Set (Set)
+import DA.Next.Set qualified as Set
 
 type T = Listing
 
@@ -39,6 +40,8 @@ template Listing
   where
     signatory operator, provider, customer
     observer observers
+      <> Set.fromList case listingType of
+            (Cleared p _) -> [p]; _ -> []
 
     -- TODO: Should we key by traded and quoted asset instead? listing id could be opaque / random
     key (operator, provider, listingId) : (Party, Party, Text)

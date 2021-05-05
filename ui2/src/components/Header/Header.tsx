@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
@@ -12,9 +12,9 @@ import classNames from 'classnames';
 import { useParty } from '@daml/react';
 import useStyles from './styles';
 import headerLogo from '../../images/lambdaLogo.png';
-import { useUserDispatch, signOut } from '../../context/UserContext';
+import { signOut, useUserDispatch } from '../../context/UserContext';
 import { ArrowBack, Menu } from '@material-ui/icons';
-import { useLayoutState, useLayoutDispatch, toggleSidebar } from '../../context/LayoutContext';
+import { toggleSidebar, useLayoutDispatch, useLayoutState } from '../../context/LayoutContext';
 import Switch from '@material-ui/core/Switch';
 import { ThemeContextDispatch, ThemeContextState } from '../../context/ThemeContext';
 import { usePartyName } from '../../config';

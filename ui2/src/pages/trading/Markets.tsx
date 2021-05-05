@@ -1,5 +1,5 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';

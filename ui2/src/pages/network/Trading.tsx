@@ -1,29 +1,28 @@
 import React, { useState } from 'react';
-import { withRouter, RouteComponentProps, NavLink } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
+  Grid,
+  IconButton,
+  Paper,
   Table,
   TableBody,
   TableCell,
-  TableRow,
   TableHead,
-  Grid,
-  Paper,
+  TableRow,
   Typography,
 } from '@material-ui/core';
 import { Button } from 'semantic-ui-react';
-
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import {
-  Service,
-  Request,
   Offer,
+  Request,
+  Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import useStyles from '../styles';
-import { usePartyName, getTemplateId } from '../../config';
+import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';

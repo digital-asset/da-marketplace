@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react'
-import { Button, Form, Header } from 'semantic-ui-react'
-import { useParams } from 'react-router-dom'
+import React, {useEffect, useState} from 'react'
+import {Button, Form, Header} from 'semantic-ui-react'
+import {useParams} from 'react-router-dom'
 
-import { useParty, useLedger } from '@daml/react'
-import { Custodian, CustodianRelationship } from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
-import { RegisteredBroker, RegisteredInvestor } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
-import { Token } from '@daml.js/da-marketplace/lib/Marketplace/Token'
+import {useLedger, useParty} from '@daml/react'
+import {Custodian, CustodianRelationship} from '@daml.js/da-marketplace/lib/Marketplace/Custodian'
+import {RegisteredBroker, RegisteredInvestor} from '@daml.js/da-marketplace/lib/Marketplace/Registry'
+import {Token} from '@daml.js/da-marketplace/lib/Marketplace/Token'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
-import { useOperator } from '../common/common'
-import { countDecimals, preciseInputSteps } from '../common/utils'
-import { TokenInfo, wrapDamlTuple } from '../common/damlTypes'
+import {useOperator} from '../common/common'
+import {countDecimals, preciseInputSteps} from '../common/utils'
+import {TokenInfo, wrapDamlTuple} from '../common/damlTypes'
 import FormErrorHandled from '../common/FormErrorHandled'
 import ContractSelect from '../common/ContractSelect'
 

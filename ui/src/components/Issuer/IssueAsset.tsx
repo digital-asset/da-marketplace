@@ -1,25 +1,25 @@
-import React, { useState } from 'react'
-import { Button, Form, Header } from 'semantic-ui-react'
+import React, {useState} from 'react'
+import {Button, Form, Header} from 'semantic-ui-react'
 
-import { useParty, useLedger } from '@daml/react'
-import { Issuer } from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
+import {useLedger, useParty} from '@daml/react'
+import {Issuer} from '@daml.js/da-marketplace/lib/Marketplace/Issuer'
 import {
-    RegisteredCustodian,
-    RegisteredIssuer,
-    RegisteredInvestor,
-    RegisteredExchange,
-    RegisteredBroker
+  RegisteredBroker,
+  RegisteredCustodian,
+  RegisteredExchange,
+  RegisteredInvestor,
+  RegisteredIssuer
 } from '@daml.js/da-marketplace/lib/Marketplace/Registry'
 
-import { AS_PUBLIC, useContractQuery } from '../../websocket/queryStream'
+import {AS_PUBLIC, useContractQuery} from '../../websocket/queryStream'
 
 import classNames from 'classnames';
 
-import { wrapDamlTuple } from '../common/damlTypes'
-import { useOperator } from '../common/common'
+import {wrapDamlTuple} from '../common/damlTypes'
+import {useOperator} from '../common/common'
 import FormErrorHandled from '../common/FormErrorHandled'
 
-import { LockIcon, PublicIcon, IconCircledCheck } from '../../icons/Icons'
+import {IconCircledCheck, LockIcon, PublicIcon} from '../../icons/Icons'
 
 const IssueAsset = () => {
     const ledger = useLedger();

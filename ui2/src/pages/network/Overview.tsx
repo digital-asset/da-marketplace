@@ -1,9 +1,8 @@
 import React from 'react';
 import { useStreamQueries } from '../../Main';
-import { Table, TableBody, TableCell, TableRow, TableHead } from '@material-ui/core';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import useStyles from '../styles';
-import { IconButton } from '@material-ui/core';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { usePartyName } from '../../config';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';

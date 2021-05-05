@@ -1,18 +1,18 @@
 import React from 'react'
-import { Header } from 'semantic-ui-react'
+import {Header} from 'semantic-ui-react'
 
-import { FairValue } from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
+import {FairValue} from '@daml.js/da-marketplace/lib/Marketplace/Derivative'
 
-import { UserIcon } from '../../icons/Icons'
-import { useContractQuery } from '../../websocket/queryStream'
+import {UserIcon} from '../../icons/Icons'
+import {useContractQuery} from '../../websocket/queryStream'
 
 import StripedTable from '../common/StripedTable'
 import PageSection from '../common/PageSection'
 import Page from '../common/Page'
-import { MarketPairInfo } from './damlTypes'
+import {MarketPairInfo} from './damlTypes'
 
-import { useRegistryLookup } from './RegistryLookup'
-import { RequestFairValues } from '../CCP/ExchangeRelationships'
+import {useRegistryLookup} from './RegistryLookup'
+import {RequestFairValues} from '../CCP/ExchangeRelationships'
 
 type Props = {
     exchanges: {

@@ -1,131 +1,131 @@
 import {
-  Offer as CustodyRoleOffer,
-  Request as CustodyRoleRequest,
   Accept as CustodyRoleAccept,
-  Decline as CustodyRoleDecline,
   Approve as CustodyRoleApprove,
+  Decline as CustodyRoleDecline,
+  Offer as CustodyRoleOffer,
   Reject as CustodyRoleReject,
+  Request as CustodyRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import {
-  Offer as TradingRoleOffer,
-  Request as TradingRoleRequest,
   Accept as TradingRoleAccept,
-  Decline as TradingRoleDecline,
   Approve as TradingRoleApprove,
+  Decline as TradingRoleDecline,
+  Offer as TradingRoleOffer,
   Reject as TradingRoleReject,
+  Request as TradingRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
-  Offer as ClearingRoleOffer,
-  Request as ClearingRoleRequest,
   Accept as ClearingRoleAccept,
-  Decline as ClearingRoleDecline,
   Approve as ClearingRoleApprove,
+  Decline as ClearingRoleDecline,
+  Offer as ClearingRoleOffer,
   Reject as ClearingRoleReject,
+  Request as ClearingRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import {
-  Offer as RegulatorRoleOffer,
-  Request as RegulatorRoleRequest,
   Accept as RegulatorRoleAccept,
-  Decline as RegulatorRoleDecline,
   Approve as RegulatorRoleApprove,
+  Decline as RegulatorRoleDecline,
+  Offer as RegulatorRoleOffer,
   Reject as RegulatorRoleReject,
+  Request as RegulatorRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import {
-  Offer as DistributionRoleOffer,
-  Request as DistributionRoleRequest,
   Accept as DistributionRoleAccept,
-  Decline as DistributionRoleDecline,
   Approve as DistributionRoleApprove,
+  Decline as DistributionRoleDecline,
+  Offer as DistributionRoleOffer,
   Reject as DistributionRoleReject,
+  Request as DistributionRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
 
 import {
-  Offer as CustodyServiceOffer,
-  Request as CustodyServiceRequest,
   Accept as CustodyServiceAccept,
-  Decline as CustodyServiceDecline,
   Approve as CustodyServiceApprove,
+  Decline as CustodyServiceDecline,
+  Offer as CustodyServiceOffer,
   Reject as CustodyServiceReject,
+  Request as CustodyServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import {
-  Offer as ListingServiceOffer,
-  Request as ListingServiceRequest,
   Accept as ListingServiceAccept,
-  Decline as ListingServiceDecline,
   Approve as ListingServiceApprove,
+  Decline as ListingServiceDecline,
+  Offer as ListingServiceOffer,
   Reject as ListingServiceReject,
+  Request as ListingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import {
-  Offer as TradingServiceOffer,
-  Request as TradingServiceRequest,
   Accept as TradingServiceAccept,
-  Decline as TradingServiceDecline,
   Approve as TradingServiceApprove,
+  Decline as TradingServiceDecline,
+  Offer as TradingServiceOffer,
   Reject as TradingServiceReject,
+  Request as TradingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import {
-  Offer as MatchingServiceOffer,
-  Request as MatchingServiceRequest,
   Accept as MatchingServiceAccept,
-  Decline as MatchingServiceDecline,
   Approve as MatchingServiceApprove,
+  Decline as MatchingServiceDecline,
+  Offer as MatchingServiceOffer,
   Reject as MatchingServiceReject,
+  Request as MatchingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 import {
-  Offer as ClearingServiceOffer,
-  Request as ClearingServiceRequest,
   Accept as ClearingServiceAccept,
-  Decline as ClearingServiceDecline,
   Approve as ClearingServiceApprove,
+  Decline as ClearingServiceDecline,
+  Offer as ClearingServiceOffer,
   Reject as ClearingServiceReject,
+  Request as ClearingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  Offer as IssuanceServiceOffer,
-  Request as IssuanceServiceRequest,
   Accept as IssuanceServiceAccept,
-  Decline as IssuanceServiceDecline,
   Approve as IssuanceServiceApprove,
+  Decline as IssuanceServiceDecline,
+  Offer as IssuanceServiceOffer,
   Reject as IssuanceServiceReject,
+  Request as IssuanceServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import {
-  Offer as RegulatorServiceOffer,
-  Request as RegulatorServiceRequest,
   Accept as RegulatorServiceAccept,
-  Decline as RegulatorServiceDecline,
   Approve as RegulatorServiceApprove,
+  Decline as RegulatorServiceDecline,
+  Offer as RegulatorServiceOffer,
   Reject as RegulatorServiceReject,
+  Request as RegulatorServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import {
-  Offer as SettlementServiceOffer,
-  Request as SettlementServiceRequest,
   Accept as SettlementServiceAccept,
-  Decline as SettlementServiceDecline,
   Approve as SettlementServiceApprove,
+  Decline as SettlementServiceDecline,
+  Offer as SettlementServiceOffer,
   Reject as SettlementServiceReject,
+  Request as SettlementServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import {
-  Offer as MarketServiceOffer,
-  Request as MarketServiceRequest,
   Accept as MarketServiceAccept,
-  Decline as MarketServiceDecline,
   Approve as MarketServiceApprove,
+  Decline as MarketServiceDecline,
+  Offer as MarketServiceOffer,
   Reject as MarketServiceReject,
+  Request as MarketServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import {
-  Offer as AuctionServiceOffer,
-  Request as AuctionServiceRequest,
   Accept as AuctionServiceAccept,
-  Decline as AuctionServiceDecline,
   Approve as AuctionServiceApprove,
+  Decline as AuctionServiceDecline,
+  Offer as AuctionServiceOffer,
   Reject as AuctionServiceReject,
+  Request as AuctionServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import {
-  Offer as BiddingServiceOffer,
-  Request as BiddingServiceRequest,
   Accept as BiddingServiceAccept,
-  Decline as BiddingServiceDecline,
   Approve as BiddingServiceApprove,
+  Decline as BiddingServiceDecline,
+  Offer as BiddingServiceOffer,
   Reject as BiddingServiceReject,
+  Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import { CreateEvent } from '@daml/ledger';

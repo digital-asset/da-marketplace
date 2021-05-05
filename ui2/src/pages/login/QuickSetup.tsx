@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react';
 
-import { Form, Button, Icon, Loader, Table, DropdownItemProps, Grid } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form, Grid, Icon, Loader, Table } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-import { useUserDispatch, loginUser } from '../../context/UserContext';
-import { useHistory, NavLink } from 'react-router-dom';
+import { loginUser, useUserDispatch } from '../../context/UserContext';
+import { NavLink, useHistory } from 'react-router-dom';
 
 import {
   DeploymentMode,
   deploymentMode,
   httpBaseUrl,
-  wsBaseUrl,
+  isHubDeployment,
   ledgerId,
   publicParty,
-  isHubDeployment,
+  wsBaseUrl,
 } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
@@ -60,8 +60,8 @@ import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regula
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 import { handleSelectMultiple } from '../common';
-import { useAutomations, AutomationProvider } from '../../context/AutomationContext';
-import { SetupAutomation, makeAutomationOptions } from '../setup/SetupAutomation';
+import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
+import { makeAutomationOptions, SetupAutomation } from '../setup/SetupAutomation';
 
 enum ServiceKind {
   CLEARING = 'Clearing',

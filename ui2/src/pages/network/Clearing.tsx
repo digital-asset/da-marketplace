@@ -3,19 +3,20 @@ import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
-import { Role, Offer as RoleOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Offer, Service, Request } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Offer as RoleOffer, Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Offer as MarketOffer,
-  Service as MarketService,
   Request as MarketRequest,
+  Service as MarketService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import { Header, Button, Form, DropdownItemProps } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
+import { FairValueRequest } from '../listing/Listing';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
@@ -147,14 +148,15 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Consumer',
-              <Button
-                size="small"
-                className="ghost"
-                variant="contained"
-                onClick={() => terminateService(c)}
-              >
-                Terminate
-              </Button>,
+              <Button.Group floated="right">
+                {getTemplateId(c.templateId) !== CLEARING_SERVICE_TEMPLATE && (
+                  <FairValueRequest service={c} />
+                )}
+                <Button negative className="ghost warning" onClick={() => terminateService(c)}>
+                  Terminate
+                </Button>
+                ,
+              </Button.Group>,
             ],
           };
         })}
@@ -162,13 +164,13 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Requests</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        loading={requestsLoading}
+        loading={requestsLoading || marketRequestsLoading}
         rows={[...requests, ...marketRequests].map((c, i) => {
           return {
             elements: [
               getTemplateId(c.templateId),
               getName(c.payload.customer),
-              <Button.Group>
+              <Button.Group floated="right">
                 {c.payload.customer === party ? (
                   <>
                     <Button
@@ -208,14 +210,14 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <Header as="h3">Offers</Header>
       <StripedTable
         headings={['Type', 'Consumer', 'Actions' /* 'Details' */]}
-        loading={offersLoading}
+        loading={offersLoading || marketOffersLoading}
         rows={[
           ...offers.map((c, i) => {
             return {
               elements: [
                 getTemplateId(c.templateId),
                 getName(c.payload.customer),
-                <Button.Group>
+                <Button.Group floated="right">
                   {c.payload.customer === party ? (
                     <>
                       <ModalFormErrorHandled onSubmit={() => acceptOffer(c)} title="Accept Offer">
@@ -269,7 +271,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                 getName(c.payload.customer),
                 <>
                   {c.payload.customer === party ? (
-                    <Button className="ghost" onClick={() => acceptOffer(c)}>
+                    <Button className="ghost" onClick={() => acceptOffer(c)} floated="right">
                       Accept
                     </Button>
                   ) : (

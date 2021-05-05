@@ -1,8 +1,8 @@
 import React from 'react'
-import { Card } from 'semantic-ui-react'
-import { unwrapDamlTuple } from '../common/damlTypes'
-import { BrokerTrade } from '@daml.js/da-marketplace/lib/Marketplace/Trading'
-import { ExchangeIcon } from '../../icons/Icons'
+import {Card} from 'semantic-ui-react'
+import {unwrapDamlTuple} from '../common/damlTypes'
+import {BrokerTrade} from '@daml.js/da-marketplace/lib/Marketplace/Trading'
+import {ExchangeIcon} from '../../icons/Icons'
 
 export type BrokerTradeCardProps = {
     brokerTrade: BrokerTrade;

@@ -60,10 +60,10 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   if (!service) return <></>;
 
   const requestOrigination = async () => {
-    const safekeepingAccountId = accounts.find(
+    const safekeepingAccount = accounts.find(
       a => a.provider === service.payload.provider && a.id.label === account
-    )?.id;
-    if (!safekeepingAccountId) {
+    );
+    if (!safekeepingAccount) {
       console.log(
         `Couldn't find account from provider ${service.payload.provider} with label ${account}`
       );
@@ -73,7 +73,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
       assetLabel: label,
       description,
       claims: zero,
-      safekeepingAccountId,
+      safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],
     });
     history.push('/app/manage/instruments');

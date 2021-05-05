@@ -1,10 +1,9 @@
 <svg
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   width="60"
-   height="60"
-   viewBox="0 0 60 60"
-   fill="none">
+        xmlns="http://www.w3.org/2000/svg"
+        width="60"
+        height="60"
+        viewBox="0 0 60 60"
+        fill="none">
   <circle
      style="opacity:1;fill:#000e33;fill-opacity:1;stroke:none;stroke-width:0.991735;stroke-opacity:1"
      id="path843"

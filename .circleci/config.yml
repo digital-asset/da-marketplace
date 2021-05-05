@@ -1,16 +1,116 @@
-version: 2.1
-orbs:
-  node: circleci/node@4.2.0 #orb version
+#
+# Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
 
-jobs:
-  build:
-    executor:
-      name: node/default
+version: 2.1
+
+executors:
+  daml-executor:
+    docker:
+      - image: cimg/openjdk:11.0-node
+
+commands:
+  install_sdk:
+    description: "Install Daml SDK"
+    parameters:
+      version:
+        type: string
     steps:
       - run:
-          command: echo "Hello"
+          name: Install Daml SDK
+          command: |
+            curl -sSL https://get.daml.com/ | sh /dev/stdin << parameters.version >>
+            # idea from https://circleci.com/docs/2.0/env-vars/
+            >> $BASH_ENV echo 'export PATH="$HOME/.daml/bin:$PATH"'
+  init_submodules:
+    description: "Init Git Submodules"
+    steps:
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init --recursive
+  install_pipenv:
+    description: "Install Pipenv"
+    steps:
+      - run:
+          name: Install Pipenv for 3.7
+          command: |
+            sudo add-apt-repository --yes ppa:deadsnakes/ppa
+            sudo apt-get update || sudo apt-get update
+            sudo apt-get install python3.7
+            sudo apt-get install python3-pip
+            pip3 install pipenv
+            pipenv --python /usr/bin/python3.7
+
+jobs:
+  daml_test:
+    parameters:
+      daml_sdk_version:
+        type: string
+    executor: daml-executor
+    steps:
+      - checkout
+      - init_submodules
+      - restore_cache:
+          keys:
+            - daml-{{ checksum "daml.yaml" }}
+      - install_sdk:
+          version: << parameters.daml_sdk_version >>
+      - run:
+          name: Daml tests
+          command: |
+            daml test --junit target/daml-test-reports/da-marketplace.xml
+      - save_cache:
+          paths:
+            - ~/.daml
+          key: daml-{{ checksum "daml.yaml" }}
+      - store_test_results:
+          path: target/daml-test-reports
+      - store_artifacts:
+          path: target/daml-test-reports
+
+  ui_test:
+    parameters:
+      daml_sdk_version:
+        type: string
+    executor: daml-executor
+    steps:
+      - checkout
+      - init_submodules
+      - restore_cache:
+          keys:
+            - daml-{{ checksum "daml.yaml" }}
+      - install_sdk:
+          version: << parameters.daml_sdk_version >>
+      - install_pipenv
+      - run:
+          name: Install YQ
+          command: |
+            pip3 install yq
+      - run:
+          name: UI build
+          command: |
+            # TODO fix ts warnings and remove "CI="
+            CI= make package
+      - run:
+          name: Yarn test
+          command: |
+            cd ui2 && yarn test  -- --watchAll=false
+      - run:
+          name: Prettier check
+          command: |
+            cd ui2 && yarn format-check
+      - save_cache:
+          paths:
+            - ~/.daml
+          key: daml-{{ checksum "daml.yaml" }}
 
 workflows:
-  build:
+  version: 2
+  test:
     jobs:
-      - build
+      - daml_test:
+          daml_sdk_version: "1.10.0"
+      - ui_test:
+          daml_sdk_version: "1.10.0"

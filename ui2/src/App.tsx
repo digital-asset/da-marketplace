@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Switch, withRouter, RouteProps, Redirect } from 'react-router-dom';
+import { Redirect, Route, RouteProps, Switch, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -16,24 +16,20 @@ import { CircularProgress } from '@material-ui/core';
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
-import { New as DistributionNew } from './pages/distribution/auction/New';
+import { New as DistributionNew, New as NewAuction } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
-import { Instruments, InstrumentsTable } from './pages/origination/Instruments';
-import { New as InstrumentsNew } from './pages/origination/New';
-import { Requests as InstrumentsRequests } from './pages/origination/Requests';
-import { Issuances, IssuancesTable } from './pages/issuance/Issuances';
+import { InstrumentsTable } from './pages/origination/Instruments';
+import { IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
-import { Requests as IssuanceRequests } from './pages/issuance/Requests';
 import { New as ListingNew } from './pages/listing/New';
-import { Requests as ListingRequests } from './pages/listing/Requests';
-import { Listings, ListingsTable } from './pages/listing/Listings';
+import { ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import { Markets, Markets as MarketNetwork } from './pages/trading/Markets';
+import { Markets } from './pages/trading/Markets';
 import { ClearingServiceTable } from './pages/network/Clearing';
-import { Custody as CustodyNetwork, CustodyServiceTable } from './pages/network/Custody';
-import { Trading as TradingNetwork, TradingServiceTable } from './pages/network/Trading';
+import { CustodyServiceTable } from './pages/network/Custody';
+import { TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
 import {
@@ -41,18 +37,16 @@ import {
   ExchangeIcon,
   MegaphoneIcon,
   OrdersIcon,
-  PublicIcon,
   ToolIcon,
+  WalletIcon,
 } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
-import { WalletIcon } from './icons/icons';
 import { ClearingMembers } from './pages/clearing/Members';
 import { ClearingMember } from './pages/clearing/Member';
 import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
-import { New as NewAuction } from './pages/distribution/auction/New';
 import Landing from './pages/landing/Landing';
 import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
@@ -300,13 +294,21 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/listings',
+        path: '/app/manage/listings/:contractId?',
         render: () => (
           <Manage>
             <ListingsTable services={listingService} listings={listings} />
           </Manage>
         ),
       },
+      // {
+      //   path: '/app/manage/listings/:contractId',
+      //   render: () => (
+      //     <Manage>
+      //       <ListingComponent services={listingService} />
+      //     </Manage>
+      //   ),
+      // },
     ],
   });
 

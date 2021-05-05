@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Table } from 'semantic-ui-react'
+import React, {useEffect, useState} from 'react'
+import {Table} from 'semantic-ui-react'
 
 import PaginationControls from './PaginationControls';
 

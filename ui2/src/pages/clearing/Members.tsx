@@ -1,22 +1,23 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useParty, useStreamQueries, useLedger } from '@daml/react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
-  MemberStanding,
   ClearedTrade,
   ClearedTradeSide,
+  MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps } from '../common';
-import { Header, Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -59,6 +60,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
         rowsClickable
+        clickableIcon={<ArrowRightIcon />}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
@@ -142,12 +144,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               c.payload.execution.takerOrderId,
               c.payload.execution.quantity,
               c.payload.execution.price,
-              <Button
-                size="small"
-                className="ghost"
-                variant="contained"
-                onClick={() => handleNovation(c)}
-              >
+              <Button aligned="right" className="ghost" onClick={() => handleNovation(c)}>
                 Novate Trade
               </Button>,
             ],
