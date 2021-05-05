@@ -39,12 +39,12 @@ jobs:
     executor: daml-executor
     steps:
       - checkout
+      - init_submodules
       - restore_cache:
           keys:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - init_submodules
       - run:
           name: Daml tests
           command: |
@@ -65,12 +65,12 @@ jobs:
     executor: daml-executor
     steps:
       - checkout
+      - init_submodules
       - restore_cache:
           keys:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - init_submodules
       - run:
           name: UI build
           command: |
