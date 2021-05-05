@@ -33,6 +33,9 @@ operator_log := $(state_dir)/operator.log
 custodian_pid := $(state_dir)/custodian.pid
 custodian_log := $(state_dir)/custodian.log
 
+ccp_pid := $(state_dir)/ccp.pid
+ccp_log := $(state_dir)/ccp.log
+
 broker_pid := $(state_dir)/broker.pid
 broker_log := $(state_dir)/broker.log
 
@@ -65,7 +68,7 @@ $(trigger_build): $(daml_build_log)
 
 .PHONY: clean_triggers
 clean_triggers:
-	rm $(trigger_build)
+	rm -rf $(trigger_build) triggers/.daml
 
 $(operator_pid): |$(state_dir) $(trigger_build)
 	(daml trigger --dar $(trigger_build) \
@@ -77,6 +80,25 @@ start_operator: $(operator_pid)
 
 stop_operator:
 	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
+
+$(ccp_pid): |$(state_dir) $(trigger_build)
+	(daml trigger --dar $(trigger_build) \
+	    --trigger-name ClearingTrigger:handleClearing \
+	    --ledger-host localhost --ledger-port 6865 \
+	    --ledger-party Ccp > $(ccp_log) & echo "$$!" > $(ccp_pid))
+
+start_ccp: $(ccp_pid)
+
+stop_ccp:
+	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
+
+### DA Marketplace Auto-Approve Triggers (all parties)
+
+start_autoapprove: |$(state_dir) $(trigger_build)
+	./scripts/run-triggers.sh $(trigger_build) $(state_dir)
+
+stop_autoapprove: |$(state_dir)
+	./scripts/stop-triggers.sh $(state_dir)
 
 ### DA Marketplace Custodian Bot
 
@@ -109,7 +131,7 @@ stop_broker:
 
 $(exchange_pid): |$(state_dir) $(trigger_build)
 	(daml trigger --dar $(trigger_build) \
-	    --trigger-name ExchangeTrigger:handleExchange \
+	    --trigger-name AutoApproval:autoApprovalTrigger \
 	    --ledger-host localhost --ledger-port 6865 \
 	    --ledger-party Exchange > $(exchange_log) & echo "$$!" > $(exchange_pid))
 
@@ -117,7 +139,6 @@ start_exchange: $(exchange_pid)
 
 stop_exchange:
 	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
-
 
 ### DA Marketplace <> Exberry Adapter
 $(exberry_adapter_dir):
@@ -181,6 +202,9 @@ $(trigger): $(target_dir) $(trigger_build)
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
 
+.PHONY: ui
+ui: $(dar) $(ui)
+
 $(ui): $(exberry_adapter)
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui2 && yarn install
@@ -191,7 +215,7 @@ $(ui): $(exberry_adapter)
 
 .PHONY: clean
 clean: clean-ui
-	rm -rf $(state_dir) $(trigger) $(exberry_adapter_dir) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit .daml
+	rm -rf .daml triggers/.daml $(state_dir) $(trigger) $(exberry_adapter_dir) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit .daml
 
 clean-ui:
 	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock ui2/node_modules ui2/build ui2/yarn.lock

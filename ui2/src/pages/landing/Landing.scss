@@ -13,9 +13,7 @@
     }
 
     .col {
-      flex-grow: 1;
       flex-basis: 100%;
-      flex-shrink: 2;
       margin-right: $spacing-m;
 
       &.col-2 {
@@ -25,8 +23,7 @@
 
         .relationships {
           display: flex;
-          flex-wrap: wrap;
-          justify-content: space-between;
+          flex-direction: column;
         }
       }
 
@@ -36,6 +33,7 @@
 
       .profile {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
 
@@ -47,9 +45,27 @@
           font-weight: 600;
           font-size: 24px;
           padding: $spacing-s $spacing-m;
+          margin-bottom: $spacing-s;
           line-height: 33px;
           text-align: center;
           vertical-align: middle;
+        }
+
+        .id-text {
+          background-color: var(--cool-grey-90);
+          font-family: monospace;
+          color: var(--cool-grey-30);
+          border: 1px solid var(--cool-grey-70);
+          padding: $spacing-xs;
+          border-radius: 5px;
+          width: auto;
+          display: inline-block;
+          text-align: center;
+          margin-bottom: $spacing-s;
+        }
+
+        .link > a {
+          font-size: 14px;
         }
       }
 
@@ -65,7 +81,15 @@
       .relationship-tile {
         margin-right: $spacing-m;
         padding: 16px $spacing-m;
-        width: 47%;
+
+        &:last-child {
+          margin-right: 0;
+        }
+
+        @media screen and (max-width: 1070px) {
+          width: 100%;
+          margin-right: 0;
+        }
 
         .tile-content {
           display: flex;
@@ -120,6 +144,13 @@
             }
           }
         }
+      }
+    }
+
+    @media screen and (max-width: 850px) {
+      flex-direction: column;
+      .col {
+        margin-right: 0px;
       }
     }
   }

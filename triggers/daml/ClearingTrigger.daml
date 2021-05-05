@@ -1,0 +1,148 @@
+module ClearingTrigger where
+
+import DA.Action
+import DA.Optional
+import DA.Foldable hiding (elem, null, foldl)
+import Daml.Trigger
+
+import DA.Finance.Asset
+import DA.Finance.Types
+
+import qualified Marketplace.Clearing.Model as Clearing
+import qualified Marketplace.Clearing.Role as Clearing
+import qualified Marketplace.Clearing.Service as Clearing
+import  Marketplace.Clearing.Service
+
+import Utils
+
+data ClearingState = ClearingState {
+   operatorParty : Party
+ }
+
+handleClearing : Trigger ClearingState
+handleClearing = Trigger
+  { initialize = return $ ClearingState $ fromSome $ partyFromText "Operator"
+  , updateState = \_ -> pure ()
+  , rule = handleCCPRule
+  , registeredTemplates = RegisteredTemplates  [ registeredTemplate @Clearing.Role
+                                               , registeredTemplate @Clearing.Service
+                                               , registeredTemplate @AssetDeposit
+                                               , registeredTemplate @Clearing.MarginCalculation
+                                               , registeredTemplate @Clearing.MarkToMarketCalculation ]
+  , heartbeat = None
+  }
+
+-- |Accept 'DepositTransferRequest' and 'CustodianRelationshipRequest'
+handleCCPRule : Party -> TriggerA ClearingState ()
+handleCCPRule party = do
+  debug "Running ccp rule..."
+  state <- get
+
+  -- > Set Operator
+  ccpRoles <- query @Clearing.Role
+  forA_ ccpRoles
+    $ \(_,ccp) -> void $ put (state { operatorParty = ccp.operator })
+               >> debug ("Setting operator party to: " <> show ccp.operator)
+
+  -- > Handle MarginCalculation
+  marginCalculations <- query @Clearing.MarginCalculation
+  forA_ marginCalculations (handleMarginCalculation party)
+
+  -- > Handle MarkToMarketCalculation
+  markToMarketCalculations <- query @Clearing.MarkToMarketCalculation
+  let incomingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount < 0.0) markToMarketCalculations
+      outgoingMarkToMarkets = filter (\(_,mtm) -> mtm.mtmAmount > 0.0) markToMarketCalculations
+
+  assetDeposits <- query @AssetDeposit
+  let ownedAssetDeposits = filter (\(_,ad) -> ad.account.owner == party) assetDeposits
+
+  forA_ incomingMarkToMarkets (handleIncomingMarkToMarketCalculation party)
+  handleOutgoingMTMCalculations party ownedAssetDeposits outgoingMarkToMarkets
+
+
+-- |Find all 'AssetDeposit' that a CCP Customer has with the CCP in a specific account
+getCustomerDeposits : Party -> Party -> (Clearing.Service -> Account) -> TriggerA ClearingState [ContractId AssetDeposit]
+getCustomerDeposits ccp customer account = do
+    state@ClearingState { operatorParty } <- get
+    (_,ccpCustomer) <- fromSomeNote "getCustomerDeposits" <$> queryContractKey @Clearing.Service (operatorParty, ccp, customer)
+    map fst . filter (checkDeposit ccpCustomer) <$> query @AssetDeposit
+  where
+    checkDeposit ccpCustomer (dCid,d) = d.account == account ccpCustomer
+
+
+-- |Transfer to and from the CCPCustomer's margin deposits from their clearing account.
+handleMarginCalculation : Party -> ContractPair Clearing.MarginCalculation -> TriggerA ClearingState ()
+handleMarginCalculation ccp (mcCid, mc@Clearing.MarginCalculation{customer, targetAmount}) = do
+  debug ("resolving margin calculation: " <> show mc)
+  ClearingState { operatorParty } <- get
+
+  clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
+  marginDepositCids   <- getCustomerDeposits ccp customer (.marginAccount)
+  emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarginFill with
+                   calculationCid = mcCid, depositCids = clearingDepositCids, marginDepositCids]
+               ([toAnyContractId mcCid] <> map toAnyContractId clearingDepositCids <> map toAnyContractId marginDepositCids)
+
+  return ()
+
+  where
+    depositIsAccount : Id -> ContractPair AssetDeposit -> Bool
+    depositIsAccount accountId (_,deposit) = deposit.account.id == accountId
+
+
+-- |Transfer from from the CCPCustomer to the CCP for a MarkToMarketCalculation
+handleIncomingMarkToMarketCalculation
+  : Party
+  -> ContractPair Clearing.MarkToMarketCalculation
+  -> TriggerA ClearingState ()
+handleIncomingMarkToMarketCalculation ccp (mtmCid, mtm@Clearing.MarkToMarketCalculation { accountId, customer, mtmAmount }) = do
+  debug ("handling incoming mtm calculation: " <> show mtm)
+  ClearingState { operatorParty } <- get
+  clearingDepositCids <- getCustomerDeposits ccp customer (.clearingAccount)
+  emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, ccp, customer) Clearing.PerformMarkToMarket with
+                  customerDepositCids = clearingDepositCids; providerDepositCids = []; calculationCid = mtmCid]
+               ([toAnyContractId mtmCid] <> map toAnyContractId clearingDepositCids)
+  return ()
+--
+--
+-- |Transfer from the CCP to the CCPCustomer for a MarkToMarketCalculation until it runs out of
+-- 'AssetDeposit's.
+handleOutgoingMTMCalculations
+  : Party
+  -> [ContractPair AssetDeposit]
+  -> [ContractPair Clearing.MarkToMarketCalculation]
+  -> TriggerA ClearingState ()
+handleOutgoingMTMCalculations _ [] _  = return ()
+handleOutgoingMTMCalculations _ _  [] = return ()
+
+handleOutgoingMTMCalculations party ds ((mtmCid,mtm)::mtms) = case ds' of
+    None -> handleOutgoingMTMCalculations party ds mtms
+    (Some (toUse,remaining)) -> do
+      debug ("resolving outgoing mtm calculation: " <> show mtm)
+      ClearingState { operatorParty } <- get
+      let providerDepositCids = map fst toUse
+      emitCommands [exerciseByKeyCmd @Clearing.Service (operatorParty, party, mtm.customer) Clearing.PerformMarkToMarket with
+                      customerDepositCids = []; calculationCid = mtmCid; ..]
+                   ([toAnyContractId mtmCid] <> map toAnyContractId providerDepositCids)
+
+      handleOutgoingMTMCalculations party remaining mtms
+  where
+    amount = mtm.mtmAmount
+    ds'    = collectDeposits amount ([], ds)
+
+
+-- |Recurses through 'AssetDeposit's until the amount of necessary funds is
+-- satisfied. Returns (used,remaining), or None if there are not enough AssetDeposits.
+collectDeposits
+  :  Decimal
+  -> ([ContractPair AssetDeposit], [ContractPair AssetDeposit])
+  -> Optional ([ContractPair AssetDeposit], [ContractPair AssetDeposit])
+collectDeposits restFunds (used, [])
+  | restFunds <= 0.0 = Some (used, [])
+  | otherwise        = None
+
+collectDeposits restFunds (used, (nextDeposit::remaining))
+  | restFunds <= 0.0 = Some (used, remaining)
+  | otherwise = collectDeposits (restFunds - nextAmount)
+                                ((nextDeposit :: used), remaining)
+  where
+    nextAmount  = (.asset.quantity) . snd $ nextDeposit

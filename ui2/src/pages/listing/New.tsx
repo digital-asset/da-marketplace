@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -7,13 +8,17 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import {
   RequestCreateListing,
   Service,
+  ListingTypeRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { publicParty } from '../../config';
-import { ServicePageProps } from '../common';
+import { Service as MarketClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { publicParty, usePartyName } from '../../config';
+import { ServicePageProps, createDropdownProp } from '../common';
 import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
+
+const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -34,9 +39,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [listingId, setListingId] = useState('');
   const [description, setDescription] = useState('');
   const [calendarId] = useState('1261007448');
+  const [clearedBy, setClearedBy] = useState<string>(COLLATERALIZED_VALUE);
 
   const ledger = useLedger();
   const party = useParty();
+  const { getName } = usePartyName(party);
+  const clearedMarketServices = useStreamQueries(MarketClearingService).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
@@ -74,8 +82,13 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;
+    const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
+    const listingType: ListingTypeRequest = isCollateralized
+      ? { tag: 'CollateralizedRequest', value: {} }
+      : { tag: 'ClearedRequest', value: clearedBy };
     const request: RequestCreateListing = {
       listingId,
+      listingType,
       calendarId,
       description,
       tradedAssetId: tradedAsset.payload.assetId,
@@ -87,7 +100,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       observers: [publicParty],
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
-    history.push('/app/listing/requests');
+    history.push('/app/manage/listings');
   };
 
   return (
@@ -171,6 +184,20 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             required
             onChange={(_, change) => setDescription(change.value as string)}
           />
+          <Form.Select
+            className="select"
+            label="Cleared by"
+            placeholder="Select..."
+            required
+            value={clearedBy}
+            options={[
+              createDropdownProp('-- Collateralized Market --', COLLATERALIZED_VALUE),
+              ...clearedMarketServices.map(cms =>
+                createDropdownProp(getName(cms.payload.provider), cms.payload.provider)
+              ),
+            ]}
+            onChange={(_, change) => setClearedBy(change.value as string)}
+          />
           <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
           <div className="submit">
             <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
@@ -182,12 +209,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       </div>
       <div className="asset">
         {showTradedAsset && (
-          <Tile header={<h2>Auctioned Asset</h2>}>
+          <Tile header={<h4>Auctioned Asset</h4>}>
             <div ref={el1} style={{ height: '100%' }} />
           </Tile>
         )}
         {showQuotedAsset && (
-          <Tile header={<h2>Quoted Asset</h2>}>
+          <Tile header={<h4>Quoted Asset</h4>}>
             <div ref={el2} style={{ height: '100%' }} />
           </Tile>
         )}

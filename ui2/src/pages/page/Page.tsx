@@ -2,17 +2,20 @@ import React from 'react';
 import { Grid, Header, Menu } from 'semantic-ui-react';
 import classNames from 'classnames';
 import TopMenu, { ITopMenuButtonInfo } from './TopMenu';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
 import { useParty } from '@daml/react';
 import PageSection from './PageSection';
 import WelcomeHeader from './WelcomeHeader';
 import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
 import _ from 'lodash';
+import { CogIcon } from '../../icons/icons';
+import { usePartyName } from '../../config';
 
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
   activeMenuTitle?: boolean;
+  showNotificationAlert?: boolean;
   sideBarItems?: SidebarEntry[];
   topMenuButtons?: ITopMenuButtonInfo[];
 };
@@ -23,9 +26,13 @@ const Page: React.FC<Props> = ({
   menuTitle,
   topMenuButtons,
   activeMenuTitle,
+  showNotificationAlert,
   sideBarItems,
 }) => {
   const user = useParty();
+  const { name } = usePartyName(user);
+  const history = useHistory();
+
   const groupSideBarItems = Array.from(
     sideBarItems?.reduce(
       (acc, cur) => acc.set(cur.groupBy, [..._.compact(acc.get(cur.groupBy)), cur]),
@@ -38,9 +45,14 @@ const Page: React.FC<Props> = ({
     const margin = level * 25;
 
     return (
-      <>
+      <React.Fragment key={sideBarItem.label + sideBarItem.path}>
         <Menu.Item
           exact
+          active={
+            sideBarItem.activeSubroutes
+              ? history.location.pathname.includes(sideBarItem.path)
+              : undefined
+          }
           key={sideBarItem.label + sideBarItem.path}
           as={NavLink}
           to={sideBarItem.path}
@@ -52,7 +64,7 @@ const Page: React.FC<Props> = ({
           </p>
         </Menu.Item>
         {childMenu.length > 0 && <Menu.Menu>{childMenu}</Menu.Menu>}
-      </>
+      </React.Fragment>
     );
   };
 
@@ -63,15 +75,16 @@ const Page: React.FC<Props> = ({
           <Menu.Menu>
             <Menu.Item as={NavLink} to="/app/" exact className="home-item">
               <Header as="h1" className="dark">
-                @{user}
+                @{name}
               </Header>
+              <CogIcon />
             </Menu.Item>
           </Menu.Menu>
 
           <Menu.Menu>
             {groupSideBarItems.map(([key, items]) =>
               key ? (
-                <Menu.Menu className="sub-menu">
+                <Menu.Menu key={key} className="sub-menu">
                   <Header as="h3">{key}</Header>
                   {items.map(item => constructMenu(item, 0))}
                 </Menu.Menu>
@@ -87,6 +100,7 @@ const Page: React.FC<Props> = ({
           title={!!menuTitle ? menuTitle : <WelcomeHeader />}
           buttons={topMenuButtons}
           activeMenuTitle={activeMenuTitle}
+          showNotificationAlert={showNotificationAlert}
         />
 
         <PageSection className={className}>{children}</PageSection>

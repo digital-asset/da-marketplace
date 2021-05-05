@@ -1,60 +1,52 @@
 import React from 'react';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { withRouter, RouteComponentProps, useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
-import { IconButton } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
-import { useStreamQueries } from '@daml/react';
-import { getName } from '../../config';
+import { useStreamQueries } from '../../Main';
+import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { ArrowRightIcon } from '../../icons/icons';
 
-const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  const issuances = useStreamQueries(Issuance).contracts;
+export const IssuancesTable: React.FC = () => {
+  const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
+  const history = useHistory();
+  const { getName } = usePartyName('');
 
   return (
-    <div className="issuances">
-      <Tile header={<h2>Actions</h2>}>
-        <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
-          New Issuance
-        </Button>
-      </Tile>
-
-      <Tile header={<h2>Issuances</h2>}>
-        <StripedTable
-          headings={[
-            'Issuing Agent',
-            'Issuer',
-            'Issuance ID',
-            'Issuance Account',
-            'Asset',
-            'Quantity',
-            'Action',
-            'Details',
-          ]}
-          rows={issuances.map(c => [
+    <StripedTable
+      headings={['Issuing Agent', 'Issuer', 'Issuance ID', 'Issuance Account', 'Asset', 'Quantity']}
+      loading={issuancesLoading}
+      rowsClickable
+      clickableIcon={<ArrowRightIcon />}
+      rows={issuances.map(c => {
+        return {
+          elements: [
             getName(c.payload.provider),
             getName(c.payload.customer),
             c.payload.issuanceId,
             c.payload.accountId.label,
             c.payload.assetId.label,
             c.payload.quantity,
-            <>
-              {/* { party === c.payload.client &&
-                  <Button secondary className='ghost' onClick={() => requestDelisting(c)}>Delist</Button>}                */}
-            </>,
-            <IconButton
-              color="primary"
-              size="small"
-              component="span"
-              onClick={() =>
-                history.push('/app/issuance/issuances/' + c.contractId.replace('#', '_'))
-              }
-            >
-              <KeyboardArrowRight fontSize="small" />
-            </IconButton>,
-          ])}
-        />
+          ],
+          onClick: () => history.push(`/app/issuance/issuances/${c.contractId.replace('#', '_')}`),
+        };
+      })}
+    />
+  );
+};
+
+const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
+  return (
+    <div className="issuances">
+      <Tile header={<h4>Actions</h4>}>
+        <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
+          New Issuance
+        </Button>
+      </Tile>
+
+      <Tile header={<h4>Issuances</h4>}>
+        <IssuancesTable />
       </Tile>
     </div>
   );

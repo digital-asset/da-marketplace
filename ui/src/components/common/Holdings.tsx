@@ -38,7 +38,6 @@ const Holdings: React.FC<Props> = ({ deposits, clearingDeposits, marginDeposits,
     const ccpProviders = useContractQuery(CCPCustomer).map(c => {return c.contractData.ccp});
     const ccpDismissibleNotifications = useDismissibleNotifications()
         .filter(dn => {
-            console.log(dn);
             return ccpProviders.includes(dn.props.notification.contractData.sender);
         });
 

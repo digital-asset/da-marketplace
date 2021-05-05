@@ -8,6 +8,7 @@ import DA.Next.Set (Set, fromList)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import Marketplace.Utils
 
 template Service
   with
@@ -26,7 +27,7 @@ template Service
           assetLabel : Text
           description : Text
           claims : Claims
-          safekeepingAccountId : Id
+          safekeepingAccount : Account
           observers : [Party]
         do
           create OriginationRequest with observers = fromList observers; ..
@@ -53,7 +54,7 @@ template Service
         with
           createOriginationCid: ContractId OriginationRequest
         do
-          OriginationRequest{assetLabel; description; claims; safekeepingAccountId; observers} <- fetch createOriginationCid
+          OriginationRequest{assetLabel; description; claims; safekeepingAccount; observers} <- fetch createOriginationCid
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
@@ -70,7 +71,7 @@ template Service
                      assetId
                      description
                      issuer
-                     safekeepingAccountId
+                     safekeepingAccount
                      observers
                      claims
           adCid <- create ad
@@ -115,7 +116,7 @@ template Offer
     controller customer can
       Accept : ContractId Service
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do pure ()
@@ -145,7 +146,7 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..
 
 template CreateIssuanceRequest
   with
@@ -178,7 +179,7 @@ template OriginationRequest
     assetLabel : Text
     description : Text
     claims : Claims
-    safekeepingAccountId : Id
+    safekeepingAccount : Account
     observers : Set Party
   where
      signatory operator, provider, customer

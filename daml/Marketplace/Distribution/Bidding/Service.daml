@@ -7,6 +7,7 @@ import Marketplace.Distribution.Bidding.Model qualified as Bidding
 import Marketplace.Settlement.Model as Settlement (SettlementDetails, SettlementInstruction(..))
 import Marketplace.Rule.AllocationAccount qualified as Allocation
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
+import Marketplace.Utils
 
 type S = Service
 
@@ -89,6 +90,17 @@ template Service
           newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
           pure (newBidCid, bidDepositCid)
 
+      nonconsuming RejectAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.Bid
+          newStatus : Bidding.Status
+        do
+          bid <- fetch bidCid
+
+          returnedDeposit <- exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = bid.depositCid
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
+          pure (newBidCid, returnedDeposit)
+
     nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction
       with
         issuer : Party
@@ -112,7 +124,7 @@ template Offer
           tradingAccount : Account
           allocationAccount : Account
         do
-          create Service with ..
+          createOrLookup Service with ..
 
       Decline : ()
         do
@@ -130,6 +142,7 @@ template Request
     allocationAccount : Account
   where
     signatory customer
+    observer provider
 
     controller customer can
       Cancel : ()
@@ -144,4 +157,4 @@ template Request
         operator : Party
       controller operator, provider
       do
-        create Service with ..
+        createOrLookup Service with ..

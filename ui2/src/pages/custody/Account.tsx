@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import React, { useMemo, useState } from 'react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
@@ -10,23 +11,43 @@ import Tile from '../../components/Tile/Tile';
 import { Button, Header, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { getName } from '../../config';
+import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps } from '../common';
+import { ArrowLeftIcon } from '../../icons/icons';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contractId } = useParams<any>();
 
   const cid = contractId.replace('_', '#');
 
-  const accounts = useStreamQueries(AssetSettlementRule);
-  const deposits = useStreamQueries(AssetDeposit);
-  const assets = useStreamQueries(AssetDescription).contracts;
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
+    AllocationAccountRule
+  );
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+  const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
+
+  const allAccounts = useMemo(
+    () =>
+      accounts
+        .map(a => {
+          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+        })
+        .concat(
+          allocatedAccounts.map(a => {
+            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+          })
+        ),
+    [accounts, allocatedAccounts]
+  );
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -58,14 +79,24 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const clientServices = services.filter(s => s.payload.customer === party);
-  const account = accounts.contracts.find(a => a.contractId === cid);
-  if (!account) return <></>;
+  const targetAccount = allAccounts.find(a => a.contractId === cid);
 
-  const accountDeposits = deposits.contracts.filter(
+  if (accountsLoading || assetsLoading || depositsLoading || allocatedAccountsLoading) {
+    return <h4>Loading account...</h4>;
+  }
+
+  if (!targetAccount) {
+    return <h4>Could not find account.</h4>;
+  }
+
+  const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId);
+  const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId);
+
+  const accountDeposits = deposits.filter(
     d =>
-      d.payload.account.id.label === account.payload.account.id.label &&
-      d.payload.account.provider === account.payload.account.provider &&
-      d.payload.account.owner === account.payload.account.owner
+      d.payload.account.id.label === targetAccount.account.id.label &&
+      d.payload.account.provider === targetAccount.account.provider &&
+      d.payload.account.owner === targetAccount.account.owner
   );
 
   const requestWithdrawDeposit = async (c: CreateEvent<AssetDeposit>) => {
@@ -78,25 +109,23 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     history.push('/app/custody/requests');
   };
 
-  const relatedAccounts = accounts.contracts
+  const relatedAccounts = accounts
     .filter(a => a.contractId !== cid)
-    .filter(a => a.payload.account.owner === account.payload.account.owner)
+    .filter(a => a.payload.account.owner === targetAccount.account.owner)
     .map(r => r.payload.account.id.label);
 
   const requestTransfer = (deposit: CreateEvent<AssetDeposit>) => {
     const onClose = async (state: any | null) => {
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
-      const transferToAccount = accounts.contracts.find(
-        a => a.payload.account.id.label === state.account
-      );
+      const transferToAccount = accounts.find(a => a.payload.account.id.label === state.account);
       const service = clientServices.find(
-        s => s.payload.provider === account.payload.account.provider
+        s => s.payload.provider === targetAccount.account.provider
       );
       if (!service || !transferToAccount) return;
 
       await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
-        accountId: account.payload.account.id,
+        accountId: targetAccount.account.id,
         transfer: {
           receiverAccountId: transferToAccount.payload.account.id,
           depositCid: state.deposit,
@@ -123,15 +152,14 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
       if (!state) return;
       const asset = assets.find(i => i.payload.description === state.asset);
-      // const account = accounts.find(a => a.payload.account.id.label === state.account);
-      if (!asset || !account) return;
+      if (!asset || !targetAccount) return;
       const service = clientServices.find(
-        s => s.payload.provider === account.payload.account.provider
+        s => s.payload.provider === targetAccount.account.provider
       );
       if (!service) return;
 
       await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
-        accountId: account.payload.account.id,
+        accountId: targetAccount.account.id,
         asset: { id: asset.payload.assetId, quantity: state.quantity },
       });
     };
@@ -158,86 +186,112 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
+      <Button className="ghost back-button" onClick={() => history.goBack()}>
+        <ArrowLeftIcon /> back
+      </Button>
       <InputDialog {...transferDialogProps} />
       <InputDialog {...creditDialogProps} />
       <div className="account">
-        <Header as="h2">{account.payload.account.id.label}</Header>
-        <Tile header={<h2>Actions</h2>}>
-          <div className="action-row">
-            <Button className="ghost" onClick={() => requestCredit(account.payload.account.id)}>
-              Deposit
-            </Button>
-            <Button className="ghost" onClick={() => requestCloseAccount(account)}>
-              Close
-            </Button>
-          </div>
-        </Tile>
+        <Header as="h2">{targetAccount.account.id.label}</Header>
+        {normalAccount && (
+          <Tile header={<h4>Actions</h4>}>
+            <div className="action-row">
+              <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
+                Deposit
+              </Button>
+              <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
+                Close
+              </Button>
+            </div>
+          </Tile>
+        )}
 
         <div className="account-overview">
           <div className="details">
-            <Tile header={<h2>Account Details</h2>}>
+            <Tile header={<h4>Account Details</h4>}>
               <Table basic="very">
                 <Table.Body>
                   <Table.Row key={0}>
                     <Table.Cell key={0}>
-                      <b>Account name</b>
+                      <b>Name</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{account.payload.account.id.label}</Table.Cell>
+                    <Table.Cell key={1}>{targetAccount.account.id.label}</Table.Cell>
                   </Table.Row>
                   <Table.Row key={1}>
                     <Table.Cell key={0}>
-                      <b>Provider</b>
+                      <b>Type</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{getName(account.payload.account.provider)}</Table.Cell>
+                    <Table.Cell key={1}>{normalAccount ? 'Normal' : 'Allocation'}</Table.Cell>
                   </Table.Row>
                   <Table.Row key={2}>
                     <Table.Cell key={0}>
-                      <b>Owner</b>
+                      <b>Provider</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>{getName(account.payload.account.owner)}</Table.Cell>
+                    <Table.Cell key={1}>{getName(targetAccount.account.provider)}</Table.Cell>
                   </Table.Row>
                   <Table.Row key={3}>
+                    <Table.Cell key={0}>
+                      <b>Owner</b>
+                    </Table.Cell>
+                    <Table.Cell key={1}>{getName(targetAccount.account.owner)}</Table.Cell>
+                  </Table.Row>
+                  <Table.Row key={4}>
                     <Table.Cell key={0}>
                       <b>Role</b>
                     </Table.Cell>
                     <Table.Cell key={1}>
-                      {party === account.payload.account.provider ? 'Provider' : 'Client'}
+                      {party === targetAccount.account.provider ? 'Provider' : 'Client'}
                     </Table.Cell>
                   </Table.Row>
-                  <Table.Row key={4}>
-                    <Table.Cell key={0}>
-                      <b>Controllers</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>
-                      {Object.keys(account.payload.ctrls.textMap).join(', ')}
-                    </Table.Cell>
-                  </Table.Row>
+                  {normalAccount && (
+                    <Table.Row key={5}>
+                      <Table.Cell key={0}>
+                        <b>Controllers</b>
+                      </Table.Cell>
+                      <Table.Cell key={1}>
+                        {Object.keys(normalAccount.payload.ctrls.textMap).join(', ')}
+                      </Table.Cell>
+                    </Table.Row>
+                  )}
+                  {allocationAccount && (
+                    <Table.Row key={5}>
+                      <Table.Cell key={0}>
+                        <b>Nominee</b>
+                      </Table.Cell>
+                      <Table.Cell key={1}>{allocationAccount.payload.nominee}</Table.Cell>
+                    </Table.Row>
+                  )}
                 </Table.Body>
               </Table>
             </Tile>
           </div>
           <div className="holdings">
-            <Tile header={<h2>Holdings</h2>}>
+            <Tile header={<h4>Holdings</h4>}>
               <StripedTable
-                headings={['Holding', 'Asset', 'Actions']}
-                rows={accountDeposits.map(c => [
-                  c.payload.asset.quantity,
-                  c.payload.asset.id.label,
-                  <>
-                    {party === account.payload.account.owner && (
-                      <div className="action-row">
-                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                          Withdraw
-                        </Button>
-                        {relatedAccounts.length > 0 && (
-                          <Button className="ghost" onClick={() => requestTransfer(c)}>
-                            Transfer
-                          </Button>
+                headings={['Holding', 'Asset', '']}
+                loading={depositsLoading}
+                rows={accountDeposits.map(c => {
+                  return {
+                    elements: [
+                      c.payload.asset.quantity,
+                      c.payload.asset.id.label,
+                      <>
+                        {party === targetAccount.account.owner && normalAccount && (
+                          <div className="action-row">
+                            <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                              Withdraw
+                            </Button>
+                            {relatedAccounts.length > 0 && (
+                              <Button className="ghost" onClick={() => requestTransfer(c)}>
+                                Transfer
+                              </Button>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
-                  </>,
-                ])}
+                      </>,
+                    ],
+                  };
+                })}
               />
             </Tile>
           </div>

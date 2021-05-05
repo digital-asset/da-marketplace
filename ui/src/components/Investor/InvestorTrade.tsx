@@ -24,6 +24,8 @@ type Props = {
     deposits: DepositInfo[];
     sideNav: React.ReactElement;
     onLogout: () => void;
+    showNotificationAlert?: boolean;
+    handleNotificationAlert?: () => void;
 }
 
 type LocationState = {
@@ -44,7 +46,7 @@ const filterDepositsForOrder = (deposits: DepositInfo[], accountLabel: string, s
         .filter(d => d.contractData.asset.id.label === symbol);
 }
 
-const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
+const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout, showNotificationAlert, handleNotificationAlert }) => {
     const [ bidDeposits, setBidDeposits ] = useState<DepositInfo[]>([]);
     const [ offerDeposits, setOfferDeposits ] = useState<DepositInfo[]>([]);
 
@@ -111,6 +113,8 @@ const InvestorTrade: React.FC<Props> = ({ deposits, sideNav, onLogout }) => {
             sideNav={sideNav}
             menuTitle={<><ExchangeIcon color='green' size='24'/>{base}/{quote}</>}
             onLogout={onLogout}
+            showNotificationAlert={showNotificationAlert}
+            handleNotificationAlert={handleNotificationAlert}
         >
             <PageSection className='investor-trade'>
                 <div className='order'>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
 import { transformClaim } from '../../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -73,7 +74,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   console.log(customerServices);
   const service = customerServices[0];
-  if (!service) return <></>;
+  if (!service) return <p>Not an auction service customer.</p>;
 
   const rightsizeAsset = async (
     deposit: CreateEvent<AssetDeposit>,
@@ -106,7 +107,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       depositCid,
     };
     await ledger.exercise(Service.RequestCreateAuction, service.contractId, request);
-    history.push('/app/distribution/requests');
+    history.push('/app/manage/distributions');
   };
 
   return (
@@ -140,7 +141,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== auctionedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}
@@ -179,12 +180,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       </div>
       <div className="asset">
         {showAuctionedAsset && (
-          <Tile header={<h2>Auctioned Asset</h2>}>
+          <Tile header={<h4>Auctioned Asset</h4>}>
             <div ref={el1} style={{ height: '100%' }} />
           </Tile>
         )}
         {showQuotedAsset && (
-          <Tile header={<h2>Quoted Asset</h2>}>
+          <Tile header={<h4>Quoted Asset</h4>}>
             <div ref={el2} style={{ height: '100%' }} />
           </Tile>
         )}

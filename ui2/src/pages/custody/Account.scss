@@ -21,7 +21,6 @@
     .account-overview {
       display: flex;
       flex-direction: row;
-      flex-wrap: wrap;
       width: 100%;
       justify-content: space-between;
 
@@ -38,11 +37,26 @@
 
       .action-row {
         justify-content: flex-end;
+
+        .button.ghost {
+          margin-right: $spacing-s;
+        }
       }
 
       table {
         th {
           background-color: var(--white);
+        }
+      }
+
+      @media screen and (max-width: 1050px) {
+        flex-direction: column;
+        .details {
+          width: 100%;
+        }
+        .holdings {
+          width: 100%;
+          margin-left: 0px;
         }
       }
     }

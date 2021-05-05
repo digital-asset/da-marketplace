@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Switch, Route, useRouteMatch } from 'react-router-dom'
+import { Switch, Route, useRouteMatch, useHistory } from 'react-router-dom'
 
 import { useLedger, useParty } from '@daml/react'
 
@@ -21,7 +21,6 @@ import { useContractQuery, usePartyLoading } from '../../websocket/queryStream'
 
 import { useOperator, useDablParties } from '../common/common'
 import { wrapDamlTuple } from '../common/damlTypes'
-import { useDismissibleNotifications } from '../common/DismissibleNotifications'
 import BrokerProfile, { Profile, createField } from '../common/Profile'
 
 import MarketRelationships from '../common/MarketRelationships'
@@ -31,6 +30,7 @@ import RoleSideNav from '../common/RoleSideNav'
 import LandingPage from '../common/LandingPage'
 import LoadingScreen from '../common/LoadingScreen'
 import Wallet from '../common/Wallet'
+import NotificationCenter, { useAllNotifications } from '../common/NotificationCenter'
 
 import BrokerOrders from './BrokerOrders'
 
@@ -49,12 +49,17 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
     const invitation = useContractQuery(BrokerInvitation);
     const allCustodianRelationships = useContractQuery(CustodianRelationship);
     const allDeposits = useContractQuery(AssetDeposit);
-    const notifications = useDismissibleNotifications();
 
     const [ profile, setProfile ] = useState<Profile>({
         'name': createField('', 'Name', 'Your legal name', 'text'),
         'location': createField('', 'Location', 'Your current location', 'text')
     });
+
+    const history = useHistory();
+    const [allNotifications, setAllNotifications] = useState<object[]>([]);
+    const [showNotificationAlert, setShowNotificationAlert] = useState(true);
+
+    const notifications = useAllNotifications();
 
     useEffect(() => {
         if (registeredBroker[0]) {
@@ -64,8 +69,23 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                 location: { ...profile.location, value: rbData.location }
             })
         }
-    // eslint-disable-next-line
     }, [registeredBroker]);
+
+    useEffect(() => {
+        if (allNotifications.length < notifications.length) {
+            setAllNotifications(notifications);
+            setShowNotificationAlert(true);
+        } else if (allNotifications.length > notifications.length) {
+            setAllNotifications(notifications);
+        }
+        if (notifications.length === 0) setShowNotificationAlert(false);
+    }, [notifications]);
+
+    const handleNotificationAlert = () => {
+        const currentLocation = history.location.pathname;
+        history.push({ pathname: `${path}/notifications`, state: currentLocation });
+        setShowNotificationAlert(false);
+    }
 
     const updateProfile = async () => {
         const key = wrapDamlTuple([operator, broker]);
@@ -135,23 +155,37 @@ const Broker: React.FC<Props> = ({ onLogout }) => {
                                 relationshipRequestChoice={BrokerTemplate.Broker_RequestCustodianRelationship}
                                 custodianRelationships={allCustodianRelationships}/>}
                         sideNav={sideNav}
-                        notifications={notifications}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/wallet`}>
                     <Wallet
                         role={MarketRole.BrokerRole}
                         sideNav={sideNav}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
 
                 <Route path={`${path}/orders`}>
                     <BrokerOrders
                         sideNav={sideNav}
                         deposits={allDeposits}
-                        onLogout={onLogout}/>
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
                 </Route>
+
+                <Route path={`${path}/notifications`}>
+                    <NotificationCenter
+                        sideNav={sideNav}
+                        onLogout={onLogout}
+                        showNotificationAlert={showNotificationAlert}
+                        handleNotificationAlert={handleNotificationAlert}/>
+                </Route>
+
             </Switch>
         </div>
 

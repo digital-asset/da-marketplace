@@ -1,0 +1,128 @@
+module Tests.Bond where
+-- ^ This module tests the full lifecycle of a binary option
+
+import Common (Customer, Providers, onboardProviders, onboardCustomer)
+import ContingentClaims.Claim (serialize)
+import DA.Date (date, Month(Jan, Oct))
+import DA.Finance.Types (Id(..), Asset(..))
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule(..), AssetSettlement_AddController(..), AssetSettlement_RemoveController(..), AssetSettlement_Transfer(..))
+import Daml.Script
+import DA.Next.Set qualified as Set
+import DA.Map qualified as Map
+import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
+import Marketplace.Custody.Service (Service, RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
+import Marketplace.Issuance.AssetDescription
+import DA.Finance.Trade.SettlementInstruction
+import Tests.Utils (bond)
+import DA.Time (time)
+import DA.Assert
+
+usd = "USD"
+
+testBond = script do
+  let date1 = date 2001 Jan 1
+      date2 = date 2002 Oct 31
+      notional = 100.0
+      coupon = 0.1
+      couponPayout = notional * coupon
+      usdAmount = 3000.0
+  (alice, providers, bob, bondCid, bobsDesc, custodyServiceCid, corpActDepositCid) <-
+    requestExerciseBond usdAmount notional coupon [date1, date2]
+
+  -- First lifecycle
+  setTime $ time date1 16 30 00
+  lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
+    assetDepositCid = bondCid
+    choice = bobsDesc.claims
+  (bondCid, [settlementInstructionCid]) <- submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
+    safekeepingDepositCid = corpActDepositCid
+    lifecycleRequestCid = lifecycleReqCid
+    fixings = Map.fromList []
+    uniquePayoutId = show date1
+
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid SettlementInstruction_Process
+
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
+  bobsOption.asset.id.version === 1
+  [(_, bobsMoney)] <- getMoneyAssetsFor bob.customer
+  bobsMoney.asset.quantity === couponPayout
+  [(corpActDepositCid, alicesMoney)] <- getMoneyAssetsFor alice
+  alicesMoney.asset.quantity === usdAmount - couponPayout
+
+  -- Second lifecycle
+  setTime $ time date2 16 30 00
+  lifecycleReqCid <- submit bob.customer $ exerciseCmd bob.custodyServiceCid RequestLifecycle with
+    assetDepositCid = bondCid
+    choice = bobsDesc.claims
+  (_, [settlementInstructionCid1, settlementInstructionCid2]) <-
+    submit providers.bank $ exerciseCmd custodyServiceCid $ Lifecycle with
+      safekeepingDepositCid = corpActDepositCid
+      lifecycleRequestCid = lifecycleReqCid
+      fixings = Map.fromList []
+      uniquePayoutId = show date2
+
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid1 SettlementInstruction_Process
+  submitMulti [alice, bob.customer, providers.bank] [] $
+    exerciseCmd settlementInstructionCid2 SettlementInstruction_Process
+
+  [(_, bobsOption)] <- queryFilter @AssetDeposit bob.customer (\c -> c.asset.id.label == "BondLabel")
+  bobsOption.asset.id.version === 2
+  bobsMoneyWithCids <- getMoneyAssetsFor bob.customer
+  sum (map (\(_, money) -> money.asset.quantity) bobsMoneyWithCids)
+    === couponPayout + notional + couponPayout
+  [(_, alicesMoney)] <- getMoneyAssetsFor alice
+  alicesMoney.asset.quantity === usdAmount - couponPayout - notional - couponPayout
+
+getMoneyAssetsFor : Party -> Script [(ContractId AssetDeposit, AssetDeposit)]
+getMoneyAssetsFor party =
+  queryFilter @AssetDeposit party (\c -> c.asset.id.label == usd)
+
+requestExerciseBond: Decimal -> Decimal -> Decimal -> [Date] -> Script (Party, Providers, Customer, ContractId AssetDeposit, AssetDescription, ContractId Service, ContractId AssetDeposit)
+requestExerciseBond usdAmount notional coupon dates = script do
+  providers <- onboardProviders
+
+  let usdId = Id with
+                signatories = Set.singleton providers.bank
+                label = usd
+                version = 0
+      usdAsset = Asset with id = usdId, quantity = usdAmount
+
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+
+  -- Alice originates the bond
+  let boClaims = bond usdId notional coupon dates
+  origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
+      assetLabel = "BondLabel"
+      description = "TestBond"
+      safekeepingAccount = alice.mainAccount
+      claims = serialize boClaims
+      observers = []
+  (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
+
+  -- Alice issues the bond
+  createReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid
+    RequestCreateIssuance with
+      issuanceId = "Myissuance"
+      accountId = Id (Set.fromList [alice.customer, providers.bank]) alice.mainAccount.id.label 0
+      assetId = optionDesc.assetId
+      quantity = 1.0
+  (_, bondCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
+
+  -- Alice gifts the bond to Bob
+  submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.mainAccount.id AssetSettlement_AddController with ctrl = alice.customer
+  xferReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestTransferDeposit with accountId = alice.mainAccount.id, transfer = AssetSettlement_Transfer with receiverAccountId = bob.mainAccount.id, depositCid = bondCid
+  bondCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid $ TransferDeposit xferReqCid
+  submit bob.customer $ exerciseByKeyCmd @AssetSettlementRule bob.mainAccount.id AssetSettlement_RemoveController with ctrl = alice.customer
+
+  -- The issuer, Alice, must deposit the payout in the safekeeping account
+  corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestCreditAccount with
+    accountId = alice.mainAccount.id
+    asset = usdAsset
+  corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid CreditAccount with
+    creditAccountRequestCid = corpActReqCid
+
+  return (alice.customer, providers, bob, bondCid, optionDesc, alice.custodyServiceCid, corpActDepositCid)

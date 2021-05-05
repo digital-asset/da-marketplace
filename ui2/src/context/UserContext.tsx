@@ -1,6 +1,5 @@
 import React from 'react';
 import { History } from 'history';
-import { getName } from '../config';
 import Credentials, {
   clearCredentials,
   retrieveCredentials,
@@ -9,7 +8,6 @@ import Credentials, {
 
 const UserStateContext = React.createContext<UserState>({
   isAuthenticated: false,
-  name: '',
   party: '',
   token: '',
 });
@@ -17,7 +15,6 @@ const UserDispatchContext = React.createContext<React.Dispatch<any>>({} as React
 
 type UserState = {
   isAuthenticated: boolean;
-  name: string;
   party: string;
   token: string;
 };
@@ -28,7 +25,6 @@ function userReducer(state: UserState, action: any) {
       return {
         ...state,
         isAuthenticated: true,
-        name: action.name,
         party: action.party,
         token: action.token,
       };
@@ -47,7 +43,6 @@ const UserProvider: React.FC = ({ children }) => {
 
   var initialUserState: UserState = {
     isAuthenticated: false,
-    name: '',
     party: '',
     token: '',
   };
@@ -55,7 +50,6 @@ const UserProvider: React.FC = ({ children }) => {
   if (credentials) {
     initialUserState = {
       isAuthenticated: true,
-      name: getName(credentials),
       party: credentials.party,
       token: credentials.token,
     };
@@ -93,21 +87,14 @@ async function loginUser(
   history: History,
   credentials: Credentials
 ) {
-  // setError(false);
-  // setIsLoading(true);
   const { party, token } = credentials;
-  const name = getName(credentials);
 
-  if (!!name) {
+  try {
     storeCredentials(credentials);
-    dispatch({ type: 'LOGIN_SUCCESS', name, party, token });
-    // setError(false);
-    // setIsLoading(false);
+    dispatch({ type: 'LOGIN_SUCCESS', party, token });
     history.push('/app');
-  } else {
+  } catch {
     dispatch({ type: 'LOGIN_FAILURE' });
-    // setError(true);
-    // setIsLoading(false);
   }
 }
 

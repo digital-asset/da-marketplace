@@ -6,6 +6,7 @@ import lock from './lock.svg'
 type IconProps = {
     size?: '24' | '32' | '48' | '64';
     color?: 'green' | 'blue';
+    strokeColor?: string;
 }
 
 export const ArrowRightIcon = () => (
@@ -14,6 +15,13 @@ export const ArrowRightIcon = () => (
             d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
             c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
             C6,1.5,6,2,6.3,2.3"/>
+    </svg>
+)
+
+export const ArrowLeftIcon = () => (
+    <svg className='icon arrow-left-icon' width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 7.99992L2 7.99992" stroke="#174DE8" strokeLinecap="round"/>
+        <path d="M6 4L2 8L6 12" stroke="#174DE8" strokeLinecap="round"/>
     </svg>
 )
 
@@ -108,7 +116,7 @@ export const MarketIcon = () => (
 
 export const OrdersIcon: React.FC<IconProps> = ({ size }) => (
     <svg className={`icon orders-icon icon-size-${size}`} width="14" height="12" viewBox="0 0 14 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <g clip-path="url(#clip0)">
+        <g clipPath="url(#clip0)">
             <path d="M10.8109 1.40002L10.8887 1.78891H12.0554L11.822 0.622244C11.7443 0.311133 11.4332 0.0777996 11.122 0.155577L1.71094 1.78891H8.55538L10.8109 1.40002Z" fill="#B4F5A3"/>
             <path d="M13.2219 4.43338L13.1442 2.41116C13.1442 2.10005 12.9108 1.78894 12.5219 1.78894H12.0553H10.8886H8.55527H1.71083H0.777496C0.466385 1.78894 0.155273 2.02227 0.155273 2.41116V10.8889C0.155273 11.2001 0.388607 11.5112 0.777496 11.5112H12.5997C12.9108 11.5112 13.2219 11.2778 13.2219 10.8889V9.48894C13.5331 9.48894 13.8442 9.25561 13.8442 8.86672V4.97783C13.8442 4.66672 13.5331 4.43338 13.2219 4.43338ZM11.9775 10.3445H1.39972V2.95561H12.0553V4.43338H8.08861C7.62194 4.43338 7.38861 4.66672 7.38861 4.97783V8.9445C7.38861 9.25561 7.62194 9.56672 8.01083 9.56672H11.9775V10.3445ZM12.5997 8.32227H11.9775H8.55527V5.60005H11.9775H12.5997V8.32227Z" fill="#B4F5A3"/>
             <path d="M10.5783 7.62213C10.9219 7.62213 11.2005 7.34355 11.2005 6.99991C11.2005 6.65626 10.9219 6.37769 10.5783 6.37769C10.2346 6.37769 9.95605 6.65626 9.95605 6.99991C9.95605 7.34355 10.2346 7.62213 10.5783 7.62213Z" fill="#B4F5A3"/>
@@ -198,10 +206,16 @@ export const EditIcon = () => (
     </svg>
   );
 
-
 export const IconCircledCheck = () => (
     <svg className='icon circled-check-icon fill-green'  viewBox="0 0 14 14">
       <circle cx="7" cy="7" r="6.5" fill="white" stroke="#4BE725"/>
       <path className='fill-green' d="M6.16873 10.4437C6.00449 10.4437 5.8465 10.3839 5.72243 10.2741L3 7.84354L3.89171 6.84472L6.10893 8.82361L10.2997 4L11.311 4.87921L6.67394 10.2134C6.55701 10.3491 6.3901 10.4303 6.21068 10.4419C6.19729 10.4428 6.18301 10.4437 6.16873 10.4437Z" fill="#3A62CA"/>
     </svg>
   )
+
+  export const NotificationCenterIcon: React.FC<IconProps> = ({ size, strokeColor }) => (
+    <svg className={`icon notification-center-icon icon-size-${size}`} width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fillRule="evenodd" clipRule="evenodd" d="M9 1.125C12.2619 1.125 14.9062 3.76948 14.9062 7.03141C14.9062 8.57957 14.9062 10.0787 14.9062 11.025C14.9062 13.725 16.875 14.625 16.875 14.625L1.125 14.625C1.125 14.625 3.09375 13.725 3.09375 11.025C3.09375 10.0787 3.09375 8.57957 3.09375 7.03142C3.09375 3.76948 5.73807 1.125 9 1.125V1.125Z" stroke={strokeColor ? strokeColor : "#22252A"} strokeLinejoin="round" />
+        <path d="M6.75 14.625C6.75 15.8676 7.75736 16.875 9 16.875C10.2426 16.875 11.25 15.8676 11.25 14.625" stroke={strokeColor ? strokeColor : "#22252A"} />
+    </svg>
+)

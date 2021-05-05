@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Header, Menu } from 'semantic-ui-react'
+import { Header, Menu, Loader } from 'semantic-ui-react'
+import {useConnectionActive} from '../../websocket/queryStream'
 
 type Props = {
     url: string;
@@ -15,6 +16,7 @@ type ISideNavItem = {
 }
 
 const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
+    const active = useConnectionActive();
     return (
         <div>
             <Menu.Menu>
@@ -24,7 +26,10 @@ const RoleSideNav: React.FC<Props> = ({ url, name, items, children }) => {
                     exact
                     className='home-item'
                 >
-                    <Header as='h1' className='dark'>@{name}</Header>
+                  <Header as='h1' className='dark'>
+                      @{name}
+                  </Header>
+                  { !active && <Loader inverted active inline size='small'>Connecting...</Loader>}
                 </Menu.Item>
                 {items.map(i =>
                     <Menu.Item

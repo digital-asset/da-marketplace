@@ -56,7 +56,7 @@
 .ui.secondary.buttons .button,
 .ui.secondary.button:focus {
   background-color: var(--cool-grey-30);
-  border-radius: 2px;
+  border-radius: 4px;
   background-color: white;
   color: var(--textcolor);
 }
@@ -69,7 +69,7 @@
 .ui.secondary.button.disabled,
 .ui.secondary.buttons.disabled .button {
   border: 1px solid var(--grey4);
-  border-radius: 2px;
+  border-radius: 4px;
   color: var(--textcolor);
 }
 

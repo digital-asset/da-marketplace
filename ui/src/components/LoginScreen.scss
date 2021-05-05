@@ -1,8 +1,11 @@
+@import './QuickSetup.scss';
+
 @mixin login-screen {
     .login-screen {
         height: 100%;
         background-color: var(--cool-grey-20);
         animation: fadeIn .5s;
+
         .setup-required {
             color: var(--white);
             font-weight: normal;

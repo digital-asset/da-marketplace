@@ -23,6 +23,25 @@ commands:
             curl -sSL https://get.daml.com/ | sh /dev/stdin << parameters.version >>
             # idea from https://circleci.com/docs/2.0/env-vars/
             >> $BASH_ENV echo 'export PATH="$HOME/.daml/bin:$PATH"'
+  init_submodules:
+    description: "Init Git Submodules"
+    steps:
+      - run:
+          name: Init submodules
+          command: |
+            git submodule update --init --recursive
+  install_pipenv:
+    description: "Install Pipenv"
+    steps:
+      - run:
+          name: Install Pipenv for 3.7
+          command: |
+            sudo add-apt-repository --yes ppa:deadsnakes/ppa
+            sudo apt-get update || sudo apt-get update
+            sudo apt-get install python3.7
+            sudo apt-get install python3-pip
+            pip3 install pipenv
+            pipenv --python /usr/bin/python3.7
 
 jobs:
   daml_test:
@@ -32,15 +51,12 @@ jobs:
     executor: daml-executor
     steps:
       - checkout
+      - init_submodules
       - restore_cache:
           keys:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - run:
-          name: Init submodules
-          command: |
-            git submodule init && git submodule update
       - run:
           name: Daml tests
           command: |
@@ -61,19 +77,22 @@ jobs:
     executor: daml-executor
     steps:
       - checkout
+      - init_submodules
       - restore_cache:
           keys:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
+      - install_pipenv
       - run:
-          name: Init submodules
+          name: Install YQ
           command: |
-            git submodule init && git submodule update
+            pip3 install yq
       - run:
           name: UI build
           command: |
-            make package
+            # TODO fix ts warnings and remove "CI="
+            CI= make package
       - run:
           name: Yarn test
           command: |

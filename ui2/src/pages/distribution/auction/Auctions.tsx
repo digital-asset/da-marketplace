@@ -1,40 +1,38 @@
 import React from 'react';
 import { withRouter, RouteComponentProps } from 'react-router-dom';
-import { useStreamQueries } from '@daml/react';
-import { getName } from '../../../config';
+import { useStreamQueries } from '../../../Main';
+import { usePartyName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';
-import Tile from '../../../components/Tile/Tile';
-import { Button, Header, Icon } from 'semantic-ui-react';
+import { Header, Icon } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
+import { ArrowRightIcon } from '../../../icons/icons';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  const auctions = useStreamQueries(Auction).contracts;
+  const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
+  const { getName } = usePartyName('');
 
   return (
-    <div>
-      <Tile header={<h2>Actions</h2>}>
-        <Button className="ghost" onClick={() => history.push('/app/distribution/new')}>
-          New Auction
-        </Button>
-      </Tile>
-      <Header as="h2">Holdings</Header>
+    <div className="auctions">
+      <Header as="h2">Auctions</Header>
       <StripedTable
-        headings={['Provider', 'Client', 'Asset', 'Floor', 'Status', 'Details']}
-        rows={auctions.map(c => [
-          getName(c.payload.provider),
-          getName(c.payload.customer),
-          c.payload.asset.quantity + ' ' + c.payload.asset.id.label,
-          c.payload.floorPrice + ' ' + c.payload.quotedAssetId.label,
-          getAuctionStatus(c.payload.status),
-          <Icon
-            name="angle right"
-            link
-            onClick={() =>
-              history.push('/app/distribution/auctions/' + c.contractId.replace('#', '_'))
-            }
-          />,
-        ])}
+        headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}
+        loading={auctionsLoading}
+        rowsClickable
+        clickableIcon={<ArrowRightIcon />}
+        rows={auctions.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.asset.quantity + ' ' + c.payload.asset.id.label,
+              c.payload.floorPrice + ' ' + c.payload.quotedAssetId.label,
+              getAuctionStatus(c.payload.status),
+            ],
+            onClick: () =>
+              history.push('/app/distribution/auctions/' + c.contractId.replace('#', '_')),
+          };
+        })}
       />
     </div>
   );

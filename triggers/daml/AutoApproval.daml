@@ -1,0 +1,205 @@
+-- {-# LANGUAGE AllowAmbiguousTypes #-}
+
+module AutoApproval where
+
+import Daml.Trigger
+import DA.Optional (mapOptional)
+import DA.Record (HasField)
+import Marketplace.Custody.Service qualified as CustodyService
+import Marketplace.Clearing.Market.Service qualified as MarketClearingService
+import Marketplace.Custody.Role qualified as CustodyRole
+import Marketplace.Custody.Model qualified as Custody
+import Marketplace.Distribution.Role qualified as DistributionRole
+import Marketplace.Distribution.Auction.Service qualified as AuctionService
+import Marketplace.Distribution.Bidding.Service qualified as BiddingService
+import Marketplace.Issuance.Service qualified as IssuanceService
+import Marketplace.Listing.Service qualified as ListingService
+import Marketplace.Listing.Model qualified as Listing
+import Marketplace.Regulator.Service qualified as RegulatorService
+import Marketplace.Regulator.Role qualified as RegulatorRole
+import Marketplace.Regulator.Model qualified as Regulator
+import Marketplace.Settlement.Service qualified as SettlementService
+import Marketplace.Trading.Role qualified as TradingRole
+import Marketplace.Trading.Service qualified as TradingService
+import Marketplace.Trading.Matching.Service qualified as MatchingService
+
+autoApprovalTrigger : Trigger ()
+autoApprovalTrigger = Trigger
+  { initialize = pure ()
+  , updateState = \_ -> pure ()
+  , rule = handleApprovalRule
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
+    , registeredTemplate @CustodyRole.Request
+    , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @MarketClearingService.Offer
+    , registeredTemplate @MarketClearingService.Request
+    , registeredTemplate @DistributionRole.Offer
+    , registeredTemplate @DistributionRole.Request
+    , registeredTemplate @IssuanceService.Offer
+    , registeredTemplate @ListingService.Offer
+    , registeredTemplate @RegulatorRole.Offer
+    , registeredTemplate @RegulatorRole.Request
+    , registeredTemplate @RegulatorRole.Role
+    , registeredTemplate @RegulatorService.Offer
+    , registeredTemplate @RegulatorService.Request
+    , registeredTemplate @RegulatorService.Service
+    , registeredTemplate @RegulatorService.IdentityVerificationRequest
+    , registeredTemplate @SettlementService.Offer
+    , registeredTemplate @SettlementService.Request
+    , registeredTemplate @TradingRole.Offer
+    , registeredTemplate @TradingRole.Request
+    , registeredTemplate @MatchingService.Offer
+    , registeredTemplate @MatchingService.Request
+    , registeredTemplate @CustodyService.Request
+    , registeredTemplate @IssuanceService.Request
+    , registeredTemplate @CustodyRole.Role
+    , registeredTemplate @AuctionService.Request
+    , registeredTemplate @BiddingService.Request
+    , registeredTemplate @DistributionRole.Role
+    , registeredTemplate @TradingService.Request
+    , registeredTemplate @ListingService.Request
+    , registeredTemplate @ListingService.CreateListingRequest
+    , registeredTemplate @TradingRole.Role
+    , registeredTemplate @IssuanceService.OriginationRequest
+    , registeredTemplate @IssuanceService.CreateIssuanceRequest
+    , registeredTemplate @IssuanceService.Service
+    , registeredTemplate @Custody.OpenAccountRequest
+    , registeredTemplate @Custody.OpenAllocationAccountRequest
+    , registeredTemplate @Custody.CreditAccountRequest
+    , registeredTemplate @CustodyService.Service
+    , registeredTemplate @AuctionService.Service
+    , registeredTemplate @AuctionService.CreateAuctionRequest ]
+  , heartbeat = None
+  }
+
+-- | Approval all requests
+handleApprovalRule : Party -> TriggerA () ()
+handleApprovalRule party = do
+  debug "Running Auto Approval rule..."
+
+      -- | Facilitates querying a template by a specific field which matches a the party which this trigger is running as
+  let queryByParty : forall t m. (Template t, ActionTriggerAny m, Functor m) => (t -> Party) -> m [(ContractId t, t)]
+      queryByParty getField = filter ((== party) . getField . snd) <$> query
+      -- | Generates commands for role contracts with a filter on the provider
+      generateRoleCommands : forall t c r t2. (Template t, Choice t c r, Template t2, HasField "provider" t Party, HasField "provider" t2 Party) => (ContractId t2 -> c) -> [(ContractId t2, t2)] -> [(ContractId t, t)] -> [(AnyContractId, Command)]
+      generateRoleCommands = generateCommandsWithCid (\req role -> role.provider == req.provider)
+      -- | Generates commands for service contracts with a filter on operator, provider and customer
+      generateServiceCommands : forall t c r t2. (Template t, Choice t c r, Template t2, HasField "operator" t Party, HasField "operator" t2 Party, HasField "provider" t Party, HasField "provider" t2 Party, HasField "customer" t Party, HasField "customer" t2 Party) => (ContractId t2 -> c) -> [(ContractId t2, t2)] -> [(ContractId t, t)] -> [(AnyContractId, Command)]
+      generateServiceCommands = generateCommandsWithCid (\req service -> service.operator == req.operator && service.provider == req.provider && service.customer == req.customer)
+
+  -- [Service Offers/Requests] Exercise Accept/Approve choice on the triggered contract
+  custodyRoleOffers           <- generateCommands CustodyRole.Accept           <$> queryByParty @CustodyRole.Offer           (.provider)
+  custodyRoleRequests         <- generateCommands CustodyRole.Approve          <$> queryByParty @CustodyRole.Request         (.operator)
+  custodyServicesOffers       <- generateCommands CustodyService.Accept        <$> queryByParty @CustodyService.Offer        (.customer)
+  marketClearingServiceOffers <- generateCommands MarketClearingService.Accept <$> queryByParty @MarketClearingService.Offer (.customer)
+  distributionRoleOffers      <- generateCommands DistributionRole.Accept      <$> queryByParty @DistributionRole.Offer      (.provider)
+  distributionRoleRequests    <- generateCommands DistributionRole.Approve     <$> queryByParty @DistributionRole.Request    (.operator)
+  issuanceServiceOffers       <- generateCommands IssuanceService.Accept       <$> queryByParty @IssuanceService.Offer       (.customer)
+  listingServiceOffers        <- generateCommands ListingService.Accept        <$> queryByParty @ListingService.Offer        (.customer)
+  regulatorServiceOffers      <- generateCommands RegulatorService.Accept      <$> queryByParty @RegulatorService.Offer      (.customer)
+  settlementServiceOffers     <- generateCommands SettlementService.Accept     <$> queryByParty @SettlementService.Offer     (.provider)
+  settlementServiceRequests   <- generateCommands SettlementService.Approve    <$> queryByParty @SettlementService.Request   (.operator)
+  tradingRoleOffers           <- generateCommands TradingRole.Accept           <$> queryByParty @TradingRole.Offer           (.provider)
+  tradingRoleRequests         <- generateCommands TradingRole.Approve          <$> queryByParty @TradingRole.Request         (.operator)
+  matchingserviceOffers       <- generateCommands MatchingService.Accept       <$> queryByParty @MatchingService.Offer       (.provider)
+  matchingserviceRequests     <- generateCommands MatchingService.Approve      <$> queryByParty @MatchingService.Request     (.operator)
+
+  submitCommands $
+    custodyRoleOffers ++
+    custodyRoleRequests ++
+    custodyServicesOffers ++
+    distributionRoleOffers ++
+    distributionRoleRequests ++
+    issuanceServiceOffers ++
+    listingServiceOffers ++
+    regulatorServiceOffers ++
+    settlementServiceOffers ++
+    settlementServiceRequests ++
+    tradingRoleOffers ++
+    tradingRoleRequests ++
+    matchingserviceOffers ++
+    matchingserviceRequests ++
+    marketClearingServiceOffers
+
+  -- [Service Offers/Requests] Exercise a choice on a contract (ie, a role contract) based off triggered contract id
+  custodyServicesRequests <- queryByParty @CustodyService.Request  (.provider)
+  issuanceServiceRequests <- queryByParty @IssuanceService.Request (.provider)
+  custodyRoles            <- queryByParty @CustodyRole.Role        (.provider)
+  submitCommands $
+    generateRoleCommands CustodyRole.ApproveCustodyRequest custodyServicesRequests custodyRoles ++
+    generateRoleCommands CustodyRole.ApproveIssuanceRequest issuanceServiceRequests custodyRoles
+
+  auctionServiceRequests  <- queryByParty @AuctionService.Request (.provider)
+  biddingServiceRequests  <- queryByParty @BiddingService.Request (.provider)
+  distributionRoles       <- queryByParty @DistributionRole.Role  (.provider)
+  submitCommands $
+    generateRoleCommands DistributionRole.ApproveAuctionServiceRequest auctionServiceRequests distributionRoles ++
+    generateRoleCommands DistributionRole.ApproveBiddingServiceRequest biddingServiceRequests distributionRoles
+
+  tradingServiceRequests  <- queryByParty @TradingService.Request (.provider)
+  listingServiceRequests  <- queryByParty @ListingService.Request (.provider)
+  tradingRoles            <- queryByParty @TradingRole.Role       (.provider)
+  submitCommands $
+    generateRoleCommands TradingRole.ApproveTradingServiceRequest tradingServiceRequests tradingRoles ++
+    generateRoleCommands TradingRole.ApproveListingServiceRequest listingServiceRequests tradingRoles
+
+  -- [Service functions] Exercise a choice on a contract (ie, a service contract) based off triggered contract id
+  originationRequests     <- queryByParty @IssuanceService.OriginationRequest    (.provider)
+  issuanceRequests        <- queryByParty @IssuanceService.CreateIssuanceRequest (.provider)
+  issuanceServices        <- queryByParty @IssuanceService.Service               (.provider)
+  submitCommands $
+    generateServiceCommands IssuanceService.Originate      originationRequests issuanceServices ++
+    generateServiceCommands IssuanceService.CreateIssuance issuanceRequests issuanceServices
+
+  idVerificationRequests     <- queryByParty @RegulatorService.IdentityVerificationRequest (.provider)
+  regulatorServicesRequests  <- queryByParty @RegulatorService.Request                     (.provider)
+  regulatorServices          <- queryByParty @RegulatorService.Service                     (.provider)
+  regulatorRoles             <- queryByParty @RegulatorRole.Role                           (.provider)
+  submitCommands $
+    generateRoleCommands RegulatorRole.ApproveRegulatorRequest regulatorServicesRequests regulatorRoles ++
+    generateServiceCommands RegulatorService.VerifyIdentity idVerificationRequests regulatorServices
+
+  creditRequests          <- queryByParty @Custody.CreditAccountRequest         (.provider)
+  openRequests            <- queryByParty @Custody.OpenAccountRequest           (.provider)
+  openAllocationRequests  <- queryByParty @Custody.OpenAllocationAccountRequest (.provider)
+  custodyServices         <- queryByParty @CustodyService.Service               (.provider)
+  submitCommands $
+    generateServiceCommands CustodyService.CreditAccount         creditRequests         custodyServices ++
+    generateServiceCommands CustodyService.OpenAccount           openRequests           custodyServices ++
+    generateServiceCommands CustodyService.OpenAllocationAccount openAllocationRequests custodyServices
+
+  auctionRequests         <- queryByParty @AuctionService.CreateAuctionRequest (.provider)
+  auctionServices         <- queryByParty @AuctionService.Service       (.provider)
+  submitCommands $
+    generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
+
+
+-- | Generates exersise commands for a specific choice on multiple contracts which expose that choice
+generateCommands : forall t c r. Choice t c r => c -> [(ContractId t, t)] -> [(AnyContractId, Command)]
+generateCommands choiceArg queryResults = map (\(cid, _) -> (toAnyContractId cid, exerciseCmd cid choiceArg)) queryResults
+
+-- | Generates commands where a contract id is required as part of a choice parameter on another related contract (ie., such as a service contract)
+generateCommandsWithCid : forall t c r t2. (Choice t c r, Template t2) => (t2 -> t -> Bool) -> (ContractId t2 -> c) -> [(ContractId t2, t2)] -> [(ContractId t, t)] -> [(AnyContractId, Command)]
+generateCommandsWithCid _ _ [] _ = []
+generateCommandsWithCid _ _ _ [] = []
+generateCommandsWithCid pred toChoice requests targets = mapOptional (\(reqCid, req) -> getCommandWithCid toChoice reqCid <$> findFirstMatch req targets pred) requests
+
+-- | Takes a choice, a contract id which is a parameter of that choice and a seperate contract which exposes this choice and builds up a command
+getCommandWithCid : forall t c r t2. Choice t c r => (ContractId t2 -> c) -> ContractId t2 -> (ContractId t, t) -> (AnyContractId, Command)
+getCommandWithCid toChoice requestCid (cid, _) = (toAnyContractId cid, exerciseCmd cid $ toChoice requestCid)
+
+-- | Matches a contract in a list to another contract and returns the first contract in the list that matches
+findFirstMatch : t2 -> [(ContractId t, t)] -> (t2 -> t -> Bool) -> Optional (ContractId t, t)
+findFirstMatch _ [] _ = None
+findFirstMatch request (target@(_, x) :: xs) pred = if pred request x then Some target else findFirstMatch request xs pred
+
+-- | Submits commands to the ledger, if any
+submitCommands : [(AnyContractId, Command)] -> TriggerA () ()
+submitCommands [] = pure ()
+submitCommands commandByContractId = do
+  let (cids, commands) = unzip commandByContractId
+  debug "Executing command on triggered template contract ids:"
+  debug $ map show cids
+
+  emitCommands commands cids
+  pure ()

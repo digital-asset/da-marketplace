@@ -1,9 +1,24 @@
 import React, { useEffect, useState } from 'react';
+import _ from 'lodash';
+
+import { CreateEvent } from '@daml/ledger';
+import { Template } from '@daml/types';
 
 import {
   Service as CustodyService,
+  Offer as CustodyOffer,
   Request as CustodyRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import {
+  Service as ClearingService,
+  Offer as ClearingOffer,
+  Request as ClearingRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
+import {
+  Service as MarketClearingService,
+  Offer as MarketClearingOffer,
+  Request as MarketClearingRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import {
   Service as AuctionService,
   Request as AuctionRequest,
@@ -22,34 +37,62 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import {
   Service as TradingService,
+  Offer as TradingOffer,
   Request as TradingRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import { useStreamQueries } from '@daml/react';
-import { CreateEvent } from '@daml/ledger';
-import { Template } from '@daml/types';
-import _ from 'lodash';
+import {
+  Service as RegulatorService,
+  Request as RegulatorRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+
+import { useStreamQueries } from '../Main';
 
 export enum ServiceKind {
   CUSTODY = 'Custody',
+  MARKET_CLEARING = 'Market Clearing',
   AUCTION = 'Auction',
   BIDDING = 'Bidding',
   ISSUANCE = 'Issuance',
   LISTING = 'Listing',
   TRADING = 'Trading',
+  CLEARING = 'Clearing',
+  MATCHING = 'Matching',
+  SETTLEMENT = 'Settlement',
+  DISTRIBUTOR = 'Distributor',
+  REGULATOR = 'Regulator',
 }
+
+export type ServiceRoleOfferChoice =
+  | typeof ClearingRole.OfferClearingService
+  | typeof ClearingRole.OfferMarketService
+  | typeof TradingRole.OfferTradingService
+  | typeof TradingRole.OfferListingService
+  | typeof CustodyRole.OfferIssuanceService
+  | typeof CustodyRole.OfferCustodyService;
 
 export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string>;
 
 export type ServiceRequestTemplates =
   | CustodyRequest
+  | ClearingRequest
+  | MarketClearingRequest
   | AuctionRequest
   | BiddingRequest
   | IssuanceRequest
   | ListingRequest
   | TradingRequest;
 
+export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
+export type ServiceOfferTemplates = TradingOffer;
+
 type ServiceContract =
   | CreateEvent<CustodyService>
+  | CreateEvent<ClearingService>
+  | CreateEvent<MarketClearingService>
   | CreateEvent<AuctionService>
   | CreateEvent<BiddingService>
   | CreateEvent<IssuanceService>
@@ -72,6 +115,12 @@ const ServicesProvider: React.FC = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
+  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
+    ClearingService
+  );
+  const { contracts: marketClearingService, loading: marketClearingLoading } = useStreamQueries(
+    MarketClearingService
+  );
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
@@ -80,44 +129,59 @@ const ServicesProvider: React.FC = ({ children }) => {
   );
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
+  const { contracts: regulatorService, loading: regulatorLoading } = useStreamQueries(
+    RegulatorService
+  );
 
   useEffect(
     () =>
       setLoading(
         custodyLoading ||
+          clearingLoading ||
+          marketClearingLoading ||
           auctionLoading ||
           biddingLoading ||
           issuanceLoading ||
           listingLoading ||
-          tradingLoading
+          tradingLoading ||
+          regulatorLoading
       ),
     [
       custodyLoading,
+      clearingLoading,
+      marketClearingLoading,
       auctionLoading,
       biddingLoading,
       issuanceLoading,
       listingLoading,
       tradingLoading,
+      regulatorLoading,
     ]
   );
 
   useEffect(
     () =>
       setServices([
+        ...clearingService.map(c => ({ contract: c, service: ServiceKind.CLEARING })),
+        ...marketClearingService.map(c => ({ contract: c, service: ServiceKind.MARKET_CLEARING })),
         ...custodyService.map(c => ({ contract: c, service: ServiceKind.CUSTODY })),
         ...auctionService.map(c => ({ contract: c, service: ServiceKind.AUCTION })),
         ...biddingService.map(c => ({ contract: c, service: ServiceKind.BIDDING })),
         ...issuanceService.map(c => ({ contract: c, service: ServiceKind.ISSUANCE })),
         ...listingService.map(c => ({ contract: c, service: ServiceKind.LISTING })),
         ...tradingService.map(c => ({ contract: c, service: ServiceKind.TRADING })),
+        ...regulatorService.map(c => ({ contract: c, service: ServiceKind.REGULATOR })),
       ]),
     [
+      clearingService,
+      marketClearingService,
       custodyService,
       auctionService,
       biddingService,
       issuanceService,
       listingService,
       tradingService,
+      regulatorService,
     ]
   );
 

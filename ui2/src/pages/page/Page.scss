@@ -67,6 +67,7 @@
 
             &:hover {
               background-color: var(--cool-grey-20);
+              border-radius: 0;
             }
 
             &.home-item {
@@ -78,6 +79,13 @@
 
               h1 {
                 margin: 0;
+              }
+
+              .cog-icon {
+                height: 20px;
+                width: 20px;
+                min-height: 20px; /* prevent icon shrinking if out of space */
+                min-width: 20px;
               }
             }
 
