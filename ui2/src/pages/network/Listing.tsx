@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import React, { useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Grid,
   IconButton,
@@ -11,17 +11,17 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {Button} from 'semantic-ui-react';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {Offer, Request, Service} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Button } from 'semantic-ui-react';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import useStyles from '../styles';
-import {getTemplateId, usePartyName} from '../../config';
-import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import {Role} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { getTemplateId, usePartyName } from '../../config';
+import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

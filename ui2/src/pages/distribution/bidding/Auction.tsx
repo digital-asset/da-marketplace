@@ -1,26 +1,29 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import {useHistory, useParams} from 'react-router-dom';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../../Main';
-import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import {CreateEvent} from '@daml/ledger';
-import {ContractId} from '@daml/types';
-import {Service, SubmitBid,} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import {transformClaim} from '../../../components/Claims/util';
-import {render} from '../../../components/Claims/render';
-import {getBidAllocation, getBidStatus} from '../Utils';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import {Button, Form, Header, Icon, Table} from 'semantic-ui-react';
-import {ServicePageProps} from '../../common';
+import { useHistory, useParams } from 'react-router-dom';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { CreateEvent } from '@daml/ledger';
+import { ContractId } from '@daml/types';
+import {
+  Service,
+  SubmitBid,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import { transformClaim } from '../../../components/Claims/util';
+import { render } from '../../../components/Claims/render';
+import { getBidAllocation, getBidStatus } from '../Utils';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { Button, Form, Header, Icon, Table } from 'semantic-ui-react';
+import { ServicePageProps } from '../../common';
 import StripedTable from '../../../components/Table/StripedTable';
-import {usePartyName} from '../../../config';
+import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
-import {ArrowLeftIcon} from '../../../icons/icons';
+import { ArrowLeftIcon } from '../../../icons/icons';
 
 export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,

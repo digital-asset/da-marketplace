@@ -1,13 +1,13 @@
 import React from 'react';
-import {Route, Switch, withRouter} from 'react-router-dom';
-import {PlayArrow} from '@material-ui/icons';
-import {SidebarEntry} from '../components/Sidebar/SidebarEntry';
-import {Requests} from '../pages/origination/Requests';
-import {Instruments} from '../pages/origination/Instruments';
-import {Instrument} from '../pages/origination/Instrument';
-import {New} from '../pages/origination/New';
-import {NewBinaryOption} from '../pages/origination/NewBinaryOption';
-import {NewConvertibleNote} from '../pages/origination/NewConvertibleNote';
+import { Route, Switch, withRouter } from 'react-router-dom';
+import { PlayArrow } from '@material-ui/icons';
+import { SidebarEntry } from '../components/Sidebar/SidebarEntry';
+import { Requests } from '../pages/origination/Requests';
+import { Instruments } from '../pages/origination/Instruments';
+import { Instrument } from '../pages/origination/Instrument';
+import { New } from '../pages/origination/New';
+import { NewBinaryOption } from '../pages/origination/NewBinaryOption';
+import { NewConvertibleNote } from '../pages/origination/NewConvertibleNote';
 import Page from '../pages/page/Page';
 
 const RegistryApp = () => {

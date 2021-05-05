@@ -1,18 +1,18 @@
-import React, {useEffect, useState} from 'react';
-import {Button, Form, Header} from 'semantic-ui-react';
-import {CircularProgress} from '@material-ui/core';
+import React, { useEffect, useState } from 'react';
+import { Button, Form, Header } from 'semantic-ui-react';
+import { CircularProgress } from '@material-ui/core';
 import classNames from 'classnames';
 
-import {useLedger, useParty} from '@daml/react';
-import {useHistory} from 'react-router';
+import { useLedger, useParty } from '@daml/react';
+import { useHistory } from 'react-router';
 
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import {IconCircledCheck, LockIcon, PublicIcon} from '../../icons/icons';
-import {useStreamQueries} from '../../Main';
-import {publicParty} from '../../config';
+import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
+import { useStreamQueries } from '../../Main';
+import { publicParty } from '../../config';
 
 const Request = () => {
   const history = useHistory();

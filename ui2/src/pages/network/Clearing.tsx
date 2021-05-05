@@ -1,22 +1,22 @@
-import React, {useState} from 'react';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {getTemplateId, usePartyName} from '../../config';
-import {Offer as RoleOffer, Role} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import {Offer, Request, Service} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import React, { useState } from 'react';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { getTemplateId, usePartyName } from '../../config';
+import { Offer as RoleOffer, Role } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Offer as MarketOffer,
   Request as MarketRequest,
   Service as MarketService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import {Button, DropdownItemProps, Form, Header} from 'semantic-ui-react';
-import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import {AllocationAccountRule} from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
+import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import {createDropdownProp} from '../common';
-import {FairValueRequest} from '../listing/Listing';
+import { createDropdownProp } from '../common';
+import { FairValueRequest } from '../listing/Listing';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';

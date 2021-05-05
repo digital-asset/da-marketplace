@@ -1,19 +1,23 @@
 import React from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
-import {useLedger, useParty, useStreamQueries} from '@daml/react';
-import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import {usePartyName} from '../../config';
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
-import {ClearedTrade, ClearedTradeSide, MemberStanding,} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import {ServicePageProps} from '../common';
-import {Button, Header} from 'semantic-ui-react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { usePartyName } from '../../config';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import {
+  ClearedTrade,
+  ClearedTradeSide,
+  MemberStanding,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
+import { ServicePageProps } from '../common';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
-import {CreateEvent} from '@daml/ledger';
-import {ArrowRightIcon} from '../../icons/icons';
+import { CreateEvent } from '@daml/ledger';
+import { ArrowRightIcon } from '../../icons/icons';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import {Button, Form, Modal} from 'semantic-ui-react';
+import React, { useEffect, useState } from 'react';
+import { Button, Form, Modal } from 'semantic-ui-react';
 
 export interface RegularField {
   label: string;

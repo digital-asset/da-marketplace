@@ -1,5 +1,5 @@
 import React from 'react';
-import {NavLink, RouteComponentProps, withRouter} from 'react-router-dom';
+import { NavLink, RouteComponentProps, withRouter } from 'react-router-dom';
 import binaryOptionImage from '../../images/binary-option.png';
 import convertibleNoteImage from '../../images/convertible-note.png';
 import Tile from '../../components/Tile/Tile';

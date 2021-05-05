@@ -1,6 +1,6 @@
 import React from 'react';
-import {useHistory} from 'react-router-dom';
-import {Button} from 'semantic-ui-react';
+import { useHistory } from 'react-router-dom';
+import { Button } from 'semantic-ui-react';
 
 import {
   Offer as CustodyRoleOffer,
@@ -68,9 +68,9 @@ import {
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
-import {ServiceKind} from '../../context/ServicesContext';
-import {ArrowLeftIcon} from '../../icons/icons';
-import {useStreamQueries} from '../../Main';
+import { ServiceKind } from '../../context/ServicesContext';
+import { ArrowLeftIcon } from '../../icons/icons';
+import { useStreamQueries } from '../../Main';
 
 import {
   NotificationSet,
@@ -79,7 +79,7 @@ import {
   RequestApproveChoice,
   RequestRejectChoice,
 } from './NotificationTypes';
-import {OfferNotification, RequestNotification} from './NotificationComponents';
+import { OfferNotification, RequestNotification } from './NotificationComponents';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);

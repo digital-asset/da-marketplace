@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {Button, Divider, DropdownItemProps, Form, Modal} from 'semantic-ui-react';
-import {publicParty} from '../../config';
+import React, { useEffect, useState } from 'react';
+import { Button, Divider, DropdownItemProps, Form, Modal } from 'semantic-ui-react';
+import { publicParty } from '../../config';
 import {
   deployAutomation,
   getAutomationInstances,
@@ -8,11 +8,11 @@ import {
   PublishedInstance,
   undeployAutomation,
 } from '../../automation';
-import {handleSelectMultiple} from '../common';
+import { handleSelectMultiple } from '../common';
 import StripedTable from '../../components/Table/StripedTable';
 import Tile from '../../components/Tile/Tile';
-import {useUserState} from '../../context/UserContext';
-import {useAutomations} from '../../context/AutomationContext';
+import { useUserState } from '../../context/UserContext';
+import { useAutomations } from '../../context/AutomationContext';
 
 export const makeAutomationOptions = (automations?: PublicAutomation[]): DropdownItemProps[] => {
   return (

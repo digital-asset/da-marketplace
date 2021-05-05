@@ -1,6 +1,6 @@
 import React from 'react';
-import {Form} from 'semantic-ui-react';
-import {KeyboardDatePicker, MuiPickersUtilsProvider} from '@material-ui/pickers';
+import { Form } from 'semantic-ui-react';
+import { KeyboardDatePicker, MuiPickersUtilsProvider } from '@material-ui/pickers';
 import DateFnsUtils from '@date-io/date-fns';
 
 type Props = {

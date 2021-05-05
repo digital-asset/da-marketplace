@@ -1,5 +1,8 @@
-import {Status as AuctionStatus} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
-import {Bid, Status as BidStatus,} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module';
+import { Status as AuctionStatus } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
+import {
+  Bid,
+  Status as BidStatus,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model/module';
 
 export const getAuctionStatus = (auctionStatus: AuctionStatus): string => {
   switch (auctionStatus.tag) {

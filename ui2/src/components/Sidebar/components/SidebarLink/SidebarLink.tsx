@@ -1,14 +1,14 @@
-import React, {useState} from 'react';
-import {Link} from 'react-router-dom';
-import {History, Location} from 'history';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { History, Location } from 'history';
 import classnames from 'classnames';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import useStyles from './styles';
-import {useLayoutState} from '../../../../context/LayoutContext';
-import {SidebarEntry} from '../../SidebarEntry';
-import {Collapse, List} from '@material-ui/core';
+import { useLayoutState } from '../../../../context/LayoutContext';
+import { SidebarEntry } from '../../SidebarEntry';
+import { Collapse, List } from '@material-ui/core';
 
 type SidebarLinkProps = {
   label: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
   Grid,
@@ -12,10 +12,10 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import {
   CloseAccountRequest,
   DebitAccountRequest,
@@ -23,10 +23,10 @@ import {
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import useStyles from '../styles';
-import {usePartyName} from '../../config';
-import {CreditAccountRequest} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
-import {AssetDeposit} from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { usePartyName } from '../../config';
+import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

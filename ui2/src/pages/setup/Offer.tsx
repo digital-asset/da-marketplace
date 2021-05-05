@@ -1,22 +1,22 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import {useParty, useStreamQueries} from '@daml/react';
+import { useParty, useStreamQueries } from '@daml/react';
 
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import {Offer as MarketClearingOffer} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
-import {Offer as CustodyOffer} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import {Offer as TradingOffer} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import {Offer as IssuanceOffer} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import {Offer as ListingOffer} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Offer as IssuanceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { Offer as ListingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 
-import {Role as TradingRole} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import {Role as CustodyRole} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {Role as ClearingRole} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
-import {ServiceOfferDialog} from '../../components/InputDialog/ServiceDialog';
-import {ServiceKind, ServiceOffer, ServiceRoleOfferChoice} from '../../context/ServicesContext';
-import {useHistory} from 'react-router';
-import {useWellKnownParties} from '@daml/hub-react/lib';
+import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
+import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
+import { useHistory } from 'react-router';
+import { useWellKnownParties } from '@daml/hub-react/lib';
 import SetUp from './SetUp';
 
 interface RequestInterface {

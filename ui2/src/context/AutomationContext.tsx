@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
-import {getPublicAutomation, PublicAutomation} from '../automation';
-import {isHubDeployment} from '../config';
+import React, { useEffect, useState } from 'react';
+import { getPublicAutomation, PublicAutomation } from '../automation';
+import { isHubDeployment } from '../config';
 
 type AutomationState = {
   automations?: PublicAutomation[];

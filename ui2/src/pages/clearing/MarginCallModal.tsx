@@ -1,11 +1,14 @@
-import React, {useEffect, useState} from 'react';
-import {v4 as uuidv4} from 'uuid';
-import {useLedger, useParty} from '@daml/react';
-import {Party} from '@daml/types';
-import {ServicePageProps} from '../common';
-import {Form} from 'semantic-ui-react';
-import {DropdownItemProps} from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
-import {CreateMarginCalculation, Service,} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import React, { useEffect, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useLedger, useParty } from '@daml/react';
+import { Party } from '@daml/types';
+import { ServicePageProps } from '../common';
+import { Form } from 'semantic-ui-react';
+import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
+import {
+  CreateMarginCalculation,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 
 type MarginCallProps = {

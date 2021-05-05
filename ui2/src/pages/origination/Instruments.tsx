@@ -1,12 +1,12 @@
 import React from 'react';
-import {RouteComponentProps, useHistory, withRouter} from 'react-router-dom';
-import {useStreamQueries} from '../../Main';
-import {usePartyName} from '../../config';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom';
+import { useStreamQueries } from '../../Main';
+import { usePartyName } from '../../config';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
-import {Button} from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import {ArrowRightIcon} from '../../icons/icons';
+import { ArrowRightIcon } from '../../icons/icons';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();

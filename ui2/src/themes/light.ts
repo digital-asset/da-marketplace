@@ -1,5 +1,5 @@
 import tinycolor from 'tinycolor2';
-import {PaletteType} from '@material-ui/core';
+import { PaletteType } from '@material-ui/core';
 
 const primary = '#203260'; //"#01a6c0"; //"#E5E6E7"
 const secondary = '#f2f2f2'; //"#203260"; //"#01a6c0"; //"#639";

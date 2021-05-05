@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import React, { useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Grid,
   IconButton,
@@ -11,20 +11,23 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {Button, Header} from 'semantic-ui-react';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
+import { Button, Header } from 'semantic-ui-react';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import {getTemplateId, usePartyName} from '../../config';
-import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import {Role} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {Offer, Request, Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { getTemplateId, usePartyName } from '../../config';
+import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Offer, Request, Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import {Requests as AccountRequests} from '../custody/Requests';
-import {OpenAccountRequest, OpenAllocationAccountRequest,} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+import { Requests as AccountRequests } from '../custody/Requests';
+import {
+  OpenAccountRequest,
+  OpenAllocationAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

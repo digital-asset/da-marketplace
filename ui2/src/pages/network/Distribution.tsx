@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import React, { useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
   Grid,
@@ -12,18 +12,18 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {Offer, Request} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import {Service as AuctionService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import {Service as BiddingService} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { Offer, Request } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import useStyles from '../styles';
-import {getTemplateId, usePartyName} from '../../config';
-import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
-import {Role} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { getTemplateId, usePartyName } from '../../config';
+import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import StripedTable from '../../components/Table/StripedTable';
 
 export const DistributionServiceTable = () => {

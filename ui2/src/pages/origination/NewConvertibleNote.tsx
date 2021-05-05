@@ -1,21 +1,21 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {MenuProps} from '@material-ui/core';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import { MenuProps } from '@material-ui/core';
 import useStyles from '../styles';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import {render} from '../../components/Claims/render';
-import {transformClaim} from '../../components/Claims/util';
-import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import {Observation} from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
-import {Claim} from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import {Date as DamlDate} from '@daml/types';
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { render } from '../../components/Claims/render';
+import { transformClaim } from '../../components/Claims/util';
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
+import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
+import { Date as DamlDate } from '@daml/types';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import Tile from '../../components/Tile/Tile';
-import {Button, Form} from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
 
 const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {

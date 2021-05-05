@@ -1,10 +1,10 @@
-import React, {useState} from 'react';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {ManualFairValueCalculation} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import {usePartyName} from '../../config';
+import React, { useState } from 'react';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { ManualFairValueCalculation } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
+import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
-import {Button, Form} from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 
 type Props = {

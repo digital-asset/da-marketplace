@@ -1,5 +1,5 @@
 import React from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
   Grid,
@@ -12,14 +12,17 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../../Main';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../../Main';
 import useStyles from '../../styles';
-import {CreateAuctionRequest, Service,} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import {usePartyName} from '../../../config';
-import {ServicePageProps} from '../../common';
+import {
+  CreateAuctionRequest,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { usePartyName } from '../../../config';
+import { ServicePageProps } from '../../common';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,

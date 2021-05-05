@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import React, { useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
   Grid,
@@ -12,17 +12,17 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import useStyles from '../styles';
-import {usePartyName} from '../../config';
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import {Id} from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { usePartyName } from '../../config';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

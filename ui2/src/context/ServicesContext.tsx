@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
 
-import {CreateEvent} from '@daml/ledger';
-import {Template} from '@daml/types';
+import { CreateEvent } from '@daml/ledger';
+import { Template } from '@daml/types';
 
 import {
   Request as CustodyRequest,
@@ -37,13 +37,13 @@ import {
   Request as TradingRequest,
   Service as TradingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import {Service as RegulatorService} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
-import {Role as TradingRole} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import {Role as CustodyRole} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import {Role as ClearingRole} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
-import {useStreamQueries} from '../Main';
+import { useStreamQueries } from '../Main';
 
 export enum ServiceKind {
   CUSTODY = 'Custody',

@@ -1,11 +1,11 @@
 import React from 'react';
-import {useStreamQueries} from '../../Main';
-import {IconButton, Table, TableBody, TableCell, TableHead, TableRow} from '@material-ui/core';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import { useStreamQueries } from '../../Main';
+import { IconButton, Table, TableBody, TableCell, TableHead, TableRow } from '@material-ui/core';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import useStyles from '../styles';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {usePartyName} from '../../config';
-import {Service as CustodyService} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { usePartyName } from '../../config';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 
 const OverviewComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const classes = useStyles();

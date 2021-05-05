@@ -1,8 +1,8 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
-import {ArchiveEvent, CreateEvent} from '@daml/ledger';
+import { ArchiveEvent, CreateEvent } from '@daml/ledger';
 
-import {deploymentMode, DeploymentMode, httpBaseUrl, ledgerId} from '../config';
+import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config';
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official

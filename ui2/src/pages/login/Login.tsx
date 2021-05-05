@@ -1,23 +1,23 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import React, {useEffect, useState} from 'react';
-import {useHistory, useLocation} from 'react-router-dom';
-import {Button, Form, Icon} from 'semantic-ui-react';
+import React, { useEffect, useState } from 'react';
+import { useHistory, useLocation } from 'react-router-dom';
+import { Button, Form, Icon } from 'semantic-ui-react';
 
-import {DablPartiesInput, PartyDetails} from '@daml/hub-react';
+import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
 // import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
-import Credentials, {computeCredentials} from '../../Credentials';
-import {retrieveParties, storeParties} from '../../Parties';
-import {dablHostname, deploymentMode, DeploymentMode, ledgerId} from '../../config';
+import Credentials, { computeCredentials } from '../../Credentials';
+import { retrieveParties, storeParties } from '../../Parties';
+import { dablHostname, deploymentMode, DeploymentMode, ledgerId } from '../../config';
 
-import Tile, {logoHeader} from '../../components/Tile/Tile';
+import Tile, { logoHeader } from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
 
-import {AppError} from '../error/errorTypes';
+import { AppError } from '../error/errorTypes';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import {loginUser, useUserDispatch} from '../../context/UserContext';
+import { loginUser, useUserDispatch } from '../../context/UserContext';
 
 // import SetupRequired from './SetupRequired'
 

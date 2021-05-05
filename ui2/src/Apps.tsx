@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import networkImage from './images/network.jpg';
 import custodyImage from './images/custody.jpg';

@@ -1,5 +1,10 @@
-import {Order, OrderType, Side, Status,} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
-import {CreateEvent} from '@daml/ledger';
+import {
+  Order,
+  OrderType,
+  Side,
+  Status,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { CreateEvent } from '@daml/ledger';
 
 export type TimeInForces = 'GTC' | 'GTD' | 'GAA' | 'IOC' | 'FOK';
 

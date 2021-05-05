@@ -1,23 +1,23 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, useHistory, useParams, withRouter} from 'react-router-dom';
-import {useLedger, useParty, useStreamQueries} from '@daml/react';
-import {usePartyName} from '../../config';
-import {Listing as ListingTemplate} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
-import {Service as ClearedMarketService} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
-import {Service} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import {createDropdownProp, ServicePageProps} from '../common';
+import React, { useState } from 'react';
+import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { usePartyName } from '../../config';
+import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { Service as ClearedMarketService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
+import { createDropdownProp, ServicePageProps } from '../common';
 import {
   FairValue,
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
-import {Button, Form, Header} from 'semantic-ui-react';
+import { Button, Form, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import {FairValueCalculationRequests} from './ManualCalculationRequests';
-import {AssetDescription} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { FairValueCalculationRequests } from './ManualCalculationRequests';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import {CreateEvent} from '@daml/ledger';
-import {ArrowLeftIcon} from '../../icons/icons';
+import { CreateEvent } from '@daml/ledger';
+import { ArrowLeftIcon } from '../../icons/icons';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;

@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {RouteComponentProps, withRouter} from 'react-router-dom';
+import React, { useState } from 'react';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Grid,
   IconButton,
@@ -11,18 +11,22 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import {Button} from 'semantic-ui-react';
-import {KeyboardArrowRight} from '@material-ui/icons';
-import {CreateEvent} from '@daml/ledger';
-import {useLedger, useParty} from '@daml/react';
-import {useStreamQueries} from '../../Main';
-import {Offer, Request, Service,} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Button } from 'semantic-ui-react';
+import { KeyboardArrowRight } from '@material-ui/icons';
+import { CreateEvent } from '@daml/ledger';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
+import {
+  Offer,
+  Request,
+  Service,
+} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import useStyles from '../styles';
-import {getTemplateId, usePartyName} from '../../config';
-import {InputDialog, InputDialogProps} from '../../components/InputDialog/InputDialog';
-import {AssetSettlementRule} from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import {VerifiedIdentity} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-import {Role} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { getTemplateId, usePartyName } from '../../config';
+import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import StripedTable from '../../components/Table/StripedTable';
 
 type Props = {

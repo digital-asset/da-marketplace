@@ -1,4 +1,4 @@
-import {useEffect, useRef} from 'react';
+import { useEffect, useRef } from 'react';
 
 export interface IDismissable<T extends HTMLElement, C extends HTMLElement> {
   refDismissable: React.RefObject<T>;
