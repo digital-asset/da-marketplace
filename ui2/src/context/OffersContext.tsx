@@ -10,9 +10,7 @@ import { Offer as SettlementOffer } from '@daml.js/da-marketplace/lib/Marketplac
 import { Offer as ExchangeOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Offer as MatchingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import { Offer as RegulatorServiceOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import { useStreamQueries } from '../Main';
 
@@ -28,7 +26,7 @@ enum ServiceKind {
 
 type OfferContract =
   | CreateEvent<ClearingOffer>
-  | CreateEvent<RegulatorServiceOffer>
+  | CreateEvent<RegulatorOffer>
   | CreateEvent<CustodianOffer>
   | CreateEvent<DistributorOffer>
   | CreateEvent<SettlementOffer>
@@ -60,7 +58,7 @@ const OffersProvider: React.FC = ({ children }) => {
   const {
     contracts: regulatorServiceOffers,
     loading: regulatorServiceOffersLoading,
-  } = useStreamQueries(RegulatorServiceOffer);
+  } = useStreamQueries(RegulatorOffer);
   const { contracts: custodianOffers, loading: custodianOffersLoading } = useStreamQueries(
     CustodianOffer
   );
