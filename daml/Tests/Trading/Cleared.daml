@@ -12,6 +12,7 @@ import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as ClearedMarket
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
 
 import DA.Finance.Types
 import DA.Next.Set qualified as Set
@@ -39,7 +40,7 @@ clearedTradingTest = do
     cashAsset = usd with quantity = 20000.0
 
   let
-    listingId = "TSLAUSD"
+    symbol = "TSLAUSD"
     listingType = Listing.ClearedRequest clearinghouse
     calendarId = "1261007448"
     description = "Tesla Inc."
@@ -64,6 +65,7 @@ clearedTradingTest = do
 
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- Create orders
   let aliceOrderId = Id with signatories = Set.fromList [ alice.customer ], label = "1", version = 0
@@ -72,7 +74,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = aliceOrderId
-            symbol = listingId
+            listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
@@ -85,7 +87,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
@@ -141,7 +143,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = bobOrderId2
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC
@@ -158,7 +160,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = charlieOrderId
-            symbol = listingId
+            listingId
             asset = shareAsset
             side = Order.Buy
             timeInForce = Order.GTC

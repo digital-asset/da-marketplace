@@ -32,7 +32,7 @@ data TimeInForce
 
 data Details = Details with
     id : Id
-    symbol : Text
+    listingId : Id
     asset : Asset
     side : Side
     orderType : OrderType

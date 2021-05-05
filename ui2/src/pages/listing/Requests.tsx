@@ -144,7 +144,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                         {party === c.payload.provider ? 'Provider' : 'Client'}
                       </TableCell>
                       <TableCell key={3} className={classes.tableCell}>
-                        {c.payload.listingId}
+                        {c.payload.symbol}
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
                         {c.payload.calendarId}
