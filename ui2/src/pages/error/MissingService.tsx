@@ -25,7 +25,7 @@ import {
 import { Template } from '@daml/types';
 import { NavLink, useHistory } from 'react-router-dom';
 import SetUp from '../setup/SetUp';
-import {useRequestKinds} from '../../context/RequestsContext';
+import { useRequestKinds } from '../../context/RequestsContext';
 
 type MissingServiceProps = {
   service: ServiceKind;
@@ -233,20 +233,17 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
           onClose={onClose}
           title={`Missing ${service} service, please request and try again`}
         />
-        ) : (
-          <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
-              <Modal.Header as="h3">Waiting for {service}</Modal.Header>
-              <Modal.Content>
-                Request created...
-              </Modal.Content>
-              <Modal.Actions>
-                <Button className="ghost" onClick={() => history.goBack()}>
-                  Cancel
-                </Button>
-              </Modal.Actions>
-            </Modal>
-        )
-      }
+      ) : (
+        <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
+          <Modal.Header as="h3">Waiting for {service}</Modal.Header>
+          <Modal.Content>Request created...</Modal.Content>
+          <Modal.Actions>
+            <Button className="ghost" onClick={() => history.goBack()}>
+              Cancel
+            </Button>
+          </Modal.Actions>
+        </Modal>
+      )}
       {children}
     </div>
   );

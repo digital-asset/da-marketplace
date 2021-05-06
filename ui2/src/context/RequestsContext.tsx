@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import _ from 'lodash';
 
@@ -38,7 +37,10 @@ import {
   Request as TradingRequest,
   Service as TradingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import { Service as RegulatorService, Request as RegulatorRequest} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+import {
+  Service as RegulatorService,
+  Request as RegulatorRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -192,8 +194,7 @@ function useRequestKinds(): Set<ServiceKind> {
   if (context === undefined) {
     throw new Error('useProviderServices  must be used within a ServicesProvider');
   }
-  return context.requests
-    .reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
+  return context.requests.reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
 }
 
-export { RequestsProvider, useRequestKinds }
+export { RequestsProvider, useRequestKinds };

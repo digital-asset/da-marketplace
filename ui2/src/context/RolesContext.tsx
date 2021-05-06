@@ -129,10 +129,8 @@ function useRoleKinds(): Set<ServiceKind> {
   if (context === undefined) {
     throw new Error('useProviderServices  must be used within a ServicesProvider');
   }
-  return context.roles
-    .reduce((acc, v) => acc.add(v.role), new Set<ServiceKind>());
+  return context.roles.reduce((acc, v) => acc.add(v.role), new Set<ServiceKind>());
 }
-
 
 function useRolesContext() {
   const context = React.useContext<RolesState>(RolesStateContext);
@@ -142,4 +140,4 @@ function useRolesContext() {
   return context;
 }
 
-export { RolesProvider, useRolesContext, useRoleKinds};
+export { RolesProvider, useRolesContext, useRoleKinds };

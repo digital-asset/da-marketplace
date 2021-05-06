@@ -238,7 +238,9 @@ export const ServiceRequired: React.FC<MissingServiceProps> = ({ service, action
           />
         ) : (
           <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
-            <Modal.Header as="h3">Waiting for {service} service request to be accepted...</Modal.Header>
+            <Modal.Header as="h3">
+              Waiting for {service} service request to be accepted...
+            </Modal.Header>
             <Modal.Content>Request created...</Modal.Content>
             <Modal.Actions>
               <Button className="ghost" onClick={() => setNewRequest(true)}>

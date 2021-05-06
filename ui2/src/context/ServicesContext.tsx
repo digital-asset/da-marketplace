@@ -234,4 +234,4 @@ function useCustomerServices(party: string) {
   return context.services.filter(s => s.contract.payload.provider === party);
 }
 
-export { ServicesProvider, useProviderServices, useCustomerServices, useServiceKindsProvided};
+export { ServicesProvider, useProviderServices, useCustomerServices, useServiceKindsProvided };

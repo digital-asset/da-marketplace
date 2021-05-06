@@ -128,7 +128,7 @@ interface RequestProps<T extends ServiceRequestTemplates> {
   service: ServiceKind;
   onChange: (state: any) => void;
   onClose: (open: boolean) => void;
-  title?: string
+  title?: string;
 }
 
 export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
@@ -139,7 +139,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   service,
   onChange,
   onClose,
-  title
+  title,
 }: RequestProps<T>) => {
   const ledger = useLedger();
 
