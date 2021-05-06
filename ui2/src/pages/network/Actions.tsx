@@ -1,7 +1,7 @@
 import React from 'react';
 import Tile from '../../components/Tile/Tile';
 import { Button } from 'semantic-ui-react';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 type Action = {
   path: string;
@@ -18,11 +18,11 @@ export const ActionTile: React.FC<Params> = ({ actions }) => {
       <div className="action-row">
         <Button.Group>
           {actions.map(a => (
-            <NavLink to={a.path}>
+            <Link to={a.path}>
               <Button floated="left" className="ghost">
                 {a.label}
               </Button>
-            </NavLink>
+            </Link>
           ))}
         </Button.Group>
       </div>

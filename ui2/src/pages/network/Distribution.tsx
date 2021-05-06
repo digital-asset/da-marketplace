@@ -42,7 +42,6 @@ export const DistributionServiceTable = () => {
 
   return (
     <>
-      <ActionTile actions={[{ path: '/app/distribution/new', label: 'New Distribution' }]} />
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
         loading={biddingServicesLoading || auctionServicesLoading}

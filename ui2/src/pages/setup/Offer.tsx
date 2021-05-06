@@ -79,6 +79,8 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
         setChoice(ClearingRole.OfferClearingService);
         break;
       }
+      default:
+        throw new Error('ServiceKind does not have an offer');
     }
   }, [service, legalNames]);
 
