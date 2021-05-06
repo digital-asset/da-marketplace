@@ -28,7 +28,7 @@ import { NavLink, useHistory } from 'react-router-dom';
 import SetUp from '../setup/SetUp';
 import { useRequestKinds } from '../../context/RequestsContext';
 
-type MissingServiceProps = {
+type ServiceRequiredProps = {
   service: ServiceKind;
   action: string;
 };
@@ -43,9 +43,8 @@ interface RequestInterface {
   marginAccount?: Account;
 }
 
-export const ServiceRequired: React.FC<MissingServiceProps> = ({ service, action, children }) => {
+export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, action, children }) => {
   const party = useParty();
-  console.log(service);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = useMemo(() => identities.map(c => c.payload.legalName), [identities]);
@@ -234,7 +233,7 @@ export const ServiceRequired: React.FC<MissingServiceProps> = ({ service, action
             request={request}
             onChange={state => setDialogState(state)}
             onClose={onClose}
-            title={`Missing ${service} service, please request and try again`}
+            title={`${service} service, is required to ${action}, please request and try again`}
           />
         ) : (
           <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
@@ -257,18 +256,4 @@ export const ServiceRequired: React.FC<MissingServiceProps> = ({ service, action
   } else {
     return <>{children}</>;
   }
-};
-
-type MissingRoleProps = {
-  role: RoleServiceKind;
-  action: string;
-};
-
-export const MissingRole: React.FC<MissingRoleProps> = ({ role, action }) => {
-  const party = useParty();
-  return (
-    <>
-      You need the {role} role to {action}
-    </>
-  );
 };

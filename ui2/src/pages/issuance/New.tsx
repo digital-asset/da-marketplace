@@ -14,8 +14,6 @@ import { CreateEvent } from '@daml/ledger';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import { MissingService } from '../error/MissingService';
-import { ServiceKind } from '../../context/ServicesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -59,7 +57,11 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
 
   const service = customerServices[0];
   if (!service)
-    return <MissingService service={ServiceKind.ISSUANCE} action="Create new issuance" />;
+    return (
+      <div>
+        <h2>Party "{party}" can not request new issuances.</h2>
+      </div>
+    );
 
   const requestIssuance = async () => {
     if (!asset || !account) return;

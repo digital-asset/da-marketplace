@@ -14,16 +14,10 @@ import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Cus
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
-import {
-  ServiceKind,
-  ServiceOffer,
-  ServiceRoleOfferChoice,
-  useServiceKindsProvided,
-} from '../../context/ServicesContext';
+import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { useHistory } from 'react-router';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import SetUp from './SetUp';
-import { MissingService } from '../error/MissingService';
 
 interface RequestInterface {
   operator: string;
@@ -104,9 +98,6 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
     setOpenDialog(open);
     history.goBack();
   };
-  const party = useParty();
-  const serviceKinds = useServiceKindsProvided(party);
-  // if (!serviceKinds.has(service)) { return <MissingService service={service} action="Offer"><SetUp /></MissingService> }
 
   return (
     <div className="offer">
