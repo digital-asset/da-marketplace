@@ -176,7 +176,11 @@ const AppComponent = () => {
       },
       {
         path: '/app/distribution/new',
-        render: () => <DistributionNew services={auctionService} />,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Distribution">
+            <DistributionNew services={auctionService} />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/distribution/requests',

@@ -25,6 +25,7 @@ import { InputDialog, InputDialogProps } from '../../components/InputDialog/Inpu
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import StripedTable from '../../components/Table/StripedTable';
+import { ActionTile } from './Actions';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
@@ -40,21 +41,24 @@ export const DistributionServiceTable = () => {
   const services = [...auctionServices, ...biddingServices];
 
   return (
-    <StripedTable
-      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
-      loading={biddingServicesLoading || auctionServicesLoading}
-      rows={services.map(c => {
-        return {
-          elements: [
-            getTemplateId(c.templateId).split('.')[2],
-            getName(c.payload.operator),
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Consumer',
-          ],
-        };
-      })}
-    />
+    <>
+      <ActionTile actions={[{ path: '/app/distribution/new', label: 'New Distribution' }]} />
+      <StripedTable
+        headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
+        loading={biddingServicesLoading || auctionServicesLoading}
+        rows={services.map(c => {
+          return {
+            elements: [
+              getTemplateId(c.templateId).split('.')[2],
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Consumer',
+            ],
+          };
+        })}
+      />
+    </>
   );
 };
 

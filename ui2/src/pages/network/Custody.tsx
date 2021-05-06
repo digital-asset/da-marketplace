@@ -28,6 +28,7 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+import { ActionTile } from './Actions';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -44,6 +45,9 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
+      <ActionTile
+        actions={[{ path: '/app/setup/custody/offer', label: 'Offer Custody Service' }]}
+      />
       <Header as="h2">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}

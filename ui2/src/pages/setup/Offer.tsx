@@ -52,27 +52,32 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       case ServiceKind.CUSTODY: {
         setOffer(CustodyOffer);
         setChoice(CustodyRole.OfferCustodyService);
+        break;
       }
       case ServiceKind.MARKET_CLEARING: {
         setOffer(MarketClearingOffer);
         setChoice(ClearingRole.OfferMarketService);
-        return;
+        break;
       }
       case ServiceKind.ISSUANCE: {
         setOffer(IssuanceOffer);
         setChoice(CustodyRole.OfferIssuanceService);
+        break;
       }
       case ServiceKind.TRADING: {
         setOffer(TradingOffer);
         setChoice(TradingRole.OfferTradingService);
+        break;
       }
       case ServiceKind.LISTING: {
         setOffer(ListingOffer);
         setChoice(TradingRole.OfferListingService);
+        break;
       }
       case ServiceKind.CLEARING: {
         setOffer(CustodyOffer);
         setChoice(ClearingRole.OfferClearingService);
+        break;
       }
     }
   }, [service, legalNames]);
