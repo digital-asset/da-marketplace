@@ -4,6 +4,14 @@ import { Header } from 'semantic-ui-react';
 import { SetupAutomation } from './SetupAutomation';
 import { isHubDeployment, publicParty } from '../../config';
 import { AutomationProvider } from '../../context/AutomationContext';
+import {
+  ServiceKind,
+  useProviderServices,
+  useServiceKindsProvided,
+} from '../../context/ServicesContext';
+import { useParty } from '@daml/react';
+import { useRoleKinds, ServiceKind as RoleServiceKind } from '../../context/RolesContext';
+import { MissingService, MissingRole } from '../error/MissingService';
 
 type SetupServiceProps = {
   name: string;
@@ -11,26 +19,48 @@ type SetupServiceProps = {
     label: string;
     path: string;
   }[];
+  serviceRequired?: ServiceKind;
+  roleRequired?: RoleServiceKind;
 };
 
-const SetupService: React.FC<SetupServiceProps> = ({ name, links, children }) => (
-  <div className="setup-service">
-    <Header as="h2">{name}</Header>
-    <div className="links">
-      {links.map(link => (
-        <NavLink key={link.path + link.label} to={link.path}>
-          {link.label}
-        </NavLink>
-      ))}
-      {children}
+const SetupService: React.FC<SetupServiceProps> = ({
+  name,
+  links,
+  children,
+  serviceRequired,
+  roleRequired,
+}) => {
+  const party = useParty();
+  const serviceKinds = useServiceKindsProvided(party);
+  const roleKinds = useRoleKinds();
+  const needsService = !!serviceRequired && !serviceKinds.has(serviceRequired);
+  const needsRole = !!roleRequired && !roleKinds.has(roleRequired);
+  return (
+    <div className="setup-service">
+      <Header as="h2">{name}</Header>
+      <div className="links">
+        {links.map(link =>
+          !needsService && !needsRole ? (
+            <NavLink key={link.path + link.label} to={link.path}>
+              {link.label}
+            </NavLink>
+          ) : (<>
+          {(needsRole && !!roleRequired) && <MissingRole role={roleRequired} action={link.label}/>}
+          {(needsService && !!serviceRequired) && <MissingService service={serviceRequired} action={link.label}/>}
+          </>
+          )
+        )}
+        {children}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const SetUp: React.FC = () => (
   <div className="set-up">
     <SetupService
       name="Custody"
+      roleRequired={RoleServiceKind.CUSTODY}
       links={[
         {
           label: 'Offer Custody Service',
@@ -41,6 +71,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Clearing"
+      roleRequired={RoleServiceKind.CLEARING}
       links={[
         {
           label: 'Offer Clearing Service',
@@ -55,6 +86,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Distributions"
+      serviceRequired={ServiceKind.AUCTION}
       links={[
         {
           label: 'Create New Auction',
@@ -65,6 +97,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Instruments"
+      serviceRequired={ServiceKind.ISSUANCE}
       links={[
         {
           label: 'Create Base Instrument',
@@ -83,6 +116,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Issuance"
+      serviceRequired={ServiceKind.ISSUANCE}
       links={[
         {
           label: 'Create New Issuance',
@@ -93,6 +127,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Listings"
+      serviceRequired={ServiceKind.LISTING}
       links={[
         {
           label: 'Create New Listing',
@@ -103,6 +138,7 @@ const SetUp: React.FC = () => (
 
     <SetupService
       name="Trading"
+      roleRequired={RoleServiceKind.TRADING}
       links={[
         {
           label: 'Offer Trading Service',

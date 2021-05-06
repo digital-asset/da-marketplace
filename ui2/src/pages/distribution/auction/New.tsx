@@ -18,6 +18,8 @@ import FormErrorHandled from '../../../components/Form/FormErrorHandled';
 import { IconClose } from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
 import { ServicePageProps } from '../../common';
+import {MissingService} from '../../error/MissingService';
+import {ServiceKind} from '../../../context/ServicesContext';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -74,7 +76,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   console.log(customerServices);
   const service = customerServices[0];
-  if (!service) return <p>Not an auction service customer.</p>;
+  if (!service) return <MissingService service={ServiceKind.AUCTION} action="Create a new Auction"/>
 
   const rightsizeAsset = async (
     deposit: CreateEvent<AssetDeposit>,
