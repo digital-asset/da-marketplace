@@ -3,11 +3,15 @@ import { Form, Button } from 'semantic-ui-react';
 
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-import { ledgerId, isHubDeployment } from '../../config';
+import { ledgerId, isHubDeployment, publicParty } from '../../config';
+
+import { useLedger, useStreamQueries } from '@daml/react';
 
 import { computeCredentials } from '../../Credentials';
 
 import { storeParties, retrieveParties } from '../../Parties';
+
+import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 const AddPartiesPage = (props: {
   parties: PartyDetails[];
@@ -16,9 +20,14 @@ const AddPartiesPage = (props: {
 }) => {
   const { parties, operator, toNextPage } = props;
 
+  const ledger = useLedger();
+
   const [localParties, setLocalParties] = useState<PartyDetails[]>([]);
   const [inputValue, setInputValue] = useState<string>();
   const [error, setError] = useState<string>();
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
+    RegulatorService
+  );
 
   useEffect(() => {
     const storedParties = retrieveParties() || [];
@@ -28,7 +37,6 @@ const AddPartiesPage = (props: {
   useEffect(() => {
     storeParties(localParties);
   }, [localParties]);
-
 
   return (
     <div className="setup-page add-parties">
@@ -77,11 +85,19 @@ const AddPartiesPage = (props: {
           )}
         </>
       )}
-      <Button className="ghost next" onClick={() => toNextPage(isHubDeployment ? parties : localParties)}>
+      <Button className="ghost next" onClick={() => handleOnComplete()}>
         Next
       </Button>
     </div>
   );
+
+  async function handleOnComplete() {
+    if (isHubDeployment) {
+      return toNextPage(parties);
+    } else {
+      return toNextPage(localParties);
+    }
+  }
 
   function handleChangeParty(event: any) {
     if (!inputValue) return;

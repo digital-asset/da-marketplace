@@ -66,7 +66,11 @@ const SelectAutomationPage = (props: {
     }, 1000);
     return () => clearInterval(timer);
   }, [token]);
-
+  //   const token = party.token;
+    //   await handleDeployment(token).then(_ => {
+    //     if (roles?.length === 0) onComplete();
+    //     setToDeploy([]);
+    //   });
   const currentTriggerOptions = triggerOptions
     .filter(
       to =>

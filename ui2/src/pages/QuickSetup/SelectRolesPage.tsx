@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 import { Button } from 'semantic-ui-react';
 
@@ -10,110 +10,37 @@ import { ArrowLeftIcon } from '../../icons/icons';
 
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 
-import { IQuickSetupData } from './QuickSetup';
-import { CreateEvent } from '@daml/ledger';
-
 import { PageControls, usePagination } from './PaginationUtils';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import { useLedger, useStreamQueries } from '@daml/react';
+
+import { useRolesContext } from '../../context/RolesContext';
+import { useOffersContext } from '../../context/OffersContext';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { Role as CustodianRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Role as DistributorRole } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-import { Service as SettlementService } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
-import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Service as MatchingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
-
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
-
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-type Role = {
-  contract: RoleContract;
-  role: ServiceKind;
-};
-
-type RoleContract =
-  | CreateEvent<ClearingRole>
-  | CreateEvent<CustodianRole>
-  | CreateEvent<ExchangeRole>
-  | CreateEvent<DistributorRole>
-  | CreateEvent<RegulatorRole>;
 
 const SelectRolesPage = (props: { parties: PartyDetails[]; toNextPage: () => void }) => {
   const { parties, toNextPage } = props;
 
-  const roleOptions = getRoleOptions();
   const ledger = useLedger();
-
   const page = usePagination(parties);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const roleOptions = getRoleOptions();
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
+  const { offers: allOffers, loading: offersLoading } = useOffersContext();
 
-  const { contracts: clearingRoles, loading: clearingRolesLoading } = useStreamQueries(
-    ClearingRole
-  );
-  const { contracts: custodianRoles, loading: custodianRolesLoading } = useStreamQueries(
-    CustodianRole
-  );
-  const { contracts: exchangeRoles, loading: exchangeRolesLoading } = useStreamQueries(
-    ExchangeRole
-  );
-  const { contracts: distributorRoles, loading: distributorRolesLoading } = useStreamQueries(
-    DistributorRole
-  );
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
-    RegulatorRole
-  );
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
+  const { contracts: regulatorServices, loading: regulatorLoading } = useStreamQueries(
     RegulatorService
   );
-  const { contracts: settlementServices, loading: settlementServicesLoading } = useStreamQueries(
-    SettlementService
-  );
-  const { contracts: matchingServices, loading: matchingServicesLoading } = useStreamQueries(
-    MatchingService
-  );
-  const { contracts: operatorService, loading: operatorServiceLoading } = useStreamQueries(
+  const { contracts: operatorService, loading: operatorLoading } = useStreamQueries(
     OperatorService
   );
 
-  useEffect(() => {
-    setLoading(
-      custodianRolesLoading ||
-        clearingRolesLoading ||
-        regulatorRolesLoading ||
-        regulatorServicesLoading ||
-        distributorRolesLoading ||
-        settlementServicesLoading ||
-        exchangeRolesLoading ||
-        matchingServicesLoading ||
-        operatorServiceLoading
-    );
-  }, [
-    custodianRolesLoading,
-    clearingRolesLoading,
-    regulatorRolesLoading,
-    regulatorServicesLoading,
-    distributorRolesLoading,
-    settlementServicesLoading,
-    exchangeRolesLoading,
-    matchingServicesLoading,
-    operatorServiceLoading,
-  ]);
-
-  useEffect(
-    () =>
-      setRoles([
-        ...clearingRoles.map(c => ({ contract: c, role: ServiceKind.CLEARING })),
-        ...custodianRoles.map(c => ({ contract: c, role: ServiceKind.CUSTODY })),
-        ...exchangeRoles.map(c => ({ contract: c, role: ServiceKind.TRADING })),
-        ...distributorRoles.map(c => ({ contract: c, role: ServiceKind.DISTRIBUTION })),
-        ...regulatorRoles.map(c => ({ contract: c, role: ServiceKind.REGULATOR })),
-      ]),
-    [clearingRoles, custodianRoles, exchangeRoles, distributorRoles, regulatorRoles]
-  );
+  if (rolesLoading || offersLoading || regulatorLoading || operatorLoading) {
+    return <p>Loading</p>;
+  }
 
   return (
     <div className="setup-page select-roles">
@@ -127,7 +54,7 @@ const SelectRolesPage = (props: { parties: PartyDetails[]; toNextPage: () => voi
                 key={i}
                 party={p}
                 handleAddRole={createRoleContract}
-                roles={roles
+                roles={allRoles
                   .filter(role => role.contract.payload.provider === p.party)
                   .map(role => role.role)}
               />
@@ -157,78 +84,69 @@ const SelectRolesPage = (props: { parties: PartyDetails[]; toNextPage: () => voi
     </div>
   );
 
-  async function createRoleContract(party: PartyDetails, roles: ServiceKind) {
+  async function createRoleContract(party: PartyDetails, role: ServiceKind) {
     const operatorServiceContract = operatorService[0];
 
-    // if (!!party) {
-    //   const token = party.token;
-    //   await handleDeployment(token).then(_ => {
-    //     if (roles?.length === 0) onComplete();
-    //     setToDeploy([]);
-    //   });
-    // }
+    if (!party || !operatorServiceContract || !role) return undefined;
 
     const provider = party?.party;
-
-    if (!provider || !operatorServiceContract || !roles) return undefined;
-
     const id = operatorServiceContract.contractId;
 
-    // if (!findExistingOffer(provider, ServiceKind.REGULATOR)) {
-    //   if (!regulatorServices.contracts.find(c => c.payload.customer === provider)) {
-    //     const regId = regulatorRoles.contracts[0].contractId;
-    //     await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
-    //       customer: provider,
-    //     }); // trigger auto-approves
-    //   }
-    // }
+    if (
+      !findExistingOffer(provider, ServiceKind.REGULATOR) &&
+      !regulatorServices.find(c => c.payload.customer === provider)
+    ) {
+      const regulatorRoles = allRoles.filter(
+        c => c.contract.payload.provider === party.party && c.role === ServiceKind.REGULATOR
+      );
+      const regId = regulatorRoles[0].contract.contractId;
+      await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
+        customer: provider,
+      }); // trigger auto-approves
+    }
 
-    // Promise.all(
-    //   roles.map(async role => {
-    //     if (findExistingOffer(provider, role)) {
-    //       return;
-    //     }
-    //     switch (role) {
-    //       case ServiceKind.CUSTODY:
-    //         return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
-    //       case ServiceKind.CLEARING:
-    //         return await ledger.exercise(OperatorService.OfferClearingRole, id, { provider });
-    //       case ServiceKind.TRADING:
-    //         return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
-    //       case ServiceKind.MATCHING:
-    //         return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
-    //       case ServiceKind.SETTLEMENT:
-    //         return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
-    //       case ServiceKind.DISTRIBUTION:
-    //         return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
-    //       default:
-    //         throw new Error(`Unsupported service: ${role}`);
-    //     }
-    //   })
-    // );
-    // onComplete();
+    if (findExistingOffer(provider, role) || findExistingRole(provider, role)) {
+      console.log('found this role, returning');
+      return;
+    }
+
+    switch (role) {
+      case ServiceKind.CUSTODY:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferCustodianRole, id, { provider });
+      case ServiceKind.CLEARING:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferClearingRole, id, { provider });
+      case ServiceKind.TRADING:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferExchangeRole, id, { provider });
+      case ServiceKind.MATCHING:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferMatchingService, id, { provider });
+      case ServiceKind.SETTLEMENT:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferSettlementService, id, { provider });
+      case ServiceKind.DISTRIBUTION:
+        console.log('role', role);
+        console.log('party', party.partyName);
+        return await ledger.exercise(OperatorService.OfferDistributorRole, id, { provider });
+      default:
+        throw new Error(`Unsupported service: ${role}`);
+    }
   }
 
-//   function findExistingOffer(provider: string, service: ServiceKind) {
-//     switch (service) {
-//       case ServiceKind.CLEARING:
-//         return !!clearingOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.CUSTODY:
-//         return !!custodianOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.TRADING:
-//         return !!exhangeOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.MATCHING:
-//         return !!matchingOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.DISTRIBUTION:
-//         return !!distributorOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.SETTLEMENT:
-//         return !!settlementOffers.contracts.find(c => c.payload.provider === provider);
-//       case ServiceKind.REGULATOR:
-//         return !!regulatorServiceOffers.contracts.find(c => c.payload.provider === provider);
-//       default:
-//         throw new Error(`Unsupported service: ${service}`);
-//     }
-//   }
+  function findExistingOffer(provider: string, role: ServiceKind) {
+    return !!allOffers.find(c => c.role === role && c.contract.payload.provider === provider);
+  }
+
+  function findExistingRole(provider: string, role: ServiceKind) {
+    return !!allRoles.find(c => c.role === role && c.contract.payload.provider === provider);
+  }
 };
 
 export const DraggableItemTile = (props: { item: string }) => {
