@@ -45,8 +45,10 @@ const SetupService: React.FC<SetupServiceProps> = ({
               {link.label}
             </NavLink>
           ) : (<>
-          {(needsRole && !!roleRequired) && <MissingRole role={roleRequired} action={link.label}/>}
-          {(needsService && !!serviceRequired) && <MissingService service={serviceRequired} action={link.label}/>}
+            <NavLink key={link.path + link.label} to={link.path}>
+              {link.label}
+            </NavLink>
+          {serviceRequired && <MissingService service={serviceRequired} action={link.label}/>}
           </>
           )
         )}

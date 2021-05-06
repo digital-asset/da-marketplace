@@ -22,8 +22,8 @@ import {
   useProviderServices,
 } from '../../context/ServicesContext';
 import { Template } from '@daml/types';
-import { Button } from '@material-ui/core';
 import {NavLink} from 'react-router-dom';
+import SetUp from '../setup/SetUp';
 
 type MissingServiceProps = {
   service: ServiceKind;
@@ -42,7 +42,6 @@ interface RequestInterface {
 
 export const MissingService: React.FC<MissingServiceProps> = ({ service, action, children }) => {
   const party = useParty();
-  const providers = useProviderServices(party);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
@@ -59,8 +58,6 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
     .map(c => c.payload.account);
   const accountNames = accounts.map(a => a.id.label);
 
-  const deposits = useStreamQueries(AssetDeposit).contracts;
-
   const [request, setRequest] = useState<ServiceRequest>(CustodyRequest);
   const [serviceKind, setServiceKind] = useState<ServiceKind>(ServiceKind.CUSTODY);
   const [openDialog, setOpenDialog] = useState(false);
@@ -70,6 +67,7 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
     provider: '',
     customer: '',
   });
+  // useEffect(() => { setOpenDialog(true) }, [])
   useEffect(() => {
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
@@ -215,7 +213,7 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
         onChange={state => setDialogState(state)}
         onClose={open => setOpenDialog(open)}
       />
-      <NavLink to='#' onClick={go}>{action}</NavLink>
+      {children}
     </div>
   );
 };

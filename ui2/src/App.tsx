@@ -326,6 +326,10 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
+        path: '/app/setup/custody/request',
+        render: () => <MissingService service={ServiceKind.CUSTODY}/>,
+      },
+      {
         path: '/app/setup/custody/offer',
         render: () => <Offer service={ServiceKind.CUSTODY} />,
       },
