@@ -166,12 +166,14 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label="Minimum Tradable Quantity"
             type="number"
             required
+            step="any"
             onChange={(_, change) => setMinimumTradableQuantity(change.value as string)}
           />
           <Form.Input
             label="Maximum Tradable Quantity"
             type="number"
             required
+            step="any"
             onChange={(_, change) => setMaximumTradableQuantity(change.value as string)}
           />
           <Form.Input
