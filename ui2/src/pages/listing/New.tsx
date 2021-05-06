@@ -17,6 +17,8 @@ import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
+import {MissingService} from '../error/MissingService';
+import {ServiceKind} from '../../context/ServicesContext';
 
 const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
@@ -78,7 +80,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   }, [el2, quotedAsset, showQuotedAsset]);
 
   const service = customerServices[0];
-  if (!service) return <></>;
+  if (!service) return <MissingService service={ServiceKind.LISTING} action="Create a new Listing"/>
 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;

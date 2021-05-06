@@ -16,6 +16,7 @@ import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
 import { computeCredentials } from './Credentials';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 import { RolesProvider } from './context/RolesContext';
+import { RequestsProvider } from './context/RequestsContext';
 
 type MainProps = {
   defaultPath: string;
@@ -41,7 +42,9 @@ export default function Main({ defaultPath }: MainProps) {
                 >
                   <ServicesProvider>
                     <RolesProvider>
-                      <App />
+                      <RequestsProvider>
+                        <App />
+                      </RequestsProvider>
                     </RolesProvider>
                   </ServicesProvider>
                 </PublicDamlProvider>

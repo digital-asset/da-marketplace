@@ -101,7 +101,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   };
   const party = useParty();
   const serviceKinds = useServiceKindsProvided(party)
-  if (!serviceKinds.has(service)) { return <MissingService service={service} action="Offer"/> }
+  // if (!serviceKinds.has(service)) { return <MissingService service={service} action="Offer"><SetUp /></MissingService> }
 
   return (
     <div className="offer">

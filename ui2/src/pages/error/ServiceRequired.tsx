@@ -21,11 +21,12 @@ import {
   ServiceRequest,
   ServiceRequestTemplates,
   useProviderServices,
+  useServiceKindsProvided,
 } from '../../context/ServicesContext';
 import { Template } from '@daml/types';
 import { NavLink, useHistory } from 'react-router-dom';
 import SetUp from '../setup/SetUp';
-import {useRequestKinds} from '../../context/RequestsContext';
+import { useRequestKinds } from '../../context/RequestsContext';
 
 type MissingServiceProps = {
   service: ServiceKind;
@@ -42,7 +43,7 @@ interface RequestInterface {
   marginAccount?: Account;
 }
 
-export const MissingService: React.FC<MissingServiceProps> = ({ service, action, children }) => {
+export const ServiceRequired: React.FC<MissingServiceProps> = ({ service, action, children }) => {
   const party = useParty();
   console.log(service);
 
@@ -71,6 +72,7 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
   );
   const accountNames = useMemo(() => accounts.map(a => a.id.label), [accounts]);
 
+  const [newRequest, setNewRequest] = useState(false);
   const [request, setRequest] = useState<ServiceRequest>(CustodyRequest);
   const [openDialog, setOpenDialog] = useState(true);
   const [fields, setFields] = useState<object>({});
@@ -219,37 +221,40 @@ export const MissingService: React.FC<MissingServiceProps> = ({ service, action,
   };
 
   const requests = useRequestKinds();
-
-  return (
-    <div>
-      {!requests.has(service) ? (
-        <ServiceRequestDialog
-          open={openDialog}
-          service={service}
-          fields={fields}
-          params={requestParams}
-          request={request}
-          onChange={state => setDialogState(state)}
-          onClose={onClose}
-          title={`Missing ${service} service, please request and try again`}
-        />
+  const serviceKinds = useServiceKindsProvided(party);
+  if (!serviceKinds.has(service)) {
+    return (
+      <div>
+        {!requests.has(service) || newRequest ? (
+          <ServiceRequestDialog
+            open={openDialog}
+            service={service}
+            fields={fields}
+            params={requestParams}
+            request={request}
+            onChange={state => setDialogState(state)}
+            onClose={onClose}
+            title={`Missing ${service} service, please request and try again`}
+          />
         ) : (
           <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
-              <Modal.Header as="h3">Waiting for {service}</Modal.Header>
-              <Modal.Content>
-                Request created...
-              </Modal.Content>
-              <Modal.Actions>
-                <Button className="ghost" onClick={() => history.goBack()}>
-                  Cancel
-                </Button>
-              </Modal.Actions>
-            </Modal>
-        )
-      }
-      {children}
-    </div>
-  );
+            <Modal.Header as="h3">Waiting for {service} service request to be accepted...</Modal.Header>
+            <Modal.Content>Request created...</Modal.Content>
+            <Modal.Actions>
+              <Button className="ghost" onClick={() => setNewRequest(true)}>
+                New Request
+              </Button>
+              <Button className="ghost" onClick={() => history.goBack()}>
+                Cancel
+              </Button>
+            </Modal.Actions>
+          </Modal>
+        )}
+      </div>
+    );
+  } else {
+    return <>{children}</>;
+  }
 };
 
 type MissingRoleProps = {

@@ -187,42 +187,13 @@ const RequestsProvider: React.FC = ({ children }) => {
   );
 };
 
-// type GroupedCustomerServices = {
-//   provider: string;
-//   services: ServiceKind[];
-//   contracts: ServiceContract[];
-// }[];
-//
-// /* Retrieve all providers who are providing you, the customer, a service */
-// function useProviderServices(party: string): GroupedCustomerServices {
-//   const context = React.useContext<ServicesState>(ServicesStateContext);
-//   if (context === undefined) {
-//     throw new Error('useProviderServices  must be used within a ServicesProvider');
-//   }
-//
-//   return context.services
-//     .filter(s => s.contract.payload.customer === party)
-//     .reduce((acc, service) => {
-//       const providerDetails = acc.find(i => i.provider === service.contract.payload.provider);
-//
-//       const provider = providerDetails?.provider || service.contract.payload.provider;
-//       const services = _.concat(_.compact(providerDetails?.services), service.service);
-//       const contracts = _.concat(_.compact(providerDetails?.contracts), service.contract);
-//
-//       return [
-//         ...acc.filter(i => i.provider !== service.contract.payload.provider),
-//         { provider, services, contracts },
-//       ];
-//     }, [] as GroupedCustomerServices);
-// }
-//
-// /* Retrieve all customers who are using services provided by you */
-// function useCustomerServices(party: string) {
-//   const context = React.useContext<ServicesState>(ServicesStateContext);
-//   if (context === undefined) {
-//     throw new Error('useCustomerServices must be used within a ServicesProvider');
-//   }
-//   return context.services.filter(s => s.contract.payload.provider === party);
-// }
-//
-// export { ServicesProvider, useProviderServices, useCustomerServices };
+function useRequestKinds(): Set<ServiceKind> {
+  const context = React.useContext<RequestsState>(RequestsStateContext);
+  if (context === undefined) {
+    throw new Error('useProviderServices  must be used within a ServicesProvider');
+  }
+  return context.requests
+    .reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
+}
+
+export { RequestsProvider, useRequestKinds }

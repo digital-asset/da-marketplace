@@ -128,6 +128,7 @@ interface RequestProps<T extends ServiceRequestTemplates> {
   service: ServiceKind;
   onChange: (state: any) => void;
   onClose: (open: boolean) => void;
+  title?: string
 }
 
 export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
@@ -138,6 +139,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   service,
   onChange,
   onClose,
+  title
 }: RequestProps<T>) => {
   const ledger = useLedger();
 
@@ -154,7 +156,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   return (
     <InputDialog
       open={!!open}
-      title={`Request ${service} Service`}
+      title={title || `Request ${service} Service`}
       defaultValue={{
         provider: '',
       }}
