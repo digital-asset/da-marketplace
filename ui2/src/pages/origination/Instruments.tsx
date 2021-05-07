@@ -6,7 +6,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import { ArrowRightIcon } from '../../icons/icons';
+import { ActionTile } from '../network/Actions';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
@@ -17,26 +17,41 @@ export const InstrumentsTable: React.FC = () => {
   const { getName } = usePartyName('');
 
   return (
-    <StripedTable
-      rowsClickable
-      headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
-      loading={allInstrumentsLoading}
-      rows={instruments.map(c => {
-        return {
-          elements: [
-            getName(c.payload.issuer),
-            Object.keys(c.payload.assetId.signatories.textMap)
-              .map(party => getName(party))
-              .sort()
-              .join(', '),
-            c.payload.assetId.label,
-            c.payload.assetId.version,
-            c.payload.description,
-          ],
-          onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
-        };
-      })}
-    />
+    <div>
+      <ActionTile
+        actions={[
+          { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
+          {
+            path: '/app/setup/instrument/new/convertiblenote',
+            label: 'New Convertible Note',
+          },
+          {
+            path: '/app/setup/instrument/new/binaryoption',
+            label: 'New Binary Option',
+          },
+        ]}
+      />
+      <StripedTable
+        rowsClickable
+        headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
+        loading={allInstrumentsLoading}
+        rows={instruments.map(c => {
+          return {
+            elements: [
+              getName(c.payload.issuer),
+              Object.keys(c.payload.assetId.signatories.textMap)
+                .map(party => getName(party))
+                .sort()
+                .join(', '),
+              c.payload.assetId.label,
+              c.payload.assetId.version,
+              c.payload.description,
+            ],
+            onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
+          };
+        })}
+      />
+    </div>
   );
 };
 

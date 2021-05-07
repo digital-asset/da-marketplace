@@ -58,6 +58,7 @@ import { Header } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
+import { ServiceRequired } from './pages/error/ServiceRequired';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -175,7 +176,11 @@ const AppComponent = () => {
       },
       {
         path: '/app/distribution/new',
-        render: () => <DistributionNew services={auctionService} />,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Distribution">
+            <DistributionNew services={auctionService} />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/distribution/requests',
@@ -339,7 +344,11 @@ const AppComponent = () => {
       },
       {
         path: '/app/setup/distribution/new/auction',
-        render: () => <NewAuction services={auctionService} />,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Auction">
+            <NewAuction services={auctionService} />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/identity',
@@ -347,23 +356,43 @@ const AppComponent = () => {
       },
       {
         path: '/app/setup/instrument/new/base',
-        component: NewBaseInstrument,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Base Instrument">
+            <NewBaseInstrument />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/instrument/new/convertiblenote',
-        component: NewConvertibleNote,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Convertible Note">
+            <NewConvertibleNote />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/instrument/new/binaryoption',
-        component: NewBinaryOption,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Binary Option">
+            <NewBinaryOption />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/issuance/new',
-        render: () => <IssuanceNew services={issuanceService} />,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Issuance">
+            <IssuanceNew services={issuanceService} />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/listing/new',
-        render: () => <ListingNew services={listingService} />,
+        render: () => (
+          <ServiceRequired service={ServiceKind.LISTING} action="Create New Listing">
+            <ListingNew services={listingService} />
+          </ServiceRequired>
+        ),
       },
       {
         path: '/app/setup/trading/offer',

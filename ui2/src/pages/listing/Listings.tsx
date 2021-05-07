@@ -1,7 +1,7 @@
 import React from 'react';
 import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -15,6 +15,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import { ArrowRightIcon } from '../../icons/icons';
+import { ActionTile } from '../network/Actions';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -24,10 +25,8 @@ type Props = {
 export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
-  const ledger = useLedger();
   const history = useHistory();
 
-  const service = services.find(s => s.payload.customer === party);
   const { contractId } = useParams<any>();
 
   const { contracts: manualFVRequests, loading: manualFVRequestsLoading } = useStreamQueries(
@@ -47,6 +46,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   return !contractId ? (
     <>
+      <ActionTile actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]} />
       <StripedTable
         rowsClickable
         headings={[

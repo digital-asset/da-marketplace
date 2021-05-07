@@ -48,8 +48,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   return (
     <div className="assets">
       <Tile header={<h4>Actions</h4>}>
-        <MarginCallModal services={services} />
-        <MTMCalculationModal services={services} />
+        <Button.Group>
+          <MarginCallModal services={services} />
+          <MTMCalculationModal services={services} />
+        </Button.Group>
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
