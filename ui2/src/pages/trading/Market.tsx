@@ -288,6 +288,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           </Tile>
           <Tile header={<h4>Orders</h4>}>
             <StripedTable
+              rowsClickable
               headings={[
                 'Symbol',
                 'Order ID',
@@ -301,8 +302,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 'Status',
               ]}
               loading={allOrders.loading}
-              rowsClickable
-              clickableIcon={<ArrowRightIcon />}
               rows={orders.map(c => {
                 return {
                   elements: [

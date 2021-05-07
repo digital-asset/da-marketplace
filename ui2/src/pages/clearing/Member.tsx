@@ -109,7 +109,7 @@ const ClearingMemberComponent: React.FC<
       <Button className="ghost back-button" onClick={() => history.goBack()}>
         <ArrowLeftIcon /> back
       </Button>
-      <Tile header={<h2>Actions</h2>}>
+      <Tile header={<h4>Actions</h4>}>
         {!member && (
           <>
             <MarginCallModal services={services} member={customer} />

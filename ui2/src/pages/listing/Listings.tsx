@@ -48,6 +48,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   return !contractId ? (
     <>
       <StripedTable
+        rowsClickable
         headings={[
           'Provider',
           'Client',
@@ -60,8 +61,6 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
           'Quoted Asset Precision',
           'Fair Value',
         ]}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
         loading={fairValuesLoading}
         rows={listings.map(c => {
           const fairValues = fairValueContracts.filter(

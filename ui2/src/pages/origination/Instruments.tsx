@@ -18,10 +18,9 @@ export const InstrumentsTable: React.FC = () => {
 
   return (
     <StripedTable
+      rowsClickable
       headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
       loading={allInstrumentsLoading}
-      rowsClickable
-      clickableIcon={<ArrowRightIcon />}
       rows={instruments.map(c => {
         return {
           elements: [

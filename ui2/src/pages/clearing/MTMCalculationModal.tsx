@@ -10,6 +10,7 @@ import {
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { usePartyName } from '../../config';
 
 type MTMProps = {
   member?: Party;
@@ -21,6 +22,7 @@ const MTMCalculationModal: React.FC<ServicePageProps<Service> & MTMProps> = ({
 }) => {
   const party = useParty();
   const ledger = useLedger();
+  const { getName } = usePartyName(party);
 
   const [customer, setCustomer] = useState<Party>();
   const [amount, setAmount] = useState<string>();
@@ -48,7 +50,7 @@ const MTMCalculationModal: React.FC<ServicePageProps<Service> & MTMProps> = ({
 
   const customers: DropdownItemProps[] = services.map((c, i) => ({
     key: i,
-    text: c.payload.customer,
+    text: getName(c.payload.customer),
     value: c.payload.customer,
   }));
 

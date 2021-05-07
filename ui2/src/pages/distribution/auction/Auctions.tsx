@@ -16,10 +16,9 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="auctions">
       <Header as="h2">Auctions</Header>
       <StripedTable
+        rowsClickable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}
         loading={auctionsLoading}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
         rows={auctions.map(c => {
           return {
             elements: [

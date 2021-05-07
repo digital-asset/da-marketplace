@@ -41,6 +41,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
       <Tile header={<h4>Origination Requests</h4>}>
         <StripedTable
+          rowsClickable
           headings={[
             'Registrar',
             'Issuer',
@@ -50,8 +51,6 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
             'Action',
           ]}
           loading={requestsLoading}
-          rowsClickable
-          clickableIcon={<ArrowRightIcon />}
           rows={requests.map(c => {
             return {
               elements: [
