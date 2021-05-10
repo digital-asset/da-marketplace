@@ -35,7 +35,7 @@ export const FairValueCalculationRequests: React.FC<Props> = ({ requests, loadin
           elements: [
             getName(fv.payload.provider),
             getName(fv.payload.customer),
-            fv.payload.listingId,
+            fv.payload.listingId.label,
             fv.payload.currency.label,
             fv.payload.upTo,
             <Button.Group floated="right">

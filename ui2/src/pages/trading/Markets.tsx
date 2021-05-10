@@ -27,7 +27,7 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
             elements: [
               getName(c.payload.provider),
               getName(c.payload.customer),
-              c.payload.listingId,
+              c.payload.listingId.label,
               c.payload.tradedAssetId.label,
               c.payload.quotedAssetId.label,
             ],

@@ -17,6 +17,7 @@ import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropd
 import { IconClose } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import { CreateEvent } from '@daml/ledger';
 
 enum AccountType {
   REGULAR = 'Regular',
@@ -102,11 +103,17 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     }
   };
 
-  const operators: DropdownItemProps[] = services.map((c, i) => ({
-    key: i,
-    text: getName(c.payload.operator),
-    value: c.payload.operator,
-  }));
+  const operators: DropdownItemProps[] = services
+    .reduce(
+      (acc, cur) =>
+        acc.find(a => a.payload.operator === cur.payload.operator) ? acc : [...acc, cur],
+      [] as CreateEvent<Service, any, any>[]
+    )
+    .map((c, i) => ({
+      key: i,
+      text: getName(c.payload.operator),
+      value: c.payload.operator,
+    }));
 
   const providerByOperator = (operator: string): DropdownItemProps[] =>
     services

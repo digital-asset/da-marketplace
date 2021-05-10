@@ -127,7 +127,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
         accountId: targetAccount.account.id,
         transfer: {
           receiverAccountId: transferToAccount.payload.account.id,
-          depositCid: state.deposit,
+          depositCid: deposit.contractId,
         },
       });
     };
@@ -248,7 +248,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                         <b>Controllers</b>
                       </Table.Cell>
                       <Table.Cell key={1}>
-                        {Object.keys(normalAccount.payload.ctrls).join(', ')}
+                        {Object.keys(normalAccount.payload.ctrls)
+                          .map(ctrl => getName(ctrl))
+                          .sort()
+                          .join(', ')}
                       </Table.Cell>
                     </Table.Row>
                   )}

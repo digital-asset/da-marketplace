@@ -11,6 +11,8 @@ import qualified Marketplace.Trading.Matching.Service as Matching
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as TradingService
 import qualified Marketplace.Listing.Service as Listing
+import qualified Marketplace.Listing.Model as Listing
+
 import DA.List
 
 setup : Script ()
@@ -32,7 +34,7 @@ setup = do
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
-    listingId = "TSLAUSD"
+    symbol = "TSLAUSD"
     listingType = Listing.CollateralizedRequest
     calendarId = "1"
     description = "Tesla Inc."
@@ -46,6 +48,7 @@ setup = do
     observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- > Alice places a bid for shares
   Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- submit alice.customer do
@@ -53,7 +56,7 @@ setup = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset
           orderType = Order.Limit with
             price = 100.0
@@ -67,7 +70,7 @@ setup = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset
           orderType = Order.Limit with
             price = 100.0
@@ -112,7 +115,7 @@ partialExecutionsTest = do
   -- List a Security to trade
   (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
   let
-    listingId = "TSLAUSD"
+    symbol = "TSLAUSD"
     listingType = Listing.CollateralizedRequest
     calendarId = "1"
     description = "Tesla Inc."
@@ -126,6 +129,7 @@ partialExecutionsTest = do
     observers = []
   createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
   listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- > Alice places an order to buy shares
   submit alice.customer do
@@ -133,7 +137,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ alice.customer ]; label = "001"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset
           orderType = Order.Limit with price = 100.0
           side = Order.Buy
@@ -147,7 +151,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ bob.customer ]; label = "100"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
@@ -160,7 +164,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ bob.customer ]; label = "101"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
@@ -173,7 +177,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ bob.customer ]; label = "102"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
@@ -186,7 +190,7 @@ partialExecutionsTest = do
       with
         details = Order.Details with
           id = Id with signatories = fromList [ bob.customer ]; label = "103"; version = 0
-          symbol = listingId
+          listingId
           asset = shareAsset with quantity = 50.0
           orderType = Order.Limit with price = 100.0
           side = Order.Sell

@@ -188,6 +188,16 @@ type GroupedCustomerServices = {
   contracts: ServiceContract[];
 }[];
 
+function useServiceKindsProvided(party: string): Set<ServiceKind> {
+  const context = React.useContext<ServicesState>(ServicesStateContext);
+  if (context === undefined) {
+    throw new Error('useProviderServices  must be used within a ServicesProvider');
+  }
+  return context.services
+    .filter(s => s.contract.payload.customer === party)
+    .reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
+}
+
 /* Retrieve all providers who are providing you, the customer, a service */
 function useProviderServices(party: string): GroupedCustomerServices {
   const context = React.useContext<ServicesState>(ServicesStateContext);
@@ -220,4 +230,4 @@ function useCustomerServices(party: string) {
   return context.services.filter(s => s.contract.payload.provider === party);
 }
 
-export { ServicesProvider, useProviderServices, useCustomerServices };
+export { ServicesProvider, useProviderServices, useCustomerServices, useServiceKindsProvided };

@@ -17,6 +17,7 @@ import { Button, Form, Header, Icon } from 'semantic-ui-react';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
+import { preciseInputSteps } from '../../util';
 
 const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
@@ -87,7 +88,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       ? { tag: 'CollateralizedRequest', value: {} }
       : { tag: 'ClearedRequest', value: clearedBy };
     const request: RequestCreateListing = {
-      listingId,
+      symbol: listingId,
       listingType,
       calendarId,
       description,
@@ -102,6 +103,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
     history.push('/app/manage/listings');
   };
+
+  const { step, placeholder } = preciseInputSteps(+tradedAssetPrecision);
 
   return (
     <div className="listing">
@@ -163,15 +166,21 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             onChange={(_, change) => setQuotedAssetPrecision(change.value as string)}
           />
           <Form.Input
+            required
             label="Minimum Tradable Quantity"
             type="number"
-            required
+            step={step}
+            placeholder={placeholder}
+            disabled={!tradedAssetPrecision || !tradedAssetLabel}
             onChange={(_, change) => setMinimumTradableQuantity(change.value as string)}
           />
           <Form.Input
+            required
             label="Maximum Tradable Quantity"
             type="number"
-            required
+            step={step}
+            placeholder={placeholder}
+            disabled={!tradedAssetPrecision || !tradedAssetLabel}
             onChange={(_, change) => setMaximumTradableQuantity(change.value as string)}
           />
           <Form.Input

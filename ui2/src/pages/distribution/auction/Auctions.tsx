@@ -7,6 +7,7 @@ import { getAuctionStatus } from '../Utils';
 import { Header } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 import { ArrowRightIcon } from '../../../icons/icons';
+import { ActionTile } from '../../network/Actions';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
@@ -14,6 +15,9 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   return (
     <div className="auctions">
+      <ActionTile
+        actions={[{ path: '/app/setup/distribution/new/auction', label: 'New Auction' }]}
+      />
       <Header as="h2">Auctions</Header>
       <StripedTable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}

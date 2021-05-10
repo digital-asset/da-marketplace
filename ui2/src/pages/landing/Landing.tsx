@@ -25,6 +25,7 @@ import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketpl
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import {
   Request as RegulatorRequest,
@@ -35,6 +36,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
+import { formatCurrency } from '../../util';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -247,12 +249,7 @@ const Landing = () => {
     setRequestParams(params);
   }, [dialogState]);
 
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  });
-
-  const portfolio = formatter.format(
+  const portfolio = formatCurrency(
     deposits
       .filter(d => d.payload.asset.id.label === 'USD')
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
@@ -385,6 +382,23 @@ const Landing = () => {
                     label: 'Receivable Account',
                     type: 'selection',
                     items: accountNames,
+                  },
+                })
+              }
+            />
+            <OverflowMenuEntry
+              label="Request Bidding Service"
+              onClick={() =>
+                requestService(BiddingRequest, ServiceKind.BIDDING, {
+                  tradingAccount: {
+                    label: 'Trading Account',
+                    type: 'selection',
+                    items: accountNames,
+                  },
+                  allocationAccount: {
+                    label: 'Allocation Account',
+                    type: 'selection',
+                    items: allocationAccountNames,
                   },
                 })
               }

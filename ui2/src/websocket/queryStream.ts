@@ -52,8 +52,8 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
   return publicToken;
 };
 
-const QueryStreamProvider = (props: PropsWithChildren<any>) => {
-  const { children } = props;
+const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken?: string }) => {
+  const { children, defaultPartyToken } = props;
   const [publicTemplateIds, setPublicTemplateIds] = useState<string[]>([]);
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
 
@@ -63,9 +63,13 @@ const QueryStreamProvider = (props: PropsWithChildren<any>) => {
   const [streamErrors, setStreamErrors] = useState<StreamErrors[]>();
 
   useEffect(() => {
-    const token = retrieveCredentials()?.token;
-    if (token) {
-      setPartyToken(token);
+    if (defaultPartyToken) {
+      setPartyToken(defaultPartyToken);
+    } else {
+      const token = retrieveCredentials()?.token;
+      if (token) {
+        setPartyToken(token);
+      }
     }
   }, []);
 

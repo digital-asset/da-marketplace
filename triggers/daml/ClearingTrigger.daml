@@ -191,13 +191,13 @@ handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationReq
 -- fairvalues will be ignored.
 handleFairValueCalculation : Party -> ContractPair MarketClearing.Service -> Id -> Time -> ContractPair Listing.T -> TriggerA ClearingState ()
 handleFairValueCalculation party (serviceCid,_) currency upTo (marketPairCid,l@(Listing.Listing{..})) = do
-  debug ("calculating FVR: " <> l.listingId)
+  debug ("calculating FVR: " <> l.listingId.label)
 
   fairValues <- sortOn ((.upTo) . snd)
               . filter (\(_,fv) -> fv.listingId == l.listingId) <$> query @Clearing.FairValue
 
   trades     <- sortOn (Down . (.timeNovated) . snd)
-              . filter (\(_,cts) -> cts.order.details.symbol == l.listingId) <$> query @Clearing.ClearedTradeSide
+              . filter (\(_,cts) -> cts.order.details.listingId == l.listingId) <$> query @Clearing.ClearedTradeSide
 
   let relevantTrades = filter (\(_,ct) -> (subTime ct.timeNovated upTo) < (seconds 0)) trades
   timestamp <- getTime

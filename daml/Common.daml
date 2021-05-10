@@ -91,7 +91,7 @@ onboardProviders = do
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = bank
   regulatorServiceCid             <- submit bank      do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
-  identityVerificationRequestCid  <- submit bank      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Bankeee LegalName"; location = "Bank Location"; observers = [public]
+  identityVerificationRequestCid  <- submit bank      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Bank LegalName"; location = "Bank Location"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = exchange
