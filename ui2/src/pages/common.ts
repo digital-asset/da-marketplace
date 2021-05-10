@@ -38,16 +38,6 @@ export const createDropdownProp = (
   return { key, value, text };
 };
 
-export function wrapTextMap<T>(items: T[]) {
-  let map = Object.create(null);
-
-  items.forEach((key: T) => {
-    map[key] = {};
-  });
-
-  return { map };
-}
-
 export function makeDamlSet<T>(items: T[]): { map: Map<T, {}> } {
   return { map: items.reduce((map, val) => map.set(val, {}), emptyMap<T, {}>()) };
 }

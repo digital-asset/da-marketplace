@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
-// import { useStreamQueries } from '../../Main';
+import { useLedger, useParty } from '@daml/react';
+import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';

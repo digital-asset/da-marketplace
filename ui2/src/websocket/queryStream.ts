@@ -13,7 +13,7 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 export const AS_PUBLIC = true;
 
 export type QueryStream = {
-  templateMap: Map<string, Template<any,any,any>>;
+  templateMap: Map<string, Template<any, any, any>>;
   publicTemplateIds: string[];
   publicContracts: CreateEvent<any, any, any>[];
   partyTemplateIds: string[];
@@ -22,7 +22,11 @@ export type QueryStream = {
   publicLoading: boolean;
   partyLoading: boolean;
   publicToken?: string;
-  subscribeTemplate: (templateId: string, template: Template<any, any, any>, isPublic?: boolean) => void;
+  subscribeTemplate: (
+    templateId: string,
+    template: Template<any, any, any>,
+    isPublic?: boolean
+  ) => void;
   connectionActive: boolean;
 };
 
@@ -56,7 +60,6 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
 const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken?: string }) => {
   const { children, defaultPartyToken } = props;
   const [templateMap, setTemplateMap] = useState<Map<string, Template<any, any, any>>>(new Map());
-    //useState<Map<string,Template<any,any,any>>(new Map());
   const [publicTemplateIds, setPublicTemplateIds] = useState<string[]>([]);
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
 
@@ -112,7 +115,11 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     }
   }, [partyStreamErrors, publicStreamErrors]);
 
-  const subscribeTemplate = (templateId: string, template: Template<any, any, any>, asPublic?: boolean) => {
+  const subscribeTemplate = (
+    templateId: string,
+    template: Template<any, any, any>,
+    asPublic?: boolean
+  ) => {
     if (asPublic) {
       setTemplateMap(prev => new Map(prev).set(templateId, template));
       setPublicTemplateIds(templateIds => [...templateIds, templateId]);
@@ -133,7 +140,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     partyLoading,
     publicToken,
     connectionActive,
-    templateMap
+    templateMap,
   });
 
   useEffect(() => {
