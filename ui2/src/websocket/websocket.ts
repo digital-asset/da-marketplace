@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ArchiveEvent, CreateEvent } from '@daml/ledger';
+import * as jtv from '@mojotech/json-type-validation';
 
 import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config';
+import { Template, ContractId, List, Text, lookupTemplate, Party } from '@daml/types';
+import _ from 'lodash';
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official
@@ -54,8 +57,25 @@ function isErrorMessage(event: object): event is StreamErrors {
   return 'errors' in event;
 }
 
+/**
+ * Decoder for a [[CreateEvent]].
+ */
+const decodeCreateEvent = <T extends object, K, I extends string>(
+  template: Template<T, K, I>
+): jtv.Decoder<CreateEvent<T, K, I>> =>
+  jtv.object({
+    templateId: jtv.constant(template.templateId),
+    contractId: ContractId(template).decoder,
+    signatories: List(Party).decoder,
+    observers: List(Party).decoder,
+    agreementText: Text.decoder,
+    key: template.keyDecoder,
+    payload: template.decoder,
+  });
+
 function useDamlStreamQuery<T extends object, K, I extends string>(
   templateIds: string[],
+  templateMap: Map<string,Template<any, any, any>>,
   token?: string
 ) {
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
@@ -98,7 +118,12 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
       if (events && events.length > 0) {
         events.forEach(e => {
           if (isCreateEvent(e)) {
-            const contract = e.created as CreateEvent<T, K, I>;
+            const template = templateMap.get(e.created.templateId);
+            if (!template) {
+              console.log(`could not find ${e.created.templateId}`);
+              return;
+            }
+            const contract = decodeCreateEvent(template).runWithException(e.created);
             if (!contracts.find(c => c.contractId === contract.contractId)) {
               setContracts(contracts => [...contracts, contract]);
             }
@@ -162,7 +187,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
         setWebsocket(null);
       }
     };
-  }, [errors, token, templateIds, websocket, setWebsocket, openWebsocket]);
+  }, [errors, token, templateIds, templateMap, websocket, setWebsocket, openWebsocket]);
 
   useEffect(() => {
     if (websocket && token) {

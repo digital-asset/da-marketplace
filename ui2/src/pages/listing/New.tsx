@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
-import { useStreamQueries } from '../../Main';
+import { useLedger, useParty, useStreamQueries } from '@daml/react';
+// import { useStreamQueries } from '../../Main';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -83,6 +83,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;
+    console.log(tradedAsset.payload.assetId);
     const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
     const listingType: ListingTypeRequest = isCollateralized
       ? { tag: 'CollateralizedRequest', value: {} }
@@ -120,7 +121,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== quotedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}
@@ -147,7 +148,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== tradedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}

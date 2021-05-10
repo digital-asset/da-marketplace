@@ -1,6 +1,6 @@
 import { CreateEvent } from '@daml/ledger';
 import { DropdownItemProps, DropdownProps } from 'semantic-ui-react';
-import { Map as DamlMap } from '@daml/types';
+import { Map, emptyMap } from '@daml/types';
 
 export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;
@@ -38,7 +38,7 @@ export const createDropdownProp = (
   return { key, value, text };
 };
 
-export function makeDamlSet<T>(items: T[]): { map: DamlMap<T, {}> } {
+export function wrapTextMap<T>(items: T[]) {
   let map = Object.create(null);
 
   items.forEach((key: T) => {
@@ -46,4 +46,8 @@ export function makeDamlSet<T>(items: T[]): { map: DamlMap<T, {}> } {
   });
 
   return { map };
+}
+
+export function makeDamlSet<T>(items: T[]): { map: Map<T, {}> } {
+  return { map: items.reduce((map, val) => map.set(val, {}), emptyMap<T, {}>()) };
 }
