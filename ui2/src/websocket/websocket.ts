@@ -88,7 +88,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   );
   const [retries, setRetries] = useState(0);
 
-  const messageHandlerScoped = useCallback(() => {
+  const messageHandlerScoped = useCallback((templateMap: Map<string,Template<any, any, any>>) => {
     return (message: { data: string }) => {
       if (timer != null) {
         clearInterval(timer);
@@ -197,9 +197,9 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   useEffect(() => {
     if (websocket && token) {
-      websocket.onmessage = messageHandlerScoped();
+      websocket.onmessage = messageHandlerScoped(templateMap);
     }
-  }, [token, websocket, messageHandlerScoped]);
+  }, [token, websocket, templateMap, messageHandlerScoped]);
 
   return { contracts, errors, loading, active };
 }
