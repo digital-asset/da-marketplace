@@ -169,7 +169,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
                         {party === c.payload.account.provider ? 'Provider' : 'Client'}
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
-                        {Object.keys(c.payload.ctrls.textMap).join(', ')}
+                        {Object.keys(c.payload.ctrls).join(', ')}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         {party === c.payload.account.owner && (

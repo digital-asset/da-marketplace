@@ -99,7 +99,7 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap).join(', '),
+              Object.keys(c.payload.ctrls).join(', '),
               party === c.payload.provider && (
                 <Button className="ghost" size="small" onClick={() => openAccount(c)}>
                   Process
@@ -183,9 +183,8 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { provider: { label: 'Provider', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -205,9 +204,8 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { client: { label: 'Client', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {

@@ -29,9 +29,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
-    AllocationAccountRule
-  );
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
+    useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
 
@@ -249,7 +248,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                         <b>Controllers</b>
                       </Table.Cell>
                       <Table.Cell key={1}>
-                        {Object.keys(normalAccount.payload.ctrls.textMap).join(', ')}
+                        {Object.keys(normalAccount.payload.ctrls).join(', ')}
                       </Table.Cell>
                     </Table.Row>
                   )}

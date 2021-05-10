@@ -94,10 +94,8 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     fv => fv.payload.listingId === listing?.payload.listingId
   );
 
-  const {
-    contracts: manualFVRequestContracts,
-    loading: manualFVRequestsLoading,
-  } = useStreamQueries(ManualFairValueCalculation);
+  const { contracts: manualFVRequestContracts, loading: manualFVRequestsLoading } =
+    useStreamQueries(ManualFairValueCalculation);
   const manualFVRequests = manualFVRequestContracts.filter(
     fv => fv.payload.listingId === listing?.payload.listingId
   );

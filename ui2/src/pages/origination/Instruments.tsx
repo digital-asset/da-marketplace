@@ -10,9 +10,8 @@ import { ArrowRightIcon } from '../../icons/icons';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
-  const { contracts: allInstruments, loading: allInstrumentsLoading } = useStreamQueries(
-    AssetDescription
-  );
+  const { contracts: allInstruments, loading: allInstrumentsLoading } =
+    useStreamQueries(AssetDescription);
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
   const { getName } = usePartyName('');
 
@@ -26,7 +25,7 @@ export const InstrumentsTable: React.FC = () => {
         return {
           elements: [
             getName(c.payload.issuer),
-            Object.keys(c.payload.assetId.signatories.textMap)
+            Object.keys(c.payload.assetId.signatories)
               .map(party => getName(party))
               .join(', '),
             c.payload.assetId.label,

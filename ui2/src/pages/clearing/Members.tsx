@@ -28,12 +28,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const ledger = useLedger();
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: clearedTrades, loading: clearedTradesLoading } = useStreamQueries(
-    ClearedTrade
-  );
-  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } = useStreamQueries(
-    ClearedTradeSide
-  );
+  const { contracts: clearedTrades, loading: clearedTradesLoading } =
+    useStreamQueries(ClearedTrade);
+  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } =
+    useStreamQueries(ClearedTradeSide);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
   const ccpDeposits = deposits.filter(
@@ -126,7 +124,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               getName(c.payload.account.provider),
               getName(c.payload.account.owner),
               party === c.payload.account.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap).join(', '),
+              Object.keys(c.payload.ctrls).join(', '),
             ],
           };
         })}

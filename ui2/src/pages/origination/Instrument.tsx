@@ -18,9 +18,8 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   const { getName } = usePartyName('');
   const cid = contractId.replace('_', '#');
 
-  const { contracts: instruments, loading: instrumentsLoading } = useStreamQueries(
-    AssetDescription
-  );
+  const { contracts: instruments, loading: instrumentsLoading } =
+    useStreamQueries(AssetDescription);
   const instrument = instruments.find(c => c.contractId === cid);
 
   useEffect(() => {
@@ -49,7 +48,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
             {
               elements: [
                 getName(instrument.payload.issuer),
-                Object.keys(instrument.payload.assetId.signatories.textMap)
+                Object.keys(instrument.payload.assetId.signatories)
                   .map(party => getName(party))
                   .join(', '),
                 instrument.payload.assetId.label,
