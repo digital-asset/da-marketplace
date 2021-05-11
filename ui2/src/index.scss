@@ -15,6 +15,7 @@
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
+@use 'pages/clearing/Member';
 @use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
@@ -204,6 +205,7 @@ html {
         @include QuickSetup.quick-setup();
         @include Landing.landing();
         @include Assets.assets();
+        @include Member.member();
         @include Account.account();
         @include New.new-account();
         @include Auction.auction();

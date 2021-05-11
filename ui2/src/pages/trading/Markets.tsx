@@ -5,6 +5,7 @@ import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
 import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
+import {ArrowRightIcon} from '../../icons/icons';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
@@ -22,6 +23,7 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
       <StripedTable
         headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset']}
         rowsClickable
+        clickableIcon={<ArrowRightIcon/>}
         rows={listings.map(c => {
           return {
             elements: [

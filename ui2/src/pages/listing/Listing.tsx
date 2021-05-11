@@ -19,6 +19,7 @@ import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { CreateEvent } from '@daml/ledger';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { ArrowLeftIcon } from '../../icons/icons';
+import {getMarketType} from './Listings';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
@@ -139,6 +140,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             headings={[
               'Provider',
               'Client',
+              'Cleared By',
               'Listing ID',
               'Calendar ID',
               'Traded Asset',
@@ -151,6 +153,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                 elements: [
                   getName(listing.payload.provider),
                   getName(listing.payload.customer),
+                  getMarketType(listing, getName),
                   listing.payload.listingId.label,
                   listing.payload.calendarId,
                   listing.payload.tradedAssetId.label,

@@ -35,6 +35,7 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { ArrowRightIcon } from '../../icons/icons';
+import {usePartyName} from '../../config';
 
 type Props = {
   cid: string;
@@ -47,6 +48,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   listings,
 }: ServicePageProps<Service> & Props) => {
   const history = useHistory();
+
 
   const [isBuy, setIsBuy] = useState(true);
   const [isLimit, setIsLimit] = useState(true);
@@ -117,12 +119,17 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const ledger = useLedger();
   const clientServices = services.filter(s => s.payload.customer === party);
   const listing = listings.find(c => c.contractId === cid);
+  const { getName } = usePartyName(party);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
   const allOrders = useStreamQueries(Order);
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
+  const clearinghouse =
+    listing.payload.listingType.tag === 'Collateralized'
+      ? 'Collateralized'
+      : listing.payload.listingType.value.clearinghouse;
   const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
@@ -228,7 +235,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   return (
     <div>
       <Header as="h2" textAlign="center">
-        <b>{listing.payload.listingId.label}</b>
+        <b>{listing.payload.listingId.label} ({getName(clearinghouse)})</b>
       </Header>
       <div className="market">
         <div className="orders">
@@ -432,7 +439,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <input />
                 <Label>{listing.payload.quotedAssetId.label}</Label>
               </Form.Input>
-              <Button className="ghost" type="submit" disabled={!price || !quantity}>
+              <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity}>
                 {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
               </Button>
             </FormErrorHandled>
