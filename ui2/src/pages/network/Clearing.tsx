@@ -138,7 +138,9 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
             path: '/app/setup/clearing/market/offer',
           },
         ]}
-      />
+      >
+        <ClearingOfferModal services={[]} />
+      </ActionTile>
       <Header as="h3">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
