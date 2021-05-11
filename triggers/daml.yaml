@@ -23,5 +23,4 @@ data-dependencies:
 sandbox-options:
   - --wall-clock-time
 build-options:
-  - --target=1.12
   - --ghc-option=-Wno-deprecations
