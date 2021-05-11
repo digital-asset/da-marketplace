@@ -12,12 +12,12 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
 import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
-import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
 import { ActionTile } from './Actions';
+import ClearingOfferModal from '../clearing/ClearingOfferModal';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { createDropdownProp } from '../common';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
@@ -45,6 +45,12 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
 
+  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
+  const accounts = assetSettlementRules
+    .filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+  const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
+
   const terminateService = async (c: CreateEvent<Service> | CreateEvent<MarketService>) => {
     if (getTemplateId(c.templateId) === CLEARING_SERVICE_TEMPLATE) {
       await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -53,22 +59,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     }
   };
 
-  const [clearingAccountName, setClearingAccountName] = useState('');
-  const [marginAccountName, setMarginAccountName] = useState('');
   const [ccpAccountName, setCcpAccountName] = useState('');
-  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = allocationAccountRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
-  const allocationAccountNames: DropdownItemProps[] = allocationAccounts.map(a =>
-    createDropdownProp(a.id.label)
-  );
-
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
-  const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
   const approveRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
     if (!hasRole) return; // TODO: Display error
@@ -104,15 +95,8 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     }
   };
 
-  const acceptOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
-    if (getTemplateId(c.templateId) === CLEARING_OFFER_TEMPLATE) {
-      const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
-      const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
-      if (!clearingAccount || !marginAccount) return;
-      await ledger.exercise(Offer.Accept, c.contractId, { marginAccount, clearingAccount });
-    } else {
-      await ledger.exercise(MarketOffer.Accept, c.contractId, {});
-    }
+  const acceptMarketOffer = async (c: CreateEvent<MarketOffer>) => {
+    await ledger.exercise(MarketOffer.Accept, c.contractId, {});
   };
 
   const withdrawOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
@@ -232,30 +216,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                     <Button.Group floated="right">
                       {c.payload.customer === party ? (
                         <>
-                          <ModalFormErrorHandled
-                            onSubmit={() => acceptOffer(c)}
-                            title="Accept Offer"
-                          >
-                            <Form.Select
-                              label="Clearing Account"
-                              placeholder="Select..."
-                              required
-                              min={1}
-                              options={accountNames}
-                              value={clearingAccountName}
-                              onChange={(_, change) =>
-                                setClearingAccountName(change.value as string)
-                              }
-                            />
-                            <Form.Select
-                              label="Margin Account"
-                              placeholder="Select..."
-                              required
-                              options={allocationAccountNames}
-                              value={marginAccountName}
-                              onChange={(_, change) => setMarginAccountName(change.value as string)}
-                            />
-                          </ModalFormErrorHandled>
+                          <ClearingOfferModal offer={c} services={services} />
                           <Button className="ghost warning" onClick={() => rejectOffer(c)}>
                             Reject
                           </Button>
@@ -280,7 +241,11 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                     <>
                       {c.payload.customer === party ? (
                         <Button.Group>
-                          <Button className="ghost" onClick={() => acceptOffer(c)} floated="right">
+                          <Button
+                            className="ghost"
+                            onClick={() => acceptMarketOffer(c)}
+                            floated="right"
+                          >
                             Accept
                           </Button>
                           <Button className="ghost warning" onClick={() => rejectOffer(c)}>
