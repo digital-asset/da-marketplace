@@ -10,7 +10,7 @@ import {
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, damlSetValues } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
@@ -123,7 +123,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               getName(c.payload.account.provider),
               getName(c.payload.account.owner),
               party === c.payload.account.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap)
+              damlSetValues(c.payload.ctrls)
                 .map(ctrl => getName(ctrl))
                 .sort()
                 .join(', '),

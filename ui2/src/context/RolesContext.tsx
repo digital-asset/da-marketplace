@@ -54,27 +54,20 @@ const RolesProvider: React.FC = ({ children }) => {
 
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingRoles, loading: clearingRolesLoading } = useStreamQueries(
-    ClearingRole
-  );
-  const { contracts: custodianRoles, loading: custodianRolesLoading } = useStreamQueries(
-    CustodianRole
-  );
-  const { contracts: exchangeRoles, loading: exchangeRolesLoading } = useStreamQueries(
-    ExchangeRole
-  );
-  const { contracts: distributorRoles, loading: distributorRolesLoading } = useStreamQueries(
-    DistributorRole
-  );
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
-    RegulatorRole
-  );
-  const { contracts: settlementServices, loading: settlementServicesLoading } = useStreamQueries(
-    SettlementService
-  );
-  const { contracts: matchingServices, loading: matchingServicesLoading } = useStreamQueries(
-    MatchingService
-  );
+  const { contracts: clearingRoles, loading: clearingRolesLoading } =
+    useStreamQueries(ClearingRole);
+  const { contracts: custodianRoles, loading: custodianRolesLoading } =
+    useStreamQueries(CustodianRole);
+  const { contracts: exchangeRoles, loading: exchangeRolesLoading } =
+    useStreamQueries(ExchangeRole);
+  const { contracts: distributorRoles, loading: distributorRolesLoading } =
+    useStreamQueries(DistributorRole);
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
+    useStreamQueries(RegulatorRole);
+  const { contracts: settlementServices, loading: settlementServicesLoading } =
+    useStreamQueries(SettlementService);
+  const { contracts: matchingServices, loading: matchingServicesLoading } =
+    useStreamQueries(MatchingService);
 
   useEffect(() => {
     setLoading(

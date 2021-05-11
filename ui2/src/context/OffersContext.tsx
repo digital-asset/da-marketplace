@@ -52,28 +52,20 @@ const OffersProvider: React.FC = ({ children }) => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingOffers, loading: clearingOffersLoading } = useStreamQueries(
-    ClearingOffer
-  );
-  const {
-    contracts: regulatorServiceOffers,
-    loading: regulatorServiceOffersLoading,
-  } = useStreamQueries(RegulatorOffer);
-  const { contracts: custodianOffers, loading: custodianOffersLoading } = useStreamQueries(
-    CustodianOffer
-  );
-  const { contracts: distributorOffers, loading: distributorOffersLoading } = useStreamQueries(
-    DistributorOffer
-  );
-  const { contracts: settlementOffers, loading: settlementOffersLoading } = useStreamQueries(
-    SettlementOffer
-  );
-  const { contracts: exhangeOffers, loading: exhangeOffersLoading } = useStreamQueries(
-    ExchangeOffer
-  );
-  const { contracts: matchingOffers, loading: matchingOffersLoading } = useStreamQueries(
-    MatchingOffer
-  );
+  const { contracts: clearingOffers, loading: clearingOffersLoading } =
+    useStreamQueries(ClearingOffer);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
+  const { contracts: custodianOffers, loading: custodianOffersLoading } =
+    useStreamQueries(CustodianOffer);
+  const { contracts: distributorOffers, loading: distributorOffersLoading } =
+    useStreamQueries(DistributorOffer);
+  const { contracts: settlementOffers, loading: settlementOffersLoading } =
+    useStreamQueries(SettlementOffer);
+  const { contracts: exhangeOffers, loading: exhangeOffersLoading } =
+    useStreamQueries(ExchangeOffer);
+  const { contracts: matchingOffers, loading: matchingOffersLoading } =
+    useStreamQueries(MatchingOffer);
 
   useEffect(() => {
     setLoading(

@@ -70,14 +70,12 @@ const AppComponent = () => {
   const party = useParty();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
-  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
-    ClearingService
-  );
+  const { contracts: clearingService, loading: clearingLoading } =
+    useStreamQueries(ClearingService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
-  const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
-    IssuanceService
-  );
+  const { contracts: issuanceService, loading: issuanceLoading } =
+    useStreamQueries(IssuanceService);
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
   const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);

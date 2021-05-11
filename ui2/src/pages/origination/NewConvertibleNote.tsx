@@ -17,6 +17,7 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import Tile from '../../components/Tile/Tile';
 import { Button, Form } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
+import { makeDamlSet } from '../common';
 
 const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
@@ -58,13 +59,13 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   const accounts = assetSettlementRules.map(c => c.payload.account);
   const ccy = assets.find(c => c.payload.assetId.label === currency);
   const ccyId: Id = ccy?.payload.assetId || {
-    signatories: { textMap: {} },
+    signatories: makeDamlSet<string>([]),
     label: '',
     version: '0',
   };
   const asset = assets.find(c => c.payload.assetId.label === underlying);
   const assetId: Id = asset?.payload.assetId || {
-    signatories: { textMap: {} },
+    signatories: makeDamlSet<string>([]),
     label: '',
     version: '0',
   };

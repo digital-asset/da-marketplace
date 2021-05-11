@@ -13,7 +13,7 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, damlSetValues } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 
@@ -29,9 +29,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
-    AllocationAccountRule
-  );
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
+    useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
 
@@ -249,7 +248,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                         <b>Controllers</b>
                       </Table.Cell>
                       <Table.Cell key={1}>
-                        {Object.keys(normalAccount.payload.ctrls.textMap)
+                        {damlSetValues(normalAccount.payload.ctrls)
                           .map(ctrl => getName(ctrl))
                           .sort()
                           .join(', ')}

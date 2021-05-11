@@ -3,7 +3,7 @@ module Tests.Trading.E2E where
 import Daml.Script
 import Common
 import DA.Assert ((===))
-import DA.Next.Set
+import DA.Set
 import DA.List
 import DA.Foldable
 import DA.Finance.Types (Id(..))

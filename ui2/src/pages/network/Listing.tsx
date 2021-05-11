@@ -52,9 +52,8 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { provider: { label: 'Provider', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -74,9 +73,8 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { customer: { label: 'Customer', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {

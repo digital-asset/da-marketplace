@@ -36,13 +36,11 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
   const { contracts: marketOffers, loading: marketOffersLoading } = useStreamQueries(MarketOffer);
   const { contracts: requests, loading: requestsLoading } = useStreamQueries(Request);
-  const { contracts: marketRequests, loading: marketRequestsLoading } = useStreamQueries(
-    MarketRequest
-  );
+  const { contracts: marketRequests, loading: marketRequestsLoading } =
+    useStreamQueries(MarketRequest);
 
-  const { contracts: marketServices, loading: marketServicesLoading } = useStreamQueries(
-    MarketService
-  );
+  const { contracts: marketServices, loading: marketServicesLoading } =
+    useStreamQueries(MarketService);
 
   const roles = useStreamQueries(Role).contracts;
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;

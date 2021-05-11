@@ -13,7 +13,7 @@ import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, makeDamlSet } from '../common';
 import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
@@ -197,7 +197,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
-      id: { signatories: { textMap: {} }, label: orderId, version: '0' },
+      id: { signatories: makeDamlSet<string>([]), label: orderId, version: '0' },
       listingId: listing.payload.listingId,
       asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,

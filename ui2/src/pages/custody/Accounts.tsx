@@ -23,6 +23,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { damlSetValues } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -169,7 +170,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
                         {party === c.payload.account.provider ? 'Provider' : 'Client'}
                       </TableCell>
                       <TableCell key={4} className={classes.tableCell}>
-                        {Object.keys(c.payload.ctrls.textMap).join(', ')}
+                        {damlSetValues(c.payload.ctrls).join(', ')}
                       </TableCell>
                       <TableCell key={5} className={classes.tableCell}>
                         {party === c.payload.account.owner && (

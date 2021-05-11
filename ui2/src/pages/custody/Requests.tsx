@@ -27,6 +27,7 @@ import { usePartyName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { damlSetValues } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -164,7 +165,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                           {party === c.payload.provider ? 'Provider' : 'Client'}
                         </TableCell>
                         <TableCell key={4} className={classes.tableCell}>
-                          {Object.keys(c.payload.ctrls.textMap).join(', ')}
+                          {damlSetValues(c.payload.ctrls).join(', ')}
                         </TableCell>
                         <TableCell key={5} className={classes.tableCell}>
                           {party === c.payload.provider && (

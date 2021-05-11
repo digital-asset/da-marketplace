@@ -6,7 +6,7 @@ import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Finance.Trade.SettlementInstruction
 import DA.Map (Map)
-import DA.Next.Set
+import DA.Set
 import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 import Marketplace.Custody.Model qualified as Custody

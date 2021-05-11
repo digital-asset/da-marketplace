@@ -28,12 +28,10 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const ledger = useLedger();
 
   const providerServices = services.filter(s => s.payload.provider === party);
-  const { contracts: createRequests, loading: createRequestsLoading } = useStreamQueries(
-    CreateIssuanceRequest
-  );
-  const { contracts: reduceRequests, loading: reduceRequestsLoading } = useStreamQueries(
-    ReduceIssuanceRequest
-  );
+  const { contracts: createRequests, loading: createRequestsLoading } =
+    useStreamQueries(CreateIssuanceRequest);
+  const { contracts: reduceRequests, loading: reduceRequestsLoading } =
+    useStreamQueries(ReduceIssuanceRequest);
   const createIssuance = async (c: CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
     if (!service) return; // TODO: Display error

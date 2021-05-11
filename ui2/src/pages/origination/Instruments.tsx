@@ -7,12 +7,12 @@ import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import { ActionTile } from '../network/Actions';
+import { damlSetValues } from '../common';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
-  const { contracts: allInstruments, loading: allInstrumentsLoading } = useStreamQueries(
-    AssetDescription
-  );
+  const { contracts: allInstruments, loading: allInstrumentsLoading } =
+    useStreamQueries(AssetDescription);
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
   const { getName } = usePartyName('');
 
@@ -39,7 +39,7 @@ export const InstrumentsTable: React.FC = () => {
           return {
             elements: [
               getName(c.payload.issuer),
-              Object.keys(c.payload.assetId.signatories.textMap)
+              damlSetValues(c.payload.assetId.signatories)
                 .map(party => getName(party))
                 .sort()
                 .join(', '),
