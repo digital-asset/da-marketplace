@@ -13,7 +13,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 import { getAbbreviation } from '../page/utils';
-import { usePartyName } from '../../config';
+import { usePartyName, useVerifiedParties } from '../../config';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Link, NavLink } from 'react-router-dom';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
@@ -37,6 +37,8 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
+import { Fields } from '../../components/InputDialog/Fields';
+import _ from 'lodash';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -169,8 +171,7 @@ const Landing = () => {
   const { name } = usePartyName(party);
   const providers = useProviderServices(party);
 
-  const identities = useStreamQueries(VerifiedIdentity).contracts;
-  const legalNames = identities.map(c => c.payload.legalName);
+  const { identities, legalNames } = useVerifiedParties();
 
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
   const allocationAccounts = allocationAccountRules
@@ -259,7 +260,7 @@ const Landing = () => {
   const requestService = <T extends ServiceRequestTemplates>(
     service: Template<T, undefined, string>,
     kind: ServiceKind,
-    extraFields?: object
+    extraFields?: Fields
   ) => {
     setFields({
       provider: {

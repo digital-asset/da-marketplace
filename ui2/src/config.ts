@@ -4,6 +4,7 @@
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { partyNameFromJwtToken, useWellKnownParties } from '@daml/hub-react';
 import { Parties } from '@daml/hub-react/lib/WellKnownParties';
+import _ from 'lodash';
 import { useCallback, useMemo } from 'react';
 import { retrieveCredentials } from './Credentials';
 import { useStreamQueries } from './Main';
@@ -92,6 +93,12 @@ export const usePartyName = (party: string) => {
   const name = useMemo(() => getName(party), [party, getName]);
 
   return { name, getName };
+};
+
+export const useVerifiedParties = () => {
+  const identities = useStreamQueries(VerifiedIdentity).contracts;
+  const legalNames = _.uniq(identities.map(c => c.payload.legalName)).sort();
+  return { identities, legalNames };
 };
 
 export function getTemplateId(t: string) {

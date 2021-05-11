@@ -4,6 +4,17 @@
   .notifications {
     .notification-content {
       margin-top: $spacing-m;
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        padding-right: $spacing-s;
+      }
+
+      .button {
+        margin-right: $spacing-s;
+      }
     }
   }
 }
