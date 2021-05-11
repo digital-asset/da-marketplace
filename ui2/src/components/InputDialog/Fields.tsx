@@ -19,9 +19,6 @@ export interface CheckBoxField {
 
 export type Field = RegularField | SelectionField | CheckBoxField;
 export type Fields = Record<string, Field>;
-// export type Fields<K> = {
-//   [Property in keyof K]: Field;
-// };
 
 type FieldComponentsProps<T> = {
   defaultValue: T;
