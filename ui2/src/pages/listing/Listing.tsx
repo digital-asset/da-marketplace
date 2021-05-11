@@ -19,7 +19,7 @@ import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { CreateEvent } from '@daml/ledger';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { ArrowLeftIcon } from '../../icons/icons';
-import {getMarketType} from './Listings';
+import { getMarketType } from './Listings';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;

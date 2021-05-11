@@ -35,7 +35,7 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { ArrowRightIcon } from '../../icons/icons';
-import {usePartyName} from '../../config';
+import { usePartyName } from '../../config';
 
 type Props = {
   cid: string;
@@ -48,7 +48,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   listings,
 }: ServicePageProps<Service> & Props) => {
   const history = useHistory();
-
 
   const [isBuy, setIsBuy] = useState(true);
   const [isLimit, setIsLimit] = useState(true);
@@ -235,7 +234,9 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   return (
     <div>
       <Header as="h2" textAlign="center">
-        <b>{listing.payload.listingId.label} ({getName(clearinghouse)})</b>
+        <b>
+          {listing.payload.listingId.label} ({getName(clearinghouse)})
+        </b>
       </Header>
       <div className="market">
         <div className="orders">

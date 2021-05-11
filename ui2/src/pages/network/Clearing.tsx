@@ -195,25 +195,16 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                   <Button.Group floated="right">
                     {c.payload.customer === party ? (
                       <>
-                        <Button
-                          className="ghost warning"
-                          onClick={() => cancelRequest(c)}
-                        >
+                        <Button className="ghost warning" onClick={() => cancelRequest(c)}>
                           Cancel
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button
-                          className="ghost"
-                          onClick={() => approveRequest(c)}
-                        >
+                        <Button className="ghost" onClick={() => approveRequest(c)}>
                           Approve
                         </Button>
-                        <Button
-                          className="ghost warning"
-                          onClick={() => rejectRequest(c)}
-                        >
+                        <Button className="ghost warning" onClick={() => rejectRequest(c)}>
                           Reject
                         </Button>
                       </>
@@ -265,19 +256,13 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                               onChange={(_, change) => setMarginAccountName(change.value as string)}
                             />
                           </ModalFormErrorHandled>
-                          <Button
-                            className="ghost warning"
-                            onClick={() => rejectOffer(c)}
-                          >
+                          <Button className="ghost warning" onClick={() => rejectOffer(c)}>
                             Reject
                           </Button>
                         </>
                       ) : (
                         <>
-                          <Button
-                            className="ghost warning"
-                            onClick={() => withdrawOffer(c)}
-                          >
+                          <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
                             Withdraw
                           </Button>
                         </>
@@ -298,19 +283,13 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                           <Button className="ghost" onClick={() => acceptOffer(c)} floated="right">
                             Accept
                           </Button>
-                          <Button
-                            className="ghost warning"
-                            onClick={() => rejectOffer(c)}
-                          >
+                          <Button className="ghost warning" onClick={() => rejectOffer(c)}>
                             Reject
                           </Button>
                         </Button.Group>
                       ) : (
                         <>
-                          <Button
-                            className="ghost warning"
-                            onClick={() => withdrawOffer(c)}
-                          >
+                          <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
                             Withdraw
                           </Button>
                         </>

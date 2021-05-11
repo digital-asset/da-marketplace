@@ -21,6 +21,7 @@ import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
 import { ArrowLeftIcon } from '../../icons/icons';
 import { formatCurrency } from '../../util';
+import { ActionTile } from '../network/Actions';
 
 type Props = {
   member?: boolean;
@@ -105,14 +106,21 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
         <Button className="ghost back-button" onClick={() => history.goBack()}>
           <ArrowLeftIcon /> back
         </Button>
-        <Tile header={<h2>Actions</h2>}>
+        <ActionTile
+          actions={[
+            {
+              label: 'Manage Clearing Services',
+              path: '/app/manage/clearing',
+            },
+          ]}
+        >
           {!member && (
             <>
               <MarginCallModal services={services} member={customer} />
               <MTMCalculationModal services={services} member={customer} />
             </>
           )}
-        </Tile>
+        </ActionTile>
         <Tile header={<h4>Standing</h4>}>
           <b>Margins:</b> {!!standing && standing?.payload.marginSatisfied ? 'Yes' : 'No'}
           <br />

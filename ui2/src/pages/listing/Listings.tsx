@@ -23,14 +23,13 @@ type Props = {
 };
 
 export const getMarketType = (c: CreateEvent<Listing>, getName: (party: string) => string) => {
-    const listingType = c.payload.listingType;
-    if (listingType.tag === 'Collateralized') {
-      return 'Collateralized';
-    } else {
-      return getName(listingType.value.clearinghouse);
-    }
-  };
-
+  const listingType = c.payload.listingType;
+  if (listingType.tag === 'Collateralized') {
+    return 'Collateralized';
+  } else {
+    return getName(listingType.value.clearinghouse);
+  }
+};
 
 export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
