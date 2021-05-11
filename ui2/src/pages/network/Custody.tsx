@@ -29,6 +29,7 @@ import {
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import { ActionTile } from './Actions';
+import { damlSetValues } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -103,7 +104,7 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls).join(', '),
+              damlSetValues(c.payload.ctrls).join(', '),
               party === c.payload.provider && (
                 <Button className="ghost" size="small" onClick={() => openAccount(c)}>
                   Process

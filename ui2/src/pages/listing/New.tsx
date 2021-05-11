@@ -83,7 +83,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   const requestListing = async () => {
     if (!tradedAsset || !quotedAsset) return;
-    console.log(tradedAsset.payload.assetId);
     const isCollateralized = clearedBy === COLLATERALIZED_VALUE;
     const listingType: ListingTypeRequest = isCollateralized
       ? { tag: 'CollateralizedRequest', value: {} }

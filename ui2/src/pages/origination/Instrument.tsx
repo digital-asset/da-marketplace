@@ -10,6 +10,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { ArrowLeftIcon } from '../../icons/icons';
+import { damlSetValues } from '../common';
 
 export const Instrument: React.FC<RouteComponentProps> = () => {
   const el = useRef<HTMLDivElement>(null);
@@ -48,7 +49,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
             {
               elements: [
                 getName(instrument.payload.issuer),
-                Object.keys(instrument.payload.assetId.signatories)
+                damlSetValues(instrument.payload.assetId.signatories)
                   .map(party => getName(party))
                   .join(', '),
                 instrument.payload.assetId.label,

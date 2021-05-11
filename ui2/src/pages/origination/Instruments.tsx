@@ -8,6 +8,7 @@ import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import { ArrowRightIcon } from '../../icons/icons';
 import { ActionTile } from '../network/Actions';
+import { damlSetValues } from '../common';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
@@ -40,7 +41,7 @@ export const InstrumentsTable: React.FC = () => {
           return {
             elements: [
               getName(c.payload.issuer),
-              Object.keys(c.payload.assetId.signatories)
+              damlSetValues(c.payload.assetId.signatories)
                 .map(party => getName(party))
                 .sort()
                 .join(', '),

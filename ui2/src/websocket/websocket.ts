@@ -72,7 +72,7 @@ const decodeCreateEvent = <T extends object, K, I extends string>(
 
 function useDamlStreamQuery<T extends object, K, I extends string>(
   templateIds: string[],
-  templateMap: Map<string, Template<any, any, any>>,
+  templateMap: Map<string, Template<T, K, I>>,
   token?: string
 ) {
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
@@ -86,7 +86,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [retries, setRetries] = useState(0);
 
   const messageHandlerScoped = useCallback(
-    (templateMap: Map<string, Template<any, any, any>>) => {
+    (templateMap: Map<string, Template<T, K, I>>) => {
       return (message: { data: string }) => {
         if (timer != null) {
           clearInterval(timer);
