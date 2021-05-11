@@ -112,23 +112,19 @@ const RequestsProvider: React.FC = ({ children }) => {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingRequest, loading: clearingLoading } = useStreamQueries(
-    ClearingRequest
-  );
-  const { contracts: marketClearingRequest, loading: marketClearingLoading } = useStreamQueries(
-    MarketClearingRequest
-  );
+  const { contracts: clearingRequest, loading: clearingLoading } =
+    useStreamQueries(ClearingRequest);
+  const { contracts: marketClearingRequest, loading: marketClearingLoading } =
+    useStreamQueries(MarketClearingRequest);
   const { contracts: custodyRequest, loading: custodyLoading } = useStreamQueries(CustodyRequest);
   const { contracts: auctionRequest, loading: auctionLoading } = useStreamQueries(AuctionRequest);
   const { contracts: biddingRequest, loading: biddingLoading } = useStreamQueries(BiddingRequest);
-  const { contracts: issuanceRequest, loading: issuanceLoading } = useStreamQueries(
-    IssuanceRequest
-  );
+  const { contracts: issuanceRequest, loading: issuanceLoading } =
+    useStreamQueries(IssuanceRequest);
   const { contracts: listingRequest, loading: listingLoading } = useStreamQueries(ListingRequest);
   const { contracts: tradingRequest, loading: tradingLoading } = useStreamQueries(TradingRequest);
-  const { contracts: regulatorRequest, loading: regulatorLoading } = useStreamQueries(
-    RegulatorRequest
-  );
+  const { contracts: regulatorRequest, loading: regulatorLoading } =
+    useStreamQueries(RegulatorRequest);
 
   useEffect(
     () =>

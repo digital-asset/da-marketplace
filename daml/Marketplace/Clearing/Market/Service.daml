@@ -6,8 +6,8 @@ import Marketplace.Clearing.Market.Model
 import Marketplace.Listing.Model
 import Marketplace.Utils
 
-import DA.Next.Set (Set)
-import DA.Next.Set qualified as Set
+import DA.Set (Set)
+import DA.Set qualified as Set
 
 template Service
   with

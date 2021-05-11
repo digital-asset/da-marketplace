@@ -57,9 +57,10 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
         .map(c => c.payload.account),
     [allocationAccountRules]
   );
-  const allocationAccountNames = useMemo(() => allocationAccounts.map(a => a.id.label), [
-    allocationAccounts,
-  ]);
+  const allocationAccountNames = useMemo(
+    () => allocationAccounts.map(a => a.id.label),
+    [allocationAccounts]
+  );
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useMemo(
@@ -148,7 +149,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       ...extraFields,
     });
 
-    setRequest((service as unknown) as Template<ServiceRequestTemplates, undefined, string>);
+    setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
   };
 
   useEffect(() => {

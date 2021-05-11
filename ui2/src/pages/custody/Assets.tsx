@@ -21,9 +21,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   const { getName } = usePartyName(party);
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
-    AllocationAccountRule
-  );
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
+    useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
   const allAccounts = useMemo(

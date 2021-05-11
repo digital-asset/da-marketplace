@@ -120,7 +120,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== quotedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}
@@ -147,7 +147,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
               options={assets
                 .filter(c => c.payload.assetId.label !== tradedAssetLabel)
                 .map(c => ({
-                  key: c,
+                  key: c.payload.assetId.label,
                   text: c.payload.assetId.label,
                   value: c.payload.assetId.label,
                 }))}

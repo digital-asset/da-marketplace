@@ -104,9 +104,8 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
   const { parties, loading: operatorLoading } = useWellKnownParties();
   const provider = parties?.userAdminParty || 'Operator';
 
-  const { contracts: regulatorServices, loading: regulatorLoading } = useStreamQueries(
-    RegulatorService
-  );
+  const { contracts: regulatorServices, loading: regulatorLoading } =
+    useStreamQueries(RegulatorService);
 
   const requestContract = useStreamQueries(RegulatorRequest).contracts.find(
     r => r.payload.customer === customer
@@ -270,7 +269,7 @@ const Landing = () => {
       ...extraFields,
     });
 
-    setRequest((service as unknown) as Template<ServiceRequestTemplates, undefined, string>);
+    setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
     setServiceKind(kind);
     setOpenDialog(true);
   };

@@ -109,9 +109,8 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { client: { label: 'Client', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {
@@ -137,9 +136,8 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
     },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -169,9 +167,8 @@ const TradingComponent: React.FC<RouteComponentProps & Props> = ({
     },
     onClose: async function (state: any | null) {},
   };
-  const [acceptDialogProps, setAcceptDialogProps] = useState<InputDialogProps<any>>(
-    defaultAcceptDialogProps
-  );
+  const [acceptDialogProps, setAcceptDialogProps] =
+    useState<InputDialogProps<any>>(defaultAcceptDialogProps);
 
   const acceptOffer = async (c: CreateEvent<Offer>) => {
     const onClose = async (state: any | null) => {

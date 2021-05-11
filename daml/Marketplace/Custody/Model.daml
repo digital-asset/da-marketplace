@@ -19,7 +19,7 @@ import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Map (Map)
 import DA.Map qualified as Map
-import DA.Next.Set
+import DA.Set
 import DA.Optional (fromSomeNote)
 import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription

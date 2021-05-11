@@ -10,7 +10,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { createDropdownProp, ServicePageProps } from '../common';
+import { createDropdownProp, ServicePageProps, makeDamlSet } from '../common';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
@@ -40,7 +40,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [accountName, setAccountName] = useState<string>('');
   const [accountType, setAccountType] = useState(AccountType.REGULAR);
   const [accountNominee, setAccountNominee] = useState<Party>();
-  console.log(accountType);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
 
@@ -78,9 +77,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       case AccountType.REGULAR:
         const accountRequest: RequestOpenAccount = {
           accountId: {
-            signatories: {
-              textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} },
-            },
+            signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
             label: accountName,
             version: '0',
           },
@@ -94,13 +91,11 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         if (!nomineeIdentity) return;
         const request: RequestOpenAllocationAccount = {
           accountId: {
-            signatories: {
-              textMap: { [service.payload.provider]: {}, [service.payload.customer]: {} },
-            },
+            signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
             label: accountName,
             version: '0',
           },
-          observers: { textMap: {} },
+          observers: makeDamlSet<string>([]),
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);

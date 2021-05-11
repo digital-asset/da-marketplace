@@ -14,9 +14,8 @@ import { ArrowRightIcon } from '../../../icons/icons';
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
 }: RouteComponentProps) => {
-  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } = useStreamQueries(
-    BiddingAuctionContract
-  );
+  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } =
+    useStreamQueries(BiddingAuctionContract);
   const { contracts: bids, loading: bidsLoading } = useStreamQueries(Bid);
   const { getName } = usePartyName('');
 

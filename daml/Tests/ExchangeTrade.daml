@@ -4,7 +4,7 @@ import Common
 import Daml.Script
 import DA.Finance.Types (Id(..))
 import DA.Finance.Asset (AssetDeposit_Split(..))
-import DA.Next.Set
+import DA.Set
 import DA.Foldable (forA_)
 import qualified Marketplace.Settlement.Model as Settlement
 import qualified Marketplace.Trading.Matching.Service as Matching

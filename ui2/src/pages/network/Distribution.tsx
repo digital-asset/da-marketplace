@@ -31,12 +31,10 @@ export const DistributionServiceTable = () => {
   const party = useParty();
   const { getName } = usePartyName(party);
 
-  const { contracts: auctionServices, loading: auctionServicesLoading } = useStreamQueries(
-    AuctionService
-  );
-  const { contracts: biddingServices, loading: biddingServicesLoading } = useStreamQueries(
-    BiddingService
-  );
+  const { contracts: auctionServices, loading: auctionServicesLoading } =
+    useStreamQueries(AuctionService);
+  const { contracts: biddingServices, loading: biddingServicesLoading } =
+    useStreamQueries(BiddingService);
 
   const services = [...auctionServices, ...biddingServices];
 
@@ -83,9 +81,8 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
     fields: { provider: { label: 'Provider', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -105,9 +102,8 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
     fields: { customer: { label: 'Customer', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {
