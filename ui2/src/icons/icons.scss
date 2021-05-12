@@ -55,12 +55,22 @@
 
     &.fill-blue,
     path.fill-blue {
-      fill: var(--blue-50);
+      fill: var(--blue-60);
     }
 
     &.fill-green,
     path.fill-green {
       fill: var(--green-50);
+    }
+
+    &.fill-white,
+    path.fill-white {
+      fill: var(--white);
+    }
+
+    &.fill-grey,
+    path.fill-grey {
+      fill: var(--cool-grey-40);
     }
 
     &.circled-check-icon {

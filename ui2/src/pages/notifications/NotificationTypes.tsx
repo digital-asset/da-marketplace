@@ -72,6 +72,7 @@ import {
   Request as MatchingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 import {
+  Accept,
   Accept as ClearingServiceAccept,
   Approve as ClearingServiceApprove,
   Decline as ClearingServiceDecline,
@@ -131,6 +132,7 @@ import {
 import { CreateEvent } from '@daml/ledger';
 import { Choice, ContractId } from '@daml/types';
 import { ServiceKind } from '../../context/ServicesContext';
+import { Field, Fields } from '../../components/InputDialog/Fields';
 
 export type OfferTemplates =
   | CustodyRoleOffer
@@ -200,14 +202,21 @@ export type OfferDeclineChoice = Choice<
   undefined
 >;
 
-type OfferNotificationSet = {
+export type OfferAcceptFields<A> = {
+  acceptFields?: { [K in keyof Extract<OfferAccepts, A>]: Field };
+  lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
+};
+
+export type OfferNotificationSet = {
+  kind: 'Role' | 'Service';
+  service: ServiceKind;
   tag: 'offer';
   choices: {
     accept: OfferAcceptChoice;
     decline: OfferDeclineChoice;
   };
   contracts: readonly CreateEvent<OfferTemplates>[];
-};
+} & OfferAcceptFields<Record<string, any>>;
 
 // -------------------------------------------------------------
 
@@ -279,16 +288,20 @@ export type RequestRejectChoice = Choice<
   undefined
 >;
 
+export type RequestApproveFields<A> = {
+  approveFields?: { [K in keyof Extract<RequestApproves, A>]: Field };
+  lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
+};
+
 type RequestNotificationSet = {
+  kind: 'Role' | 'Service';
+  service: ServiceKind;
   tag: 'request';
   choices: {
     approve: RequestApproveChoice;
     reject: RequestRejectChoice;
   };
   contracts: readonly CreateEvent<RequestTemplates>[];
-};
+} & RequestApproveFields<Record<string, any>>;
 
-export type NotificationSet = (OfferNotificationSet | RequestNotificationSet) & {
-  kind: 'Role' | 'Service';
-  service: ServiceKind;
-};
+export type NotificationSet = OfferNotificationSet | RequestNotificationSet;

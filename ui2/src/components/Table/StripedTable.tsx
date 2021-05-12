@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
 import { Loader, Table } from 'semantic-ui-react';
+import { ArrowRightIcon } from '../../icons/icons';
 
 import PaginationControls from './PaginationControls';
 
@@ -30,6 +31,10 @@ const StripedTable = (props: {
     clickableIcon,
   } = props;
 
+  const clickIcon =
+    clickableIcon || (rowsClickable && !clickableIcon ? <ArrowRightIcon /> : undefined);
+
+  const colSpan = clickIcon ? headings.length + 1 : headings.length;
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
   const [activePage, setActivePage] = useState<number>(1);
@@ -56,7 +61,7 @@ const StripedTable = (props: {
                 {heading}
               </Table.HeaderCell>
             ))}
-            {!!clickableIcon && <Table.HeaderCell></Table.HeaderCell>}
+            {!!clickIcon && <Table.HeaderCell></Table.HeaderCell>}
           </Table.Row>
         </Table.Header>
         {loading ? (
@@ -84,16 +89,16 @@ const StripedTable = (props: {
                       {showLabel && <b className="label">{headings[j]}: </b>} {item}
                     </Table.Cell>
                   ))}
-                  {!!clickableIcon && (
+                  {!!clickIcon && (
                     <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
-                      {clickableIcon}
+                      {clickIcon}
                     </Table.Cell>
                   )}
                 </Table.Row>
               ))
             ) : (
               <Table.Row className="empty-table">
-                <Table.Cell textAlign={'center'} colSpan={headings.length}>
+                <Table.Cell textAlign={'center'} colSpan={colSpan}>
                   <i>{emptyLabel || 'none'}</i>
                 </Table.Cell>
               </Table.Row>

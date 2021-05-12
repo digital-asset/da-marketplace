@@ -33,7 +33,7 @@ type RoleContract =
   | CreateEvent<SettlementService>
   | CreateEvent<MatchingService>;
 
-type Role = {
+export type Role = {
   contract: RoleContract;
   role: ServiceKind;
 };
@@ -50,8 +50,6 @@ const RolesStateContext = React.createContext<RolesState>({
 
 const RolesProvider: React.FC = ({ children }) => {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [operatorRole, setOperatorRole] = useState([]);
-
   const [loading, setLoading] = useState<boolean>(false);
 
   const { contracts: clearingRoles, loading: clearingRolesLoading } =
@@ -62,8 +60,6 @@ const RolesProvider: React.FC = ({ children }) => {
     useStreamQueries(ExchangeRole);
   const { contracts: distributorRoles, loading: distributorRolesLoading } =
     useStreamQueries(DistributorRole);
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
-    useStreamQueries(RegulatorRole);
   const { contracts: settlementServices, loading: settlementServicesLoading } =
     useStreamQueries(SettlementService);
   const { contracts: matchingServices, loading: matchingServicesLoading } =
@@ -73,7 +69,6 @@ const RolesProvider: React.FC = ({ children }) => {
     setLoading(
       custodianRolesLoading ||
         clearingRolesLoading ||
-        regulatorRolesLoading ||
         distributorRolesLoading ||
         exchangeRolesLoading ||
         matchingServicesLoading ||
@@ -82,7 +77,6 @@ const RolesProvider: React.FC = ({ children }) => {
   }, [
     custodianRolesLoading,
     clearingRolesLoading,
-    regulatorRolesLoading,
     distributorRolesLoading,
     exchangeRolesLoading,
     matchingServicesLoading,
@@ -96,7 +90,6 @@ const RolesProvider: React.FC = ({ children }) => {
         ...custodianRoles.map(c => ({ contract: c, role: ServiceKind.CUSTODY })),
         ...exchangeRoles.map(c => ({ contract: c, role: ServiceKind.TRADING })),
         ...distributorRoles.map(c => ({ contract: c, role: ServiceKind.DISTRIBUTION })),
-        ...regulatorRoles.map(c => ({ contract: c, role: ServiceKind.REGULATOR })),
         ...settlementServices.map(c => ({ contract: c, role: ServiceKind.SETTLEMENT })),
         ...matchingServices.map(c => ({ contract: c, role: ServiceKind.MATCHING })),
       ]),
@@ -105,8 +98,6 @@ const RolesProvider: React.FC = ({ children }) => {
       custodianRoles,
       exchangeRoles,
       distributorRoles,
-      regulatorRoles,
-      operatorRole,
       settlementServices,
       matchingServices,
     ]

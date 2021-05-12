@@ -80,6 +80,10 @@ import {
   RequestRejectChoice,
 } from './NotificationTypes';
 import { OfferNotification, RequestNotification } from './NotificationComponents';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { useVerifiedParties } from '../../config';
+import { createDropdownProp } from '../common';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -115,6 +119,20 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const auctionServiceRequests = useStreamQueries(AuctionServiceRequest);
   const biddingServiceOffers = useStreamQueries(BiddingServiceOffer);
   const biddingServiceRequests = useStreamQueries(BiddingServiceRequest);
+
+  const accounts = useStreamQueries(AssetSettlementRule)
+    .contracts.filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+
+  const accountNames = accounts.map(a => a.id.label);
+
+  const allocationAccounts = useStreamQueries(AllocationAccountRule)
+    .contracts.filter(c => c.payload.account.owner === party)
+    .map(c => c.payload.account);
+
+  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
+
+  const { identities } = useVerifiedParties();
 
   return [
     {
@@ -165,6 +183,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: ClearingRoleOffer.Accept as OfferAcceptChoice,
         decline: ClearingRoleOffer.Decline as OfferDeclineChoice,
       },
+      acceptFields: {
+        ccpAccount: {
+          label: 'Clearing Account',
+          type: 'selection',
+          items: accountNames,
+        },
+      },
+      lookupFields: fields => ({
+        ccpAccount: accounts.find(acc => acc.id.label === fields.ccpAccount) || '',
+      }),
       contracts: clearingRoleOffers.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -235,6 +263,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: CustodyServiceRequest.Approve as RequestApproveChoice,
         reject: CustodyServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: custodianServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -255,6 +293,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: ListingServiceRequest.Approve as RequestApproveChoice,
         reject: ListingServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: listingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -264,6 +312,25 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       choices: {
         accept: TradingServiceOffer.Accept as OfferAcceptChoice,
         decline: TradingServiceOffer.Decline as OfferDeclineChoice,
+      },
+      acceptFields: {
+        tradingAccount: {
+          label: 'Trading Account',
+          type: 'selection',
+          items: accountNames,
+        },
+        allocationAccount: {
+          label: 'Allocation Account',
+          type: 'selection',
+          items: allocationAccounts,
+        },
+      },
+      lookupFields: fields => {
+        return {
+          tradingAccount: accounts.find(acc => acc.id.label === fields.tradingAccount) || '',
+          allocationAccount:
+            allocationAccounts.find(acc => acc.id.label === fields.allocationAccount) || '',
+        };
       },
       contracts: tradingServiceOffers.contracts.filter(c => c.payload.customer === party),
     },
@@ -275,6 +342,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: TradingServiceRequest.Approve as RequestApproveChoice,
         reject: TradingServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: tradingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -305,6 +382,25 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: ClearingServiceOffer.Accept as OfferAcceptChoice,
         decline: ClearingServiceOffer.Decline as OfferDeclineChoice,
       },
+      acceptFields: {
+        clearingAccount: {
+          label: 'Clearing Account',
+          type: 'selection',
+          items: accountNames,
+        },
+        marginAccount: {
+          label: 'Margin Account',
+          type: 'selection',
+          items: allocationAccountNames,
+        },
+      },
+      lookupFields: fields => {
+        return {
+          clearingAccount: accounts.find(acc => acc.id.label === fields.clearingAccount) || '',
+          marginAccount:
+            allocationAccounts.find(acc => acc.id.label === fields.marginAccount) || '',
+        };
+      },
       contracts: clearingServiceOffers.contracts.filter(c => c.payload.customer === party),
     },
     {
@@ -315,6 +411,24 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: ClearingServiceRequest.Approve as RequestApproveChoice,
         reject: ClearingServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+        ccpAccount: {
+          label: 'Clearing Account',
+          type: 'selection',
+          items: accountNames,
+        },
+      },
+      lookupFields: fields => ({
+        operator: fields.operator,
+        ccpAccount: accounts.find(acc => acc.id.label === fields.ccpAccount) || '',
+      }),
       contracts: clearingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -335,6 +449,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: IssuanceServiceRequest.Approve as RequestApproveChoice,
         reject: IssuanceServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: issuanceServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -355,6 +479,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: RegulatorServiceRequest.Approve as RequestApproveChoice,
         reject: RegulatorServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: regulatorServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -395,6 +529,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: MarketServiceRequest.Approve as RequestApproveChoice,
         reject: MarketServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: marketServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -404,6 +548,31 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       choices: {
         accept: AuctionServiceOffer.Accept as OfferAcceptChoice,
         decline: AuctionServiceOffer.Decline as OfferDeclineChoice,
+      },
+      acceptFields: {
+        tradingAccount: {
+          label: 'Trading Account',
+          type: 'selection',
+          items: accountNames,
+        },
+        allocationAccount: {
+          label: 'Allocation Account',
+          type: 'selection',
+          items: allocationAccountNames,
+        },
+        receivableAccount: {
+          label: 'Receivable Account',
+          type: 'selection',
+          items: accountNames,
+        },
+      },
+      lookupFields: fields => {
+        return {
+          tradingAccount: accounts.find(acc => acc.id.label === fields.tradingAccount) || '',
+          allocationAccount:
+            allocationAccounts.find(acc => acc.id.label === fields.allocationAccount) || '',
+          receivableAccount: accounts.find(acc => acc.id.label === fields.receivableAccount) || '',
+        };
       },
       contracts: auctionServiceOffers.contracts.filter(c => c.payload.customer === party),
     },
@@ -415,6 +584,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: AuctionServiceRequest.Approve as RequestApproveChoice,
         reject: AuctionServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: auctionServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
@@ -424,6 +603,25 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       choices: {
         accept: BiddingServiceOffer.Accept as OfferAcceptChoice,
         decline: BiddingServiceOffer.Decline as OfferDeclineChoice,
+      },
+      acceptFields: {
+        tradingAccount: {
+          label: 'Trading Account',
+          type: 'selection',
+          items: accountNames,
+        },
+        allocationAccount: {
+          label: 'Allocation Account',
+          type: 'selection',
+          items: allocationAccountNames,
+        },
+      },
+      lookupFields: fields => {
+        return {
+          tradingAccount: accounts.find(acc => acc.id.label === fields.tradingAccount) || '',
+          allocationAccount:
+            allocationAccounts.find(acc => acc.id.label === fields.allocationAccount) || '',
+        };
       },
       contracts: biddingServiceOffers.contracts.filter(c => c.payload.customer === party),
     },
@@ -435,6 +633,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         approve: BiddingServiceRequest.Approve as RequestApproveChoice,
         reject: BiddingServiceRequest.Reject as RequestRejectChoice,
       },
+      approveFields: {
+        operator: {
+          label: 'Operator',
+          type: 'selection',
+          items: identities.map(id =>
+            createDropdownProp(id.payload.legalName, id.payload.customer)
+          ),
+        },
+      },
+      lookupFields: fields => fields,
       contracts: biddingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
   ];
@@ -466,8 +674,10 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       key={c.contractId}
                       contract={c.contractId}
                       serviceText={n.service + ' ' + n.kind}
-                      offerer={c.payload.provider}
+                      offerer={c.signatories.length > 1 ? c.payload.provider : c.signatories[0]}
                       acceptChoice={n.choices.accept}
+                      acceptFields={n.acceptFields}
+                      lookupFields={n.lookupFields}
                       declineChoice={n.choices.decline}
                     />
                   ));
@@ -477,7 +687,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       key={c.contractId}
                       contract={c.contractId}
                       serviceText={n.service + ' ' + n.kind}
-                      requester={c.payload.provider}
+                      requester={c.signatories[0]}
                       approveChoice={n.choices.approve}
                       rejectChoice={n.choices.reject}
                     />

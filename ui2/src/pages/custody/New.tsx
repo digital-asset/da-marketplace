@@ -19,6 +19,7 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { CreateEvent } from '@daml/ledger';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import _ from 'lodash';
 
 enum AccountType {
   REGULAR = 'Regular',
@@ -115,7 +116,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       key: i,
       text: getName(c.payload.operator),
       value: c.payload.operator,
-    }));
+    }))
+    .sort();
 
   const providerByOperator = (operator: string): DropdownItemProps[] =>
     services
