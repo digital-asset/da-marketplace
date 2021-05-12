@@ -10,7 +10,7 @@ import { useUserState } from './context/UserContext';
 import Login from './pages/login/Login';
 // import Apps from "./Apps";
 import { App } from './App';
-import QuickSetup from './pages/login/QuickSetup';
+import QuickSetup from './pages/QuickSetup/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
 import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
 import { computeCredentials } from './Credentials';

@@ -100,7 +100,7 @@ const QuickSetup = (props: { onLogin: (credentials?: Credentials) => void }) => 
     return (
         <div className='quick-setup'>
             <Button
-                icon='left arrow'
+            icon='left arrow'
                 className='back-button ghost dark'
                 onClick={() => history.push("/")}
             />

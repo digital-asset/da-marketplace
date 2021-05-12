@@ -3,116 +3,107 @@ import { Form, Button } from 'semantic-ui-react';
 
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-import { ledgerId, isHubDeployment, publicParty } from '../../config';
-
-import { useLedger, useStreamQueries } from '@daml/react';
+import { ledgerId, isHubDeployment } from '../../config';
 
 import { computeCredentials } from '../../Credentials';
 
 import { storeParties, retrieveParties } from '../../Parties';
 
-import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }) => {
+  const { localOperator, onComplete } = props;
 
-const AddPartiesPage = (props: {
-  parties: PartyDetails[];
-  operator: string;
-  toNextPage: (parties: PartyDetails[]) => void;
-}) => {
-  const { parties, operator, toNextPage } = props;
-
-  const ledger = useLedger();
-
-  const [localParties, setLocalParties] = useState<PartyDetails[]>([]);
   const [inputValue, setInputValue] = useState<string>();
+  const [parties, setParties] = useState<PartyDetails[]>([]);
   const [error, setError] = useState<string>();
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
-    RegulatorService
+  const storedParties = retrieveParties() || [];
+
+  useEffect(() => {
+    setParties(storedParties);
+  }, [storedParties.length]);
+
+  const uploadButton = (
+    <label className="custom-file-upload button ui">
+      <DablPartiesInput
+        ledgerId={ledgerId}
+        onError={error => setError(error)}
+        onLoad={(newParties: PartyDetails[]) => handleLoad(newParties)}
+      />
+      <p>Upload {parties.length > 0 ? 'a new ' : ''}.JSON file</p>
+    </label>
   );
 
-  useEffect(() => {
-    const storedParties = retrieveParties() || [];
-    setLocalParties(storedParties);
-  }, []);
-
-  useEffect(() => {
-    storeParties(localParties);
-  }, [localParties]);
+  function handleLoad(newParties: PartyDetails[]) {
+    storeParties(newParties);
+    setParties(newParties);
+  }
 
   return (
     <div className="setup-page add-parties">
       {isHubDeployment ? (
         parties.length === 0 ? (
-          <>
+          <div className="upload-parties">
             <p className="details">
               Download the .json file from the Users tab on Daml Hub, and upload it here.
             </p>
-            <label className="custom-file-upload button ui">
-              <DablPartiesInput
-                ledgerId={ledgerId}
-                onError={error => setError(error)}
-                onLoad={storeParties}
-              />
-              <p>Upload .JSON file</p>
-            </label>
+            {uploadButton}
             <span className="login-details dark">{error}</span>
-          </>
+          </div>
         ) : (
-          <div className="party-names">
-            {parties.map(p => (
-              <p className="party-name" key={p.party}>
-                {p.partyName}
-              </p>
-            ))}
+          <div>
+            <div className="page-row parties-title">
+              <h4>Parties</h4>
+              {uploadButton}
+            </div>
+
+            <div className="party-names uploaded">
+              {parties.map(p => (
+                <p className="party-name" key={p.party}>
+                  {p.partyName}
+                </p>
+              ))}
+            </div>
           </div>
         )
       ) : (
         <>
-          <p className="details">Type a party name and press 'Enter'</p>
+          <h4 className="details">Type a party name and press 'Enter'</h4>
           <Form.Input
             placeholder="Username"
             value={inputValue}
             onChange={e => setInputValue(e.currentTarget.value)}
-            onKeyDown={handleChangeParty}
+            onKeyDown={handleAddParty}
           />
-          {localParties.length > 0 && (
-            <>
-              <div className="party-names">
-                {localParties.map(p => (
-                  <p className="party-name">{p.partyName}</p>
-                ))}
-              </div>
-            </>
+          {parties.length > 0 && (
+            <div className="party-names">
+              {parties.map(p => (
+                <p className="party-name" key={p.party}>
+                  {p.partyName}
+                </p>
+              ))}
+            </div>
           )}
         </>
       )}
-      <Button className="ghost next" onClick={() => handleOnComplete()}>
+      <Button disabled={parties.length === 0} className="ghost next" onClick={() => onComplete()}>
         Next
       </Button>
     </div>
   );
 
-  async function handleOnComplete() {
-    if (isHubDeployment) {
-      return toNextPage(parties);
-    } else {
-      return toNextPage(localParties);
-    }
-  }
-
-  function handleChangeParty(event: any) {
+  function handleAddParty(event: any) {
     if (!inputValue) return;
 
     switch (event.key) {
       case 'Enter':
         const { ledgerId, party, token } = computeCredentials(inputValue);
-        let newParty = {
+        let newLocalParty = {
           ledgerId,
           party,
           token,
-          owner: operator,
+          owner: localOperator,
           partyName: inputValue,
         };
-        setLocalParties([...localParties, newParty]);
+        storeParties([...parties, newLocalParty]);
         setInputValue('');
         event.preventDefault();
         event.stopPropagation();

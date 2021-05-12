@@ -68,9 +68,9 @@
       fill: var(--white);
     }
 
-    &.fill-black,
-    path.fill-black {
-      fill: var(--textcolor);
+    &.fill-grey,
+    path.fill-grey {
+      fill: var(--cool-grey-40);
     }
     &.circled-check-icon {
       position: absolute;

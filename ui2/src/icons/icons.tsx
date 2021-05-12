@@ -5,7 +5,7 @@ import marketplaceLogo from './marketplace.svg';
 
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
-  color?: 'green' | 'blue' | 'white' | 'black';
+  color?: 'green' | 'blue' | 'white' | 'grey';
   strokeColor?: string;
 };
 
