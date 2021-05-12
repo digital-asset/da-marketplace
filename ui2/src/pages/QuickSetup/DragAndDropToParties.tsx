@@ -5,9 +5,11 @@ import { PartyDetails } from '@daml/hub-react';
 import { ArrowLeftIcon } from '../../icons/icons';
 
 import { PublishedInstance, getAutomationInstances } from '../../automation';
-import { ServiceKind } from '../../context/RolesContext';
 
-import { Role } from '../../context/RolesContext';
+import { useRolesContext, ServiceKind } from '../../context/RolesContext';
+import { useOffersContext } from '../../context/OffersContext';
+
+import { LoadingWheel } from './QuickSetup';
 
 export enum DropItemTypes {
   AUTOMATION = 'Automation',
@@ -17,11 +19,21 @@ export enum DropItemTypes {
 const DragAndDropToParties = (props: {
   parties: PartyDetails[];
   handleAddItem: (party: PartyDetails, item: string) => void;
-  allRoles: Role[];
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
 }) => {
-  const { parties, handleAddItem, allRoles, dropItems, dropItemType } = props;
+  const { parties, handleAddItem, dropItems, dropItemType } = props;
+
+  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
+  const { offers: allOffers, loading: offersLoading } = useOffersContext();
+
+  if (rolesLoading || offersLoading) {
+    return (
+      <div className="setup-page select">
+        <LoadingWheel label="Loading..." />
+      </div>
+    );
+  }
 
   return (
     <div className="page-row">
@@ -37,6 +49,7 @@ const DragAndDropToParties = (props: {
                   roles={allRoles
                     .filter(r => r.contract.payload.provider === p.party)
                     .map(r => r.role)}
+                  clearingOffer={findClearingOffer(p)}
                 />
               ))
             : dropItemType === DropItemTypes.AUTOMATION &&
@@ -49,6 +62,7 @@ const DragAndDropToParties = (props: {
                     .filter(r => r.contract.payload.provider === p.party)
                     .map(r => r.role)}
                   triggers={dropItems}
+                  clearingOffer={findClearingOffer(p)}
                 />
               ))}
         </div>
@@ -66,6 +80,12 @@ const DragAndDropToParties = (props: {
       </div>
     </div>
   );
+
+  function findClearingOffer(party: PartyDetails) {
+    return !!allOffers.find(
+      r => r.contract.payload.provider === party.party && r.role == ServiceKind.CLEARING
+    );
+  }
 };
 
 export const PartyRowDropZone = (props: {
@@ -73,8 +93,10 @@ export const PartyRowDropZone = (props: {
   handleAddItem: (party: PartyDetails, item: string | ServiceKind) => void;
   roles: ServiceKind[];
   triggers?: { name: string; value: string }[];
+  clearingOffer: boolean;
 }) => {
-  const { party, handleAddItem, roles, triggers } = props;
+  const { party, handleAddItem, roles, triggers, clearingOffer } = props;
+
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
 
   const token = party.token;
@@ -105,7 +127,10 @@ export const PartyRowDropZone = (props: {
       {roles && (
         <div className="party-details">
           <p>{party.partyName}</p>
-          <p className="dropped-items">{roles.join(', ')}</p>
+          <p className="dropped-items">
+            {roles.join(', ')}
+            {clearingOffer ? ', Clearing(pending)' : ''}
+          </p>
         </div>
       )}
 

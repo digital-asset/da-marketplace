@@ -17,7 +17,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
-import DragAndDropToParties, {DropItemTypes} from './DragAndDropToParties';
+import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
 
 const SelectRolesPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
@@ -42,10 +42,11 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
   if (rolesLoading || offersLoading || regulatorLoading || operatorLoading) {
     return (
       <div className="setup-page select">
-        <LoadingWheel label="Loading role selection..." />
+        <LoadingWheel label="Loading..," />
       </div>
     );
   }
+  let roles = allRoles;
 
   return (
     <div className="setup-page select">
@@ -57,7 +58,6 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
       <DragAndDropToParties
         parties={parties}
         handleAddItem={createRoleContract}
-        allRoles={allRoles}
         dropItems={roleOptions}
         dropItemType={DropItemTypes.ROLES}
       />
@@ -69,6 +69,7 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
 
   async function createRoleContract(party: PartyDetails, role: string) {
     const operatorServiceContract = operatorService[0];
+
     if (
       findExistingOffer(party.party, role as ServiceKind) ||
       findExistingRole(party.party, role as ServiceKind)

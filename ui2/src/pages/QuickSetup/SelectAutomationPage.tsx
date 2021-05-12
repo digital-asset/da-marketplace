@@ -49,7 +49,6 @@ const SelectAutomationPage = (props: { onComplete: () => void }) => {
       <DragAndDropToParties
         parties={parties}
         handleAddItem={handleAddItem}
-        allRoles={allRoles}
         dropItems={triggerOptions}
         dropItemType={DropItemTypes.AUTOMATION}
       />
