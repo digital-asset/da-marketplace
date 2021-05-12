@@ -54,7 +54,6 @@
         align-items: flex-start;
         justify-content: flex-end;
         flex-direction: column;
-        min-height: 400px;
         padding: $spacing-m;
         animation: fadeIn 0.2s;
 
@@ -98,10 +97,13 @@
           }
 
           .dropped-items {
-            color: var(--cool-grey-30);
             padding-right: $spacing-s;
             width: 190px;
-            font-size: 12px;
+
+            p {
+                font-size: 12px;
+                color: var(--cool-grey-30);
+            }
           }
         }
 
@@ -251,7 +253,6 @@
               margin: $spacing-xs $spacing-xs $spacing-xs 0;
 
               p {
-                font-size: 16px;
                 font-weight: 600;
               }
 

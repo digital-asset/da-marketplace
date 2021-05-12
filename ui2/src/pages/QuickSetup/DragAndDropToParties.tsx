@@ -4,7 +4,7 @@ import { PartyDetails } from '@daml/hub-react';
 
 import { ArrowLeftIcon } from '../../icons/icons';
 
-import { PublishedInstance, getAutomationInstances } from '../../automation';
+import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
 
 import { useRolesContext, ServiceKind } from '../../context/RolesContext';
 import { useOffersContext } from '../../context/OffersContext';
@@ -33,6 +33,12 @@ const DragAndDropToParties = (props: {
         <LoadingWheel label="Loading..." />
       </div>
     );
+  }
+
+  let draggableItems = dropItems;
+
+  if (dropItemType === DropItemTypes.AUTOMATION) {
+    draggableItems.filter(item => item.value != MarketplaceTrigger.AutoApproveTrigger); // already deployed for all parties
   }
 
   return (
@@ -73,7 +79,7 @@ const DragAndDropToParties = (props: {
       <div>
         <p className="bold">{dropItemType}</p>
         <div className="role-tiles">
-          {dropItems.map((item, i) => (
+          {draggableItems.map((item, i) => (
             <DraggableItemTile key={i} item={item} />
           ))}
         </div>
@@ -118,6 +124,12 @@ export const PartyRowDropZone = (props: {
           .includes(String(to.value))
     ) || [];
 
+  let rolesList = roles as string[];
+
+  if (clearingOffer) {
+    rolesList = [...rolesList, 'Clearing (pending)'];
+  }
+
   return (
     <div
       className="party-name"
@@ -127,10 +139,7 @@ export const PartyRowDropZone = (props: {
       {roles && (
         <div className="party-details">
           <p>{party.partyName}</p>
-          <p className="dropped-items">
-            {roles.join(', ')}
-            {clearingOffer ? ', Clearing(pending)' : ''}
-          </p>
+          <p className="dropped-items">{rolesList.join(', ')}</p>
         </div>
       )}
 
