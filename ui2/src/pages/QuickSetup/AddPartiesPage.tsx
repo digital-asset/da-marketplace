@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Form, Button } from 'semantic-ui-react';
 
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-import { ledgerId, isHubDeployment, publicParty } from '../../config';
+import { Form, Button } from 'semantic-ui-react';
+
+import { ledgerId, isHubDeployment } from '../../config';
 
 import { computeCredentials } from '../../Credentials';
 
@@ -14,6 +15,7 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
 
   const [inputValue, setInputValue] = useState<string>();
   const [error, setError] = useState<string>();
+
   const storedParties = retrieveUserParties();
 
   const uploadButton = (

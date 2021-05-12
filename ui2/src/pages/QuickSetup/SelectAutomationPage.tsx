@@ -13,7 +13,7 @@ import { useRolesContext } from '../../context/RolesContext';
 import { retrieveUserParties } from '../../Parties';
 
 import { LoadingWheel } from './QuickSetup';
-import DragAndDropToParties, { formatTriggerName } from './DragAndDropToParties';
+import DragAndDropToParties, { formatTriggerName, DropItemTypes } from './DragAndDropToParties';
 
 const SelectAutomationPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
@@ -30,7 +30,7 @@ const SelectAutomationPage = (props: { onComplete: () => void }) => {
 
   if (rolesLoading) {
     return (
-      <div className="setup-page select-roles">
+      <div className="setup-page">
         <LoadingWheel label="Loading role selection..." />
       </div>
     );
@@ -44,14 +44,14 @@ const SelectAutomationPage = (props: { onComplete: () => void }) => {
   };
 
   return (
-    <div className="setup-page select-roles">
+    <div className="setup-page select">
       <h4>Drag and Drop Automation to Parties</h4>
       <DragAndDropToParties
         parties={parties}
         handleAddItem={handleAddItem}
         allRoles={allRoles}
         dropItems={triggerOptions}
-        dropItemType="Automation"
+        dropItemType={DropItemTypes.AUTOMATION}
       />
       <Button className="ghost next" onClick={() => onComplete()}>
         Next

@@ -4,8 +4,8 @@ import { useHistory } from 'react-router-dom';
 
 import { ArrowRightIcon } from '../../icons/icons';
 
-import { useRolesContext } from '../../context/RolesContext';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
+import { useRolesContext } from '../../context/RolesContext';
 
 import { computeCredentials } from '../../Credentials';
 
@@ -30,7 +30,7 @@ const FinishPage = () => {
 
   if (loading) {
     return (
-      <div className="setup-page select-roles">
+      <div className="setup-page">
         <LoadingWheel label="Loading role selection..." />
       </div>
     );

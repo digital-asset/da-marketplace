@@ -30,7 +30,7 @@ const ReviewPage = (props: { onComplete: () => void }) => {
 
   if (loading) {
     return (
-      <div className="setup-page select-roles">
+      <div className="setup-page">
         <LoadingWheel label="Loading role selection..." />
       </div>
     );

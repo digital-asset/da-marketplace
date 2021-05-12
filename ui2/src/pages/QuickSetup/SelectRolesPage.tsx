@@ -17,7 +17,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
-import DragAndDropToParties from './DragAndDropToParties';
+import DragAndDropToParties, {DropItemTypes} from './DragAndDropToParties';
 
 const SelectRolesPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
@@ -41,14 +41,14 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
 
   if (rolesLoading || offersLoading || regulatorLoading || operatorLoading) {
     return (
-      <div className="setup-page select-roles">
+      <div className="setup-page select">
         <LoadingWheel label="Loading role selection..." />
       </div>
     );
   }
 
   return (
-    <div className="setup-page select-roles">
+    <div className="setup-page select">
       <h4>Drag and Drop Roles to Parties</h4>
       <i>
         Auto Approval Triggers have been deployed, check the logs in the Hub Deployments tab to view
@@ -59,7 +59,7 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
         handleAddItem={createRoleContract}
         allRoles={allRoles}
         dropItems={roleOptions}
-        dropItemType="Roles"
+        dropItemType={DropItemTypes.ROLES}
       />
       <Button className="ghost next" onClick={() => onComplete()}>
         Next

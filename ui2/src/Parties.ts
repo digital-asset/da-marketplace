@@ -29,12 +29,8 @@ export function retrieveParties(validateParties: boolean = true): PartyDetails[]
   return parties;
 }
 
-function filterDefaultParties(partyList: PartyDetails[]) {
-  const adminParty = partyList.find(p => p.partyName === 'UserAdmin');
-  return partyList.filter(p => p.party != adminParty?.party && p.party != publicParty);
-}
-
 export function retrieveUserParties() {
   const parties = retrieveParties() || [];
-  return filterDefaultParties(parties);
+  const adminParty = parties.find(p => p.partyName === 'UserAdmin');
+  return parties.filter(p => p.party != adminParty?.party && p.party != publicParty);
 }

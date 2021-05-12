@@ -18,11 +18,11 @@
         display: flex;
         justify-self: center;
         align-self: center;
-        background-color: var(--white);
         flex-direction: column;
+        background-color: var(--white);
         border-radius: 6px;
         width: 800px;
-        height: 550px;
+        min-height: 550px;
 
         .quick-setup-menu.menu {
             display: flex;
@@ -37,13 +37,14 @@
 
             p {
                 color: var(--cool-grey-40);
-            }
 
-            p.visited, a.active {
-                color: var(--blue-60);
+                &.visited {
+                    color: var(--blue-60);
+                }
             }
 
             a.active {
+                color: var(--blue-60);
                 border-bottom: 3px solid var(--blue-60);
             }
         }
@@ -56,7 +57,6 @@
             min-height: 400px;
             padding: $spacing-m;
             animation: fadeIn .2s;
-            height: 100%;
 
             .ui.loader {
                 position: static;
@@ -81,9 +81,9 @@
                 flex-direction: row;
                 align-items: flex-start;
                 justify-content: space-between;
-                width: 400px;
                 padding: $spacing-s $spacing-s $spacing-xs $spacing-s;
                 border-bottom: 1px solid var(--cool-grey-80);
+                width: 400px;
                 font-size: 16px;
                 line-height: 26px;
                 min-height: 50px;
@@ -95,19 +95,13 @@
                 .party-details {
                     display: flex;
                     flex-direction: column;
-                    width: 50%;
-                    width: 190px;
                 }
 
                 .dropped-items {
-                    font-size: 12px;
                     color: var(--cool-grey-30);
                     padding-right: $spacing-s;
                     width: 190px;
-
-                    p {
-                        font-size: 12px;
-                    }
+                    font-size: 12px;
                 }
             }
 
@@ -118,15 +112,6 @@
                 .page-row {
                     margin-top: $spacing-l;
                     height: 100%;
-                }
-            }
-
-            &.review {
-                .party-names {
-                    margin-right: $spacing-s;
-                }
-                .party-name {
-                    width: 350px;
                 }
             }
 
@@ -145,7 +130,7 @@
                     width: 238px;
                     min-height: 72px;
                     padding: $spacing-s;
-                    margin: $spacing-s $spacing-s $spacing-s  0;
+                    margin: $spacing-s $spacing-s $spacing-s 0;
 
                     .log-in-row {
                         display: flex;
@@ -155,8 +140,8 @@
                         overflow: hidden;
 
                         h4 {
-                            white-space: nowrap;
                             display: unset;
+                            white-space: nowrap;
                             width: unset;
                             align-items: unset;
                             overflow: hidden;
@@ -223,10 +208,10 @@
                 .custom-file-upload {
                     width: fit-content;
                     height: 44px;
-                    cursor: pointer;
                     border-radius: 4px;
                     background-color: var(--white);
                     border: 1px solid var(--green-50);
+                    cursor: pointer;
 
                     > input[type='file'] {
                         display: none;
@@ -244,28 +229,7 @@
                 align-self: center;
             }
 
-            .page-controls {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-end;
-
-                .ghost {
-                    padding: 2px 4px;
-                    margin: 0px;
-                    border: none;
-
-                    .icon {
-                        margin: 0px;
-                    }
-                }
-
-                p.p2 {
-                    margin: 0 $spacing-xs ;
-                }
-            }
-
-            &.select-roles {
+            &.select {
                 .party-names {
                     margin-top: $spacing-xs;
                 }
@@ -296,16 +260,6 @@
                             cursor: pointer;
                         }
                     }
-                }
-            }
-
-            &.request-services {
-                .field {
-                    margin-bottom: $spacing-s;
-                }
-
-                .ghost.request {
-                    border: var(--blue-60)
                 }
             }
         }

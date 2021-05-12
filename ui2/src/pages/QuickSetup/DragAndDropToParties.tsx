@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
 
-import { Loader } from 'semantic-ui-react';
-
 import { PartyDetails } from '@daml/hub-react';
 
 import { ArrowLeftIcon } from '../../icons/icons';
 
-import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
+import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { ServiceKind } from '../../context/RolesContext';
-import { makeAutomationOptions } from '../setup/SetupAutomation';
-import { isHubDeployment } from '../../config';
+
 import { Role } from '../../context/RolesContext';
+
+export enum DropItemTypes {
+  AUTOMATION = 'Automation',
+  ROLES = 'Roles',
+}
 
 const DragAndDropToParties = (props: {
   parties: PartyDetails[];
   handleAddItem: (party: PartyDetails, item: string) => void;
   allRoles: Role[];
   dropItems: { name: string; value: string }[];
-  dropItemType: 'Automation' | 'Roles';
+  dropItemType: DropItemTypes;
 }) => {
   const { parties, handleAddItem, allRoles, dropItems, dropItemType } = props;
 
@@ -26,7 +28,7 @@ const DragAndDropToParties = (props: {
       <div>
         <p className="bold here">Parties</p>
         <div className="party-names">
-          {dropItemType === 'Roles'
+          {dropItemType === DropItemTypes.ROLES
             ? parties.map((p, i) => (
                 <PartyRowDropZone
                   key={i}
@@ -37,7 +39,7 @@ const DragAndDropToParties = (props: {
                     .map(r => r.role)}
                 />
               ))
-            : dropItemType === 'Automation' &&
+            : dropItemType === DropItemTypes.AUTOMATION &&
               parties.map((p, i) => (
                 <PartyRowDropZone
                   key={i}
@@ -141,6 +143,7 @@ export const DraggableItemTile = (props: { item: { name: string; value: string }
     </div>
   );
 };
+
 export function formatTriggerName(name: string) {
   return name
     .split('#')[0]
