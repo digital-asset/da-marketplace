@@ -59,10 +59,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       </ActionTile>
       <Header as="h2">Holdings</Header>
       <StripedTable
+        rowsClickable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
         rows={services.map(s => {
           const standing = standings.find(
             standing => standing.payload.customer === s.payload.customer
@@ -87,7 +86,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               : 'No';
           return {
             elements: [
-              <>{s.payload.customer}</>,
+              getName(s.payload.customer),
               formatCurrency(clearingAmount),
               formatCurrency(marginAmount),
               standingText,
@@ -128,7 +127,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               getName(c.payload.account.provider),
               getName(c.payload.account.owner),
               party === c.payload.account.provider ? 'Provider' : 'Client',
-              damlSetValues(c.payload.ctrls).join(', '),
+              damlSetValues(c.payload.ctrls)
+                .map(ctrl => getName(ctrl))
+                .sort()
+                .join(', '),
             ],
           };
         })}

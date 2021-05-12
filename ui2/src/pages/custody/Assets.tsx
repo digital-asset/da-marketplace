@@ -15,7 +15,6 @@ import { ArrowRightIcon } from '../../icons/icons';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
-  services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
   const { getName } = usePartyName(party);
@@ -48,10 +47,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
+        rowsClickable
         headings={['Asset', 'Account', 'Owner']}
         loading={depositsLoading}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
         rows={deposits.map(c => {
           return {
             elements: [
@@ -73,9 +71,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       />
       <Header as="h2">Accounts</Header>
       <StripedTable
-        headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}
         rowsClickable
-        clickableIcon={<ArrowRightIcon />}
+        headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}
         loading={accountsLoading || allocatedAccountsLoading}
         rows={allAccounts.map(a => {
           return {

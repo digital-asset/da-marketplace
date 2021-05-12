@@ -70,6 +70,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
 
   useEffect(() => {
     if (defaultPartyToken) {
+      console.log(defaultPartyToken);
       setPartyToken(defaultPartyToken);
     } else {
       const token = retrieveCredentials()?.token;
@@ -80,6 +81,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   }, []);
 
   const publicParty = useWellKnownParties()?.parties?.publicParty || 'Public';
+
   useEffect(() => {
     getPublicToken(publicParty).then(token => {
       if (token) {
