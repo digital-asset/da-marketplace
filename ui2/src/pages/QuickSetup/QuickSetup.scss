@@ -10,283 +10,284 @@
     background-color: var(--cool-grey-20);
 
     button.ghost.dark.back-button {
-        width: fit-content;
-        border-color: var(--cool-grey-20);
+      width: fit-content;
+      border-color: var(--cool-grey-20);
     }
 
     .quick-setup-tile {
-        display: flex;
-        justify-self: center;
-        align-self: center;
-        flex-direction: column;
-        background-color: var(--white);
-        border-radius: 6px;
-        width: 800px;
-        min-height: 550px;
+      display: flex;
+      justify-self: center;
+      align-self: center;
+      flex-direction: column;
+      background-color: var(--white);
+      border-radius: 6px;
+      width: 800px;
+      min-height: 550px;
 
-        .quick-setup-menu.menu {
+      .quick-setup-menu.menu {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: none;
+        border-radius: 6px 6px 0px 0px;
+        padding: $spacing-xs $spacing-m 0 $spacing-m;
+        margin-bottom: 0px;
+        background-color: var(--cool-grey-100);
+
+        p {
+          color: var(--cool-grey-40);
+
+          &.visited {
+            color: var(--blue-60);
+          }
+        }
+
+        a.active {
+          color: var(--blue-60);
+          border-bottom: 3px solid var(--blue-60);
+        }
+      }
+
+      .setup-page {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+        flex-direction: column;
+        min-height: 400px;
+        padding: $spacing-m;
+        animation: fadeIn 0.2s;
+
+        .ui.loader {
+          position: static;
+          transform: translateX(-0%) translateY(-0%);
+        }
+
+        .ghost.next {
+          align-self: flex-end;
+          margin-top: auto;
+        }
+
+        .party-names {
+          max-height: 330px;
+          overflow-y: auto;
+          border: 1px solid var(--cool-grey-80);
+          background-color: var(--cool-grey-100);
+          margin-top: $spacing-m;
+        }
+
+        .party-name {
+          display: flex;
+          flex-direction: row;
+          align-items: flex-start;
+          justify-content: space-between;
+          padding: $spacing-s $spacing-s $spacing-xs $spacing-s;
+          border-bottom: 1px solid var(--cool-grey-80);
+          width: 400px;
+          font-size: 16px;
+          line-height: 26px;
+          min-height: 50px;
+
+          &:last-of-type {
+            border-bottom: none;
+          }
+
+          .party-details {
+            display: flex;
+            flex-direction: column;
+          }
+
+          .dropped-items {
+            color: var(--cool-grey-30);
+            padding-right: $spacing-s;
+            width: 190px;
+            font-size: 12px;
+          }
+        }
+
+        &.not-supported {
+          align-items: center;
+          justify-content: center;
+
+          .page-row {
+            margin-top: $spacing-l;
+            height: 100%;
+          }
+        }
+
+        &.finish {
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: unset;
+          background-color: var(--cool-grey-20);
+
+          .log-in-tile {
+            display: flex;
+            flex-direction: column;
+            border-radius: 4px;
+            background-color: var(--white);
+            width: 238px;
+            min-height: 72px;
+            padding: $spacing-s;
+            margin: $spacing-s $spacing-s $spacing-s 0;
+
+            .log-in-row {
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: baseline;
+              overflow: hidden;
+
+              h4 {
+                display: unset;
+                white-space: nowrap;
+                width: unset;
+                align-items: unset;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+
+              p.p2.log-in {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                border: none;
+                color: var(--blue-60);
+                padding: 0px;
+                white-space: nowrap;
+
+                .icon {
+                  margin-left: $spacing-xs;
+                }
+              }
+            }
+
+            &:hover {
+              background-color: var(--blue-100);
+              cursor: pointer;
+            }
+
+            .finished-roles {
+              font-size: 12px;
+              color: var(--cool-grey-30);
+            }
+          }
+        }
+
+        &.add-parties {
+          align-items: center;
+          justify-content: center;
+
+          .parties-title {
+            align-items: flex-end;
+            justify-content: space-between;
+          }
+
+          .party-names {
+            max-height: 310px;
+
+            .uploaded {
+              margin-top: $spacing-xs;
+            }
+          }
+
+          p.details {
+            margin-bottom: $spacing-m;
+          }
+
+          .upload-parties {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-left: $spacing-m;
+            height: 100%;
+          }
+
+          .custom-file-upload {
+            width: fit-content;
+            height: 44px;
+            border-radius: 4px;
+            background-color: var(--white);
+            border: 1px solid var(--green-50);
+            cursor: pointer;
+
+            > input[type='file'] {
+              display: none;
+            }
+          }
+        }
+
+        .page-row {
+          display: flex;
+          flex-direction: row;
+        }
+
+        .arrow {
+          padding: $spacing-l;
+          align-self: center;
+        }
+
+        &.select {
+          .party-names {
+            margin-top: $spacing-xs;
+          }
+
+          i {
+            margin-bottom: $spacing-s;
+          }
+
+          .role-tiles {
             display: flex;
             flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: none;
-            border-radius: 6px 6px 0px 0px;
-            padding: $spacing-xs $spacing-m 0 $spacing-m;
-            margin-bottom: 0px;
-            background-color: var(--cool-grey-100);
+            flex-wrap: wrap;
 
-            p {
-                color: var(--cool-grey-40);
+            .role-tile {
+              padding: $spacing-s $spacing-m;
+              border: 1px solid var(--cool-grey-80);
+              border-radius: 4px;
+              background-color: var(--white);
+              margin: $spacing-xs $spacing-xs $spacing-xs 0;
 
-                &.visited {
-                    color: var(--blue-60);
-                }
-            }
-
-            a.active {
-                color: var(--blue-60);
-                border-bottom: 3px solid var(--blue-60);
-            }
-        }
-
-        .setup-page {
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-end;
-            flex-direction: column;
-            min-height: 400px;
-            padding: $spacing-m;
-            animation: fadeIn .2s;
-
-            .ui.loader {
-                position: static;
-                transform: translateX(-0%) translateY(-0%);
-            }
-
-            .ghost.next {
-                align-self: flex-end;
-                margin-top: auto;
-            }
-
-            .party-names {
-                max-height: 330px;
-                overflow-y: auto;
-                border: 1px solid var(--cool-grey-80);
-                background-color: var(--cool-grey-100);
-                margin-top: $spacing-m;
-            }
-
-            .party-name {
-                display: flex;
-                flex-direction: row;
-                align-items: flex-start;
-                justify-content: space-between;
-                padding: $spacing-s $spacing-s $spacing-xs $spacing-s;
-                border-bottom: 1px solid var(--cool-grey-80);
-                width: 400px;
+              p {
                 font-size: 16px;
-                line-height: 26px;
-                min-height: 50px;
+                font-weight: 600;
+              }
 
-                &:last-of-type {
-                    border-bottom: none;
-                }
-
-                .party-details {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .dropped-items {
-                    color: var(--cool-grey-30);
-                    padding-right: $spacing-s;
-                    width: 190px;
-                    font-size: 12px;
-                }
+              &:hover {
+                background-color: var(--cool-grey-100);
+                cursor: pointer;
+              }
             }
-
-            &.not-supported {
-                align-items: center;
-                justify-content: center;
-
-                .page-row {
-                    margin-top: $spacing-l;
-                    height: 100%;
-                }
-            }
-
-            &.finish {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: unset;
-                background-color: var(--cool-grey-20);
-
-                .log-in-tile {
-                    display: flex;
-                    flex-direction: column;
-                    border-radius: 4px;
-                    background-color: var(--white);
-                    width: 238px;
-                    min-height: 72px;
-                    padding: $spacing-s;
-                    margin: $spacing-s $spacing-s $spacing-s 0;
-
-                    .log-in-row {
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: space-between;
-                        align-items: baseline;
-                        overflow: hidden;
-
-                        h4 {
-                            display: unset;
-                            white-space: nowrap;
-                            width: unset;
-                            align-items: unset;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
-
-                        p.p2.log-in {
-                            display: flex;
-                            flex-direction: row;
-                            align-items: center;
-                            border: none;
-                            color: var(--blue-60);
-                            padding: 0px;
-                            white-space: nowrap;
-
-                            .icon {
-                                margin-left: $spacing-xs;
-                            }
-                        }
-                    }
-
-                    &:hover {
-                        background-color: var(--blue-100);
-                        cursor: pointer;
-                    }
-
-                    .finished-roles {
-                        font-size: 12px;
-                        color: var(--cool-grey-30);
-                    }
-                }
-            }
-
-            &.add-parties {
-                align-items: center;
-                justify-content: center;
-
-                .parties-title {
-                    align-items: flex-end;
-                    justify-content: space-between;
-                }
-
-                .party-names {
-                    max-height: 310px;
-
-                    .uploaded {
-                        margin-top: $spacing-xs;
-                    }
-                }
-
-                p.details {
-                    margin-bottom: $spacing-m;
-                }
-
-                .upload-parties {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    margin-left: $spacing-m;
-                    height: 100%;
-                }
-
-                .custom-file-upload {
-                    width: fit-content;
-                    height: 44px;
-                    border-radius: 4px;
-                    background-color: var(--white);
-                    border: 1px solid var(--green-50);
-                    cursor: pointer;
-
-                    > input[type='file'] {
-                        display: none;
-                    }
-                }
-            }
-
-            .page-row {
-                display: flex;
-                flex-direction: row;
-            }
-
-            .arrow {
-                padding: $spacing-l;
-                align-self: center;
-            }
-
-            &.select {
-                .party-names {
-                    margin-top: $spacing-xs;
-                }
-
-                i {
-                    margin-bottom: $spacing-s;
-                }
-
-                .role-tiles {
-                    display: flex;
-                    flex-direction: row;
-                    flex-wrap: wrap;
-
-                    .role-tile {
-                        padding: $spacing-s $spacing-m;
-                        border:  1px solid var(--cool-grey-80);
-                        border-radius: 4px;
-                        background-color: var(--white);
-                        margin: $spacing-xs $spacing-xs $spacing-xs 0;
-
-                        p {
-                            font-size: 16px;
-                            font-weight: 600;
-                        }
-
-                        &:hover {
-                            background-color: var(--cool-grey-100);
-                            cursor: pointer;
-                        }
-                    }
-                }
-            }
+          }
         }
+      }
     }
 
     .quick-setup-header {
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      margin: $spacing-s 0 $spacing-xl 0;
+
+      .logo-header,
+      h2 {
         display: flex;
         justify-content: center;
-        flex-direction: column;
-        margin: $spacing-s 0 $spacing-xl 0;
+        color: var(--white);
+        font-family: 'BrownStd-Light';
+      }
 
-        .logo-header, h2 {
-            display: flex;
-            justify-content: center;
-            color: var(--white);
-            font-family: 'BrownStd-Light';
+      .logo-header {
+        font-size: 34px;
+        line-height: 32px;
+        margin-bottom: 0px;
+
+        .open-marketplace-icon {
+          margin-right: $spacing-s;
         }
-
-        .logo-header {
-            font-size: 34px;
-            line-height: 32px;
-            margin-bottom: 0px;
-
-            .open-marketplace-icon {
-                margin-right: $spacing-s;
-            }
-        }
+      }
     }
-}
+  }
 }
