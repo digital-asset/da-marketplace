@@ -13,6 +13,7 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 export const AS_PUBLIC = true;
 
 export type QueryStream = {
+  templateMap: Map<string, Template<any, any, any>>;
   publicTemplateIds: string[];
   publicContracts: CreateEvent<any, any, any>[];
   partyTemplateIds: string[];
@@ -21,7 +22,11 @@ export type QueryStream = {
   publicLoading: boolean;
   partyLoading: boolean;
   publicToken?: string;
-  subscribeTemplate: (templateId: string, isPublic?: boolean) => void;
+  subscribeTemplate: (
+    templateId: string,
+    template: Template<any, any, any>,
+    isPublic?: boolean
+  ) => void;
   connectionActive: boolean;
 };
 
@@ -54,6 +59,7 @@ export const getPublicToken = async (publicParty: string): Promise<string | unde
 
 const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken?: string }) => {
   const { children, defaultPartyToken } = props;
+  const [templateMap, setTemplateMap] = useState<Map<string, Template<any, any, any>>>(new Map());
   const [publicTemplateIds, setPublicTemplateIds] = useState<string[]>([]);
   const [partyTemplateIds, setPartyTemplateIds] = useState<string[]>([]);
 
@@ -93,13 +99,13 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     errors: partyStreamErrors,
     loading: partyLoading,
     active: connectionActive,
-  } = useDamlStreamQuery(partyTemplateIds, partyToken);
+  } = useDamlStreamQuery(partyTemplateIds, templateMap, partyToken);
 
   const {
     contracts: publicContracts,
     errors: publicStreamErrors,
     loading: publicLoading,
-  } = useDamlStreamQuery(publicTemplateIds, publicToken);
+  } = useDamlStreamQuery(publicTemplateIds, templateMap, publicToken);
 
   useEffect(() => {
     if (partyStreamErrors) {
@@ -111,10 +117,16 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     }
   }, [partyStreamErrors, publicStreamErrors]);
 
-  const subscribeTemplate = (templateId: string, asPublic?: boolean) => {
+  const subscribeTemplate = (
+    templateId: string,
+    template: Template<any, any, any>,
+    asPublic?: boolean
+  ) => {
     if (asPublic) {
+      setTemplateMap(prev => new Map(prev).set(templateId, template));
       setPublicTemplateIds(templateIds => [...templateIds, templateId]);
     } else {
+      setTemplateMap(prev => new Map(prev).set(templateId, template));
       setPartyTemplateIds(templateIds => [...templateIds, templateId]);
     }
   };
@@ -130,6 +142,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
     partyLoading,
     publicToken,
     connectionActive,
+    templateMap,
   });
 
   useEffect(() => {
@@ -242,7 +255,7 @@ export function useContractQuery<T extends object, K, I extends string = string>
   useEffect(() => {
     if (asPublic === AS_PUBLIC) {
       if (!publicTemplateIds.find(id => id === templateId)) {
-        subscribeTemplate(templateId, AS_PUBLIC);
+        subscribeTemplate(templateId, template, AS_PUBLIC);
       }
     }
   }, [asPublic, templateId, publicTemplateIds, subscribeTemplate]);
@@ -250,7 +263,7 @@ export function useContractQuery<T extends object, K, I extends string = string>
   useEffect(() => {
     if (asPublic !== AS_PUBLIC) {
       if (!partyTemplateIds.find(id => id === templateId)) {
-        subscribeTemplate(templateId);
+        subscribeTemplate(templateId, template);
       }
     }
   }, [asPublic, templateId, partyTemplateIds, subscribeTemplate]);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
-import { useLedger, useParty, useStreamQueries } from '@daml/react';
+import { useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -15,19 +15,27 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import { ArrowRightIcon } from '../../icons/icons';
+import { ActionTile } from '../network/Actions';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
 };
 
+export const getMarketType = (c: CreateEvent<Listing>, getName: (party: string) => string) => {
+  const listingType = c.payload.listingType;
+  if (listingType.tag === 'Collateralized') {
+    return 'Collateralized';
+  } else {
+    return getName(listingType.value.clearinghouse);
+  }
+};
+
 export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
-  const ledger = useLedger();
   const history = useHistory();
 
-  const service = services.find(s => s.payload.customer === party);
   const { contractId } = useParams<any>();
 
   const { contracts: manualFVRequests, loading: manualFVRequestsLoading } = useStreamQueries(
@@ -36,17 +44,9 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   const { contracts: fairValueContracts, loading: fairValuesLoading } = useStreamQueries(FairValue);
 
-  const getMarketType = (c: CreateEvent<Listing>) => {
-    const listingType = c.payload.listingType;
-    if (listingType.tag === 'Collateralized') {
-      return 'Collateralized';
-    } else {
-      return getName(listingType.value.clearinghouse);
-    }
-  };
-
   return !contractId ? (
     <>
+      <ActionTile actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]} />
       <StripedTable
         headings={[
           'Provider',
@@ -71,7 +71,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
             elements: [
               getName(c.payload.provider),
               getName(c.payload.customer),
-              getMarketType(c),
+              getMarketType(c, getName),
               c.payload.listingId.label,
               c.payload.calendarId,
               c.payload.tradedAssetId.label,

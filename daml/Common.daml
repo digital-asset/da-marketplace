@@ -3,7 +3,7 @@ module Common where
 import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
-import DA.Next.Set
+import DA.Set
 import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
 import qualified Marketplace.Clearing.Service as Clearing
@@ -91,7 +91,7 @@ onboardProviders = do
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = bank
   regulatorServiceCid             <- submit bank      do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
-  identityVerificationRequestCid  <- submit bank      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Bankeee LegalName"; location = "Bank Location"; observers = [public]
+  identityVerificationRequestCid  <- submit bank      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Bank LegalName"; location = "Bank Location"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = exchange

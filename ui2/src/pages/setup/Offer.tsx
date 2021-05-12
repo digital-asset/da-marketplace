@@ -33,9 +33,10 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
 
   const identities = useStreamQueries(VerifiedIdentity);
-  const legalNames = useMemo(() => identities.contracts.map(c => c.payload.legalName), [
-    identities,
-  ]);
+  const legalNames = useMemo(
+    () => identities.contracts.map(c => c.payload.legalName),
+    [identities]
+  );
 
   const [offer, setOffer] = useState<ServiceOffer>(CustodyOffer);
   const [choice, setChoice] = useState<ServiceRoleOfferChoice>();
@@ -52,28 +53,35 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
       case ServiceKind.CUSTODY: {
         setOffer(CustodyOffer);
         setChoice(CustodyRole.OfferCustodyService);
+        break;
       }
       case ServiceKind.MARKET_CLEARING: {
         setOffer(MarketClearingOffer);
         setChoice(ClearingRole.OfferMarketService);
-        return;
+        break;
       }
       case ServiceKind.ISSUANCE: {
         setOffer(IssuanceOffer);
         setChoice(CustodyRole.OfferIssuanceService);
+        break;
       }
       case ServiceKind.TRADING: {
         setOffer(TradingOffer);
         setChoice(TradingRole.OfferTradingService);
+        break;
       }
       case ServiceKind.LISTING: {
         setOffer(ListingOffer);
         setChoice(TradingRole.OfferListingService);
+        break;
       }
       case ServiceKind.CLEARING: {
         setOffer(CustodyOffer);
         setChoice(ClearingRole.OfferClearingService);
+        break;
       }
+      default:
+        throw new Error('ServiceKind does not have an offer');
     }
   }, [service, legalNames]);
 

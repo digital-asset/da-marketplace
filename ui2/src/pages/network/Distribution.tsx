@@ -25,36 +25,37 @@ import { InputDialog, InputDialogProps } from '../../components/InputDialog/Inpu
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import StripedTable from '../../components/Table/StripedTable';
+import { ActionTile } from './Actions';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
   const { getName } = usePartyName(party);
 
-  const { contracts: auctionServices, loading: auctionServicesLoading } = useStreamQueries(
-    AuctionService
-  );
-  const { contracts: biddingServices, loading: biddingServicesLoading } = useStreamQueries(
-    BiddingService
-  );
+  const { contracts: auctionServices, loading: auctionServicesLoading } =
+    useStreamQueries(AuctionService);
+  const { contracts: biddingServices, loading: biddingServicesLoading } =
+    useStreamQueries(BiddingService);
 
   const services = [...auctionServices, ...biddingServices];
 
   return (
-    <StripedTable
-      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
-      loading={biddingServicesLoading || auctionServicesLoading}
-      rows={services.map(c => {
-        return {
-          elements: [
-            getTemplateId(c.templateId).split('.')[2],
-            getName(c.payload.operator),
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Consumer',
-          ],
-        };
-      })}
-    />
+    <>
+      <StripedTable
+        headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
+        loading={biddingServicesLoading || auctionServicesLoading}
+        rows={services.map(c => {
+          return {
+            elements: [
+              getTemplateId(c.templateId).split('.')[2],
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Consumer',
+            ],
+          };
+        })}
+      />
+    </>
   );
 };
 
@@ -80,9 +81,8 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
     fields: { provider: { label: 'Provider', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -102,9 +102,8 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
     fields: { customer: { label: 'Customer', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {

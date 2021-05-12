@@ -2,7 +2,7 @@ module Marketplace.Issuance.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
 import DA.Finance.Types (Account, Id)
-import DA.Next.Set (Set)
+import DA.Set (Set)
 import DA.Map (Map, size)
 import DA.Map qualified as Map
 import ContingentClaims.Claim.Serializable (Claim(..))

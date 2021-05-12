@@ -13,7 +13,7 @@ import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service
 import { CreateEvent } from '@daml/ledger';
 import { ContractId } from '@daml/types';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, makeDamlSet } from '../common';
 import { Button, Form, Header, Label, Popup, Table } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
@@ -35,6 +35,7 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { ArrowRightIcon } from '../../icons/icons';
+import { usePartyName } from '../../config';
 
 type Props = {
   cid: string;
@@ -117,12 +118,17 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const ledger = useLedger();
   const clientServices = services.filter(s => s.payload.customer === party);
   const listing = listings.find(c => c.contractId === cid);
+  const { getName } = usePartyName(party);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
   const allOrders = useStreamQueries(Order);
 
   if (!listing || clientServices.length === 0) return <></>; // TODO: Return 404 not found
   const service = clientServices[0];
+  const clearinghouse =
+    listing.payload.listingType.tag === 'Collateralized'
+      ? 'Collateralized'
+      : listing.payload.listingType.value.clearinghouse;
   const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
@@ -197,7 +203,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
-      id: { signatories: { textMap: {} }, label: orderId, version: '0' },
+      id: { signatories: makeDamlSet<string>([]), label: orderId, version: '0' },
       listingId: listing.payload.listingId,
       asset: { id: listing.payload.tradedAssetId, quantity: quantity.toString() },
       side: isBuy ? Side.Buy : Side.Sell,
@@ -228,7 +234,9 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   return (
     <div>
       <Header as="h2" textAlign="center">
-        <b>{listing.payload.listingId.label}</b>
+        <b>
+          {listing.payload.listingId.label} ({getName(clearinghouse)})
+        </b>
       </Header>
       <div className="market">
         <div className="orders">
@@ -432,7 +440,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <input />
                 <Label>{listing.payload.quotedAssetId.label}</Label>
               </Form.Input>
-              <Button className="ghost" type="submit" disabled={!price || !quantity}>
+              <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity}>
                 {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
               </Button>
             </FormErrorHandled>

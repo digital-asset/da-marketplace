@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ArchiveEvent, CreateEvent } from '@daml/ledger';
+import * as jtv from '@mojotech/json-type-validation';
 
 import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config';
+import { Template, ContractId, List, Text, Party } from '@daml/types';
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official
@@ -54,8 +56,23 @@ function isErrorMessage(event: object): event is StreamErrors {
   return 'errors' in event;
 }
 
+// Decoder for a CreateEvent, copied from @daml/types
+const decodeCreateEvent = <T extends object, K, I extends string>(
+  template: Template<T, K, I>
+): jtv.Decoder<CreateEvent<T, K, I>> =>
+  jtv.object({
+    templateId: jtv.constant(template.templateId),
+    contractId: ContractId(template).decoder,
+    signatories: List(Party).decoder,
+    observers: List(Party).decoder,
+    agreementText: Text.decoder,
+    key: template.keyDecoder,
+    payload: template.decoder,
+  });
+
 function useDamlStreamQuery<T extends object, K, I extends string>(
   templateIds: string[],
+  templateMap: Map<string, Template<T, K, I>>,
   token?: string
 ) {
   const [websocket, setWebsocket] = useState<WebSocket | null>(null);
@@ -68,52 +85,62 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   );
   const [retries, setRetries] = useState(0);
 
-  const messageHandlerScoped = useCallback(() => {
-    return (message: { data: string }) => {
-      if (timer != null) {
-        clearInterval(timer);
-        setTimer(
-          setInterval(() => {
-            setActive(false);
-            clearInterval(timer);
-          }, TIME_UNTIL_INACTIVE)
-        );
-      }
-      setActive(true);
-      setLoading(false);
+  const messageHandlerScoped = useCallback(
+    (templateMap: Map<string, Template<T, K, I>>) => {
+      return (message: { data: string }) => {
+        if (timer != null) {
+          clearInterval(timer);
+          setTimer(
+            setInterval(() => {
+              setActive(false);
+              clearInterval(timer);
+            }, TIME_UNTIL_INACTIVE)
+          );
+        }
+        setActive(true);
+        setLoading(false);
 
-      const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
+        const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
 
-      if (isWarningMessage(data)) {
-        console.warn('Warning emitted from DAML websocket: ', data.warnings);
-      }
+        if (isWarningMessage(data)) {
+          console.warn('Warning emitted from DAML websocket: ', data.warnings);
+        }
 
-      if (isErrorMessage(data)) {
-        console.error(`Errors emitted from DAML websocket: ${data.errors}. Shutting down stream.`);
-        setErrors(data);
-      }
+        if (isErrorMessage(data)) {
+          console.error(
+            `Errors emitted from DAML websocket: ${data.errors}. Shutting down stream.`
+          );
+          setErrors(data);
+        }
 
-      const { events } = data;
+        const { events } = data;
 
-      if (events && events.length > 0) {
-        events.forEach(e => {
-          if (isCreateEvent(e)) {
-            const contract = e.created as CreateEvent<T, K, I>;
-            if (!contracts.find(c => c.contractId === contract.contractId)) {
-              setContracts(contracts => [...contracts, contract]);
+        if (events && events.length > 0) {
+          events.forEach(e => {
+            if (isCreateEvent(e)) {
+              const template = templateMap.get(e.created.templateId);
+              if (!template) {
+                console.log(`could not find ${e.created.templateId}`);
+                return;
+              }
+              const contract = decodeCreateEvent(template).runWithException(e.created);
+              if (!contracts.find(c => c.contractId === contract.contractId)) {
+                setContracts(contracts => [...contracts, contract]);
+              }
             }
-          }
 
-          if (isArchiveEvent(e)) {
-            const contractId = e.archived.contractId;
-            if (contracts.find(c => c.contractId === contractId)) {
-              setContracts(contracts => [...contracts.filter(c => c.contractId !== contractId)]);
+            if (isArchiveEvent(e)) {
+              const contractId = e.archived.contractId;
+              if (contracts.find(c => c.contractId === contractId)) {
+                setContracts(contracts => [...contracts.filter(c => c.contractId !== contractId)]);
+              }
             }
-          }
-        });
-      }
-    };
-  }, [contracts, loading]);
+          });
+        }
+      };
+    },
+    [contracts, loading]
+  );
 
   const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
     const ws = newDamlWebsocket(token);
@@ -162,7 +189,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
         setWebsocket(null);
       }
     };
-  }, [errors, token, templateIds, websocket, setWebsocket, openWebsocket]);
+  }, [errors, token, templateIds, templateMap, websocket, setWebsocket, openWebsocket]);
 
   useEffect(() => {
     if (websocket && token) {
@@ -172,9 +199,9 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   useEffect(() => {
     if (websocket && token) {
-      websocket.onmessage = messageHandlerScoped();
+      websocket.onmessage = messageHandlerScoped(templateMap);
     }
-  }, [token, websocket, messageHandlerScoped]);
+  }, [token, websocket, templateMap, messageHandlerScoped]);
 
   return { contracts, errors, loading, active };
 }

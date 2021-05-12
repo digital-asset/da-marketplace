@@ -1,6 +1,6 @@
 module Marketplace.Regulator.Model where
 
-import DA.Next.Set (Set)
+import DA.Set (Set)
 
 template VerifiedIdentity
   with

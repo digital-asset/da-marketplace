@@ -38,9 +38,8 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   const [price, setPrice] = useState<number>(0);
   const [allowPublishing, setAllowPublishing] = useState<boolean>(false);
 
-  const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } = useStreamQueries(
-    BiddingAuctionContract
-  );
+  const { contracts: allBiddingAuctions, loading: allBiddingAuctionsLoading } =
+    useStreamQueries(BiddingAuctionContract);
   const deposits = useStreamQueries(AssetDeposit).contracts;
   const bids = useStreamQueries(Bid);
 

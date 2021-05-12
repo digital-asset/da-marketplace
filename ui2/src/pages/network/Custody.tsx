@@ -28,6 +28,8 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+import { ActionTile } from './Actions';
+import { damlSetValues } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -44,6 +46,9 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
+      <ActionTile
+        actions={[{ path: '/app/setup/custody/offer', label: 'Offer Custody Service' }]}
+      />
       <Header as="h2">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
@@ -99,7 +104,7 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
               getName(c.payload.provider),
               getName(c.payload.customer),
               party === c.payload.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap).join(', '),
+              damlSetValues(c.payload.ctrls).join(', '),
               party === c.payload.provider && (
                 <Button className="ghost" size="small" onClick={() => openAccount(c)}>
                   Process
@@ -183,9 +188,8 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { provider: { label: 'Provider', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [requestDialogProps, setRequestDialogProps] = useState<InputDialogProps<any>>(
-    defaultRequestDialogProps
-  );
+  const [requestDialogProps, setRequestDialogProps] =
+    useState<InputDialogProps<any>>(defaultRequestDialogProps);
 
   const requestService = () => {
     const onClose = async (state: any | null) => {
@@ -205,9 +209,8 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
     fields: { client: { label: 'Client', type: 'selection', items: legalNames } },
     onClose: async function (state: any | null) {},
   };
-  const [offerDialogProps, setOfferDialogProps] = useState<InputDialogProps<any>>(
-    defaultOfferDialogProps
-  );
+  const [offerDialogProps, setOfferDialogProps] =
+    useState<InputDialogProps<any>>(defaultOfferDialogProps);
 
   const offerService = () => {
     const onClose = async (state: any | null) => {

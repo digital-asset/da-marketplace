@@ -4,8 +4,8 @@ import Marketplace.Trading.Model qualified as Order
 import Marketplace.Trading.Model (Order(..))
 
 import DA.Finance.Types
-import DA.Next.Set (Set)
-import qualified DA.Next.Set as Set
+import DA.Set (Set)
+import qualified DA.Set as Set
 
 template MemberStanding
   with

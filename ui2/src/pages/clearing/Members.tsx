@@ -10,7 +10,7 @@ import {
   ClearedTradeSide,
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
-import { ServicePageProps } from '../common';
+import { ServicePageProps, damlSetValues } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
@@ -19,6 +19,7 @@ import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { ArrowRightIcon } from '../../icons/icons';
 import { formatCurrency } from '../../util';
+import { ActionTile } from '../network/Actions';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -29,12 +30,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   const ledger = useLedger();
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: clearedTrades, loading: clearedTradesLoading } = useStreamQueries(
-    ClearedTrade
-  );
-  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } = useStreamQueries(
-    ClearedTradeSide
-  );
+  const { contracts: clearedTrades, loading: clearedTradesLoading } =
+    useStreamQueries(ClearedTrade);
+  const { contracts: clearedTradeSides, loading: clearedTradeSidesLoading } =
+    useStreamQueries(ClearedTradeSide);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: standings, loading: standingsLoading } = useStreamQueries(MemberStanding);
   const ccpDeposits = deposits.filter(
@@ -47,10 +46,17 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   return (
     <div className="assets">
-      <Tile header={<h4>Actions</h4>}>
+      <ActionTile
+        actions={[
+          {
+            label: 'Manage Clearing Services',
+            path: '/app/manage/clearing',
+          },
+        ]}
+      >
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
-      </Tile>
+      </ActionTile>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
@@ -122,7 +128,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               getName(c.payload.account.provider),
               getName(c.payload.account.owner),
               party === c.payload.account.provider ? 'Provider' : 'Client',
-              Object.keys(c.payload.ctrls.textMap).join(', '),
+              damlSetValues(c.payload.ctrls).join(', '),
             ],
           };
         })}

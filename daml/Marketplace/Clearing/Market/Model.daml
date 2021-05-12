@@ -1,7 +1,7 @@
 module Marketplace.Clearing.Market.Model where
 
 import DA.Finance.Types
-import DA.Next.Set (Set)
+import DA.Set (Set)
 
 template FairValueCalculationRequest
   with

@@ -1,7 +1,7 @@
 module Marketplace.Rule.AllocationAccount where
 
 import DA.Record
-import DA.Next.Set (Set, insert)
+import DA.Set (Set, insert)
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Finance.Types (Account, Id, Asset)
 import DA.Finance.Asset (AssetDeposit(..))

@@ -3,7 +3,7 @@ module Tests.Distribution.Auction where
 import DA.Assert
 import DA.Foldable qualified as F
 import DA.List
-import DA.Next.Set hiding (filter, null)
+import DA.Set hiding (filter, null)
 import DA.Date
 import DA.Finance.Asset
 import DA.Finance.Types

@@ -109,23 +109,19 @@ const ServicesProvider: React.FC = ({ children }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingService, loading: clearingLoading } = useStreamQueries(
-    ClearingService
-  );
-  const { contracts: marketClearingService, loading: marketClearingLoading } = useStreamQueries(
-    MarketClearingService
-  );
+  const { contracts: clearingService, loading: clearingLoading } =
+    useStreamQueries(ClearingService);
+  const { contracts: marketClearingService, loading: marketClearingLoading } =
+    useStreamQueries(MarketClearingService);
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: auctionService, loading: auctionLoading } = useStreamQueries(AuctionService);
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
-  const { contracts: issuanceService, loading: issuanceLoading } = useStreamQueries(
-    IssuanceService
-  );
+  const { contracts: issuanceService, loading: issuanceLoading } =
+    useStreamQueries(IssuanceService);
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
-  const { contracts: regulatorService, loading: regulatorLoading } = useStreamQueries(
-    RegulatorService
-  );
+  const { contracts: regulatorService, loading: regulatorLoading } =
+    useStreamQueries(RegulatorService);
 
   useEffect(
     () =>
@@ -192,6 +188,16 @@ type GroupedCustomerServices = {
   contracts: ServiceContract[];
 }[];
 
+function useServiceKindsProvided(party: string): Set<ServiceKind> {
+  const context = React.useContext<ServicesState>(ServicesStateContext);
+  if (context === undefined) {
+    throw new Error('useProviderServices  must be used within a ServicesProvider');
+  }
+  return context.services
+    .filter(s => s.contract.payload.customer === party)
+    .reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
+}
+
 /* Retrieve all providers who are providing you, the customer, a service */
 function useProviderServices(party: string): GroupedCustomerServices {
   const context = React.useContext<ServicesState>(ServicesStateContext);
@@ -224,4 +230,4 @@ function useCustomerServices(party: string) {
   return context.services.filter(s => s.contract.payload.provider === party);
 }
 
-export { ServicesProvider, useProviderServices, useCustomerServices };
+export { ServicesProvider, useProviderServices, useCustomerServices, useServiceKindsProvided };

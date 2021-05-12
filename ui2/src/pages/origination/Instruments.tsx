@@ -7,37 +7,53 @@ import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import { ArrowRightIcon } from '../../icons/icons';
+import { ActionTile } from '../network/Actions';
+import { damlSetValues } from '../common';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
-  const { contracts: allInstruments, loading: allInstrumentsLoading } = useStreamQueries(
-    AssetDescription
-  );
+  const { contracts: allInstruments, loading: allInstrumentsLoading } =
+    useStreamQueries(AssetDescription);
   const instruments = allInstruments.filter(c => c.payload.assetId.version === '0');
   const { getName } = usePartyName('');
 
   return (
-    <StripedTable
-      headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
-      loading={allInstrumentsLoading}
-      rowsClickable
-      clickableIcon={<ArrowRightIcon />}
-      rows={instruments.map(c => {
-        return {
-          elements: [
-            getName(c.payload.issuer),
-            Object.keys(c.payload.assetId.signatories.textMap)
-              .map(party => getName(party))
-              .sort()
-              .join(', '),
-            c.payload.assetId.label,
-            c.payload.assetId.version,
-            c.payload.description,
-          ],
-          onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
-        };
-      })}
-    />
+    <div>
+      <ActionTile
+        actions={[
+          { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
+          {
+            path: '/app/setup/instrument/new/convertiblenote',
+            label: 'New Convertible Note',
+          },
+          {
+            path: '/app/setup/instrument/new/binaryoption',
+            label: 'New Binary Option',
+          },
+        ]}
+      />
+      <StripedTable
+        headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
+        loading={allInstrumentsLoading}
+        rowsClickable
+        clickableIcon={<ArrowRightIcon />}
+        rows={instruments.map(c => {
+          return {
+            elements: [
+              getName(c.payload.issuer),
+              damlSetValues(c.payload.assetId.signatories)
+                .map(party => getName(party))
+                .sort()
+                .join(', '),
+              c.payload.assetId.label,
+              c.payload.assetId.version,
+              c.payload.description,
+            ],
+            onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
+          };
+        })}
+      />
+    </div>
   );
 };
 

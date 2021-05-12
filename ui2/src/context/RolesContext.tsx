@@ -60,7 +60,6 @@ const RolesProvider: React.FC = ({ children }) => {
     useStreamQueries(ExchangeRole);
   const { contracts: distributorRoles, loading: distributorRolesLoading } =
     useStreamQueries(DistributorRole);
-
   const { contracts: settlementServices, loading: settlementServicesLoading } =
     useStreamQueries(SettlementService);
   const { contracts: matchingServices, loading: matchingServicesLoading } =
@@ -109,6 +108,14 @@ const RolesProvider: React.FC = ({ children }) => {
   );
 };
 
+function useRoleKinds(): Set<ServiceKind> {
+  const context = React.useContext<RolesState>(RolesStateContext);
+  if (context === undefined) {
+    throw new Error('useProviderServices  must be used within a ServicesProvider');
+  }
+  return context.roles.reduce((acc, v) => acc.add(v.role), new Set<ServiceKind>());
+}
+
 function useRolesContext() {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
@@ -117,4 +124,4 @@ function useRolesContext() {
   return context;
 }
 
-export { RolesProvider, useRolesContext };
+export { RolesProvider, useRolesContext, useRoleKinds };
