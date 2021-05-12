@@ -181,10 +181,17 @@ const QuickSetup = () => {
 
   return (
     <div className="quick-setup">
-      <Button className="ghost dark back-button" onClick={() => history.push('/login')}>
-        <ArrowLeftIcon color={'white'} />
-        Back
-      </Button>
+      <div className="page-controls">
+        <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
+          <ArrowLeftIcon color={'white'} />
+          Back
+        </Button>
+        <Button className="ghost dark control-button" onClick={() => setActiveMenuItem(undefined)}>
+          Skip to Log In
+          <ArrowRightIcon color={'white'} />
+        </Button>
+      </div>
+
       <div className="quick-setup-header">
         <h1 className="logo-header">
           <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
@@ -193,7 +200,7 @@ const QuickSetup = () => {
       </div>
       <div className="quick-setup-tile">
         {activeMenuItem && (
-          <Menu pointing secondary className="quick-setup-menu">
+          <Menu pointing secondary className="quick-setup-menu page-row">
             {Object.values(MenuItems).map((item, i) => (
               <>
                 <Menu.Item

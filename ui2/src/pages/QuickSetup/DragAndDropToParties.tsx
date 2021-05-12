@@ -10,6 +10,8 @@ import { useRolesContext, ServiceKind } from '../../context/RolesContext';
 import { useOffersContext } from '../../context/OffersContext';
 
 import { LoadingWheel } from './QuickSetup';
+import classNames from 'classnames';
+import { isHubDeployment } from '../../config';
 
 export enum DropItemTypes {
   AUTOMATION = 'Automation',
@@ -78,7 +80,7 @@ const DragAndDropToParties = (props: {
       </div>
       <div>
         <p className="bold">{dropItemType}</p>
-        <div className="role-tiles">
+        <div className="drag-tiles page-row ">
           {draggableItems.map((item, i) => (
             <DraggableItemTile key={i} item={item} />
           ))}
@@ -104,16 +106,19 @@ export const PartyRowDropZone = (props: {
   const { party, handleAddItem, roles, triggers, clearingOffer } = props;
 
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
+  const [dragCount, setDragCount] = useState(0);
 
   const token = party.token;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      getAutomationInstances(token).then(pd => {
-        setDeployedAutomations(pd || []);
-      });
-    }, 1000);
-    return () => clearInterval(timer);
+    if (isHubDeployment) {
+      const timer = setInterval(() => {
+        getAutomationInstances(token).then(pd => {
+          setDeployedAutomations(pd || []);
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
   }, [token]);
 
   const currentTriggerOptions =
@@ -132,8 +137,10 @@ export const PartyRowDropZone = (props: {
 
   return (
     <div
-      className="party-name"
+      className={classNames('party-name page-row', { 'drag-over': dragCount > 0 })}
       onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as string)}
+      onDragEnter={evt => setDragCount(dragCount + 1)}
+      onDragLeave={evt => setDragCount(dragCount - 1)}
       onDragOver={evt => evt.preventDefault()}
     >
       {roles && (
@@ -154,6 +161,9 @@ export const PartyRowDropZone = (props: {
   );
 
   function handleDrop(item: string) {
+    console.log(item);
+    setDragCount(dragCount - 1);
+
     if (!!triggers) {
       if (currentTriggerOptions.map(i => i.value).includes(item)) {
         handleAddItem(party, item);
@@ -172,7 +182,7 @@ export const DraggableItemTile = (props: { item: { name: string; value: string }
   }
 
   return (
-    <div className="role-tile" draggable={true} onDragStart={e => handleDragStart(e)}>
+    <div className="drag-tile" draggable={true} onDragStart={e => handleDragStart(e)}>
       <p>{item.name}</p>
     </div>
   );

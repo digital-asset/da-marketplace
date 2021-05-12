@@ -33,19 +33,18 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
     <div className="setup-page add-parties">
       {isHubDeployment ? (
         storedParties.length > 0 ? (
-          <div>
-            <div className="page-row parties-title">
-              <h4>Parties</h4>
-              {uploadButton}
+          <div className="page-row">
+            <div>
+              <p className="details">Parties</p>
+              <div className="party-names uploaded">
+                {storedParties.map(p => (
+                  <p className="party-name" key={p.party}>
+                    {p.partyName}
+                  </p>
+                ))}
+              </div>
             </div>
-
-            <div className="party-names uploaded">
-              {storedParties.map(p => (
-                <p className="party-name" key={p.party}>
-                  {p.partyName}
-                </p>
-              ))}
-            </div>
+            <div className="upload-parties uploaded">{uploadButton}</div>
           </div>
         ) : (
           <div className="upload-parties">
@@ -59,8 +58,9 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
         )
       ) : (
         <>
-          <h4 className="details">Type a party name and press 'Enter'</h4>
+          <p>Type a party name and press 'Enter'</p>
           <Form.Input
+            className='party-input'
             placeholder="Username"
             value={inputValue}
             onChange={e => setInputValue(e.currentTarget.value)}

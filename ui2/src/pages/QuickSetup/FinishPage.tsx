@@ -49,9 +49,9 @@ const FinishPage = () => {
             )
           }
         >
-          <div className="log-in-row">
+          <div className="log-in-row page-row">
             <h4>{p.partyName}</h4>
-            <p className="p2 log-in">
+            <p className="p2 log-in page-row">
               Log in <ArrowRightIcon />
             </p>
           </div>
