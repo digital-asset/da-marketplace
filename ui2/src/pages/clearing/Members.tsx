@@ -19,6 +19,7 @@ import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { ArrowRightIcon } from '../../icons/icons';
 import { formatCurrency } from '../../util';
+import { ActionTile } from '../network/Actions';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -45,12 +46,17 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   return (
     <div className="assets">
-      <Tile header={<h4>Actions</h4>}>
-        <Button.Group>
-          <MarginCallModal services={services} />
-          <MTMCalculationModal services={services} />
-        </Button.Group>
-      </Tile>
+      <ActionTile
+        actions={[
+          {
+            label: 'Manage Clearing Services',
+            path: '/app/manage/clearing',
+          },
+        ]}
+      >
+        <MarginCallModal services={services} />
+        <MTMCalculationModal services={services} />
+      </ActionTile>
       <Header as="h2">Holdings</Header>
       <StripedTable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}

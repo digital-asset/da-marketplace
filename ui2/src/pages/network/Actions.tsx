@@ -12,7 +12,7 @@ type Params = {
   actions: Action[];
 };
 
-export const ActionTile: React.FC<Params> = ({ actions }) => {
+export const ActionTile: React.FC<Params> = ({ actions, children }) => {
   return (
     <Tile header={<h4>Actions</h4>}>
       <div className="action-row">
@@ -24,6 +24,7 @@ export const ActionTile: React.FC<Params> = ({ actions }) => {
               </Button>
             </Link>
           ))}
+          {children}
         </Button.Group>
       </div>
     </Tile>

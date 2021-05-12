@@ -22,6 +22,15 @@ type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
 };
 
+export const getMarketType = (c: CreateEvent<Listing>, getName: (party: string) => string) => {
+  const listingType = c.payload.listingType;
+  if (listingType.tag === 'Collateralized') {
+    return 'Collateralized';
+  } else {
+    return getName(listingType.value.clearinghouse);
+  }
+};
+
 export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
@@ -34,15 +43,6 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   );
 
   const { contracts: fairValueContracts, loading: fairValuesLoading } = useStreamQueries(FairValue);
-
-  const getMarketType = (c: CreateEvent<Listing>) => {
-    const listingType = c.payload.listingType;
-    if (listingType.tag === 'Collateralized') {
-      return 'Collateralized';
-    } else {
-      return getName(listingType.value.clearinghouse);
-    }
-  };
 
   return !contractId ? (
     <>
@@ -71,7 +71,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
             elements: [
               getName(c.payload.provider),
               getName(c.payload.customer),
-              getMarketType(c),
+              getMarketType(c, getName),
               c.payload.listingId.label,
               c.payload.calendarId,
               c.payload.tradedAssetId.label,
