@@ -12,11 +12,13 @@ import {
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { ArrowRightIcon } from '../../icons/icons';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const services = useStreamQueries(Service).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
@@ -24,7 +26,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   const originateInstrument = async (c: CreateEvent<OriginationRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return displayErrorMessage({ message: 'Could not find service contract' });
     await ledger.exercise(Service.Originate, service.contractId, {
       createOriginationCid: c.contractId,
     });

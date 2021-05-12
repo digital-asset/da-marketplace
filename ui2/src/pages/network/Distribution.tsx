@@ -26,6 +26,7 @@ import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import StripedTable from '../../components/Table/StripedTable';
 import { ActionTile } from './Actions';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 export const DistributionServiceTable = () => {
   const party = useParty();
@@ -72,6 +73,7 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
   const requests = useStreamQueries(Request).contracts;
   const offers = useStreamQueries(Offer).contracts;
+  const displayErrorMessage = useDisplayErrorMessage();
 
   // Service request
   const defaultRequestDialogProps: InputDialogProps<any> = {
@@ -118,7 +120,7 @@ const DistributionComponent: React.FC<RouteComponentProps> = ({ history }: Route
   };
 
   const approveRequest = async (c: CreateEvent<Request>) => {
-    if (!hasRole) return; // TODO: Display error
+    if (!hasRole) return displayErrorMessage({ message: 'Could not find role contract.' });
     await ledger.exercise(Role.ApproveListingServiceRequest, roles[0].contractId, {
       listingRequestCid: c.contractId,
     });

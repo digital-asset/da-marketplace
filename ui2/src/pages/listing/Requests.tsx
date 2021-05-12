@@ -25,6 +25,7 @@ import {
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -41,6 +42,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const { getName } = usePartyName(party);
 
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const providerServices = services.filter(s => s.payload.provider === party);
   const createRequests = useStreamQueries(CreateListingRequest).contracts;
@@ -51,7 +53,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   }));
   const createListing = async (c: CreateEvent<CreateListingRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return displayErrorMessage({ message: 'You do not provide trading services.' });
     await ledger.exercise(Service.CreateListing, service.contractId, {
       createListingRequestCid: c.contractId,
       providerId: uuidv4(),
@@ -61,7 +63,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const deleteListing = async (c: CreateEvent<DisableListingRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return displayErrorMessage({ message: 'You do not provide trading services.' });
     await ledger.exercise(Service.DisableListing, service.contractId, {
       disableListingRequestCid: c.contractId,
     });

@@ -18,6 +18,7 @@ import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
 import { ActionTile } from './Actions';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
@@ -31,6 +32,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const { contracts: roleOffers, loading: roleOffersLoading } = useStreamQueries(RoleOffer);
   const { contracts: offers, loading: offersLoading } = useStreamQueries(Offer);
@@ -71,7 +73,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
   const approveRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
-    if (!hasRole) return; // TODO: Display error
+    if (!hasRole) return displayErrorMessage({ message: 'Count not find role contract.' });
     if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,
@@ -84,7 +86,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   const rejectRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
-    if (!hasRole) return; // TODO: Display error
+    if (!hasRole) return displayErrorMessage({ message: 'Count not find role contract.' });
     if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,

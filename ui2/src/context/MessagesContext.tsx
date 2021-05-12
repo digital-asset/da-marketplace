@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 
 import { Message } from 'semantic-ui-react';
 
+export type ErrorMessage = {
+  header?: string;
+  message?: string;
+  list?: string[];
+};
+
 type MessagesState = {
-  displayErrorMessage: () => void;
+  displayErrorMessage: (error: ErrorMessage) => void;
 };
 
 const MessagesStateContext = React.createContext<MessagesState>({
@@ -12,16 +18,19 @@ const MessagesStateContext = React.createContext<MessagesState>({
 
 const MessagesProvider: React.FC = ({ children }) => {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [error, setError] = useState<ErrorMessage>();
 
-  function displayErrorMessage() {
+  function displayErrorMessage(error: ErrorMessage) {
     setShowErrorMessage(true);
+    setError(error);
   }
 
   useEffect(() => {
     if (showErrorMessage) {
       const timer = setInterval(() => {
         setShowErrorMessage(false);
-      }, 5000);
+        setError(undefined);
+      }, 7000);
 
       return () => clearInterval(timer);
     }
@@ -31,10 +40,13 @@ const MessagesProvider: React.FC = ({ children }) => {
     <MessagesStateContext.Provider value={{ displayErrorMessage }}>
       {children}
       {showErrorMessage && (
-        <Message>
-          <Message.Header></Message.Header>
-          <p>HELLOOOOOO</p>
-        </Message>
+        <Message
+          error
+          onDismiss={() => setShowErrorMessage(false)}
+          header={error?.header || 'Error'}
+          content={error?.message}
+          list={error?.list}
+        />
       )}
     </MessagesStateContext.Provider>
   );

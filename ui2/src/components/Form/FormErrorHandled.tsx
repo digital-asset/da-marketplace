@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Message } from 'semantic-ui-react';
 import classNames from 'classnames';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
 
@@ -25,39 +26,33 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
   onSubmit,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<ErrorMessage>();
-
-  useEffect(() => {
-    if (error) {
-      setTimeout(() => {
-        setError(undefined);
-      }, 6000);
-    }
-  }, [error]);
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const loadAndCatch = async (fn: () => Promise<void>) => {
     setLoading(true);
     try {
       await fn();
     } catch (err) {
-      setError(parseError(err));
+      handleError(err);
     }
     setLoading(false);
   };
 
-  const errorMsgList = error?.message instanceof Array ? error.message : undefined;
-  const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
+  function handleError(err: any) {
+    const error = parseError(err);
+    const errorMsgList = error?.message instanceof Array ? error.message : undefined;
+    const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
+    displayErrorMessage({ header: error?.header, message: errorMsgContent, list: errorMsgList });
+  }
 
   return (
     <Form
       className={classNames('form-error-handled', className)}
       size={size}
       loading={loading}
-      error={!!error}
       onSubmit={() => loadAndCatch(onSubmit)}
     >
       {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
-      <Message error header={error?.header} content={errorMsgContent} list={errorMsgList} />
     </Form>
   );
 };

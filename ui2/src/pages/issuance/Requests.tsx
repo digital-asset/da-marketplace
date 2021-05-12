@@ -13,6 +13,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -26,6 +27,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const { getName } = usePartyName(party);
 
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const providerServices = services.filter(s => s.payload.provider === party);
   const { contracts: createRequests, loading: createRequestsLoading } =
@@ -34,7 +36,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     useStreamQueries(ReduceIssuanceRequest);
   const createIssuance = async (c: CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return displayErrorMessage({ message: 'You do not provide issuance services.' });
     await ledger.exercise(Service.CreateIssuance, service.contractId, {
       createIssuanceRequestCid: c.contractId,
     });
@@ -43,7 +45,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const deleteIssuance = async (c: CreateEvent<ReduceIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return displayErrorMessage({ message: 'You do not provide issuance services.' });
     await ledger.exercise(Service.ReduceIssuance, service.contractId, {
       reduceIssuanceRequestCid: c.contractId,
     });
