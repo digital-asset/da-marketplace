@@ -10,16 +10,16 @@ import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regula
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 
 import { LoadingWheel } from './QuickSetup';
-import { formatTriggerName } from './SelectAutomationPage';
+import { formatTriggerName } from './DragAndDropToParties';
 
-import { retrieveParties } from '../../Parties';
+import { retrieveUserParties } from '../../Parties';
 
 const ReviewPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
 
   const [loading, setLoading] = useState<boolean>(false);
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const parties = retrieveParties() || [];
+  const parties = retrieveUserParties() || [];
 
   const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
     useStreamQueries(VerifiedIdentity);
@@ -80,10 +80,10 @@ const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
     <div className="party-name">
       <div className="party-details">
         <p>{party.partyName}</p>
-        <p className="role-names">{roles.join(', ')}</p>
+        <p className="dropped-items">{roles.join(', ')}</p>
       </div>
 
-      <p className="role-names">
+      <p className="dropped-items">
         {deployedAutomations.map(da => {
           return <p>{formatTriggerName(da.config.value.name)}</p>;
         })}

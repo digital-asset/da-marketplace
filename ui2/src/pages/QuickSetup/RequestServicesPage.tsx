@@ -6,7 +6,7 @@ import { PartyDetails } from '@daml/hub-react';
 
 import { ServiceKind } from '../../context/ServicesContext';
 
-import { retrieveParties } from '../../Parties';
+import { retrieveUserParties } from '../../Parties';
 
 const RequestServicesPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
@@ -15,7 +15,7 @@ const RequestServicesPage = (props: { onComplete: () => void }) => {
   const [serviceKind, setServiceKind] = useState<ServiceKind>(ServiceKind.CUSTODY);
   //   const [request, setRequest] = useState<ServiceRequest>(CustodyRequest);
 
-  const parties = retrieveParties() || [];
+  const parties = retrieveUserParties() || [];
 
   const [fields, setFields] = useState<object>({});
 

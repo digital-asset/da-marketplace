@@ -2,37 +2,30 @@ import React, { useEffect, useState } from 'react';
 
 import { Button, Loader, Menu } from 'semantic-ui-react';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
-import { PartyDetails } from '@daml/hub-react';
-
 import { useHistory } from 'react-router-dom';
-import { PublicDamlProvider } from '../../Main';
-import {
-  DeploymentMode,
-  deploymentMode,
-  httpBaseUrl,
-  wsBaseUrl,
-  ledgerId,
-  publicParty,
-  isHubDeployment,
-} from '../../config';
 
 import classNames from 'classnames';
 
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import { PartyDetails } from '@daml/hub-react';
+import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
+
+import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+
+import { PublicDamlProvider } from '../../Main';
+
+import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
+
 import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties } from '../../Parties';
+import { retrieveParties, retrieveUserParties } from '../../Parties';
 
 import { halfSecondPromise } from '../page/utils';
 
-import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-
-import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
-
-import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
-
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+
 import { AutomationProvider } from '../../context/AutomationContext';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { RolesProvider } from '../../context/RolesContext';
@@ -40,29 +33,12 @@ import { OffersProvider } from '../../context/OffersContext';
 
 import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
 import QueryStreamProvider from '../../websocket/queryStream';
-import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
 import SelectAutomationPage from './SelectAutomationPage';
-import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-
-export enum ServiceKind {
-  CLEARING = 'Clearing',
-  CUSTODY = 'Custody',
-  TRADING = 'Trading',
-  MATCHING = 'Matching',
-  SETTLEMENT = 'Settlement',
-  REGULATOR = 'Regulator',
-  DISTRIBUTION = 'Distribution',
-}
-
-export interface IQuickSetupData {
-  roles?: ServiceKind[];
-  automation?: string[];
-}
 
 export enum MenuItems {
   ADD_PARTIES = 'Add Parties',
@@ -138,91 +114,22 @@ const AdminLedger = (props: {
       </div>
     );
   } else if (activeMenuItem === MenuItems.REVIEW) {
-    return <ReviewPage onComplete={() => setActiveMenuItem(undefined)} />;
+    return (
+      <ReviewPage
+        onComplete={() => {
+          onComplete();
+          setActiveMenuItem(undefined);
+        }}
+      />
+    );
   }
 
   return <FinishPage />;
 };
 
-const CreateRoleContract = (props: { onFinish: () => void; party: PartyDetails }) => {
-  const { onFinish, party } = props;
-
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const parties = retrieveParties() || [];
-
-  const ledger = useLedger();
-
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
-
-  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
-    useStreamQueries(VerifiedIdentity);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-    const allVerfified = parties.every(
-      p => !!verifiedIdentities.find(v => v.payload.customer === p.party)
-    );
-    console.log('party is', party.partyName);
-    console.log('allverified is', allVerfified);
-    if (allVerfified) {
-      onFinish();
-    }
-  }, [verifiedIdentities]);
-
-  useEffect(() => {
-    setLoading(regulatorServicesLoading || verifiedIdentityLoading);
-  }, [regulatorServicesLoading, verifiedIdentityLoading]);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-    async function handleVerifiedIdentity() {
-      let retries = 0;
-
-      const legalName = party.partyName;
-      const location = 'none';
-
-      while (retries < 3) {
-        console.log('attempting to verify party', party.partyName);
-
-        if (regulatorServices.length > 0) {
-          await Promise.all(
-            regulatorServices.map(async service => {
-              if (legalName && location) {
-                await ledger.exercise(
-                  RegulatorService.RequestIdentityVerification,
-                  service.contractId,
-                  {
-                    legalName,
-                    location,
-                    observers: [publicParty],
-                  }
-                );
-              }
-            })
-          );
-          console.log('verified', party.partyName);
-
-          break;
-        } else {
-          await halfSecondPromise();
-          retries++;
-        }
-      }
-    }
-    handleVerifiedIdentity();
-  }, [loading, regulatorServices]);
-
-  return null;
-};
-
 const QuickSetup = () => {
   const localCreds = computeCredentials('Operator');
+  const history = useHistory();
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [submitSetupData, setSubmitSetupData] = useState(false);
@@ -230,11 +137,7 @@ const QuickSetup = () => {
     MenuItems.ADD_PARTIES
   );
 
-  const history = useHistory();
-
-  const parties =
-    retrieveParties()?.filter(p => p.party != publicParty && p.party != adminCredentials?.party) ||
-    [];
+  const parties = retrieveParties() || [];
 
   useEffect(() => {
     if (isHubDeployment) {
@@ -372,6 +275,70 @@ const QuickSetup = () => {
       return true;
     }
     return false;
+  }
+};
+
+const CreateRoleContract = (props: { onFinish: () => void; party: PartyDetails }) => {
+  const { onFinish, party } = props;
+
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const parties = retrieveUserParties();
+
+  const ledger = useLedger();
+
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+
+  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
+    useStreamQueries(VerifiedIdentity);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (parties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+      onFinish();
+    }
+  }, [verifiedIdentities]);
+
+  useEffect(() => {
+    setLoading(regulatorServicesLoading || verifiedIdentityLoading);
+  }, [regulatorServicesLoading, verifiedIdentityLoading]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
+      handleVerifiedIdentity();
+    }
+  }, [loading, regulatorServices]);
+
+  return null;
+
+  async function handleVerifiedIdentity() {
+    let retries = 0;
+
+    while (retries < 3) {
+      if (regulatorServices.length > 0) {
+        await Promise.all(
+          regulatorServices.map(async service => {
+            await ledger.exercise(
+              RegulatorService.RequestIdentityVerification,
+              service.contractId,
+              {
+                legalName: party.partyName,
+                location: '',
+                observers: [publicParty],
+              }
+            );
+          })
+        );
+        break;
+      } else {
+        await halfSecondPromise();
+        retries++;
+      }
+    }
   }
 };
 

@@ -1,54 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Form, Button } from 'semantic-ui-react';
 
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-import { ledgerId, isHubDeployment } from '../../config';
+import { ledgerId, isHubDeployment, publicParty } from '../../config';
 
 import { computeCredentials } from '../../Credentials';
 
-import { storeParties, retrieveParties } from '../../Parties';
+import { storeParties, retrieveUserParties } from '../../Parties';
 
 const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }) => {
   const { localOperator, onComplete } = props;
 
   const [inputValue, setInputValue] = useState<string>();
-  const [parties, setParties] = useState<PartyDetails[]>([]);
   const [error, setError] = useState<string>();
-  const storedParties = retrieveParties() || [];
-
-  useEffect(() => {
-    setParties(storedParties);
-  }, [storedParties.length]);
+  const storedParties = retrieveUserParties();
 
   const uploadButton = (
     <label className="custom-file-upload button ui">
       <DablPartiesInput
         ledgerId={ledgerId}
         onError={error => setError(error)}
-        onLoad={(newParties: PartyDetails[]) => handleLoad(newParties)}
+        onLoad={(newParties: PartyDetails[]) => storeParties(newParties)}
       />
-      <p>Upload {parties.length > 0 ? 'a new ' : ''}.JSON file</p>
+      <p>Upload {storedParties.length > 0 ? 'a new ' : ''}.JSON file</p>
     </label>
   );
-
-  function handleLoad(newParties: PartyDetails[]) {
-    storeParties(newParties);
-    setParties(newParties);
-  }
 
   return (
     <div className="setup-page add-parties">
       {isHubDeployment ? (
-        parties.length === 0 ? (
-          <div className="upload-parties">
-            <p className="details">
-              Download the .json file from the Users tab on Daml Hub, and upload it here.
-            </p>
-            {uploadButton}
-            <span className="login-details dark">{error}</span>
-          </div>
-        ) : (
+        storedParties.length > 0 ? (
           <div>
             <div className="page-row parties-title">
               <h4>Parties</h4>
@@ -56,12 +38,21 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
             </div>
 
             <div className="party-names uploaded">
-              {parties.map(p => (
+              {storedParties.map(p => (
                 <p className="party-name" key={p.party}>
                   {p.partyName}
                 </p>
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="upload-parties">
+            <p className="details">
+              Download the .json file from the Users tab on Daml Hub, and upload it here then
+              refresh.
+            </p>
+            {uploadButton}
+            <span className="login-details dark">{error}</span>
           </div>
         )
       ) : (
@@ -73,9 +64,9 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
             onChange={e => setInputValue(e.currentTarget.value)}
             onKeyDown={handleAddParty}
           />
-          {parties.length > 0 && (
+          {storedParties.length > 0 && (
             <div className="party-names">
-              {parties.map(p => (
+              {storedParties.map(p => (
                 <p className="party-name" key={p.party}>
                   {p.partyName}
                 </p>
@@ -84,7 +75,11 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
           )}
         </>
       )}
-      <Button disabled={parties.length === 0} className="ghost next" onClick={() => onComplete()}>
+      <Button
+        disabled={storedParties.length === 0}
+        className="ghost next"
+        onClick={() => onComplete()}
+      >
         Next
       </Button>
     </div>
@@ -103,7 +98,7 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
           owner: localOperator,
           partyName: inputValue,
         };
-        storeParties([...parties, newLocalParty]);
+        storeParties([...storedParties, newLocalParty]);
         setInputValue('');
         event.preventDefault();
         event.stopPropagation();

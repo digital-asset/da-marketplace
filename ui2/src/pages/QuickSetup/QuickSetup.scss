@@ -87,9 +87,7 @@
                 font-size: 16px;
                 line-height: 26px;
                 min-height: 50px;
-                &.drag-over {
-                    background-color: red;
-                }
+
                 &:last-of-type {
                     border-bottom: none;
                 }
@@ -98,12 +96,14 @@
                     display: flex;
                     flex-direction: column;
                     width: 50%;
+                    width: 190px;
                 }
 
-                .role-names {
+                .dropped-items {
                     font-size: 12px;
                     color: var(--cool-grey-30);
-                    margin-right: $spacing-s;
+                    padding-right: $spacing-s;
+                    width: 190px;
 
                     p {
                         font-size: 12px;
@@ -181,6 +181,11 @@
                     &:hover {
                         background-color: var(--blue-100);
                         cursor: pointer;
+                    }
+
+                    .finished-roles {
+                        font-size: 12px;
+                        color: var(--cool-grey-30);
                     }
                 }
             }
@@ -263,8 +268,10 @@
             &.select-roles {
                 .party-names {
                     margin-top: $spacing-xs;
-                    // overflow: unset;
-                    //max-height: unset;
+                }
+
+                i {
+                    margin-bottom: $spacing-s;
                 }
 
                 .role-tiles {

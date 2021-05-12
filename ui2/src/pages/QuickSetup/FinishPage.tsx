@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
-import { PartyDetails } from '@daml/hub-react';
-
 import { ArrowRightIcon } from '../../icons/icons';
 
 import { useRolesContext } from '../../context/RolesContext';
@@ -11,17 +9,19 @@ import { loginUser, useUserDispatch } from '../../context/UserContext';
 
 import { computeCredentials } from '../../Credentials';
 
-import { retrieveParties } from '../../Parties';
+import { retrieveUserParties } from '../../Parties';
 
 import { LoadingWheel } from './QuickSetup';
 
-const FinishPage = (props: {}) => {
+const FinishPage = () => {
   const dispatch = useUserDispatch();
+
   const history = useHistory();
 
-  const parties = retrieveParties() || [];
+  const parties = retrieveUserParties();
 
   const [loading, setLoading] = useState<boolean>(false);
+
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
 
   useEffect(() => {
@@ -55,12 +55,11 @@ const FinishPage = (props: {}) => {
               Log in <ArrowRightIcon />
             </p>
           </div>
-          <p className="role-names">
+          <p className="finished-roles">
             {allRoles
               .filter(r => r.contract.payload.provider === p.party)
-              .map(r => {
-                return <p>r.role</p>;
-              })}
+              .map(r => r.role)
+              .join(',')}
           </p>
         </div>
       ))}

@@ -14,7 +14,7 @@ import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/R
 
 import { useStreamQueries } from '../Main';
 
-enum ServiceKind {
+export enum ServiceKind {
   CLEARING = 'Clearing',
   CUSTODY = 'Custody',
   TRADING = 'Trading',
@@ -33,7 +33,7 @@ type RoleContract =
   | CreateEvent<SettlementService>
   | CreateEvent<MatchingService>;
 
-type Role = {
+export type Role = {
   contract: RoleContract;
   role: ServiceKind;
 };
@@ -50,29 +50,21 @@ const RolesStateContext = React.createContext<RolesState>({
 
 const RolesProvider: React.FC = ({ children }) => {
   const [roles, setRoles] = useState<Role[]>([]);
-  const [operatorRole, setOperatorRole] = useState([]);
-
   const [loading, setLoading] = useState<boolean>(false);
 
-  const { contracts: clearingRoles, loading: clearingRolesLoading } = useStreamQueries(
-    ClearingRole
-  );
-  const { contracts: custodianRoles, loading: custodianRolesLoading } = useStreamQueries(
-    CustodianRole
-  );
-  const { contracts: exchangeRoles, loading: exchangeRolesLoading } = useStreamQueries(
-    ExchangeRole
-  );
-  const { contracts: distributorRoles, loading: distributorRolesLoading } = useStreamQueries(
-    DistributorRole
-  );
+  const { contracts: clearingRoles, loading: clearingRolesLoading } =
+    useStreamQueries(ClearingRole);
+  const { contracts: custodianRoles, loading: custodianRolesLoading } =
+    useStreamQueries(CustodianRole);
+  const { contracts: exchangeRoles, loading: exchangeRolesLoading } =
+    useStreamQueries(ExchangeRole);
+  const { contracts: distributorRoles, loading: distributorRolesLoading } =
+    useStreamQueries(DistributorRole);
 
-  const { contracts: settlementServices, loading: settlementServicesLoading } = useStreamQueries(
-    SettlementService
-  );
-  const { contracts: matchingServices, loading: matchingServicesLoading } = useStreamQueries(
-    MatchingService
-  );
+  const { contracts: settlementServices, loading: settlementServicesLoading } =
+    useStreamQueries(SettlementService);
+  const { contracts: matchingServices, loading: matchingServicesLoading } =
+    useStreamQueries(MatchingService);
 
   useEffect(() => {
     setLoading(
@@ -107,7 +99,6 @@ const RolesProvider: React.FC = ({ children }) => {
       custodianRoles,
       exchangeRoles,
       distributorRoles,
-      operatorRole,
       settlementServices,
       matchingServices,
     ]

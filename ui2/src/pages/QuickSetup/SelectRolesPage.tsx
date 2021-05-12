@@ -1,34 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { Button } from 'semantic-ui-react';
 
 import { PartyDetails } from '@daml/hub-react';
 
-import { ServiceKind } from './QuickSetup';
-
-import { ArrowLeftIcon } from '../../icons/icons';
-
-import classNames from 'classnames';
-
 import { LoadingWheel } from './QuickSetup';
 
 import { useLedger, useStreamQueries } from '@daml/react';
 
-import { useRolesContext } from '../../context/RolesContext';
+import { useRolesContext, ServiceKind } from '../../context/RolesContext';
 import { useOffersContext } from '../../context/OffersContext';
 
-import { retrieveParties } from '../../Parties';
+import { retrieveUserParties } from '../../Parties';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
+import DragAndDropToParties from './DragAndDropToParties';
+
 const SelectRolesPage = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
-  const parties = retrieveParties() || [];
+  const parties = retrieveUserParties() || [];
 
   const ledger = useLedger();
-  const roleOptions = getRoleOptions();
+  const roleOptions = Object.values(ServiceKind)
+    .filter(s => s !== ServiceKind.REGULATOR)
+    .map(i => {
+      return { name: i, value: i };
+    });
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { offers: allOffers, loading: offersLoading } = useOffersContext();
@@ -50,47 +50,29 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
   return (
     <div className="setup-page select-roles">
       <h4>Drag and Drop Roles to Parties</h4>
-      <div className="page-row">
-        <div>
-          <p className="bold here">Parties</p>
-          <div className="party-names">
-            {parties.map((p, i) => (
-              <PartyRowDropZone
-                key={i}
-                party={p}
-                handleAddRole={createRoleContract}
-                roles={allRoles
-                  .filter(r => r.contract.payload.provider === p.party)
-                  .map(r => r.role)}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="arrow">
-          <ArrowLeftIcon color="grey" />
-        </div>
-        <div>
-          <p className="bold">Roles</p>
-          <div className="role-tiles">
-            {roleOptions.map((role, i) => (
-              <DraggableItemTile key={i} item={role} />
-            ))}
-          </div>
-        </div>
-      </div>
+      <i>
+        Auto Approval Triggers have been deployed, check the logs in the Hub Deployments tab to view
+        their status.
+      </i>
+      <DragAndDropToParties
+        parties={parties}
+        handleAddItem={createRoleContract}
+        allRoles={allRoles}
+        dropItems={roleOptions}
+        dropItemType="Roles"
+      />
       <Button className="ghost next" onClick={() => onComplete()}>
         Next
       </Button>
     </div>
   );
 
-  async function createRoleContract(party: PartyDetails, role: ServiceKind) {
+  async function createRoleContract(party: PartyDetails, role: string) {
     const operatorServiceContract = operatorService[0];
-
-    console.log('dropped: ', role);
-
-    if (findExistingOffer(party.party, role) || findExistingRole(party.party, role)) {
-      console.log('found existing offer or role: ', role);
+    if (
+      findExistingOffer(party.party, role as ServiceKind) ||
+      findExistingRole(party.party, role as ServiceKind)
+    ) {
       return;
     }
 
@@ -105,41 +87,52 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
 
     switch (role) {
       case ServiceKind.CUSTODY:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferCustodianRole,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
       case ServiceKind.CLEARING:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferClearingRole,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
+
       case ServiceKind.TRADING:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferExchangeRole,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
+
       case ServiceKind.MATCHING:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferMatchingService,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
+
       case ServiceKind.SETTLEMENT:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferSettlementService,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
+
       case ServiceKind.DISTRIBUTION:
-        return await ledger.exercise(
+        await ledger.exercise(
           OperatorService.OfferDistributorRole,
           operatorServiceContract.contractId,
           { provider: party.party }
         );
+        return;
+
       default:
         throw new Error(`Unsupported service: ${role}`);
     }
@@ -153,48 +146,5 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
     return !!allRoles.find(c => c.role === role && c.contract.payload.provider === provider);
   }
 };
-
-export const DraggableItemTile = (props: { item: { name: string; value: string } }) => {
-  const { item } = props;
-
-  function handleDragStart(evt: any) {
-    evt.dataTransfer.setData('text', item.value);
-  }
-
-  return (
-    <div className="role-tile" draggable={true} onDragStart={e => handleDragStart(e)}>
-      <p>{item.name}</p>
-    </div>
-  );
-};
-
-const PartyRowDropZone = (props: {
-  party: PartyDetails;
-  handleAddRole: (party: PartyDetails, role: ServiceKind) => void;
-  roles: ServiceKind[];
-}) => {
-  const { party, handleAddRole, roles } = props;
-
-  return (
-    <div
-      className="party-name"
-      onDrop={evt => handleAddRole(party, evt.dataTransfer.getData('text') as ServiceKind)}
-      onDragOver={evt => evt.preventDefault()}
-    >
-      <div>
-        <p>{party.partyName}</p>
-        <p className="role-names">{roles.join(', ')}</p>
-      </div>
-    </div>
-  );
-};
-
-function getRoleOptions(excludeOptions?: ServiceKind[]) {
-  return Object.values(ServiceKind)
-    .filter(s => s !== ServiceKind.REGULATOR && !(excludeOptions || []).includes(s))
-    .map(i => {
-      return { name: i, value: i };
-    });
-}
 
 export default SelectRolesPage;
