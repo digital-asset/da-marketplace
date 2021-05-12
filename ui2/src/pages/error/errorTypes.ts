@@ -27,7 +27,7 @@ export class AppError extends Error {
 }
 
 export type ErrorMessage = {
-  header?: string;
+  header: string;
   message: string | string[];
 };
 

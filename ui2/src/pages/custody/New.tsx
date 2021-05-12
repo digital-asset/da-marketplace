@@ -18,7 +18,6 @@ import { IconClose } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { CreateEvent } from '@daml/ledger';
-import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 enum AccountType {
   REGULAR = 'Regular',
@@ -32,7 +31,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
-  const displayErrorMessage = useDisplayErrorMessage();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
   const allocationAccounts = useStreamQueries(AllocationAccountRule).contracts;
