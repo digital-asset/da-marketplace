@@ -5,14 +5,14 @@ import marketplaceLogo from './marketplace.svg';
 
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
-  color?: 'green' | 'blue';
+  color?: 'green' | 'blue' | 'white' | 'grey';
   strokeColor?: string;
 };
 
-export const ArrowRightIcon = () => (
+export const ArrowRightIcon: React.FC<IconProps> = ({ size, color }) => (
   <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
     <path
-      className="fill-blue"
+      className={color ? `fill-${color}` : 'fill-blue'}
       d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
             c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
             C6,1.5,6,2,6.3,2.3"
@@ -20,10 +20,10 @@ export const ArrowRightIcon = () => (
   </svg>
 );
 
-export const ArrowLeftIcon = () => (
+export const ArrowLeftIcon: React.FC<IconProps> = ({ size, color }) => (
   <svg className="icon arrow-left-icon" viewBox="0 0 13 12">
     <path
-      className="fill-blue"
+      className={color ? `fill-${color}` : 'fill-blue'}
       d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
               c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
               C6,1.5,6,2,6.3,2.3"
@@ -432,7 +432,7 @@ export const AddPlusIcon = () => (
 );
 
 export const OverflowIcon = () => (
-  <svg className="icon overflow-icon" width="20px" viewBox="0 0 17.8 4.6">
+  <svg className="icon overflow-icon" width="15px" viewBox="0 0 17.8 4.6">
     <circle className="fill-blue" cx="2" cy="2.3" r="2" />
     <circle className="fill-blue" cx="8.9" cy="2.3" r="2" />
     <circle className="fill-blue" cx="15.8" cy="2.3" r="2" />
