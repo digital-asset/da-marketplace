@@ -6,7 +6,6 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import StripedTable from '../../components/Table/StripedTable';
 import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import { ArrowRightIcon } from '../../icons/icons';
 import { ActionTile } from '../network/Actions';
 import { damlSetValues } from '../common';
 
@@ -33,10 +32,9 @@ export const InstrumentsTable: React.FC = () => {
         ]}
       />
       <StripedTable
+        rowsClickable
         headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
         loading={allInstrumentsLoading}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
         rows={instruments.map(c => {
           return {
             elements: [

@@ -10,6 +10,7 @@ import {
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { usePartyName } from '../../config';
 
 type MarginCallProps = {
   member?: Party;
@@ -20,6 +21,7 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
   member,
 }) => {
   const party = useParty();
+  const { getName } = usePartyName(party);
   const ledger = useLedger();
 
   const [customer, setCustomer] = useState<Party>();
@@ -48,7 +50,7 @@ const MarginCallModal: React.FC<ServicePageProps<Service> & MarginCallProps> = (
 
   const customers: DropdownItemProps[] = services.map((c, i) => ({
     key: i,
-    text: c.payload.customer,
+    text: getName(c.payload.customer),
     value: c.payload.customer,
   }));
 

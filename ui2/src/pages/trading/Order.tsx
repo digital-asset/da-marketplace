@@ -175,10 +175,9 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
           <Tile header={<h4>Executions</h4>}>
             <Table basic="very">
               <StripedTable
+                rowsClickable
                 headings={['Match Id', 'Quantity', 'Price', 'Execution Date']}
                 loading={allOrders.loading}
-                rowsClickable
-                clickableIcon={<ArrowRightIcon />}
                 rows={order.payload.executions.map(e => {
                   return {
                     elements: [

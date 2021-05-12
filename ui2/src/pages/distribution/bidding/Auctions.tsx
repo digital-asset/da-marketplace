@@ -23,10 +23,9 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
     <div className="bidding">
       <Tile header={<h4>Auctions</h4>}>
         <StripedTable
+          rowsClickable
           headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
           loading={biddingAuctionsLoading}
-          rowsClickable
-          clickableIcon={<ArrowRightIcon />}
           rows={biddingAuctions.map(c => {
             return {
               elements: [
