@@ -176,6 +176,8 @@ html {
     }
   }
 
+
+
   body {
     margin: 0;
     height: 100%;
@@ -213,6 +215,14 @@ html {
         @include Listing.listing();
         @include Market.market();
         @include Notifications.notifications();
+
+        .ui.message {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            right: 40px;
+            width: auto;
+        }
       }
     }
   }

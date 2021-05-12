@@ -12,6 +12,7 @@ import Login from './pages/login/Login';
 import { App } from './App';
 import QuickSetup from './pages/login/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
+import { MessagesProvider } from './context/MessagesContext';
 import { httpBaseUrl, ledgerId, publicParty, wsBaseUrl } from './config';
 import { computeCredentials } from './Credentials';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
@@ -40,13 +41,15 @@ export default function Main({ defaultPath }: MainProps) {
                   httpBaseUrl={httpBaseUrl}
                   wsBaseUrl={wsBaseUrl}
                 >
-                  <ServicesProvider>
-                    <RolesProvider>
-                      <RequestsProvider>
-                        <App />
-                      </RequestsProvider>
-                    </RolesProvider>
-                  </ServicesProvider>
+                  <MessagesProvider>
+                    <ServicesProvider>
+                      <RolesProvider>
+                        <RequestsProvider>
+                          <App />
+                        </RequestsProvider>
+                      </RolesProvider>
+                    </ServicesProvider>
+                  </MessagesProvider>
                 </PublicDamlProvider>
               </WellKnownPartiesProvider>
             );
