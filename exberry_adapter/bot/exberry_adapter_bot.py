@@ -58,24 +58,38 @@ def main():
 
     client = network.aio_party(exchange_party)
 
+    def find_and_run(template_name, fn):
+        templates = client.find_active(template_name)
+        for (cid,item) in templates.items():
+            fn({'cid': cid,
+                'cdata': item
+            })
+
+
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
-        sids = client.find_active(MARKETPLACE.ExberrySID)
-        global SID
-        for (_,item) in sids.items():
-            SID = item['sid']
-            logging.info(f'Changed current SID to {SID}')
+        find_and_run(MARKETPLACE.ResetMarketRequest, handle_clear_market)
+        find_and_run(MARKETPLACE.ExberrySID, handle_exberry_SID)
+        find_and_run(MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request)
+        find_and_run(MARKETPLACE.OrderRequest, handle_order_request)
+        find_and_run(EXBERRY.NewOrderSuccess, handle_new_order_success)
+        find_and_run(EXBERRY.NewOrderFailure, handle_new_order_failure)
+        find_and_run(MARKETPLACE.MarketPair, handle_new_market_pair) # maybe?
+        find_and_run(MARKETPLACE.OrderCancelRequest, handle_order_cancel_request)
+        find_and_run(MARKETPLACE.ClearedOrderCancelRequest, handle_cleared_order_cancel_request)
+        find_and_run(EXBERRY.CancelOrderSuccess, handle_cancel_order_success)
+        find_and_run(EXBERRY.CancelOrderFailure, handle_cancel_order_failure)
+        find_and_run(EXBERRY.ExecutionReport, handle_execution_report)
 
         # Populate market_pairs store on startup
         marketpairs = client.find_active(MARKETPLACE.MarketPair)
         for (_, pair) in marketpairs.items():
             market_pairs[pair['id']['label']] = pair
 
-        return [exercise(cid, 'ExberrySID_Ack') for cid in sids.keys()]
-
     @client.ledger_created(MARKETPLACE.ResetMarketRequest)
     def handle_clear_market(event):
+        logging.info('running clear market...')
         sid = get_sid()
         pair = event.cdata['pair']
         commands = []
@@ -90,7 +104,7 @@ def main():
             cancel_requests = client.find_active(MARKETPLACE.ClearedOrderCancelRequest)
             for (req_cid, req) in cancel_requests.items():
                 if req['order']['pair'] == pair:
-                    commands.append(exercise(req_cid, "ClearedOrderCancelRequest_Reject"))
+                    commands.append(exercise(req_cid, "ClearedOrderCancel_Reject"))
 
             order_requests = client.find_active(MARKETPLACE.ClearedOrderRequest)
             for (req_cid, req) in order_requests.items():
@@ -107,7 +121,7 @@ def main():
             cancel_requests = client.find_active(MARKETPLACE.OrderCancelRequest)
             for (req_cid, req) in cancel_requests.items():
                 if req['order']['pair'] == pair:
-                    commands.append(exercise(req_cid, "OrderCancelRequest_Reject"))
+                    commands.append(exercise(req_cid, "OrderCancel_Reject"))
 
             order_requests = client.find_active(MARKETPLACE.OrderRequest)
             for (req_cid, req) in order_requests.items():

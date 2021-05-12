@@ -31,6 +31,14 @@ template OrderRequest
             account = order.account
             asset = order.asset
 
+    controller order.exchParticipant can
+      OrderRequest_Cancel : ContractId DepositCreditRequest
+        do
+          create DepositCreditRequest with
+            owner = order.exchParticipant
+            account = order.account
+            asset = order.asset
+
 
 template OrderCancelRequest
   with
@@ -261,6 +269,9 @@ template ClearedOrderRequest
         do create order with orderId = orderId
 
       ClearedOrderRequest_Reject : ()
+        do return ()
+    controller order.exchParticipant can
+      ClearedOrderRequest_Cancel : ()
         do return ()
 
 -- TODO: Allow for cancelling pending orders

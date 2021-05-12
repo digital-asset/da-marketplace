@@ -20,6 +20,7 @@ import { TradeCard } from '../common/TradeCard'
 import Page from '../common/Page'
 import PageSection from '../common/PageSection'
 import ExchangeOrderCard from '../common/ExchangeOrderCard'
+import ExchangeOrderRequestCard from '../common/ExchangeOrderRequestCard'
 
 
 type Props = {
@@ -39,8 +40,8 @@ const InvestorOrders: React.FC<Props> = ({ sideNav, onLogout, showNotificationAl
     const allBrokerTrades = useContractQuery(BrokerTrade);
 
     const orderRequests = [
-        ...allOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>),
-        ...allClearedOrderRequests.map(or => <OrderCard key={or.contractId} order={or.contractData.order}/>)
+        ...allOrderRequests.map(or => <ExchangeOrderRequestCard key={or.contractId} order={or.contractData.order}/>),
+        ...allClearedOrderRequests.map(or => <ExchangeOrderRequestCard key={or.contractId} cleared order={or.contractData.order}/>)
     ];
 
     const openOrders = [

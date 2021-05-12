@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='marketplace-exchange-adapter',
-      version='0.1.18',
+      version='0.1.19',
       description='Daml Marketplace Exchange Adapter',
       author='Digital Asset',
       url='daml.com',
