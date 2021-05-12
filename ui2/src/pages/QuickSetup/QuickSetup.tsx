@@ -68,7 +68,6 @@ export enum MenuItems {
   ADD_PARTIES = 'Add Parties',
   SELECT_ROLES = 'Select Roles',
   SELECT_AUTOMATION = 'Select Automation',
-  REQUEST_SERVICES = 'Request Services',
   REVIEW = 'Review',
 }
 
@@ -129,27 +128,14 @@ const AdminLedger = (props: {
     return <SelectRolesPage onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)} />;
   } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
     return isHubDeployment ? (
-      <SelectAutomationPage onComplete={() => setActiveMenuItem(MenuItems.REQUEST_SERVICES)} />
+      <SelectAutomationPage onComplete={() => setActiveMenuItem(MenuItems.REVIEW)} />
     ) : (
       <div className="setup-page not-supported">
         <p className="page-row">This step is not supported locally.</p>
-        <Button
-          className="ghost next"
-          onClick={() => setActiveMenuItem(MenuItems.REQUEST_SERVICES)}
-        >
+        <Button className="ghost next" onClick={() => setActiveMenuItem(MenuItems.REVIEW)}>
           Next
         </Button>
       </div>
-    );
-  } else if (activeMenuItem === MenuItems.REQUEST_SERVICES) {
-    return (
-      <RequestServicesPage
-        onComplete={() => {
-          console.log('completing quick setup');
-          onComplete();
-          setActiveMenuItem(MenuItems.REVIEW);
-        }}
-      />
     );
   } else if (activeMenuItem === MenuItems.REVIEW) {
     return <ReviewPage onComplete={() => setActiveMenuItem(undefined)} />;
