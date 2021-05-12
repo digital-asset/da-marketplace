@@ -60,7 +60,7 @@ const AddPartiesPage = (props: { localOperator: string; onComplete: () => void }
         <>
           <p>Type a party name and press 'Enter'</p>
           <Form.Input
-            className='party-input'
+            className="party-input"
             placeholder="Username"
             value={inputValue}
             onChange={e => setInputValue(e.currentTarget.value)}

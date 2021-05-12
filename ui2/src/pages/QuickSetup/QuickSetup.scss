@@ -10,18 +10,18 @@
     background-color: var(--cool-grey-20);
 
     .page-controls {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
 
-    button.ghost.dark.control-button {
+      button.ghost.dark.control-button {
         width: fit-content;
         border-color: var(--cool-grey-20);
 
         .arrow-right-icon {
-            margin-left: $spacing-xs;
+          margin-left: $spacing-xs;
         }
       }
     }
@@ -70,13 +70,13 @@
         position: relative;
 
         .page-row {
-            display: flex;
-            flex-direction: row;
-          }
+          display: flex;
+          flex-direction: row;
+        }
 
         .arrow {
-            padding: $spacing-l;
-            align-self: center;
+          padding: $spacing-l;
+          align-self: center;
         }
 
         .ui.loader {
@@ -112,10 +112,10 @@
             background-color: var(--blue-100);
 
             p.dropped-items {
-                font-weight: 600;
-                color: var(--cool-grey-10);
+              font-weight: 600;
+              color: var(--cool-grey-10);
             }
-        }
+          }
 
           &:last-of-type {
             border-bottom: none;
@@ -145,8 +145,8 @@
         }
 
         &.finish {
-            display: grid;
-            grid-template-columns: 33% 33% 33%;
+          display: grid;
+          grid-template-columns: 33% 33% 33%;
 
           background-color: var(--cool-grey-20);
 
@@ -200,14 +200,16 @@
         }
 
         &.add-parties {
-          .page-row, .upload-parties {
-              width: 100%;
-              height: 100%;
+          .page-row,
+          .upload-parties {
+            width: 100%;
+            height: 100%;
           }
 
-          .party-names, .uploaded {
-              margin-top: $spacing-xs;
-              max-height: 400px;
+          .party-names,
+          .uploaded {
+            margin-top: $spacing-xs;
+            max-height: 400px;
           }
 
           .upload-parties {
@@ -216,14 +218,14 @@
             flex-direction: column;
             justify-content: space-evenly;
 
-             &.uploaded {
-                margin-left: $spacing-xl;
-                justify-content: center;
-             }
+            &.uploaded {
+              margin-left: $spacing-xl;
+              justify-content: center;
+            }
           }
 
           .party-input {
-              margin-top: $spacing-xs;
+            margin-top: $spacing-xs;
           }
 
           .custom-file-upload {
@@ -240,12 +242,14 @@
           }
         }
 
-        &.review, &.select {
-            justify-content: unset;
+        &.review,
+        &.select {
+          justify-content: unset;
         }
 
-        &.review, &.select {
-            justify-content: unset;
+        &.review,
+        &.select {
+          justify-content: unset;
           .party-names {
             margin-top: $spacing-xs;
           }
