@@ -89,7 +89,11 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
 
   const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
     const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Open Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
@@ -134,7 +138,11 @@ export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) =>
 
   const openAccount = async (c: CreateEvent<OpenAllocationAccountRequest>) => {
     const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Open Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.OpenAllocationAccount, service.contractId, {
       openAllocationAccountRequestCid: c.contractId,
     });

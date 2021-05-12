@@ -36,7 +36,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     useStreamQueries(ReduceIssuanceRequest);
   const createIssuance = async (c: CreateEvent<CreateIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide issuance services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Issuance',
+        message: 'Could not find Issuance service contract',
+      });
     await ledger.exercise(Service.CreateIssuance, service.contractId, {
       createIssuanceRequestCid: c.contractId,
     });
@@ -45,7 +49,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const deleteIssuance = async (c: CreateEvent<ReduceIssuanceRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide issuance services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Issuance',
+        message: 'Could not find Issuance service contract',
+      });
     await ledger.exercise(Service.ReduceIssuance, service.contractId, {
       reduceIssuanceRequestCid: c.contractId,
     });

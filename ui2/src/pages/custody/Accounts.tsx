@@ -48,7 +48,11 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to close account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });

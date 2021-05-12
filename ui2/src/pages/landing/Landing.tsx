@@ -410,6 +410,9 @@ const Landing = () => {
             <Relationship key={p.provider} provider={p.provider} services={p.services} />
           ))}
         </div>
+        <div className="col col-2">
+          <h2>Exchanges</h2>
+        </div>
       </div>
     </div>
   );

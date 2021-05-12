@@ -53,7 +53,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   }));
   const createListing = async (c: CreateEvent<CreateListingRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide trading services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Listing',
+        message: 'Cuuld not find Listing service contract.',
+      });
     await ledger.exercise(Service.CreateListing, service.contractId, {
       createListingRequestCid: c.contractId,
       providerId: uuidv4(),
@@ -63,7 +67,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const deleteListing = async (c: CreateEvent<DisableListingRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide trading services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Listing',
+        message: 'Cuuld not find Listing service contract.',
+      });
     await ledger.exercise(Service.DisableListing, service.contractId, {
       disableListingRequestCid: c.contractId,
     });

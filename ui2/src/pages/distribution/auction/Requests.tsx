@@ -40,7 +40,11 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
 
   const createAuction = async (c: CreateEvent<CreateAuctionRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Auction',
+        message: 'Could not find Distribution service contract',
+      });
     await ledger.exercise(Service.CreateAuction, service.contractId, {
       createAuctionRequestCid: c.contractId,
     });

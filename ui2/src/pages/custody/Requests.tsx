@@ -63,7 +63,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to close account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.CloseAccount, service.contractId, {
       closeAccountRequestCid: c.contractId,
     });
@@ -72,7 +76,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Credit Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.CreditAccount, service.contractId, {
       creditAccountRequestCid: c.contractId,
     });
@@ -81,7 +89,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Debit Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.DebitAccount, service.contractId, {
       debitAccountRequestCid: c.contractId,
     });
@@ -90,7 +102,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return displayErrorMessage({ message: 'You do not provide custody services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Transfer Deposit',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.TransferDeposit, service.contractId, {
       transferDepositRequestCid: c.contractId,
     });

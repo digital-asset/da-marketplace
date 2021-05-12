@@ -42,7 +42,11 @@ export const FairValueRequest: React.FC<FairValueRequestProps> = ({
   const displayErrorMessage = useDisplayErrorMessage();
 
   const requestFairValues = async () => {
-    if (!service) return displayErrorMessage({ message: 'You do not provide listing services.' });
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Request Fair Values',
+        message: 'Could not find Listing service contract',
+      });
     const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
     if (!currencyAsset) return;
     if (selectedListingIds == null) {
@@ -107,7 +111,10 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const requestDisableDelisting = async () => {
     if (!service || !listing)
-      return displayErrorMessage({ message: 'You do not provide listing services.' });
+      return displayErrorMessage({
+        header: 'Failed to Disable Delisting',
+        message: 'Could not find Listing service contract',
+      });
     await ledger.exercise(Service.RequestDisableListing, service.contractId, {
       listingCid: listing.contractId,
     });
