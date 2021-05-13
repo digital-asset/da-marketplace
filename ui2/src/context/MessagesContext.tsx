@@ -30,7 +30,7 @@ const MessagesProvider: React.FC = ({ children }) => {
       const timer = setInterval(() => {
         setShowErrorMessage(false);
         setError(undefined);
-      }, 7000);
+      }, 9000);
 
       return () => clearInterval(timer);
     }

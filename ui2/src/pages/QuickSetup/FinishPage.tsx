@@ -2,22 +2,45 @@ import React, { useState, useEffect } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
+import DamlLedger from '@daml/react';
+
 import { ArrowRightIcon } from '../../icons/icons';
 
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-import { useRolesContext } from '../../context/RolesContext';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
-import { computeCredentials } from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 
 import { retrieveUserParties } from '../../Parties';
 
 import { LoadingWheel } from './QuickSetup';
 
-const FinishPage = () => {
-  const dispatch = useUserDispatch();
+import QueryStreamProvider from '../../websocket/queryStream';
 
+import { httpBaseUrl, wsBaseUrl } from '../../config';
+
+const FinishPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+
+  return (
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <RolesProvider>
+          <LoginTileGrid />
+        </RolesProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const LoginTileGrid = () => {
   const history = useHistory();
-
+  const dispatch = useUserDispatch();
   const parties = retrieveUserParties();
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -35,6 +58,7 @@ const FinishPage = () => {
       </div>
     );
   }
+
   return (
     <div className="setup-page finish">
       {parties.map(p => (

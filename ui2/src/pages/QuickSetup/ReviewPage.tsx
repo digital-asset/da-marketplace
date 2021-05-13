@@ -3,30 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { Button } from 'semantic-ui-react';
 
 import { PartyDetails } from '@daml/hub-react';
-import { useStreamQueries } from '@daml/react';
+
+import DamlLedger from '@daml/react';
+
 import { useRolesContext } from '../../context/RolesContext';
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { PublishedInstance, getAutomationInstances } from '../../automation';
+import { httpBaseUrl, wsBaseUrl } from '../../config';
+import QueryStreamProvider from '../../websocket/queryStream';
+import { retrieveUserParties } from '../../Parties';
+import Credentials from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
+import { RequestsTable } from './RequestServicesPage';
 
-import { retrieveUserParties } from '../../Parties';
-
-const ReviewPage = (props: { onComplete: () => void }) => {
-  const { onComplete } = props;
-
+const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
   const [loading, setLoading] = useState<boolean>(false);
-  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const parties = retrieveUserParties() || [];
-
-  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
-    useStreamQueries(VerifiedIdentity);
-
-  useEffect(() => {
-    setLoading(verifiedIdentityLoading || rolesLoading);
-  }, [verifiedIdentityLoading, rolesLoading]);
 
   if (loading) {
     return (
@@ -35,28 +29,54 @@ const ReviewPage = (props: { onComplete: () => void }) => {
       </div>
     );
   }
+
   return (
     <div className="setup-page review">
       <h4>Review</h4>
-      <div className="page-row">
-        <div>
-          <p className="bold">Parties</p>
-          <div className="party-names">
-            {parties.map(p => (
-              <PartyRow
-                key={p.party}
-                party={p}
-                roles={allRoles
-                  .filter(r => r.contract.payload.provider === p.party)
-                  .map(r => r.role)}
-              />
-            ))}
+      <DamlLedger
+        party={adminCredentials.party}
+        token={adminCredentials.token}
+        httpBaseUrl={httpBaseUrl}
+        wsBaseUrl={wsBaseUrl}
+      >
+        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+          <div className="page-row">
+            <PartiesReview setLoading={setLoading} />
+            <RequestsTable />
           </div>
-        </div>
-      </div>
+        </QueryStreamProvider>
+      </DamlLedger>
+
       <Button className="ghost next" onClick={() => onComplete()}>
         Next
       </Button>
+    </div>
+  );
+};
+
+const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
+  const { setLoading } = props;
+
+  const parties = retrieveUserParties() || [];
+
+  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
+
+  useEffect(() => {
+    setLoading(rolesLoading);
+  }, [rolesLoading]);
+
+  return (
+    <div>
+      <p className="bold">Parties</p>
+      <div className="party-names">
+        {parties.map(p => (
+          <PartyRow
+            key={p.party}
+            party={p}
+            roles={allRoles.filter(r => r.contract.payload.provider === p.party).map(r => r.role)}
+          />
+        ))}
+      </div>
     </div>
   );
 };

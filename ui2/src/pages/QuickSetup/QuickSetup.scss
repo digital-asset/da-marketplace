@@ -132,6 +132,9 @@
             font-size: 12px;
             color: var(--cool-grey-30);
           }
+
+          &.request {
+          }
         }
 
         &.not-supported {
@@ -147,7 +150,6 @@
         &.finish {
           display: grid;
           grid-template-columns: 33% 33% 33%;
-
           background-color: var(--cool-grey-20);
 
           .log-in-tile {
@@ -200,22 +202,39 @@
         }
 
         &.request-services {
-            justify-content: unset;
+          justify-content: unset;
 
-            .input-label {
-                margin-bottom: $spacing-xs;
-            }
+          .page-row {
+              width: 100%;
+              justify-content: space-between;
+              flex: 1;
+          }
 
-            .request-select {
-                margin: $spacing-s 0;
-            }
+          .input-label {
+            margin-bottom: $spacing-xs;
+          }
 
-            .ghost.request {
-                border-color: var(--blue-60);
-            }
+          .request-select {
+            margin: $spacing-s 0;
+          }
+
+          .ghost.request {
+            border-color: var(--blue-60);
+          }
+
+          .all-requests,  .request-form  {
+              width: 50%;
+          }
+
+          .requests {
+            border-top: 1px solid var(--cool-grey-80);
+            max-height: 330px;
+            overflow-y: auto;
+          }
         }
 
         &.add-parties {
+            justify-content: unset;
           .page-row,
           .upload-parties {
             width: 100%;
@@ -225,7 +244,7 @@
           .party-names,
           .uploaded {
             margin-top: $spacing-xs;
-            max-height: 400px;
+            max-height: 370px;
           }
 
           .upload-parties {

@@ -4,21 +4,43 @@ import { Button } from 'semantic-ui-react';
 
 import { PartyDetails } from '@daml/hub-react';
 
-import { deployAutomation } from '../../automation';
-import { useAutomations } from '../../context/AutomationContext';
-import { makeAutomationOptions } from '../setup/SetupAutomation';
-import { publicParty } from '../../config';
-import { useRolesContext } from '../../context/RolesContext';
+import DamlLedger from '@daml/react';
 
+import { deployAutomation } from '../../automation';
+import { makeAutomationOptions } from '../setup/SetupAutomation';
+
+import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
 import { retrieveUserParties } from '../../Parties';
 
-import { LoadingWheel } from './QuickSetup';
+import QueryStreamProvider from '../../websocket/queryStream';
+
+import Credentials from '../../Credentials';
+
 import DragAndDropToParties, { formatTriggerName, DropItemTypes } from './DragAndDropToParties';
 
-const SelectAutomationPage = (props: { onComplete: () => void }) => {
-  const { onComplete } = props;
+import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
 
-  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
+const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
+
+  return (
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <AutomationProvider publicParty={publicParty}>
+          <DragAndDropAutomation onComplete={onComplete} />
+        </AutomationProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const DragAndDropAutomation = (props: { onComplete: () => void }) => {
+  const { onComplete } = props;
 
   const parties = retrieveUserParties() || [];
 
@@ -27,14 +49,6 @@ const SelectAutomationPage = (props: { onComplete: () => void }) => {
   const triggerOptions = makeAutomationOptions(automations)?.map(option => {
     return { name: formatTriggerName(option.value as string), value: option.value as string };
   });
-
-  if (rolesLoading) {
-    return (
-      <div className="setup-page">
-        <LoadingWheel label="Loading role selection..." />
-      </div>
-    );
-  }
 
   const handleDeployment = async (token: string, auto: string) => {
     const [name, hash] = auto.split('#');
@@ -59,7 +73,6 @@ const SelectAutomationPage = (props: { onComplete: () => void }) => {
   );
 
   function handleAddItem(party: PartyDetails, item: string) {
-    console.log('dropped:', item);
     handleDeployment(party.token, item);
   }
 };

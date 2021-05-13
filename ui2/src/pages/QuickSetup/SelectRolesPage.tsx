@@ -4,22 +4,47 @@ import { Button } from 'semantic-ui-react';
 
 import { PartyDetails } from '@daml/hub-react';
 
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+
 import { LoadingWheel } from './QuickSetup';
 
-import { useLedger, useStreamQueries } from '@daml/react';
-
-import { useRolesContext, ServiceKind } from '../../context/RolesContext';
-import { useOffersContext } from '../../context/OffersContext';
-
+import { RolesProvider, useRolesContext, ServiceKind } from '../../context/RolesContext';
+import { OffersProvider, useOffersContext } from '../../context/OffersContext';
 import { retrieveUserParties } from '../../Parties';
+
+import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
+import Credentials from '../../Credentials';
 
-const SelectRolesPage = (props: { onComplete: () => void }) => {
+import { httpBaseUrl, wsBaseUrl } from '../../config';
+
+const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
+
+  return (
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <RolesProvider>
+          <OffersProvider>
+            <DragAndDropRoles onComplete={onComplete} />
+          </OffersProvider>
+        </RolesProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const DragAndDropRoles = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
   const parties = retrieveUserParties() || [];
 
