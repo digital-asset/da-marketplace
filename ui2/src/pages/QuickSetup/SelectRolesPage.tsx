@@ -46,7 +46,6 @@ const SelectRolesPage = (props: { onComplete: () => void }) => {
       </div>
     );
   }
-  let roles = allRoles;
 
   return (
     <div className="setup-page select">

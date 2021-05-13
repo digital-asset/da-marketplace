@@ -199,6 +199,22 @@
           }
         }
 
+        &.request-services {
+            justify-content: unset;
+
+            .input-label {
+                margin-bottom: $spacing-xs;
+            }
+
+            .request-select {
+                margin: $spacing-s 0;
+            }
+
+            .ghost.request {
+                border-color: var(--blue-60);
+            }
+        }
+
         &.add-parties {
           .page-row,
           .upload-parties {
