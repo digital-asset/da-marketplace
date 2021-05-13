@@ -28,6 +28,7 @@ import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Cu
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { damlSetValues } from '../common';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -41,6 +42,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const providerServices = services.filter(s => s.payload.provider === party);
   const openRequests = useStreamQueries(OpenAccountRequest).contracts;
@@ -52,7 +54,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service) return;
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
@@ -61,7 +63,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to close account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.CloseAccount, service.contractId, {
       closeAccountRequestCid: c.contractId,
     });
@@ -70,7 +76,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Credit Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.CreditAccount, service.contractId, {
       creditAccountRequestCid: c.contractId,
     });
@@ -79,7 +89,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Debit Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.DebitAccount, service.contractId, {
       debitAccountRequestCid: c.contractId,
     });
@@ -88,7 +102,11 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Transfer Deposit',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.TransferDeposit, service.contractId, {
       transferDepositRequestCid: c.contractId,
     });

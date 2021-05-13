@@ -22,6 +22,7 @@ import { getTemplateId, usePartyName } from '../../config';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -43,6 +44,7 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
   const hasRole = roles.length > 0 && roles[0].payload.provider === party;
   const requests = useStreamQueries(Request).contracts;
   const offers = useStreamQueries(Offer).contracts;
+  const displayErrorMessage = useDisplayErrorMessage();
 
   // Service request
   const defaultRequestDialogProps: InputDialogProps<any> = {
@@ -93,7 +95,7 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
   };
 
   const approveRequest = async (c: CreateEvent<Request>) => {
-    if (!hasRole) return; // TODO: Display error
+    if (!hasRole) return displayErrorMessage({ message: 'Could not find role contract' });
     await ledger.exercise(Role.ApproveListingServiceRequest, roles[0].contractId, {
       listingRequestCid: c.contractId,
     });

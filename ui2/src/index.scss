@@ -181,6 +181,10 @@ html {
     height: 100%;
     background-color: colors.$background-dark;
 
+    .ui.page.modals {
+      z-index: 3;
+    }
+
     #root {
       height: 100%;
 
@@ -213,6 +217,42 @@ html {
         @include Listing.listing();
         @include Market.market();
         @include Notifications.notifications();
+
+        .ui.message {
+          position: absolute;
+          top: 0px;
+          right: 20px;
+          min-width: 300px;
+          min-height: 125px;
+          animation: bounceInLeft 1.4s;
+          z-index: 4;
+        }
+
+        @keyframes bounceInLeft {
+          0% {
+            opacity: 0;
+            -webkit-transform: translateX(2000px);
+            -ms-transform: translateX(2000px);
+            transform: translateX(2000px);
+          }
+          60% {
+            opacity: 1;
+            -webkit-transform: translateX(-30px);
+            -ms-transform: translateX(-30px);
+            transform: translateX(-30px);
+          }
+
+          80% {
+            -webkit-transform: translateX(10px);
+            -ms-transform: translateX(10px);
+            transform: translateX(10px);
+          }
+          100% {
+            -webkit-transform: translateX(0);
+            -ms-transform: translateX(0);
+            transform: translateX(0);
+          }
+        }
       }
     }
   }

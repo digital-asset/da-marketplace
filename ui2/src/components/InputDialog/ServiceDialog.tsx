@@ -14,6 +14,7 @@ import { useStreamQueries } from '../../Main';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 interface OfferProps<T extends ServiceOfferTemplates> {
   choice?: any;
@@ -38,7 +39,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
 }: OfferProps<T>) => {
   const party = useParty();
   const ledger = useLedger();
-  const [error, setError] = useState<string>();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const tradingRole = useStreamQueries(TradingRole).contracts.find(
     r => r.payload.provider === party
@@ -62,8 +63,9 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
       case ServiceKind.TRADING:
       case ServiceKind.MARKET_CLEARING: {
         if (!clearingRole || !choice) {
-          setError(`You can not offer ${service} services without a Clearing Role contract.`);
-          return;
+          return displayErrorMessage({
+            message: `You can not offer ${service} services without a Clearing Role contract.`,
+          });
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
@@ -72,8 +74,9 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
       }
       case ServiceKind.CLEARING: {
         if (!clearingRole || !choice) {
-          setError(`You can not offer ${service} services without a Clearing Role contract.`);
-          return;
+          return displayErrorMessage({
+            message: `You can not offer ${service} services without a Clearing Role contract.`,
+          });
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
@@ -82,8 +85,9 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
       }
       case ServiceKind.LISTING: {
         if (!tradingRole || !choice) {
-          setError(`You can not offer ${service} services without a Trading Role contract.`);
-          return;
+          return displayErrorMessage({
+            message: `You can not offer ${service} services without a Trading Role contract.`,
+          });
         } else {
           await ledger.exercise(choice, tradingRole.contractId, params);
           onClose(false);
@@ -93,8 +97,9 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
       case ServiceKind.CUSTODY:
       case ServiceKind.ISSUANCE:
         if (!custodyRole || !choice) {
-          setError(`You can not offer ${service} services without a Custody Role contract.`);
-          return;
+          return displayErrorMessage({
+            message: `You can not offer ${service} services without a Custody Role contract.`,
+          });
         } else {
           await ledger.exercise(choice, custodyRole.contractId, params);
           onClose(false);
@@ -108,7 +113,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
   return (
     <InputDialog
       open={!!open}
-      error={error}
       title={`Offer ${service} Service`}
       defaultValue={{
         provider: '',

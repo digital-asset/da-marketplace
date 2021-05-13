@@ -30,6 +30,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import { ActionTile } from './Actions';
 import { damlSetValues } from '../common';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -39,6 +40,7 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -81,11 +83,17 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
+
   const { contracts: openRequests, loading } = useStreamQueries(OpenAccountRequest);
 
   const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
     const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Open Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
@@ -124,11 +132,17 @@ export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) =>
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
+
   const { contracts: openRequests, loading } = useStreamQueries(OpenAllocationAccountRequest);
 
   const openAccount = async (c: CreateEvent<OpenAllocationAccountRequest>) => {
     const service = services.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Open Account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.OpenAllocationAccount, service.contractId, {
       openAllocationAccountRequestCid: c.contractId,
     });
@@ -171,6 +185,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = identities.map(c => c.payload.legalName);
@@ -225,7 +240,7 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
   };
 
   const approveRequest = async (c: CreateEvent<Request>) => {
-    if (!hasRole) return; // TODO: Display error
+    if (!hasRole) return displayErrorMessage({ message: 'Could not find role contract.' });
     await ledger.exercise(Role.ApproveCustodyRequest, roles[0].contractId, {
       custodyRequestCid: c.contractId,
     });
