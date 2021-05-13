@@ -20,6 +20,7 @@ import { CreateEvent } from '@daml/ledger';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { ArrowLeftIcon } from '../../icons/icons';
 import { getMarketType } from './Listings';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type FairValueRequestProps = {
   service?: Readonly<CreateEvent<ClearedMarketService, any, any>>;
@@ -38,9 +39,14 @@ export const FairValueRequest: React.FC<FairValueRequestProps> = ({
   const assets = allAssets.filter(c => c.payload.assetId.version === '0');
   const [currencyLabel, setCurrencyLabel] = useState('');
   const selectedListingIds = !!listingId ? [listingId] : null;
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const requestFairValues = async () => {
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Request Fair Values',
+        message: 'Could not find Listing service contract',
+      });
     const currencyAsset = assets.find(c => c.payload.assetId.label === currencyLabel);
     if (!currencyAsset) return;
     if (selectedListingIds == null) {
@@ -78,6 +84,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const ledger = useLedger();
   const { contractId } = useParams<any>();
   const history = useHistory();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const cid = contractId.replace('_', '#');
 
@@ -103,8 +110,11 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const requestDisableDelisting = async () => {
-    console.log(service);
-    if (!service || !listing) return; // TODO: Display error
+    if (!service || !listing)
+      return displayErrorMessage({
+        header: 'Failed to Disable Delisting',
+        message: 'Could not find Listing service contract',
+      });
     await ledger.exercise(Service.RequestDisableListing, service.contractId, {
       listingCid: listing.contractId,
     });

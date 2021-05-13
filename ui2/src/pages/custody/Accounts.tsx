@@ -24,6 +24,7 @@ import { InputDialog, InputDialogProps } from '../../components/InputDialog/Inpu
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { damlSetValues } from '../common';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -37,6 +38,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
   const assets = useStreamQueries(AssetDescription).contracts;
@@ -46,7 +48,11 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to close account',
+        message: 'Could not find Custody service contract',
+      });
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });

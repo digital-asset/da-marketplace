@@ -16,6 +16,7 @@ import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps, damlSetValues } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -24,6 +25,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
 
   const cid = contractId.replace('_', '#');
@@ -100,7 +102,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const requestWithdrawDeposit = async (c: CreateEvent<AssetDeposit>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        message: 'The account provider does not offer issuance services.',
+      });
     await ledger.exercise(Service.RequestDebitAccount, service.contractId, {
       accountId: c.payload.account.id,
       debit: { depositCid: c.contractId },
@@ -176,7 +181,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        message: 'The account provider does not offer issuance services.',
+      });
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });

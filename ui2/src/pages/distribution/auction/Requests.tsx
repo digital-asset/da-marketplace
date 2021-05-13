@@ -23,6 +23,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { usePartyName } from '../../../config';
 import { ServicePageProps } from '../../common';
+import { useDisplayErrorMessage } from '../../../context/MessagesContext';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -32,13 +33,18 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
+  const displayErrorMessage = useDisplayErrorMessage();
 
   const requests = useStreamQueries(CreateAuctionRequest).contracts;
   const providerServices = services.filter(s => s.payload.provider === party);
 
   const createAuction = async (c: CreateEvent<CreateAuctionRequest>) => {
     const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return; // TODO: Display error
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Create Auction',
+        message: 'Could not find Distribution service contract',
+      });
     await ledger.exercise(Service.CreateAuction, service.contractId, {
       createAuctionRequestCid: c.contractId,
     });
