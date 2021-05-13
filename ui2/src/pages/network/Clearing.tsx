@@ -73,7 +73,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
 
   const approveRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
-    if (!hasRole) return displayErrorMessage({ message: 'Count not find role contract.' });
+    if (!hasRole) return displayErrorMessage({ message: 'Could not find role contract.' });
     if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.ApproveClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,
@@ -86,7 +86,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   const rejectRequest = async (c: CreateEvent<Request> | CreateEvent<MarketRequest>) => {
-    if (!hasRole) return displayErrorMessage({ message: 'Count not find role contract.' });
+    if (!hasRole) return displayErrorMessage({ message: 'Could not find role contract.' });
     if (getTemplateId(c.templateId) === CLEARING_REQUEST_TEMPLATE) {
       await ledger.exercise(Role.RejectClearingRequest, roles[0].contractId, {
         clearingRequestCid: (c as CreateEvent<Request>).contractId,
