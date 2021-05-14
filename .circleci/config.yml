@@ -30,6 +30,15 @@ commands:
           name: Init submodules
           command: |
             git submodule update --init --recursive
+  install_yq:
+    description: "Install yq from binary"
+    steps:
+      - run:
+        name: Install yq
+        command: |
+          wget https://github.com/mikefarah/yq/releases/download/v3.4.1/yq_linux_amd64 -O $HOME/bin/yq &&\
+              chmod +x $HOME/bin/yq
+          >> $BASH_ENV echo 'export PATH="$HOME/bin:$PATH"'
   install_python:
     description: "Install Python Dependencies"
     steps:
@@ -85,11 +94,7 @@ jobs:
       - install_sdk:
           version: << parameters.daml_sdk_version >>
       - install_python
-      - run:
-          name: Install YQ
-          command: |
-            wget https://github.com/mikefarah/yq/releases/download/v3.4.1/yq_linux_amd64 -O /usr/bin/yq &&\
-              chmod +x /usr/bin/yq
+      - install_yq
       - run:
           name: UI build
           command: |
