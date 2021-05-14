@@ -16,7 +16,9 @@ import Credentials from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
-import { RequestsTable } from './RequestServicesPage';
+import { OffersTable } from './OfferServicesPage';
+import { ServicesProvider } from '../../context/ServicesContext';
+import { OffersProvider } from '../../context/OffersContext';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -40,10 +42,14 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
         wsBaseUrl={wsBaseUrl}
       >
         <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <div className="page-row">
-            <PartiesReview setLoading={setLoading} />
-            <RequestsTable />
-          </div>
+          <ServicesProvider>
+            <OffersProvider>
+              <div className="page-row">
+                <PartiesReview setLoading={setLoading} />
+                <OffersTable />
+              </div>
+            </OffersProvider>
+          </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
 
@@ -66,7 +72,7 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
   }, [rolesLoading]);
 
   return (
-    <div>
+    <div className='all-parties'>
       <p className="bold">Parties</p>
       <div className="party-names">
         {parties.map(p => (
@@ -100,14 +106,12 @@ const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
     <div className="party-name">
       <div className="party-details">
         <p>{party.partyName}</p>
-        <p className="dropped-items">{roles.join(', ')}</p>
+        <p className="dropped-items">{roles.join(', ')}asdasdasdasdasdasdasdasdasdasdasdasdasdasd</p>
+        <p className="dropped-items">
+            asdasdasdsads, asdasdasdasd, asdasdasdasdas, asdasdasdas
+          {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
+        </p>
       </div>
-
-      <p className="dropped-items">
-        {deployedAutomations.map(da => {
-          return <p>{formatTriggerName(da.config.value.name)}</p>;
-        })}
-      </p>
     </div>
   );
 };

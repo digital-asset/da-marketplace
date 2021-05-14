@@ -11,7 +11,8 @@ import { makeAutomationOptions } from '../setup/SetupAutomation';
 
 import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
 import { retrieveUserParties } from '../../Parties';
-
+import { RolesProvider } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import Credentials from '../../Credentials';
@@ -32,7 +33,11 @@ const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
         <AutomationProvider publicParty={publicParty}>
-          <DragAndDropAutomation onComplete={onComplete} />
+          <RolesProvider>
+            <OffersProvider>
+              <DragAndDropAutomation onComplete={onComplete} />
+            </OffersProvider>
+          </RolesProvider>
         </AutomationProvider>
       </QueryStreamProvider>
     </DamlLedger>

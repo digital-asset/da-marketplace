@@ -230,4 +230,18 @@ function useCustomerServices(party: string) {
   return context.services.filter(s => s.contract.payload.provider === party);
 }
 
-export { ServicesProvider, useProviderServices, useCustomerServices, useServiceKindsProvided };
+function useServiceContext() {
+  const context = React.useContext<ServicesState>(ServicesStateContext);
+  if (context === undefined) {
+    throw new Error('useCustomerServices must be used within a ServicesProvider');
+  }
+  return context;
+}
+
+export {
+  ServicesProvider,
+  useProviderServices,
+  useCustomerServices,
+  useServiceKindsProvided,
+  useServiceContext,
+};

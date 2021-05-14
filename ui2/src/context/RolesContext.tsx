@@ -14,7 +14,7 @@ import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/R
 
 import { useStreamQueries } from '../Main';
 
-export enum ServiceKind {
+export enum RoleKind {
   CLEARING = 'Clearing',
   CUSTODY = 'Custody',
   TRADING = 'Trading',
@@ -35,7 +35,7 @@ type RoleContract =
 
 export type Role = {
   contract: RoleContract;
-  role: ServiceKind;
+  role: RoleKind;
 };
 
 type RolesState = {
@@ -86,12 +86,12 @@ const RolesProvider: React.FC = ({ children }) => {
   useEffect(
     () =>
       setRoles([
-        ...clearingRoles.map(c => ({ contract: c, role: ServiceKind.CLEARING })),
-        ...custodianRoles.map(c => ({ contract: c, role: ServiceKind.CUSTODY })),
-        ...exchangeRoles.map(c => ({ contract: c, role: ServiceKind.TRADING })),
-        ...distributorRoles.map(c => ({ contract: c, role: ServiceKind.DISTRIBUTION })),
-        ...settlementServices.map(c => ({ contract: c, role: ServiceKind.SETTLEMENT })),
-        ...matchingServices.map(c => ({ contract: c, role: ServiceKind.MATCHING })),
+        ...clearingRoles.map(c => ({ contract: c, role: RoleKind.CLEARING })),
+        ...custodianRoles.map(c => ({ contract: c, role: RoleKind.CUSTODY })),
+        ...exchangeRoles.map(c => ({ contract: c, role: RoleKind.TRADING })),
+        ...distributorRoles.map(c => ({ contract: c, role: RoleKind.DISTRIBUTION })),
+        ...settlementServices.map(c => ({ contract: c, role: RoleKind.SETTLEMENT })),
+        ...matchingServices.map(c => ({ contract: c, role: RoleKind.MATCHING })),
       ]),
     [
       clearingRoles,
@@ -108,12 +108,12 @@ const RolesProvider: React.FC = ({ children }) => {
   );
 };
 
-function useRoleKinds(): Set<ServiceKind> {
+function useRoleKinds(): Set<RoleKind> {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
     throw new Error('useProviderServices  must be used within a ServicesProvider');
   }
-  return context.roles.reduce((acc, v) => acc.add(v.role), new Set<ServiceKind>());
+  return context.roles.reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
 }
 
 function useRolesContext() {

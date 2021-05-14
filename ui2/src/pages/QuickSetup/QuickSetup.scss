@@ -132,9 +132,6 @@
             font-size: 12px;
             color: var(--cool-grey-30);
           }
-
-          &.request {
-          }
         }
 
         &.not-supported {
@@ -201,40 +198,77 @@
           }
         }
 
-        &.request-services {
+        .offer-select {
+            margin: $spacing-s 0;
+          }
+
+          .ghost.offer {
+            border-color: var(--blue-60);
+          }
+
+          p.role-missing {
+            display: flex;
+            margin: $spacing-m $spacing-s 0 0;
+
+            .icon {
+              width: 40px;
+              margin-right: $spacing-xs;
+            }
+
+            a {
+              font-size: 14px;
+            }
+          }
+
+          .all-offers {
+            width: 450px;
+          }
+
+          .offers {
+            border: 1px solid var(--cool-grey-80);
+            overflow: auto;
+            height: 360px;
+            margin-top: $spacing-xs;
+
+            .offer-row {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 14px;
+                line-height: 26px;
+                padding: $spacing-s;
+            }
+
+            .offer {
+              display: flex;
+              flex-direction: row;
+              align-items: center;
+              white-space: nowrap;
+
+              p {
+                margin: 0 $spacing-xs;
+                color: var(--cool-grey-30);
+              }
+            }
+          }
+
+        &.offer-services {
           justify-content: unset;
 
           .page-row {
-              width: 100%;
-              justify-content: space-between;
-              flex: 1;
+            width: 100%;
+            justify-content: space-between;
+            flex: 1;
           }
 
           .input-label {
             margin-bottom: $spacing-xs;
           }
-
-          .request-select {
-            margin: $spacing-s 0;
-          }
-
-          .ghost.request {
-            border-color: var(--blue-60);
-          }
-
-          .all-requests,  .request-form  {
-              width: 50%;
-          }
-
-          .requests {
-            border-top: 1px solid var(--cool-grey-80);
-            max-height: 330px;
-            overflow-y: auto;
-          }
         }
 
         &.add-parties {
-            justify-content: unset;
+          justify-content: unset;
           .page-row,
           .upload-parties {
             width: 100%;
@@ -276,18 +310,38 @@
             }
           }
         }
+        &.review {
+            .page-row {
+                justify-content: space-between;
+                width: 100%;
 
-        &.review,
-        &.select {
-          justify-content: unset;
+                .party-name {
+                    width: unset;
+                }
+            }
+            .all-offers, .all-parties {
+                width: 48%;
+            }
+            .all-offers {
+              margin-left: $spacing-m;
+
+              .offers {
+                height: 330px;
+            }
+          }
         }
 
         &.review,
         &.select {
           justify-content: unset;
+
           .party-names {
             margin-top: $spacing-xs;
           }
+        }
+
+        &.select {
+          justify-content: unset;
 
           i {
             margin-bottom: $spacing-s;

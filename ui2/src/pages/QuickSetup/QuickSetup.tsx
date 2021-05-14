@@ -32,7 +32,7 @@ import QueryStreamProvider from '../../websocket/queryStream';
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
 import SelectAutomationPage from './SelectAutomationPage';
-import RequestServicesPage from './RequestServicesPage';
+import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 
@@ -40,7 +40,7 @@ export enum MenuItems {
   ADD_PARTIES = 'Add Parties',
   SELECT_ROLES = 'Select Roles',
   SELECT_AUTOMATION = 'Select Automation',
-  REQUEST_SERVICES = 'Request Services',
+  OFFER_SERVICES = 'Offer Services',
   REVIEW = 'Review',
 }
 
@@ -94,6 +94,55 @@ const QuickSetup = () => {
 
     deployAllTriggers();
   }, [parties, adminCredentials]);
+
+  let activePage;
+
+  if (activeMenuItem === MenuItems.ADD_PARTIES) {
+    activePage = (
+      <AddPartiesPage
+        localOperator={localCreds.party}
+        onComplete={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
+    activePage = (
+      <SelectRolesPage
+        adminCredentials={adminCredentials}
+        onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
+    activePage = isHubDeployment ? (
+      <SelectAutomationPage
+        adminCredentials={adminCredentials}
+        onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)}
+      />
+    ) : (
+      <UnsupportedPageStep onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)} />
+    );
+  } else if (activeMenuItem === MenuItems.OFFER_SERVICES) {
+    activePage = (
+      <OfferServicesPage
+        adminCredentials={adminCredentials}
+        onComplete={() => {
+          setActiveMenuItem(MenuItems.REVIEW);
+        }}
+        backToSelectRoles={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.REVIEW) {
+    activePage = (
+      <ReviewPage
+        adminCredentials={adminCredentials}
+        onComplete={() => {
+          setSubmitSetupData(true);
+          setActiveMenuItem(undefined);
+        }}
+      />
+    );
+  } else if (activeMenuItem === undefined) {
+    activePage = <FinishPage adminCredentials={adminCredentials} />;
+  }
 
   return (
     <WellKnownPartiesProvider>
@@ -152,82 +201,37 @@ const QuickSetup = () => {
               ))}
             </Menu>
           )}
-
-          {activeMenuItem === MenuItems.ADD_PARTIES && (
-            <AddPartiesPage
-              localOperator={localCreds.party}
-              onComplete={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
-            />
-          )}
-
-          {activeMenuItem === MenuItems.SELECT_ROLES && (
-            <SelectRolesPage
-              adminCredentials={adminCredentials}
-              onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
-            />
-          )}
-
-          {activeMenuItem === MenuItems.SELECT_AUTOMATION ? (
-            !isHubDeployment ? (
-              <SelectAutomationPage
-                adminCredentials={adminCredentials}
-                onComplete={() => setActiveMenuItem(MenuItems.REQUEST_SERVICES)}
-              />
-            ) : (
-              <UnsupportedPageStep
-                onComplete={() => setActiveMenuItem(MenuItems.REQUEST_SERVICES)}
-              />
-            )
-          ) : null}
-
-          {activeMenuItem === MenuItems.REQUEST_SERVICES && (
-            <RequestServicesPage
-              adminCredentials={adminCredentials}
-              onComplete={() => {
-                setActiveMenuItem(MenuItems.REVIEW);
-              }}
-            />
-          )}
-
-          {activeMenuItem === MenuItems.REVIEW && (
-            <ReviewPage
-              adminCredentials={adminCredentials}
-              onComplete={() => {
-                setSubmitSetupData(true);
-                setActiveMenuItem(undefined);
-              }}
-            />
-          )}
-
-          {activeMenuItem === undefined && <FinishPage adminCredentials={adminCredentials} />}
+          {activePage}
         </div>
-
         {submitSetupData &&
           parties.map(p => (
-            <PublicDamlProvider
+            <DamlLedger
               party={p.party}
               token={p.token}
               httpBaseUrl={httpBaseUrl}
               wsBaseUrl={wsBaseUrl}
             >
-              <CreateRoleContract party={p} onFinish={() => setSubmitSetupData(false)} />
-            </PublicDamlProvider>
+              <QueryStreamProvider defaultPartyToken={p.token}>
+                <CreateVerifiedIdentities party={p} onFinish={() => setSubmitSetupData(false)} />
+              </QueryStreamProvider>
+            </DamlLedger>
           ))}
       </div>
     </WellKnownPartiesProvider>
   );
 
   function checkIsDisabled(item: MenuItems) {
-    if (!activeMenuItem) {
-      return false;
-    }
-    const clickedItemIndex = Object.values(MenuItems).indexOf(item);
-    const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
-
-    if (clickedItemIndex > activeItemIndex) {
-      return true;
-    }
     return false;
+    // if (!activeMenuItem) {
+    //   return false;
+    // }
+    // const clickedItemIndex = Object.values(MenuItems).indexOf(item);
+    // const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
+
+    // if (clickedItemIndex > activeItemIndex) {
+    //   return true;
+    // }
+    // return false;
   }
 };
 
@@ -277,7 +281,7 @@ const AdminLedger = (props: { adminCredentials: Credentials }) => {
   return null;
 };
 
-const CreateRoleContract = (props: { onFinish: () => void; party: PartyDetails }) => {
+const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDetails }) => {
   const { onFinish, party } = props;
 
   const [loading, setLoading] = useState<boolean>(false);

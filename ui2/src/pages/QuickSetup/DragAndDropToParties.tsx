@@ -6,8 +6,8 @@ import { ArrowLeftIcon } from '../../icons/icons';
 
 import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
 
-import { useRolesContext, ServiceKind } from '../../context/RolesContext';
-import { useOffersContext } from '../../context/OffersContext';
+import { useRolesContext, RoleKind } from '../../context/RolesContext';
+import { useOffers } from '../../context/OffersContext';
 
 import { LoadingWheel } from './QuickSetup';
 import classNames from 'classnames';
@@ -27,7 +27,7 @@ const DragAndDropToParties = (props: {
   const { parties, handleAddItem, dropItems, dropItemType } = props;
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const { offers: allOffers, loading: offersLoading } = useOffersContext();
+  const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
   if (rolesLoading || offersLoading) {
     return (
@@ -90,16 +90,16 @@ const DragAndDropToParties = (props: {
   );
 
   function findClearingOffer(party: PartyDetails) {
-    return !!allOffers.find(
-      r => r.contract.payload.provider === party.party && r.role == ServiceKind.CLEARING
+    return !!roleOffers.find(
+      r => r.contract.payload.provider === party.party && r.role == RoleKind.CLEARING
     );
   }
 };
 
 export const PartyRowDropZone = (props: {
   party: PartyDetails;
-  handleAddItem: (party: PartyDetails, item: string | ServiceKind) => void;
-  roles: ServiceKind[];
+  handleAddItem: (party: PartyDetails, item: string | RoleKind) => void;
+  roles: RoleKind[];
   triggers?: { name: string; value: string }[];
   clearingOffer: boolean;
 }) => {
@@ -152,16 +152,13 @@ export const PartyRowDropZone = (props: {
 
       {triggers && (
         <div className="dropped-items">
-          {deployedAutomations.map(da => {
-            return <p>{formatTriggerName(da.config.value.name)}</p>;
-          })}
+          {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
         </div>
       )}
     </div>
   );
 
   function handleDrop(item: string) {
-    console.log(item);
     setDragCount(dragCount - 1);
 
     if (!!triggers) {
