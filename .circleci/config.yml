@@ -99,6 +99,7 @@ jobs:
       - run:
           name: UI build
           command: |
+            ls -la $HOME/yq
             # TODO fix ts warnings and remove "CI="
             CI= make package
       - run:
