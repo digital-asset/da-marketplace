@@ -97,17 +97,12 @@ jobs:
       - install_python
       - install_yq
       - run:
-          name: UI build
+          name: UI test
           command: |
-            ls -la $HOME/yq
             echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
             source $BASH_ENV
             # TODO fix ts warnings and remove "CI="
-            CI= make package
-      - run:
-          name: UI test
-          command: |
-            make test-ui
+            CI= make test-ui
       - save_cache:
           paths:
             - ~/.daml

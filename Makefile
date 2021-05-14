@@ -1,5 +1,3 @@
-# VERSION = $(shell git describe --tags | cut -d'v' -f 2)
-# VERSION = 0.2.0
 VERSION = $(shell yq r dabl-meta.yaml 'catalog.version')
 PYTHON = pipenv run python
 
@@ -46,15 +44,15 @@ $(trigger_dar_src):
 $(trigger_dar): $(trigger_dar_src) $(PKG_DIR)
 	cp $(trigger_dar_src) $@
 
-# Codegen target
-$(damljs): $(dar_src)
-	daml codegen js $(dar_src) -o $@
-
 # Exberry Adapter target
 $(exberry_adapter): $(PKG_DIR)
 	cd exberry_adapter && $(PYTHON) setup.py sdist
 	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
 	cp exberry_adapter/dist/$(exberry_adapter_name) $@
+
+# Codegen target
+$(damljs): $(dar_src)
+	daml codegen js $(dar_src) -o $@
 
 # UI target
 $(ui): $(damljs) $(trigger_dar) $(exberry_adapter) $(PKG_DIR)
