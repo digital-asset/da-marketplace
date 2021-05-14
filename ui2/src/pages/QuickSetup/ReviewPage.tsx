@@ -26,8 +26,8 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
 
   if (loading) {
     return (
-      <div className="setup-page">
-        <LoadingWheel label="Loading role selection..." />
+      <div className="setup-page loading">
+        <LoadingWheel label="Loading review data..." />
       </div>
     );
   }
@@ -72,7 +72,7 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
   }, [rolesLoading]);
 
   return (
-    <div className='all-parties'>
+    <div className="all-parties">
       <p className="bold">Parties</p>
       <div className="party-names">
         {parties.map(p => (
@@ -106,9 +106,11 @@ const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
     <div className="party-name">
       <div className="party-details">
         <p>{party.partyName}</p>
-        <p className="dropped-items">{roles.join(', ')}asdasdasdasdasdasdasdasdasdasdasdasdasdasd</p>
         <p className="dropped-items">
-            asdasdasdsads, asdasdasdasd, asdasdasdasdas, asdasdasdas
+          {roles.join(', ')}asdasdasdasdasdasdasdasdasdasdasdasdasdasd
+        </p>
+        <p className="dropped-items">
+          asdasdasdsads, asdasdasdasd, asdasdasdasdas, asdasdasdas
           {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
         </p>
       </div>

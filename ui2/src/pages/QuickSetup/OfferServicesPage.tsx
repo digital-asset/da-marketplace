@@ -6,10 +6,6 @@ import { Button, Form } from 'semantic-ui-react';
 
 import { retrieveUserParties } from '../../Parties';
 
-import { halfSecondPromise } from '../page/utils';
-
-import { ContractId } from '@daml/types';
-
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
@@ -143,7 +139,7 @@ const OfferForm = (props: {
   ]);
 
   if (loading) {
-    return <p> loading </p>;
+    return null;
   }
 
   return (
@@ -372,7 +368,7 @@ export const OffersTable = () => {
   const createdServices = services.filter(s => !defaultServices.includes(s.service));
 
   if (loading) {
-    return <p>Loading</p>;
+    return null;
   }
 
   return (

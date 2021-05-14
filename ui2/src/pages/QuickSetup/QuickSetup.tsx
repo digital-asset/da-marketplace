@@ -48,6 +48,7 @@ const QuickSetup = () => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
   const parties = retrieveParties() || [];
+  const userParties = retrieveUserParties();
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [submitSetupData, setSubmitSetupData] = useState(false);
@@ -186,15 +187,17 @@ const QuickSetup = () => {
                 <>
                   <Menu.Item
                     key={i}
-                    disabled={checkIsDisabled(item)}
+                    disabled={
+                      item === MenuItems.ADD_PARTIES ? false : userParties.length === 0 && true
+                    }
                     active={activeMenuItem === item}
                     onClick={() => setActiveMenuItem(item)}
                   >
-                    <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
+                    <p className={classNames({ visited: !checkIsVisited(item) })}>{item}</p>
                   </Menu.Item>
                   {i + 1 !== Object.values(MenuItems).length && (
                     <ArrowRightIcon
-                      color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
+                      color={checkIsVisited(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
                     />
                   )}
                 </>
@@ -220,18 +223,17 @@ const QuickSetup = () => {
     </WellKnownPartiesProvider>
   );
 
-  function checkIsDisabled(item: MenuItems) {
-    return false;
-    // if (!activeMenuItem) {
-    //   return false;
-    // }
-    // const clickedItemIndex = Object.values(MenuItems).indexOf(item);
-    // const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
+  function checkIsVisited(item: MenuItems) {
+    if (!activeMenuItem) {
+      return false;
+    }
+    const clickedItemIndex = Object.values(MenuItems).indexOf(item);
+    const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
 
-    // if (clickedItemIndex > activeItemIndex) {
-    //   return true;
-    // }
-    // return false;
+    if (clickedItemIndex > activeItemIndex) {
+      return true;
+    }
+    return false;
   }
 };
 
@@ -347,7 +349,7 @@ const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDet
 
 export const LoadingWheel = (props: { label?: string }) => {
   return (
-    <Loader active indeterminate inverted size="small">
+    <Loader active indeterminate size="small">
       <p>{props.label || 'Loading...'}</p>
     </Loader>
   );

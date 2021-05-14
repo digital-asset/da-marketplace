@@ -31,7 +31,7 @@ const DragAndDropToParties = (props: {
 
   if (rolesLoading || offersLoading) {
     return (
-      <div className="setup-page select">
+      <div className="setup-page select loading">
         <LoadingWheel label="Loading..." />
       </div>
     );

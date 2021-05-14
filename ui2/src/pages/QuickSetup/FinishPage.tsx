@@ -21,7 +21,6 @@ import { httpBaseUrl, wsBaseUrl } from '../../config';
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
-
   return (
     <DamlLedger
       token={adminCredentials.token}
@@ -53,8 +52,8 @@ const LoginTileGrid = () => {
 
   if (loading) {
     return (
-      <div className="setup-page">
-        <LoadingWheel label="Loading role selection..." />
+      <div className="setup-page loading">
+        <LoadingWheel label="Loading market data..." />
       </div>
     );
   }

@@ -69,6 +69,11 @@
         height: 100%;
         position: relative;
 
+        &.loading {
+          justify-content: center;
+          align-items: center;
+        }
+
         .page-row {
           display: flex;
           flex-direction: row;
@@ -199,59 +204,59 @@
         }
 
         .offer-select {
-            margin: $spacing-s 0;
+          margin: $spacing-s 0;
+        }
+
+        .ghost.offer {
+          border-color: var(--blue-60);
+        }
+
+        p.role-missing {
+          display: flex;
+          margin: $spacing-m $spacing-s 0 0;
+
+          .icon {
+            width: 40px;
+            margin-right: $spacing-xs;
           }
 
-          .ghost.offer {
-            border-color: var(--blue-60);
+          a {
+            font-size: 14px;
           }
+        }
 
-          p.role-missing {
+        .all-offers {
+          width: 450px;
+        }
+
+        .offers {
+          border: 1px solid var(--cool-grey-80);
+          overflow: auto;
+          height: 360px;
+          margin-top: $spacing-xs;
+
+          .offer-row {
             display: flex;
-            margin: $spacing-m $spacing-s 0 0;
-
-            .icon {
-              width: 40px;
-              margin-right: $spacing-xs;
-            }
-
-            a {
-              font-size: 14px;
-            }
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            line-height: 26px;
+            padding: $spacing-s;
           }
 
-          .all-offers {
-            width: 450px;
-          }
+          .offer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            white-space: nowrap;
 
-          .offers {
-            border: 1px solid var(--cool-grey-80);
-            overflow: auto;
-            height: 360px;
-            margin-top: $spacing-xs;
-
-            .offer-row {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: space-between;
-                font-size: 14px;
-                line-height: 26px;
-                padding: $spacing-s;
-            }
-
-            .offer {
-              display: flex;
-              flex-direction: row;
-              align-items: center;
-              white-space: nowrap;
-
-              p {
-                margin: 0 $spacing-xs;
-                color: var(--cool-grey-30);
-              }
+            p {
+              margin: 0 $spacing-xs;
+              color: var(--cool-grey-30);
             }
           }
+        }
 
         &.offer-services {
           justify-content: unset;
@@ -311,22 +316,23 @@
           }
         }
         &.review {
-            .page-row {
-                justify-content: space-between;
-                width: 100%;
+          .page-row {
+            justify-content: space-between;
+            width: 100%;
 
-                .party-name {
-                    width: unset;
-                }
+            .party-name {
+              width: unset;
             }
-            .all-offers, .all-parties {
-                width: 48%;
-            }
-            .all-offers {
-              margin-left: $spacing-m;
+          }
+          .all-offers,
+          .all-parties {
+            width: 48%;
+          }
+          .all-offers {
+            margin-left: $spacing-m;
 
-              .offers {
-                height: 330px;
+            .offers {
+              height: 330px;
             }
           }
         }
