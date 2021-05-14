@@ -41,6 +41,7 @@ commands:
             sudo apt-get install python3.7
             sudo apt-get install python3-pip
             pip3 install pipenv
+            pip3 install ddit
             pipenv --python /usr/bin/python3.7
 
 jobs:
@@ -83,7 +84,7 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - install_pipenv
+      - install_python
       - run:
           name: Install YQ
           command: |
