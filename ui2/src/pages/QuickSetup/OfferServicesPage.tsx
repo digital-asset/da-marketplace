@@ -149,7 +149,7 @@ const OfferForm = (props: {
       <Form.Select
         className="offer-select"
         label={<p className="input-label">Provider:</p>}
-        value={offerInfo?.provider?.partyName || ''}
+        // value={offerInfo?.provider?.partyName || ''}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
@@ -165,9 +165,9 @@ const OfferForm = (props: {
         className="offer-select"
         disabled={!offerInfo?.provider}
         label={<p className="input-label">Service:</p>}
-        value={
-          offerInfo?.service ? serviceOptions.find(p => offerInfo.service === p.value)?.text : ''
-        }
+        // value={
+        //   offerInfo?.service ? serviceOptions.find(p => offerInfo.service === p.value)?.text : ''
+        // }
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({ ...offerInfo, service: data.value as OfferServiceKind })
@@ -178,7 +178,7 @@ const OfferForm = (props: {
         className="offer-select"
         label={<p className="input-label">Customer:</p>}
         disabled={!offerInfo?.provider}
-        value={offerInfo?.customer?.partyName || ''}
+        // value={offerInfo?.customer?.partyName || ''}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
