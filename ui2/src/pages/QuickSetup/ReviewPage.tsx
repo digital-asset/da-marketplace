@@ -27,7 +27,7 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
   if (loading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading review data..." />
+        <LoadingWheel label="Loading Review Data..." />
       </div>
     );
   }

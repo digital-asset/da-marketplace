@@ -53,7 +53,7 @@ const LoginTileGrid = () => {
   if (loading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading market data..." />
+        <LoadingWheel label="Loading Log In Data..." />
       </div>
     );
   }

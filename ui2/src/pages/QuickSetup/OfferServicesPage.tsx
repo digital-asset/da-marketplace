@@ -373,7 +373,7 @@ export const OffersTable = () => {
   if (loading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading services..." />
+        <LoadingWheel label="Loading Services..." />
       </div>
     );
   }
