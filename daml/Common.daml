@@ -7,6 +7,7 @@ import DA.Set
 import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
 import qualified Marketplace.Clearing.Service as Clearing
+import qualified Marketplace.Clearing.Market.Service as MarketClearing
 import qualified Marketplace.Custody.Role as Custodian
 import qualified Marketplace.Custody.Service as Custody
 import qualified Marketplace.Issuance.Service as Issuance
@@ -164,6 +165,9 @@ onboardCustomer Providers{..} party = do
   -- Clearing Service
   clearingServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
   clearingServiceCid      <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
+
+  marketClearingServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferMarketService with ..
+  marketClearingServiceCid      <- submit customer do exerciseCmd marketClearingServiceOfferCid MarketClearing.Accept
 
   -- Identity
   (Some (regulatorRoleCid,_))          <- queryContractKey @Regulator.Role operator (operator, operator)
