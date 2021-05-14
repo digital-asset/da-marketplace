@@ -30,11 +30,11 @@ commands:
           name: Init submodules
           command: |
             git submodule update --init --recursive
-  install_pipenv:
-    description: "Install Pipenv"
+  install_python:
+    description: "Install Python Dependencies"
     steps:
       - run:
-          name: Install Pipenv for 3.7
+          name: Install Python for 3.7
           command: |
             sudo add-apt-repository --yes ppa:deadsnakes/ppa
             sudo apt-get update || sudo apt-get update
@@ -60,15 +60,15 @@ jobs:
       - run:
           name: Daml tests
           command: |
-            daml test --junit target/daml-test-reports/da-marketplace.xml
+            make test-daml
       - save_cache:
           paths:
             - ~/.daml
           key: daml-{{ checksum "daml.yaml" }}
       - store_test_results:
-          path: target/daml-test-reports
+          path: da-marketplace-test-report
       - store_artifacts:
-          path: target/daml-test-reports
+          path: da-marketplace-test-report
 
   ui_test:
     parameters:
@@ -87,20 +87,17 @@ jobs:
       - run:
           name: Install YQ
           command: |
-            pip3 install yq
+            wget https://github.com/mikefarah/yq/releases/download/v3.4.1/yq_linux_amd64 -O /usr/bin/yq &&\
+              chmod +x /usr/bin/yq
       - run:
           name: UI build
           command: |
             # TODO fix ts warnings and remove "CI="
             CI= make package
       - run:
-          name: Yarn test
+          name: UI test
           command: |
-            cd ui2 && yarn test  -- --watchAll=false
-      - run:
-          name: Prettier check
-          command: |
-            cd ui2 && yarn format-check
+            make test-ui
       - save_cache:
           paths:
             - ~/.daml

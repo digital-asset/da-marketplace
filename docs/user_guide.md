@@ -1,3 +1,5 @@
+[← back](../README.md)
+
 # User Guide
 
 ## Initial party & relationship setup
@@ -163,3 +165,8 @@ Trading mediated through a CCP
 
 52. Login as `Ccp`
 53. `Ccp`: Request Custody from `Bank`
+
+# Read More
+
+- [Build &amp; deploy source code to Daml Hub](./damlhub_deployment.md)
+- [Set up a local development environment](./local_development.md)
