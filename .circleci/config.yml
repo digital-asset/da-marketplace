@@ -39,7 +39,7 @@ commands:
             mkdir -p $HOME/yq
             curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -o $HOME/yq/yq &&\
               chmod +x $HOME/yq/yq &&\
-              echo 'export PATH=$HOME/bin:$PATH' >> $BASH_ENV
+              echo 'export PATH=$HOME/yq/yq:$PATH' >> $BASH_ENV
   install_python:
     description: "Install Python Dependencies"
     steps:
