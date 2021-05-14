@@ -211,12 +211,17 @@
           border-color: var(--blue-60);
         }
 
-        p.role-missing {
+        .warning{
           display: flex;
           margin: $spacing-m $spacing-s 0 0;
+            width: 285px;
+            font-size: 12px;
+            p {
+                font-size: 12px;
 
+            }
           .icon {
-            width: 40px;
+            flex: none;
             margin-right: $spacing-xs;
           }
 
@@ -351,6 +356,12 @@
 
           i {
             margin-bottom: $spacing-s;
+          }
+
+          &.roles {
+            .party-name p.dropped-items {
+                width: unset;
+            }
           }
 
           .drag-tiles {

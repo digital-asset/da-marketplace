@@ -73,7 +73,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
   }
 
   return (
-    <div className="setup-page select">
+    <div className="setup-page select roles">
       <h4>Drag and Drop Roles to Parties</h4>
       <i>
         Auto Approval Triggers have been deployed, check the logs in the Hub Deployments tab to view

@@ -15,6 +15,7 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 import { httpBaseUrl, wsBaseUrl } from '../../config';
 import Credentials from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
+import { LoadingWheel } from './QuickSetup';
 
 import { InformationIcon, CheckMarkIcon } from '../../icons/icons';
 
@@ -198,9 +199,9 @@ const OfferForm = (props: {
         {creatingOffer ? 'Creating Offer...' : 'Offer'}
       </Button>
       {warning && offerInfo && (
-        <p className="role-missing">
+        <div className="warning">
           <InformationIcon /> {warning}
-        </p>
+        </div>
       )}
     </div>
   );
@@ -360,6 +361,8 @@ export const OffersTable = () => {
   const { services: services, loading: loadingServices } = useServiceContext();
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
 
+  const parties = retrieveUserParties() || [];
+
   useEffect(() => {
     setLoading(loadingServiceOffers || loadingServices);
   }, [loadingServices, loadingServiceOffers]);
@@ -368,37 +371,49 @@ export const OffersTable = () => {
   const createdServices = services.filter(s => !defaultServices.includes(s.service));
 
   if (loading) {
-    return null;
+    return (
+      <div className="setup-page loading">
+        <LoadingWheel label="Loading services..." />
+      </div>
+    );
   }
 
   return (
     <div className="all-offers">
       <>
         <p className="bold">Services</p>
-        <div className="offers">
-          {serviceOffers.map(r => (
-            <div className="offer-row" key={r.contract.contractId}>
-              <div className="offer">
-                {r.contract.payload.provider} <p>offered</p> {r.service} Service <p>to</p>{' '}
-                {r.contract.payload.customer}
+        {serviceOffers.length > 0 || createdServices.length > 0 ? (
+          <div className="offers">
+            {serviceOffers.map(r => (
+              <div className="offer-row" key={r.contract.contractId}>
+                <div className="offer">
+                  {r.contract.payload.provider} <p>offered</p> {r.service} Service <p>to</p>{' '}
+                  {r.contract.payload.customer}
+                </div>
               </div>
-            </div>
-          ))}
-          {createdServices.map(r => (
-            <div className="offer-row" key={r.contract.contractId}>
-              <div className="offer">
-                {r.contract.payload.provider} <p>provides</p> {r.service} Service <p>to</p>{' '}
-                {r.contract.payload.customer}
+            ))}
+            {createdServices.map(r => (
+              <div className="offer-row" key={r.contract.contractId}>
+                <div className="offer">
+                  {findStoredPartyName(r.contract.payload.provider)} <p>provides</p> {r.service}{' '}
+                  Service <p>to</p> {findStoredPartyName(r.contract.payload.customer)}
+                </div>
+                <p className="accepted">
+                  <CheckMarkIcon />
+                </p>
               </div>
-              <p className="accepted">
-                <CheckMarkIcon />
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <i>None...</i>
+        )}
       </>
     </div>
   );
+
+  function findStoredPartyName(partyId: string) {
+    return parties.find(p => p.party === partyId)?.partyName || partyId;
+  }
 };
 
 export default OfferServicesPage;
