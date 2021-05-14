@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 import dazl
-from dazl import create, exercise, exercise_by_key
+from dazl import create, exercise, exercise_by_key, ContractId, ContractData
 
 dazl.setup_default_logger(logging.INFO)
 
@@ -44,6 +44,13 @@ class MARKETPLACE:
     MarketPair = 'Marketplace.Token:MarketPair'
     ExberrySID = 'Marketplace.Utils:ExberrySID'
 
+class FakeContractEvent():
+    def __init__(self, cid, cdata):
+        self.cid = cid
+        self.cdata = cdata
+
+    cid: ContractId
+    cdata: ContractData
 
 def main():
     url = os.getenv('DAML_LEDGER_URL')
@@ -58,34 +65,69 @@ def main():
 
     client = network.aio_party(exchange_party)
 
-    def find_and_run(template_name, fn):
-        templates = client.find_active(template_name)
-        for (cid,item) in templates.items():
-            fn({'cid': cid,
-                'cdata': item
-            })
+    def find_highest_sid():
+        current_highest = 0
+        exberry_requests = client.find_active(EXBERRY.NewOrderRequest)
+        orders = client.find_active(MARKETPLACE.Order)
+        cleared_orders = client.find_active(MARKETPLACE.ClearedOrder)
 
+        for (_,exberry_request) in exberry_requests.items():
+            if exberry_request['order']['mpOrderId'] > current_highest:
+                current_highest = exberry_request['order']['mpOrderId']
+
+        for(_,order) in orders.items():
+            if order['orderId'] > current_highest: current_highest = order['orderId']
+
+        for(_,order) in cleared_orders.items():
+            if order['orderId'] > current_highest: current_highest = order['orderId']
+
+        return current_highest
+
+
+    def find_and_run(template_name, fn):
+        commands = []
+        templates = client.find_active(template_name)
+
+        for (cid,item) in templates.items():
+            event = FakeContractEvent(cid, item)
+            result = fn(event)
+            if isinstance(result, list):
+                commands.extend(result)
+            else:
+                commands.append(result)
+        return commands
+
+    def collect_run_commands(template_pairs):
+        commands = []
+        for (template, fn) in template_pairs:
+            commands.extend(find_and_run(template, fn))
+        return commands
 
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
-        find_and_run(MARKETPLACE.ResetMarketRequest, handle_clear_market)
-        find_and_run(MARKETPLACE.ExberrySID, handle_exberry_SID)
-        find_and_run(MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request)
-        find_and_run(MARKETPLACE.OrderRequest, handle_order_request)
-        find_and_run(EXBERRY.NewOrderSuccess, handle_new_order_success)
-        find_and_run(EXBERRY.NewOrderFailure, handle_new_order_failure)
-        find_and_run(MARKETPLACE.MarketPair, handle_new_market_pair) # maybe?
-        find_and_run(MARKETPLACE.OrderCancelRequest, handle_order_cancel_request)
-        find_and_run(MARKETPLACE.ClearedOrderCancelRequest, handle_cleared_order_cancel_request)
-        find_and_run(EXBERRY.CancelOrderSuccess, handle_cancel_order_success)
-        find_and_run(EXBERRY.CancelOrderFailure, handle_cancel_order_failure)
-        find_and_run(EXBERRY.ExecutionReport, handle_execution_report)
-
         # Populate market_pairs store on startup
         marketpairs = client.find_active(MARKETPLACE.MarketPair)
         for (_, pair) in marketpairs.items():
             market_pairs[pair['id']['label']] = pair
+
+        global SID
+        SID = find_highest_sid() + 1
+
+        return collect_run_commands([
+            (MARKETPLACE.ExberrySID, handle_exberry_SID),
+            (MARKETPLACE.MarketPair, handle_new_market_pair),
+            (EXBERRY.ExecutionReport, handle_execution_report),
+            (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
+            (MARKETPLACE.OrderRequest, handle_order_request),
+            (EXBERRY.NewOrderSuccess, handle_new_order_success),
+            (EXBERRY.NewOrderFailure, handle_new_order_failure),
+            (MARKETPLACE.OrderCancelRequest, handle_order_cancel_request),
+            (MARKETPLACE.ClearedOrderCancelRequest, handle_cleared_order_cancel_request),
+            (EXBERRY.CancelOrderSuccess, handle_cancel_order_success),
+            (EXBERRY.CancelOrderFailure, handle_cancel_order_failure),
+            (MARKETPLACE.ResetMarketRequest, handle_clear_market)
+        ])
 
     @client.ledger_created(MARKETPLACE.ResetMarketRequest)
     def handle_clear_market(event):
@@ -237,16 +279,18 @@ def main():
 
         query = { 'order': order }
 
+        logging.info(f'{query}')
+
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Failure")
             req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, query)
-            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {}),
-                    exercise(event.cid, 'Archive', {})]
+            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {})]
+                    # exercise(event.cid, 'Archive', {})]
         else:
             logging.info(f"Acknowledging Order Failure")
             req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, query)
-            return [exercise(req_cid, 'OrderRequest_Reject', {}),
-                    exercise(event.cid, 'Archive', {})]
+            return [exercise(req_cid, 'OrderRequest_Reject', {})]
+                    # exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
