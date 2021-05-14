@@ -31,7 +31,7 @@ const DragAndDropToParties = (props: {
 
   if (rolesLoading || offersLoading) {
     return (
-      <div className="setup-page select loading">
+      <div className="setup-page loading">
         <LoadingWheel label="Loading..." />
       </div>
     );
@@ -151,9 +151,9 @@ export const PartyRowDropZone = (props: {
       )}
 
       {triggers && (
-        <div className="dropped-items">
+        <p className="dropped-items">
           {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
-        </div>
+        </p>
       )}
     </div>
   );

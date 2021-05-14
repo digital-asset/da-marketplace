@@ -107,11 +107,9 @@ const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
       <div className="party-details">
         <p>{party.partyName}</p>
         <p className="dropped-items">
-          {roles.join(', ')}asdasdasdasdasdasdasdasdasdasdasdasdasdasd
+          {roles.join(', ')}
         </p>
         <p className="dropped-items">
-          asdasdasdsads, asdasdasdasd, asdasdasdasdas, asdasdasdas
-          {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
         </p>
       </div>
     </div>
