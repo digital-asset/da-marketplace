@@ -2,7 +2,7 @@ import json
 import sys
 
 if len(sys.argv) < 3:
-    print('Convert a participants.json file from the DABL console to a JSON format readable by the DAML Script runner')
+    print('Convert a participants.json file from the Daml Hub console to a JSON format readable by the Daml Script runner')
     sys.exit('$ python create_ledger_parties.py {path/to/particpants.json} {path/to/output.json}')
 
 inPath = sys.argv[1]

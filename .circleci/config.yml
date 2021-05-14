@@ -30,17 +30,28 @@ commands:
           name: Init submodules
           command: |
             git submodule update --init --recursive
-  install_pipenv:
-    description: "Install Pipenv"
+  install_yq:
+    description: "Install yq from binary"
     steps:
       - run:
-          name: Install Pipenv for 3.7
+          name: Install yq
+          command: |
+            mkdir -p $HOME/yq
+            curl -L https://github.com/mikefarah/yq/releases/download/3.4.1/yq_linux_amd64 -o $HOME/yq/yq &&\
+              chmod +x $HOME/yq/yq &&\
+              echo 'export PATH=$HOME/yq/yq:$PATH' >> $BASH_ENV
+  install_python:
+    description: "Install Python Dependencies"
+    steps:
+      - run:
+          name: Install Python for 3.7
           command: |
             sudo add-apt-repository --yes ppa:deadsnakes/ppa
             sudo apt-get update || sudo apt-get update
             sudo apt-get install python3.7
             sudo apt-get install python3-pip
             pip3 install pipenv
+            pip3 install daml-dit-ddit
             pipenv --python /usr/bin/python3.7
 
 jobs:
@@ -60,15 +71,15 @@ jobs:
       - run:
           name: Daml tests
           command: |
-            daml test --junit target/daml-test-reports/da-marketplace.xml
+            make test-daml
       - save_cache:
           paths:
             - ~/.daml
           key: daml-{{ checksum "daml.yaml" }}
       - store_test_results:
-          path: target/daml-test-reports
+          path: da-marketplace-test-report
       - store_artifacts:
-          path: target/daml-test-reports
+          path: da-marketplace-test-report
 
   ui_test:
     parameters:
@@ -83,24 +94,15 @@ jobs:
             - daml-{{ checksum "daml.yaml" }}
       - install_sdk:
           version: << parameters.daml_sdk_version >>
-      - install_pipenv
+      - install_python
+      - install_yq
       - run:
-          name: Install YQ
+          name: UI test
           command: |
-            pip3 install yq
-      - run:
-          name: UI build
-          command: |
+            echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
+            source $BASH_ENV
             # TODO fix ts warnings and remove "CI="
-            CI= make package
-      - run:
-          name: Yarn test
-          command: |
-            cd ui2 && yarn test  -- --watchAll=false
-      - run:
-          name: Prettier check
-          command: |
-            cd ui2 && yarn format-check
+            CI= make test-ui
       - save_cache:
           paths:
             - ~/.daml

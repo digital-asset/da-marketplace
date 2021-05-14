@@ -1,8 +1,8 @@
 from setuptools import setup
 
-setup(name='marketplace-exchange-adapter',
+setup(name='da-marketplace-exberry-adapter',
       version='0.1.8',
-      description='Daml Marketplace Exchange Adapter',
+      description='Daml Marketplace Exberry Adapter',
       author='Digital Asset',
       url='daml.com',
       license='Apache2',
