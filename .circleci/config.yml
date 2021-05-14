@@ -36,9 +36,10 @@ commands:
       - run:
           name: Install yq
           command: |
+            mkdir -p $HOME/bin
             wget https://github.com/mikefarah/yq/releases/download/v3.4.1/yq_linux_amd64 -O $HOME/bin/yq &&\
                 chmod +x $HOME/bin/yq
-            >> $BASH_ENV echo 'export PATH="$HOME/bin:$PATH"'
+            echo 'export PATH=$HOME/bin:$PATH' >> $BASH_ENV
   install_python:
     description: "Install Python Dependencies"
     steps:
