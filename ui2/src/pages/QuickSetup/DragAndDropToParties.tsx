@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 
-import { PartyDetails } from '@daml/hub-react';
-
 import { ArrowLeftIcon } from '../../icons/icons';
 
 import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
+
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import { useRolesContext, RoleKind } from '../../context/RolesContext';
 import { useOffers } from '../../context/OffersContext';
 
 import { LoadingWheel } from './QuickSetup';
 import classNames from 'classnames';
-import { isHubDeployment } from '../../config';
+import { isHubDeployment, useVerifiedParties } from '../../config';
+
+import { computeToken } from '../../Credentials';
+import { CreateEvent } from '@daml/ledger';
 
 export enum DropItemTypes {
   AUTOMATION = 'Automation',
@@ -19,13 +22,12 @@ export enum DropItemTypes {
 }
 
 const DragAndDropToParties = (props: {
-  parties: PartyDetails[];
-  handleAddItem: (party: PartyDetails, item: string) => void;
+  handleAddItem: (partyOrToken: string, item: string) => void;
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
 }) => {
-  const { parties, handleAddItem, dropItems, dropItemType } = props;
-
+  const { handleAddItem, dropItems, dropItemType } = props;
+  const { identities } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
@@ -48,31 +50,18 @@ const DragAndDropToParties = (props: {
       <div>
         <p className="bold here">Parties</p>
         <div className="party-names">
-          {dropItemType === DropItemTypes.ROLES
-            ? parties.map((p, i) => (
-                <PartyRowDropZone
-                  key={i}
-                  party={p}
-                  handleAddItem={handleAddItem}
-                  roles={allRoles
-                    .filter(r => r.contract.payload.provider === p.party)
-                    .map(r => r.role)}
-                  clearingOffer={findClearingOffer(p)}
-                />
-              ))
-            : dropItemType === DropItemTypes.AUTOMATION &&
-              parties.map((p, i) => (
-                <PartyRowDropZone
-                  key={i}
-                  party={p}
-                  handleAddItem={handleAddItem}
-                  roles={allRoles
-                    .filter(r => r.contract.payload.provider === p.party)
-                    .map(r => r.role)}
-                  triggers={dropItems}
-                  clearingOffer={findClearingOffer(p)}
-                />
-              ))}
+          {identities.map((p, i) => (
+            <PartyRowDropZone
+              key={i}
+              party={p}
+              handleAddItem={handleAddItem}
+              roles={allRoles
+                .filter(r => r.contract.payload.provider === p.payload.customer)
+                .map(r => r.role)}
+              triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
+              clearingOffer={findClearingOffer(p.payload.customer)}
+            />
+          ))}
         </div>
       </div>
       <div className="arrow">
@@ -89,16 +78,16 @@ const DragAndDropToParties = (props: {
     </div>
   );
 
-  function findClearingOffer(party: PartyDetails) {
+  function findClearingOffer(partyId: string) {
     return !!roleOffers.find(
-      r => r.contract.payload.provider === party.party && r.role == RoleKind.CLEARING
+      r => r.contract.payload.provider === partyId && r.role == RoleKind.CLEARING
     );
   }
 };
 
 export const PartyRowDropZone = (props: {
-  party: PartyDetails;
-  handleAddItem: (party: PartyDetails, item: string | RoleKind) => void;
+  party: CreateEvent<VerifiedIdentity>;
+  handleAddItem: (partyOrToken: string, item: string | RoleKind) => void;
   roles: RoleKind[];
   triggers?: { name: string; value: string }[];
   clearingOffer: boolean;
@@ -108,7 +97,7 @@ export const PartyRowDropZone = (props: {
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const [dragCount, setDragCount] = useState(0);
 
-  const token = party.token;
+  const token = computeToken(party.payload.customer);
 
   useEffect(() => {
     if (isHubDeployment) {
@@ -145,7 +134,7 @@ export const PartyRowDropZone = (props: {
     >
       {roles && (
         <div className="party-details">
-          <p>{party.partyName}</p>
+          <p>{party.payload.legalName}</p>
           <p className="dropped-items">{rolesList.join(', ')}</p>
         </div>
       )}
@@ -163,10 +152,10 @@ export const PartyRowDropZone = (props: {
 
     if (!!triggers) {
       if (currentTriggerOptions.map(i => i.value).includes(item)) {
-        handleAddItem(party, item);
+        handleAddItem(token, item);
       }
     } else {
-      handleAddItem(party, item);
+      handleAddItem(token, item);
     }
   }
 };

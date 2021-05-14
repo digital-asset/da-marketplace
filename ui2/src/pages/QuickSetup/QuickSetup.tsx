@@ -51,7 +51,9 @@ const QuickSetup = () => {
   const userParties = retrieveUserParties();
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [submitSetupData, setSubmitSetupData] = useState(false);
+  const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
+  const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
+
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
     MenuItems.ADD_PARTIES
   );
@@ -98,11 +100,33 @@ const QuickSetup = () => {
 
   let activePage;
 
-  if (activeMenuItem === MenuItems.ADD_PARTIES) {
+  if (creatingAdminContracts) {
+    activePage = (
+      <DamlLedger
+        token={adminCredentials.token}
+        party={adminCredentials.party}
+        httpBaseUrl={httpBaseUrl}
+        wsBaseUrl={wsBaseUrl}
+      >
+        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+          <AdminLedger
+            adminCredentials={adminCredentials}
+            onFinish={() => {
+              setCreatingAdminContracts(false);
+              setCreatingVerifiedIdentities(true);
+            }}
+          />
+        </QueryStreamProvider>
+      </DamlLedger>
+    );
+  } else if (activeMenuItem === MenuItems.ADD_PARTIES) {
     activePage = (
       <AddPartiesPage
         localOperator={localCreds.party}
-        onComplete={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
+        onComplete={() => {
+          setCreatingAdminContracts(true);
+          setActiveMenuItem(MenuItems.SELECT_ROLES);
+        }}
       />
     );
   } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
@@ -136,7 +160,6 @@ const QuickSetup = () => {
       <ReviewPage
         adminCredentials={adminCredentials}
         onComplete={() => {
-          setSubmitSetupData(true);
           setActiveMenuItem(undefined);
         }}
       />
@@ -147,17 +170,6 @@ const QuickSetup = () => {
 
   return (
     <WellKnownPartiesProvider>
-      <DamlLedger
-        token={adminCredentials.token}
-        party={adminCredentials.party}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <AdminLedger adminCredentials={adminCredentials} />
-        </QueryStreamProvider>
-      </DamlLedger>
-
       <div className="quick-setup">
         <div className="page-controls">
           <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
@@ -206,7 +218,8 @@ const QuickSetup = () => {
           )}
           {activePage}
         </div>
-        {submitSetupData &&
+
+        {creatingVerifiedIdentities &&
           parties.map(p => (
             <DamlLedger
               party={p.party}
@@ -215,7 +228,10 @@ const QuickSetup = () => {
               wsBaseUrl={wsBaseUrl}
             >
               <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentities party={p} onFinish={() => setSubmitSetupData(false)} />
+                <CreateVerifiedIdentities
+                  party={p}
+                  onFinish={() => setCreatingVerifiedIdentities(false)}
+                />
               </QueryStreamProvider>
             </DamlLedger>
           ))}
@@ -248,8 +264,11 @@ const UnsupportedPageStep = (props: { onComplete: () => void }) => {
   );
 };
 
-const AdminLedger = (props: { adminCredentials: Credentials }) => {
-  const { adminCredentials } = props;
+const AdminLedger = (props: { adminCredentials: Credentials; onFinish: () => void }) => {
+  const { adminCredentials, onFinish } = props;
+
+  const [loading, setLoading] = useState<boolean>(false);
+
   const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
@@ -258,36 +277,57 @@ const AdminLedger = (props: { adminCredentials: Credentials }) => {
     useStreamQueries(RegulatorRole);
 
   useEffect(() => {
+    setLoading(regulatorRolesLoading || operatorServiceLoading);
+  }, [regulatorRolesLoading, operatorServiceLoading]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (regulatorRoles.length > 0 && operatorService.length > 0) {
+      console.log(regulatorRoles);
+      console.log(operatorService);
+
+      return onFinish();
+    }
+  }, [loading, operatorService, regulatorRoles]);
+
+  useEffect(() => {
+    if (loading) return;
+
     const createOperatorService = async () => {
+      console.log('Creating Operator Service');
       await ledger.create(OperatorService, { operator: adminCredentials.party });
     };
 
-    if (!operatorServiceLoading && operatorService.length === 0) {
+    if (operatorService.length === 0) {
       createOperatorService();
     }
-  }, [operatorServiceLoading, operatorService]);
 
-  useEffect(() => {
     const createRegulatorRole = async () => {
+      console.log('Creating Operator Regulator Role');
+
       await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
       });
     };
 
-    if (!regulatorRolesLoading && regulatorRoles.length === 0) {
+    if (regulatorRoles.length === 0) {
       createRegulatorRole();
     }
-  }, [regulatorRolesLoading, regulatorRoles]);
+  }, [loading, regulatorRoles, operatorService]);
 
-  return null;
+  return (
+    <div className="setup-page loading">
+      <LoadingWheel label="Loading Quick Set Up..." />
+    </div>
+  );
 };
 
 const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDetails }) => {
   const { onFinish, party } = props;
 
   const [loading, setLoading] = useState<boolean>(false);
-
   const parties = retrieveUserParties();
 
   const ledger = useLedger();
@@ -314,6 +354,8 @@ const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDet
     if (loading) return;
 
     if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
+      console.log('Creating Verified Identity for', party.partyName);
+
       handleVerifiedIdentity();
     }
   }, [loading, regulatorServices]);
@@ -323,23 +365,25 @@ const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDet
   async function handleVerifiedIdentity() {
     let retries = 0;
 
+    if (regulatorServices.length === 0 ){
+        
+    }
     while (retries < 3) {
       if (regulatorServices.length > 0) {
         await Promise.all(
           regulatorServices.map(async service => {
-            await ledger.exercise(
-              RegulatorService.RequestIdentityVerification,
-              service.contractId,
-              {
+            await ledger
+              .exercise(RegulatorService.RequestIdentityVerification, service.contractId, {
                 legalName: party.partyName,
                 location: '',
                 observers: [publicParty],
-              }
-            );
+              })
+              .catch(resp => console.log(resp));
           })
         );
         break;
       } else {
+        ledger.create(RegulatorRequest, { customer, provider });
         await halfSecondPromise();
         retries++;
       }

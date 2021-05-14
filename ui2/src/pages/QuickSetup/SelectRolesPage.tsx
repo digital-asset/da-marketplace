@@ -2,15 +2,12 @@ import React from 'react';
 
 import { Button } from 'semantic-ui-react';
 
-import { PartyDetails } from '@daml/hub-react';
-
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 
 import { LoadingWheel } from './QuickSetup';
 
 import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
 import { OffersProvider, useOffers } from '../../context/OffersContext';
-import { retrieveUserParties } from '../../Parties';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
@@ -21,7 +18,7 @@ import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketp
 import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
 import Credentials from '../../Credentials';
 
-import { httpBaseUrl, wsBaseUrl } from '../../config';
+import { httpBaseUrl, wsBaseUrl, usePartyName } from '../../config';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -46,7 +43,6 @@ const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () 
 
 const DragAndDropRoles = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
-  const parties = retrieveUserParties() || [];
 
   const ledger = useLedger();
   const roleOptions = Object.values(RoleKind)
@@ -54,6 +50,8 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
     .map(i => {
       return { name: i, value: i };
     });
+
+  const { getName } = usePartyName('');
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
@@ -80,7 +78,6 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
         their status.
       </i>
       <DragAndDropToParties
-        parties={parties}
         handleAddItem={createRoleContract}
         dropItems={roleOptions}
         dropItemType={DropItemTypes.ROLES}
@@ -91,38 +88,41 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
     </div>
   );
 
-  async function createRoleContract(party: PartyDetails, role: string) {
+  async function createRoleContract(partyId: string, role: string) {
     const operatorServiceContract = operatorService[0];
 
     if (
-      findExistingRoleOffer(party.party, role as RoleKind) ||
-      findExistingRole(party.party, role as RoleKind)
+      findExistingRoleOffer(partyId, role as RoleKind) ||
+      findExistingRole(partyId, role as RoleKind)
     ) {
       return;
     }
 
-    if (!findExistingRoleOffer(party.party, RoleKind.REGULATOR)) {
-      if (!regulatorServices.find(c => c.payload.customer === party.party)) {
+    if (!findExistingRoleOffer(partyId, RoleKind.REGULATOR)) {
+      if (!regulatorServices.find(c => c.payload.customer === partyId)) {
         const regId = regulatorRoles.contracts[0].contractId;
         await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
-          customer: party.party,
+          customer: partyId,
         });
       }
     }
+
+    const provider = { provider: partyId };
+    console.log('Creating Role Contract for', getName(partyId));
 
     switch (role) {
       case RoleKind.CUSTODY:
         await ledger.exercise(
           OperatorService.OfferCustodianRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
       case RoleKind.CLEARING:
         await ledger.exercise(
           OperatorService.OfferClearingRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
@@ -130,7 +130,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
         await ledger.exercise(
           OperatorService.OfferExchangeRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
@@ -138,7 +138,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
         await ledger.exercise(
           OperatorService.OfferMatchingService,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
@@ -146,7 +146,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
         await ledger.exercise(
           OperatorService.OfferSettlementService,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
@@ -154,7 +154,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
         await ledger.exercise(
           OperatorService.OfferDistributorRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 

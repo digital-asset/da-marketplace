@@ -10,7 +10,6 @@ import { deployAutomation } from '../../automation';
 import { makeAutomationOptions } from '../setup/SetupAutomation';
 
 import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
-import { retrieveUserParties } from '../../Parties';
 import { RolesProvider } from '../../context/RolesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import QueryStreamProvider from '../../websocket/queryStream';
@@ -47,8 +46,6 @@ const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete
 const DragAndDropAutomation = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
 
-  const parties = retrieveUserParties() || [];
-
   const automations = useAutomations();
 
   const triggerOptions = makeAutomationOptions(automations)?.map(option => {
@@ -57,6 +54,8 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
 
   const handleDeployment = async (token: string, auto: string) => {
     const [name, hash] = auto.split('#');
+    console.log('Deploying automation', formatTriggerName(auto));
+
     if (hash) {
       deployAutomation(hash, name, token, publicParty);
     }
@@ -66,7 +65,6 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
     <div className="setup-page select">
       <h4>Drag and Drop Automation to Parties</h4>
       <DragAndDropToParties
-        parties={parties}
         handleAddItem={handleAddItem}
         dropItems={triggerOptions}
         dropItemType={DropItemTypes.AUTOMATION}
@@ -77,8 +75,8 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
     </div>
   );
 
-  function handleAddItem(party: PartyDetails, item: string) {
-    handleDeployment(party.token, item);
+  function handleAddItem(token: string, item: string) {
+    handleDeployment(token, item);
   }
 };
 

@@ -239,7 +239,10 @@
           border: 1px solid var(--cool-grey-80);
           overflow: auto;
           height: 360px;
-          margin-top: $spacing-xs;
+
+          &.empty {
+              border: none;
+          }
 
           .offer-row {
             display: flex;
@@ -249,6 +252,10 @@
             font-size: 14px;
             line-height: 26px;
             padding: $spacing-s;
+
+            &.empty {
+                padding: 0px;
+            }
           }
 
           .offer {
@@ -270,8 +277,8 @@
           .page-row {
             width: 100%;
             justify-content: space-between;
-            flex: 1;
-          }
+            align-items: flex-start;
+        }
 
           .input-label {
             margin-bottom: $spacing-xs;

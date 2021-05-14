@@ -11,13 +11,11 @@ import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 
-import { retrieveUserParties } from '../../Parties';
-
 import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
-import { httpBaseUrl, wsBaseUrl } from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -40,7 +38,7 @@ const FinishPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
-  const parties = retrieveUserParties();
+  const { identities } = useVerifiedParties();
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -60,27 +58,27 @@ const LoginTileGrid = () => {
 
   return (
     <div className="setup-page finish">
-      {parties.map(p => (
+      {identities.map(p => (
         <div
           className="log-in-tile"
-          key={p.party}
+          key={p.payload.customer}
           onClick={() =>
             loginUser(
               dispatch,
               history,
-              parties.find(party => party.party === p.party) || computeCredentials(p.party)
+              computeCredentials(p.payload.customer)
             )
           }
         >
           <div className="log-in-row page-row">
-            <h4>{p.partyName}</h4>
+            <h4>{p.payload.legalName}</h4>
             <p className="p2 log-in page-row">
               Log in <ArrowRightIcon />
             </p>
           </div>
           <p className="finished-roles">
             {allRoles
-              .filter(r => r.contract.payload.provider === p.party)
+              .filter(r => r.contract.payload.provider === p.payload.customer)
               .map(r => r.role)
               .join(',')}
           </p>

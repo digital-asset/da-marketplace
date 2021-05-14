@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { PartyDetails } from '@daml/hub-react';
-
 import { Button, Form } from 'semantic-ui-react';
-
-import { retrieveUserParties } from '../../Parties';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 
@@ -12,7 +8,7 @@ import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Tra
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
-import { httpBaseUrl, wsBaseUrl } from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import Credentials from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { LoadingWheel } from './QuickSetup';
@@ -25,10 +21,11 @@ import { OffersProvider, useOffers, OfferServiceKind } from '../../context/Offer
 import { RoleKind } from '../../context/RolesContext';
 
 import { useWellKnownParties } from '@daml/hub-react/lib';
+import { computeToken } from '../../Credentials';
 
 interface IOfferServiceInfo {
-  provider?: PartyDetails;
-  customer?: PartyDetails;
+  provider?: string;
+  customer?: string;
   service?: OfferServiceKind;
 }
 
@@ -69,12 +66,12 @@ const OfferServicesPage = (props: {
       </DamlLedger>
       {creatingOffer && offerInfo && offerInfo.provider && (
         <DamlLedger
-          token={offerInfo.provider.token}
-          party={offerInfo.provider.party}
+          token={computeToken(offerInfo.provider)}
+          party={offerInfo.provider}
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
-          <QueryStreamProvider defaultPartyToken={offerInfo.provider.token}>
+          <QueryStreamProvider defaultPartyToken={computeToken(offerInfo.provider)}>
             <CreateServiceOffer
               offerInfo={offerInfo}
               onFinish={() => {
@@ -104,7 +101,8 @@ const OfferForm = (props: {
 
   const [loading, setLoading] = useState(false);
 
-  const parties = retrieveUserParties() || [];
+  const { identities } = useVerifiedParties();
+  const { getName } = usePartyName('');
 
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
   const { services: services, loading: servicesLoading } = useServiceContext();
@@ -119,8 +117,8 @@ const OfferForm = (props: {
 
   const [warning, setWarning] = useState<JSX.Element>();
 
-  const partyOptions = parties.map(p => {
-    return { text: p.partyName, value: p.party };
+  const partyOptions = identities.map(p => {
+    return { text: p.payload.legalName, value: p.payload.customer };
   });
 
   useEffect(() => {
@@ -149,12 +147,11 @@ const OfferForm = (props: {
       <Form.Select
         className="offer-select"
         label={<p className="input-label">Provider:</p>}
-        // value={offerInfo?.provider?.partyName || ''}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
             ...offerInfo,
-            provider: parties.find(p => p.party === data.value),
+            provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
             customer: undefined,
           })
         }
@@ -165,9 +162,6 @@ const OfferForm = (props: {
         className="offer-select"
         disabled={!offerInfo?.provider}
         label={<p className="input-label">Service:</p>}
-        // value={
-        //   offerInfo?.service ? serviceOptions.find(p => offerInfo.service === p.value)?.text : ''
-        // }
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({ ...offerInfo, service: data.value as OfferServiceKind })
@@ -178,15 +172,14 @@ const OfferForm = (props: {
         className="offer-select"
         label={<p className="input-label">Customer:</p>}
         disabled={!offerInfo?.provider}
-        // value={offerInfo?.customer?.partyName || ''}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
             ...offerInfo,
-            customer: parties.find(p => p.party === data.value),
+            customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
           })
         }
-        options={partyOptions.filter(p => p.value != offerInfo?.provider?.party)}
+        options={partyOptions.filter(p => p.value != offerInfo?.provider)}
       />
 
       <Button
@@ -210,8 +203,8 @@ const OfferForm = (props: {
     return !!serviceOffers.find(
       p =>
         p.service === offerInfo?.service &&
-        p.contract.payload.provider === offerInfo?.provider?.party &&
-        p.contract.payload.customer === offerInfo?.customer?.party
+        p.contract.payload.provider === offerInfo?.provider &&
+        p.contract.payload.customer === offerInfo?.customer
     );
   }
 
@@ -219,8 +212,8 @@ const OfferForm = (props: {
     return !!services.find(
       p =>
         (p.service as string) === (offerInfo?.service as string) &&
-        p.contract.payload.provider === offerInfo?.provider?.party &&
-        p.contract.payload.customer === offerInfo?.customer?.party
+        p.contract.payload.provider === offerInfo?.provider &&
+        p.contract.payload.customer === offerInfo?.customer
     );
   }
 
@@ -230,15 +223,15 @@ const OfferForm = (props: {
       service === OfferServiceKind.MARKET_CLEARING ||
       service === OfferServiceKind.CLEARING
     ) {
-      if (!clearingRoles.find(r => r.payload.provider === offerInfo?.provider?.party)) {
+      if (!clearingRoles.find(r => r.payload.provider === offerInfo?.provider)) {
         return RoleKind.CLEARING;
       }
     } else if (service === OfferServiceKind.LISTING) {
-      if (!tradingRoles.find(r => r.payload.provider === offerInfo?.provider?.party)) {
+      if (!tradingRoles.find(r => r.payload.provider === offerInfo?.provider)) {
         return RoleKind.TRADING;
       }
     } else if (service === OfferServiceKind.CUSTODY || service === OfferServiceKind.ISSUANCE) {
-      if (!custodyRoles.find(r => r.payload.provider === offerInfo?.provider?.party)) {
+      if (!custodyRoles.find(r => r.payload.provider === offerInfo?.provider)) {
         return RoleKind.CUSTODY;
       }
     }
@@ -263,12 +256,16 @@ const OfferForm = (props: {
 
     const { service, provider, customer } = offerInfo;
 
+    if (!service || !provider || !customer) {
+      return;
+    }
+
     const existingAction = findExistingAction();
 
     if (existingAction) {
       return setWarning(
         <p>
-          {provider?.party} already {existingAction} {customer?.party} with a {service} Service
+          {getName(provider)} already {existingAction} {getName(customer)} with a {service} Service
         </p>
       );
     }
@@ -278,9 +275,9 @@ const OfferForm = (props: {
     if (missingRole) {
       return setWarning(
         <p>
-          {provider?.partyName} must have a {missingRole} Role Contract to offer {service}
+          {getName(provider)} must have a {missingRole} Role Contract to offer {service}
           services. Go back to the <a onClick={() => backToSelectRoles()}>Select Roles</a> page to
-          assign {provider?.partyName} a {missingRole} Role.
+          assign {getName(provider)} a {missingRole} Role.
         </p>
       );
     }
@@ -295,6 +292,7 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
   const { provider, customer, service } = offerInfo;
 
   const ledger = useLedger();
+  const { getName } = usePartyName('');
 
   const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
 
@@ -312,8 +310,8 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
     }
 
     const params = {
-      customer: customer.party,
-      provider: provider.party,
+      customer,
+      provider,
       operator,
     };
 
@@ -322,6 +320,8 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
     const custodyRoleId = custodyRoles[0]?.contractId;
 
     async function offerServices() {
+        console.log('Creating Service Offer', service, 'for', getName(offerInfo.customer || ''));
+
       switch (service) {
         case OfferServiceKind.TRADING:
           await ledger.exercise(TradingRole.OfferTradingService, clearingRoleId, params);
@@ -361,7 +361,7 @@ export const OffersTable = () => {
   const { services: services, loading: loadingServices } = useServiceContext();
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
 
-  const parties = retrieveUserParties() || [];
+  const { getName } = usePartyName('');
 
   useEffect(() => {
     setLoading(loadingServiceOffers || loadingServices);
@@ -381,7 +381,7 @@ export const OffersTable = () => {
   return (
     <div className="all-offers">
       <>
-        <p className="bold">Services</p>
+        <h4>Services</h4>
         {serviceOffers.length > 0 || createdServices.length > 0 ? (
           <div className="offers">
             {serviceOffers.map(r => (
@@ -395,8 +395,8 @@ export const OffersTable = () => {
             {createdServices.map(r => (
               <div className="offer-row" key={r.contract.contractId}>
                 <div className="offer">
-                  {findStoredPartyName(r.contract.payload.provider)} <p>provides</p> {r.service}{' '}
-                  Service <p>to</p> {findStoredPartyName(r.contract.payload.customer)}
+                  {getName(r.contract.payload.provider)} <p>provides</p> {r.service} Service{' '}
+                  <p>to</p> {getName(r.contract.payload.customer)}
                 </div>
                 <p className="accepted">
                   <CheckMarkIcon />
@@ -405,15 +405,13 @@ export const OffersTable = () => {
             ))}
           </div>
         ) : (
-          <i>None...</i>
+          <div className="offers empty">
+            <div className="offer-row empty">No services are being offered or provided.</div>
+          </div>
         )}
       </>
     </div>
   );
-
-  function findStoredPartyName(partyId: string) {
-    return parties.find(p => p.party === partyId)?.partyName || partyId;
-  }
 };
 
 export default OfferServicesPage;

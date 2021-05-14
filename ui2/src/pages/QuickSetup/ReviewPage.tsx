@@ -9,10 +9,9 @@ import DamlLedger from '@daml/react';
 import { useRolesContext } from '../../context/RolesContext';
 
 import { PublishedInstance, getAutomationInstances } from '../../automation';
-import { httpBaseUrl, wsBaseUrl } from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
-import { retrieveUserParties } from '../../Parties';
-import Credentials from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
@@ -63,7 +62,7 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
 const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
   const { setLoading } = props;
 
-  const parties = retrieveUserParties() || [];
+  const { identities } = useVerifiedParties();
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
 
@@ -75,11 +74,13 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
     <div className="all-parties">
       <p className="bold">Parties</p>
       <div className="party-names">
-        {parties.map(p => (
+        {identities.map(p => (
           <PartyRow
-            key={p.party}
-            party={p}
-            roles={allRoles.filter(r => r.contract.payload.provider === p.party).map(r => r.role)}
+            key={p.payload.customer}
+            partyId={p.payload.customer}
+            roles={allRoles
+              .filter(r => r.contract.payload.provider === p.payload.customer)
+              .map(r => r.role)}
           />
         ))}
       </div>
@@ -87,11 +88,12 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
   );
 };
 
-const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
-  const { party, roles } = props;
+const PartyRow = (props: { partyId: string; roles: string[] }) => {
+  const { partyId, roles } = props;
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
+  const { getName } = usePartyName('');
 
-  const token = party.token;
+  const token = computeToken(partyId);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -105,10 +107,8 @@ const PartyRow = (props: { party: PartyDetails; roles: string[] }) => {
   return (
     <div className="party-name">
       <div className="party-details">
-        <p>{party.partyName}</p>
-        <p className="dropped-items">
-          {roles.join(', ')}
-        </p>
+        <p>{getName(partyId)}</p>
+        <p className="dropped-items">{roles.join(', ')}</p>
         <p className="dropped-items">
           {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
         </p>
