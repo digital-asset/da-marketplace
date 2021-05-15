@@ -23,6 +23,20 @@ To get up to date, run the following:
 $ TBD
 ```
 
+## Requirements
+
+To run the marketplace locally, or build it to be deployed on Daml Hub, the following requirements are necessary:
+
+1. Daml Connect (1.12)
+2. `make` (3.x)
+3. `yq` (3.x)
+4. `python` (3.8)
+5. `poetry` (1.0.x)
+6. `node` (14.x)
+7. `yarn` (1.22.x)
+
+Instructions for installing Daml can be found [here](https://docs.daml.com/getting-started/installation.html).
+
 ## Build &amp; Deployment
 
 See the instructions on [building and deploying from source to Daml Hub](./docs/damlhub_deployment.md).

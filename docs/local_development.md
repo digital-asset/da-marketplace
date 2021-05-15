@@ -2,21 +2,18 @@
 
 # Local Development
 
-## Requirements
+## Pre-requisites
 
-To run the marketplace locally or to build to be deployed on Daml Hub, the following requirements are necessary:
+Ensure you have installed the dependencies as noted on the main README. Note that the local stack
+currently only works on Unix-based operating systems, such as macOS and GNU/Linux.
 
-1. Daml Connect (1.12)
-2. `make` (3.x)
-3. `yq` (3.x)
-4. `python` (3.8)
-5. `poetry` (1.0.x)
-6. `node` (14.x)
-7. `yarn` (1.22.x)
+Windows development is not fully supported yet. It may be possible to follow these steps through
+[Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/), though this is largely untested.
 
 ## Setup
 
-This project uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules), so use `--recurse-submodules` or equivalent when cloning (see link).
+This project uses [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules),
+so use `--recurse-submodules` or equivalent when cloning (see link).
 
 In the root folder, run:
 
@@ -24,9 +21,10 @@ In the root folder, run:
 make package
 ```
 
-This will build the bots, the Daml dar file, build the UI components, and automatically generate the TypeScript bindings.
+This will build the Marketplace Daml DAR file and trigger DARs, automatically generate the
+TypeScript bindings, build the UI components, and package a DIT (for Daml Hub).
 
-Whenever the Daml model is changed, you must rebuild the DAR file and regenerate the TypeScript bindings.
+Whenever the Daml model is changed, you must rebuild the DAR file, and regenerate the TypeScript bindings.
 
 This can be done by rebuilding the project using `make clean && make package`.
 
@@ -45,49 +43,98 @@ yarn install --force --frozen-lockfile
 
 To run the sample app locally in the background using the Makefile, follow these steps:
 
+### Start the Sandbox
+
+The sandbox is a local, in-memory Daml ledger for development. The configuration of this
+ledger is managed in `daml.yaml`, and has some options that may be useful to know about.
+
+The first is `init-script`, which points to a Daml script for bootstrapping the local ledger.
+This will run automatically, creating all the contracts and relationships to set up a typical
+market configuration.
+
+If you'd like to start with a blank ledger (no contracts), comment out the line entirely.
+
+A useful tool for inspecting the state of the ledger is the Navigator. It is disabled in the
+configuration file, but you may enable it by setting `start-navigator: yes` on line 20.
+
+With the sandbox configured, launch the ledger with
+
 ```
 # start the Daml server
-make start_daml_server
+make start-daml-server
+```
 
-# wait for the navigator to pop up...
+This will start a sandbox listening on `localhost:6865` and a Navigator (if enabled) on `localhost:7500`.
 
-# start all bots
-make start_bots
+A log file is written out to `.dev/sandbox.log` - any errors at the ledger level will show up there.
 
-# if you would like to use the included matching engine:
-make start_matching_engine
+Stop the sandbox by running `make stop-daml-server`.
 
-# start the UI
+### Start the Triggers
+
+A Daml trigger is a piece of off-ledger automation that runs
+as a particular Daml party, and may react to contract events disclosed to that party. See the
+[documentation on triggers](https://docs.daml.com/triggers/index.html) to learn more.
+
+In the Daml Marketplace, there are various triggers:
+
+- **Auto Approve Trigger**: attempts to automatically approve or accept any requests that come to the running party
+- **Clearing Trigger**: performs clearinghouse-specific actions
+- **Matching Engine**: matches orders on an exchange
+- **Settlement Trigger**: handles asset settlement of matched trades
+
+```
+# start the auto approval triggers for all parties in daml.yaml
+# this is strongly recommended to run, as there exist lots of propose-accept workflows
+
+make start-autoapprove-all
+
+# the other triggers are run on a case-by-case basis
+# they take the party name to run as through an environment variable
+
+make start-clearing-trigger party=Ccp      # Or any other party
+make start-matching-engine party=Exchange  # Or any other party
+make start-settlement-trigger party=Bank   # Or any other party
+
+# you can also run a single auto approve trigger at a time with
+make start-autoapprove party=PartyName
+```
+
+Each trigger also writes to a log file within the `.dev` directory. If an error occurs during trigger
+execution, look there.
+
+You may run multiple instances of the same trigger with different parties - each instance will get its own log.
+
+### Stop the Triggers
+
+You may explicitly stop any trigger by calling its symmetric `stop-*` make target on it. For example
+
+```
+make stop-clearing-trigger party=PartyName
+make stop-matching-engine party=PartyName
+make stop-settlement-trigger party=PartyName
+make stop-autoapprove party=PartyName
+```
+
+To stop all the running auto approve triggers in one go, run
+
+```
+make stop-autoapprove-all
+```
+
+Be aware that stopping a trigger will delete the log file associated with it.
+
+Additionally, the trigger processes will die if the main sandbox process is killed,
+which may leave behind lingering files in `.dev`.
+
+### Start the UI
+
+The UI can be run locally through the webpack dev server. Simply
+
+```
 cd ui
 yarn start
 ```
 
-This will spin up the Daml Sandbox, run the automation bots, and run a yarn server for the frontend.
-
-The Daml Sandbox will automatically be bootstrapped with contracts from `daml/Setup.daml`.
-
-If you would like to change which Daml Script file is run when the Daml Sandbox starts, you can modify the `init-script` field in `daml.yaml`.
-
-To access the frontend, point your browser to `http://localhost:3000`. To view the Daml ledger state in the Daml Navigator, point your browser to `http://localhost:7500`.
-
-To stop running background processes:
-
-```
-# stop the Daml server
-make stop_daml_server
-
-# stop all bots
-make stop_bots
-
-# if you are using the included matching engine:
-make stop_matching_engine
-```
-
-Alternatively to running the Daml server in the background, `daml start` can be run in a separate terminal window.
-
-Running the bots manually can be done with:
-
-```
-cd {bot_folder}
-(DAML_LEDGER_URL=localhost:6865 poetry run python bot/{bot_name}_bot.py
-```
+This should result in a UI on `localhost:3000`. Locally, files are watched for changes and the server
+should reload automatically.

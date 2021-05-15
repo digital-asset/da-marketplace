@@ -4,27 +4,15 @@
 
 These instructions will show you how to build and deploy the Marketplace to the Daml Hub cloud service.
 
-## Requirements
-
-To run the marketplace locally or to build to be deployed on Daml Hub, the following requirements are necessary:
-
-1. Daml Connect (1.12)
-2. `make` (3.x)
-3. `yq` (3.x)
-4. `python` (3.8)
-5. `poetry` (1.0.x)
-6. `node` (14.x)
-7. `yarn` (1.22.x)
-
 ## Build the DIT file
 
-First, rebuild the project.
+First, package a DIT from a clean slate if you haven't already.
 
 ```
 make clean && make package
 ```
 
-This will build the model, UI, and bots, as well as package the project in a `.dit` file which can be uploaded to Daml Hub.
+This will build the model, UI, and triggers, as well as package the project in a `.dit` file which can be uploaded to Daml Hub.
 
 ## Create the Project
 
@@ -36,7 +24,7 @@ Next, enter a name and a ledger name for this project:
 
 ![2_name_project](https://user-images.githubusercontent.com/71082197/98857328-ec817480-242c-11eb-9d03-8e7a0f260dd1.png)
 
-Once the project is created, click on the ledger in the project explorer. This will take you to the ledger's details.
+Once the project is created, click on the ledger in the Workspace. This will take you to the ledger's details.
 
 ## Upload and launch the DAR model and UI
 
