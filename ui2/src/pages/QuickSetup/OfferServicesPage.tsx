@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Button, Form } from 'semantic-ui-react';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import DamlLedger, { useLedger } from '@daml/react';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
@@ -12,6 +12,7 @@ import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../
 import Credentials from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { LoadingWheel } from './QuickSetup';
+import { useStreamQueries } from '../../Main';
 
 import { InformationIcon, CheckMarkIcon } from '../../icons/icons';
 
@@ -22,6 +23,7 @@ import { RoleKind } from '../../context/RolesContext';
 
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { computeToken } from '../../Credentials';
+import { retrieveUserParties } from '../../Parties';
 
 interface IOfferServiceInfo {
   provider?: string;
@@ -35,10 +37,17 @@ const OfferServicesPage = (props: {
   backToSelectRoles: () => void;
 }) => {
   const { adminCredentials, onComplete, backToSelectRoles } = props;
+  const userParties = retrieveUserParties() || [];
 
   const [offerInfo, setOfferInfo] = useState<IOfferServiceInfo>();
-  const [creatingOffer, setCreatingOffer] = useState(false);
+  const [token, setToken] = useState<string>();
 
+  const [creatingOffer, setCreatingOffer] = useState(false);
+  useEffect(() => {
+    if (offerInfo?.provider) {
+      setToken(userParties.find(p => p.party === offerInfo.provider)?.token);
+    }
+  }, [offerInfo?.provider]);
   return (
     <div className="setup-page offer-services">
       <DamlLedger
@@ -64,9 +73,9 @@ const OfferServicesPage = (props: {
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
-      {creatingOffer && offerInfo && offerInfo.provider && (
+      {creatingOffer && offerInfo && offerInfo.provider && token && (
         <DamlLedger
-          token={computeToken(offerInfo.provider)}
+          token={token}
           party={offerInfo.provider}
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
@@ -320,7 +329,7 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
     const custodyRoleId = custodyRoles[0]?.contractId;
 
     async function offerServices() {
-        console.log('Creating Service Offer', service, 'for', getName(offerInfo.customer || ''));
+      console.log('Creating Service Offer', service, 'for', getName(offerInfo.customer || ''));
 
       switch (service) {
         case OfferServiceKind.TRADING:

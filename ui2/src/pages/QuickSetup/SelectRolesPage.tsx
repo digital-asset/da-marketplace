@@ -71,21 +71,13 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
   }
 
   return (
-    <div className="setup-page select roles">
-      <h4>Drag and Drop Roles to Parties</h4>
-      <i>
-        Auto Approval Triggers have been deployed, check the logs in the Hub Deployments tab to view
-        their status.
-      </i>
-      <DragAndDropToParties
-        handleAddItem={createRoleContract}
-        dropItems={roleOptions}
-        dropItemType={DropItemTypes.ROLES}
-      />
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
-    </div>
+    <DragAndDropToParties
+      handleAddItem={createRoleContract}
+      dropItems={roleOptions}
+      dropItemType={DropItemTypes.ROLES}
+      title={'Drag and Drop Roles to Parties'}
+      onComplete={onComplete}
+    />
   );
 
   async function createRoleContract(partyId: string, role: string) {
@@ -98,17 +90,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
       return;
     }
 
-    if (!findExistingRoleOffer(partyId, RoleKind.REGULATOR)) {
-      if (!regulatorServices.find(c => c.payload.customer === partyId)) {
-        const regId = regulatorRoles.contracts[0].contractId;
-        await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
-          customer: partyId,
-        });
-      }
-    }
-
     const provider = { provider: partyId };
-    console.log('Creating Role Contract for', getName(partyId));
 
     switch (role) {
       case RoleKind.CUSTODY:

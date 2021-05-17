@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 
 import classNames from 'classnames';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import DamlLedger, { useLedger } from '@daml/react';
 import { PartyDetails } from '@daml/hub-react';
 import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
@@ -14,8 +14,6 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-
-import { PublicDamlProvider } from '../../Main';
 
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
 
@@ -28,6 +26,7 @@ import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automa
 
 import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
 import QueryStreamProvider from '../../websocket/queryStream';
+import { PublicDamlProvider, useStreamQueries } from '../../Main';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
@@ -35,6 +34,10 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import { Request as RegulatorRequest } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
+import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
+import { OffersProvider, useOffers } from '../../context/OffersContext';
+import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 export enum MenuItems {
   ADD_PARTIES = 'Add Parties',
@@ -48,15 +51,14 @@ const QuickSetup = () => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
   const parties = retrieveParties() || [];
-  const userParties = retrieveUserParties();
+  const userParties = retrieveUserParties() || [];
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
-  const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
-
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
     MenuItems.ADD_PARTIES
   );
+  const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
+  const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
 
   useEffect(() => {
     if (isHubDeployment) {
@@ -100,26 +102,7 @@ const QuickSetup = () => {
 
   let activePage;
 
-  if (creatingAdminContracts) {
-    activePage = (
-      <DamlLedger
-        token={adminCredentials.token}
-        party={adminCredentials.party}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <AdminLedger
-            adminCredentials={adminCredentials}
-            onFinish={() => {
-              setCreatingAdminContracts(false);
-              setCreatingVerifiedIdentities(true);
-            }}
-          />
-        </QueryStreamProvider>
-      </DamlLedger>
-    );
-  } else if (activeMenuItem === MenuItems.ADD_PARTIES) {
+  if (activeMenuItem === MenuItems.ADD_PARTIES) {
     activePage = (
       <AddPartiesPage
         localOperator={localCreds.party}
@@ -130,12 +113,25 @@ const QuickSetup = () => {
       />
     );
   } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
-    activePage = (
-      <SelectRolesPage
-        adminCredentials={adminCredentials}
-        onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
-      />
-    );
+    activePage =
+      creatingAdminContracts || creatingVerifiedIdentities ? (
+        <div className="setup-page loading">
+          <LoadingWheel
+            label={
+              creatingAdminContracts
+                ? 'Confirming Admin Contracts...'
+                : creatingVerifiedIdentities
+                ? 'Confirming Verified Identities ...'
+                : 'Loading...'
+            }
+          />
+        </div>
+      ) : (
+        <SelectRolesPage
+          adminCredentials={adminCredentials}
+          onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
+        />
+      );
   } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
     activePage = isHubDeployment ? (
       <SelectAutomationPage
@@ -199,17 +195,15 @@ const QuickSetup = () => {
                 <>
                   <Menu.Item
                     key={i}
-                    disabled={
-                      item === MenuItems.ADD_PARTIES ? false : userParties.length === 0 && true
-                    }
+                    disabled={checkIsDisabled(item)}
                     active={activeMenuItem === item}
                     onClick={() => setActiveMenuItem(item)}
                   >
-                    <p className={classNames({ visited: !checkIsVisited(item) })}>{item}</p>
+                    <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
                   </Menu.Item>
                   {i + 1 !== Object.values(MenuItems).length && (
                     <ArrowRightIcon
-                      color={checkIsVisited(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
+                      color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
                     />
                   )}
                 </>
@@ -219,33 +213,55 @@ const QuickSetup = () => {
           {activePage}
         </div>
 
+        {creatingAdminContracts && (
+          <DamlLedger
+            token={adminCredentials.token}
+            party={adminCredentials.party}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+              <RolesProvider>
+                <OffersProvider>
+                  <AdminLedger
+                    adminCredentials={adminCredentials}
+                    onComplete={() => {
+                      setCreatingAdminContracts(false);
+                      setCreatingVerifiedIdentities(true);
+                    }}
+                  />
+                </OffersProvider>
+              </RolesProvider>
+            </QueryStreamProvider>
+          </DamlLedger>
+        )}
+
         {creatingVerifiedIdentities &&
-          parties.map(p => (
-            <DamlLedger
+          userParties.map(p => (
+            <PublicDamlProvider
               party={p.party}
               token={p.token}
               httpBaseUrl={httpBaseUrl}
               wsBaseUrl={wsBaseUrl}
             >
               <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentities
+                <CreateVerifiedIdentity
                   party={p}
-                  onFinish={() => setCreatingVerifiedIdentities(false)}
+                  onComplete={() => setCreatingVerifiedIdentities(false)}
                 />
               </QueryStreamProvider>
-            </DamlLedger>
+            </PublicDamlProvider>
           ))}
       </div>
     </WellKnownPartiesProvider>
   );
 
-  function checkIsVisited(item: MenuItems) {
+  function checkIsDisabled(item: MenuItems) {
     if (!activeMenuItem) {
       return false;
     }
     const clickedItemIndex = Object.values(MenuItems).indexOf(item);
     const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
-
     if (clickedItemIndex > activeItemIndex) {
       return true;
     }
@@ -264,131 +280,147 @@ const UnsupportedPageStep = (props: { onComplete: () => void }) => {
   );
 };
 
-const AdminLedger = (props: { adminCredentials: Credentials; onFinish: () => void }) => {
-  const { adminCredentials, onFinish } = props;
+const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
+  const { onComplete, party } = props;
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const ledger = useLedger();
+  const userParties = retrieveUserParties() || [];
 
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
+  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
+    useStreamQueries(VerifiedIdentity);
+
+  useEffect(() => {
+    if (regulatorServicesLoading || verifiedIdentityLoading) return;
+
+    const handleVerifiedIdentity = async () => {
+      let retries = 0;
+      while (retries < 3) {
+        if (regulatorServices.length > 0) {
+          await Promise.all(
+            regulatorServices.map(async service => {
+              await ledger.exercise(
+                RegulatorService.RequestIdentityVerification,
+                service.contractId,
+                {
+                  legalName: party.partyName,
+                  location: '',
+                  observers: [publicParty],
+                }
+              );
+            })
+          );
+          break;
+        } else {
+          await halfSecondPromise();
+          retries++;
+        }
+      }
+    };
+
+    if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
+      handleVerifiedIdentity();
+    }
+
+    if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+      return onComplete();
+    }
+  }, [
+    verifiedIdentities,
+    verifiedIdentityLoading,
+    regulatorServices,
+    regulatorServicesLoading,
+    party,
+  ]);
+
+  return null;
+};
+
+const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
+  const userParties = retrieveUserParties() || [];
   const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
-    setLoading(regulatorRolesLoading || operatorServiceLoading);
-  }, [regulatorRolesLoading, operatorServiceLoading]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (regulatorRoles.length > 0 && operatorService.length > 0) {
-      console.log(regulatorRoles);
-      console.log(operatorService);
-
-      return onFinish();
-    }
-  }, [loading, operatorService, regulatorRoles]);
-
-  useEffect(() => {
-    if (loading) return;
-
     const createOperatorService = async () => {
-      console.log('Creating Operator Service');
-      await ledger.create(OperatorService, { operator: adminCredentials.party });
+      return await ledger.create(OperatorService, { operator: adminCredentials.party });
     };
 
-    if (operatorService.length === 0) {
-      createOperatorService();
-    }
-
     const createRegulatorRole = async () => {
-      console.log('Creating Operator Regulator Role');
-
-      await ledger.create(RegulatorRole, {
+      return await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
       });
     };
 
-    if (regulatorRoles.length === 0) {
+    if (
+      operatorServiceLoading ||
+      regulatorRolesLoading ||
+      regulatorServicesLoading ||
+      regulatorServiceOffersLoading
+    ) {
+      return;
+    }
+    // console.log(regulatorServiceOffers)
+
+    if (operatorService.length === 0) {
+      createOperatorService();
+    } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
+    } else {
+      userParties.forEach(party => {
+        if (
+          !regulatorServices.find(c => c.payload.customer === party.party) ||
+          !regulatorServiceOffers.find(c => c.payload.customer === party.partyName)
+        ) {
+          offerRegulatorService(party.party);
+        }
+      });
     }
-  }, [loading, regulatorRoles, operatorService]);
 
-  return (
-    <div className="setup-page loading">
-      <LoadingWheel label="Loading Quick Set Up..." />
-    </div>
-  );
-};
-
-const CreateVerifiedIdentities = (props: { onFinish: () => void; party: PartyDetails }) => {
-  const { onFinish, party } = props;
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const parties = retrieveUserParties();
-
-  const ledger = useLedger();
-
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
-
-  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
-    useStreamQueries(VerifiedIdentity);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (parties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
-      onFinish();
+    if (
+      userParties.every(
+        p =>
+          regulatorServiceOffers.find(contract => contract.payload.customer === p.party) ||
+          regulatorServices.find(contract => contract.payload.customer === p.party)
+      )
+    ) {
+      console.log('done with offers');
+      return onComplete();
     }
-  }, [verifiedIdentities]);
+  }, [
+    regulatorRolesLoading,
+    operatorServiceLoading,
+    regulatorServicesLoading,
+    regulatorServiceOffersLoading,
+    regulatorServices,
+    regulatorRoles,
+    operatorService,
+    regulatorServiceOffers,
+  ]);
 
-  useEffect(() => {
-    setLoading(regulatorServicesLoading || verifiedIdentityLoading);
-  }, [regulatorServicesLoading, verifiedIdentityLoading]);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
-      console.log('Creating Verified Identity for', party.partyName);
-
-      handleVerifiedIdentity();
-    }
-  }, [loading, regulatorServices]);
-
-  return null;
-
-  async function handleVerifiedIdentity() {
-    let retries = 0;
-
-    if (regulatorServices.length === 0 ){
-        
-    }
-    while (retries < 3) {
-      if (regulatorServices.length > 0) {
-        await Promise.all(
-          regulatorServices.map(async service => {
-            await ledger
-              .exercise(RegulatorService.RequestIdentityVerification, service.contractId, {
-                legalName: party.partyName,
-                location: '',
-                observers: [publicParty],
-              })
-              .catch(resp => console.log(resp));
-          })
-        );
-        break;
-      } else {
-        ledger.create(RegulatorRequest, { customer, provider });
-        await halfSecondPromise();
-        retries++;
-      }
+  async function offerRegulatorService(party: string) {
+    const regulatorRoleId = regulatorRoles[0]?.contractId;
+    if (regulatorRoleId) {
+      await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+        customer: party,
+      });
     }
   }
+
+  return null;
 };
 
 export const LoadingWheel = (props: { label?: string }) => {

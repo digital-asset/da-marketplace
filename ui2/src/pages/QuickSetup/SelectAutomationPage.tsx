@@ -54,7 +54,6 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
 
   const handleDeployment = async (token: string, auto: string) => {
     const [name, hash] = auto.split('#');
-    console.log('Deploying automation', formatTriggerName(auto));
 
     if (hash) {
       deployAutomation(hash, name, token, publicParty);
@@ -62,17 +61,13 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
   };
 
   return (
-    <div className="setup-page select">
-      <h4>Drag and Drop Automation to Parties</h4>
-      <DragAndDropToParties
-        handleAddItem={handleAddItem}
-        dropItems={triggerOptions}
-        dropItemType={DropItemTypes.AUTOMATION}
-      />
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
-    </div>
+    <DragAndDropToParties
+      handleAddItem={handleAddItem}
+      dropItems={triggerOptions}
+      dropItemType={DropItemTypes.AUTOMATION}
+      title={'Drag and Drop Automation to Parties'}
+      onComplete={onComplete}
+    />
   );
 
   function handleAddItem(token: string, item: string) {

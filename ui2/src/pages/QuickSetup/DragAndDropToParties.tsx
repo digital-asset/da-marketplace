@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
+import { Button } from 'semantic-ui-react';
+
 import { ArrowLeftIcon } from '../../icons/icons';
 
 import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
@@ -15,18 +17,21 @@ import { isHubDeployment, useVerifiedParties } from '../../config';
 
 import { computeToken } from '../../Credentials';
 import { CreateEvent } from '@daml/ledger';
+import { retrieveParties } from '../../Parties';
 
 export enum DropItemTypes {
-  AUTOMATION = 'Automation',
-  ROLES = 'Roles',
+  AUTOMATION = 'automation',
+  ROLES = 'roles',
 }
 
 const DragAndDropToParties = (props: {
   handleAddItem: (partyOrToken: string, item: string) => void;
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
+  title: string;
+  onComplete: () => void;
 }) => {
-  const { handleAddItem, dropItems, dropItemType } = props;
+  const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
   const { identities } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
@@ -46,35 +51,41 @@ const DragAndDropToParties = (props: {
   }
 
   return (
-    <div className="page-row">
-      <div>
-        <p className="bold here">Parties</p>
-        <div className="party-names">
-          {identities.map((p, i) => (
-            <PartyRowDropZone
-              key={i}
-              party={p}
-              handleAddItem={handleAddItem}
-              roles={allRoles
-                .filter(r => r.contract.payload.provider === p.payload.customer)
-                .map(r => r.role)}
-              triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
-              clearingOffer={findClearingOffer(p.payload.customer)}
-            />
-          ))}
+    <div className={classNames('setup-page select', { dropItemType })}>
+      <h4>{title}</h4>
+      <div className="page-row">
+        <div>
+          <p className="bold here">Parties</p>
+          <div className="party-names">
+            {identities.map((p, i) => (
+              <PartyRowDropZone
+                key={i}
+                party={p}
+                handleAddItem={handleAddItem}
+                roles={allRoles
+                  .filter(r => r.contract.payload.provider === p.payload.customer)
+                  .map(r => r.role)}
+                triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
+                clearingOffer={findClearingOffer(p.payload.customer)}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="arrow">
+          <ArrowLeftIcon color="grey" />
+        </div>
+        <div>
+          <p className="bold">{dropItemType}</p>
+          <div className="drag-tiles page-row ">
+            {draggableItems.map((item, i) => (
+              <DraggableItemTile key={i} item={item} />
+            ))}
+          </div>
         </div>
       </div>
-      <div className="arrow">
-        <ArrowLeftIcon color="grey" />
-      </div>
-      <div>
-        <p className="bold">{dropItemType}</p>
-        <div className="drag-tiles page-row ">
-          {draggableItems.map((item, i) => (
-            <DraggableItemTile key={i} item={item} />
-          ))}
-        </div>
-      </div>
+      <Button className="ghost next" onClick={() => onComplete()}>
+        Next
+      </Button>
     </div>
   );
 
@@ -97,10 +108,12 @@ export const PartyRowDropZone = (props: {
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const [dragCount, setDragCount] = useState(0);
 
-  const token = computeToken(party.payload.customer);
+  const parties = retrieveParties() || [];
+
+  const token = parties.find(p => p.party === party.payload.customer)?.token;
 
   useEffect(() => {
-    if (isHubDeployment) {
+    if (isHubDeployment && token) {
       const timer = setInterval(() => {
         getAutomationInstances(token).then(pd => {
           setDeployedAutomations(pd || []);
@@ -150,12 +163,12 @@ export const PartyRowDropZone = (props: {
   function handleDrop(item: string) {
     setDragCount(dragCount - 1);
 
-    if (!!triggers) {
+    if (!!triggers && token) {
       if (currentTriggerOptions.map(i => i.value).includes(item)) {
         handleAddItem(token, item);
       }
     } else {
-      handleAddItem(token, item);
+      handleAddItem(party.payload.customer, item);
     }
   }
 };
