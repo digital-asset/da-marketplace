@@ -50,7 +50,17 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout, showNotificationAlert
         await ledger.exerciseByKey(Exchange.Exchange_ResetMarket, key, args);
     }
 
-    const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value', 'Reset Market']
+    const handleRemoveMarket = async (baseTokenId: Id, quoteTokenId: Id, cleared: boolean ) => {
+        const key = wrapDamlTuple([operator, exchange]);
+        const pair = {_1: baseTokenId, _2: quoteTokenId};
+        const args = {
+            pair,
+            clearedMarket: cleared
+        }
+        await ledger.exerciseByKey(Exchange.Exchange_RemovePair, key, args);
+    }
+
+    const header = ['Pair', 'Current Price', 'Change', 'Volume', 'Fair Value', 'Reset Market', 'Remove Market']
     const collateralizedRows = exchangeContract?.contractData.tokenPairs.map(pair => {
         // TODO: Show all fair values
         // const fairValues = allFairValues.filter(fv => fv.contractData.instrumentId.label === instrument?.contractData.id.label);
@@ -58,7 +68,8 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout, showNotificationAlert
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} / {quote.label}</>;
         const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, false)}/>
-        return [pairLabel, '-', '-', '-', '-', reset];
+        const remove = <Button negative size='mini' content='Delete Market' onClick={() => handleRemoveMarket(base, quote, false)}/>
+        return [pairLabel, '-', '-', '-', '-', reset, remove];
     }) || [];
 
     const clearedRows = exchangeContract?.contractData.clearedMarkets.map(listing => {
@@ -69,7 +80,8 @@ const MarketPairs: React.FC<Props> = ({ sideNav, onLogout, showNotificationAlert
         const [ base, quote ] = unwrapDamlTuple(pair);
         const pairLabel = <>{base.label} / {quote.label}</>;
         const reset = <Button negative size='mini' content='Reset Market' onClick={() => handleResetMarket(base, quote, true)}/>
-        return [pairLabel, '-', '-', '-', '-', reset];
+        const remove = <Button negative size='mini' content='Remove Market' onClick={() => handleRemoveMarket(base, quote, true)}/>
+        return [pairLabel, '-', '-', '-', '-', reset, remove];
     }) || [];
 
     return (
