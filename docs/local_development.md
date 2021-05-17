@@ -149,17 +149,15 @@ in this repository, and the integration itself which is in its own repository.
   "runAs": "Exchange"
   "username": "EXBERRY_USERNAME"
   "password": "EXBERRY_PASSWORD"
-  "clientId": "EXBERRY_CLIENTID"
   "tradingApiUrl": "EXBERRY_TRADING_API_URL"
   "adminApiUrl": "EXBERRY_ADMIN_API_URL"
-  "tokenUrl": "EXBERRY_TOKEN_URL"
   "apiKey": "EXBERRY_API_KEY"
   "secret": "EXBERRY_SECRET"
 ```
 
 4. In `daml-dit-integration-exberry/`, run `make all`
-5. In `da-marketplace/`, run `daml start --sandbox-option ../daml-dit-integration-exberry/dabl-integration-exberry-0.7.3.dar`
-6. In `daml-dit-integration-exberry/`, run `DABL_INTEGRATION_TYPE_ID=com.projectdabl.integrations.exberry.integration ./dabl-integration-exberry-0.7.3.dit`
+5. In `da-marketplace/`, run `daml start --sandbox-option ../daml-dit-integration-exberry/dabl-integration-exberry-{VERSION}.dar`
+6. In `daml-dit-integration-exberry/`, run `DABL_INTEGRATION_TYPE_ID=com.projectdabl.integrations.exberry.integration ./dabl-integration-exberry-{VERSION}.dit`
 
 With the sandbox ledger and integration both running, it is time to connect them via the Exberry adapter.
 
@@ -169,7 +167,7 @@ $ make start-exberry-adapter
 
 By default, the Exberry Adapter runs locally as the `Exchange` party. Run it as any other party by adding `party=AnyPartyName` at the end.
 
-This will also start writing a log to `.dev/adapter_AnyPartyName.log`, similar to the sandbox and triggers.
+This will start writing a log to `.dev/adapter_AnyPartyName.log`, similar to the sandbox and triggers.
 
 The adapter can be stopped as well.
 
