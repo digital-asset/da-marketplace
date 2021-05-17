@@ -166,9 +166,6 @@ onboardCustomer Providers{..} party = do
   clearingServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferClearingService with ..
   clearingServiceCid      <- submit customer do exerciseCmd clearingServiceOfferCid Clearing.Accept with ..
 
-  marketClearingServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearinghouse.OfferMarketService with ..
-  marketClearingServiceCid      <- submit customer do exerciseCmd marketClearingServiceOfferCid MarketClearing.Accept
-
   -- Identity
   (Some (regulatorRoleCid,_))          <- queryContractKey @Regulator.Role operator (operator, operator)
 
