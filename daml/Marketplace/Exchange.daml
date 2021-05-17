@@ -124,7 +124,7 @@ template Exchange
           clearedMarket : Bool
         do
           (marketPairCid, marketPair) <- fetchByKey @MarketPair (makeMarketPairId pair clearedMarket)
-          exercise self Exchange_ResetMarket with pair, clearedMarket = marketPair.clearedMarket
+          create ResetMarketRequest with ..
           archive marketPairCid
           create this with tokenPairs = delete pair tokenPairs
 
