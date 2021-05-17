@@ -9,13 +9,14 @@ import { useRolesContext } from '../../context/RolesContext';
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
+import { retrieveParties } from '../../Parties';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -70,7 +71,7 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
 
   return (
     <div className="all-parties">
-      <p className="bold">Parties</p>
+      <h4>Parties</h4>
       <div className="party-names">
         {identities.map(p => (
           <PartyRow
@@ -91,15 +92,19 @@ const PartyRow = (props: { partyId: string; roles: string[] }) => {
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const { getName } = usePartyName('');
 
-  const token = computeToken(partyId);
+  const parties = retrieveParties() || [];
+
+  const token = parties.find(p => p.party === partyId)?.token;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      getAutomationInstances(token).then(pd => {
-        setDeployedAutomations(pd || []);
-      });
-    }, 1000);
-    return () => clearInterval(timer);
+    if (token) {
+      const timer = setInterval(() => {
+        getAutomationInstances(token).then(pd => {
+          setDeployedAutomations(pd || []);
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
   }, [token]);
 
   return (
