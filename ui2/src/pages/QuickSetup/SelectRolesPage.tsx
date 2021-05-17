@@ -1,7 +1,5 @@
 import React from 'react';
 
-import { Button } from 'semantic-ui-react';
-
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 
 import { LoadingWheel } from './QuickSetup';

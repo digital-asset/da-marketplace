@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 
 import { Button } from 'semantic-ui-react';
 
-import { PartyDetails } from '@daml/hub-react';
-
 import DamlLedger from '@daml/react';
 
 import { useRolesContext } from '../../context/RolesContext';

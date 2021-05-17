@@ -15,7 +15,6 @@ import { LoadingWheel } from './QuickSetup';
 import classNames from 'classnames';
 import { isHubDeployment, useVerifiedParties } from '../../config';
 
-import { computeToken } from '../../Credentials';
 import { CreateEvent } from '@daml/ledger';
 import { retrieveParties } from '../../Parties';
 

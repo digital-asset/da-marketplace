@@ -34,9 +34,8 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import { Request as RegulatorRequest } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
-import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
-import { OffersProvider, useOffers } from '../../context/OffersContext';
+import { RolesProvider } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 export enum MenuItems {
@@ -50,7 +49,6 @@ export enum MenuItems {
 export enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Creating Admin Contracts',
   CREATING_VERIFIED_CONTRACTS = 'Creating Verified Contracts',
-  WAITING_FOR_TRIGGERS = 'Waiting for triggers',
 }
 
 const QuickSetup = () => {
@@ -63,8 +61,7 @@ const QuickSetup = () => {
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
     MenuItems.ADD_PARTIES
   );
-  //   const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
-  //   const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
+
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
 
   useEffect(() => {
@@ -282,8 +279,7 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
-  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
-    useStreamQueries(RegulatorOffer);
+
   const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
     useStreamQueries(VerifiedIdentity);
 
@@ -367,7 +363,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     ) {
       return;
     }
-    // console.log(regulatorServiceOffers)
 
     if (operatorService.length === 0) {
       createOperatorService();
@@ -391,7 +386,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
           regulatorServices.find(contract => contract.payload.customer === p.party)
       )
     ) {
-      console.log('done with offers');
       return onComplete();
     }
   }, [
