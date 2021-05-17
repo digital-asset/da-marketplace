@@ -18,6 +18,7 @@ import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context
 import { useHistory } from 'react-router';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import SetUp from './SetUp';
+import { useVerifiedParties } from '../../config';
 
 interface RequestInterface {
   operator: string;
@@ -32,11 +33,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
   const history = useHistory();
   const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
 
-  const identities = useStreamQueries(VerifiedIdentity);
-  const legalNames = useMemo(
-    () => identities.contracts.map(c => c.payload.legalName),
-    [identities]
-  );
+  const { identities, legalNames } = useVerifiedParties();
 
   const [offer, setOffer] = useState<ServiceOffer>(CustodyOffer);
   const [choice, setChoice] = useState<ServiceRoleOfferChoice>();
@@ -87,8 +84,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
 
   useEffect(() => {
     const customer =
-      identities.contracts.find(i => i.payload.legalName === dialogState?.customer)?.payload
-        .customer || '';
+      identities.find(i => i.payload.legalName === dialogState?.customer)?.payload.customer || '';
 
     if (dialogState?.tradingAccount && dialogState?.allocationAccount) {
       const params = { provider, customer, operator };
