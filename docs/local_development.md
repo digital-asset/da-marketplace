@@ -17,8 +17,8 @@ so use `--recurse-submodules` or equivalent when cloning (see link).
 
 In the root folder, run:
 
-```
-make package
+```sh
+$ make package
 ```
 
 This will build the Marketplace Daml DAR file and trigger DARs, automatically generate the
@@ -30,11 +30,11 @@ This can be done by rebuilding the project using `make clean && make package`.
 
 Alternatively, to only build the DAR file and regenerate the TypeScript bindings:
 
-```
-daml build
-daml codegen js .daml/dist/da-marketplace-0.1.8.dar -o daml.js
-cd ui
-yarn install --force --frozen-lockfile
+```sh
+$ daml build
+$ daml codegen js .daml/dist/da-marketplace-0.1.8.dar -o daml.js
+$ cd ui
+$ yarn install --force --frozen-lockfile
 ```
 
 `yarn` will automatically rebuild components as they are changed while running, or you can build them manually with `yarn build`.
@@ -59,9 +59,9 @@ configuration file, but you may enable it by setting `start-navigator: yes` on l
 
 With the sandbox configured, launch the ledger with
 
-```
+```sh
 # start the Daml server
-make start-daml-server
+$ make start-daml-server
 ```
 
 This will start a sandbox listening on `localhost:6865` and a Navigator (if enabled) on `localhost:7500`.
@@ -83,21 +83,17 @@ In the Daml Marketplace, there are various triggers:
 - **Matching Engine**: matches orders on an exchange
 - **Settlement Trigger**: handles asset settlement of matched trades
 
-```
+```sh
 # start the auto approval triggers for all parties in daml.yaml
-# this is strongly recommended to run, as there exist lots of propose-accept workflows
+$ make start-autoapprove-all
 
-make start-autoapprove-all
+# optionally run other triggers as needed, specify party name through variable
+$ make start-clearing-trigger party=Ccp
+$ make start-matching-engine party=Exchange
+$ make start-settlement-trigger party=Bank
 
-# the other triggers are run on a case-by-case basis
-# they take the party name to run as through an environment variable
-
-make start-clearing-trigger party=Ccp      # Or any other party
-make start-matching-engine party=Exchange  # Or any other party
-make start-settlement-trigger party=Bank   # Or any other party
-
-# you can also run a single auto approve trigger at a time with
-make start-autoapprove party=PartyName
+# optionally run a single auto approve trigger at a time
+$ make start-autoapprove party=AnyPartyName
 ```
 
 Each trigger also writes to a log file within the `.dev` directory. If an error occurs during trigger
@@ -109,17 +105,17 @@ You may run multiple instances of the same trigger with different parties - each
 
 You may explicitly stop any trigger by calling its symmetric `stop-*` make target on it. For example
 
-```
-make stop-clearing-trigger party=PartyName
-make stop-matching-engine party=PartyName
-make stop-settlement-trigger party=PartyName
-make stop-autoapprove party=PartyName
+```sh
+$ make stop-clearing-trigger party=AnyPartyName
+$ make stop-matching-engine party=AnyPartyName
+$ make stop-settlement-trigger party=AnyPartyName
+$ make stop-autoapprove party=AnyPartyName
 ```
 
 To stop all the running auto approve triggers in one go, run
 
-```
-make stop-autoapprove-all
+```sh
+$ make stop-autoapprove-all
 ```
 
 Be aware that stopping a trigger will delete the log file associated with it.
@@ -131,10 +127,56 @@ which may leave behind lingering files in `.dev`.
 
 The UI can be run locally through the webpack dev server. Simply
 
-```
-cd ui
-yarn start
+```sh
+$ cd ui
+$ yarn start
 ```
 
 This should result in a UI on `localhost:3000`. Locally, files are watched for changes and the server
 should reload automatically.
+
+## Exberry Integration
+
+The Exberry integration can be started up locally. There are two components: the adapter, included
+in this repository, and the integration itself which is in its own repository.
+
+1. Clone [`daml-dit-integration-exberry`](https://github.com/digital-asset/daml-dit-integration-exberry) in a sibling directory next to `da-marketplace/`
+2. Open two terminals, one in the `da-marketplace/` directory, and one in the `daml-dit-integration-exberry/` directory.
+3. In `daml-dit-integration-exberry/`, create a file in the repo root named `int_args.yaml`. Fill it with the template below, replaced with your Exberry account details.
+
+```yaml
+"metadata":
+  "runAs": "Exchange"
+  "username": "EXBERRY_USERNAME"
+  "password": "EXBERRY_PASSWORD"
+  "clientId": "EXBERRY_CLIENTID"
+  "tradingApiUrl": "EXBERRY_TRADING_API_URL"
+  "adminApiUrl": "EXBERRY_ADMIN_API_URL"
+  "tokenUrl": "EXBERRY_TOKEN_URL"
+  "apiKey": "EXBERRY_API_KEY"
+  "secret": "EXBERRY_SECRET"
+```
+
+4. In `daml-dit-integration-exberry/`, run `make all`
+5. In `da-marketplace/`, run `daml start --sandbox-option ../daml-dit-integration-exberry/dabl-integration-exberry-0.7.3.dar`
+6. In `daml-dit-integration-exberry/`, run `DABL_INTEGRATION_TYPE_ID=com.projectdabl.integrations.exberry.integration ./dabl-integration-exberry-0.7.3.dit`
+
+With the sandbox ledger and integration both running, it is time to connect them via the Exberry adapter.
+
+```sh
+$ make start-exberry-adapter
+```
+
+By default, the Exberry Adapter runs locally as the `Exchange` party. Run it as any other party by adding `party=AnyPartyName` at the end.
+
+This will also start writing a log to `.dev/adapter_AnyPartyName.log`, similar to the sandbox and triggers.
+
+The adapter can be stopped as well.
+
+```sh
+# default Exchange party
+$ make stop-exberry-adapter
+
+# with a different party
+$ make stop-exberry-adapter party=AnyPartyName
+```

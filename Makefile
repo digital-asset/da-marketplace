@@ -1,4 +1,4 @@
-VERSION = $(shell yq r dabl-meta.yaml 'catalog.version')
+VERSION = $(shell ddit ditversion)
 PYTHON = pipenv run python
 
 UI_DIR = ui2
@@ -66,8 +66,10 @@ $(app_icon):
 	cp $(UI_DIR)/public/marketplace.svg $@
 
 # DIT target
-$(dit): $(dar) $(triggers) $(exberry_adapter) $(ui) $(app_icon)
-	ddit build --skip-dar-build --force
+$(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
+	ddit build --force --skip-dar-build
+# TO-DO: replace above with below after ddit is patched (duplicate artifacts)
+#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
@@ -99,7 +101,8 @@ tag:
 		integrationTesting/daml.yaml\
 		exberry_adapter/setup.py \
 		$(UI_DIR)/package.json \
-		docs/local_development.md
+		docs/local_development.md \
+		docs/damlhub_deployment.md
 	@echo "Tagged files... check results before committing"
 
 .PHONY: release
@@ -125,11 +128,27 @@ start-daml-server: $(sandbox_pid)
 stop-daml-server:
 	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
 
+# Exberry Adapter
+party ?= Exchange
+adapter_pid := $(STATE_DIR)/adapter_$(party).pid
+adapter_log := $(STATE_DIR)/adapter_$(party).log
+
+$(adapter_pid): |$(STATE_DIR) $(exberry_adapter)
+	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 DAML_LEDGER_PARTY=$(party) $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
+
+.PHONY: start-exberry-adapter
+start-exberry-adapter: $(adapter_pid)
+
+.PHONY: stop-exberry-adapter
+stop-exberry-adapter:
+	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
+
 # Autoapprove Triggers
-.PHONY: start-autoapprove-all start-autoapprove
+.PHONY: start-autoapprove-all
 start-autoapprove-all: |$(STATE_DIR) $(trigger_dar_src)
 	./scripts/run-autoapproval-triggers.sh $(trigger_dar_src) $(STATE_DIR)
 
+.PHONY: start-autoapprove
 start-autoapprove: |$(STATE_DIR) $(trigger_dar_src)
 	@./scripts/run-trigger.sh \
 		$$party \
@@ -217,4 +236,4 @@ clean-daml:
 
 .PHONY: clean
 clean: clean-daml clean-ui
-	rm -rf $(PKG_DIR) $(dit) $(UI_DIR)/build $(STATE_DIR) *.log
+	rm -rf $(PKG_DIR) $(UI_DIR)/build $(STATE_DIR) *.dit *.log

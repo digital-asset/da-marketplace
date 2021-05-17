@@ -4,16 +4,18 @@
 #!/bin/bash
 set -eu
 
-$app_version=$1
-$dabl_meta=$2
-$daml_yaml=$3
-$daml_yaml_triggers=$4
-$daml_yaml_it=$5
-$exberry_setup=$6
-$package_json=$7
-$docs_page=$8
+app_version=$1
 
-$vregex='[0-9]*\.[0-9]*\.[0-9]*'
+dabl_meta=$2
+daml_yaml=$3
+daml_yaml_triggers=$4
+daml_yaml_it=$5
+exberry_setup=$6
+package_json=$7
+docs_localdev=$8
+docs_damlhub=$9
+
+vregex='[0-9]*\.[0-9]*\.[0-9]*'
 
 yq w -i $daml_yaml 'version' "$app_version"
 
@@ -30,4 +32,7 @@ sed -i "s/version='$vregex/version='$app_version/" $exberry_setup
 sed -i "s/\"version\": \"$vregex/\"version\": \"$app_version/" $package_json
 sed -i "s/da-marketplace\-$vregex\"/da-marketplace\-$app_version\"/" $package_json
 
-sed -i "s/da-marketplace\-$vregex/da-marketplace\-$app_version/" $docs_page
+sed -i "s/da-marketplace\-$vregex/da-marketplace\-$app_version/" $docs_localdev
+
+sed -i "s/da-marketplace\-$vregex/da-marketplace\-$app_version/g" $docs_damlhub
+sed -i "s/da-marketplace-exberry-adapter\-$vregex/da-marketplace-exberry-adapter\-$app_version/" $docs_damlhub

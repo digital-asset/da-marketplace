@@ -4,6 +4,14 @@
 
 These instructions will show you how to build and deploy the Marketplace to the Daml Hub cloud service.
 
+## Pre-requisites
+
+Ensure you have installed the dependencies as noted on the main README. Note that the local stack
+currently only works on Unix-based operating systems, such as macOS and GNU/Linux.
+
+Windows development is not fully supported yet. It may be possible to follow these steps through
+[Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/), though this is largely untested.
+
 ## Build the DIT file
 
 First, package a DIT from a clean slate if you haven't already.
@@ -32,9 +40,7 @@ Under the deployments tab, click on "Upload File":
 
 ![3_upload_file](https://user-images.githubusercontent.com/71082197/98857330-ec817480-242c-11eb-8b07-4b0f88d3a39f.png)
 
-Upload the following files from the `target` folder:
-`da-marketplace-ui-0.0.X.zip`
-`da-marketplace-model-0.0.X.dar`
+Upload the packaged `da-marketplace-0.1.8.dit` file.
 
 Click "Launch" for both the UI and the Model:
 
@@ -42,11 +48,11 @@ Click "Launch" for both the UI and the Model:
 
 ### Add the parties
 
-Next, add the parties. Click on the "Live Data" tab, and first add the `Public` and `UserAdmin` parties by clicking the "Plus" next to their names:
+Next, add the parties. Click on the "Identities" tab, and add the `UserAdmin` party by clicking the "Plus" next to its name:
 
 ![5_add_public](https://user-images.githubusercontent.com/71082197/98857333-ed1a0b00-242c-11eb-809a-a7a8a5e983ef.png)
 
-Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer` and `Custodian`:
+Add the following parties by clicking the "+ Add Party" button: `Alice`, `Bob`, `Exchange`, `Broker`, `UsdtIssuer`, `BtcIssuer`, `Ccp`, and `Custodian`:
 
 ![6_add_parties](https://user-images.githubusercontent.com/71082197/98857334-ed1a0b00-242c-11eb-8f6a-4e385baca6f8.png)
 
@@ -58,12 +64,12 @@ Click the "Ledger Settings" tab, and download the `participants.json` file:
 
 In your marketplace repo:
 
-```
+```sh
 # creates a ledger_parties.json file that maps the Daml Hub party IDs to party names
-./create_ledger_parties.py path/to/participants.json ledger_parties.json
+$ ./scripts/create_ledger_parties.py path/to/participants.json ledger_parties.json
 
 # runs a Daml Script that adds all relevant information to the project ledger
-daml script --participant-config participants.json --json-api --dar .daml/dist/da-marketplace-0.0.2.dar --script-name Setup:doSetup --input-file ledger-parties.json
+$ daml script --participant-config participants.json --json-api --dar .daml/dist/da-marketplace-0.1.8.dar --script-name Setup:doSetup --input-file ledger-parties.json
 ```
 
 If you would like to boostrap the marketplace with your own data, you can either change the `doSetup` function in `daml/Setup.daml`, or create your own setup function and change the `--script-name` to `MyModule:myFunction`.
@@ -75,23 +81,23 @@ If you have **not** bootstrapped the data, you must manually add a role contract
 On the "Live Data" tab, select the `UserAdmin` party and click "Add Contract":
 ![oc01_select_add](https://user-images.githubusercontent.com/71082197/101641394-b0c3d580-39ff-11eb-94bd-6198dce25b70.png)
 
-Then, select the `Marketplace.Operator:Operator` template, and fill in `UserAdmin` for the `Operator` field, and `Public` for the `Public` field and click "Submit":
+Then, select the `Marketplace.Operator.Role:Role` template, fill in `UserAdmin` for the `Operator`, and click "Submit":
 
 ![oc02_submit](https://user-images.githubusercontent.com/71082197/101641542-e072dd80-39ff-11eb-878e-7353730a46a6.png)
 
-### Upload and deploy the Trigger Automation
+### Deploy the Trigger Automation
 
-Upload the `da-marketplace-triggers-x.x.x.dar` file.
+There are two ways to deploy automations. The recommended approach is to go through the Quick Setup page on the Marketplace app UI (accessible from `ledgerid.projectdabl.com` after deployment). This automatically deploys Auto Approve triggers for all parties, and allows you to deploy other automations on a per party basis.
 
-In the deployments tab, launch and configure each trigger with the following parties:
+You can also deploy triggers through Daml Hub, in the Deployments tab.
 
-| Trigger            | Party       |
-| ------------------ | ----------- |
-| `OperatorTrigger`  | `UserAdmin` |
-| `ExchangeTrigger`  | `Exchange`  |
-| `MatchingEngine`   | `Exchange`  |
-| `CustodianTrigger` | `Custodian` |
-| `BrokerTrigger`    | `Broker`    |
+Aside from auto approve triggers for all parties, launch and configure each trigger with the following parties:
+
+| Trigger                        | Party      | Notes                                                           |
+| ------------------------------ | ---------- | --------------------------------------------------------------- |
+| `SettlementInstructionTrigger` | `Bank`     |                                                                 |
+| `ClearingTrigger`              | `Ccp`      |                                                                 |
+| `MatchingEngine`               | `Exchange` | Optional. Do this if you are not using the Exberry Integration. |
 
 After uploading, add the first configuration (the human readable name has no bearing on the functionality of the bot), and click launch:
 
@@ -123,6 +129,6 @@ Next, in deployments, click on the Integration and configure it with your Exberr
 
 ![13_click_exberry](https://user-images.githubusercontent.com/71082197/98867872-50139e00-243d-11eb-8448-479e46fd85df.png)
 
-Finally, upload the `da-marketplace-exberry-adapter-0.0.2.tar.gz` file in the `target` folder and launch the automation as `Exchange`.
+Finally, deploy an instance of `da-marketplace-exberry-adapter-0.1.8.tar.gz` and launch the automation as `Exchange`.
 
 If you would like to change which `SID` the Exberry adapter begins counting at for the `orderId` calls to Exberry, create a `Marketplace.Utils.ExberrySID` contract as the `Exchange` party _after_ launching the adapter.

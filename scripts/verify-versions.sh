@@ -57,6 +57,9 @@ fi
 
 if [[ $return_code -eq 0 ]] ; then
   echo "Success: All versions match!"
+else
+  echo "Error: Found mismatching versions :("
+  echo "Run `make tag` to attempt a fix automatically. Commit and push the resulting changes."
 fi
 
 exit $return_code

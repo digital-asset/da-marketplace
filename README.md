@@ -4,12 +4,12 @@ This is an open-source example of an application written in [Daml](https://daml.
 
 A UI written in React and Typescript is also provided.
 
-Run the application without requiring any technical experience, via [Daml Hub](https://hub.daml.com).
+Try out the whole application easily via [Daml Hub](https://hub.daml.com).
 
 - Create a free Daml Hub account
 - Deploy `DA Marketplace` from the Sample Apps list after logging in
-- Click on the ledger after it's created
-- Finally, follow the [user guide](./docs/user_guide.md) to walk through the available features.
+- Click on the ledger after it's created in the Workspace
+- Finally, follow the [user guide](./docs/user_guide.md) to walk through the available features
 
 ## v0.2.0
 
@@ -28,14 +28,19 @@ $ TBD
 To run the marketplace locally, or build it to be deployed on Daml Hub, the following requirements are necessary:
 
 1. Daml Connect (1.12)
-2. `make` (3.x)
-3. `yq` (3.x)
-4. `python` (3.8)
-5. `poetry` (1.0.x)
-6. `node` (14.x)
-7. `yarn` (1.22.x)
+2. `daml-dit-ddit` (0.5.x)
+3. `make` (3.x)
+4. `yq` (3.x)
+5. `python` (3.8)
+6. `poetry` (1.0.x)
+7. `node` (14.x)
+8. `yarn` (1.22.x)
 
 Instructions for installing Daml can be found [here](https://docs.daml.com/getting-started/installation.html).
+
+Install `daml-dit-ddit` with `pip3 install daml-dit-ddit` after configuring Python. This provides you with an
+executable command called `ddit`. Verify the installation by running `ddit --help` in a terminal to display the
+options.
 
 ## Build &amp; Deployment
 
