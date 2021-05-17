@@ -6,7 +6,7 @@ These instructions will show you how to build and deploy the Marketplace to the 
 
 ## Pre-requisites
 
-Ensure you have installed the dependencies as noted on the main README. Note that the local stack
+Ensure you have installed the dependencies as noted on the main README. Note that the build process
 currently only works on Unix-based operating systems, such as macOS and GNU/Linux.
 
 Windows development is not fully supported yet. It may be possible to follow these steps through
