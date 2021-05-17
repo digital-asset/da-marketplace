@@ -49,18 +49,13 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
       return { name: i, value: i };
     });
 
-  const { getName } = usePartyName('');
-
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
-  const { contracts: regulatorServices, loading: regulatorLoading } =
-    useStreamQueries(RegulatorService);
   const { contracts: operatorService, loading: operatorLoading } =
     useStreamQueries(OperatorService);
-  const regulatorRoles = useStreamQueries(RegulatorRole);
 
-  if (rolesLoading || offersLoading || regulatorLoading || operatorLoading) {
+  if (rolesLoading || offersLoading || operatorLoading) {
     return (
       <div className="setup-page loading">
         <LoadingWheel label="Loading Parties and Roles..." />

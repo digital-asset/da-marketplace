@@ -82,7 +82,7 @@ const OfferServicesPage = (props: {
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
-          <QueryStreamProvider defaultPartyToken={computeToken(offerInfo.provider)}>
+          <QueryStreamProvider defaultPartyToken={token}>
             <CreateServiceOffer
               offerInfo={offerInfo}
               onFinish={() => {

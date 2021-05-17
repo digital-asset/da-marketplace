@@ -47,8 +47,9 @@ export enum MenuItems {
 }
 
 export enum LoadingStatus {
-  CREATING_ADMIN_CONTRACTS = 'Creating Admin Contracts',
-  CREATING_VERIFIED_CONTRACTS = 'Creating Verified Contracts',
+  CREATING_ADMIN_CONTRACTS = 'Confirming admin role....',
+  WAITING_FOR_TRIGGERS = 'Waiting for auto-approve trigger to deploy. This may take up to 5 minutes....',
+  CREATING_VERIFIED_CONTRACTS = 'Confirming verified identities..',
 }
 
 const QuickSetup = () => {
@@ -221,7 +222,7 @@ const QuickSetup = () => {
                   <AdminLedger
                     adminCredentials={adminCredentials}
                     onComplete={() => {
-                      setLoadingStatus(LoadingStatus.CREATING_VERIFIED_CONTRACTS);
+                      setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS);
                     }}
                   />
                 </OffersProvider>
@@ -230,19 +231,24 @@ const QuickSetup = () => {
           </DamlLedger>
         )}
 
-        {loadingStatus === LoadingStatus.CREATING_VERIFIED_CONTRACTS &&
-          userParties.map(p => (
-            <PublicDamlProvider
-              party={p.party}
-              token={p.token}
-              httpBaseUrl={httpBaseUrl}
-              wsBaseUrl={wsBaseUrl}
-            >
-              <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentity party={p} onComplete={() => setLoadingStatus(undefined)} />
-              </QueryStreamProvider>
-            </PublicDamlProvider>
-          ))}
+        {loadingStatus === LoadingStatus.CREATING_VERIFIED_CONTRACTS ||
+          (loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
+            userParties.map(p => (
+              <PublicDamlProvider
+                party={p.party}
+                token={p.token}
+                httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
+              >
+                <QueryStreamProvider defaultPartyToken={p.token}>
+                  <CreateVerifiedIdentity
+                    party={p}
+                    setLoadingStatus={setLoadingStatus}
+                    onComplete={() => setLoadingStatus(undefined)}
+                  />
+                </QueryStreamProvider>
+              </PublicDamlProvider>
+            )))}
       </div>
     </WellKnownPartiesProvider>
   );
@@ -271,8 +277,12 @@ const UnsupportedPageStep = (props: { onComplete: () => void }) => {
   );
 };
 
-const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
-  const { onComplete, party } = props;
+const CreateVerifiedIdentity = (props: {
+  onComplete: () => void;
+  setLoadingStatus: (status: LoadingStatus) => void;
+  party: PartyDetails;
+}) => {
+  const { onComplete, party, setLoadingStatus } = props;
 
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
@@ -290,6 +300,7 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       let retries = 0;
       while (retries < 3) {
         if (regulatorServices.length > 0) {
+          setLoadingStatus(LoadingStatus.CREATING_VERIFIED_CONTRACTS);
           await Promise.all(
             regulatorServices.map(async service => {
               await ledger.exercise(
