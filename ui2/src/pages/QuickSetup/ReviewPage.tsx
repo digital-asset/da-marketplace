@@ -9,7 +9,7 @@ import { useRolesContext } from '../../context/RolesContext';
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
-import Credentials, { computeToken } from '../../Credentials';
+import Credentials from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
@@ -71,7 +71,7 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
 
   return (
     <div className="all-parties">
-      <p className="bold">Parties</p>
+      <h4>Parties</h4>
       <div className="party-names">
         {identities.map(p => (
           <PartyRow
