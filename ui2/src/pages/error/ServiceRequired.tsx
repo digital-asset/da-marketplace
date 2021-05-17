@@ -8,7 +8,6 @@ import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import { useRoleKinds, ServiceKind as RoleServiceKind } from '../../context/RolesContext';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { useParty, useStreamQueries } from '@daml/react';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';

@@ -56,7 +56,7 @@ export function retrieveCredentials(): Credentials | undefined {
   return undefined;
 }
 
-function computeToken(party: string): string {
+export function computeToken(party: string): string {
   const payload = {
     'https://daml.com/ledger-api': {
       ledgerId: ledgerId,

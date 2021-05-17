@@ -6,7 +6,7 @@ import { useHistory } from 'react-router-dom';
 
 import classNames from 'classnames';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import DamlLedger, { useLedger } from '@daml/react';
 import { PartyDetails } from '@daml/hub-react';
 import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
@@ -14,8 +14,6 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
-
-import { PublicDamlProvider } from '../../Main';
 
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
 
@@ -26,118 +24,46 @@ import { halfSecondPromise } from '../page/utils';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
-import { AutomationProvider } from '../../context/AutomationContext';
-import { ServicesProvider } from '../../context/ServicesContext';
-import { RolesProvider } from '../../context/RolesContext';
-import { OffersProvider } from '../../context/OffersContext';
-
 import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
 import QueryStreamProvider from '../../websocket/queryStream';
+import { PublicDamlProvider, useStreamQueries } from '../../Main';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
 import SelectAutomationPage from './SelectAutomationPage';
+import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import { RolesProvider } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
+import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 export enum MenuItems {
   ADD_PARTIES = 'Add Parties',
   SELECT_ROLES = 'Select Roles',
   SELECT_AUTOMATION = 'Select Automation',
+  OFFER_SERVICES = 'Offer Services',
   REVIEW = 'Review',
 }
 
-const AdminLedger = (props: {
-  credentials: Credentials;
-  onComplete: () => void;
-  activeMenuItem?: MenuItems;
-  setActiveMenuItem: (item?: MenuItems) => void;
-}) => {
-  const { credentials, onComplete, activeMenuItem, setActiveMenuItem } = props;
-
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const ledger = useLedger();
-
-  const { contracts: operatorService, loading: operatorServiceLoading } =
-    useStreamQueries(OperatorService);
-
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
-    useStreamQueries(RegulatorRole);
-
-  useEffect(() => {
-    setLoading(operatorServiceLoading || regulatorRolesLoading);
-  }, [operatorServiceLoading, regulatorRolesLoading]);
-
-  useEffect(() => {
-    const createOperatorService = async () => {
-      await ledger.create(OperatorService, { operator: credentials.party });
-    };
-
-    if (!operatorServiceLoading && operatorService.length === 0) {
-      createOperatorService();
-    }
-  }, [operatorServiceLoading, operatorService]);
-
-  useEffect(() => {
-    const createRegulatorRole = async () => {
-      await ledger.create(RegulatorRole, {
-        operator: credentials.party,
-        provider: credentials.party,
-      });
-    };
-
-    if (!regulatorRolesLoading && regulatorRoles.length === 0) {
-      createRegulatorRole();
-    }
-  }, [regulatorRolesLoading, regulatorRoles]);
-
-  if (operatorService.length === 0 || loading) {
-    return (
-      <div className="setup-page">
-        <LoadingWheel label="Loading Quick Setup..." />
-      </div>
-    );
-  }
-
-  if (activeMenuItem === MenuItems.SELECT_ROLES) {
-    return <SelectRolesPage onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)} />;
-  } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
-    return isHubDeployment ? (
-      <SelectAutomationPage onComplete={() => setActiveMenuItem(MenuItems.REVIEW)} />
-    ) : (
-      <div className="setup-page not-supported">
-        <p className="page-row">This step is not supported locally.</p>
-        <Button className="ghost next" onClick={() => setActiveMenuItem(MenuItems.REVIEW)}>
-          Next
-        </Button>
-      </div>
-    );
-  } else if (activeMenuItem === MenuItems.REVIEW) {
-    return (
-      <ReviewPage
-        onComplete={() => {
-          onComplete();
-          setActiveMenuItem(undefined);
-        }}
-      />
-    );
-  }
-
-  return <FinishPage />;
-};
+export enum LoadingStatus {
+  CREATING_ADMIN_CONTRACTS = 'Confirming admin role....',
+  WAITING_FOR_TRIGGERS = 'Waiting for auto-approve trigger to deploy. This may take up to 5 minutes....',
+  CREATING_VERIFIED_CONTRACTS = 'Confirming verified identities..',
+}
 
 const QuickSetup = () => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
+  const parties = retrieveParties() || [];
+  const userParties = retrieveUserParties() || [];
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [submitSetupData, setSubmitSetupData] = useState(false);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
     MenuItems.ADD_PARTIES
   );
 
-  const parties = retrieveParties() || [];
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
 
   useEffect(() => {
     if (isHubDeployment) {
@@ -179,96 +105,152 @@ const QuickSetup = () => {
     deployAllTriggers();
   }, [parties, adminCredentials]);
 
-  return (
-    <div className="quick-setup">
-      <div className="page-controls">
-        <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
-          <ArrowLeftIcon color={'white'} />
-          Back
-        </Button>
-        <Button className="ghost dark control-button" onClick={() => setActiveMenuItem(undefined)}>
-          Skip to Log In
-          <ArrowRightIcon color={'white'} />
-        </Button>
-      </div>
+  let activePage;
 
-      <div className="quick-setup-header">
-        <h1 className="logo-header">
-          <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
-        </h1>
-        {activeMenuItem ? <h2>Market Set-Up</h2> : <h2>Log In</h2>}
+  if (activeMenuItem === MenuItems.ADD_PARTIES) {
+    activePage = (
+      <AddPartiesPage
+        localOperator={localCreds.party}
+        onComplete={() => {
+          setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS);
+          setActiveMenuItem(MenuItems.SELECT_ROLES);
+        }}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
+    activePage = loadingStatus ? (
+      <div className="setup-page loading">
+        <LoadingWheel label={loadingStatus} />
       </div>
-      <div className="quick-setup-tile">
-        {activeMenuItem && (
-          <Menu pointing secondary className="quick-setup-menu page-row">
-            {Object.values(MenuItems).map((item, i) => (
-              <>
-                <Menu.Item
-                  key={i}
-                  disabled={checkIsDisabled(item)}
-                  active={activeMenuItem === item}
-                  onClick={() => setActiveMenuItem(item)}
-                >
-                  <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
-                </Menu.Item>
-                {i + 1 !== Object.values(MenuItems).length && (
-                  <ArrowRightIcon
-                    color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
+    ) : (
+      <SelectRolesPage
+        adminCredentials={adminCredentials}
+        onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
+    activePage = isHubDeployment ? (
+      <SelectAutomationPage
+        adminCredentials={adminCredentials}
+        onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)}
+      />
+    ) : (
+      <UnsupportedPageStep onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)} />
+    );
+  } else if (activeMenuItem === MenuItems.OFFER_SERVICES) {
+    activePage = (
+      <OfferServicesPage
+        adminCredentials={adminCredentials}
+        onComplete={() => {
+          setActiveMenuItem(MenuItems.REVIEW);
+        }}
+        backToSelectRoles={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
+      />
+    );
+  } else if (activeMenuItem === MenuItems.REVIEW) {
+    activePage = (
+      <ReviewPage
+        adminCredentials={adminCredentials}
+        onComplete={() => {
+          setActiveMenuItem(undefined);
+        }}
+      />
+    );
+  } else if (activeMenuItem === undefined) {
+    activePage = <FinishPage adminCredentials={adminCredentials} />;
+  }
+
+  return (
+    <WellKnownPartiesProvider>
+      <div className="quick-setup">
+        <div className="page-controls">
+          <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
+            <ArrowLeftIcon color={'white'} />
+            Back
+          </Button>
+          <Button
+            className="ghost dark control-button"
+            onClick={() => setActiveMenuItem(undefined)}
+          >
+            Skip to Log In
+            <ArrowRightIcon color={'white'} />
+          </Button>
+        </div>
+
+        <div className="quick-setup-header">
+          <h1 className="logo-header">
+            <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
+          </h1>
+          {activeMenuItem ? <h2>Market Set-Up</h2> : <h2>Log In</h2>}
+        </div>
+
+        <div className="quick-setup-tile">
+          {activeMenuItem && (
+            <Menu pointing secondary className="quick-setup-menu page-row">
+              {Object.values(MenuItems).map((item, i) => (
+                <>
+                  <Menu.Item
+                    key={i}
+                    disabled={checkIsDisabled(item)}
+                    active={activeMenuItem === item}
+                    onClick={() => setActiveMenuItem(item)}
+                  >
+                    <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
+                  </Menu.Item>
+                  {i + 1 !== Object.values(MenuItems).length && (
+                    <ArrowRightIcon
+                      color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
+                    />
+                  )}
+                </>
+              ))}
+            </Menu>
+          )}
+          {activePage}
+        </div>
+
+        {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS && (
+          <DamlLedger
+            token={adminCredentials.token}
+            party={adminCredentials.party}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+              <RolesProvider>
+                <OffersProvider>
+                  <AdminLedger
+                    adminCredentials={adminCredentials}
+                    onComplete={() => {
+                      setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS);
+                    }}
                   />
-                )}
-              </>
-            ))}
-          </Menu>
+                </OffersProvider>
+              </RolesProvider>
+            </QueryStreamProvider>
+          </DamlLedger>
         )}
-        {activeMenuItem === MenuItems.ADD_PARTIES ? (
-          <AddPartiesPage
-            localOperator={localCreds.party}
-            onComplete={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
-          />
-        ) : adminCredentials ? (
-          <WellKnownPartiesProvider>
-            <DamlLedger
-              token={adminCredentials.token}
-              party={adminCredentials.party}
-              httpBaseUrl={httpBaseUrl}
-              wsBaseUrl={wsBaseUrl}
-            >
-              <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-                <ServicesProvider>
-                  <RolesProvider>
-                    <OffersProvider>
-                      <AutomationProvider publicParty={publicParty}>
-                        <AdminLedger
-                          credentials={adminCredentials}
-                          onComplete={() => setSubmitSetupData(true)}
-                          activeMenuItem={activeMenuItem}
-                          setActiveMenuItem={setActiveMenuItem}
-                        />
-                      </AutomationProvider>
-                    </OffersProvider>
-                  </RolesProvider>
-                </ServicesProvider>
-              </QueryStreamProvider>
-            </DamlLedger>
-          </WellKnownPartiesProvider>
-        ) : (
-          <LoadingWheel label="Loading credentials..." />
-        )}
+
+        {loadingStatus === LoadingStatus.CREATING_VERIFIED_CONTRACTS ||
+          (loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
+            userParties.map(p => (
+              <PublicDamlProvider
+                party={p.party}
+                token={p.token}
+                httpBaseUrl={httpBaseUrl}
+                wsBaseUrl={wsBaseUrl}
+              >
+                <QueryStreamProvider defaultPartyToken={p.token}>
+                  <CreateVerifiedIdentity
+                    party={p}
+                    setLoadingStatus={setLoadingStatus}
+                    onComplete={() => setLoadingStatus(undefined)}
+                  />
+                </QueryStreamProvider>
+              </PublicDamlProvider>
+            )))}
       </div>
-      {submitSetupData &&
-        parties.map(p => (
-          <WellKnownPartiesProvider>
-            <PublicDamlProvider
-              party={p.party}
-              token={p.token}
-              httpBaseUrl={httpBaseUrl}
-              wsBaseUrl={wsBaseUrl}
-            >
-              <CreateRoleContract party={p} onFinish={() => setSubmitSetupData(false)} />
-            </PublicDamlProvider>
-          </WellKnownPartiesProvider>
-        ))}
-    </div>
+    </WellKnownPartiesProvider>
   );
 
   function checkIsDisabled(item: MenuItems) {
@@ -277,7 +259,6 @@ const QuickSetup = () => {
     }
     const clickedItemIndex = Object.values(MenuItems).indexOf(item);
     const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
-
     if (clickedItemIndex > activeItemIndex) {
       return true;
     }
@@ -285,14 +266,26 @@ const QuickSetup = () => {
   }
 };
 
-const CreateRoleContract = (props: { onFinish: () => void; party: PartyDetails }) => {
-  const { onFinish, party } = props;
+const UnsupportedPageStep = (props: { onComplete: () => void }) => {
+  return (
+    <div className="setup-page not-supported">
+      <p className="page-row">This step is not supported locally.</p>
+      <Button className="ghost next" onClick={() => props.onComplete()}>
+        Next
+      </Button>
+    </div>
+  );
+};
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const parties = retrieveUserParties();
+const CreateVerifiedIdentity = (props: {
+  onComplete: () => void;
+  setLoadingStatus: (status: LoadingStatus) => void;
+  party: PartyDetails;
+}) => {
+  const { onComplete, party, setLoadingStatus } = props;
 
   const ledger = useLedger();
+  const userParties = retrieveUserParties() || [];
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
@@ -301,57 +294,138 @@ const CreateRoleContract = (props: { onFinish: () => void; party: PartyDetails }
     useStreamQueries(VerifiedIdentity);
 
   useEffect(() => {
-    if (loading) return;
+    if (regulatorServicesLoading || verifiedIdentityLoading) return;
 
-    if (parties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
-      onFinish();
-    }
-  }, [verifiedIdentities]);
-
-  useEffect(() => {
-    setLoading(regulatorServicesLoading || verifiedIdentityLoading);
-  }, [regulatorServicesLoading, verifiedIdentityLoading]);
-
-  useEffect(() => {
-    if (loading) return;
+    const handleVerifiedIdentity = async () => {
+      let retries = 0;
+      while (retries < 3) {
+        if (regulatorServices.length > 0) {
+          setLoadingStatus(LoadingStatus.CREATING_VERIFIED_CONTRACTS);
+          await Promise.all(
+            regulatorServices.map(async service => {
+              await ledger.exercise(
+                RegulatorService.RequestIdentityVerification,
+                service.contractId,
+                {
+                  legalName: party.partyName,
+                  location: '',
+                  observers: [publicParty],
+                }
+              );
+            })
+          );
+          break;
+        } else {
+          await halfSecondPromise();
+          retries++;
+        }
+      }
+    };
 
     if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
       handleVerifiedIdentity();
     }
-  }, [loading, regulatorServices]);
+
+    if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+      halfSecondPromise();
+      return onComplete();
+    }
+  }, [
+    verifiedIdentities,
+    verifiedIdentityLoading,
+    regulatorServices,
+    regulatorServicesLoading,
+    party,
+  ]);
 
   return null;
+};
 
-  async function handleVerifiedIdentity() {
-    let retries = 0;
+const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
+  const userParties = retrieveUserParties() || [];
+  const ledger = useLedger();
 
-    while (retries < 3) {
-      if (regulatorServices.length > 0) {
-        await Promise.all(
-          regulatorServices.map(async service => {
-            await ledger.exercise(
-              RegulatorService.RequestIdentityVerification,
-              service.contractId,
-              {
-                legalName: party.partyName,
-                location: '',
-                observers: [publicParty],
-              }
-            );
-          })
-        );
-        break;
-      } else {
-        await halfSecondPromise();
-        retries++;
-      }
+  const { contracts: operatorService, loading: operatorServiceLoading } =
+    useStreamQueries(OperatorService);
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
+    useStreamQueries(RegulatorRole);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
+
+  useEffect(() => {
+    const createOperatorService = async () => {
+      return await ledger.create(OperatorService, { operator: adminCredentials.party });
+    };
+
+    const createRegulatorRole = async () => {
+      return await ledger.create(RegulatorRole, {
+        operator: adminCredentials.party,
+        provider: adminCredentials.party,
+      });
+    };
+
+    if (
+      operatorServiceLoading ||
+      regulatorRolesLoading ||
+      regulatorServicesLoading ||
+      regulatorServiceOffersLoading
+    ) {
+      return;
+    }
+
+    if (operatorService.length === 0) {
+      createOperatorService();
+    } else if (regulatorRoles.length === 0) {
+      createRegulatorRole();
+    } else {
+      userParties.forEach(party => {
+        if (
+          !regulatorServices.find(c => c.payload.customer === party.party) ||
+          !regulatorServiceOffers.find(c => c.payload.customer === party.partyName)
+        ) {
+          offerRegulatorService(party.party);
+        }
+      });
+    }
+
+    if (
+      userParties.every(
+        p =>
+          regulatorServiceOffers.find(contract => contract.payload.customer === p.party) ||
+          regulatorServices.find(contract => contract.payload.customer === p.party)
+      )
+    ) {
+      return onComplete();
+    }
+  }, [
+    regulatorRolesLoading,
+    operatorServiceLoading,
+    regulatorServicesLoading,
+    regulatorServiceOffersLoading,
+    regulatorServices,
+    regulatorRoles,
+    operatorService,
+    regulatorServiceOffers,
+  ]);
+
+  async function offerRegulatorService(party: string) {
+    const regulatorRoleId = regulatorRoles[0]?.contractId;
+    if (regulatorRoleId) {
+      await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+        customer: party,
+      });
     }
   }
+
+  return null;
 };
 
 export const LoadingWheel = (props: { label?: string }) => {
   return (
-    <Loader active indeterminate inverted size="small">
+    <Loader active indeterminate size="small">
       <p>{props.label || 'Loading...'}</p>
     </Loader>
   );

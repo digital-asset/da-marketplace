@@ -70,7 +70,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
 
   useEffect(() => {
     if (defaultPartyToken) {
-      console.log(defaultPartyToken);
       setPartyToken(defaultPartyToken);
     } else {
       const token = retrieveCredentials()?.token;

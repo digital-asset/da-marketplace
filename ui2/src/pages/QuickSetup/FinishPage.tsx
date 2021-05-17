@@ -2,23 +2,43 @@ import React, { useState, useEffect } from 'react';
 
 import { useHistory } from 'react-router-dom';
 
+import DamlLedger from '@daml/react';
+
 import { ArrowRightIcon } from '../../icons/icons';
 
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-import { useRolesContext } from '../../context/RolesContext';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
-import { computeCredentials } from '../../Credentials';
-
-import { retrieveUserParties } from '../../Parties';
+import Credentials, { computeCredentials } from '../../Credentials';
 
 import { LoadingWheel } from './QuickSetup';
 
-const FinishPage = () => {
-  const dispatch = useUserDispatch();
+import QueryStreamProvider from '../../websocket/queryStream';
 
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+
+const FinishPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
+  return (
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <RolesProvider>
+          <LoginTileGrid />
+        </RolesProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const LoginTileGrid = () => {
   const history = useHistory();
-
-  const parties = retrieveUserParties();
+  const dispatch = useUserDispatch();
+  const { identities } = useVerifiedParties();
 
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -30,34 +50,29 @@ const FinishPage = () => {
 
   if (loading) {
     return (
-      <div className="setup-page">
-        <LoadingWheel label="Loading role selection..." />
+      <div className="setup-page loading">
+        <LoadingWheel label="Loading Log In Data..." />
       </div>
     );
   }
+
   return (
     <div className="setup-page finish">
-      {parties.map(p => (
+      {identities.map(p => (
         <div
           className="log-in-tile"
-          key={p.party}
-          onClick={() =>
-            loginUser(
-              dispatch,
-              history,
-              parties.find(party => party.party === p.party) || computeCredentials(p.party)
-            )
-          }
+          key={p.payload.customer}
+          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
         >
           <div className="log-in-row page-row">
-            <h4>{p.partyName}</h4>
+            <h4>{p.payload.legalName}</h4>
             <p className="p2 log-in page-row">
               Log in <ArrowRightIcon />
             </p>
           </div>
           <p className="finished-roles">
             {allRoles
-              .filter(r => r.contract.payload.provider === p.party)
+              .filter(r => r.contract.payload.provider === p.payload.customer)
               .map(r => r.role)
               .join(',')}
           </p>

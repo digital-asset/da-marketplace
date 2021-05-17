@@ -1,149 +1,148 @@
 import React from 'react';
 
-import { Button } from 'semantic-ui-react';
-
-import { PartyDetails } from '@daml/hub-react';
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 
 import { LoadingWheel } from './QuickSetup';
 
-import { useLedger, useStreamQueries } from '@daml/react';
+import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
+import { OffersProvider, useOffers } from '../../context/OffersContext';
 
-import { useRolesContext, ServiceKind } from '../../context/RolesContext';
-import { useOffersContext } from '../../context/OffersContext';
-
-import { retrieveUserParties } from '../../Parties';
+import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
+import Credentials from '../../Credentials';
 
-const SelectRolesPage = (props: { onComplete: () => void }) => {
+import { httpBaseUrl, wsBaseUrl, usePartyName } from '../../config';
+
+const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
+  const { adminCredentials, onComplete } = props;
+
+  return (
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <RolesProvider>
+          <OffersProvider>
+            <DragAndDropRoles onComplete={onComplete} />
+          </OffersProvider>
+        </RolesProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const DragAndDropRoles = (props: { onComplete: () => void }) => {
   const { onComplete } = props;
-  const parties = retrieveUserParties() || [];
 
   const ledger = useLedger();
-  const roleOptions = Object.values(ServiceKind)
-    .filter(s => s !== ServiceKind.REGULATOR)
+  const roleOptions = Object.values(RoleKind)
+    .filter(s => s !== RoleKind.REGULATOR)
     .map(i => {
       return { name: i, value: i };
     });
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const { offers: allOffers, loading: offersLoading } = useOffersContext();
+  const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
-  const { contracts: regulatorServices, loading: regulatorLoading } =
-    useStreamQueries(RegulatorService);
   const { contracts: operatorService, loading: operatorLoading } =
     useStreamQueries(OperatorService);
-  const regulatorRoles = useStreamQueries(RegulatorRole);
 
-  if (rolesLoading || offersLoading || regulatorLoading || operatorLoading) {
+  if (rolesLoading || offersLoading || operatorLoading) {
     return (
-      <div className="setup-page select">
-        <LoadingWheel label="Loading..," />
+      <div className="setup-page loading">
+        <LoadingWheel label="Loading Parties and Roles..." />
       </div>
     );
   }
-  let roles = allRoles;
 
   return (
-    <div className="setup-page select">
-      <h4>Drag and Drop Roles to Parties</h4>
-      <i>
-        Auto Approval Triggers have been deployed, check the logs in the Hub Deployments tab to view
-        their status.
-      </i>
-      <DragAndDropToParties
-        parties={parties}
-        handleAddItem={createRoleContract}
-        dropItems={roleOptions}
-        dropItemType={DropItemTypes.ROLES}
-      />
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
-    </div>
+    <DragAndDropToParties
+      handleAddItem={createRoleContract}
+      dropItems={roleOptions}
+      dropItemType={DropItemTypes.ROLES}
+      title={'Drag and Drop Roles to Parties'}
+      onComplete={onComplete}
+    />
   );
 
-  async function createRoleContract(party: PartyDetails, role: string) {
+  async function createRoleContract(partyId: string, role: string) {
     const operatorServiceContract = operatorService[0];
 
     if (
-      findExistingOffer(party.party, role as ServiceKind) ||
-      findExistingRole(party.party, role as ServiceKind)
+      findExistingRoleOffer(partyId, role as RoleKind) ||
+      findExistingRole(partyId, role as RoleKind)
     ) {
       return;
     }
 
-    if (!findExistingOffer(party.party, ServiceKind.REGULATOR)) {
-      if (!regulatorServices.find(c => c.payload.customer === party.party)) {
-        const regId = regulatorRoles.contracts[0].contractId;
-        await ledger.exercise(RegulatorRole.OfferRegulatorService, regId, {
-          customer: party.party,
-        });
-      }
-    }
+    const provider = { provider: partyId };
 
     switch (role) {
-      case ServiceKind.CUSTODY:
+      case RoleKind.CUSTODY:
         await ledger.exercise(
           OperatorService.OfferCustodianRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
-      case ServiceKind.CLEARING:
+      case RoleKind.CLEARING:
         await ledger.exercise(
           OperatorService.OfferClearingRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
-      case ServiceKind.TRADING:
+      case RoleKind.TRADING:
         await ledger.exercise(
           OperatorService.OfferExchangeRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
-      case ServiceKind.MATCHING:
+      case RoleKind.MATCHING:
         await ledger.exercise(
           OperatorService.OfferMatchingService,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
-      case ServiceKind.SETTLEMENT:
+      case RoleKind.SETTLEMENT:
         await ledger.exercise(
           OperatorService.OfferSettlementService,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
-      case ServiceKind.DISTRIBUTION:
+      case RoleKind.DISTRIBUTION:
         await ledger.exercise(
           OperatorService.OfferDistributorRole,
           operatorServiceContract.contractId,
-          { provider: party.party }
+          provider
         );
         return;
 
       default:
-        throw new Error(`Unsupported service: ${role}`);
+        throw new Error(`Unsupported role: ${role}`);
     }
   }
 
-  function findExistingOffer(provider: string, role: ServiceKind) {
-    return !!allOffers.find(c => c.role === role && c.contract.payload.provider === provider);
+  function findExistingRoleOffer(provider: string, role: RoleKind) {
+    return !!roleOffers.find(c => c.role === role && c.contract.payload.provider === provider);
   }
 
-  function findExistingRole(provider: string, role: ServiceKind) {
+  function findExistingRole(provider: string, role: RoleKind) {
     return !!allRoles.find(c => c.role === role && c.contract.payload.provider === provider);
   }
 };

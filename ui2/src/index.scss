@@ -224,28 +224,16 @@ html {
           right: 20px;
           min-width: 300px;
           min-height: 125px;
-          animation: bounceInLeft 1.4s;
+          animation: slideInLeft 0.7s;
           z-index: 4;
         }
 
-        @keyframes bounceInLeft {
+        @keyframes slideInLeft {
           0% {
             opacity: 0;
             -webkit-transform: translateX(2000px);
             -ms-transform: translateX(2000px);
             transform: translateX(2000px);
-          }
-          60% {
-            opacity: 1;
-            -webkit-transform: translateX(-30px);
-            -ms-transform: translateX(-30px);
-            transform: translateX(-30px);
-          }
-
-          80% {
-            -webkit-transform: translateX(10px);
-            -ms-transform: translateX(10px);
-            transform: translateX(10px);
           }
           100% {
             -webkit-transform: translateX(0);
