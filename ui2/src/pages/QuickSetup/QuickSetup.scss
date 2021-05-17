@@ -213,15 +213,14 @@
           border-color: var(--blue-60);
         }
 
-        .warning{
+        .warning {
           display: flex;
           margin: $spacing-m $spacing-s 0 0;
-            width: 285px;
+          width: 285px;
+          font-size: 12px;
+          p {
             font-size: 12px;
-            p {
-                font-size: 12px;
-
-            }
+          }
           .icon {
             flex: none;
             margin-right: $spacing-xs;
@@ -242,7 +241,7 @@
           height: 360px;
 
           &.empty {
-              border: none;
+            border: none;
           }
 
           .offer-row {
@@ -255,7 +254,7 @@
             padding: $spacing-s;
 
             &.empty {
-                padding: 0px;
+              padding: 0px;
             }
           }
 
@@ -279,7 +278,7 @@
             width: 100%;
             justify-content: space-between;
             align-items: flex-start;
-        }
+          }
 
           .input-label {
             margin-bottom: $spacing-xs;
@@ -369,7 +368,7 @@
 
           &.roles {
             .party-name p.dropped-items {
-                width: unset;
+              width: unset;
             }
           }
 

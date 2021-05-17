@@ -62,13 +62,7 @@ const LoginTileGrid = () => {
         <div
           className="log-in-tile"
           key={p.payload.customer}
-          onClick={() =>
-            loginUser(
-              dispatch,
-              history,
-              computeCredentials(p.payload.customer)
-            )
-          }
+          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
         >
           <div className="log-in-row page-row">
             <h4>{p.payload.legalName}</h4>

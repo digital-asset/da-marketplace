@@ -47,6 +47,12 @@ export enum MenuItems {
   REVIEW = 'Review',
 }
 
+export enum LoadingStatus {
+  CREATING_ADMIN_CONTRACTS = 'Creating Admin Contracts',
+  CREATING_VERIFIED_CONTRACTS = 'Creating Verified Contracts',
+  WAITING_FOR_TRIGGERS = 'Waiting for triggers',
+}
+
 const QuickSetup = () => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
@@ -57,8 +63,9 @@ const QuickSetup = () => {
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
     MenuItems.ADD_PARTIES
   );
-  const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
-  const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
+  //   const [creatingAdminContracts, setCreatingAdminContracts] = useState(false);
+  //   const [creatingVerifiedIdentities, setCreatingVerifiedIdentities] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
 
   useEffect(() => {
     if (isHubDeployment) {
@@ -107,31 +114,22 @@ const QuickSetup = () => {
       <AddPartiesPage
         localOperator={localCreds.party}
         onComplete={() => {
-          setCreatingAdminContracts(true);
+          setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS);
           setActiveMenuItem(MenuItems.SELECT_ROLES);
         }}
       />
     );
   } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
-    activePage =
-      creatingAdminContracts || creatingVerifiedIdentities ? (
-        <div className="setup-page loading">
-          <LoadingWheel
-            label={
-              creatingAdminContracts
-                ? 'Confirming Admin Contracts...'
-                : creatingVerifiedIdentities
-                ? 'Confirming Verified Identities ...'
-                : 'Loading...'
-            }
-          />
-        </div>
-      ) : (
-        <SelectRolesPage
-          adminCredentials={adminCredentials}
-          onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
-        />
-      );
+    activePage = loadingStatus ? (
+      <div className="setup-page loading">
+        <LoadingWheel label={loadingStatus} />
+      </div>
+    ) : (
+      <SelectRolesPage
+        adminCredentials={adminCredentials}
+        onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
+      />
+    );
   } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
     activePage = isHubDeployment ? (
       <SelectAutomationPage
@@ -213,7 +211,7 @@ const QuickSetup = () => {
           {activePage}
         </div>
 
-        {creatingAdminContracts && (
+        {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS && (
           <DamlLedger
             token={adminCredentials.token}
             party={adminCredentials.party}
@@ -226,8 +224,7 @@ const QuickSetup = () => {
                   <AdminLedger
                     adminCredentials={adminCredentials}
                     onComplete={() => {
-                      setCreatingAdminContracts(false);
-                      setCreatingVerifiedIdentities(true);
+                      setLoadingStatus(LoadingStatus.CREATING_VERIFIED_CONTRACTS);
                     }}
                   />
                 </OffersProvider>
@@ -236,7 +233,7 @@ const QuickSetup = () => {
           </DamlLedger>
         )}
 
-        {creatingVerifiedIdentities &&
+        {loadingStatus === LoadingStatus.CREATING_VERIFIED_CONTRACTS &&
           userParties.map(p => (
             <PublicDamlProvider
               party={p.party}
@@ -245,10 +242,7 @@ const QuickSetup = () => {
               wsBaseUrl={wsBaseUrl}
             >
               <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentity
-                  party={p}
-                  onComplete={() => setCreatingVerifiedIdentities(false)}
-                />
+                <CreateVerifiedIdentity party={p} onComplete={() => setLoadingStatus(undefined)} />
               </QueryStreamProvider>
             </PublicDamlProvider>
           ))}

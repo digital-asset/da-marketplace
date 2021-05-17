@@ -34,4 +34,3 @@ export function retrieveUserParties() {
   const adminParty = parties.find(p => p.partyName === 'UserAdmin');
   return parties.filter(p => p.party != adminParty?.party && p.party != publicParty);
 }
-

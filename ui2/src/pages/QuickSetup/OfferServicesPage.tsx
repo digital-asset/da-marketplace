@@ -43,11 +43,13 @@ const OfferServicesPage = (props: {
   const [token, setToken] = useState<string>();
 
   const [creatingOffer, setCreatingOffer] = useState(false);
+
   useEffect(() => {
     if (offerInfo?.provider) {
       setToken(userParties.find(p => p.party === offerInfo.provider)?.token);
     }
   }, [offerInfo?.provider]);
+
   return (
     <div className="setup-page offer-services">
       <DamlLedger
