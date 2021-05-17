@@ -86,11 +86,9 @@ template Exchange
         makeMarketPairId (baseId, quoteId) cleared
           = Id with signatories = fromList [exchange], label = instrumentName, version = 0
           where
-            instrumentName =
-              if cleared -- TODO : figure out how to pad instrument names to a length of 13, then append CLR or 000
-              then baseId.label <> quoteId.label <> "CLR"
-              else baseId.label <> quoteId.label
-
+            instrumentName = if cleared
+                             then baseId.label <> quoteId.label <> "CLR"
+                             else baseId.label <> quoteId.label
 
     controller exchange can
       nonconsuming Exchange_RequestCustodianRelationship : ContractId CustodianRelationshipRequest

@@ -18,7 +18,6 @@ import Marketplace.Derivative
 import Marketplace.CentralCounterparty
 import Marketplace.CentralCounterpartyCustomer
 
-import qualified DA.Text as T
 import Marketplace.Trading
 import Marketplace.Transfer
 
@@ -80,12 +79,7 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
 
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
 
-  prep <- T.take 3 . T.drop 1 . T.reverse . show <$> getTime
-
-  usdTokenId     <- createToken operator issuer "USD" "US Dollars" 2 observers
-  agcTokenId     <- createToken operator issuer ("AGC") "Alex Graham Base" 2 observers
-  agcPrepTokenId <- createToken operator issuer ("AGC" <> prep) "Alex Graham Coin" 2 observers
-  gcoinId <- createToken operator issuer ("GCN" <> prep) "Graham Coin" 2 observers
+  usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
   h2oQ121DerId <- createSimpleDerivative operator issuer "H2OQ121" "H2O" "H2O Q1 21" 6 1 "h2o" h2oTokenId observers
@@ -93,9 +87,9 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   h2oQ321DerId <- createSimpleDerivative operator issuer "H2OQ321" "H2O" "H2O Q3 21" 6 1 "h2o" h2oTokenId observers
   h2oQ421DerId <- createSimpleDerivative operator issuer "H2OQ421" "H2O" "H2O Q4 21" 6 1 "h2o" h2oTokenId observers
 
-  -- (q121usdId, q121usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ121DerId DerivativeAsset ccp
-  -- (q221usdId, q221usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ221DerId DerivativeAsset ccp
-  -- (q321q421Id, q321q421Pair) <- createMarketPair exchange operator h2oQ321DerId DerivativeAsset h2oQ421DerId DerivativeAsset ccp
+  (q121usdId, q121usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ121DerId DerivativeAsset ccp
+  (q221usdId, q221usdPair) <- createMarketPair exchange operator usdTokenId TokenAsset h2oQ221DerId DerivativeAsset ccp
+  (q321q421Id, q321q421Pair) <- createMarketPair exchange operator h2oQ321DerId DerivativeAsset h2oQ421DerId DerivativeAsset ccp
 
   let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0  10_000.0 3000.0
 
@@ -103,25 +97,24 @@ doSetupClearing wt lp@(LedgerParties operator public custodian exchange issuer a
   bobAccts   <- setupAccount bob
   carlAccts  <- setupAccount carl
   danaAccts  <- setupAccount dana
-  return ()
 
   -- ccp `submit` exerciseByKeyCmd @CCPCustomer (ccp,operator,alice) CCPCustomer_PerformMarginFill
   --   with amount = 100.0
 
-  -- let tradePairs = [ (alice, bob,   q121usdId, q121usdPair, 50.0,  1000.0)
-  --                  , (alice, carl,  q221usdId, q221usdPair, 10.0,  3000.0)
-  --                  , (alice, dana,  q121usdId, q221usdPair, 34.0,  5044.0)
-  --                  , (carl,  bob,   q221usdId, q221usdPair, 10.0,  5044.0)
-  --                  , (dana,  alice, q121usdId, q121usdPair, 10.0,  100.0)
-  --                  , (bob,   dana,  q121usdId, q121usdPair, 456.0, 1434.0) ]
-  --
-  -- let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
-  --
-  -- tradeCids <- mapA (\t -> exchange `submit` createCmd t) trades
-  -- awaitOrDo' wt 0.5 "novating trades"
-  --   $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
-  --        CCP_NovateClearedTrade with clearedTradeCid = tCid)
-  --
+  let tradePairs = [ (alice, bob,   q121usdId, q121usdPair, 50.0,  1000.0)
+                   , (alice, carl,  q221usdId, q221usdPair, 10.0,  3000.0)
+                   , (alice, dana,  q121usdId, q221usdPair, 34.0,  5044.0)
+                   , (carl,  bob,   q221usdId, q221usdPair, 10.0,  5044.0)
+                   , (dana,  alice, q121usdId, q121usdPair, 10.0,  100.0)
+                   , (bob,   dana,  q121usdId, q121usdPair, 456.0, 1434.0) ]
+
+  let trades = zipWith (createTrade ccp exchange) [1..(length tradePairs)] tradePairs
+
+  tradeCids <- mapA (\t -> exchange `submit` createCmd t) trades
+  awaitOrDo' wt 0.5 "novating trades"
+    $ forA_ tradeCids (\tCid -> ccp `submit` exerciseByKeyCmd @CCP (operator, ccp)
+         CCP_NovateClearedTrade with clearedTradeCid = tCid)
+
   -- let fairValuePairs = [ (h2oQ121DerId, 1000.0)
   --                      , (h2oQ221DerId, 1500.0) ]
   --
@@ -147,12 +140,7 @@ doSetupAccounts wt lp@(LedgerParties operator public custodian exchange issuer a
 
   let observers = [operator, public, custodian, exchange, issuer, ccp, alice, bob, carl, dana]
 
-  prep <- T.take 3 . T.drop 1 . T.reverse . show <$> getTime
-
-  usdTokenId     <- createToken operator issuer "USD" "US Dollars" 2 observers
-  agcTokenId     <- createToken operator issuer ("AGC") "Alex Graham Base" 2 observers
-  agcPrepTokenId <- createToken operator issuer ("AGC" <> prep) "Alex Graham Coin" 2 observers
-  gcoinId <- createToken operator issuer ("GCN" <> prep) "Graham Coin" 2 observers
+  usdTokenId <- createToken operator issuer "USD" "US Dollars" 2 observers
   h2oTokenId <- createToken operator issuer "H2O" "H2O" 2 observers
 
   let setupAccount = setupInvestorAccount wt lp usdTokenId 100_000.0 10_000.0 3000.0

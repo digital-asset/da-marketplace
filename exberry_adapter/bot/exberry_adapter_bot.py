@@ -279,18 +279,16 @@ def main():
 
         query = { 'order': order }
 
-        logging.info(f'{query}')
-
         if order['isCleared']:
             logging.info(f"Acknowledging Cleared Order Failure")
             req_cid, _ = await client.find_one(MARKETPLACE.ClearedOrderRequest, query)
-            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {})]
-                    # exercise(event.cid, 'Archive', {})]
+            return [exercise(req_cid, 'ClearedOrderRequest_Reject', {}),
+                    exercise(event.cid, 'Archive', {})]
         else:
             logging.info(f"Acknowledging Order Failure")
             req_cid, _ = await client.find_one(MARKETPLACE.OrderRequest, query)
-            return [exercise(req_cid, 'OrderRequest_Reject', {})]
-                    # exercise(event.cid, 'Archive', {})]
+            return [exercise(req_cid, 'OrderRequest_Reject', {}),
+                    exercise(event.cid, 'Archive', {})]
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.MarketPair)
