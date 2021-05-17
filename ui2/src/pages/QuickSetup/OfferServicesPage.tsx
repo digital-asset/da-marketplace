@@ -22,7 +22,6 @@ import { OffersProvider, useOffers, OfferServiceKind } from '../../context/Offer
 import { RoleKind } from '../../context/RolesContext';
 
 import { useWellKnownParties } from '@daml/hub-react/lib';
-import { computeToken } from '../../Credentials';
 import { retrieveUserParties } from '../../Parties';
 
 interface IOfferServiceInfo {
@@ -166,7 +165,6 @@ const OfferForm = (props: {
             customer: undefined,
           })
         }
-        key={2}
         options={partyOptions}
       />
       <Form.Select
@@ -298,7 +296,6 @@ const OfferForm = (props: {
 
 const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () => void }) => {
   const { offerInfo, onFinish } = props;
-  const [loading, setLoading] = useState(false);
 
   const { provider, customer, service } = offerInfo;
 
@@ -312,11 +309,14 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
   const { contracts: custodyRoles, loading: custodyRoleLoading } = useStreamQueries(CustodyRole);
 
   useEffect(() => {
-    setLoading(tradingRoleLoading || clearingRoleLoading || custodyRoleLoading);
-  }, [tradingRoleLoading, clearingRoleLoading, custodyRoleLoading]);
-
-  useEffect(() => {
-    if (!provider || !customer || !service || loading) {
+    if (
+      !provider ||
+      !customer ||
+      !service ||
+      tradingRoleLoading ||
+      clearingRoleLoading ||
+      custodyRoleLoading
+    ) {
       return;
     }
 
@@ -340,30 +340,26 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
         case OfferServiceKind.MARKET_CLEARING:
           await ledger.exercise(ClearingRole.OfferMarketService, clearingRoleId, params);
           break;
-
         case OfferServiceKind.CLEARING:
           await ledger.exercise(ClearingRole.OfferClearingService, clearingRoleId, params);
           break;
-
         case OfferServiceKind.LISTING:
           await ledger.exercise(TradingRole.OfferListingService, tradingRoleId, params);
           break;
-
         case OfferServiceKind.CUSTODY:
           await ledger.exercise(CustodyRole.OfferCustodyService, custodyRoleId, params);
           break;
-
         case OfferServiceKind.ISSUANCE:
           await ledger.exercise(CustodyRole.OfferIssuanceService, custodyRoleId, params);
           break;
-
         default:
           throw new Error(`Unsupported service: ${service}`);
       }
       onFinish();
     }
     offerServices();
-  }, [loading]);
+  }, [tradingRoleLoading, clearingRoleLoading, custodyRoleLoading]);
+
   return null;
 };
 

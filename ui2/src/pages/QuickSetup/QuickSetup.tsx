@@ -327,6 +327,7 @@ const CreateVerifiedIdentity = (props: {
     }
 
     if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
+      halfSecondPromise();
       return onComplete();
     }
   }, [
