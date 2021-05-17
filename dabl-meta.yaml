@@ -9,3 +9,8 @@ catalog:
   license: 0BSD
   tags: [dabl-sample-app, application]
   icon_file: da-marketplace.svg
+subdeployments:
+  - da-marketplace-exberry-adapter-0.1.8.tar.gz
+  - da-marketplace-triggers-0.1.8.dar
+  - da-marketplace-ui-0.1.8.zip
+  - da-marketplace-0.1.8.dar

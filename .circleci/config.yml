@@ -108,6 +108,26 @@ jobs:
             - ~/.daml
           key: daml-{{ checksum "daml.yaml" }}
 
+  release:
+    parameters:
+      daml_sdk_version:
+        type: string
+    executor: daml-executor
+    steps:
+      - checkout
+      - init_submodules
+      - install_sdk:
+          version: << parameters.daml_sdk_version >>
+      - install_python
+      - install_yq
+      - run:
+          name: Release
+          command: |
+            echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
+            source $BASH_ENV
+            # TODO fix ts warnings and remove "CI="
+            CI= make release
+
 workflows:
   version: 2
   test:
@@ -116,3 +136,11 @@ workflows:
           daml_sdk_version: "1.10.0"
       - ui_test:
           daml_sdk_version: "1.10.0"
+  release:
+    jobs:
+      - release:
+          daml_sdk_version: "1.12.0"
+          filters:
+            branches:
+              only:
+                - main

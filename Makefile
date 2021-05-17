@@ -1,4 +1,4 @@
-VERSION = $(shell yq r dabl-meta.yaml 'catalog.version')
+VERSION = $(shell ddit ditversion)
 PYTHON = pipenv run python
 
 UI_DIR = ui2
@@ -66,8 +66,10 @@ $(app_icon):
 	cp $(UI_DIR)/public/marketplace.svg $@
 
 # DIT target
-$(dit): $(dar) $(triggers) $(exberry_adapter) $(ui) $(app_icon)
-	ddit build --skip-dar-build --force
+$(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
+	ddit build --force --skip-dar-build
+# TO-DO: replace above with below after ddit is patched (duplicate artifacts)
+#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
@@ -85,22 +87,141 @@ test-daml:
 
 .PHONY: test
 test: test-daml test-ui
+	./scripts/verify-versions.sh
 
 ### *-=- Release -=-*
 
+.PHONY: tag
+tag:
+	@./scripts/tag-versions.sh \
+		$(VERSION) \
+		dabl-meta.yaml \
+		daml.yaml \
+		triggers/daml.yaml \
+		integrationTesting/daml.yaml\
+		exberry_adapter/setup.py \
+		$(UI_DIR)/package.json \
+		docs/local_development.md \
+		docs/damlhub_deployment.md
+	@echo "Tagged files... check results before committing"
+
 .PHONY: release
-release: test build
-	ddit release
+release: test package
+	ddit release --dry-run
 
 ### *-=- Running -=-*
 
+$(STATE_DIR):
+	mkdir $@
+
+# Sandbox
+sandbox_pid := $(STATE_DIR)/sandbox.pid
+sandbox_log := $(STATE_DIR)/sandbox.log
+
+$(sandbox_pid): |$(STATE_DIR) $(dar_src)
+	daml start > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
+
+.PHONY: start-daml-server
+start-daml-server: $(sandbox_pid)
+
+.PHONY: stop-daml-server
+stop-daml-server:
+	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
+
+# Exberry Adapter
+party ?= Exchange
+adapter_pid := $(STATE_DIR)/adapter_$(party).pid
+adapter_log := $(STATE_DIR)/adapter_$(party).log
+
+$(adapter_pid): |$(STATE_DIR) $(exberry_adapter)
+	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 DAML_LEDGER_PARTY=$(party) $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
+
+.PHONY: start-exberry-adapter
+start-exberry-adapter: $(adapter_pid)
+
+.PHONY: stop-exberry-adapter
+stop-exberry-adapter:
+	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
+
+# Autoapprove Triggers
+.PHONY: start-autoapprove-all
+start-autoapprove-all: |$(STATE_DIR) $(trigger_dar_src)
+	./scripts/run-autoapproval-triggers.sh $(trigger_dar_src) $(STATE_DIR)
+
 .PHONY: start-autoapprove
-start-autoapprove: |$(STATE_DIR) $(trigger_src_dar)
-	./scripts/run-triggers.sh $(trigger_src_dar) $(STATE_DIR)
+start-autoapprove: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		AutoApprove:autoApprovalTrigger \
+		autoapproval_$$party \
+		$(STATE_DIR)
+	@echo "Starting auto approve trigger for $$party..."
+
+.PHONY: stop-autoapprove-all
+stop-autoapprove-all: |$(STATE_DIR)
+	./scripts/stop-autoapproval-triggers.sh $(STATE_DIR)
 
 .PHONY: stop-autoapprove
 stop-autoapprove: |$(STATE_DIR)
-	./scripts/stop-triggers.sh $(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		autoapproval_$$party \
+		$(STATE_DIR)
+	@echo "Stopping auto approve trigger for $$party..."
+
+# Clearing Trigger
+.PHONY: start-clearing-trigger
+start-clearing-trigger: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		ClearingTrigger:handleClearing \
+		clearing_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Starting clearing trigger for $$party..."
+
+.PHONY: stop-clearing-trigger
+stop-clearing-trigger: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		clearing_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Stopping clearing trigger for $$party..."
+
+# Matching Engine Trigger
+.PHONY: start-matching-engine
+start-matching-engine: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		MatchingEngine:handleMatching \
+		matching_engine_$$party \
+		$(STATE_DIR)
+	@echo "Starting matching engine for $$party..."
+
+.PHONY: stop-matching-engine
+stop-matching-engine: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		matching_engine_$$party \
+		$(STATE_DIR)
+	@echo "Stopping matching engine for $$party..."
+
+# Settlement Trigger
+.PHONY: start-settlement-trigger
+start-settlement-trigger: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		SettlementInstructionTrigger:handleSettlementInstruction \
+		settlement_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Starting settlement trigger for $$party..."
+
+.PHONY: stop-settlement-trigger
+stop-settlement-trigger: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		settlement_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Stopping settlement trigger for $$party..."
 
 ### *-=- Cleanup -=-*
 
@@ -115,4 +236,4 @@ clean-daml:
 
 .PHONY: clean
 clean: clean-daml clean-ui
-	rm -rf $(PKG_DIR) $(dit) $(UI_DIR)/build $(STATE_DIR) *.log
+	rm -rf $(PKG_DIR) $(UI_DIR)/build $(STATE_DIR) *.dit *.log
