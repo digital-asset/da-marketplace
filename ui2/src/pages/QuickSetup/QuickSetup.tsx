@@ -384,7 +384,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       userParties.forEach(party => {
         if (
           !regulatorServices.find(c => c.payload.customer === party.party) ||
-          !regulatorServiceOffers.find(c => c.payload.customer === party.partyName)
+          !regulatorServiceOffers.find(c => c.payload.customer === party.party)
         ) {
           offerRegulatorService(party.party);
         }

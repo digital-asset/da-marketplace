@@ -16,6 +16,7 @@ import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
+import { retrieveParties } from '../../Parties';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -91,15 +92,19 @@ const PartyRow = (props: { partyId: string; roles: string[] }) => {
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const { getName } = usePartyName('');
 
-  const token = computeToken(partyId);
+  const parties = retrieveParties() || [];
+
+  const token = parties.find(p => p.party === partyId)?.token;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      getAutomationInstances(token).then(pd => {
-        setDeployedAutomations(pd || []);
-      });
-    }, 1000);
-    return () => clearInterval(timer);
+    if (token) {
+      const timer = setInterval(() => {
+        getAutomationInstances(token).then(pd => {
+          setDeployedAutomations(pd || []);
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
   }, [token]);
 
   return (
