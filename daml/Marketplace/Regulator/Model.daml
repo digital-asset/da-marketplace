@@ -12,4 +12,8 @@ template VerifiedIdentity
     location : Text
   where
     signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
     observer observers

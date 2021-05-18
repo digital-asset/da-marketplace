@@ -86,7 +86,6 @@ const OfferServicesPage = (props: {
               offerInfo={offerInfo}
               onFinish={() => {
                 setCreatingOffer(false);
-                setOfferInfo(undefined);
               }}
             />
           </QueryStreamProvider>
@@ -109,9 +108,7 @@ const OfferForm = (props: {
 }) => {
   const { offerInfo, setOfferInfo, createOffer, creatingOffer, backToSelectRoles } = props;
 
-  const [loading, setLoading] = useState(false);
-
-  const { identities } = useVerifiedParties();
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { getName } = usePartyName('');
 
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
@@ -131,23 +128,14 @@ const OfferForm = (props: {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  useEffect(() => {
-    setLoading(
-      tradingRoleLoading ||
-        clearingRoleLoading ||
-        custodyRoleLoading ||
-        loadingServiceOffers ||
-        servicesLoading
-    );
-  }, [
-    tradingRoleLoading,
-    clearingRoleLoading,
-    custodyRoleLoading,
-    loadingServiceOffers,
-    servicesLoading,
-  ]);
-
-  if (loading) {
+  if (
+    tradingRoleLoading ||
+    clearingRoleLoading ||
+    custodyRoleLoading ||
+    loadingServiceOffers ||
+    servicesLoading ||
+    identitiesLoading
+  ) {
     return null;
   }
 
@@ -162,14 +150,12 @@ const OfferForm = (props: {
           setOfferInfo({
             ...offerInfo,
             provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-            customer: undefined,
           })
         }
         options={partyOptions}
       />
       <Form.Select
         className="offer-select"
-        disabled={!offerInfo?.provider}
         label={<p className="input-label">Service:</p>}
         placeholder="Select..."
         onChange={(_, data: any) =>
@@ -180,7 +166,6 @@ const OfferForm = (props: {
       <Form.Select
         className="offer-select"
         label={<p className="input-label">Customer:</p>}
-        disabled={!offerInfo?.provider}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
@@ -188,7 +173,7 @@ const OfferForm = (props: {
             customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
           })
         }
-        options={partyOptions.filter(p => p.value != offerInfo?.provider)}
+        options={partyOptions}
       />
 
       <Button
@@ -284,12 +269,13 @@ const OfferForm = (props: {
     if (missingRole) {
       return setWarning(
         <p>
-          {getName(provider)} must have a {missingRole} Role Contract to offer {service}
-          services. Go back to the <a onClick={() => backToSelectRoles()}>Select Roles</a> page to
-          assign {getName(provider)} a {missingRole} Role.
+          {getName(provider)} must have a {missingRole} Role Contract to offer {service} services.{' '}
+          Go back to the <a onClick={() => backToSelectRoles()}>Select Roles</a> page to assign{' '}
+          {getName(provider)} a {missingRole} Role.
         </p>
       );
     }
+
     return createOffer();
   }
 };
@@ -368,8 +354,6 @@ export const OffersTable = () => {
   const { services: services, loading: loadingServices } = useServiceContext();
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
 
-  const { getName } = usePartyName('');
-
   useEffect(() => {
     setLoading(loadingServiceOffers || loadingServices);
   }, [loadingServices, loadingServiceOffers]);
@@ -392,23 +376,22 @@ export const OffersTable = () => {
         {serviceOffers.length > 0 || createdServices.length > 0 ? (
           <div className="offers">
             {serviceOffers.map(r => (
-              <div className="offer-row" key={r.contract.contractId}>
-                <div className="offer">
-                  {r.contract.payload.provider} <p>offered</p> {r.service} Service <p>to</p>{' '}
-                  {r.contract.payload.customer}
-                </div>
-              </div>
+              <OfferRow
+                key={r.contract.contractId}
+                provider={r.contract.payload.provider}
+                customer={r.contract.payload.customer}
+                service={r.service}
+                isAccepted={false}
+              />
             ))}
             {createdServices.map(r => (
-              <div className="offer-row" key={r.contract.contractId}>
-                <div className="offer">
-                  {getName(r.contract.payload.provider)} <p>provides</p> {r.service} Service{' '}
-                  <p>to</p> {getName(r.contract.payload.customer)}
-                </div>
-                <p className="accepted">
-                  <CheckMarkIcon />
-                </p>
-              </div>
+              <OfferRow
+                key={r.contract.contractId}
+                provider={r.contract.payload.provider}
+                customer={r.contract.payload.customer}
+                service={r.service}
+                isAccepted={true}
+              />
             ))}
           </div>
         ) : (
@@ -417,6 +400,34 @@ export const OffersTable = () => {
           </div>
         )}
       </>
+    </div>
+  );
+};
+
+const OfferRow = (props: {
+  provider: string;
+  customer: string;
+  service: string;
+  isAccepted: boolean;
+}) => {
+  const { provider, customer, service, isAccepted } = props;
+
+  const { getName } = usePartyName('');
+
+  const providerName = getName(provider);
+  const customerName = getName(customer);
+
+  return (
+    <div className="offer-row">
+      <div className="offer">
+        {providerName} <p>{isAccepted ? 'provides' : 'offered'}</p> {service} Service <p>to</p>{' '}
+        {customerName}
+      </div>
+      {isAccepted && (
+        <p className="accepted">
+          <CheckMarkIcon />
+        </p>
+      )}
     </div>
   );
 };

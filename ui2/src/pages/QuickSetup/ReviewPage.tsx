@@ -4,31 +4,20 @@ import { Button } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
 
-import { useRolesContext } from '../../context/RolesContext';
-
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
 
-import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { retrieveParties } from '../../Parties';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
-  const [loading, setLoading] = useState<boolean>(false);
-
-  if (loading) {
-    return (
-      <div className="setup-page loading">
-        <LoadingWheel label="Loading Review Data..." />
-      </div>
-    );
-  }
 
   return (
     <div className="setup-page review">
@@ -41,12 +30,14 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
       >
         <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
           <ServicesProvider>
-            <OffersProvider>
-              <div className="page-row">
-                <PartiesReview setLoading={setLoading} />
-                <OffersTable />
-              </div>
-            </OffersProvider>
+            <RolesProvider>
+              <OffersProvider>
+                <div className="page-row">
+                  <PartiesReview />
+                  <OffersTable />
+                </div>
+              </OffersProvider>
+            </RolesProvider>
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
@@ -58,16 +49,10 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
   );
 };
 
-const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
-  const { setLoading } = props;
-
+const PartiesReview = () => {
   const { identities } = useVerifiedParties();
 
-  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-
-  useEffect(() => {
-    setLoading(rolesLoading);
-  }, [rolesLoading]);
+  const { roles: allRoles } = useRolesContext();
 
   return (
     <div className="all-parties">
@@ -90,10 +75,9 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
 const PartyRow = (props: { partyId: string; roles: string[] }) => {
   const { partyId, roles } = props;
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
-  const { getName } = usePartyName('');
-
   const parties = retrieveParties() || [];
 
+  const { getName } = usePartyName('');
   const token = parties.find(p => p.party === partyId)?.token;
 
   useEffect(() => {

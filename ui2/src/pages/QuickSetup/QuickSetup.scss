@@ -103,6 +103,7 @@
           border: 1px solid var(--cool-grey-80);
           background-color: var(--cool-grey-100);
           margin-top: $spacing-m;
+          min-width: 400px;
         }
 
         .party-name {
@@ -332,8 +333,10 @@
             justify-content: space-between;
             width: 100%;
 
-            .party-name {
+            .party-name,
+            .party-names {
               width: unset;
+              min-width: unset;
             }
           }
           .all-offers,

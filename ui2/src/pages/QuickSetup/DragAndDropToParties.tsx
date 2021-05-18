@@ -31,14 +31,14 @@ const DragAndDropToParties = (props: {
   onComplete: () => void;
 }) => {
   const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
-  const { identities } = useVerifiedParties();
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
-  if (rolesLoading || offersLoading) {
+  if (rolesLoading || offersLoading || identitiesLoading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading Parties..." />
+        <LoadingWheel label={`Loading parties and ${dropItemType}...`} />
       </div>
     );
   }
@@ -54,7 +54,7 @@ const DragAndDropToParties = (props: {
       <h4>{title}</h4>
       <div className="page-row">
         <div>
-          <p className="bold here">Parties</p>
+          <p className="bold">Parties</p>
           <div className="party-names">
             {identities.map((p, i) => (
               <PartyRowDropZone

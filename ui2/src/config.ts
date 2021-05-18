@@ -96,9 +96,9 @@ export const usePartyName = (party: string) => {
 };
 
 export const useVerifiedParties = () => {
-  const identities = useStreamQueries(VerifiedIdentity).contracts;
+  const { contracts: identities, loading } = useStreamQueries(VerifiedIdentity);
   const legalNames = _.uniq(identities.map(c => c.payload.legalName)).sort();
-  return { identities, legalNames };
+  return { identities, legalNames, loading };
 };
 
 export function getTemplateId(t: string) {
