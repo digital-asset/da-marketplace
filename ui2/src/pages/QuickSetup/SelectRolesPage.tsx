@@ -1,8 +1,9 @@
 import React from 'react';
 
-import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import DamlLedger, { useLedger } from '@daml/react';
 
 import { LoadingWheel } from './QuickSetup';
+import { useStreamQueries } from '../../Main';
 
 import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
 import { OffersProvider, useOffers } from '../../context/OffersContext';
@@ -10,8 +11,6 @@ import { OffersProvider, useOffers } from '../../context/OffersContext';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
-import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
 import Credentials from '../../Credentials';

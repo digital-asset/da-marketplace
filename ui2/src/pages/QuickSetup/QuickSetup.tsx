@@ -47,9 +47,8 @@ export enum MenuItems {
 }
 
 export enum LoadingStatus {
-  CREATING_ADMIN_CONTRACTS = 'Confirming admin role....',
-  WAITING_FOR_TRIGGERS = 'Waiting for auto-approve trigger to deploy. This may take up to 5 minutes....',
-  CREATING_VERIFIED_CONTRACTS = 'Confirming verified identities..',
+  CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
+  WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }
 
 const QuickSetup = () => {
@@ -221,9 +220,7 @@ const QuickSetup = () => {
                 <OffersProvider>
                   <AdminLedger
                     adminCredentials={adminCredentials}
-                    onComplete={() => {
-                      setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS);
-                    }}
+                    onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
                   />
                 </OffersProvider>
               </RolesProvider>
@@ -231,24 +228,19 @@ const QuickSetup = () => {
           </DamlLedger>
         )}
 
-        {loadingStatus === LoadingStatus.CREATING_VERIFIED_CONTRACTS ||
-          (loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
-            userParties.map(p => (
-              <PublicDamlProvider
-                party={p.party}
-                token={p.token}
-                httpBaseUrl={httpBaseUrl}
-                wsBaseUrl={wsBaseUrl}
-              >
-                <QueryStreamProvider defaultPartyToken={p.token}>
-                  <CreateVerifiedIdentity
-                    party={p}
-                    setLoadingStatus={setLoadingStatus}
-                    onComplete={() => setLoadingStatus(undefined)}
-                  />
-                </QueryStreamProvider>
-              </PublicDamlProvider>
-            )))}
+        {loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
+          userParties.map(p => (
+            <PublicDamlProvider
+              party={p.party}
+              token={p.token}
+              httpBaseUrl={httpBaseUrl}
+              wsBaseUrl={wsBaseUrl}
+            >
+              <QueryStreamProvider defaultPartyToken={p.token}>
+                <CreateVerifiedIdentity party={p} onComplete={() => setLoadingStatus(undefined)} />
+              </QueryStreamProvider>
+            </PublicDamlProvider>
+          ))}
       </div>
     </WellKnownPartiesProvider>
   );
@@ -277,30 +269,24 @@ const UnsupportedPageStep = (props: { onComplete: () => void }) => {
   );
 };
 
-const CreateVerifiedIdentity = (props: {
-  onComplete: () => void;
-  setLoadingStatus: (status: LoadingStatus) => void;
-  party: PartyDetails;
-}) => {
-  const { onComplete, party, setLoadingStatus } = props;
-
+const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
+  const { onComplete, party } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
 
-  const { contracts: verifiedIdentities, loading: verifiedIdentityLoading } =
+  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
     useStreamQueries(VerifiedIdentity);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentityLoading) return;
+    if (regulatorServicesLoading || verifiedIdentitiesLoading) return;
 
     const handleVerifiedIdentity = async () => {
       let retries = 0;
       while (retries < 3) {
         if (regulatorServices.length > 0) {
-          setLoadingStatus(LoadingStatus.CREATING_VERIFIED_CONTRACTS);
           await Promise.all(
             regulatorServices.map(async service => {
               await ledger.exercise(
@@ -332,10 +318,11 @@ const CreateVerifiedIdentity = (props: {
     }
   }, [
     verifiedIdentities,
-    verifiedIdentityLoading,
+    verifiedIdentitiesLoading,
     regulatorServices,
     regulatorServicesLoading,
     party,
+    userParties.length,
   ]);
 
   return null;
@@ -356,6 +343,15 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     useStreamQueries(RegulatorOffer);
 
   useEffect(() => {
+    if (
+      operatorServiceLoading ||
+      regulatorRolesLoading ||
+      regulatorServicesLoading ||
+      regulatorServiceOffersLoading
+    ) {
+      return;
+    }
+
     const createOperatorService = async () => {
       return await ledger.create(OperatorService, { operator: adminCredentials.party });
     };
@@ -367,28 +363,34 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       });
     };
 
-    if (
-      operatorServiceLoading ||
-      regulatorRolesLoading ||
-      regulatorServicesLoading ||
-      regulatorServiceOffersLoading
-    ) {
-      return;
-    }
+    const offerRegulatorService = async (party: string) => {
+      const regulatorRoleId = regulatorRoles[0]?.contractId;
+      if (regulatorRoleId) {
+        await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+          customer: party,
+        });
+      }
+    };
+
+    const offerRegulatorServices = async () => {
+      await Promise.all(
+        userParties.map(party => {
+          if (
+            !regulatorServices.find(c => c.payload.customer === party.party) ||
+            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
+          ) {
+            offerRegulatorService(party.party);
+          }
+        })
+      );
+    };
 
     if (operatorService.length === 0) {
       createOperatorService();
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
     } else {
-      userParties.forEach(party => {
-        if (
-          !regulatorServices.find(c => c.payload.customer === party.party) ||
-          !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-        ) {
-          offerRegulatorService(party.party);
-        }
-      });
+      offerRegulatorServices();
     }
 
     if (
@@ -411,16 +413,11 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     regulatorServiceOffers,
   ]);
 
-  async function offerRegulatorService(party: string) {
-    const regulatorRoleId = regulatorRoles[0]?.contractId;
-    if (regulatorRoleId) {
-      await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
-        customer: party,
-      });
-    }
-  }
-
-  return null;
+  return (
+    <div className="setup-page loading">
+      <LoadingWheel label={status} />
+    </div>
+  );
 };
 
 export const LoadingWheel = (props: { label?: string }) => {
