@@ -67,9 +67,9 @@ $(app_icon):
 
 # DIT target
 $(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
-	../daml-dit-ddit/ddit.pex build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
-# ddit build --force --skip-dar-build
+	ddit build --force --skip-dar-build
 # TO-DO: replace above with below after ddit is patched (duplicate artifacts)
+#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
