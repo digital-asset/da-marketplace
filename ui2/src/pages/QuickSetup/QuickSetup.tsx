@@ -12,7 +12,10 @@ import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
-import { Service as RegulatorService } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
+import {
+  IdentityVerificationRequest,
+  Service as RegulatorService,
+} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
@@ -268,20 +271,29 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
+    RegulatorService
+  );
 
-  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
-    useStreamQueries(VerifiedIdentity);
+  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
+    VerifiedIdentity
+  );
+
+  const {
+    contracts: verifiedIdentityRequests,
+    loading: verifiedIdentityRequestsLoading,
+  } = useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentitiesLoading) {
+    if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
       return;
     }
+
     const handleVerifiedIdentity = async () => {
       let retries = 0;
 
       const currentServices = regulatorServices.filter(s => s.payload.customer === party.party);
+      console.log('current services for', party.partyName, ' ', currentServices);
 
       while (retries < 3) {
         if (currentServices.length > 0) {
@@ -306,12 +318,15 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       }
     };
 
-    if (!verifiedIdentities.find(id => id.payload.customer === party.party)) {
+    if (
+      !verifiedIdentities.find(id => id.payload.customer === party.party) &&
+      !verifiedIdentityRequests.find(c => c.payload.customer === party.party)
+    ) {
+      console.log('requesting verfieid iD for', party.partyName);
       handleVerifiedIdentity();
     }
 
     if (userParties.every(p => !!verifiedIdentities.find(v => v.payload.customer === p.party))) {
-      halfSecondPromise();
       return onComplete();
     }
   }, [
@@ -319,6 +334,8 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     verifiedIdentitiesLoading,
     regulatorServices,
     regulatorServicesLoading,
+    verifiedIdentityRequestsLoading,
+    verifiedIdentityRequests,
     party,
   ]);
 
@@ -331,14 +348,19 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   const ledger = useLedger();
 
-  const { contracts: operatorService, loading: operatorServiceLoading } =
-    useStreamQueries(OperatorService);
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
-    useStreamQueries(RegulatorRole);
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
-  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
-    useStreamQueries(RegulatorOffer);
+  const { contracts: operatorService, loading: operatorServiceLoading } = useStreamQueries(
+    OperatorService
+  );
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
+    RegulatorRole
+  );
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
+    RegulatorService
+  );
+  const {
+    contracts: regulatorServiceOffers,
+    loading: regulatorServiceOffersLoading,
+  } = useStreamQueries(RegulatorOffer);
 
   const createOperatorService = async () => {
     return await ledger.create(OperatorService, { operator: adminCredentials.party });
@@ -384,8 +406,10 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     }
 
     if (
-      userParties.every(p =>
-        regulatorServices.find(contract => contract.payload.customer === p.party)
+      userParties.every(
+        p =>
+          !!regulatorServiceOffers.find(c => c.payload.customer === p.party) ||
+          !!regulatorServices.find(contract => contract.payload.customer === p.party)
       )
     ) {
       return onComplete();
