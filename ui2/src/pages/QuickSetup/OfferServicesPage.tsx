@@ -86,7 +86,6 @@ const OfferServicesPage = (props: {
               offerInfo={offerInfo}
               onFinish={() => {
                 setCreatingOffer(false);
-                setOfferInfo(undefined);
               }}
             />
           </QueryStreamProvider>

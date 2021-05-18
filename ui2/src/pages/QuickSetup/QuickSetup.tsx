@@ -34,8 +34,6 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import { RolesProvider } from '../../context/RolesContext';
-import { OffersProvider } from '../../context/OffersContext';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 export enum MenuItems {
@@ -216,14 +214,10 @@ const QuickSetup = () => {
             wsBaseUrl={wsBaseUrl}
           >
             <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-              <RolesProvider>
-                <OffersProvider>
-                  <AdminLedger
-                    adminCredentials={adminCredentials}
-                    onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
-                  />
-                </OffersProvider>
-              </RolesProvider>
+              <AdminLedger
+                adminCredentials={adminCredentials}
+                onComplete={() => setLoadingStatus(LoadingStatus.WAITING_FOR_TRIGGERS)}
+              />
             </QueryStreamProvider>
           </DamlLedger>
         )}
@@ -281,14 +275,20 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     useStreamQueries(VerifiedIdentity);
 
   useEffect(() => {
-    if (regulatorServicesLoading || verifiedIdentitiesLoading) return;
-
+    if (regulatorServicesLoading || verifiedIdentitiesLoading) {
+      console.log('waiting for regulator services and verified IDs');
+      return;
+    }
     const handleVerifiedIdentity = async () => {
       let retries = 0;
+
+      const currentServices = regulatorServices.filter(s => s.payload.customer === party.party);
+
       while (retries < 3) {
-        if (regulatorServices.length > 0) {
+        if (currentServices.length > 0) {
+          console.log('handing current services', currentServices);
           await Promise.all(
-            regulatorServices.map(async service => {
+            currentServices.map(async service => {
               await ledger.exercise(
                 RegulatorService.RequestIdentityVerification,
                 service.contractId,
@@ -322,7 +322,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
     regulatorServices,
     regulatorServicesLoading,
     party,
-    userParties.length,
   ]);
 
   return null;
@@ -331,6 +330,7 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
   const userParties = retrieveUserParties() || [];
+
   const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
@@ -342,6 +342,40 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
     useStreamQueries(RegulatorOffer);
 
+  const createOperatorService = async () => {
+    return await ledger.create(OperatorService, { operator: adminCredentials.party });
+  };
+
+  const createRegulatorRole = async () => {
+    return await ledger.create(RegulatorRole, {
+      operator: adminCredentials.party,
+      provider: adminCredentials.party,
+    });
+  };
+
+  const offerRegulatorService = async (party: string) => {
+    const regulatorRoleId = regulatorRoles[0]?.contractId;
+    if (regulatorRoleId) {
+      return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+        customer: party,
+      });
+    }
+  };
+
+  const offerRegulatorServices = async () => {
+    await Promise.all(
+      userParties.map(async party => {
+        if (
+          !regulatorServices.find(c => c.payload.customer === party.party) &&
+          !regulatorServiceOffers.find(c => c.payload.customer === party.party)
+        ) {
+          console.log('creating reg offer for', party.partyName);
+          return await offerRegulatorService(party.party);
+        }
+      })
+    );
+  };
+
   useEffect(() => {
     if (
       operatorServiceLoading ||
@@ -352,57 +386,19 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       return;
     }
 
-    const createOperatorService = async () => {
-      return await ledger.create(OperatorService, { operator: adminCredentials.party });
-    };
-
-    const createRegulatorRole = async () => {
-      return await ledger.create(RegulatorRole, {
-        operator: adminCredentials.party,
-        provider: adminCredentials.party,
-      });
-    };
-
-    const offerRegulatorService = async (party: string) => {
-      const regulatorRoleId = regulatorRoles[0]?.contractId;
-      if (regulatorRoleId) {
-        return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
-          customer: party,
-        });
-      }
-    };
-
-    const offerRegulatorServices = async () => {
-      return await Promise.all(
-        userParties.map(party => {
-          if (
-            !regulatorServices.find(c => c.payload.customer === party.party) ||
-            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-          ) {
-            offerRegulatorService(party.party);
-          }
-        })
-      );
-    };
-
     if (
-      userParties.every(
-        p =>
-          regulatorServiceOffers.find(contract => contract.payload.customer === p.party) ||
-          regulatorServices.find(contract => contract.payload.customer === p.party)
+      userParties.every(p =>
+        regulatorServices.find(contract => contract.payload.customer === p.party)
       )
     ) {
       return onComplete();
     }
     if (operatorService.length === 0) {
       createOperatorService();
-      return;
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
-      return;
     } else {
       offerRegulatorServices();
-      return;
     }
   }, [
     regulatorRolesLoading,
