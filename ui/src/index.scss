@@ -1,74 +1,60 @@
-/* Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved. */
-/* SPDX-License-Identifier: Apache-2.0  */
+@use 'themes/colors';
+@use 'themes/button';
+@use 'themes/overrides';
+
+@use 'components/Tile/TilePage';
+@use 'components/Tile/Tile';
+@use 'components/Table/StripedTable';
+@use 'components/Form/CalendarInput';
+
+@use 'pages/login/Login';
+@use 'pages/QuickSetup/QuickSetup';
+@use 'pages/landing/Landing';
+@use 'pages/manage/Manage';
+@use 'pages/setup/SetUp';
+@use 'pages/page/Page';
+@use 'pages/page/WelcomeHeader';
+@use 'pages/page/OverflowMenu';
+@use 'pages/clearing/Member';
+@use 'pages/custody/Assets';
+@use 'pages/custody/Account';
+@use 'pages/custody/New';
+@use 'pages/origination/New' as OriginationNew;
+@use 'pages/notifications/Notifications';
+@use 'pages/distribution/auction/Auction';
+@use 'pages/distribution/bidding/Bidding';
+@use 'pages/listing/Listing';
+@use 'pages/trading/Market';
+
+@use './icons/icons';
+@use './App';
 
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400&display=swap');
 
-@import 'overrides/overrides.scss';
-@import 'colors.scss';
-@import 'icons/Icons.scss';
-
-@import 'components/App.scss';
-
-@include overrides;
-
 @font-face {
-  font-family: "BrownStd-Regular";
-  src: url('../src/fonts/BrownStd-Regular.otf') format("opentype");
+  font-family: 'BrownStd-Regular';
+  src: url('../src/fonts/BrownStd-Regular.otf') format('opentype');
 }
 
 @font-face {
-  font-family: "BrownStd-Light";
-  src: url('../src/fonts/BrownStd-Light.otf') format("opentype");
+  font-family: 'BrownStd-Light';
+  src: url('../src/fonts/BrownStd-Light.otf') format('opentype');
 }
 
 @font-face {
-  font-family: "BrownStd-Bold";
-  src: url('../src/fonts/BrownStd-Bold.otf') format("opentype");
-}
-
-:root {
-  --spacing-gap: 2px;
-  --spacing-xs: 6px;
-  --spacing-s: 12px;
-  --spacing-m: 24px;
-  --spacing-l: 32px;
-  --spacing-xl: 48px;
-
-  --input-height: 40px;
-  --max-page-width: 1000px;
-}
-
-@keyframes fadeIn {
-  0% {
-    opacity:0;
-  }
-  100% {
-    opacity:1;
-  }
-}
-
-$spacing-gap: #{var(--spacing-gap)};
-$spacing-xs: #{var(--spacing-xs)};
-$spacing-s: #{var(--spacing-s)};
-$spacing-m: #{var(--spacing-m)};
-$spacing-l: #{var(--spacing-l)};
-$spacing-xl: #{var(--spacing-xl)};
-
-$input-height: #{var(--input-height)};
-$max-page-width: #{var(--max-page-width)};
-
-* {
-  font-family: "Open Sans";
+  font-family: 'BrownStd-Bold';
+  src: url('../src/fonts/BrownStd-Bold.otf') format('opentype');
 }
 
 html {
+  height: 100%;
+
   code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
   }
 
   h1.ui.header {
-    font-family: "BrownStd-Light";
+    font-family: 'BrownStd-Light';
     font-style: normal;
     font-weight: normal;
     font-size: 20px;
@@ -81,12 +67,12 @@ html {
     }
 
     &.bold {
-      font-family: "BrownStd-Bold";
+      font-family: 'BrownStd-Bold';
     }
   }
 
   h2.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 20px;
@@ -104,7 +90,7 @@ html {
   }
 
   h3.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 16px;
@@ -122,7 +108,7 @@ html {
   }
 
   h4.ui.header {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: 600;
     font-size: 14px;
@@ -131,13 +117,17 @@ html {
   }
 
   p {
-    font-family: "Open sans";
+    font-family: 'Open sans';
     font-style: normal;
     font-weight: normal;
     font-size: 14px;
     line-height: 19px;
     margin: 0px;
     color: var(--grey-10);
+
+    &.error {
+      color: var(--red-50);
+    }
 
     &.bold {
       font-weight: 600;
@@ -188,30 +178,70 @@ html {
 
   body {
     margin: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: var(--textcolor);
-    background-color: var(--cool-grey-10);
+    height: 100%;
+    background-color: colors.$background-dark;
+
+    .ui.page.modals {
+      z-index: 3;
+    }
 
     #root {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+      height: 100%;
 
-      @include app;
+      .app {
+        width: 100vw;
+        height: 100vh;
+
+        @include overrides.overrides();
+        @include WelcomeHeader.welcome-header();
+        @include icons.icons();
+        @include Tile.tile();
+        @include TilePage.tile-page();
+        @include StripedTable.striped-table();
+        @include CalendarInput.calendar-input();
+        @include App.app();
+        @include Manage.manage();
+        @include SetUp.set-up();
+        @include Page.page();
+        @include OverflowMenu.overflow-menu();
+        @include OriginationNew.origination-new();
+        @include Login.login-screen();
+        @include QuickSetup.quick-setup();
+        @include Landing.landing();
+        @include Assets.assets();
+        @include Member.member();
+        @include Account.account();
+        @include New.new-account();
+        @include Auction.auction();
+        @include Bidding.bidding();
+        @include Listing.listing();
+        @include Market.market();
+        @include Notifications.notifications();
+
+        .ui.message {
+          position: absolute;
+          top: 0px;
+          right: 20px;
+          min-width: 300px;
+          min-height: 125px;
+          animation: slideInLeft 0.7s;
+          z-index: 4;
+        }
+
+        @keyframes slideInLeft {
+          0% {
+            opacity: 0;
+            -webkit-transform: translateX(2000px);
+            -ms-transform: translateX(2000px);
+            transform: translateX(2000px);
+          }
+          100% {
+            -webkit-transform: translateX(0);
+            -ms-transform: translateX(0);
+            transform: translateX(0);
+          }
+        }
+      }
     }
   }
 }
-
-.ui.form .field>.selection.dropdown, .ui.form .field> .ui.input {
-  width: 230px;
-  border: 1px solid var(--cool-grey-10);
-  border-radius: 3px;
-}
-
-.ui.form textarea {
-  border: 1px solid var(--cool-grey-10);
-  border-radius: 3px;
-}
-
-@include icons;

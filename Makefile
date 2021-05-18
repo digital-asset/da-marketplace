@@ -1,7 +1,7 @@
 VERSION = $(shell ddit ditversion)
 PYTHON = pipenv run python
 
-UI_DIR = ui2
+UI_DIR = ui
 STATE_DIR = .dev
 PKG_DIR = pkg
 
