@@ -15,29 +15,27 @@
    - `Bob`
 3. Download `parties.json`
 4. Open deployed UI → Quick Setup
-5. Upload `parties.json`
-6. Wait ~5 mins for all auto-approve triggers for all parties to deploy
-7. Set up `Bank`
-   - **Legal Name**: `Bank`
-   - **Location**: `NYC`
-   - **Services**: `Custody`, `Distribution`, `Settlement`
-   - **Automation**: `SettlementInstructionTrigger`
-8. Set up `Exchange`
-   - **Legal Name**: `Exchange`
-   - **Location**: `NYC`
-   - **Services**: `Custody`, `Trading`, `Matching`, `Settlement`
-   - **Automation**: `MatchingEngine`, `SettlementInstructionTrigger`
-9. Set up `Ccp`
-   - **Legal Name**: `Central Clearing Counterparty`
-   - **Location**: `NYC`
-   - **Services**: `Clearing`
-   - **Automation**: `ClearingTrigger`
-10. \*Optional - if any of the above parties still lack a Legal Name after being added in Quick Setup, login as that party and request identity verification from the Landing page
+5. Upload `parties.json`, refresh the page and click Next
+6. Wait for all auto-approve triggers for all parties to deploy...
+7. Drag and drop roles to specific parties: (then click Next)
+    - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` roles
+    - Assign `Exchange` the `Custody`, `Trading`, `Matching`, and `Settlement` roles
+    - Assign `Ccp` the `Clearing` role
+9. Drag and drop automation to specific parties: (then click Next)
+    - Assign `Bank` the `SettlementInstructionTrigger`
+    - Assign `Exchange` the `MatchingEngine`, and `SettlementInstructionTrigger`
+    - Assign `Ccp` the `ClearingTrigger`
+9. Offer services to and from specific parties: (then click Next)
+    - As `Bank` offer the `Custody`, `Issuance` services to `Issuer`
+    - As `Bank` offer the `Custody` service to `Alice`
+    - As `Bank` offer the `Custody` service to `Ccp`
+    - as `Exchange` offer the `Listing` service to `Exchange`
+    - As `Exchange` offer the `Custody` service to `Alice`
+    - As `Exchange` offer the `Custody` service to `Bob`
 
 ## Issuing new assets
 
 11. Login as `Issuer`
-12. `Issuer`: Request `Custody`, `Issuance` services from the `Bank`
 13. `Issuer`: go to Wallet and create a regular account
     - **Provider**: `Bank`
     - **Account Name** : `MainIssuer-Bank`
@@ -72,7 +70,6 @@ Auctioning off assets
     - **Floor Price** : `300`
     - **Auction ID** : `auc1`
 21. Login as `Alice`
-22. `Alice`: Request `Custody` service from `Bank`
 23. `Alice`: Go to Wallet, create a regular account with `Bank`
     - **Provider**: `Bank`
     - **Account Name** : `MainAlice-Bank`
@@ -102,7 +99,6 @@ Auctioning off assets
 Setting up tradeable, collateralized markets
 
 34. Login as `Exchange`
-35. `Exchange`: Request `Listing` service from `Exchange`
 36. `Exchange`: Go to Setup, Create New Listing
     - **Traded Asset** : `BTC`
     - **Traded Asset Precision**: `6`
@@ -114,7 +110,6 @@ Setting up tradeable, collateralized markets
     - **Description**: `Bitcoin vs USD`
     - **Cleared by**: `-- Collateralized Market --`
 37. Login as `Alice`
-38. `Alice`: Request `Custody` service from the `Exchange`
 39. `Alice`: Go to Wallet, create a regular account
     - **Provider**: `Exchange`
     - **Account Name** : `MainAlice-Exchange`
@@ -137,7 +132,6 @@ Setting up tradeable, collateralized markets
     - **Price** : `500`
     - **Quantity** : `2`
 45. Login as `Bob`
-46. `Bob`: Request `Custody` service from `Exchange`
 47. `Bob`: Go to Wallet, create a regular account
     - **Provider**: `Exchange`
     - **Account Name** : `MainBob-Exchange`
@@ -158,13 +152,6 @@ Setting up tradeable, collateralized markets
     - **Time in Force** : `Good Till Cancelled`
     - **Price** : `500`
     - **Quantity** : `1.0`
-
-## Central counterparty clearing
-
-Trading mediated through a CCP
-
-52. Login as `Ccp`
-53. `Ccp`: Request Custody from `Bank`
 
 # Read More
 

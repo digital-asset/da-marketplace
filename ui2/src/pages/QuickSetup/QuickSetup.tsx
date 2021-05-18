@@ -366,14 +366,14 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     const offerRegulatorService = async (party: string) => {
       const regulatorRoleId = regulatorRoles[0]?.contractId;
       if (regulatorRoleId) {
-        await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+        return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
           customer: party,
         });
       }
     };
 
     const offerRegulatorServices = async () => {
-      await Promise.all(
+      return await Promise.all(
         userParties.map(party => {
           if (
             !regulatorServices.find(c => c.payload.customer === party.party) ||
@@ -385,14 +385,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       );
     };
 
-    if (operatorService.length === 0) {
-      createOperatorService();
-    } else if (regulatorRoles.length === 0) {
-      createRegulatorRole();
-    } else {
-      offerRegulatorServices();
-    }
-
     if (
       userParties.every(
         p =>
@@ -401,6 +393,16 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       )
     ) {
       return onComplete();
+    }
+    if (operatorService.length === 0) {
+      createOperatorService();
+      return;
+    } else if (regulatorRoles.length === 0) {
+      createRegulatorRole();
+      return;
+    } else {
+      offerRegulatorServices();
+      return;
     }
   }, [
     regulatorRolesLoading,

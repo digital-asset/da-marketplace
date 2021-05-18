@@ -162,14 +162,12 @@ const OfferForm = (props: {
           setOfferInfo({
             ...offerInfo,
             provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-            customer: undefined,
           })
         }
         options={partyOptions}
       />
       <Form.Select
         className="offer-select"
-        disabled={!offerInfo?.provider}
         label={<p className="input-label">Service:</p>}
         placeholder="Select..."
         onChange={(_, data: any) =>
@@ -180,7 +178,6 @@ const OfferForm = (props: {
       <Form.Select
         className="offer-select"
         label={<p className="input-label">Customer:</p>}
-        disabled={!offerInfo?.provider}
         placeholder="Select..."
         onChange={(_, data: any) =>
           setOfferInfo({
@@ -188,7 +185,7 @@ const OfferForm = (props: {
             customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
           })
         }
-        options={partyOptions.filter(p => p.value != offerInfo?.provider)}
+        options={partyOptions}
       />
 
       <Button
@@ -290,6 +287,7 @@ const OfferForm = (props: {
         </p>
       );
     }
+
     return createOffer();
   }
 };
