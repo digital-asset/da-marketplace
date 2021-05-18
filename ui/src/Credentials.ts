@@ -1,10 +1,10 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import {encode} from 'jwt-simple'
-import {expiredToken} from '@daml/hub-react'
+import { encode } from 'jwt-simple';
+import { expiredToken } from '@daml/hub-react';
 
-import {ledgerId} from './config'
+import { ledgerId, publicParty } from './config';
 
 export const APPLICATION_ID: string = 'da-marketplace';
 
@@ -17,18 +17,24 @@ export type Credentials = {
   party: string;
   token: string;
   ledgerId: string;
-}
+};
 
-function isCredentials(credentials: any): credentials is Credentials {
-  return typeof credentials.party === 'string' &&
-         typeof credentials.token === 'string' &&
-         typeof credentials.ledgerId === 'string'
+export function isCredentials(credentials: any): credentials is Credentials {
+  return (
+    typeof credentials.party === 'string' &&
+    typeof credentials.token === 'string' &&
+    typeof credentials.ledgerId === 'string'
+  );
 }
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
 export function storeCredentials(credentials?: Credentials): void {
   sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
+}
+
+export function clearCredentials(): void {
+  sessionStorage.removeItem(CREDENTIALS_STORAGE_KEY);
 }
 
 export function retrieveCredentials(): Credentials | undefined {
@@ -44,26 +50,27 @@ export function retrieveCredentials(): Credentials | undefined {
       return credentials;
     }
   } catch {
-    console.error("Could not parse credentials: ", credentialsJson);
+    console.error('Could not parse credentials: ', credentialsJson);
   }
 
   return undefined;
 }
 
-function computeToken(party: string): string {
+export function computeToken(party: string): string {
   const payload = {
-    "https://daml.com/ledger-api": {
-      "ledgerId": ledgerId,
-      "applicationId": APPLICATION_ID,
-      "actAs": [party]
-    }
+    'https://daml.com/ledger-api': {
+      ledgerId: ledgerId,
+      applicationId: APPLICATION_ID,
+      actAs: [party],
+      readAs: [party, publicParty],
+    },
   };
   return encode(payload, SECRET_KEY, 'HS256');
 }
 
 export const computeCredentials = (party: string): Credentials => {
   const token = computeToken(party);
-  return {party, token, ledgerId};
-}
+  return { party, token, ledgerId };
+};
 
 export default Credentials;
