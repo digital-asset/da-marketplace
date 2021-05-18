@@ -14,8 +14,8 @@ import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
-import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { retrieveParties } from '../../Parties';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -62,17 +62,17 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
 const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
   const { setLoading } = props;
 
-  const { identities, loading: identitiesLoading } = useVerifiedParties();
+  const { identities } = useVerifiedParties();
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
 
   useEffect(() => {
-    setLoading(rolesLoading || identitiesLoading);
-  }, [rolesLoading, identitiesLoading]);
+    setLoading(rolesLoading);
+  }, [rolesLoading]);
 
   return (
     <div className="all-parties">
-      <h4>Parties</h4>
+      <p className="bold">Parties</p>
       <div className="party-names">
         {identities.map(p => (
           <PartyRow
@@ -91,10 +91,9 @@ const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
 const PartyRow = (props: { partyId: string; roles: string[] }) => {
   const { partyId, roles } = props;
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
-  const { getName } = usePartyName('');
-
   const parties = retrieveParties() || [];
 
+  const { getName } = usePartyName('');
   const token = parties.find(p => p.party === partyId)?.token;
 
   useEffect(() => {
