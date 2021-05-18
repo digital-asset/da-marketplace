@@ -4,8 +4,6 @@ import { Button } from 'semantic-ui-react';
 
 import DamlLedger from '@daml/react';
 
-import { useRolesContext } from '../../context/RolesContext';
-
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
@@ -16,6 +14,7 @@ import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 import { retrieveParties } from '../../Parties';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
@@ -41,12 +40,14 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
       >
         <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
           <ServicesProvider>
-            <OffersProvider>
-              <div className="page-row">
-                <PartiesReview setLoading={setLoading} />
-                <OffersTable />
-              </div>
-            </OffersProvider>
+            <RolesProvider>
+              <OffersProvider>
+                <div className="page-row">
+                  <PartiesReview setLoading={setLoading} />
+                  <OffersTable />
+                </div>
+              </OffersProvider>
+            </RolesProvider>
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>

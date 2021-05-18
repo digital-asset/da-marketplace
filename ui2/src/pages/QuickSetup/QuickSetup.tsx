@@ -276,7 +276,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 
   useEffect(() => {
     if (regulatorServicesLoading || verifiedIdentitiesLoading) {
-      console.log('waiting for regulator services and verified IDs');
       return;
     }
     const handleVerifiedIdentity = async () => {
@@ -286,7 +285,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 
       while (retries < 3) {
         if (currentServices.length > 0) {
-          console.log('handing current services', currentServices);
           await Promise.all(
             currentServices.map(async service => {
               await ledger.exercise(
@@ -369,7 +367,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
           !regulatorServices.find(c => c.payload.customer === party.party) &&
           !regulatorServiceOffers.find(c => c.payload.customer === party.party)
         ) {
-          console.log('creating reg offer for', party.partyName);
           return await offerRegulatorService(party.party);
         }
       })
