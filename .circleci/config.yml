@@ -114,6 +114,9 @@ jobs:
         type: string
     executor: daml-executor
     steps:
+      - add_ssh_keys:
+          fingerprints:
+              - "47:af:b2:64:7a:bb:03:49:99:93:e2:74:97:55:f4:69"
       - checkout
       - init_submodules
       - install_sdk:

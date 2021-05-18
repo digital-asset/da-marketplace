@@ -1,8 +1,8 @@
-# This script ensures that version literals specified in all of the marketplace sub-components
-# match exactly with the canonical version supplied in `dabl-meta.yaml`
-
 #!/bin/bash
 set -eu
+
+# This script ensures that version literals specified in all of the marketplace sub-components
+# match exactly with the canonical version supplied in `dabl-meta.yaml`
 
 app_version=$(yq r dabl-meta.yaml 'catalog.version')
 return_code=0
