@@ -413,11 +413,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     regulatorServiceOffers,
   ]);
 
-  return (
-    <div className="setup-page loading">
-      <LoadingWheel label={status} />
-    </div>
-  );
+  return null;
 };
 
 export const LoadingWheel = (props: { label?: string }) => {
