@@ -15,12 +15,17 @@ Try out the whole application easily via [Daml Hub](https://hub.daml.com).
 
 The newest version of the app contains a rewrite of the Daml models. They are now more flexible and featureful than the ones from the `v0.1.x` series, and it is recommended to upgrade.
 
-If you've cloned this repository in the past, there are some changes to the branches. First, the default branch has changed from `master` to `main`. `main` now contains the 0.2.x series of code, and the old 0.1.x series HEAD now lives on the branch `TBD`.
+If you've cloned this repository in the past, there are some changes to the branches. First, the default branch has changed from `master` to `main`. `main` now contains the 0.2.x series of code, and the old 0.1.x series HEAD now lives on the branch `0.1.x`.
 
 To get up to date, run the following:
 
 ```shell
-$ TBD
+$ git fetch
+$ git checkout main
+$ git remote set-head origin main
+$ git remote prune origin
+$ git branch -d master
+$ git submodule update --init --recursive
 ```
 
 ## Requirements

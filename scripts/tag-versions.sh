@@ -1,8 +1,8 @@
-# This script writes changes to files to bump versions everywhere that's needed
-# Use with caution, and verify results afterwards - it relies on regexes!
-
 #!/bin/bash
 set -eu
+
+# This script writes changes to files to bump versions everywhere that's needed
+# Use with caution, and verify results afterwards - it relies on regexes!
 
 app_version=$1
 
