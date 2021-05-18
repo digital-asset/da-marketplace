@@ -153,6 +153,105 @@ Setting up tradeable, collateralized markets
     - **Price** : `500`
     - **Quantity** : `1.0`
 
+## Setup Clearinghouse
+52. Login as `Ccp`
+53. `Ccp`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `Clearing-Bank`
+    - **Account Type** : `Regular`
+54. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
+    - **Clearing Account**: `Clearing-Bank`
+55. Login as `Alice`
+56. `Alice`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `ClearingAlice-Bank`
+    - **Account Type** : `Regular`
+57. `Alice`: Go to Wallet, create an allocation account
+    - **Provider**: `Bank`
+    - **Account Name** : `MarginAlice-Bank`
+    - **Account Type** : `Allocation`
+    - **Nominee** : `Ccp`
+58. `Alice`: On Landing, click "Request Clearing Service"
+    - **Provider**: `CCP`
+    - **Clearing Account**: `ClearingAlice-Bank`
+    - **Margin Account**: `MarginAlice-Bank`
+59. `Alice`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+60. Login as `Bob`
+61. `Bob`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `ClearingBob-Bank`
+    - **Account Type** : `Regular`
+62. `Bob`: Go to Wallet, create an allocation account
+    - **Provider**: `Bank`
+    - **Account Name** : `MarginBob-Bank`
+    - **Account Type** : `Allocation`
+    - **Nominee** : `Ccp`
+63. `Bob`: On Landing, click "Request Clearing Service"
+    - **Provider**: `CCP`
+    - **Clearing Account**: `ClearingBob-Bank`
+    - **Margin Account**: `MarginBob-Bank`
+64. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+
+### Test Margin Calls
+Perform successful margin call for Alice
+
+65. Login as `Ccp`
+66. `Ccp`: on `Members` page, click "Perform Margin Call":
+    - **Customer**: `Alice`
+    - **Amount**: 5000
+
+Fail and retry a margin calculation for `Bob`
+67. `Ccp`: on `Members` page, click "Perform Margin Call":
+    - **Customer** : `Bob`
+    - **Amount** : 12000
+68. Login as `Bob`
+69. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 5000 USD
+70. `Bob`: Go to Clearing page, click "Retry" on failed Margin Call
+
+
+### Test Mark to Market
+Transfer funds from Alice to Bob via central countrerparty.
+
+71. `Ccp`: on `Members` page, click "Perform Mark to Market":
+    - **Customer**: `Alice`
+    - **Amount**: 5000
+72. `Ccp`: on `Members` page, click "Perform Mark to Market":
+    - **Customer** : `Bob`
+    - **Amount** : -5000
+
+## Cleared Secondary Market
+Setting up tradeable, cleared markets
+
+73. Login as `Exchange`
+74. On landing page, click "Request Market Clearing"
+    - **Provider** : `Ccp`
+75. `Exchange`: Go to Setup, Create New Listing
+    - **Traded Asset** : `BTC`
+    - **Traded Asset Precision**: `6`
+    - **Quoted Asset** : `USD`
+    - **Quoted Asset Precision**: `2`
+    - **Minimum Tradable Quantity**: `1`
+    - **Maximum Tradable Quantity**: `10000`
+    - **Symbol**: `BTCUSD-CLR`
+    - **Description**: `Cleared Bitcoin vs USD`
+    - **Cleared by**: `CCP`
+76. Login as `Alice`
+77. `Alice`: Go to BTCUSD-CLR Market, place an order
+    - **Buy**
+    - **Limit**
+    - **Time in Force** : `Good Till Cancelled`
+    - **Price** : `500`
+    - **Quantity** : `2`
+78. Login as `Bob`
+79. `Bob`: Go to BTCUSD-CLR Market, place an order (to partially match `Alice`'s Buy)
+    - **Sell**
+    - **Market**
+    - **Time in Force** : `Good Till Cancelled`
+    - **Quantity** : `1.0`
+80. Login as `Ccp`
+81. On Manage/Clearing, click "Request FV" next to Exchange's Market.Clearing role
+    - **Currency** : USD
+
 # Read More
 
 - [Build &amp; deploy source code to Daml Hub](./damlhub_deployment.md)
