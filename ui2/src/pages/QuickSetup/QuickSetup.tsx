@@ -271,18 +271,14 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
 
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
-    RegulatorService
-  );
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
 
-  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } = useStreamQueries(
-    VerifiedIdentity
-  );
+  const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
+    useStreamQueries(VerifiedIdentity);
 
-  const {
-    contracts: verifiedIdentityRequests,
-    loading: verifiedIdentityRequestsLoading,
-  } = useStreamQueries(IdentityVerificationRequest);
+  const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
+    useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
@@ -293,7 +289,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       let retries = 0;
 
       const currentServices = regulatorServices.filter(s => s.payload.customer === party.party);
-      console.log('current services for', party.partyName, ' ', currentServices);
 
       while (retries < 3) {
         if (currentServices.length > 0) {
@@ -322,7 +317,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       !verifiedIdentities.find(id => id.payload.customer === party.party) &&
       !verifiedIdentityRequests.find(c => c.payload.customer === party.party)
     ) {
-      console.log('requesting verfieid iD for', party.partyName);
       handleVerifiedIdentity();
     }
 
@@ -348,19 +342,14 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   const ledger = useLedger();
 
-  const { contracts: operatorService, loading: operatorServiceLoading } = useStreamQueries(
-    OperatorService
-  );
-  const { contracts: regulatorRoles, loading: regulatorRolesLoading } = useStreamQueries(
-    RegulatorRole
-  );
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } = useStreamQueries(
-    RegulatorService
-  );
-  const {
-    contracts: regulatorServiceOffers,
-    loading: regulatorServiceOffersLoading,
-  } = useStreamQueries(RegulatorOffer);
+  const { contracts: operatorService, loading: operatorServiceLoading } =
+    useStreamQueries(OperatorService);
+  const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
+    useStreamQueries(RegulatorRole);
+  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
+    useStreamQueries(RegulatorService);
+  const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
+    useStreamQueries(RegulatorOffer);
 
   const createOperatorService = async () => {
     return await ledger.create(OperatorService, { operator: adminCredentials.party });
