@@ -54,23 +54,21 @@ const DragAndDropToParties = (props: {
       <h4>{title}</h4>
       <div className="page-row">
         <div>
-          <p className="bold here">Parties</p>
-          {identities.length > 0 && (
-            <div className="party-names">
-              {identities.map((p, i) => (
-                <PartyRowDropZone
-                  key={i}
-                  party={p}
-                  handleAddItem={handleAddItem}
-                  roles={allRoles
-                    .filter(r => r.contract.payload.provider === p.payload.customer)
-                    .map(r => r.role)}
-                  triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
-                  clearingOffer={findClearingOffer(p.payload.customer)}
-                />
-              ))}
-            </div>
-          )}
+          <p className="bold">Parties</p>
+          <div className="party-names">
+            {identities.map((p, i) => (
+              <PartyRowDropZone
+                key={i}
+                party={p}
+                handleAddItem={handleAddItem}
+                roles={allRoles
+                  .filter(r => r.contract.payload.provider === p.payload.customer)
+                  .map(r => r.role)}
+                triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
+                clearingOffer={findClearingOffer(p.payload.customer)}
+              />
+            ))}
+          </div>
         </div>
         <div className="arrow">
           <ArrowLeftIcon color="grey" />
