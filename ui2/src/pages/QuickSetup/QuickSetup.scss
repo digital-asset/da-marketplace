@@ -333,8 +333,9 @@
             justify-content: space-between;
             width: 100%;
 
-            .party-name {
+            .party-name, .party-names {
               width: unset;
+              min-width: unset;
             }
           }
           .all-offers,

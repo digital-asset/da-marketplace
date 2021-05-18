@@ -9,7 +9,6 @@ import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../
 import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
 
-import { LoadingWheel } from './QuickSetup';
 import { formatTriggerName } from './DragAndDropToParties';
 import { OffersTable } from './OfferServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
@@ -19,15 +18,6 @@ import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
-  const [loading, setLoading] = useState<boolean>(false);
-
-  if (loading) {
-    return (
-      <div className="setup-page loading">
-        <LoadingWheel label="Loading Review Data..." />
-      </div>
-    );
-  }
 
   return (
     <div className="setup-page review">
@@ -43,7 +33,7 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
             <RolesProvider>
               <OffersProvider>
                 <div className="page-row">
-                  <PartiesReview setLoading={setLoading} />
+                  <PartiesReview />
                   <OffersTable />
                 </div>
               </OffersProvider>
@@ -59,20 +49,14 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
   );
 };
 
-const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
-  const { setLoading } = props;
-
+const PartiesReview = () => {
   const { identities } = useVerifiedParties();
 
-  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-
-  useEffect(() => {
-    setLoading(rolesLoading);
-  }, [rolesLoading]);
+  const { roles: allRoles } = useRolesContext();
 
   return (
     <div className="all-parties">
-      <p className="bold">Parties</p>
+      <h4>Parties</h4>
       <div className="party-names">
         {identities.map(p => (
           <PartyRow
