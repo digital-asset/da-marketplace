@@ -31,14 +31,14 @@ const DragAndDropToParties = (props: {
   onComplete: () => void;
 }) => {
   const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
-  const { identities } = useVerifiedParties();
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
 
-  if (rolesLoading || offersLoading) {
+  if (rolesLoading || offersLoading || identitiesLoading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading Parties..." />
+        <LoadingWheel label={`Loading parties and ${dropItemType}...`} />
       </div>
     );
   }
@@ -55,20 +55,22 @@ const DragAndDropToParties = (props: {
       <div className="page-row">
         <div>
           <p className="bold here">Parties</p>
-          <div className="party-names">
-            {identities.map((p, i) => (
-              <PartyRowDropZone
-                key={i}
-                party={p}
-                handleAddItem={handleAddItem}
-                roles={allRoles
-                  .filter(r => r.contract.payload.provider === p.payload.customer)
-                  .map(r => r.role)}
-                triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
-                clearingOffer={findClearingOffer(p.payload.customer)}
-              />
-            ))}
-          </div>
+          {identities.length > 0 && (
+            <div className="party-names">
+              {identities.map((p, i) => (
+                <PartyRowDropZone
+                  key={i}
+                  party={p}
+                  handleAddItem={handleAddItem}
+                  roles={allRoles
+                    .filter(r => r.contract.payload.provider === p.payload.customer)
+                    .map(r => r.role)}
+                  triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
+                  clearingOffer={findClearingOffer(p.payload.customer)}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div className="arrow">
           <ArrowLeftIcon color="grey" />

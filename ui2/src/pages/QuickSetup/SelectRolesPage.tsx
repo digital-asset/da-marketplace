@@ -57,7 +57,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
   if (rolesLoading || offersLoading || operatorLoading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label="Loading Parties and Roles..." />
+        <LoadingWheel label="Loading parties and roles..." />
       </div>
     );
   }

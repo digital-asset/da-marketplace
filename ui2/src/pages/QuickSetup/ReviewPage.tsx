@@ -19,9 +19,12 @@ import { retrieveParties } from '../../Parties';
 
 const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
-  const [loading, setLoading] = useState<boolean>(false);
 
-  if (loading) {
+  const { loading: identitiesLoading } = useVerifiedParties();
+
+  const { loading: rolesLoading } = useRolesContext();
+
+  if (rolesLoading || identitiesLoading) {
     return (
       <div className="setup-page loading">
         <LoadingWheel label="Loading Review Data..." />
@@ -43,7 +46,7 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
             <RolesProvider>
               <OffersProvider>
                 <div className="page-row">
-                  <PartiesReview setLoading={setLoading} />
+                  <PartiesReview />
                   <OffersTable />
                 </div>
               </OffersProvider>
@@ -59,16 +62,10 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
   );
 };
 
-const PartiesReview = (props: { setLoading: (bool: boolean) => void }) => {
-  const { setLoading } = props;
-
+const PartiesReview = () => {
   const { identities } = useVerifiedParties();
 
-  const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-
-  useEffect(() => {
-    setLoading(rolesLoading);
-  }, [rolesLoading]);
+  const { roles: allRoles } = useRolesContext();
 
   return (
     <div className="all-parties">

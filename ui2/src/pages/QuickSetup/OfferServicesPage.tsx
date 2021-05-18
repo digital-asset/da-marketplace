@@ -108,9 +108,7 @@ const OfferForm = (props: {
 }) => {
   const { offerInfo, setOfferInfo, createOffer, creatingOffer, backToSelectRoles } = props;
 
-  const [loading, setLoading] = useState(false);
-
-  const { identities } = useVerifiedParties();
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { getName } = usePartyName('');
 
   const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
@@ -130,23 +128,14 @@ const OfferForm = (props: {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  useEffect(() => {
-    setLoading(
-      tradingRoleLoading ||
-        clearingRoleLoading ||
-        custodyRoleLoading ||
-        loadingServiceOffers ||
-        servicesLoading
-    );
-  }, [
-    tradingRoleLoading,
-    clearingRoleLoading,
-    custodyRoleLoading,
-    loadingServiceOffers,
-    servicesLoading,
-  ]);
-
-  if (loading) {
+  if (
+    tradingRoleLoading ||
+    clearingRoleLoading ||
+    custodyRoleLoading ||
+    loadingServiceOffers ||
+    servicesLoading ||
+    identitiesLoading
+  ) {
     return null;
   }
 

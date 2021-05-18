@@ -38,17 +38,11 @@ const FinishPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
-  const { identities } = useVerifiedParties();
-
-  const [loading, setLoading] = useState<boolean>(false);
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
 
-  useEffect(() => {
-    setLoading(rolesLoading);
-  }, [rolesLoading]);
-
-  if (loading) {
+  if (rolesLoading || identitiesLoading) {
     return (
       <div className="setup-page loading">
         <LoadingWheel label="Loading Log In Data..." />
