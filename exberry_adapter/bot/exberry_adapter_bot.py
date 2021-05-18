@@ -2,7 +2,7 @@ import logging
 import os
 
 import dazl
-from dazl import create, exercise, exercise_by_key, ContractId, ContractData
+from dazl import create, exercise, exercise_by_key
 
 import time
 from datetime import datetime
@@ -30,13 +30,6 @@ class MARKETPLACE:
     CreateListingRequest = 'Marketplace.Listing.Service:CreateListingRequest'
     MatchingService = 'Marketplace.Trading.Matching.Service:Service'
 
-class FakeContractEvent():
-    def __init__(self, cid, cdata):
-        self.cid = cid
-        self.cdata = cdata
-
-    cid: ContractId
-    cdata: ContractData
 
 def main():
     url = os.getenv('DAML_LEDGER_URL')
@@ -51,47 +44,9 @@ def main():
 
     client = network.aio_party(exchange_party)
 
-    def find_and_run(template_name, fn):
-        commands = []
-        templates = client.find_active(template_name)
-
-        for (cid,item) in templates.items():
-            event = FakeContractEvent(cid, item)
-            result = fn(event)
-            if isinstance(result, list):
-                commands.extend(result)
-            else:
-                commands.append(result)
-        return commands
-
-    def collect_run_commands(template_pairs):
-        commands = []
-        for (template, fn) in template_pairs:
-            commands.extend(find_and_run(template, fn))
-        return commands
-
     @client.ledger_ready()
     def say_hello(event):
         logging.info("DA Marketplace <> Exberry adapter is ready!")
-
-        return collect_run_commands([
-            (EXBERRY.ExecutionReport, handle_execution_report),
-
-            (MARKETPLACE.CreateListingRequest, handle_new_listing),
-            (MARKETPLACE.CreateOrderRequest, handle_order_request),
-
-            (EXBERRY.Instrument, handle_new_listing_success),
-            (EXBERRY.FailedInstrumentRequest, handle_new_listing_failure),
-
-            (EXBERRY.NewOrderSuccess, handle_new_order_success),
-            (EXBERRY.NewOrderFailure, handle_new_order_failure),
-
-            (MARKETPLACE.CancelOrderRequest, handle_order_cancel_request),
-
-            (EXBERRY.CancelOrderSuccess, handle_cancel_order_success),
-            (EXBERRY.CancelOrderFailure, handle_cancel_order_failure),
-
-        ])
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
