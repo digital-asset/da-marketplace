@@ -146,6 +146,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   return (
     <div className="assets">
       <ActionTile
+        title="Clearing"
         actions={[
           {
             label: 'Offer Clearing Service',
@@ -157,7 +158,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
           },
         ]}
       />
-      <Header as="h3">Current Services</Header>
+      <Header as="h2">Current Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         loading={marketServicesLoading}

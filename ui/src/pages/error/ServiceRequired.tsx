@@ -237,7 +237,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
           />
         ) : (
           <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
-            <Modal.Header as="h3">
+            <Modal.Header as="h2">
               Waiting for {service} service request to be accepted...
             </Modal.Header>
             <Modal.Content>Request created...</Modal.Content>

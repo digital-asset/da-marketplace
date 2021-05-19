@@ -47,6 +47,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   return (
     <div className="assets">
       <ActionTile
+        title="Clearing"
         actions={[
           {
             label: 'Manage Clearing Services',

@@ -41,10 +41,12 @@
               padding-top: 0px;
             }
 
-            h3.ui.header {
-              color: var(--cool-grey-60);
-              padding: $spacing-s;
+            p.sub-menu-header {
+              color: var(--white);
+              font-weight: 200;
+              padding: $spacing-m $spacing-m $spacing-s $spacing-m;
               margin: 0;
+              font-size: 12px;
             }
           }
 

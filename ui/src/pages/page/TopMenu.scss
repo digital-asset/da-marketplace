@@ -32,6 +32,11 @@
         > .header > .content {
           display: flex;
           align-items: center;
+          .icon-header {
+            .icon path {
+              fill: var(--green-50);
+            }
+          }
         }
 
         .menu-button {
@@ -44,13 +49,9 @@
         align-self: flex-start;
         height: 100%;
 
-        &.divider {
-          border-left: var(--cool-grey-90) 1px solid;
-        }
-
         .log-out {
           display: flex;
-          align-items: flex-start;
+          align-items: flex-center;
 
           .icon.logout-icon {
             margin-left: $spacing-s;
@@ -93,7 +94,7 @@
       }
 
       .log-out {
-        h3 {
+        p {
           display: none;
         }
 

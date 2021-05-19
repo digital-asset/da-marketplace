@@ -42,8 +42,11 @@
           align-items: center;
           background: var(--blue-100);
           border-radius: 40px;
+          font-family: Open Sans;
+          font-style: normal;
           font-weight: 600;
           font-size: 24px;
+          line-height: 33px;
           padding: $spacing-s $spacing-m;
           margin-bottom: $spacing-s;
           line-height: 33px;
@@ -76,6 +79,15 @@
         .link > a {
           font-size: 14px;
         }
+
+        .balance {
+          display: flex;
+          flex-direction: row;
+          align-items: baseline;
+          h3 {
+            margin: 0px;
+          }
+        }
       }
 
       .relationship-tile {
@@ -100,6 +112,13 @@
 
             &:last-child {
               margin-right: 0;
+            }
+
+            p.p2.label {
+              color: var(--cool-grey-20);
+              background-color: var(--blue-100);
+              padding: $spacing-xs $spacing-s;
+              border-radius: 6px;
             }
           }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Label } from 'semantic-ui-react';
+import { Button, Label, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -83,7 +83,9 @@ const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
       <div className="child provider">{name}</div>
       <div className="child">
         {services.map(s => (
-          <Label key={s} content={s} />
+          <p className="p2 label" key={s}>
+            {s}
+          </p>
         ))}
       </div>
     </Tile>
@@ -298,11 +300,10 @@ const Landing = () => {
         <Tile>
           <div className="link-tile">
             <div>
-              <h3>Portfolio</h3>
+              <Header as="h2">Portfolio</Header>
               <span className="balance">
-                <h3>{portfolio}</h3>
+                <h3>{portfolio}</h3>&nbsp;<span>USD</span>
               </span>
-              <span>USD</span>
             </div>
             <div className="link">
               <NavLink to="/app/custody/assets">View Wallet</NavLink>
@@ -313,7 +314,9 @@ const Landing = () => {
 
       <div className="col col-2">
         <div>
-          <h2 className="header">Network</h2>
+          <Header as="h2" className="header">
+            Network
+          </Header>
           <OverflowMenu>
             <OverflowMenuEntry
               label="Request Custody Service"

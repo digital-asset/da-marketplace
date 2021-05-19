@@ -8,12 +8,18 @@
     background-color: white;
     color: var(--textcolor);
     padding: v.$spacing-m;
-    border-radius: 4px;
+    border-radius: 2px;
     margin-bottom: v.$spacing-l;
     text-align: left;
 
     .striped-table table thead tr th {
       background-color: white;
+    }
+
+    .action-row {
+      .ghost {
+        margin-right: v.$spacing-s;
+      }
     }
 
     &.thin-gap {

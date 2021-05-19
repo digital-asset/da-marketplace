@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Form } from 'semantic-ui-react';
+import { Form, Header } from 'semantic-ui-react';
 
 export interface RegularField {
   label: string;
@@ -40,7 +40,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
       return (
         <Form.Select
           key={key}
-          label={!placeholderLabels ? field.label : undefined}
+          label={!placeholderLabels ? <Header as="h4">{field.label}</Header> : undefined}
           placeholder={!!placeholderLabels ? field.label : undefined}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
           options={field.items.map(item => ({
@@ -55,7 +55,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
       return (
         <Form.Checkbox
           key={key}
-          label={field.label}
+          label={<Header as="h4">{field.label}</Header>}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.checked }))}
         />
       );
@@ -64,7 +64,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
         <Form.Input
           key={key}
           required
-          label={field.label}
+          label={<Header as="h4">{field.label}</Header>}
           type={field.type}
           onChange={(_, change) => setState(state => ({ ...state, [fieldName]: change.value }))}
           placeholder={field.type === 'date' ? 'YYYY-MM-DD' : ''}

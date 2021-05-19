@@ -13,8 +13,8 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
+import BackButton from '../../components/Common/BackButton';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
-import { ArrowLeftIcon } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import _ from 'lodash';
@@ -235,9 +235,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon /> back
-      </Button>
+      <BackButton />
       <InputDialog {...transferDialogProps} />
       <InputDialog {...creditDialogProps} />
       <div className="account">

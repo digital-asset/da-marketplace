@@ -11,7 +11,7 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import { Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -43,38 +43,37 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   return (
-    <StripedTable
-      headings={[
-        'Service',
-        'Operator',
-        'Provider',
-        'Consumer',
-        'Role',
-        'Trading Account',
-        'Allocation Account',
-        'Action',
-        // 'Details'
-      ]}
-      rows={services.map((c, i) => {
-        return {
-          elements: [
-            getTemplateId(c.templateId),
-            getName(c.payload.operator),
-            getName(c.payload.provider),
-            getName(c.payload.customer),
-            party === c.payload.provider ? 'Provider' : 'Consumer',
-            c.payload.tradingAccount.id.label,
-            c.payload.allocationAccount.id.label,
-            <Button className="ghost warning" onClick={() => terminateService(c)}>
-              Terminate
-            </Button>,
-            // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
-            //     <ArrowRightIcon/>
-            // </NavLink>
-          ],
-        };
-      })}
-    />
+    <>
+      <Header as="h2">Trading</Header>
+      <StripedTable
+        headings={[
+          'Service',
+          'Operator',
+          'Provider',
+          'Consumer',
+          'Role',
+          'Trading Account',
+          'Allocation Account',
+          'Action',
+        ]}
+        rows={services.map((c, i) => {
+          return {
+            elements: [
+              getTemplateId(c.templateId),
+              getName(c.payload.operator),
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Consumer',
+              c.payload.tradingAccount.id.label,
+              c.payload.allocationAccount.id.label,
+              <Button className="ghost warning" onClick={() => terminateService(c)}>
+                Terminate
+              </Button>,
+            ],
+          };
+        })}
+      />
+    </>
   );
 };
 

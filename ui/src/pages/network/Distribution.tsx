@@ -12,6 +12,7 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
+import { Header } from 'semantic-ui-react';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -41,6 +42,7 @@ export const DistributionServiceTable = () => {
 
   return (
     <>
+      <Header as="h2">Services</Header>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
         loading={biddingServicesLoading || auctionServicesLoading}
