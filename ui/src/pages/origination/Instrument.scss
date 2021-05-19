@@ -1,0 +1,35 @@
+@use '../../themes/variables' as v;
+
+@mixin instrument {
+  .instrument {
+    .position-holdings {
+      display: flex;
+      flex-direction: row;
+
+      .tile:nth-of-type(2) {
+        margin-left: v.$spacing-l;
+      }
+      .pie-chart {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+
+        .recharts-surface {
+          overflow: overlay;
+          text {
+            fill: var(--text-color);
+          }
+          path.recharts-pie-label-line {
+            stroke: black;
+          }
+        }
+      }
+      @media screen and (max-width: 1300px) {
+        flex-direction: column;
+        .tile:nth-of-type(2) {
+          margin-left: 0px;
+        }
+      }
+    }
+  }
+}
