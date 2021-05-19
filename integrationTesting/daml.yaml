@@ -12,13 +12,13 @@ parties:
   - Public
   - Exchange
   - Broker
-version: 0.1.8
+version: 0.1.9
 dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
 data-dependencies:
-  - ../.daml/dist/da-marketplace-0.1.8.dar
+  - ../.daml/dist/da-marketplace-0.1.9.dar
 start-navigator: no
 sandbox-options:
   - --wall-clock-time
