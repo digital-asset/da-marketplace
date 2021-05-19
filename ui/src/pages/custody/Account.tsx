@@ -40,7 +40,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
-  const addSignatoryAsDepositObserver = async (deposit: CreateEvent<AssetDeposit>, newObs: any) => {
+  const addSignatoryAsDepositObserver = async (
+    deposit: CreateEvent<AssetDeposit>,
+    newObs: string[]
+  ) => {
     const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
 
     await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
@@ -53,7 +56,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       await halfSecondPromise();
       return updateDeposits(retries - 1);
     }
-
     return Promise.all(
       deposits.map(d => {
         const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(

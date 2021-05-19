@@ -52,9 +52,11 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   const pieData: {
     name: string;
     value: number;
-  }[] = Array.from(groupedDeposits.keys()).map(key => {
-    return { name: key, value: groupedDeposits.get(key) || 0 };
-  });
+  }[] = Array.from(groupedDeposits.keys())
+    .filter(key => getDataPercentage(groupedDeposits.get(key) || 0) > 5)
+    .map(key => {
+      return { name: key, value: groupedDeposits.get(key) || 0 };
+    });
 
   return (
     <div className="instrument">
@@ -81,8 +83,8 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
           ]}
         />
       </Tile>
-      <Tile header={<h3>Position Holdings</h3>}>
-        <div className="position-holdings">
+      <div className="position-holdings">
+        <Tile header={<h3>Position Holdings</h3>}>
           <StripedTable
             headings={['Investor', 'Quantity']}
             loading={depositsLoading}
@@ -92,7 +94,8 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
               };
             })}
           />
-
+        </Tile>
+        <Tile header={<h3>Allocations - Top 5%</h3>}>
           <div className="pie-chart">
             <PieChart width={400} height={400}>
               <Pie
@@ -102,7 +105,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
                 cy="50%"
                 innerRadius={60}
                 outerRadius={80}
-                label={data => ` ${data.name} ${((data.value / total) * 100).toFixed(1)}% `}
+                label={data => ` ${data.name} ${getDataPercentage(data.value)}% `}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -110,11 +113,15 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
               </Pie>
             </PieChart>
           </div>
-        </div>
-      </Tile>
+        </Tile>
+      </div>
       <Tile header={<h3>Claims</h3>}>
         <div ref={el} style={{ height: '100%' }} />
       </Tile>
     </div>
   );
+
+  function getDataPercentage(val: number) {
+    return +((val / total) * 100).toFixed(1);
+  }
 };
