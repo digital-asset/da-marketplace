@@ -201,6 +201,7 @@ Perform successful margin call for Alice
     - **Amount**: 5000
 
 Fail and retry a margin calculation for `Bob`
+
 67. `Ccp`: on `Members` page, click "Perform Margin Call":
     - **Customer** : `Bob`
     - **Amount** : 12000
