@@ -40,7 +40,7 @@ Under the deployments tab, click on "Upload File":
 
 ![3_upload_file](https://user-images.githubusercontent.com/71082197/98857330-ec817480-242c-11eb-8b07-4b0f88d3a39f.png)
 
-Upload the packaged `da-marketplace-0.1.9.dit` file.
+Upload the packaged `da-marketplace-0.0.2.dit` file.
 
 Click "Launch" for both the UI and the Model:
 
@@ -69,7 +69,7 @@ In your marketplace repo:
 $ ./scripts/create_ledger_parties.py path/to/participants.json ledger_parties.json
 
 # runs a Daml Script that adds all relevant information to the project ledger
-$ daml script --participant-config participants.json --json-api --dar .daml/dist/da-marketplace-0.1.9.dar --script-name Setup:doSetup --input-file ledger-parties.json
+$ daml script --participant-config participants.json --json-api --dar .daml/dist/da-marketplace-0.0.2.dar --script-name Setup:doSetup --input-file ledger-parties.json
 ```
 
 If you would like to boostrap the marketplace with your own data, you can either change the `doSetup` function in `daml/Setup.daml`, or create your own setup function and change the `--script-name` to `MyModule:myFunction`.
@@ -129,6 +129,6 @@ Next, in deployments, click on the Integration and configure it with your Exberr
 
 ![13_click_exberry](https://user-images.githubusercontent.com/71082197/98867872-50139e00-243d-11eb-8448-479e46fd85df.png)
 
-Finally, deploy an instance of `da-marketplace-exberry-adapter-0.1.9.tar.gz` and launch the automation as `Exchange`.
+Finally, deploy an instance of `da-marketplace-exberry-adapter-0.0.2.tar.gz` and launch the automation as `Exchange`.
 
 If you would like to change which `SID` the Exberry adapter begins counting at for the `orderId` calls to Exberry, create a `Marketplace.Utils.ExberrySID` contract as the `Exchange` party _after_ launching the adapter.

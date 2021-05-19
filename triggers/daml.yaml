@@ -12,14 +12,14 @@ parties:
   - Exchange
   - Broker
   - Ccp
-version: 0.1.9
+version: 0.0.2
 # trigger-dependencies-begin
 dependencies:
   - daml-prim
   - daml-stdlib
   - daml-trigger
 data-dependencies:
-  - ../.daml/dist/da-marketplace-0.1.9.dar
+  - ../.daml/dist/da-marketplace-0.0.2.dar
 sandbox-options:
   - --wall-clock-time
 build-options:
