@@ -56,15 +56,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
     return Promise.all(
       deposits.map(d => {
-        damlSetValues(d.payload.asset.id.signatories).map(signatory =>
-          console.log(d.payload.asset.id.label, signatory, !d.observers.includes(signatory))
-        );
-
         const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
           signatory => !d.observers.includes(signatory)
         );
-        console.log(newObservers);
-
         if (newObservers.length > 0) {
           addSignatoryAsDepositObserver(d, newObservers);
         }
