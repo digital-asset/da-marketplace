@@ -65,44 +65,42 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]}
       />
       <Header as="h2">Listings</Header>
-      <Tile>
-        <StripedTable
-          rowsClickable
-          headings={[
-            'Provider',
-            'Client',
-            'Cleared By',
-            'Listing ID',
-            'Calendar ID',
-            'Traded Asset',
-            'Traded Asset Precision',
-            'Quoted Asset',
-            'Quoted Asset Precision',
-            'Fair Value',
-          ]}
-          loading={fairValuesLoading}
-          rows={listings.map(c => {
-            const fairValues = fairValueContracts.filter(
-              fv => fv.payload.listingId.label === c.payload.listingId.label
-            );
-            return {
-              elements: [
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                getMarketType(c, getName),
-                c.payload.listingId.label,
-                c.payload.calendarId,
-                c.payload.tradedAssetId.label,
-                c.payload.tradedAssetPrecision,
-                c.payload.quotedAssetId.label,
-                c.payload.quotedAssetPrecision,
-                fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
-              ],
-              onClick: () => history.push('/app/manage/listings/' + c.contractId.replace('#', '_')),
-            };
-          })}
-        />
-      </Tile>
+      <StripedTable
+        rowsClickable
+        headings={[
+          'Provider',
+          'Client',
+          'Cleared By',
+          'Listing ID',
+          'Calendar ID',
+          'Traded Asset',
+          'Traded Asset Precision',
+          'Quoted Asset',
+          'Quoted Asset Precision',
+          'Fair Value',
+        ]}
+        loading={fairValuesLoading}
+        rows={listings.map(c => {
+          const fairValues = fairValueContracts.filter(
+            fv => fv.payload.listingId.label === c.payload.listingId.label
+          );
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              getMarketType(c, getName),
+              c.payload.listingId.label,
+              c.payload.calendarId,
+              c.payload.tradedAssetId.label,
+              c.payload.tradedAssetPrecision,
+              c.payload.quotedAssetId.label,
+              c.payload.quotedAssetPrecision,
+              fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
+            ],
+            onClick: () => history.push('/app/manage/listings/' + c.contractId.replace('#', '_')),
+          };
+        })}
+      />
       {(!!listingRequests.length || !!failedListingRequests.length) && (
         <Tile header={<h2>Requests</h2>}>
           <StripedTable
