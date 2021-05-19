@@ -18,7 +18,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { CreateEvent } from '@daml/ledger';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { ArrowLeftIcon } from '../../icons/icons';
+import BackButton from '../../components/Common/BackButton';
 import { getMarketType } from './Listings';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
@@ -122,9 +122,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <div className="listing">
-      <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon /> back
-      </Button>
+      <BackButton />
       <Header as="h2">{listing?.payload.listingId.label}</Header>
       <br />
       <br />

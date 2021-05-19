@@ -6,7 +6,6 @@ import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Au
 import { getAuctionStatus } from '../Utils';
 import { Header } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { ArrowRightIcon } from '../../../icons/icons';
 import { ActionTile } from '../../network/Actions';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
@@ -16,6 +15,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
   return (
     <div className="auctions">
       <ActionTile
+        title="Auctions"
         actions={[{ path: '/app/setup/distribution/new/auction', label: 'New Auction' }]}
       />
       <Header as="h2">Auctions</Header>

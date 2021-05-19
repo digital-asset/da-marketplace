@@ -7,6 +7,7 @@
 
     .setup-service {
       width: 300px;
+
       margin-right: calc(2 * #{$spacing-xl});
       margin-bottom: calc(2 * #{$spacing-xl});
 
@@ -19,6 +20,9 @@
 
         a {
           margin-bottom: $spacing-s;
+          font-weight: 600;
+          font-size: 14px;
+          line-height: 22px;
         }
       }
     }

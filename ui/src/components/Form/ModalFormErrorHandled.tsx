@@ -59,7 +59,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
         </Button>
       }
     >
-      <Modal.Header>{title}</Modal.Header>
+      <Modal.Header as="h2">{title}</Modal.Header>
       <Modal.Content>
         {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
         <input hidden type="submit" />
@@ -68,7 +68,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
         )}
       </Modal.Content>
       <Modal.Actions>
-        <Button color="black" onClick={() => setOpen(false)}>
+        <Button className="ghost warning" color="black" onClick={() => setOpen(false)}>
           Cancel
         </Button>
         <Button

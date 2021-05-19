@@ -1,6 +1,6 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
@@ -14,7 +14,11 @@ export const IssuancesTable: React.FC = () => {
 
   return (
     <>
-      <ActionTile actions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]} />
+      <ActionTile
+        title="Issuance"
+        actions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
+      />
+      <Header as="h2">Issuances</Header>
       <StripedTable
         headings={[
           'Issuing Agent',

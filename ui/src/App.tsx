@@ -1,5 +1,5 @@
 import React from 'react';
-import { Redirect, Route, RouteProps, Switch, withRouter } from 'react-router-dom';
+import { Redirect, Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -265,9 +265,8 @@ const AppComponent = () => {
         path: '/app/manage/distributions',
         render: () => (
           <Manage>
-            <Header as="h2">Service</Header>
-            <DistributionServiceTable />
             <Auctions />
+            <DistributionServiceTable />
           </Manage>
         ),
       },
@@ -427,8 +426,22 @@ const AppComponent = () => {
     return routes.concat(childRoutes);
   };
 
+  const path = useLocation().pathname;
+  const currentEntry = entriesToDisplay.find(entry => path.startsWith(entry.path));
+
   return (
-    <Page sideBarItems={entriesToDisplay} showNotificationAlert={notifCount > 0}>
+    <Page
+      sideBarItems={entriesToDisplay}
+      menuTitle={
+        currentEntry && (
+          <Header className="bold icon-header" as="h3">
+            {currentEntry.icon}
+            {currentEntry.label}
+          </Header>
+        )
+      }
+      showNotificationAlert={notifCount > 0}
+    >
       {servicesLoading ? (
         <div>
           <CircularProgress color="secondary" />

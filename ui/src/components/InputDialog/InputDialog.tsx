@@ -19,7 +19,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
 
   return (
     <Modal open={props.open} size="small" onClose={() => props.onClose(null)}>
-      <Modal.Header as="h3">{props.title}</Modal.Header>
+      <Modal.Header as="h2">{props.title}</Modal.Header>
       <Modal.Content>
         <Form>
           <FieldComponents
@@ -33,7 +33,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
         <Button className="ghost" onClick={() => props.onClose(state)}>
           Confirm
         </Button>
-        <Button className="ghost" onClick={() => props.onClose(null)}>
+        <Button className="ghost warning" onClick={() => props.onClose(null)}>
           Cancel
         </Button>
       </Modal.Actions>
