@@ -75,11 +75,7 @@ export const usePartyName = (party: string) => {
       )?.payload.legalName;
 
       if (legalName) {
-        if (isHubDeployment) {
-          return legalName;
-        } else {
-          return legalName.replace('LegalName', '');
-        }
+        return legalName;
       }
 
       const inferredName: string | undefined = inferPartyName(party, wellKnownParties);
