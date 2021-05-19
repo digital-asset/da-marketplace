@@ -55,7 +55,6 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
           'Trading Account',
           'Allocation Account',
           'Action',
-          // 'Details'
         ]}
         rows={services.map((c, i) => {
           return {
@@ -70,9 +69,6 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
               <Button className="ghost warning" onClick={() => terminateService(c)}>
                 Terminate
               </Button>,
-              // <NavLink to={`/app/network/trading/service/${c.contractId.replace('#', '_')}`}>
-              //     <ArrowRightIcon/>
-              // </NavLink>
             ],
           };
         })}
