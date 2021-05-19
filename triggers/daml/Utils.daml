@@ -1,5 +1,7 @@
 module Utils where
 
+import DA.Time
+import DA.Date
 import Daml.Trigger
 
 type ContractPair a = (ContractId a, a)
@@ -7,3 +9,7 @@ type ContractPair a = (ContractId a, a)
 -- |Helper function to exercise a choice
 emitExerciseCmd : (Template t, Choice t c r) => ContractId t -> c -> TriggerA s CommandId
 emitExerciseCmd cid c = emitCommands [exerciseCmd cid c] [toAnyContractId cid]
+
+getUnixTimestamp : TriggerA s Int
+getUnixTimestamp = convertRelTimeToMicroseconds . (flip subTime) (time (date 1970 Jan 1) 0 0 0) <$> getTime
+

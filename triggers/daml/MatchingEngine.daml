@@ -6,8 +6,6 @@ module MatchingEngine where
 import DA.Finance.Types
 
 import DA.Action
-import DA.Date
-import DA.Time
 import DA.Foldable hiding (elem, null)
 import DA.Next.Set (fromList)
 import DA.List
@@ -19,9 +17,6 @@ import Marketplace.Trading
 import Utils
 
 type CurrentOrderId = Int
-
-getUnixTimestamp : TriggerA CurrentOrderId Int
-getUnixTimestamp = convertRelTimeToMicroseconds . (flip subTime) (time (date 1970 Jan 1) 0 0 0) <$> getTime
 
 handleMatching : Trigger CurrentOrderId
 handleMatching = Trigger
@@ -130,7 +125,7 @@ handleOrder party orders (orderCid, order) = do
       let fillQty   = min passive.qty aggressive.qty
           fillPrice = passive.price
 
-      nanoTimestamp <- (* 1000) <$> getUnixTimestamp
+      nanoTimestamp <- (1000 *) <$> getUnixTimestamp
 
       emitExerciseCmd aggressiveCid Order_Fill with
           fillQty, fillPrice
