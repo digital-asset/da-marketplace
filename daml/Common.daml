@@ -4,6 +4,7 @@ import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Set
+import qualified DA.Finance.Asset as AssetDeposit
 import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
 import qualified Marketplace.Clearing.Service as Clearing
@@ -153,7 +154,6 @@ onboardCustomer Providers{..} party = do
   openAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestOpenAllocationAccount with accountId = marginAccountId; observers = fromList [clearinghouse, bank]; nominee = clearinghouse
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid = openAccountRequestCid
 
-
   -- Trading and Listing services
   tradingServiceOfferCid <- submit exchange do exerciseCmd exchangeRoleCid Exchange.OfferTradingService with ..
   tradingServiceCid <- submit customer do exerciseCmd tradingServiceOfferCid Trading.Accept with tradingAccount = mainAccount; allocationAccount = exchangeLockedAccount
@@ -197,8 +197,11 @@ onboardAssets Providers{..} = do
     libor = Asset with id = liborId; quantity = 0.0
   pure Assets with ..
 
+
 depositAsset : Providers -> Customer -> Asset -> Id -> Script (ContractId AssetDeposit)
 depositAsset Providers{..} Customer{..} asset accountId = do
   -- Assets
   creditAccountRequestCid <- submit customer do exerciseCmd custodyServiceCid Custody.RequestCreditAccount with accountId = accountId; asset
-  submit bank do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
+  depositCid <- submit bank do exerciseCmd custodyServiceCid Custody.CreditAccount with ..
+  (Some deposit) <- queryContractId bank depositCid
+  submit customer do exerciseCmd depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.asset.id.signatories `union` deposit.observers
