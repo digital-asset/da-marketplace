@@ -20,6 +20,8 @@
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
+@use 'pages/origination/Instrument';
+
 @use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
 @use 'pages/distribution/bidding/Bidding';
@@ -205,6 +207,8 @@ html {
         @include Page.page();
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
+        @include Instrument.instrument();
+
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();

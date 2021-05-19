@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -13,10 +13,12 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
-import { ServicePageProps, damlSetValues } from '../common';
+import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { ArrowLeftIcon } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import _ from 'lodash';
+import { halfSecondPromise } from '../page/utils';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -28,13 +30,52 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
 
+  const [updatingDeposits, setUpdatingDeposits] = useState(false);
+
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
-  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
+  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+
+  const addSignatoryAsDepositObserver = async (deposit: CreateEvent<AssetDeposit>, newObs: any) => {
+    const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
+
+    await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
+      newObservers,
+    });
+  };
+
+  const updateDeposits: any = async (retries: number) => {
+    if (retries > 0) {
+      await halfSecondPromise();
+      return updateDeposits(retries - 1);
+    }
+
+    return Promise.all(
+      deposits.map(d => {
+        damlSetValues(d.payload.asset.id.signatories).map(signatory =>
+          console.log(d.payload.asset.id.label, signatory, !d.observers.includes(signatory))
+        );
+
+        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
+          signatory => !d.observers.includes(signatory)
+        );
+        console.log(newObservers);
+
+        if (newObservers.length > 0) {
+          addSignatoryAsDepositObserver(d, newObservers);
+        }
+      })
+    );
+  };
+
+  useEffect(() => {
+    setUpdatingDeposits(true);
+    updateDeposits(3).then(() => setUpdatingDeposits(false));
+  }, []);
 
   const allAccounts = useMemo(
     () =>
@@ -162,10 +203,15 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       );
       if (!service) return;
 
-      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
-        accountId: targetAccount.account.id,
-        asset: { id: asset.payload.assetId, quantity: state.quantity },
-      });
+      await ledger
+        .exercise(Service.RequestCreditAccount, service.contractId, {
+          accountId: targetAccount.account.id,
+          asset: { id: asset.payload.assetId, quantity: state.quantity },
+        })
+        .then(() => {
+          setUpdatingDeposits(true);
+          updateDeposits(3).then(() => setUpdatingDeposits(false));
+        });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,
@@ -279,7 +325,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             <Tile header={<h4>Holdings</h4>}>
               <StripedTable
                 headings={['Holding', 'Asset', '']}
-                loading={depositsLoading}
+                loading={depositsLoading || updatingDeposits}
                 rows={accountDeposits.map(c => {
                   return {
                     elements: [

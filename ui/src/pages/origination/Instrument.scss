@@ -1,0 +1,23 @@
+@mixin instrument {
+    .instrument {
+        .position-holdings {
+            display: flex;
+            flex-direction: row;
+            .pie-chart {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+
+                .recharts-surface {
+                    overflow: overlay;
+                    text {
+                        fill: var(--text-color);
+                    }
+                    path.recharts-pie-label-line {
+                        stroke: black;
+                    }
+                }
+            }
+        }
+    }
+}
