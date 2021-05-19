@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
@@ -23,9 +23,8 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
+import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;

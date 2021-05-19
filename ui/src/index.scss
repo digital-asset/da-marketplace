@@ -208,7 +208,6 @@ html {
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Instrument.instrument();
-
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();

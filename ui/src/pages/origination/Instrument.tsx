@@ -48,7 +48,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
       let current = groupedDeposits.get(getName(d.payload.account.owner)) || 0;
       groupedDeposits.set(getName(d.payload.account.owner), current + +d.payload.asset.quantity);
     });
-
+  const total = Array.from(groupedDeposits.values()).reduce((acc, item) => (acc += item), 0);
   const pieData: {
     name: string;
     value: number;
@@ -102,7 +102,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
                 cy="50%"
                 innerRadius={60}
                 outerRadius={80}
-                label={data => ` ${data.name} ${data.value} `}
+                label={data => ` ${data.name} ${((data.value / total) * 100).toFixed(1)}% `}
               >
                 {pieData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
