@@ -19,7 +19,7 @@ import {
 } from './Utils';
 import { useHistory, useParams } from 'react-router-dom';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
+import BackButton from '../../components/Common/BackButton';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
@@ -39,9 +39,7 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
 
   return (
     <div>
-      <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon /> back
-      </Button>
+      <BackButton />
       <div className="market">
         <div className="orders">
           <Tile header={<h4>Order</h4>}>

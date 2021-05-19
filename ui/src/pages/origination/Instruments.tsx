@@ -4,7 +4,7 @@ import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import { ActionTile } from '../network/Actions';
 import { damlSetValues } from '../common';
@@ -19,6 +19,7 @@ export const InstrumentsTable: React.FC = () => {
   return (
     <div>
       <ActionTile
+        title="Instrument"
         actions={[
           { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
           {
@@ -31,6 +32,7 @@ export const InstrumentsTable: React.FC = () => {
           },
         ]}
       />
+      <Header as="h2">Instruments</Header>
       <StripedTable
         rowsClickable
         headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}

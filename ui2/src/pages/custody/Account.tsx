@@ -11,7 +11,7 @@ import Tile from '../../components/Tile/Tile';
 import { Button, Header, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
-import { usePartyName } from '../../config';
+import { publicParty, usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import { ServicePageProps, damlSetValues } from '../common';
 import BackButton from '../../components/Common/BackButton';
@@ -162,10 +162,19 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       );
       if (!service) return;
 
-      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+      const deposit = await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
         accountId: targetAccount.account.id,
         asset: { id: asset.payload.assetId, quantity: state.quantity },
       });
+
+      console.log('got deposit', deposit)
+      if (deposit) {
+        console.log('adding observers', deposit)
+
+        await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
+          newObservers: [publicParty],
+        });
+      }
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,
@@ -193,7 +202,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <BackButton />
+      <BackButton/>
       <InputDialog {...transferDialogProps} />
       <InputDialog {...creditDialogProps} />
       <div className="account">

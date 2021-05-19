@@ -9,12 +9,11 @@ import { transformClaim } from '../../components/Claims/util';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowLeftIcon } from '../../icons/icons';
+import BackButton from '../../components/Common/BackButton';
 import { damlSetValues } from '../common';
 
 export const Instrument: React.FC<RouteComponentProps> = () => {
   const el = useRef<HTMLDivElement>(null);
-  const history = useHistory();
   const { contractId } = useParams<any>();
   const { getName } = usePartyName('');
   const cid = contractId.replace('_', '#');
@@ -37,9 +36,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
 
   return (
     <div>
-      <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon /> back
-      </Button>
+      <BackButton />
       <Tile header={<h3>{instrument.payload.description}</h3>}>
         <h5>Details</h5>
         <StripedTable

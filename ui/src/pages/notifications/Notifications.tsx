@@ -69,7 +69,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
 import { ServiceKind } from '../../context/ServicesContext';
-import { ArrowLeftIcon } from '../../icons/icons';
+import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
 
 import {
@@ -660,9 +660,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
   return (
     <div className="notifications">
       <div className="return-link">
-        <Button className="ghost" onClick={() => history.goBack()}>
-          <ArrowLeftIcon />
-        </Button>
+        <BackButton />
       </div>
       <div className="notification-content">
         {count > 0

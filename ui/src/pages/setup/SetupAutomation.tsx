@@ -95,7 +95,7 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({ title, token, 
       open={open}
       trigger={modalTrigger}
     >
-      <Modal.Header>{title || 'Setup Automation'}</Modal.Header>
+      <Modal.Header as="h2">{title || 'Setup Automation'}</Modal.Header>
       <Modal.Content>
         <Tile header={<h2>Running Automation</h2>}>
           <br />

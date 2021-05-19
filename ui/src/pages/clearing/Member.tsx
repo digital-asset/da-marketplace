@@ -19,7 +19,7 @@ import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
-import { ArrowLeftIcon } from '../../icons/icons';
+import BackButton from '../../components/Common/BackButton';
 import { formatCurrency } from '../../util';
 import { ActionTile } from '../network/Actions';
 
@@ -103,10 +103,9 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     return (
       <div className="member">
-        <Button className="ghost back-button" onClick={() => history.goBack()}>
-          <ArrowLeftIcon /> back
-        </Button>
+        <BackButton />
         <ActionTile
+          title="Clearing"
           actions={[
             {
               label: 'Manage Clearing Services',

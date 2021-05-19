@@ -85,7 +85,7 @@ const Page: React.FC<Props> = ({
             {groupSideBarItems.map(([key, items]) =>
               key ? (
                 <Menu.Menu key={key} className="sub-menu">
-                  <Header as="h3">{key}</Header>
+                  <p className="sub-menu-header">{key}:</p>
                   {items.map(item => constructMenu(item, 0))}
                 </Menu.Menu>
               ) : (

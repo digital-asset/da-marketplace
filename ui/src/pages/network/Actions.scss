@@ -1,0 +1,11 @@
+@use '../../themes/variables.scss' as *;
+
+@mixin action-tile {
+  .action-tile {
+    margin-top: $spacing-l;
+
+    h5.ui.header {
+      margin-bottom: $spacing-xs;
+    }
+  }
+}

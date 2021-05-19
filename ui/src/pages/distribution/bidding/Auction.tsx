@@ -23,7 +23,7 @@ import StripedTable from '../../../components/Table/StripedTable';
 import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import FormErrorHandled from '../../../components/Form/FormErrorHandled';
-import { ArrowLeftIcon } from '../../../icons/icons';
+import BackButton from '../../../components/Common/BackButton';
 
 export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   services,
@@ -116,9 +116,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
 
   return (
     <div className="auction">
-      <Button className="ghost back-button" onClick={() => history.goBack()}>
-        <ArrowLeftIcon /> back
-      </Button>
+      <BackButton />
       <Header as="h2" className="header">
         Auction - {biddingAuction.payload.asset.id.label}
       </Header>

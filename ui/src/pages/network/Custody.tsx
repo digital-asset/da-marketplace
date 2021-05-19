@@ -49,6 +49,7 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   return (
     <>
       <ActionTile
+        title="Custody"
         actions={[{ path: '/app/setup/custody/offer', label: 'Offer Custody Service' }]}
       />
       <Header as="h2">Current Services</Header>

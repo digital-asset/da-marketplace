@@ -20,16 +20,9 @@ type Props = {
   activeMenuTitle?: boolean;
   showNotificationAlert?: boolean;
   buttons?: ITopMenuButtonInfo[];
-  buttonDivider?: boolean;
 };
 
-const TopMenu: React.FC<Props> = ({
-  title,
-  buttons,
-  activeMenuTitle,
-  buttonDivider,
-  showNotificationAlert,
-}) => {
+const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotificationAlert }) => {
   const history = useHistory();
   const userDispatch = useUserDispatch();
 
@@ -72,10 +65,10 @@ const TopMenu: React.FC<Props> = ({
               <div className={classNames({ 'notifications-active': showNotificationAlert })}></div>
             </Link>
           </Menu.Item>
-          <Menu.Item className={classNames('log-out-button', { divider: buttonDivider !== false })}>
+          <Menu.Item className="log-out-button">
             <Button className="ghost smaller" onClick={() => signOut(userDispatch, history)}>
               <div className="log-out">
-                <Header as="h3">Log out</Header>
+                <p>Log out</p>
                 <LogoutIcon />
               </div>
             </Button>

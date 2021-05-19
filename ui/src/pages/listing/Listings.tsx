@@ -60,8 +60,12 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   return !contractId ? (
     <>
-      <ActionTile actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]} />
-      <Tile header={<h2>Listings</h2>}>
+      <ActionTile
+        title="Listing"
+        actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]}
+      />
+      <Header as="h2">Listings</Header>
+      <Tile>
         <StripedTable
           rowsClickable
           headings={[
