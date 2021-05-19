@@ -161,7 +161,7 @@ start-autoapprove: |$(STATE_DIR) $(trigger_dar_src)
 	@./scripts/run-trigger.sh \
 		$$party \
 		$(trigger_dar_src) \
-		AutoApprove:autoApprovalTrigger \
+		AutoApproval:autoApprovalTrigger \
 		autoapproval_$$party \
 		$(STATE_DIR)
 	@echo "Starting auto approve trigger for $$party..."
