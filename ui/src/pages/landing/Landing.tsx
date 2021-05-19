@@ -83,7 +83,9 @@ const Relationship: React.FC<RelationshipProps> = ({ provider, services }) => {
       <div className="child provider">{name}</div>
       <div className="child">
         {services.map(s => (
-          <Label key={s} content={s} />
+          <p className="p2 label" key={s}>
+            {s}
+          </p>
         ))}
       </div>
     </Tile>

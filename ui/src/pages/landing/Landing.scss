@@ -113,6 +113,13 @@
             &:last-child {
               margin-right: 0;
             }
+
+            p.p2.label {
+              color: var(--cool-grey-20);
+              background-color: var(--blue-100);
+              padding: $spacing-xs $spacing-s;
+              border-radius: 6px;
+            }
           }
 
           .provider {
