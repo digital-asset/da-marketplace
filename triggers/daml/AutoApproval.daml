@@ -6,6 +6,8 @@ import Daml.Trigger
 import DA.Optional (mapOptional)
 import DA.Record (HasField)
 import Marketplace.Custody.Service qualified as CustodyService
+import Marketplace.Clearing.Role qualified as ClearingRole
+import Marketplace.Clearing.Service qualified as ClearingService
 import Marketplace.Clearing.Market.Service qualified as MarketClearingService
 import Marketplace.Custody.Role qualified as CustodyRole
 import Marketplace.Custody.Model qualified as Custody
@@ -29,6 +31,8 @@ autoApprovalTrigger = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
     , registeredTemplate @CustodyRole.Request
     , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @ClearingRole.Role
+    , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
     , registeredTemplate @MarketClearingService.Request
     , registeredTemplate @DistributionRole.Offer
@@ -127,6 +131,11 @@ handleApprovalRule party = do
   submitCommands $
     generateRoleCommands CustodyRole.ApproveCustodyRequest custodyServicesRequests custodyRoles ++
     generateRoleCommands CustodyRole.ApproveIssuanceRequest issuanceServiceRequests custodyRoles
+
+  clearingServiceRequests <- queryByParty @ClearingService.Request  (.provider)
+  clearingRoles           <- queryByParty @ClearingRole.Role        (.provider)
+  submitCommands $
+    generateRoleCommands ClearingRole.ApproveClearingRequest clearingServiceRequests clearingRoles
 
   auctionServiceRequests  <- queryByParty @AuctionService.Request (.provider)
   biddingServiceRequests  <- queryByParty @BiddingService.Request (.provider)
