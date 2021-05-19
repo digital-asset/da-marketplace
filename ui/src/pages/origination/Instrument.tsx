@@ -59,7 +59,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
 
   return (
     <div className="instrument">
-       <BackButton />
+      <BackButton />
       <Tile header={<h3>{instrument.payload.description}</h3>}>
         <h5>Details</h5>
         <StripedTable
