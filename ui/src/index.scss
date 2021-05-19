@@ -209,13 +209,9 @@ html {
         .actions > .button {
           color: var(--textcolor);
           background: var(--white);
-          align-items: center;
           border: 1px solid var(--green-50);
           border-radius: 4px;
           font-weight: 400;
-          &.warning {
-            border: 1px solid var(--cool-grey-80);
-          }
         }
       }
     }

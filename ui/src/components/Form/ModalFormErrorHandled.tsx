@@ -48,7 +48,6 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
   return (
     <Modal
-      dimmer={'blurring'}
       as={Form}
       onSubmit={() => loadAndCatch(onSubmit)}
       onClose={() => setOpen(false)}
