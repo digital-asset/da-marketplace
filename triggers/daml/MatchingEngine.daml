@@ -6,8 +6,6 @@ module MatchingEngine where
 import DA.Finance.Types
 
 import DA.Action
-import DA.Date
-import DA.Time
 import DA.Foldable hiding (elem, null)
 import DA.Next.Set (fromList)
 import DA.List
@@ -19,9 +17,6 @@ import Marketplace.Trading
 import Utils
 
 type CurrentOrderId = Int
-
-getUnixTimestamp : TriggerA CurrentOrderId Int
-getUnixTimestamp = convertRelTimeToMicroseconds . (flip subTime) (time (date 1970 Jan 1) 0 0 0) <$> getTime
 
 handleMatching : Trigger CurrentOrderId
 handleMatching = Trigger
@@ -130,19 +125,19 @@ handleOrder party orders (orderCid, order) = do
       let fillQty   = min passive.qty aggressive.qty
           fillPrice = passive.price
 
-      nanoTimestamp <- (* 1000) <$> getUnixTimestamp
+      time <- getTime
 
       emitExerciseCmd aggressiveCid Order_Fill with
           fillQty, fillPrice
           counterOrderId = passive.orderId
           counterParty = passive.exchParticipant
-          timeMatched = show nanoTimestamp
+          timeMatched = show time
 
       emitExerciseCmd passiveCid Order_Fill with
           fillQty, fillPrice
           counterOrderId = aggressive.orderId
           counterParty = aggressive.exchParticipant
-          timeMatched = show nanoTimestamp
+          timeMatched = show time
 
       return ()
 
@@ -197,7 +192,7 @@ handleClearedOrder party orders (orderCid, order) = do
       let fillQty   = min passive.qty aggressive.qty
           fillPrice = passive.price
 
-      nanoTimestamp <- (* 1000) <$> getUnixTimestamp
+      time <- getTime
 
       emitExerciseCmd aggressiveCid ClearedOrder_Fill with
           fillQty, fillPrice
@@ -215,7 +210,7 @@ handleClearedOrder party orders (orderCid, order) = do
           instrument = instrumentId
           exchange = party
           eventId = -1
-          timeMatched = show nanoTimestamp
+          timeMatched = (show time)
           pair = order.pair
           trackingNumber = -1
           buyer = buyer.exchParticipant
