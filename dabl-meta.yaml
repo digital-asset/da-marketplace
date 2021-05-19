@@ -6,6 +6,7 @@ catalog:
   release_date: 2020-10-14
   author: Digital Asset (Switzerland) GmbH
   url: https://github.com/digital-asset/da-marketplace
+  source_url: https://github.com/digital-asset/da-marketplace
   license: 0BSD
   tags: [dabl-sample-app, application]
   icon_file: da-marketplace.svg
