@@ -12,7 +12,7 @@ parties:
   - Broker
   - Bank
   - Issuer
-version: 0.0.2
+version: 0.2.0
 dependencies:
   - daml-prim
   - daml-stdlib
