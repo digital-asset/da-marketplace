@@ -14,6 +14,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { AddPlusIcon } from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -62,11 +63,9 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="issuance-requests">
-      <Tile header={<h4>Actions</h4>}>
-        <Button secondary className="ghost" onClick={() => history.push('/app/issuance/new')}>
-          New Issuance
-        </Button>
-      </Tile>
+      <a className="a2 with-icon" onClick={() => history.push('/app/issuance/new')}>
+        <AddPlusIcon /> New Issuance
+      </a>
 
       <Tile header={<h4>Issuance Requests</h4>}>
         <StripedTable

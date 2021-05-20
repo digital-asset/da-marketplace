@@ -10,7 +10,7 @@ type Action = {
 
 type Params = {
   actions: Action[];
-  title: string;
+  title?: string;
 };
 
 export const ActionTile: React.FC<Params> = ({ actions, title, children }) => {

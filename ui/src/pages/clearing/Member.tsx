@@ -103,24 +103,8 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     return (
       <div className="member">
-        <BackButton />
-        <ActionTile
-          title="Clearing"
-          actions={[
-            {
-              label: 'Manage Clearing Services',
-              path: '/app/manage/clearing',
-            },
-          ]}
-        >
-          {!member && (
-            <>
-              <MarginCallModal services={services} member={customer} />
-              <MTMCalculationModal services={services} member={customer} />
-            </>
-          )}
-        </ActionTile>
-        <Tile header={<h4>Standing</h4>}>
+        <Header as="h2">Standing</Header>
+        <Tile>
           <b>Margins:</b> {!!standing && standing?.payload.marginSatisfied ? 'Yes' : 'No'}
           <br />
           <b>MTM:</b> {!!standing && standing?.payload.mtmSatisfied ? 'Yes' : 'No'}
@@ -129,167 +113,173 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
           <br />
           <b>Clearing Amount:</b> {formatCurrency(clearingAmount)}
         </Tile>
-        <Tile header={<h2>Margin Calculations</h2>}>
-          {(!!failedMarginCalcs.length || !!pendingMarginCalcs.length) && (
-            <Tile header={<h3>In Progress</h3>}>
-              <div className="calculations-in-progress">
-                {!!failedMarginCalcs.length && (
-                  <div className="failed-calculations">
-                    <Header as="h3">Failed Margin Calculations</Header>
-                    <StripedTable
-                      headings={['Time', 'Target Amount', 'Account', 'Action']}
-                      loading={failedMarginCalcsLoading}
-                      rows={[
-                        ...failedMarginCalcs
-                          .filter(mc => mc.payload.customer === customer)
-                          .reverse()
-                          .map(mc => {
-                            return {
-                              elements: [
-                                mc.payload.calculation.calculationTime,
-                                formatCurrency(mc.payload.calculation.targetAmount),
-                                mc.payload.calculation.accountId.label,
-                                <Button.Group size="mini">
-                                  <Button
-                                    className="ghost"
-                                    onClick={() => handleMarginRetry(mc.contractId)}
-                                  >
-                                    Retry
-                                  </Button>
-                                  {!member && (
-                                    <Button
-                                      className="ghost"
-                                      onClick={() => handleMarginCancel(mc.contractId)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  )}
-                                </Button.Group>,
-                              ],
-                            };
-                          }),
-                      ]}
-                    />
-                  </div>
-                )}
-                <div className="pending-calculations">
-                  <Header as="h3">Pending Margin Calculations</Header>
-                  <StripedTable
-                    headings={['Time', 'Target Amount', 'Account']}
-                    loading={pendingMarginCalcsLoading}
-                    rows={pendingMarginCalcs
-                      .filter(mc => mc.payload.customer === customer)
-                      .reverse()
-                      .map(mc => {
-                        return {
-                          elements: [
-                            mc.payload.calculationTime,
-                            formatCurrency(mc.payload.targetAmount),
-                            mc.payload.accountId.label,
-                          ],
-                        };
-                      })}
-                  />
-                </div>
-              </div>
-            </Tile>
+        <div className="title-action">
+          <Header as="h2">Margin Calculations</Header>
+          <Button className="ghost" onClick={() => history.push('/app/manage/clearing')}>
+            Manage Clearing Services
+          </Button>
+          {!member && (
+            <>
+              <MarginCallModal services={services} member={customer} />
+              <MTMCalculationModal services={services} member={customer} />
+            </>
           )}
-          <StripedTable
-            headings={['Time', 'Target Amount', 'Account']}
-            loading={fulfilledMarginCalcsLoading}
-            rows={fulfilledMarginCalcs
-              .filter(mc => mc.payload.customer === customer)
-              .reverse()
-              .map(mc => {
-                return {
-                  elements: [
-                    mc.payload.calculation.calculationTime,
-                    formatCurrency(mc.payload.calculation.targetAmount),
-                    mc.payload.calculation.accountId.label,
-                  ],
-                };
-              })}
-          />
-        </Tile>
-
-        <Tile header={<h2>Mark to Market</h2>}>
-          {(!!failedMTMCalcs.length || !!pendingMTMCalcs.length) && (
-            <Tile header={<h3>In Progress</h3>}>
-              {!!failedMTMCalcs.length && (
+        </div>
+        {(!!failedMarginCalcs.length || !!pendingMarginCalcs.length) && (
+          <Tile header={<h3>In Progress</h3>}>
+            <div className="calculations-in-progress">
+              {!!failedMarginCalcs.length && (
                 <div className="failed-calculations">
-                  <Header as="h3">Failed MTM Calculations</Header>
+                  <Header as="h3">Failed Margin Calculations</Header>
                   <StripedTable
                     headings={['Time', 'Target Amount', 'Account', 'Action']}
-                    loading={failedMTMCalcsLoading}
-                    rows={failedMTMCalcs
-                      .filter(mc => mc.payload.customer === customer)
-                      .reverse()
-                      .map(mc => {
-                        return {
-                          elements: [
-                            mc.payload.calculation.calculationTime,
-                            formatCurrency(mc.payload.calculation.mtmAmount),
-                            mc.payload.calculation.accountId.label,
-                            <Button.Group size="mini">
-                              <Button
-                                className="ghost"
-                                onClick={() => handleMTMRetry(mc.contractId)}
-                              >
-                                Retry
-                              </Button>
-                              {!member && (
+                    loading={failedMarginCalcsLoading}
+                    rows={[
+                      ...failedMarginCalcs
+                        .filter(mc => mc.payload.customer === customer)
+                        .reverse()
+                        .map(mc => {
+                          return {
+                            elements: [
+                              mc.payload.calculation.calculationTime,
+                              formatCurrency(mc.payload.calculation.targetAmount),
+                              mc.payload.calculation.accountId.label,
+                              <Button.Group size="mini">
                                 <Button
                                   className="ghost"
-                                  onClick={() => handleMTMCancel(mc.contractId)}
+                                  onClick={() => handleMarginRetry(mc.contractId)}
                                 >
-                                  Cancel
+                                  Retry
                                 </Button>
-                              )}
-                            </Button.Group>,
-                          ],
-                        };
-                      })}
+                                {!member && (
+                                  <Button
+                                    className="ghost"
+                                    onClick={() => handleMarginCancel(mc.contractId)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                )}
+                              </Button.Group>,
+                            ],
+                          };
+                        }),
+                    ]}
                   />
                 </div>
               )}
               <div className="pending-calculations">
-                <Header as="h3">Pending MTM Calculations</Header>
+                <Header as="h3">Pending Margin Calculations</Header>
                 <StripedTable
-                  headings={['Time', 'Amount', 'Account']}
-                  loading={pendingMTMCalcsLoading}
-                  rows={pendingMTMCalcs
+                  headings={['Time', 'Target Amount', 'Account']}
+                  loading={pendingMarginCalcsLoading}
+                  rows={pendingMarginCalcs
                     .filter(mc => mc.payload.customer === customer)
                     .reverse()
                     .map(mc => {
                       return {
                         elements: [
                           mc.payload.calculationTime,
-                          formatCurrency(mc.payload.mtmAmount),
+                          formatCurrency(mc.payload.targetAmount),
                           mc.payload.accountId.label,
                         ],
                       };
                     })}
                 />
               </div>
-            </Tile>
-          )}
-          <StripedTable
-            headings={['Time', 'Target Amount', 'Account']}
-            loading={fulfilledMTMCalcsLoading}
-            rows={fulfilledMTMCalcs
-              .filter(mc => mc.payload.customer === customer)
-              .reverse()
-              .map(mc => {
-                return {
-                  elements: [
-                    mc.payload.calculation.calculationTime,
-                    formatCurrency(mc.payload.calculation.mtmAmount),
-                    mc.payload.calculation.accountId.label,
-                  ],
-                };
-              })}
-          />
-        </Tile>
+            </div>
+          </Tile>
+        )}
+        <StripedTable
+          headings={['Time', 'Target Amount', 'Account']}
+          loading={fulfilledMarginCalcsLoading}
+          rows={fulfilledMarginCalcs
+            .filter(mc => mc.payload.customer === customer)
+            .reverse()
+            .map(mc => {
+              return {
+                elements: [
+                  mc.payload.calculation.calculationTime,
+                  formatCurrency(mc.payload.calculation.targetAmount),
+                  mc.payload.calculation.accountId.label,
+                ],
+              };
+            })}
+        />
+        <Header as="h2">Mark to Market</Header>
+
+        {(!!failedMTMCalcs.length || !!pendingMTMCalcs.length) && (
+          <Tile header={<h3>In Progress</h3>}>
+            {!!failedMTMCalcs.length && (
+              <div className="failed-calculations">
+                <Header as="h3">Failed MTM Calculations</Header>
+                <StripedTable
+                  headings={['Time', 'Target Amount', 'Account', 'Action']}
+                  loading={failedMTMCalcsLoading}
+                  rows={failedMTMCalcs
+                    .filter(mc => mc.payload.customer === customer)
+                    .reverse()
+                    .map(mc => {
+                      return {
+                        elements: [
+                          mc.payload.calculation.calculationTime,
+                          formatCurrency(mc.payload.calculation.mtmAmount),
+                          mc.payload.calculation.accountId.label,
+                          <Button.Group size="mini">
+                            <Button className="ghost" onClick={() => handleMTMRetry(mc.contractId)}>
+                              Retry
+                            </Button>
+                            {!member && (
+                              <Button
+                                className="ghost"
+                                onClick={() => handleMTMCancel(mc.contractId)}
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </Button.Group>,
+                        ],
+                      };
+                    })}
+                />
+              </div>
+            )}
+            <div className="pending-calculations">
+              <Header as="h3">Pending MTM Calculations</Header>
+              <StripedTable
+                headings={['Time', 'Amount', 'Account']}
+                loading={pendingMTMCalcsLoading}
+                rows={pendingMTMCalcs
+                  .filter(mc => mc.payload.customer === customer)
+                  .reverse()
+                  .map(mc => {
+                    return {
+                      elements: [
+                        mc.payload.calculationTime,
+                        formatCurrency(mc.payload.mtmAmount),
+                        mc.payload.accountId.label,
+                      ],
+                    };
+                  })}
+              />
+            </div>
+          </Tile>
+        )}
+        <StripedTable
+          headings={['Time', 'Target Amount', 'Account']}
+          loading={fulfilledMTMCalcsLoading}
+          rows={fulfilledMTMCalcs
+            .filter(mc => mc.payload.customer === customer)
+            .reverse()
+            .map(mc => {
+              return {
+                elements: [
+                  mc.payload.calculation.calculationTime,
+                  formatCurrency(mc.payload.calculation.mtmAmount),
+                  mc.payload.calculation.accountId.label,
+                ],
+              };
+            })}
+        />
       </div>
     );
   };

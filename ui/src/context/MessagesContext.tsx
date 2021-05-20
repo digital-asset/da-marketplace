@@ -1,51 +1,63 @@
 import React, { useState, useEffect } from 'react';
 
-import { Message } from 'semantic-ui-react';
+import { Message, Header } from 'semantic-ui-react';
 
-export type ErrorMessage = {
+export type Message = {
   header?: string;
   message?: string;
   list?: string[];
 };
 
 type MessagesState = {
-  displayErrorMessage: (error: ErrorMessage) => void;
+  displayErrorMessage: (message: Message) => void;
+  displaySuccessMessage: (message: Message) => void;
 };
 
 const MessagesStateContext = React.createContext<MessagesState>({
   displayErrorMessage: () => {},
+  displaySuccessMessage: () => {},
 });
 
 const MessagesProvider: React.FC = ({ children }) => {
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
-  const [error, setError] = useState<ErrorMessage>();
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageType, setMessageType] = useState<'Error' | 'Success'>();
+  const [message, setMessage] = useState<Message>();
 
-  function displayErrorMessage(error: ErrorMessage) {
-    setShowErrorMessage(true);
-    setError(error);
+  function displayErrorMessage(message: Message) {
+    setMessageType('Error');
+    setShowMessage(true);
+    setMessage(message);
   }
 
-  useEffect(() => {
-    if (showErrorMessage) {
-      const timer = setInterval(() => {
-        setShowErrorMessage(false);
-        setError(undefined);
-      }, 9000);
+  function displaySuccessMessage(message: Message) {
+    setMessageType('Success');
+    setShowMessage(true);
+    setMessage(message);
+  }
 
-      return () => clearInterval(timer);
-    }
-  }, [showErrorMessage]);
+    useEffect(() => {
+      if (showMessage) {
+        const timer = setInterval(() => {
+          setShowMessage(false);
+          setMessage(undefined);
+          setMessageType(undefined);
+        }, 9000);
+
+        return () => clearInterval(timer);
+      }
+    }, [showMessage]);
 
   return (
-    <MessagesStateContext.Provider value={{ displayErrorMessage }}>
+    <MessagesStateContext.Provider value={{ displayErrorMessage, displaySuccessMessage }}>
       {children}
-      {showErrorMessage && (
+      {showMessage && (
         <Message
-          error
-          onDismiss={() => setShowErrorMessage(false)}
-          header={error?.header || 'Error'}
-          content={error?.message}
-          list={error?.list}
+          error={messageType === 'Error'}
+          success={messageType === 'Success'}
+          onDismiss={() => setShowMessage(false)}
+          header={<Header as='h3'>{message?.header || messageType}</Header>}
+          content={<p>{message?.message}</p>}
+          list={message?.list}
         />
       )}
     </MessagesStateContext.Provider>
@@ -60,4 +72,12 @@ function useDisplayErrorMessage() {
   return context.displayErrorMessage;
 }
 
-export { MessagesProvider, useDisplayErrorMessage };
+function useDisplaySuccessMessage() {
+  const context = React.useContext<MessagesState>(MessagesStateContext);
+  if (context === undefined) {
+    throw new Error('useCustomerServices must be used within a ServicesProvider');
+  }
+  return context.displaySuccessMessage;
+}
+
+export { MessagesProvider, useDisplayErrorMessage, useDisplaySuccessMessage };

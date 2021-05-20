@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter, useHistory } from 'react-router-dom';
 import {
   Grid,
   IconButton,
@@ -38,6 +38,7 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
+  const history = useHistory();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
@@ -48,11 +49,12 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
-      <ActionTile
-        title="Custody"
-        actions={[{ path: '/app/setup/custody/offer', label: 'Offer Custody Service' }]}
-      />
-      <Header as="h2">Current Services</Header>
+      <div className="title-action">
+        <Header as="h2">Current Services</Header>
+        <Button className="ghost" onClick={() => history.push('/app/setup/custody/offer')}>
+          Offer Custody Service
+        </Button>
+      </div>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         rows={services.map((c, i) => {

@@ -188,8 +188,8 @@ const Landing = () => {
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
-  const [request, setRequest] = useState<ServiceRequest>(CustodyRequest);
-  const [serviceKind, setServiceKind] = useState<ServiceKind>(ServiceKind.CUSTODY);
+  const [request, setRequest] = useState<ServiceRequest>();
+  const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
   const [fields, setFields] = useState<object>({});
   const [dialogState, setDialogState] = useState<any>({});
@@ -277,19 +277,23 @@ const Landing = () => {
     setOpenDialog(true);
   };
 
+  if (serviceKind && request) {
+    return (
+      <ServiceRequestDialog
+        open={openDialog}
+        service={serviceKind}
+        fields={fields}
+        params={requestParams}
+        request={request}
+        onChange={state => setDialogState(state)}
+        onClose={() => setServiceKind(undefined)}
+      />
+    );
+  }
+
   return (
     <div className="landing">
       <div className="col col-1">
-        <ServiceRequestDialog
-          open={openDialog}
-          service={serviceKind}
-          fields={fields}
-          params={requestParams}
-          request={request}
-          onChange={state => setDialogState(state)}
-          onClose={open => setOpenDialog(open)}
-        />
-
         <Tile>
           <div className="profile">
             <div className="profile-name">@{name}</div>

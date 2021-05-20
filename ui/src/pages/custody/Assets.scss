@@ -4,16 +4,17 @@
   .assets {
     animation: fadeIn 0.5s;
 
-    h2 {
-      margin-bottom: $spacing-m;
+    .title-action {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        a, button {
+            margin-left: $spacing-m
+        }
     }
 
     table {
       margin-bottom: $spacing-m;
-    }
-
-    .button.ghost {
-      margin-right: $spacing-s;
     }
   }
 }

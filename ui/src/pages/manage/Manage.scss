@@ -20,10 +20,29 @@
       }
     }
 
+    .title-action {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        a, button {
+            margin-left: $spacing-m
+        }
+    }
+
+    .action-bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        a {
+            margin-right: $spacing-m
+        }
+    }
+
     .manage-menu {
       border-width: 1px;
       border-color: var(--cool-grey-80);
       box-sizing: border-box;
+      margin-bottom: $spacing-l;
 
       .item {
         padding: 0;

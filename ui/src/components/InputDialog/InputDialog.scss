@@ -1,0 +1,43 @@
+@use '../../themes/variables' as *;
+
+@mixin input-dialog {
+    .input-dialog {
+        display: flex;
+        flex-direction: column;
+    
+        h2 {
+          margin-bottom: $spacing-m;
+        }
+
+        form {
+            width: 33%;
+            margin-bottom: $spacing-m;
+        }
+
+        form, h2, .submit {
+            margin-left: $spacing-xl;
+        }
+    
+    
+        .ghost {
+            margin-right: $spacing-s;
+        }
+    
+        .submit,
+        a.a2 {
+
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+        }
+    
+        .submit a.a2 {
+          margin-left: $spacing-xl;
+    
+          .icon {
+            margin-right: $spacing-xs;
+          }
+        }
+      }
+    }
+

@@ -7,6 +7,14 @@
     flex-wrap: wrap;
     width: 100%;
     justify-content: space-between;
+    .title-action {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        a, button {
+            margin-left: $spacing-m
+        }
+    }
 
     .new-auction {
       display: flex;

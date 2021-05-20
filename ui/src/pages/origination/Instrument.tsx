@@ -92,25 +92,27 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
             })}
           />
         </Tile>
-        <Tile header={<h3>Allocations - Top 5%</h3>}>
-          <div className="pie-chart">
-            <PieChart width={400} height={400}>
-              <Pie
-                dataKey="value"
-                data={pieData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                label={data => ` ${data.name} ${getDataPercentage(data.value)}% `}
-              >
-                {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-            </PieChart>
-          </div>
-        </Tile>
+        {pieData.length > 0 && (
+          <Tile header={<h3>Allocations - Top 5%</h3>}>
+            <div className="pie-chart">
+              <PieChart width={400} height={400}>
+                <Pie
+                  dataKey="value"
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  label={data => ` ${data.name} ${getDataPercentage(data.value)}% `}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
+          </Tile>
+        )}
       </div>
       <Tile header={<h3>Claims</h3>}>
         <div ref={el} style={{ height: '100%' }} />

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
+import { useHistory } from 'react-router-dom';
+
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
@@ -142,23 +144,19 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const declineRoleOffer = async (c: CreateEvent<RoleOffer>) => {
     await ledger.exercise(RoleOffer.Decline, c.contractId, {});
   };
+  const history = useHistory();
 
   return (
     <div className="assets">
-      <ActionTile
-        title="Clearing"
-        actions={[
-          {
-            label: 'Offer Clearing Service',
-            path: '/app/setup/clearing/offer',
-          },
-          {
-            label: 'Offer Market Clearing Service',
-            path: '/app/setup/clearing/market/offer',
-          },
-        ]}
-      />
-      <Header as="h2">Current Services</Header>
+      <div className="title-action">
+        <Header as="h2">Current Services</Header>
+        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/offer')}>
+          Offer Clearing Service
+        </Button>
+        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/market/offer')}>
+          Offer Market Clearing Service
+        </Button>
+      </div>
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         loading={marketServicesLoading}

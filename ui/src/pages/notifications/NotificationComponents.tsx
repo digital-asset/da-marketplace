@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Message } from 'semantic-ui-react';
+import { Button, Form, Header } from 'semantic-ui-react';
 
 import { useLedger } from '@daml/react';
 import { ContractId } from '@daml/types';
@@ -23,11 +23,7 @@ import {
 import { Offer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 const Notification: React.FC = ({ children }) => {
-  return (
-    <div className="notification">
-      <Message>{children}</Message>
-    </div>
-  );
+  return <div className="notification">{children}</div>;
 };
 
 type OfferProps<F extends Fields> = {
@@ -140,9 +136,9 @@ export function RequestNotification<T extends Fields>({
 
   return (
     <Notification>
-      <h3>
+      <p>
         {name} is requesting {serviceText}.
-      </h3>
+      </p>
       <FormErrorHandled onSubmit={onApprove}>
         {loadAndCatch => (
           <Form.Group className="inline-form-group">

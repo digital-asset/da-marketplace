@@ -11,7 +11,7 @@ import { Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { ArrowRightIcon } from '../../icons/icons';
+import { AddPlusIcon } from '../../icons/icons';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -40,11 +40,6 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
 
   return (
     <div className="assets">
-      <Tile header={<h4>Actions</h4>}>
-        <Button className="ghost" onClick={() => history.push('/app/custody/accounts/new')}>
-          New Account
-        </Button>
-      </Tile>
       <Header as="h2">Holdings</Header>
       <StripedTable
         rowsClickable
@@ -69,7 +64,13 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           };
         })}
       />
-      <Header as="h2">Accounts</Header>
+      <div className="title-action">
+        <Header as="h2">Accounts</Header>
+
+        <a className="a2 with-icon" onClick={() => history.push('/app/custody/accounts/new')}>
+          <AddPlusIcon /> New Account
+        </a>
+      </div>
       <StripedTable
         rowsClickable
         headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}

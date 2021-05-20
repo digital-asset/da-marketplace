@@ -121,7 +121,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
         params={params}
         service={service}
       />
-      <SetUp />
+      {/* <SetUp /> */}
     </div>
   );
 };

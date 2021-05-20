@@ -7,18 +7,24 @@ import { getAuctionStatus } from '../Utils';
 import { Header } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
 import { ActionTile } from '../../network/Actions';
+import { AddPlusIcon } from '../../../icons/icons';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
   const { getName } = usePartyName('');
 
   return (
-    <div className="auctions">
-      <ActionTile
-        title="Auctions"
-        actions={[{ path: '/app/setup/distribution/new/auction', label: 'New Auction' }]}
-      />
-      <Header as="h2">Auctions</Header>
+    <div className="auction">
+      <div className="title-action">
+        <Header as="h2">Auctions</Header>
+        <a
+          className="a2 with-icon"
+          onClick={() => history.push('/app/setup/distribution/new/auction')}
+        >
+          <AddPlusIcon /> New Auction
+        </a>
+      </div>
+
       <StripedTable
         rowsClickable
         headings={['Provider', 'Client', 'Asset', 'Floor', 'Status']}

@@ -108,6 +108,7 @@
           align-items: center;
 
           .child {
+              display: flex;
             margin-right: $spacing-s;
 
             &:last-child {
@@ -119,6 +120,7 @@
               background-color: var(--blue-100);
               padding: $spacing-xs $spacing-s;
               border-radius: 6px;
+              margin: 0 $spacing-xs;
             }
           }
 

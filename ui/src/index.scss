@@ -6,6 +6,8 @@
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
 @use 'components/Form/CalendarInput';
+@use 'components/InputDialog/InputDialog';
+
 
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
@@ -173,6 +175,16 @@ html {
       &.bold {
         font-weight: 600;
       }
+
+      &.with-icon {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          width: fit-content;
+          .icon {
+              margin-right: 6px;
+          }
+      }
     }
 
     &:hover {
@@ -252,6 +264,8 @@ html {
         @include Market.market();
         @include Notifications.notifications();
         @include Actions.action-tile();
+        @include InputDialog.input-dialog();
+
 
         .ui.message {
           position: absolute;
@@ -259,8 +273,26 @@ html {
           right: 20px;
           min-width: 300px;
           min-height: 125px;
-          animation: slideInLeft 0.7s;
+          animation: slideInLeft 0.2s;
           z-index: 4;
+          background-color: var(--white);
+          border-radius: 2px;
+          border: 1px solid var(--cool-grey-90);
+          box-shadow: unset;
+
+          .content, h3 {
+            color: var(--textcolor)
+
+          }
+        }
+
+        .ui.success.message {
+            border-left: 3px solid  var(--green-50);
+            color: var(--green-50)
+        }
+        .ui.error.message {
+            border-left: 3px solid  var(--red-50);
+            color: var(--red-50)
         }
 
         @keyframes slideInLeft {

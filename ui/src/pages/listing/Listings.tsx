@@ -18,8 +18,7 @@ import {
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
-import { ArrowRightIcon } from '../../icons/icons';
-import { ActionTile } from '../network/Actions';
+import { AddPlusIcon } from '../../icons/icons';
 
 const FAILED_LISTING_TEMPLATE = 'Marketplace.Listing.Service.FailedListingCreation';
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
@@ -60,11 +59,13 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   return !contractId ? (
     <>
-      <ActionTile
-        title="Listing"
-        actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]}
-      />
-      <Header as="h2">Listings</Header>
+      <div className="title-action">
+        <Header as="h2">Listings</Header>
+        <a className="a2 with-icon" onClick={() => history.push('/app/setup/listing/new')}>
+          <AddPlusIcon /> New Listing
+        </a>
+      </div>
+
       <StripedTable
         rowsClickable
         headings={[
@@ -161,12 +162,12 @@ const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
 }: RouteComponentProps & Props) => {
   return (
     <div>
-      <Tile header={<h4>Actions</h4>}>
-        <Button className="ghost" onClick={() => history.push('/app/listing/new')}>
-          New Listing
-        </Button>
-      </Tile>
-      <Header as="h2">Listings</Header>
+      <div className="title-action">
+        <Header as="h2">Listings</Header>
+        <a className="a2 with-icon" onClick={() => history.push('/app/listing/new')}>
+          <AddPlusIcon /> New Listing
+        </a>
+      </div>
     </div>
   );
 };

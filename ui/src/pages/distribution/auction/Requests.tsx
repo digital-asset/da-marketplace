@@ -24,6 +24,7 @@ import {
 import { usePartyName } from '../../../config';
 import { ServicePageProps } from '../../common';
 import { useDisplayErrorMessage } from '../../../context/MessagesContext';
+import { AddPlusIcon } from '../../../icons/icons';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -63,15 +64,12 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
+                    <a
+                      className="a2 with-icon"
                       onClick={() => history.push('/app/distribution/new')}
                     >
-                      New Auction
-                    </Button>
+                      <AddPlusIcon /> New Auction
+                    </a>
                   </Grid>
                 </Grid>
               </Grid>

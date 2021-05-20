@@ -175,7 +175,7 @@ const AppComponent = () => {
       {
         path: '/app/distribution/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Distribution">
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
             <DistributionNew services={auctionService} />
           </ServiceRequired>
         ),
@@ -342,7 +342,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/distribution/new/auction',
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Auction">
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
             <NewAuction services={auctionService} />
           </ServiceRequired>
         ),
@@ -354,7 +354,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/base',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Base Instrument">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
             <NewBaseInstrument />
           </ServiceRequired>
         ),
@@ -362,7 +362,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/convertiblenote',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Convertible Note">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
             <NewConvertibleNote />
           </ServiceRequired>
         ),
@@ -370,7 +370,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/binaryoption',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Binary Option">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
             <NewBinaryOption />
           </ServiceRequired>
         ),
@@ -378,7 +378,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/issuance/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Issuance">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
             <IssuanceNew services={issuanceService} />
           </ServiceRequired>
         ),
@@ -386,7 +386,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/listing/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="Create New Listing">
+          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
             <ListingNew services={listingService} />
           </ServiceRequired>
         ),
@@ -427,7 +427,12 @@ const AppComponent = () => {
   };
 
   const path = useLocation().pathname;
-  const currentEntry = entriesToDisplay.find(entry => path.startsWith(entry.path));
+
+  const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
+
+  function getBaseSegment(segment: string) {
+    return [segment.split('/')[0], segment.split('/')[1], segment.split('/')[2]].join('/');
+  }
 
   return (
     <Page
