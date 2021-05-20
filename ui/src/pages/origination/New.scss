@@ -1,12 +1,4 @@
-@use './NewBaseInstrument';
-@use './NewBinaryOption';
-@use './NewConvertibleNote';
-
 @mixin origination-new {
-  @include NewBaseInstrument.new-base-instrument();
-  @include NewBinaryOption.new-binary-option();
-  @include NewConvertibleNote.new-convertible-note();
-
   .origination-new {
     display: flex;
     flex-wrap: wrap;

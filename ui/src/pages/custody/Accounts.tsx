@@ -141,7 +141,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
-      <InputDialog {...creditDialogProps} />
+      <InputDialog {...creditDialogProps} isModal />
       <Grid container direction="column">
         <Grid container direction="row">
           <Grid item xs={12}>

@@ -18,6 +18,7 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
 import { preciseInputSteps } from '../../util';
+import BackButton from '../../components/Common/BackButton';
 
 const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
@@ -107,115 +108,114 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const { step, placeholder } = preciseInputSteps(+tradedAssetPrecision);
 
   return (
-    <div className="listing">
-      <div className="new-listing">
-        <Header as="h2">New Listing</Header>
-        <FormErrorHandled onSubmit={() => requestListing()}>
-          <div className="form-select">
-            <Form.Select
-              className="select"
-              label="Traded Asset"
-              placeholder="Select..."
-              required
-              options={assets
-                .filter(c => c.payload.assetId.label !== quotedAssetLabel)
-                .map(c => ({
-                  key: c.payload.assetId.label,
-                  text: c.payload.assetId.label,
-                  value: c.payload.assetId.label,
-                }))}
-              onChange={(_, change) => setTradedAssetLabel(change.value as string)}
-            />
-            {showTradedAsset ? (
-              <Icon name="eye slash" link onClick={() => setShowTradedAsset(false)} />
-            ) : (
-              <Icon name="eye" link onClick={() => setShowTradedAsset(true)} />
-            )}
-          </div>
-          <Form.Input
-            label="Traded Asset Precision"
-            type="number"
-            required
-            onChange={(_, change) => setTradedAssetPrecision(change.value as string)}
-          />
-          <div className="form-select">
-            <Form.Select
-              className="select"
-              label="Quoted Asset"
-              placeholder="Select..."
-              required
-              options={assets
-                .filter(c => c.payload.assetId.label !== tradedAssetLabel)
-                .map(c => ({
-                  key: c.payload.assetId.label,
-                  text: c.payload.assetId.label,
-                  value: c.payload.assetId.label,
-                }))}
-              onChange={(_, change) => setQuotedAssetLabel(change.value as string)}
-            />
-            {showQuotedAsset ? (
-              <Icon name="eye slash" link onClick={() => setShowQuotedAsset(false)} />
-            ) : (
-              <Icon name="eye" link onClick={() => setShowQuotedAsset(true)} />
-            )}
-          </div>
-          <Form.Input
-            label="Quoted Asset Precision"
-            type="number"
-            required
-            onChange={(_, change) => setQuotedAssetPrecision(change.value as string)}
-          />
-          <Form.Input
-            required
-            label="Minimum Tradable Quantity"
-            type="number"
-            step={step}
-            placeholder={placeholder}
-            disabled={!tradedAssetPrecision || !tradedAssetLabel}
-            onChange={(_, change) => setMinimumTradableQuantity(change.value as string)}
-          />
-          <Form.Input
-            required
-            label="Maximum Tradable Quantity"
-            type="number"
-            step={step}
-            placeholder={placeholder}
-            disabled={!tradedAssetPrecision || !tradedAssetLabel}
-            onChange={(_, change) => setMaximumTradableQuantity(change.value as string)}
-          />
-          <Form.Input
-            label="Symbol"
-            required
-            onChange={(_, change) => setListingId(change.value as string)}
-          />
-          <Form.Input
-            label="Description"
-            required
-            onChange={(_, change) => setDescription(change.value as string)}
-          />
+    <div className="input-dialog">
+      <BackButton />
+      <Header as="h2">New Base Instrument</Header>
+      <FormErrorHandled onSubmit={() => requestListing()}>
+        <div className="form-select">
           <Form.Select
             className="select"
-            label="Cleared by"
+            label="Traded Asset"
             placeholder="Select..."
             required
-            value={clearedBy}
-            options={[
-              createDropdownProp('-- Collateralized Market --', COLLATERALIZED_VALUE),
-              ...clearedMarketServices.map(cms =>
-                createDropdownProp(getName(cms.payload.provider), cms.payload.provider)
-              ),
-            ]}
-            onChange={(_, change) => setClearedBy(change.value as string)}
+            options={assets
+              .filter(c => c.payload.assetId.label !== quotedAssetLabel)
+              .map(c => ({
+                key: c.payload.assetId.label,
+                text: c.payload.assetId.label,
+                value: c.payload.assetId.label,
+              }))}
+            onChange={(_, change) => setTradedAssetLabel(change.value as string)}
           />
-          <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
-          <div className="submit">
-            <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-            <a className="a2" onClick={() => history.goBack()}>
-              <IconClose /> Cancel
-            </a>
-          </div>
-        </FormErrorHandled>
-      </div>
+          {showTradedAsset ? (
+            <Icon name="eye slash" link onClick={() => setShowTradedAsset(false)} />
+          ) : (
+            <Icon name="eye" link onClick={() => setShowTradedAsset(true)} />
+          )}
+        </div>
+        <Form.Input
+          label="Traded Asset Precision"
+          type="number"
+          required
+          onChange={(_, change) => setTradedAssetPrecision(change.value as string)}
+        />
+        <div className="form-select">
+          <Form.Select
+            className="select"
+            label="Quoted Asset"
+            placeholder="Select..."
+            required
+            options={assets
+              .filter(c => c.payload.assetId.label !== tradedAssetLabel)
+              .map(c => ({
+                key: c.payload.assetId.label,
+                text: c.payload.assetId.label,
+                value: c.payload.assetId.label,
+              }))}
+            onChange={(_, change) => setQuotedAssetLabel(change.value as string)}
+          />
+          {showQuotedAsset ? (
+            <Icon name="eye slash" link onClick={() => setShowQuotedAsset(false)} />
+          ) : (
+            <Icon name="eye" link onClick={() => setShowQuotedAsset(true)} />
+          )}
+        </div>
+        <Form.Input
+          label="Quoted Asset Precision"
+          type="number"
+          required
+          onChange={(_, change) => setQuotedAssetPrecision(change.value as string)}
+        />
+        <Form.Input
+          required
+          label="Minimum Tradable Quantity"
+          type="number"
+          step={step}
+          placeholder={placeholder}
+          disabled={!tradedAssetPrecision || !tradedAssetLabel}
+          onChange={(_, change) => setMinimumTradableQuantity(change.value as string)}
+        />
+        <Form.Input
+          required
+          label="Maximum Tradable Quantity"
+          type="number"
+          step={step}
+          placeholder={placeholder}
+          disabled={!tradedAssetPrecision || !tradedAssetLabel}
+          onChange={(_, change) => setMaximumTradableQuantity(change.value as string)}
+        />
+        <Form.Input
+          label="Symbol"
+          required
+          onChange={(_, change) => setListingId(change.value as string)}
+        />
+        <Form.Input
+          label="Description"
+          required
+          onChange={(_, change) => setDescription(change.value as string)}
+        />
+        <Form.Select
+          className="select"
+          label="Cleared by"
+          placeholder="Select..."
+          required
+          value={clearedBy}
+          options={[
+            createDropdownProp('-- Collateralized Market --', COLLATERALIZED_VALUE),
+            ...clearedMarketServices.map(cms =>
+              createDropdownProp(getName(cms.payload.provider), cms.payload.provider)
+            ),
+          ]}
+          onChange={(_, change) => setClearedBy(change.value as string)}
+        />
+        <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
+        <div className="submit-form">
+          <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
+          <a className="a2" onClick={() => history.goBack()}>
+            <IconClose /> Cancel
+          </a>
+        </div>
+      </FormErrorHandled>
       <div className="asset">
         {showTradedAsset && (
           <Tile header={<h4>Auctioned Asset</h4>}>

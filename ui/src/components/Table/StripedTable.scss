@@ -1,4 +1,3 @@
-@use './PaginationControls';
 @use '../../themes/variables.scss' as *;
 
 @mixin striped-table {
@@ -9,8 +8,28 @@
     align-items: flex-start;
     animation: fadeIn 0.5s;
 
-    @include PaginationControls.pagination-controls();
+    .ui.pagination.menu {
+      margin-left: auto;
 
+      a.item {
+        border: none;
+        color: var(--cool-grey-60);
+      }
+      a.active.item {
+        color: var(--blue-50);
+        background-color: transparent;
+      }
+    }
+
+    &.empty {
+      background-color: var(--white);
+      border: 1px solid var(--cool-grey-90);
+      height: 57px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: $spacing-m;
+    }
 
     table {
       border-collapse: collapse;
@@ -41,6 +60,10 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+
+        .ui.button {
+          padding: 4px;
+        }
       }
 
       tr td {

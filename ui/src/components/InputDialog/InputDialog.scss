@@ -9,9 +9,19 @@
       margin-bottom: $spacing-m;
     }
 
+    .form-select {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+    }
+
     form {
-      width: 33%;
+      width: 40%;
       margin-bottom: $spacing-m;
+    }
+
+    .ghost.checked {
+      margin: $spacing-m 0;
     }
 
     form,
@@ -31,11 +41,16 @@
       align-items: center;
     }
 
-    .submit a.a2 {
-      margin-left: $spacing-xl;
+    .submit-form {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      a.a2 {
+        margin-left: $spacing-xl;
 
-      .icon {
-        margin-right: $spacing-xs;
+        .icon {
+          margin-right: $spacing-xs;
+        }
       }
     }
   }

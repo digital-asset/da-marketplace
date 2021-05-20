@@ -236,12 +236,12 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   return (
     <>
       <BackButton />
-      <InputDialog {...transferDialogProps} />
-      <InputDialog {...creditDialogProps} />
+      <InputDialog {...transferDialogProps} isModal />
+      <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <Header as="h2">{targetAccount.account.id.label}</Header>
-        {normalAccount && (
-          <Tile header={<h4>Actions</h4>}>
+        <div className="title-action">
+          <Header as="h2">{targetAccount.account.id.label}</Header>
+          {normalAccount && (
             <div className="action-row">
               <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
                 Deposit
@@ -250,8 +250,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                 Close
               </Button>
             </div>
-          </Tile>
-        )}
+          )}
+        </div>
 
         <div className="account-overview">
           <div className="details">

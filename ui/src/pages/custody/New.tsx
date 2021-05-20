@@ -128,7 +128,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       }));
 
   return (
-    <div className="new-account">
+    <div className="input-dialog">
       <BackButton />
       <Header as="h2">New Account Request</Header>
       <FormErrorHandled onSubmit={() => requestAccount()}>
@@ -179,7 +179,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           readOnly
           onChange={(_, change) => setAccountName(change.value as string)}
         />
-        <div className="submit">
+        <div className="form-select">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
           <a className="a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel

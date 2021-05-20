@@ -15,9 +15,12 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Header } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
 import { makeDamlSet } from '../common';
+import BackButton from '../../components/Common/BackButton';
+import { IconCircledCheck, IconClose } from '../../icons/icons';
+import classNames from 'classnames';
 
 const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const classes = useStyles();
@@ -120,108 +123,105 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
     getContentAnchorEl: null,
   };
   return (
-    <div className="new-binary-option">
-      <h2>New Binary Option</h2>
-      <Tile header={<h5>Details</h5>}>
-        <FormErrorHandled onSubmit={requestOrigination}>
-          <Button.Group>
-            <Button active={isCall} onClick={() => setIsCall(true)}>
-              Call
-            </Button>
-            <Button.Or />
-            <Button active={!isCall} onClick={() => setIsCall(false)}>
-              Put
-            </Button>
-          </Button.Group>
+    <div className="input-dialog">
+      <BackButton />
+      <Header as="h2">New Binary Option</Header>{' '}
+      <FormErrorHandled onSubmit={requestOrigination}>
+        <div className="form-select">
+          <Button
+            type="button"
+            className={classNames('ghost checked', { darken: !isCall })}
+            onClick={() => setIsCall(true)}
+          >
+            {isCall && <IconCircledCheck />}
+            <p>Call</p>
+          </Button>
+          <Button
+            type="button"
+            className={classNames('ghost checked', { darken: isCall })}
+            onClick={() => setIsCall(false)}
+          >
+            {!isCall && <IconCircledCheck />}
+            <p>Put</p>
+          </Button>
+        </div>
 
-          <div className="asset-row">
-            <Form.Select
-              className="issue-asset-form-field select-account"
-              placeholder="Underlying"
-              label="Underlying"
-              value={underlying}
-              options={assets.map(c => ({
-                text: c.payload.assetId.label,
-                value: c.payload.assetId.label,
-              }))}
-              onChange={(event: React.SyntheticEvent, result: any) => {
-                setUnderlying(result.value);
-              }}
-            />
-          </div>
+        <Form.Select
+          className="issue-asset-form-field select-account"
+          placeholder="Underlying"
+          label="Underlying"
+          value={underlying}
+          options={assets.map(c => ({
+            text: c.payload.assetId.label,
+            value: c.payload.assetId.label,
+          }))}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setUnderlying(result.value);
+          }}
+        />
 
-          <div className="asset-row">
-            <Form.Input
-              fluid
-              label="Strike"
-              placeholder="Strike"
-              value={strike}
-              className="issue-asset-form-field"
-              onChange={e => setStrike(e.currentTarget.value)}
-            />
-          </div>
+        <Form.Input
+          fluid
+          label="Strike"
+          placeholder="Strike"
+          value={strike}
+          className="issue-asset-form-field"
+          onChange={e => setStrike(e.currentTarget.value)}
+        />
 
-          <div className="asset-row">
-            <CalendarInput
-              label="Expiry Date"
-              placeholder="Expiry Date"
-              value={expiry}
-              onChange={e => setExpiry(e)}
-            />
-          </div>
+        <CalendarInput
+          label="Expiry Date"
+          placeholder="Expiry Date"
+          value={expiry}
+          onChange={e => setExpiry(e)}
+        />
 
-          <div className="asset-row">
-            <Form.Select
-              className="issue-asset-form-field select-account"
-              placeholder="Payout Currency"
-              label="Payout Currency"
-              value={currency}
-              options={assets.map(c => ({
-                text: c.payload.assetId.label,
-                value: c.payload.assetId.label,
-              }))}
-              onChange={(event: React.SyntheticEvent, result: any) => {
-                setCurrency(result.value);
-              }}
-            />
-          </div>
+        <Form.Select
+          className="issue-asset-form-field select-account"
+          placeholder="Payout Currency"
+          label="Payout Currency"
+          value={currency}
+          options={assets.map(c => ({
+            text: c.payload.assetId.label,
+            value: c.payload.assetId.label,
+          }))}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setCurrency(result.value);
+          }}
+        />
 
-          <div className="asset-row">
-            <Form.Input
-              fluid
-              label="Instrument ID"
-              value={label}
-              className="issue-asset-form-field"
-              onChange={e => setLabel(e.currentTarget.value)}
-            />
-          </div>
+        <Form.Input
+          fluid
+          label="Instrument ID"
+          value={label}
+          className="issue-asset-form-field"
+          onChange={e => setLabel(e.currentTarget.value)}
+        />
 
-          <div className="asset-row">
-            <Form.Input
-              fluid
-              label="Description"
-              value={description}
-              className="issue-asset-form-field"
-              onChange={e => setDescription(e.currentTarget.value)}
-            />
-          </div>
+        <Form.Input
+          fluid
+          label="Description"
+          value={description}
+          className="issue-asset-form-field"
+          onChange={e => setDescription(e.currentTarget.value)}
+        />
 
-          <div className="asset-row">
-            <Form.Select
-              className="issue-asset-form-field select-account"
-              placeholder="Safekeeping Account"
-              label="Safekeeping Account"
-              options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-              onChange={(event: React.SyntheticEvent, result: any) => {
-                setAccount(result.value);
-              }}
-            />
-          </div>
-
-          <Button className="ghost submit" type="submit" content="Request Origination" />
-        </FormErrorHandled>
-      </Tile>
-
+        <Form.Select
+          className="issue-asset-form-field select-account"
+          placeholder="Safekeeping Account"
+          label="Safekeeping Account"
+          options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setAccount(result.value);
+          }}
+        />
+        <div className="submit-form">
+          <Button className="ghost" type="submit" content="Request Origination" />
+          <a className="a2" onClick={() => history.goBack()}>
+            <IconClose /> Cancel
+          </a>
+        </div>
+      </FormErrorHandled>
       <Tile header={<h5>Payoff</h5>}>
         <div ref={el} style={{ height: '100%' }} />
       </Tile>

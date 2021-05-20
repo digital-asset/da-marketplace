@@ -12,8 +12,9 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { CreateEvent } from '@daml/ledger';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
+import BackButton from '../../components/Common/BackButton';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -75,72 +76,63 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   };
 
   return (
-    <div className="issuance-new">
-      <div>
-        <h3>New Issuance</h3>
-        <Tile header={<h3>Details</h3>}>
-          <FormErrorHandled onSubmit={requestIssuance}>
-            <Form.Input>
-              <Form.Select
-                selection
-                placeholder="Asset"
-                options={assets.map(c => ({
-                  text: c.payload.assetId.label,
-                  value: c.payload.assetId.label,
-                }))}
-                value={assetLabel}
-                onChange={(_, d) => setAssetLabel((d.value && (d.value as string)) || '')}
-              />
-              <IconButton
-                className={classes.marginLeft10}
-                color="primary"
-                size="small"
-                component="span"
-                onClick={() => setShowAsset(!showAsset)}
-              >
-                {showAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-              </IconButton>
-            </Form.Input>
+    <div className="input-dialog">
+      <BackButton />
+      <Header as="h2">New Issuance</Header>
+      <FormErrorHandled onSubmit={requestIssuance}>
+        <div className="form-select">
+          <Form.Select
+            selection
+            placeholder="Asset"
+            options={assets.map(c => ({
+              text: c.payload.assetId.label,
+              value: c.payload.assetId.label,
+            }))}
+            value={assetLabel}
+            onChange={(_, d) => setAssetLabel((d.value && (d.value as string)) || '')}
+          />
+          <IconButton
+            className={classes.marginLeft10}
+            color="primary"
+            size="small"
+            component="span"
+            onClick={() => setShowAsset(!showAsset)}
+          >
+            {showAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+          </IconButton>
+        </div>
 
-            <Form.Select
-              selection
-              placeholder="Issuance Account"
-              options={accounts.map(c => ({
-                text: c.id.label,
-                value: c.id.label,
-              }))}
-              value={accountLabel}
-              onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
-            />
+        <Form.Select
+          selection
+          placeholder="Issuance Account"
+          options={accounts.map(c => ({
+            text: c.id.label,
+            value: c.id.label,
+          }))}
+          value={accountLabel}
+          onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
+        />
 
-            <Form.Input
-              required
-              fluid
-              placeholder="Issuance ID"
-              value={issuanceId}
-              onChange={e => setIssuanceId(e.currentTarget.value)}
-            />
+        <Form.Input
+          required
+          fluid
+          placeholder="Issuance ID"
+          value={issuanceId}
+          onChange={e => setIssuanceId(e.currentTarget.value)}
+        />
 
-            <Form.Input
-              required
-              fluid
-              placeholder="Quantity"
-              value={quantity}
-              onChange={e => setQuantity(e.currentTarget.value)}
-            />
+        <Form.Input
+          required
+          fluid
+          placeholder="Quantity"
+          value={quantity}
+          onChange={e => setQuantity(e.currentTarget.value)}
+        />
 
-            <Button
-              secondary
-              type="submit"
-              disabled={!canRequest}
-              icon="right arrow"
-              labelPosition="right"
-              className="ghost"
-              content="Request Issuance"
-            />
-          </FormErrorHandled>
-        </Tile>
-      </div>
+        <Button type="submit" disabled={!canRequest} className="ghost">
+          Request Issuance
+        </Button>
+      </FormErrorHandled>
 
       {showAsset && (
         <Tile header={<h3>Instrument</h3>}>

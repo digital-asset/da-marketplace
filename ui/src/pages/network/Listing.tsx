@@ -115,8 +115,8 @@ const ListingComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
-      <InputDialog {...requestDialogProps} />
-      <InputDialog {...offerDialogProps} />
+      <InputDialog {...requestDialogProps} isModal />
+      <InputDialog {...offerDialogProps} isModal />
       <Grid container direction="column">
         <Grid container direction="row">
           <Grid item xs={12}>

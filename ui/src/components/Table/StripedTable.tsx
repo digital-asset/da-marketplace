@@ -10,31 +10,26 @@ interface IStripedTableRow {
   onClick?: () => void;
 }
 
+interface IEmptyTableAction {
+  text: string;
+  onClick?: () => void;
+}
+
 const StripedTable = (props: {
   headings: React.ReactNode[];
   rows: IStripedTableRow[];
-  rowsPerPage?: number;
-  emptyLabel?: string;
   loading?: boolean;
   rowsClickable?: boolean;
   clickableIcon?: JSX.Element;
   showLabel?: boolean;
 }) => {
-  const {
-    headings,
-    rows,
-    rowsPerPage,
-    emptyLabel,
-    loading,
-    rowsClickable,
-    showLabel,
-    clickableIcon,
-  } = props;
+  const { headings, rows, loading, rowsClickable, showLabel, clickableIcon } = props;
 
   const clickIcon =
     clickableIcon || (rowsClickable && !clickableIcon ? <ArrowRightIcon /> : undefined);
 
-  const colSpan = clickIcon ? headings.length + 1 : headings.length;
+  const rowsPerPage = 10;
+
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
   const [activePage, setActivePage] = useState<number>(1);
@@ -48,6 +43,13 @@ const StripedTable = (props: {
     }
   }, [activePage, rows, rowsPerPage]);
 
+  if (activePageRows.length === 0) {
+    return (
+      <div className="striped-table empty">
+        <p className="p2">This table contains on data...yet..</p>
+      </div>
+    );
+  }
   return (
     <div className="striped-table">
       <Table>
@@ -74,35 +76,27 @@ const StripedTable = (props: {
           </Table.Body>
         ) : (
           <Table.Body>
-            {rows.length > 0 ? (
-              activePageRows.map((row, i) => (
-                <Table.Row
-                  key={i}
-                  className={classNames({ clickable: rowsClickable })}
-                  onClick={row.onClick}
-                >
-                  {row.elements.map((item, j) => (
-                    <Table.Cell
-                      key={j}
-                      textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}
-                    >
-                      {showLabel && <b className="label">{headings[j]}: </b>} {item}
-                    </Table.Cell>
-                  ))}
-                  {!!clickIcon && (
-                    <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
-                      {clickIcon}
-                    </Table.Cell>
-                  )}
-                </Table.Row>
-              ))
-            ) : (
-              <Table.Row className="empty-table">
-                <Table.Cell textAlign={'center'} colSpan={colSpan}>
-                  <i>{emptyLabel || 'none'}</i>
-                </Table.Cell>
+            {activePageRows.map((row, i) => (
+              <Table.Row
+                key={i}
+                className={classNames({ clickable: rowsClickable })}
+                onClick={row.onClick}
+              >
+                {row.elements.map((item, j) => (
+                  <Table.Cell
+                    key={j}
+                    textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}
+                  >
+                    {showLabel && <b className="label">{headings[j]}: </b>} {item}
+                  </Table.Cell>
+                ))}
+                {!!clickIcon && (
+                  <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
+                    {clickIcon}
+                  </Table.Cell>
+                )}
               </Table.Row>
-            )}
+            ))}
           </Table.Body>
         )}
       </Table>

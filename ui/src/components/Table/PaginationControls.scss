@@ -2,6 +2,17 @@
 
 @mixin pagination-controls {
   .pagination-controls {
-    margin: $spacing-s 0;
+    margin-left: auto;
+    a.item {
+      background-color: transparent;
+    }
+
+    .ui.pagination.menu {
+      background-color: transparent;
+    }
+
+    a.active.item {
+      color: var(--blue-50);
+    }
   }
 }
