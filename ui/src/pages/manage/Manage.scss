@@ -24,18 +24,10 @@
       display: flex;
       flex-direction: row;
       align-items: baseline;
+      flex-wrap: wrap;
       a,
       button {
         margin-left: $spacing-m;
-      }
-    }
-
-    .action-bar {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      a {
-        margin-right: $spacing-m;
       }
     }
 
@@ -48,7 +40,7 @@
       .item {
         padding: 0;
         padding-bottom: $spacing-s;
-        margin-right: $spacing-xl;
+        margin-right: 5%;
 
         &.active {
           color: var(--text-color);
@@ -60,7 +52,7 @@
       }
     }
 
-    @media screen and (max-width: 1050px) {
+    @media screen and (max-width: 1030px) {
       .manage-menu {
         display: none;
       }

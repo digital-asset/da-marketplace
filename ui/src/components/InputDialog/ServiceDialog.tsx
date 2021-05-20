@@ -14,7 +14,7 @@ import { useStreamQueries } from '../../Main';
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
-import { useDisplayErrorMessage, useDisplaySuccessMessage } from '../../context/MessagesContext';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 interface OfferProps<T extends ServiceOfferTemplates> {
   choice?: any;
@@ -40,7 +40,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
   const party = useParty();
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
-  const displaySuccessMessage = useDisplaySuccessMessage();
 
   const tradingRole = useStreamQueries(TradingRole).contracts.find(
     r => r.payload.provider === party
@@ -70,9 +69,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
-          return displaySuccessMessage({
-            message: `Successfully offered ${service} service`,
-          });
         }
       }
       case ServiceKind.CLEARING: {
@@ -83,9 +79,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
-          return displaySuccessMessage({
-            message: `Successfully offered ${service} service`,
-          });
         }
       }
       case ServiceKind.LISTING: {
@@ -96,9 +89,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, tradingRole.contractId, params);
           onClose(false);
-          return displaySuccessMessage({
-            message: `Successfully offered ${service} service`,
-          });
         }
       }
       case ServiceKind.CUSTODY:
@@ -110,9 +100,6 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, custodyRole.contractId, params);
           onClose(false);
-          return displaySuccessMessage({
-            message: `Successfully offered ${service} service`,
-          });
         }
       default:
         throw new Error(`Unsupported service: ${service}`);
@@ -155,7 +142,6 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   title,
 }: RequestProps<T>) => {
   const ledger = useLedger();
-  const displaySuccessMessage = useDisplaySuccessMessage();
 
   const handleClose = async (state: any | null) => {
     if (!state) {
@@ -163,11 +149,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
       return;
     }
 
-    await ledger.create(request, params).then(_ => {
-      return displaySuccessMessage({
-        message: `Successfully requested ${service} service`,
-      });
-    });
+    await ledger.create(request, params);
     onClose(false);
   };
 

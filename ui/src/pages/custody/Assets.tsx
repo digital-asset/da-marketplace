@@ -66,7 +66,6 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       />
       <div className="title-action">
         <Header as="h2">Accounts</Header>
-
         <a className="a2 with-icon" onClick={() => history.push('/app/custody/accounts/new')}>
           <AddPlusIcon /> New Account
         </a>

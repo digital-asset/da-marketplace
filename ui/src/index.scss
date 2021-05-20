@@ -180,6 +180,7 @@ html {
         flex-direction: row;
         align-items: center;
         width: fit-content;
+
         .icon {
           margin-right: 6px;
         }
@@ -288,6 +289,7 @@ html {
           border-left: 3px solid var(--green-50);
           color: var(--green-50);
         }
+
         .ui.error.message {
           border-left: 3px solid var(--red-50);
           color: var(--red-50);

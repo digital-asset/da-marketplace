@@ -12,12 +12,10 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps, damlSetValues } from '../common';
 import { Button, Header } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
-import { ArrowRightIcon } from '../../icons/icons';
 import { formatCurrency } from '../../util';
 import { ActionTile } from '../network/Actions';
 

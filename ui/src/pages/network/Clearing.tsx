@@ -163,7 +163,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
         rows={[...services, ...marketServices].map(c => {
           return {
             elements: [
-              getTemplateId(c.templateId),
+              getTemplateId(c.templateId) + 'asdasdsadasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasdasd',
               getName(c.payload.operator),
               getName(c.payload.provider),
               getName(c.payload.customer),

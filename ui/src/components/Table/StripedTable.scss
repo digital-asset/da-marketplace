@@ -11,10 +11,12 @@
 
     @include PaginationControls.pagination-controls();
 
+
     table {
       border-collapse: collapse;
       border: none;
       margin: 0px;
+      table-layout: fixed;
 
       .ui.loader {
         position: relative;
@@ -35,6 +37,12 @@
         }
       }
 
+      td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
       tr td {
         border-top: 0px !important;
 
@@ -53,42 +61,42 @@
       }
     }
 
-    @media screen and (max-width: 1050px) {
-      table {
-        border-bottom: none;
+    // @media screen and (max-width: 1050px) {
+    //   table {
+    //     border-bottom: none;
 
-        thead {
-          display: none !important;
-        }
+    //     thead {
+    //       display: none !important;
+    //     }
 
-        tr {
-          background-color: var(--cool-grey-100);
-          display: flex;
-          flex-direction: column;
-          padding: $spacing-xs;
+    //     tr {
+    //       background-color: var(--cool-grey-100);
+    //       display: flex;
+    //       flex-direction: column;
+    //       padding: $spacing-xs;
 
-          td {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            flex-wrap: wrap;
-            word-break: break-all;
-            font-weight: normal;
-            text-align: left;
-            padding: $spacing-xs;
+    //       td {
+    //         display: flex;
+    //         flex-direction: row;
+    //         align-items: center;
+    //         flex-wrap: wrap;
+    //         word-break: break-all;
+    //         font-weight: normal;
+    //         text-align: left;
+    //         padding: $spacing-xs;
 
-            .label {
-              display: inline-flex;
-              padding-right: $spacing-xs;
-            }
+    //         .label {
+    //           display: inline-flex;
+    //           padding-right: $spacing-xs;
+    //         }
 
-            .ui.button {
-              display: unset;
-              margin: unset;
-            }
-          }
-        }
-      }
-    }
+    //         .ui.button {
+    //           display: unset;
+    //           margin: unset;
+    //         }
+    //       }
+    //     }
+    //   }
+    // }
   }
 }
