@@ -21,21 +21,22 @@
     }
 
     .title-action {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        a, button {
-            margin-left: $spacing-m
-        }
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      a,
+      button {
+        margin-left: $spacing-m;
+      }
     }
 
     .action-bar {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        a {
-            margin-right: $spacing-m
-        }
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      a {
+        margin-right: $spacing-m;
+      }
     }
 
     .manage-menu {

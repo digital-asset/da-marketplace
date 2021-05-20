@@ -35,17 +35,17 @@ const MessagesProvider: React.FC = ({ children }) => {
     setMessage(message);
   }
 
-    useEffect(() => {
-      if (showMessage) {
-        const timer = setInterval(() => {
-          setShowMessage(false);
-          setMessage(undefined);
-          setMessageType(undefined);
-        }, 9000);
+  useEffect(() => {
+    if (showMessage) {
+      const timer = setInterval(() => {
+        setShowMessage(false);
+        setMessage(undefined);
+        setMessageType(undefined);
+      }, 9000);
 
-        return () => clearInterval(timer);
-      }
-    }, [showMessage]);
+      return () => clearInterval(timer);
+    }
+  }, [showMessage]);
 
   return (
     <MessagesStateContext.Provider value={{ displayErrorMessage, displaySuccessMessage }}>
@@ -55,7 +55,7 @@ const MessagesProvider: React.FC = ({ children }) => {
           error={messageType === 'Error'}
           success={messageType === 'Success'}
           onDismiss={() => setShowMessage(false)}
-          header={<Header as='h3'>{message?.header || messageType}</Header>}
+          header={<Header as="h3">{message?.header || messageType}</Header>}
           content={<p>{message?.message}</p>}
           list={message?.list}
         />

@@ -5,12 +5,13 @@
     animation: fadeIn 0.5s;
 
     .title-action {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        a, button {
-            margin-left: $spacing-m
-        }
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      a,
+      button {
+        margin-left: $spacing-m;
+      }
     }
 
     table {

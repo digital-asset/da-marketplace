@@ -8,7 +8,6 @@
 @use 'components/Form/CalendarInput';
 @use 'components/InputDialog/InputDialog';
 
-
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
 @use 'pages/landing/Landing';
@@ -177,13 +176,13 @@ html {
       }
 
       &.with-icon {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-          width: fit-content;
-          .icon {
-              margin-right: 6px;
-          }
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: fit-content;
+        .icon {
+          margin-right: 6px;
+        }
       }
     }
 
@@ -266,7 +265,6 @@ html {
         @include Actions.action-tile();
         @include InputDialog.input-dialog();
 
-
         .ui.message {
           position: absolute;
           top: 0px;
@@ -280,19 +278,19 @@ html {
           border: 1px solid var(--cool-grey-90);
           box-shadow: unset;
 
-          .content, h3 {
-            color: var(--textcolor)
-
+          .content,
+          h3 {
+            color: var(--textcolor);
           }
         }
 
         .ui.success.message {
-            border-left: 3px solid  var(--green-50);
-            color: var(--green-50)
+          border-left: 3px solid var(--green-50);
+          color: var(--green-50);
         }
         .ui.error.message {
-            border-left: 3px solid  var(--red-50);
-            color: var(--red-50)
+          border-left: 3px solid var(--red-50);
+          color: var(--red-50);
         }
 
         @keyframes slideInLeft {
