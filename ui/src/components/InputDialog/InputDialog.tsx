@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Header, Button, Form, Modal } from 'semantic-ui-react';
 
 import { Field, FieldComponents } from './Fields';
-import { IconClose } from '../../icons/icons';
+import { IconClose, InformationIcon } from '../../icons/icons';
 
 import BackButton from '../../components/Common/BackButton';
 
 export interface InputDialogProps<T extends { [key: string]: any }> {
   open: boolean;
   title: string;
+  subtitle?: string;
   defaultValue: T;
   fields: Record<keyof T, Field>;
   onClose: (state: T | null) => Promise<void>;
@@ -29,10 +30,23 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
     />
   );
 
+  const subtitle = props.subtitle && (
+    <div className="subtitle">
+      <InformationIcon />
+      {props.subtitle}
+    </div>
+  );
+
   if (props.isModal) {
     return (
-      <Modal open={props.open} size="small" onClose={() => props.onClose(null)}>
+      <Modal
+        className="input-dialog"
+        open={props.open}
+        size="small"
+        onClose={() => props.onClose(null)}
+      >
         <Modal.Header as="h2">{props.title}</Modal.Header>
+        <Modal.Content>{props.subtitle}</Modal.Content>
         <Modal.Content>
           <Form>{content}</Form>
         </Modal.Content>
@@ -52,6 +66,8 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
     <div className="input-dialog">
       <BackButton />
       <Header as="h2">{props.title}</Header>
+      {subtitle}
+
       <Form>
         {content}
         <div className="submit-form">

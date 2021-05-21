@@ -103,14 +103,13 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     return (
       <div className="member">
-        <TitleWithActions title={'Margin Calculations'}>
-          {!member && (
-            <>
-              <MarginCallModal services={services} member={customer} />
-              <MTMCalculationModal services={services} member={customer} />
-            </>
-          )}
-        </TitleWithActions>
+        <TitleWithActions title={'Margin Calculations'} />
+        {!member && (
+          <>
+            <MarginCallModal services={services} member={customer} />
+            <MTMCalculationModal services={services} member={customer} />
+          </>
+        )}
         <div className="grid-row">
           <StripedTable
             headings={['Time', 'Target Amount', 'Account']}

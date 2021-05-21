@@ -16,15 +16,14 @@ const StripedTable = (props: {
   loading?: boolean;
   rowsClickable?: boolean;
   clickableIcon?: JSX.Element;
-  showLabel?: boolean;
   title?: string;
 }) => {
-  const { headings, rows, loading, rowsClickable, showLabel, clickableIcon, title } = props;
+  const { headings, rows, loading, rowsClickable, clickableIcon, title } = props;
 
   const clickIcon =
     clickableIcon || (rowsClickable && !clickableIcon ? <ArrowRightIcon /> : undefined);
 
-  const rowsPerPage = 10;
+  const rowsPerPage = undefined || 0;
 
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
@@ -66,7 +65,7 @@ const StripedTable = (props: {
     <div className="striped-table">
       {!!title && <Header as="h2">{title}</Header>}
 
-      <Table>
+      <Table unstackable>
         <Table.Header>
           <Table.Row>
             {headings.map((heading, index) => (
@@ -90,11 +89,16 @@ const StripedTable = (props: {
             >
               {row.elements.map((item, j) => (
                 <Table.Cell key={j} textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}>
-                  {showLabel && <b className="label">{headings[j]}: </b>} {item}
+                  <b className="label">{headings[j]}: </b>
+                  {item}
                 </Table.Cell>
               ))}
               {!!clickIcon && (
-                <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
+                <Table.Cell
+                  key={row.elements.length + 1}
+                  textAlign={'right'}
+                  className="click-icon"
+                >
                   {clickIcon}
                 </Table.Cell>
               )}

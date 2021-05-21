@@ -37,7 +37,7 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="origination-requests">
       <TitleWithActions
         title={'Origination Requests'}
-        actions={[{ path: '/app/instrument/new', label: 'New Instrument' }]}
+        addNewActions={[{ path: '/app/instrument/new', label: 'New Instrument' }]}
       />
 
       <StripedTable

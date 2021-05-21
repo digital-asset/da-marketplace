@@ -32,7 +32,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
 
-  const [updatingDeposits, setUpdatingDeposits] = useState(false);
+  //   const [updatingDeposits, setUpdatingDeposits] = useState(false);
 
   const cid = contractId.replace('_', '#');
 
@@ -53,27 +53,27 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const updateDeposits: any = async (retries: number) => {
-    if (retries > 0) {
-      await halfSecondPromise();
-      return updateDeposits(retries - 1);
-    }
-    return Promise.all(
-      deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
-          signatory => !d.observers.includes(signatory)
-        );
-        if (newObservers.length > 0) {
-          addSignatoryAsDepositObserver(d, newObservers);
-        }
-      })
-    );
-  };
+  //   const updateDeposits: any = async (retries: number) => {
+  //     if (retries > 0) {
+  //       await halfSecondPromise();
+  //       return updateDeposits(retries - 1);
+  //     }
+  //     return Promise.all(
+  //       deposits.map(d => {
+  //         const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
+  //           signatory => !d.observers.includes(signatory)
+  //         );
+  //         if (newObservers.length > 0) {
+  //           addSignatoryAsDepositObserver(d, newObservers);
+  //         }
+  //       })
+  //     );
+  //   };
 
-  useEffect(() => {
-    setUpdatingDeposits(true);
-    updateDeposits(3).then(() => setUpdatingDeposits(false));
-  }, []);
+  //   useEffect(() => {
+  //     setUpdatingDeposits(true);
+  //     updateDeposits(3).then(() => setUpdatingDeposits(false));
+  //   }, []);
 
   const allAccounts = useMemo(
     () =>
@@ -131,6 +131,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId);
   const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId);
+  const service = clientServices.find(s => s.payload.provider === targetAccount.account.provider);
 
   const accountDeposits = deposits.filter(
     d =>
@@ -140,7 +141,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const requestWithdrawDeposit = async (c: CreateEvent<AssetDeposit>) => {
-    const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service)
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
@@ -162,9 +162,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
       const transferToAccount = accounts.find(a => a.payload.account.id.label === state.account);
-      const service = clientServices.find(
-        s => s.payload.provider === targetAccount.account.provider
-      );
+
       if (!service || !transferToAccount) return;
 
       await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
@@ -196,20 +194,22 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       if (!state) return;
       const asset = assets.find(i => i.payload.description === state.asset);
       if (!asset || !targetAccount) return;
-      const service = clientServices.find(
-        s => s.payload.provider === targetAccount.account.provider
-      );
-      if (!service) return;
 
-      await ledger
-        .exercise(Service.RequestCreditAccount, service.contractId, {
-          accountId: targetAccount.account.id,
-          asset: { id: asset.payload.assetId, quantity: state.quantity },
-        })
-        .then(() => {
-          setUpdatingDeposits(true);
-          updateDeposits(3).then(() => setUpdatingDeposits(false));
+      if (!service)
+        return displayErrorMessage({
+          message: `${getName(
+            targetAccount.account.provider
+          )} does not offer issuance services to ${getName(party)}`,
         });
+
+      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+        accountId: targetAccount.account.id,
+        asset: { id: asset.payload.assetId, quantity: state.quantity },
+      });
+      // .then(() => {
+      //   setUpdatingDeposits(true);
+      //   updateDeposits(3).then(() => setUpdatingDeposits(false));
+      // });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,
@@ -224,7 +224,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   };
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
-    const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service)
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
@@ -277,25 +276,23 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <TitleWithActions title={targetAccount.account.id.label}>
-          {normalAccount && (
-            <div className="action-row">
-              <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
-                Deposit
-              </Button>
-              <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
-                Close
-              </Button>
-            </div>
-          )}
-        </TitleWithActions>
-
+        <TitleWithActions title={targetAccount.account.id.label} />
+        {normalAccount && (
+          <div className="action-row">
+            <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
+              Deposit
+            </Button>
+            <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
+              Close
+            </Button>
+          </div>
+        )}
         <div className="grid-row">
           <InfoCard title="Account Details" info={accountData} />
           <StripedTable
             title="Holdings"
             headings={['Holding', 'Asset', '']}
-            loading={depositsLoading || updatingDeposits}
+            loading={depositsLoading}
             rows={accountDeposits.map(c => {
               return {
                 elements: [

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
-import { useHistory } from 'react-router-dom';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -13,7 +12,7 @@ import {
   Service as MarketService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
@@ -145,18 +144,15 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(RoleOffer.Decline, c.contractId, {});
   };
 
-  const history = useHistory();
-
   return (
     <div>
-      <TitleWithActions title="Current Services">
-        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/offer')}>
-          Offer Clearing Service
-        </Button>
-        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/market/offer')}>
-          Offer Market Clearing Service
-        </Button>
-      </TitleWithActions>
+      <TitleWithActions
+        title="Current Services"
+        otherActions={[
+          { label: 'Offer Clearing Service', path: '/app/setup/clearing/offer' },
+          { label: 'Offer Market Clearing Service', path: '/app/setup/clearing/market/offer' },
+        ]}
+      />
 
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
