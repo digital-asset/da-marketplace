@@ -30,7 +30,6 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
-import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -41,7 +40,6 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const history = useHistory();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
-  const displayErrorMessage = useDisplayErrorMessage();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });

@@ -144,6 +144,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const declineRoleOffer = async (c: CreateEvent<RoleOffer>) => {
     await ledger.exercise(RoleOffer.Decline, c.contractId, {});
   };
+
   const history = useHistory();
 
   return (

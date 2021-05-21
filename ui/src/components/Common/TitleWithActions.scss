@@ -1,14 +1,14 @@
 @use '../../themes/variables.scss' as *;
 
 @mixin title-with-actions {
-    .title-with-actions {
-        display: flex;
-        flex-direction: row;
-        align-items: baseline;
-        flex-wrap: wrap;
-        a,
-        button {
-          margin-left: $spacing-m;
-        }
-      }
+  .title-with-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    flex-wrap: wrap;
+    a,
+    button {
+      margin-left: $spacing-m;
+    }
+  }
 }

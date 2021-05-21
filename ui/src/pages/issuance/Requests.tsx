@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, RouteComponentProps, withRouter } from 'react-router-dom';
-import { Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -14,7 +14,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { AddPlusIcon } from '../../icons/icons';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -63,48 +63,47 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <div className="issuance-requests">
-      <a className="a2 with-icon" onClick={() => history.push('/app/issuance/new')}>
-        <AddPlusIcon /> New Issuance
-      </a>
+      <TitleWithActions
+        title="Issuance Requests"
+        actions={[{ path: '/app/issuance/new', label: 'New Issuance' }]}
+      />
 
-      <Tile header={<h4>Issuance Requests</h4>}>
-        <StripedTable
-          headings={[
-            'Issuing Agent',
-            'Issuer',
-            'Issuance ID',
-            'Account',
-            'Asset',
-            'Quantity',
-            'Action',
-            'Details',
-          ]}
-          loading={createRequestsLoading}
-          rows={createRequests.map(c => {
-            return {
-              elements: [
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                c.payload.issuanceId,
-                c.payload.accountId.label,
-                c.payload.assetId.label,
-                c.payload.quantity,
-                <>
-                  {party === c.payload.provider && (
-                    <Button className="ghost" onClick={() => createIssuance(c)}>
-                      Issue
-                    </Button>
-                  )}
-                </>,
-                <NavLink to={'/app/issuance/createrequest/' + c.contractId.replace('#', '_')}>
-                  <ArrowRightIcon />
-                </NavLink>,
-              ],
-            };
-          })}
-        />
-      </Tile>
-
+      <StripedTable
+        headings={[
+          'Issuing Agent',
+          'Issuer',
+          'Issuance ID',
+          'Account',
+          'Asset',
+          'Quantity',
+          'Action',
+          'Details',
+        ]}
+        loading={createRequestsLoading}
+        rows={createRequests.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.issuanceId,
+              c.payload.accountId.label,
+              c.payload.assetId.label,
+              c.payload.quantity,
+              <>
+                {party === c.payload.provider && (
+                  <Button className="ghost" onClick={() => createIssuance(c)}>
+                    Issue
+                  </Button>
+                )}
+              </>,
+              <NavLink to={'/app/issuance/createrequest/' + c.contractId.replace('#', '_')}>
+                <ArrowRightIcon />
+              </NavLink>,
+            ],
+          };
+        })}
+      />
+      <Header as="h2">Deissuance Requests</Header>
       <Tile header={<h4>Deissuance Requests</h4>}>
         <StripedTable
           headings={[

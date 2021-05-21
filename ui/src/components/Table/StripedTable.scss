@@ -72,16 +72,16 @@
     }
 
     .ui.pagination.menu {
-        margin-left: auto;
+      margin-left: auto;
 
-        a.item {
-          border: none;
-          color: var(--cool-grey-60);
-        }
-        a.active.item {
-          color: var(--blue-50);
-          background-color: transparent;
-        }
+      a.item {
+        border: none;
+        color: var(--cool-grey-60);
+      }
+      a.active.item {
+        color: var(--blue-50);
+        background-color: transparent;
+      }
     }
 
     // @media screen and (max-width: 1050px) {

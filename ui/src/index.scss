@@ -6,6 +6,7 @@
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
 @use 'components/Form/CalendarInput';
+
 @use 'components/InputDialog/InputDialog';
 @use 'components/Common/TitleWithActions';
 @use 'pages/login/Login';
@@ -18,7 +19,6 @@
 @use 'pages/page/OverflowMenu';
 @use 'pages/clearing/Member';
 @use 'pages/custody/Account';
-@use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
 @use 'pages/origination/Instrument';
 
@@ -254,7 +254,6 @@ html {
         @include Landing.landing();
         @include Member.member();
         @include Account.account();
-        @include New.new-account();
         @include Auction.auction();
         @include Bidding.bidding();
         @include Listing.listing();
