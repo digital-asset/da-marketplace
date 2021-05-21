@@ -1,18 +1,5 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-// import {
-//   Button,
-//   Grid,
-//   IconButton,
-//   Paper,
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHead,
-//   TableRow,
-//   Typography,
-// } from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { Button } from 'semantic-ui-react';
