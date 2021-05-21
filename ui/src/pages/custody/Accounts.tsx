@@ -50,37 +50,6 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
   const clientServices = services.filter(s => s.payload.customer === party);
   const assetNames = assets.map(a => a.payload.description);
 
-  const addSignatoryAsDepositObserver = async (
-    deposit: CreateEvent<AssetDeposit>,
-    newObs: string[]
-  ) => {
-    const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
-
-    await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-      newObservers,
-    });
-  };
-
-  const updateDeposits: any = async (retries: number) => {
-    if (retries > 0) {
-      return updateDeposits(retries - 1);
-    }
-    return Promise.all(
-      deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
-          signatory => !d.observers.includes(signatory)
-        );
-        if (newObservers.length > 0) {
-          addSignatoryAsDepositObserver(d, newObservers);
-        }
-      })
-    );
-  };
-
-  useEffect(() => {
-    updateDeposits(3);
-  }, []);
-
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service)
@@ -120,12 +89,10 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
       );
       if (!service) return;
 
-      await ledger
-        .exercise(Service.RequestCreditAccount, service.contractId, {
-          accountId: account.payload.account.id,
-          asset: { id: asset.payload.assetId, quantity: state.quantity },
-        })
-        .then(() => updateDeposits(3));
+      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+        accountId: account.payload.account.id,
+        asset: { id: asset.payload.assetId, quantity: state.quantity },
+      });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,

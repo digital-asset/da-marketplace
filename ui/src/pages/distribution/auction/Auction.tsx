@@ -23,7 +23,6 @@ import StripedTable from '../../../components/Table/StripedTable';
 import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import BackButton from '../../../components/Common/BackButton';
-import { damlSetValues, makeDamlSet } from '../../common';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -50,34 +49,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
 
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
-  const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const addSignatoryAsDepositObserver = async (
-    deposit: CreateEvent<AssetDeposit>,
-    newObs: string[]
-  ) => {
-    const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
-
-    await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-      newObservers,
-    });
-  };
-
-  const updateDeposits: any = async (retries: number) => {
-    if (retries > 0) {
-      return updateDeposits(retries - 1);
-    }
-    return Promise.all(
-      deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
-          signatory => !d.observers.includes(signatory)
-        );
-        if (newObservers.length > 0) {
-          addSignatoryAsDepositObserver(d, newObservers);
-        }
-      })
-    );
-  };
 
   if (!auction || !isAuctionProvider) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
@@ -111,16 +82,12 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
 
   const closeAuction = async () => {
     const bidCids = bids.map(c => c.contractId);
-    await ledger
-      .exercise(AuctionService.ProcessAuction, auctionProviderService.contractId, {
-        auctionCid: auction.contractId,
-        bidCids,
-      })
-      .then(([result]) => {
-        updateDeposits(3).then(() =>
-          history.push('/app/distribution/auctions/' + result._1.replace('#', '_'))
-        );
-      });
+    const [result] = await ledger.exercise(
+      AuctionService.ProcessAuction,
+      auctionProviderService.contractId,
+      { auctionCid: auction.contractId, bidCids }
+    );
+    history.push('/app/distribution/auctions/' + result._1.replace('#', '_'));
   };
 
   const requestBid = async (biddingService: CreateEvent<BiddingService>) => {
