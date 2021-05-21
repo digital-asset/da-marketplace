@@ -54,7 +54,7 @@ import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header } from 'semantic-ui-react';
+import { Header, Loader } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
@@ -448,8 +448,10 @@ const AppComponent = () => {
       showNotificationAlert={notifCount > 0}
     >
       {servicesLoading ? (
-        <div>
-          <CircularProgress color="secondary" />
+        <div className="page-loading">
+          <Loader active size="large">
+            <p>Loading...</p>
+          </Loader>
         </div>
       ) : (
         <div>

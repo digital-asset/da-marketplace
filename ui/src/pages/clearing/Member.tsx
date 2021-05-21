@@ -20,7 +20,7 @@ import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
 import { formatCurrency } from '../../util';
-import TitleWithActions from '../../componenets/Common/TitleWithActions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 type Props = {
   member?: boolean;

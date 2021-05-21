@@ -13,11 +13,11 @@ import {
 import { ServicePageProps, damlSetValues } from '../common';
 import { Button, Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { formatCurrency } from '../../util';
-import { ActionTile } from '../network/Actions';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -44,7 +44,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   return (
     <div className="assets">
-      <ActionTile
+      <TitleWithActions
         title="Clearing"
         actions={[
           {
@@ -55,7 +55,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       >
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
-      </ActionTile>
+      </TitleWithActions>
       <Header as="h2">Holdings</Header>
       <StripedTable
         rowsClickable

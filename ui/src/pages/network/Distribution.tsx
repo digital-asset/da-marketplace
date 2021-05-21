@@ -26,7 +26,6 @@ import { InputDialog, InputDialogProps } from '../../components/InputDialog/Inpu
 import { Role } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import StripedTable from '../../components/Table/StripedTable';
-import { ActionTile } from './Actions';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 export const DistributionServiceTable = () => {

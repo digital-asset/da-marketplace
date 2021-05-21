@@ -30,6 +30,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
