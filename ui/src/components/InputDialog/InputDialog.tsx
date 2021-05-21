@@ -5,6 +5,7 @@ import { Field, FieldComponents } from './Fields';
 import { IconClose, InformationIcon } from '../../icons/icons';
 
 import BackButton from '../../components/Common/BackButton';
+import classNames from 'classnames';
 
 export interface InputDialogProps<T extends { [key: string]: any }> {
   open: boolean;
@@ -15,6 +16,7 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
   onClose: (state: T | null) => Promise<void>;
   onChange?: (state: T | null) => void;
   isModal?: boolean;
+  isInline?: boolean;
 }
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
@@ -63,8 +65,8 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   }
 
   return (
-    <div className="input-dialog">
-      <BackButton />
+    <div className={classNames("input-dialog", {'inline': props.isInline})}>
+      {!props.isInline && <BackButton />}
       <Header as="h2">{props.title}</Header>
       {subtitle}
 

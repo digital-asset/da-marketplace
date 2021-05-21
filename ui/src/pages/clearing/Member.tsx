@@ -110,7 +110,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
             <MTMCalculationModal services={services} member={customer} />
           </>
         )}
-        <div className="grid-row">
+        <div className="page-section-row">
           <StripedTable
             headings={['Time', 'Target Amount', 'Account']}
             loading={fulfilledMarginCalcsLoading}

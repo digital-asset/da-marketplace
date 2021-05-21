@@ -7,15 +7,14 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import Tile from '../../components/Tile/Tile';
-import { Button, Table } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
-import TitleWithActions from '../../components/Common/TitleWithActions';
 import InfoCard from '../../components/Common/InfoCard';
+import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
@@ -276,47 +275,52 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <TitleWithActions title={targetAccount.account.id.label} />
+        <Header as="h2">
+          <b>Account:</b> {targetAccount.account.id.label}
+        </Header>
         {normalAccount && (
           <div className="action-row">
-            <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
-              Deposit
-            </Button>
             <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
-              Close
+              Close Account
             </Button>
           </div>
         )}
-        <div className="grid-row">
+        <div className="page-section-row">
           <InfoCard title="Account Details" info={accountData} />
-          <StripedTable
-            title="Holdings"
-            headings={['Holding', 'Asset', '']}
-            loading={depositsLoading}
-            rows={accountDeposits.map(c => {
-              return {
-                elements: [
-                  c.payload.asset.quantity,
-                  c.payload.asset.id.label,
-                  <>
-                    {party === targetAccount.account.owner && normalAccount && (
-                      <div className="action-row">
-                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                          Withdraw
-                        </Button>
-                        {relatedAccounts.length > 0 && (
-                          <Button className="ghost" onClick={() => requestTransfer(c)}>
-                            Transfer
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </>,
-                ],
-              };
-            })}
-          />
+          <Tile header="Create Deposit">
+            <InputDialog {...creditDialogProps} isInline/>
+            <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
+              Create Deposit
+            </Button>
+          </Tile>
         </div>
+        <StripedTable
+          title="Holdings"
+          headings={['Holding', 'Asset', '']}
+          loading={depositsLoading}
+          rows={accountDeposits.map(c => {
+            return {
+              elements: [
+                c.payload.asset.quantity,
+                c.payload.asset.id.label,
+                <>
+                  {party === targetAccount.account.owner && normalAccount && (
+                    <div className="action-row">
+                      <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                        Withdraw
+                      </Button>
+                      {relatedAccounts.length > 0 && (
+                        <Button className="ghost" onClick={() => requestTransfer(c)}>
+                          Transfer
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>,
+              ],
+            };
+          })}
+        />
       </div>
     </>
   );

@@ -62,7 +62,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
     <div className="instrument">
       <BackButton />
 
-      <div className="grid-row">
+      <div className="page-section-row">
         <InfoCard
           title={instrument.payload.description}
           info={[

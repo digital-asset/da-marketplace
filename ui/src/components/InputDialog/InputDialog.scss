@@ -64,6 +64,19 @@
         }
       }
     }
+
+    &.inline {
+        form,
+        h2,
+        .submit, .subtitle {
+          margin-left: unset;
+        }
+
+        .submit-form, h2{
+            display: none;
+        }
+    }
+
     @media screen and (max-width: 980px) {
       form {
         width: auto;
