@@ -1,7 +1,7 @@
 VERSION := $(shell ddit ditversion)
 
 # Just the Major.Minor.Patch, excluding the prerelease portion
-DAML_VERSION := $(shell ddit ditversion | sed -r "s/^([0-9]*)\.([0-9]*)\.([0-9]*)(-[a-zA-Z]*\.[0-9]*)?/\1.\2.\3/")
+SHORT_VERSION := $(shell ddit ditversion | sed -r "s/^([0-9]*)\.([0-9]*)\.([0-9]*)(-[a-zA-Z]*\.[0-9]*)?/\1.\2.\3/")
 PYTHON := pipenv run python
 
 UI_DIR := ui
@@ -10,15 +10,15 @@ PKG_DIR := pkg
 
 ### *-=- Artifacts -=-*
 
-dar_name := da-marketplace-$(DAML_VERSION).dar
+dar_name := da-marketplace-$(SHORT_VERSION).dar
 dar_src := .daml/dist/$(dar_name)
 dar := $(PKG_DIR)/$(dar_name)
 
-trigger_dar_name := da-marketplace-triggers-$(DAML_VERSION).dar
+trigger_dar_name := da-marketplace-triggers-$(SHORT_VERSION).dar
 trigger_dar_src := triggers/.daml/dist/$(trigger_dar_name)
 trigger_dar := $(PKG_DIR)/$(trigger_dar_name)
 
-exberry_adapter_name := da-marketplace-exberry-adapter-$(DAML_VERSION).tar.gz
+exberry_adapter_name := da-marketplace-exberry-adapter-$(SHORT_VERSION).tar.gz
 exberry_adapter := $(PKG_DIR)/$(exberry_adapter_name)
 
 damljs := daml.js
