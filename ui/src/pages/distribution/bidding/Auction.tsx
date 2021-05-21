@@ -122,7 +122,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
       </Header>
       <div className="bidding">
         <div className="bidding-details">
-          <Tile header={<h4>Auction Details</h4>}>
+          <Tile header="Auction Details">
             <Table basic="very">
               <Table.Body>
                 <Table.Row key={0}>
@@ -190,26 +190,25 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
               </Table.Body>
             </Table>
           </Tile>
-          <Tile header={<h4>Published Bids</h4>}>
-            <StripedTable
-              headings={['Investor', 'Quantity', 'Allocation %']}
-              loading={allBiddingAuctionsLoading}
-              rows={biddingAuction.payload.publishedBids.map(c => {
-                return {
-                  elements: [
-                    c.investor,
-                    c.quantity,
-                    (
-                      (parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity)) *
-                      100
-                    ).toFixed(2),
-                  ],
-                };
-              })}
-            />
-          </Tile>
+          <StripedTable
+            title="Published Bids"
+            headings={['Investor', 'Quantity', 'Allocation %']}
+            loading={allBiddingAuctionsLoading}
+            rows={biddingAuction.payload.publishedBids.map(c => {
+              return {
+                elements: [
+                  c.investor,
+                  c.quantity,
+                  (
+                    (parseFloat(c.quantity) / parseFloat(biddingAuction.payload.asset.quantity)) *
+                    100
+                  ).toFixed(2),
+                ],
+              };
+            })}
+          />
           {!!bid && (
-            <Tile header={<h4>Bid</h4>}>
+            <Tile header="Bid">
               <Table basic="very">
                 <Table.Body>
                   <Table.Row key={0}>
@@ -245,7 +244,7 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
             </Tile>
           )}
           {!bid && (
-            <Tile header={<h4>Submit Bid</h4>}>
+            <Tile header="Submit Bid">
               <FormErrorHandled onSubmit={() => submitBid()}>
                 <Form.Input
                   label="Quantity"
@@ -278,12 +277,12 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
         </div>
         <div className="asset">
           {showAuctionedAsset && (
-            <Tile header={<h4>Auctioned Asset</h4>}>
+            <Tile header="Auctioned Asset">
               <div ref={el1} style={{ height: '100%' }} />
             </Tile>
           )}
           {showQuotedAsset && (
-            <Tile header={<h4>Quoted Asset</h4>}>
+            <Tile header="Quoted Asset">
               <div ref={el2} style={{ height: '100%' }} />
             </Tile>
           )}

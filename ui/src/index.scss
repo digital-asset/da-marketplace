@@ -7,19 +7,19 @@
 @use 'components/Table/StripedTable';
 @use 'components/Form/CalendarInput';
 
+@use 'components/InputDialog/InputDialog';
+@use 'components/Common/TitleWithActions';
+@use 'components/Common/InfoCard';
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
 @use 'pages/landing/Landing';
 @use 'pages/manage/Manage';
 @use 'pages/setup/SetUp';
 @use 'pages/page/Page';
-@use 'pages/network/Actions';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
 @use 'pages/clearing/Member';
-@use 'pages/custody/Assets';
 @use 'pages/custody/Account';
-@use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
 @use 'pages/origination/Instrument';
 
@@ -81,6 +81,8 @@ html {
     font-size: 20px;
     line-height: 27px;
     color: var(--textcolor);
+    margin-top: 24px;
+    margin-bottom: 12px;
 
     &.dark {
       color: var(--white);
@@ -173,6 +175,17 @@ html {
       &.bold {
         font-weight: 600;
       }
+
+      &.with-icon {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        width: fit-content;
+
+        .icon {
+          margin-right: 6px;
+        }
+      }
     }
 
     &:hover {
@@ -239,19 +252,19 @@ html {
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Instrument.instrument();
+        @include InfoCard.info-card();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();
-        @include Assets.assets();
         @include Member.member();
         @include Account.account();
-        @include New.new-account();
         @include Auction.auction();
         @include Bidding.bidding();
         @include Listing.listing();
         @include Market.market();
         @include Notifications.notifications();
-        @include Actions.action-tile();
+        @include TitleWithActions.title-with-actions();
+        @include InputDialog.input-dialog();
 
         .ui.message {
           position: absolute;
@@ -259,8 +272,27 @@ html {
           right: 20px;
           min-width: 300px;
           min-height: 125px;
-          animation: slideInLeft 0.7s;
+          animation: slideInLeft 0.2s;
           z-index: 4;
+          background-color: var(--white);
+          border-radius: 2px;
+          border: 1px solid var(--cool-grey-90);
+          box-shadow: unset;
+
+          .content,
+          h3 {
+            color: var(--textcolor);
+          }
+        }
+
+        .ui.success.message {
+          border-left: 3px solid var(--green-50);
+          color: var(--green-50);
+        }
+
+        .ui.error.message {
+          border-left: 3px solid var(--red-50);
+          color: var(--red-50);
         }
 
         @keyframes slideInLeft {

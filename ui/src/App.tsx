@@ -1,5 +1,13 @@
 import React from 'react';
-import { Redirect, Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
+import {
+  Redirect,
+  Route,
+  RouteProps,
+  Switch,
+  useLocation,
+  withRouter,
+  useHistory,
+} from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -12,7 +20,6 @@ import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
 import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
-import { CircularProgress } from '@material-ui/core';
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
@@ -54,7 +61,7 @@ import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header } from 'semantic-ui-react';
+import { Header, Loader, Button } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
@@ -68,6 +75,7 @@ type Entry = {
 
 const AppComponent = () => {
   const party = useParty();
+  const history = useHistory();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: clearingService, loading: clearingLoading } =
@@ -98,6 +106,7 @@ const AppComponent = () => {
       {
         label: 'Wallet',
         path: '/app/custody/assets',
+        activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
         children: [],
@@ -149,6 +158,11 @@ const AppComponent = () => {
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
         children: [],
+        topMenuButtons: [
+          <Button className="ghost" onClick={() => history.push('/app/manage/clearing')}>
+            Manage Clearing Services
+          </Button>,
+        ],
       },
     ],
   });
@@ -175,7 +189,7 @@ const AppComponent = () => {
       {
         path: '/app/distribution/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Distribution">
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
             <DistributionNew services={auctionService} />
           </ServiceRequired>
         ),
@@ -342,7 +356,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/distribution/new/auction',
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="Create New Auction">
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
             <NewAuction services={auctionService} />
           </ServiceRequired>
         ),
@@ -354,7 +368,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/base',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Base Instrument">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
             <NewBaseInstrument />
           </ServiceRequired>
         ),
@@ -362,7 +376,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/convertiblenote',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Convertible Note">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
             <NewConvertibleNote />
           </ServiceRequired>
         ),
@@ -370,7 +384,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/instrument/new/binaryoption',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Binary Option">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
             <NewBinaryOption />
           </ServiceRequired>
         ),
@@ -378,7 +392,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/issuance/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="Create New Issuance">
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
             <IssuanceNew services={issuanceService} />
           </ServiceRequired>
         ),
@@ -386,7 +400,7 @@ const AppComponent = () => {
       {
         path: '/app/setup/listing/new',
         render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="Create New Listing">
+          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
             <ListingNew services={listingService} />
           </ServiceRequired>
         ),
@@ -427,7 +441,8 @@ const AppComponent = () => {
   };
 
   const path = useLocation().pathname;
-  const currentEntry = entriesToDisplay.find(entry => path.startsWith(entry.path));
+
+  const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
 
   return (
     <Page
@@ -440,11 +455,14 @@ const AppComponent = () => {
           </Header>
         )
       }
+      topMenuButtons={currentEntry && currentEntry.topMenuButtons}
       showNotificationAlert={notifCount > 0}
     >
       {servicesLoading ? (
-        <div>
-          <CircularProgress color="secondary" />
+        <div className="page-loading">
+          <Loader active size="large">
+            <p>Loading...</p>
+          </Loader>
         </div>
       ) : (
         <div>
@@ -460,5 +478,9 @@ const AppComponent = () => {
     </Page>
   );
 };
+
+export function getBaseSegment(segment: string) {
+  return [segment.split('/')[0], segment.split('/')[1], segment.split('/')[2]].join('/');
+}
 
 export const App = withRouter(AppComponent);

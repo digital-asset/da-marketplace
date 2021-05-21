@@ -15,6 +15,8 @@ import {
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
+import { Header } from 'semantic-ui-react';
+
 import { useStreamQueries } from '../../Main';
 import {
   CloseAccountRequest,
@@ -29,7 +31,8 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-
+import StripedTable from '../../components/Table/StripedTable';
+import BackButton from '../../components/Common/BackButton';
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
 };
@@ -133,6 +136,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
+      <BackButton />
       <Grid container direction="column">
         <Grid container direction="row">
           {openRequests.length > 0 && (
@@ -221,82 +225,33 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             </Grid>
           )}
           {closeRequests.length > 0 && (
-            <Grid item xs={12}>
-              <Paper className={classes.paper}>
-                <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                  <Typography variant="h2">Close Account Requests</Typography>
-                </Grid>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        <b>Account</b>
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        <b>Provider</b>
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        <b>Client</b>
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        <b>Role</b>
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        <b>Action</b>
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        <b>Details</b>
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {closeRequests.map((c, i) => (
-                      <TableRow key={i} className={classes.tableRow}>
-                        <TableCell key={0} className={classes.tableCell}>
-                          {c.payload.accountId.label}
-                        </TableCell>
-                        <TableCell key={1} className={classes.tableCell}>
-                          {getName(c.payload.provider)}
-                        </TableCell>
-                        <TableCell key={2} className={classes.tableCell}>
-                          {getName(c.payload.customer)}
-                        </TableCell>
-                        <TableCell key={3} className={classes.tableCell}>
-                          {party === c.payload.provider ? 'Provider' : 'Client'}
-                        </TableCell>
-                        <TableCell key={4} className={classes.tableCell}>
-                          {party === c.payload.provider && (
-                            <Button
-                              color="primary"
-                              size="small"
-                              className={classes.choiceButton}
-                              variant="contained"
-                              onClick={() => closeAccount(c)}
-                            >
-                              Process
-                            </Button>
-                          )}
-                          {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
-                        </TableCell>
-                        <TableCell key={5} className={classes.tableCell}>
-                          <IconButton
-                            color="primary"
-                            size="small"
-                            component="span"
-                            onClick={() =>
-                              history.push('/app/custody/account/' + c.contractId.replace('#', '_'))
-                            }
-                          >
-                            <KeyboardArrowRight fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Paper>
-            </Grid>
+            <StripedTable
+              title="Close Account Requests"
+              headings={['Account', 'Provider', 'Client', 'Role', 'Action']}
+              rows={closeRequests.map((c, i) => {
+                return {
+                  elements: [
+                    c.payload.accountId.label,
+                    getName(c.payload.provider),
+                    getName(c.payload.customer),
+                    party === c.payload.provider ? 'Provider' : 'Client',
+                    party === c.payload.provider && (
+                      <Button
+                        color="primary"
+                        size="small"
+                        className={classes.choiceButton}
+                        variant="contained"
+                        onClick={() => closeAccount(c)}
+                      >
+                        Process
+                      </Button>
+                    ),
+                  ],
+                };
+              })}
+            />
           )}
+
           {creditRequests.length > 0 && (
             <Grid item xs={12}>
               <Paper className={classes.paper}>

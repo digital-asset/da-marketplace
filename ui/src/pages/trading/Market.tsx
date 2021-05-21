@@ -240,7 +240,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
       </Header>
       <div className="market">
         <div className="orders">
-          <Tile header={<h4>Order Book</h4>}>
+          <Tile header="Order Book">
             <Table basic="very">
               <Table.Header>
                 <Table.Cell key={0}></Table.Cell>
@@ -294,67 +294,65 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
               </Table.Footer>
             </Table>
           </Tile>
-          <Tile header={<h4>Orders</h4>}>
-            <StripedTable
-              rowsClickable
-              headings={[
-                'Symbol',
-                'Order ID',
-                'Type',
-                'Side',
-                'Price',
-                'Quantity',
-                'Volume',
-                'Time In Force',
-                'Filled',
-                'Status',
-              ]}
-              loading={allOrders.loading}
-              rows={orders.map(c => {
-                return {
-                  elements: [
-                    c.payload.details.listingId.label,
-                    c.payload.details.id.label,
-                    c.payload.details.orderType.tag,
-                    <div style={{ color: getColor(c) }}>{c.payload.details.side}</div>,
-                    getPrice(c) || '',
-                    getQuantity(c),
-                    getVolume(c) || '',
+          <StripedTable
+            title="Orders"
+            rowsClickable
+            headings={[
+              'Symbol',
+              'Order ID',
+              'Type',
+              'Side',
+              'Price',
+              'Quantity',
+              'Volume',
+              'Time In Force',
+              'Filled',
+              'Status',
+            ]}
+            loading={allOrders.loading}
+            rows={orders.map(c => {
+              return {
+                elements: [
+                  c.payload.details.listingId.label,
+                  c.payload.details.id.label,
+                  c.payload.details.orderType.tag,
+                  <div style={{ color: getColor(c) }}>{c.payload.details.side}</div>,
+                  getPrice(c) || '',
+                  getQuantity(c),
+                  getVolume(c) || '',
+                  <Popup
+                    content={getTimeInForceText(
+                      c.payload.details.timeInForce.tag,
+                      c.payload.details.orderType.tag === 'Limit'
+                    )}
+                    mouseEnterDelay={500}
+                    mouseLeaveDelay={500}
+                    on="hover"
+                    position="top right"
+                    trigger={<div>{c.payload.details.timeInForce.tag}</div>}
+                  />,
+                  <>{getFillPercentage(c)} %</>,
+                  c.payload.status.tag !== 'Rejected' &&
+                  c.payload.status.tag !== 'CancellationRejected' ? (
+                    displayStatus(c.payload.status)
+                  ) : (
                     <Popup
-                      content={getTimeInForceText(
-                        c.payload.details.timeInForce.tag,
-                        c.payload.details.orderType.tag === 'Limit'
-                      )}
+                      content={getStatusReason(c.payload.status)}
                       mouseEnterDelay={500}
                       mouseLeaveDelay={500}
                       on="hover"
                       position="top right"
-                      trigger={<div>{c.payload.details.timeInForce.tag}</div>}
-                    />,
-                    <>{getFillPercentage(c)} %</>,
-                    c.payload.status.tag !== 'Rejected' &&
-                    c.payload.status.tag !== 'CancellationRejected' ? (
-                      displayStatus(c.payload.status)
-                    ) : (
-                      <Popup
-                        content={getStatusReason(c.payload.status)}
-                        mouseEnterDelay={500}
-                        mouseLeaveDelay={500}
-                        on="hover"
-                        position="top right"
-                        trigger={<div>{displayStatus(c.payload.status)}</div>}
-                      />
-                    ),
-                  ],
-                  onClick: () =>
-                    history.push(`/app/trading/order/${c.contractId.replace('#', '_')}`),
-                };
-              })}
-            />
-          </Tile>
+                      trigger={<div>{displayStatus(c.payload.status)}</div>}
+                    />
+                  ),
+                ],
+                onClick: () => history.push(`/app/trading/order/${c.contractId.replace('#', '_')}`),
+              };
+            })}
+          />
         </div>
         <div className="new-order">
-          <Tile header={<h4>New Order</h4>}>
+          <Tile header="New Order">
             <FormErrorHandled onSubmit={requestCreateOrder}>
               <Button.Group widths="2" toggle>
                 <Button type="button" active={isBuy} onClick={() => setIsBuy(true)}>

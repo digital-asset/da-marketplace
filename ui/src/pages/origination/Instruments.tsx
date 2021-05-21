@@ -4,9 +4,9 @@ import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import { ActionTile } from '../network/Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 
 export const InstrumentsTable: React.FC = () => {
@@ -18,21 +18,15 @@ export const InstrumentsTable: React.FC = () => {
 
   return (
     <div>
-      <ActionTile
-        title="Instrument"
+      <TitleWithActions
+        title={'Instruments'}
         actions={[
           { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
-          {
-            path: '/app/setup/instrument/new/convertiblenote',
-            label: 'New Convertible Note',
-          },
-          {
-            path: '/app/setup/instrument/new/binaryoption',
-            label: 'New Binary Option',
-          },
+          { path: '/app/setup/instrument/new/convertiblenote', label: 'New Convertible Note' },
+          { path: '/app/setup/instrument/new/binaryoption', label: 'New Binary Option' },
         ]}
       />
-      <Header as="h2">Instruments</Header>
+
       <StripedTable
         rowsClickable
         headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}
@@ -60,7 +54,7 @@ export const InstrumentsTable: React.FC = () => {
 const InstrumentsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   return (
     <div className="instruments">
-      <Tile header={<h4>Actions</h4>}>
+      <Tile header="Actions">
         <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
           New Instrument
         </Button>

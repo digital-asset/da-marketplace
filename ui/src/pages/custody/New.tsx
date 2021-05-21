@@ -12,6 +12,7 @@ import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { createDropdownProp, ServicePageProps, makeDamlSet } from '../common';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import BackButton from '../../components/Common/BackButton';
 import { Button, Form, Header } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 import { IconClose } from '../../icons/icons';
@@ -127,7 +128,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       }));
 
   return (
-    <div className="new-account">
+    <div className="input-dialog">
+      <BackButton />
       <Header as="h2">New Account Request</Header>
       <FormErrorHandled onSubmit={() => requestAccount()}>
         <Form.Select
@@ -177,7 +179,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           readOnly
           onChange={(_, change) => setAccountName(change.value as string)}
         />
-        <div className="submit">
+        <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
           <a className="a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel

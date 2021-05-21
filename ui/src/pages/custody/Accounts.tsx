@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
 import {
   Button,
@@ -20,11 +20,14 @@ import useStyles from '../styles';
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
-import { damlSetValues } from '../common';
+import { damlSetValues, makeDamlSet } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { AddPlusIcon } from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -42,6 +45,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const accounts = useStreamQueries(AssetSettlementRule).contracts;
   const assets = useStreamQueries(AssetDescription).contracts;
+  const deposits = useStreamQueries(AssetDeposit).contracts;
 
   const clientServices = services.filter(s => s.payload.customer === party);
   const assetNames = assets.map(a => a.payload.description);
@@ -104,7 +108,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
-      <InputDialog {...creditDialogProps} />
+      <InputDialog {...creditDialogProps} isModal />
       <Grid container direction="column">
         <Grid container direction="row">
           <Grid item xs={12}>
@@ -115,15 +119,12 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
+                    <a
+                      className="a2 with-icon"
                       onClick={() => history.push('/app/custody/accounts/new')}
                     >
-                      New Account
-                    </Button>
+                      <AddPlusIcon /> New Account
+                    </a>
                   </Grid>
                 </Grid>
               </Grid>

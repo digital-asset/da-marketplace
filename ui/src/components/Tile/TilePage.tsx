@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid } from 'semantic-ui-react';
-import Tile, { logoHeader } from './Tile';
+import Tile from './Tile';
 
 type TilePageProps = {
   tiles?: React.ReactElement[];
@@ -12,7 +12,7 @@ const TilePage: React.FC<TilePageProps> = ({ children, tiles }) => {
       <Grid.Row>
         <Grid.Column>
           {children && (
-            <Tile header={logoHeader}>
+            <Tile showLogoHeader>
               <Grid.Row>{children}</Grid.Row>
             </Tile>
           )}

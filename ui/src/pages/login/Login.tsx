@@ -77,7 +77,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   }, [onLogin, query, history, userDispatch]);
 
   const localTiles = [
-    <Tile dark thinGap key="login" header={logoHeader}>
+    <Tile dark thinGap key="login" showLogoHeader>
       <LocalLoginForm onLogin={onLogin} />
     </Tile>,
     <Tile dark thinGap key="quick-setup">
@@ -86,7 +86,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
   ];
 
   const dablTiles = [
-    <Tile dark thinGap key="login" header={logoHeader}>
+    <Tile dark thinGap key="login" showLogoHeader>
       <DablLoginForm onLogin={onLogin} />
     </Tile>,
     <Tile dark thinGap key="parties">

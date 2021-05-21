@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { CreateEvent } from '@daml/ledger';
+import { useHistory } from 'react-router-dom';
+
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { getTemplateId, usePartyName } from '../../config';
@@ -17,7 +19,7 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
-import { ActionTile } from './Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
@@ -143,22 +145,19 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(RoleOffer.Decline, c.contractId, {});
   };
 
+  const history = useHistory();
+
   return (
-    <div className="assets">
-      <ActionTile
-        title="Clearing"
-        actions={[
-          {
-            label: 'Offer Clearing Service',
-            path: '/app/setup/clearing/offer',
-          },
-          {
-            label: 'Offer Market Clearing Service',
-            path: '/app/setup/clearing/market/offer',
-          },
-        ]}
-      />
-      <Header as="h2">Current Services</Header>
+    <div>
+      <TitleWithActions title="Current Services">
+        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/offer')}>
+          Offer Clearing Service
+        </Button>
+        <Button className="ghost" onClick={() => history.push('/app/setup/clearing/market/offer')}>
+          Offer Market Clearing Service
+        </Button>
+      </TitleWithActions>
+
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         loading={marketServicesLoading}
@@ -184,12 +183,46 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
         })}
       />
       {(!!requests.length || !!marketRequests.length) && (
-        <div>
-          <Header as="h3">Requests</Header>
-          <StripedTable
-            headings={['Type', 'Provider', 'Consumer', 'Actions']}
-            loading={requestsLoading || marketRequestsLoading}
-            rows={[...requests, ...marketRequests].map(c => {
+        <StripedTable
+          title="Requests"
+          headings={['Type', 'Provider', 'Consumer', 'Actions']}
+          loading={requestsLoading || marketRequestsLoading}
+          rows={[...requests, ...marketRequests].map(c => {
+            return {
+              elements: [
+                getTemplateId(c.templateId),
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button.Group floated="right">
+                  {c.payload.customer === party ? (
+                    <>
+                      <Button className="ghost warning" onClick={() => cancelRequest(c)}>
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button className="ghost" onClick={() => approveRequest(c)}>
+                        Approve
+                      </Button>
+                      <Button className="ghost warning" onClick={() => rejectRequest(c)}>
+                        Reject
+                      </Button>
+                    </>
+                  )}
+                </Button.Group>,
+              ],
+            };
+          })}
+        />
+      )}
+      {(!!offers.length || !!marketOffers.length) && (
+        <StripedTable
+          title="Offers"
+          headings={['Type', 'Provider', 'Consumer', 'Actions' /* 'Details' */]}
+          loading={offersLoading || marketOffersLoading}
+          rows={[
+            ...offers.map(c => {
               return {
                 elements: [
                   getTemplateId(c.templateId),
@@ -198,151 +231,106 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                   <Button.Group floated="right">
                     {c.payload.customer === party ? (
                       <>
-                        <Button className="ghost warning" onClick={() => cancelRequest(c)}>
-                          Cancel
+                        <ModalFormErrorHandled onSubmit={() => acceptOffer(c)} title="Accept Offer">
+                          <Form.Select
+                            label="Clearing Account"
+                            placeholder="Select..."
+                            required
+                            min={1}
+                            options={accountNames}
+                            value={clearingAccountName}
+                            onChange={(_, change) => setClearingAccountName(change.value as string)}
+                          />
+                          <Form.Select
+                            label="Margin Account"
+                            placeholder="Select..."
+                            required
+                            options={allocationAccountNames}
+                            value={marginAccountName}
+                            onChange={(_, change) => setMarginAccountName(change.value as string)}
+                          />
+                        </ModalFormErrorHandled>
+                        <Button className="ghost warning" onClick={() => rejectOffer(c)}>
+                          Reject
                         </Button>
                       </>
                     ) : (
                       <>
-                        <Button className="ghost" onClick={() => approveRequest(c)}>
-                          Approve
-                        </Button>
-                        <Button className="ghost warning" onClick={() => rejectRequest(c)}>
-                          Reject
+                        <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
+                          Withdraw
                         </Button>
                       </>
                     )}
                   </Button.Group>,
                 ],
               };
-            })}
-          />
-        </div>
-      )}
-      {(!!offers.length || !!marketOffers.length) && (
-        <div>
-          <Header as="h3">Offers</Header>
-          <StripedTable
-            headings={['Type', 'Provider', 'Consumer', 'Actions' /* 'Details' */]}
-            loading={offersLoading || marketOffersLoading}
-            rows={[
-              ...offers.map(c => {
-                return {
-                  elements: [
-                    getTemplateId(c.templateId),
-                    getName(c.payload.provider),
-                    getName(c.payload.customer),
-                    <Button.Group floated="right">
-                      {c.payload.customer === party ? (
-                        <>
-                          <ModalFormErrorHandled
-                            onSubmit={() => acceptOffer(c)}
-                            title="Accept Offer"
-                          >
-                            <Form.Select
-                              label="Clearing Account"
-                              placeholder="Select..."
-                              required
-                              min={1}
-                              options={accountNames}
-                              value={clearingAccountName}
-                              onChange={(_, change) =>
-                                setClearingAccountName(change.value as string)
-                              }
-                            />
-                            <Form.Select
-                              label="Margin Account"
-                              placeholder="Select..."
-                              required
-                              options={allocationAccountNames}
-                              value={marginAccountName}
-                              onChange={(_, change) => setMarginAccountName(change.value as string)}
-                            />
-                          </ModalFormErrorHandled>
-                          <Button className="ghost warning" onClick={() => rejectOffer(c)}>
-                            Reject
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
-                            Withdraw
-                          </Button>
-                        </>
-                      )}
-                    </Button.Group>,
-                  ],
-                };
-              }),
-              ...marketOffers.map(c => {
-                return {
-                  elements: [
-                    getTemplateId(c.templateId),
-                    getName(c.payload.provider),
-                    getName(c.payload.customer),
-                    <>
-                      {c.payload.customer === party ? (
-                        <Button.Group>
-                          <Button className="ghost" onClick={() => acceptOffer(c)} floated="right">
-                            Accept
-                          </Button>
-                          <Button className="ghost warning" onClick={() => rejectOffer(c)}>
-                            Reject
-                          </Button>
-                        </Button.Group>
-                      ) : (
-                        <>
-                          <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
-                            Withdraw
-                          </Button>
-                        </>
-                      )}
-                    </>,
-                  ],
-                };
-              }),
-            ]}
-          />
-        </div>
-      )}
-      {!!roleOffers.length && (
-        <div>
-          <Header as="h3">Role Offers</Header>
-          <StripedTable
-            headings={['Type', 'Operator', 'Consumer', 'Actions']}
-            loading={roleOffersLoading}
-            rows={roleOffers.map(c => {
+            }),
+            ...marketOffers.map(c => {
               return {
                 elements: [
                   getTemplateId(c.templateId),
-                  getName(c.payload.operator),
                   getName(c.payload.provider),
-                  <Button.Group>
-                    <ModalFormErrorHandled onSubmit={() => acceptRoleOffer(c)} title="Accept Offer">
-                      <Form.Select
-                        label="Clearing Account"
-                        placeholder="Select..."
-                        required
-                        min={1}
-                        options={accountNames}
-                        value={ccpAccountName}
-                        onChange={(_, change) => setCcpAccountName(change.value as string)}
-                      />
-                    </ModalFormErrorHandled>
-                    <Button
-                      size="small"
-                      className="ghost"
-                      variant="contained"
-                      onClick={() => declineRoleOffer(c)}
-                    >
-                      Decline
-                    </Button>
-                  </Button.Group>,
+                  getName(c.payload.customer),
+                  <>
+                    {c.payload.customer === party ? (
+                      <Button.Group>
+                        <Button className="ghost" onClick={() => acceptOffer(c)} floated="right">
+                          Accept
+                        </Button>
+                        <Button className="ghost warning" onClick={() => rejectOffer(c)}>
+                          Reject
+                        </Button>
+                      </Button.Group>
+                    ) : (
+                      <>
+                        <Button className="ghost warning" onClick={() => withdrawOffer(c)}>
+                          Withdraw
+                        </Button>
+                      </>
+                    )}
+                  </>,
                 ],
               };
-            })}
-          />
-        </div>
+            }),
+          ]}
+        />
+      )}
+      {!!roleOffers.length && (
+        <StripedTable
+          title="Role Offers"
+          headings={['Type', 'Operator', 'Consumer', 'Actions']}
+          loading={roleOffersLoading}
+          rows={roleOffers.map(c => {
+            return {
+              elements: [
+                getTemplateId(c.templateId),
+                getName(c.payload.operator),
+                getName(c.payload.provider),
+                <Button.Group>
+                  <ModalFormErrorHandled onSubmit={() => acceptRoleOffer(c)} title="Accept Offer">
+                    <Form.Select
+                      label="Clearing Account"
+                      placeholder="Select..."
+                      required
+                      min={1}
+                      options={accountNames}
+                      value={ccpAccountName}
+                      onChange={(_, change) => setCcpAccountName(change.value as string)}
+                    />
+                  </ModalFormErrorHandled>
+                  <Button
+                    size="small"
+                    className="ghost"
+                    variant="contained"
+                    onClick={() => declineRoleOffer(c)}
+                  >
+                    Decline
+                  </Button>
+                </Button.Group>,
+              ],
+            };
+          })}
+        />
       )}
     </div>
   );

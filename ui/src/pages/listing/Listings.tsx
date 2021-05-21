@@ -11,15 +11,14 @@ import {
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
 import { Listing as ListingComponent } from './Listing';
-import { Button, Header } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
   FairValue,
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
-import { ArrowRightIcon } from '../../icons/icons';
-import { ActionTile } from '../network/Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 const FAILED_LISTING_TEMPLATE = 'Marketplace.Listing.Service.FailedListingCreation';
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
@@ -60,11 +59,11 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   return !contractId ? (
     <>
-      <ActionTile
-        title="Listing"
-        actions={[{ path: '/app/setup/listing/new', label: 'New Listing' }]}
+      <TitleWithActions
+        title="Listings"
+        actions={[{ path: '/app/setup/listing/new', label: ' New Listing' }]}
       />
-      <Header as="h2">Listings</Header>
+
       <StripedTable
         rowsClickable
         headings={[
@@ -102,48 +101,47 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         })}
       />
       {(!!listingRequests.length || !!failedListingRequests.length) && (
-        <Tile header={<h2>Requests</h2>}>
-          <StripedTable
-            headings={[
-              'Provider',
-              'Client',
-              'Cleared By',
-              'Listing ID',
-              'Calendar ID',
-              'Traded Asset',
-              'Traded Asset Precision',
-              'Quoted Asset',
-              'Quoted Asset Precision',
-              'Status',
-            ]}
-            loading={failedListingRequestsLoading || listingRequestsLoading}
-            rows={[...listingRequests, ...failedListingRequests].map(c => {
-              return {
-                elements: [
-                  getName(c.payload.provider),
-                  getName(c.payload.customer),
-                  getMarketType(c, getName),
-                  c.payload.symbol,
-                  c.payload.calendarId,
-                  c.payload.tradedAssetId.label,
-                  c.payload.tradedAssetPrecision,
-                  c.payload.quotedAssetId.label,
-                  c.payload.quotedAssetPrecision,
-                  getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE ? 'Pending' : 'Failed',
-                  getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE
-                    ? ''
-                    : (c.payload as FailedListingCreation).error.message
-                        .replace('{', '')
-                        .replace('}', '')
-                        .replace(/'/g, ''),
-                ],
-              };
-            })}
-          />
-        </Tile>
+        <StripedTable
+          title="Requests"
+          headings={[
+            'Provider',
+            'Client',
+            'Cleared By',
+            'Listing ID',
+            'Calendar ID',
+            'Traded Asset',
+            'Traded Asset Precision',
+            'Quoted Asset',
+            'Quoted Asset Precision',
+            'Status',
+          ]}
+          loading={failedListingRequestsLoading || listingRequestsLoading}
+          rows={[...listingRequests, ...failedListingRequests].map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                getMarketType(c, getName),
+                c.payload.symbol,
+                c.payload.calendarId,
+                c.payload.tradedAssetId.label,
+                c.payload.tradedAssetPrecision,
+                c.payload.quotedAssetId.label,
+                c.payload.quotedAssetPrecision,
+                getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE ? 'Pending' : 'Failed',
+                getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE
+                  ? ''
+                  : (c.payload as FailedListingCreation).error.message
+                      .replace('{', '')
+                      .replace('}', '')
+                      .replace(/'/g, ''),
+              ],
+            };
+          })}
+        />
       )}
       {!!manualFVRequests.length && (
-        <Tile header={<h4>Manual Fair Requests</h4>}>
+        <Tile header="Manual Fair Requests">
           <FairValueCalculationRequests
             requests={manualFVRequests}
             loading={manualFVRequestsLoading}
@@ -156,18 +154,15 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   );
 };
 
+// where is this rendered? why is it here?
 const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
 }: RouteComponentProps & Props) => {
   return (
-    <div>
-      <Tile header={<h4>Actions</h4>}>
-        <Button className="ghost" onClick={() => history.push('/app/listing/new')}>
-          New Listing
-        </Button>
-      </Tile>
-      <Header as="h2">Listings</Header>
-    </div>
+    <TitleWithActions
+      title="Listings"
+      actions={[{ path: '/app/listing/new', label: ' New Listing' }]}
+    />
   );
 };
 

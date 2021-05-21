@@ -10,12 +10,12 @@ import { Date as DamlDate } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import classNames from 'classnames';
-import { IconCircledCheck, LockIcon, PublicIcon } from '../../icons/icons';
+import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
 import { publicParty } from '../../config';
+import BackButton from '../../components/Common/BackButton';
 
 const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -89,86 +89,77 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   );
 
   return (
-    <div className="new-base-instrument">
-      <h2>New Base Instrument</h2>
-      <Tile header={<h5>Details</h5>}>
-        <FormErrorHandled onSubmit={requestOrigination}>
-          <div className="issue-asset-fields">
-            <div className="asset-row">
-              <Form.Input
-                fluid
-                label={<FormLabel label="Asset ID" subLabel="Give this asset a name" />}
-                value={label}
-                className="issue-asset-form-field"
-                onChange={e => setLabel(e.currentTarget.value)}
-              />
-            </div>
+    <div className="input-dialog">
+      <BackButton />
+      <Header as="h2">New Base Instrument</Header>
+      <FormErrorHandled onSubmit={requestOrigination}>
+        <Form.Input
+          fluid
+          label={'Asset ID'}
+          value={label}
+          placeholder="Give this asset a name"
+          className="issue-asset-form-field"
+          onChange={e => setLabel(e.currentTarget.value)}
+        />
 
-            <div className="asset-row">
-              <Form.TextArea
-                label={
-                  <FormLabel
-                    label="Description"
-                    subLabel="Describe the asset to potential investors"
-                  />
-                }
-                className="issue-asset-form-field"
-                value={description}
-                onChange={e => setDescription(e.currentTarget.value)}
-              />
-            </div>
+        <Form.TextArea
+          label={'Description'}
+          className="issue-asset-form-field"
+          value={description}
+          placeholder="Describe the asset to potential investors"
+          onChange={e => setDescription(e.currentTarget.value)}
+        />
 
-            <Form.Select
-              className="issue-asset-form-field select-account"
-              placeholder="Select Safekeeping Account..."
-              options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
-              onChange={(event: React.SyntheticEvent, result: any) => {
-                setAccount(result.value);
-              }}
-            />
+        <Form.Select
+          label="Account"
+          className="issue-asset-form-field select-account"
+          placeholder="Select Safekeeping Account..."
+          options={accounts.map(c => ({ text: c.id.label, value: c.id.label }))}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setAccount(result.value);
+          }}
+        />
 
-            <div className="asset-row">
-              <FormLabel
-                label="Observers"
-                subLabel="Who should be aware that this has been issued?"
-              />
-              <div className="button-toggle">
-                <Button
-                  type="button"
-                  className={classNames('ghost checked', { darken: !isPublic })}
-                  onClick={() => setIsPublic(true)}
-                >
-                  {isPublic && <IconCircledCheck />}
-                  <PublicIcon />
-                  <p>Public</p>
-                </Button>
-                <Button
-                  type="button"
-                  className={classNames('ghost checked', { darken: isPublic })}
-                  onClick={() => setIsPublic(false)}
-                >
-                  {!isPublic && <IconCircledCheck />}
-                  <LockIcon />
-                  <p>Private</p>
-                </Button>
-              </div>
-              {!isPublic && (
-                <Form.Select
-                  multiple
-                  className="issue-asset-form-field select-observer"
-                  disabled={isPublic}
-                  placeholder="Select..."
-                  options={[]}
-                  onChange={(event: React.SyntheticEvent, result: any) => {
-                    setObservers(result.value);
-                  }}
-                />
-              )}
-            </div>
-            <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-          </div>
-        </FormErrorHandled>
-      </Tile>
+        <FormLabel label="Observers" />
+        <div className="form-select">
+          <Button
+            type="button"
+            className={classNames('ghost checked', { darken: !isPublic })}
+            onClick={() => setIsPublic(true)}
+          >
+            {isPublic && <IconCircledCheck />}
+            <PublicIcon />
+            <p>Public</p>
+          </Button>
+          <Button
+            type="button"
+            className={classNames('ghost checked', { darken: isPublic })}
+            onClick={() => setIsPublic(false)}
+          >
+            {!isPublic && <IconCircledCheck />}
+            <LockIcon />
+            <p>Private</p>
+          </Button>
+        </div>
+        {!isPublic && (
+          <Form.Select
+            multiple
+            className="issue-asset-form-field select-observer"
+            disabled={isPublic}
+            placeholder="Who should be aware that this has been issued?"
+            options={[]}
+            onChange={(event: React.SyntheticEvent, result: any) => {
+              setObservers(result.value);
+            }}
+          />
+        )}
+        <div className="submit-form">
+          <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
+          <a className="a2" onClick={() => history.goBack()}>
+            <IconClose /> Cancel
+          </a>
+        </div>
+      </FormErrorHandled>
     </div>
   );
 };

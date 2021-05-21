@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useStreamQueries } from '../../Main';
-import { Button } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 
 import { RouteComponentProps, useHistory, useParams } from 'react-router-dom';
 import { usePartyName } from '../../config';
@@ -12,6 +12,7 @@ import { PieChart, Pie, Cell } from 'recharts';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import InfoCard from '../../components/Common/InfoCard';
 import { damlSetValues } from '../common';
 
 export const Instrument: React.FC<RouteComponentProps> = () => {
@@ -60,39 +61,38 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
   return (
     <div className="instrument">
       <BackButton />
-      <Tile header={<h3>{instrument.payload.description}</h3>}>
-        <h5>Details</h5>
-        <StripedTable
-          headings={['Issuer', 'Signatories', 'Label', 'Version', 'Description']}
-          loading={instrumentsLoading}
-          rows={[
+
+      <div className="grid-row">
+        <InfoCard
+          title={instrument.payload.description}
+          info={[
+            { label: 'Issuer', data: getName(instrument.payload.issuer) },
             {
-              elements: [
-                getName(instrument.payload.issuer),
-                damlSetValues(instrument.payload.assetId.signatories)
-                  .map(party => getName(party))
-                  .join(', '),
-                instrument.payload.assetId.label,
-                instrument.payload.assetId.version,
-                instrument.payload.description,
-              ],
+              label: 'Signatories',
+              data: damlSetValues(instrument.payload.assetId.signatories)
+                .map(party => getName(party))
+                .join(', '),
             },
+            { label: 'Label', data: instrument.payload.assetId.label },
+
+            { label: 'Version', data: instrument.payload.assetId.version },
+            { label: 'Description', data: instrument.payload.description },
           ]}
         />
-      </Tile>
-      <div className="position-holdings">
-        <Tile header={<h3>Position Holdings</h3>}>
-          <StripedTable
-            headings={['Investor', 'Quantity']}
-            loading={depositsLoading}
-            rows={Array.from(groupedDeposits.keys()).map(key => {
-              return {
-                elements: [key, groupedDeposits.get(key)],
-              };
-            })}
-          />
-        </Tile>
-        <Tile header={<h3>Allocations - Top 5%</h3>}>
+        <StripedTable
+          headings={['Investor', 'Quantity']}
+          loading={depositsLoading}
+          title="Position Holdings"
+          rows={Array.from(groupedDeposits.keys()).map(key => {
+            return {
+              elements: [key, groupedDeposits.get(key)],
+            };
+          })}
+        />
+      </div>
+
+      {pieData.length > 0 && (
+        <Tile header="Allocations - Top 5%">
           <div className="pie-chart">
             <PieChart width={400} height={400}>
               <Pie
@@ -111,8 +111,8 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
             </PieChart>
           </div>
         </Tile>
-      </div>
-      <Tile header={<h3>Claims</h3>}>
+      )}
+      <Tile header="Claims">
         <div ref={el} style={{ height: '100%' }} />
       </Tile>
     </div>

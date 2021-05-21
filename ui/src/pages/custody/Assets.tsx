@@ -7,11 +7,10 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { ServicePageProps } from '../common';
-import { Button, Header } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { ArrowRightIcon } from '../../icons/icons';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -39,14 +38,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   );
 
   return (
-    <div className="assets">
-      <Tile header={<h4>Actions</h4>}>
-        <Button className="ghost" onClick={() => history.push('/app/custody/accounts/new')}>
-          New Account
-        </Button>
-      </Tile>
-      <Header as="h2">Holdings</Header>
+    <div>
       <StripedTable
+        title="Holdings"
         rowsClickable
         headings={['Asset', 'Account', 'Owner']}
         loading={depositsLoading}
@@ -69,7 +63,10 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           };
         })}
       />
-      <Header as="h2">Accounts</Header>
+      <TitleWithActions
+        title="Accounts"
+        actions={[{ path: '/app/custody/accounts/new', label: 'New Account' }]}
+      />
       <StripedTable
         rowsClickable
         headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}

@@ -12,14 +12,12 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps, damlSetValues } from '../common';
 import { Button, Header } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
-import { ArrowRightIcon } from '../../icons/icons';
 import { formatCurrency } from '../../util';
-import { ActionTile } from '../network/Actions';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -45,8 +43,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   };
 
   return (
-    <div className="assets">
-      <ActionTile
+    <div>
+      <TitleWithActions
         title="Clearing"
         actions={[
           {
@@ -57,9 +55,9 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       >
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
-      </ActionTile>
-      <Header as="h2">Holdings</Header>
+      </TitleWithActions>
       <StripedTable
+        title="Holdings"
         rowsClickable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
@@ -96,8 +94,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">CCP Account</Header>
       <StripedTable
+        title="CCP Account"
         headings={['Account', 'Asset', 'Amount']}
         loading={depositsLoading}
         rows={ccpDeposits.map(c => {
@@ -110,17 +108,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Accounts</Header>
       <StripedTable
+        title="Accounts"
         loading={accountsLoading}
-        headings={[
-          'Account',
-          'Provider',
-          'Owner',
-          'Role',
-          'Controllers',
-          // 'Requests',
-        ]}
+        headings={['Account', 'Provider', 'Owner', 'Role', 'Controllers']}
         rows={accounts.map(c => {
           return {
             elements: [
@@ -136,8 +127,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Cleared Trades</Header>
       <StripedTable
+        title="Cleared Trades"
         loading={clearedTradesLoading}
         headings={['Provider', 'Match Id', 'Maker Order Id', 'Taker Order Id', 'Quantity', 'Price']}
         rows={clearedTrades.map(c => {
@@ -156,8 +147,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Cleared Trade Sides</Header>
       <StripedTable
+        title="Cleared Trade Sides"
         loading={clearedTradeSidesLoading}
         headings={['Exchange', 'Member', 'Listing', 'Quantity', 'Price', 'Time Matched']}
         rows={clearedTradeSides.map(c => {

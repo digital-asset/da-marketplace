@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter, useHistory } from 'react-router-dom';
 import {
   Grid,
   IconButton,
@@ -28,7 +28,7 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import { ActionTile } from './Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
@@ -38,9 +38,9 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
+  const history = useHistory();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
-  const displayErrorMessage = useDisplayErrorMessage();
 
   const terminateService = async (c: CreateEvent<Service>) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
@@ -48,11 +48,12 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
-      <ActionTile
-        title="Custody"
-        actions={[{ path: '/app/setup/custody/offer', label: 'Offer Custody Service' }]}
-      />
-      <Header as="h2">Current Services</Header>
+      <TitleWithActions title="Current Services">
+        <Button className="ghost" onClick={() => history.push('/app/setup/custody/offer')}>
+          Offer Custody Service
+        </Button>
+      </TitleWithActions>
+
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         rows={services.map((c, i) => {
@@ -101,29 +102,27 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
   };
 
   return !!openRequests.length ? (
-    <>
-      <Header as="h2">Account Requests</Header>
-      <StripedTable
-        headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
-        loading={loading}
-        rows={openRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              damlSetValues(c.payload.ctrls).join(', '),
-              party === c.payload.provider && (
-                <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                  Process
-                </Button>
-              ),
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Account Requests"
+      headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
+      loading={loading}
+      rows={openRequests.map((c, i) => {
+        return {
+          elements: [
+            c.payload.accountId.label,
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Client',
+            damlSetValues(c.payload.ctrls).join(', '),
+            party === c.payload.provider && (
+              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
+                Process
+              </Button>
+            ),
+          ],
+        };
+      })}
+    />
   ) : (
     <></>
   );
@@ -150,29 +149,27 @@ export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) =>
   };
 
   return !!openRequests.length ? (
-    <>
-      <Header as="h2">Allocation Account Requests</Header>
-      <StripedTable
-        headings={['Account', 'Provider', 'Client', 'Role', 'Nominee', 'Action']}
-        loading={loading}
-        rows={openRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              c.payload.nominee,
-              party === c.payload.provider && (
-                <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                  Process
-                </Button>
-              ),
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Allocation Account Requests"
+      headings={['Account', 'Provider', 'Client', 'Role', 'Nominee', 'Action']}
+      loading={loading}
+      rows={openRequests.map((c, i) => {
+        return {
+          elements: [
+            c.payload.accountId.label,
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Client',
+            c.payload.nominee,
+            party === c.payload.provider && (
+              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
+                Process
+              </Button>
+            ),
+          ],
+        };
+      })}
+    />
   ) : (
     <></>
   );
@@ -261,8 +258,8 @@ const CustodyComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
-      <InputDialog {...requestDialogProps} />
-      <InputDialog {...offerDialogProps} />
+      <InputDialog {...requestDialogProps} isModal />
+      <InputDialog {...offerDialogProps} isModal />
       <Grid container direction="column">
         <Grid container direction="row">
           <Grid item xs={12}>

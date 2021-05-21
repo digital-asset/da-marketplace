@@ -126,7 +126,7 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <Header as="h2">{listing?.payload.listingId.label}</Header>
       <br />
       <br />
-      <Tile header={<h4>Actions</h4>}>
+      <Tile header="Actions">
         <div className="action-row">
           <Button.Group>
             {!!clearedMarketService && (
@@ -142,64 +142,62 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
         </div>
       </Tile>
       {!!listing && (
-        <Tile header={<h4>Details</h4>}>
-          <StripedTable
-            loading={loading}
-            headings={[
-              'Provider',
-              'Client',
-              'Cleared By',
-              'Listing ID',
-              'Calendar ID',
-              'Traded Asset',
-              'Traded Asset Precision',
-              'Quoted Asset',
-              'Quoted Asset Precision',
-            ]}
-            rows={[
-              {
-                elements: [
-                  getName(listing.payload.provider),
-                  getName(listing.payload.customer),
-                  getMarketType(listing, getName),
-                  listing.payload.listingId.label,
-                  listing.payload.calendarId,
-                  listing.payload.tradedAssetId.label,
-                  listing.payload.tradedAssetPrecision,
-                  listing.payload.quotedAssetId.label,
-                  listing.payload.quotedAssetPrecision,
-                ],
-              },
-            ]}
-          />
-        </Tile>
+        <StripedTable
+          title="Details"
+          loading={loading}
+          headings={[
+            'Provider',
+            'Client',
+            'Cleared By',
+            'Listing ID',
+            'Calendar ID',
+            'Traded Asset',
+            'Traded Asset Precision',
+            'Quoted Asset',
+            'Quoted Asset Precision',
+          ]}
+          rows={[
+            {
+              elements: [
+                getName(listing.payload.provider),
+                getName(listing.payload.customer),
+                getMarketType(listing, getName),
+                listing.payload.listingId.label,
+                listing.payload.calendarId,
+                listing.payload.tradedAssetId.label,
+                listing.payload.tradedAssetPrecision,
+                listing.payload.quotedAssetId.label,
+                listing.payload.quotedAssetPrecision,
+              ],
+            },
+          ]}
+        />
       )}
       {!!manualFVRequests.length && party === listing?.payload.customer && (
-        <Tile header={<h4>Manual Fair Requests</h4>}>
+        <Tile header="Manual Fair Requests">
           <FairValueCalculationRequests
             requests={manualFVRequests}
             loading={manualFVRequestsLoading}
           />
         </Tile>
       )}
-      <Tile header={<h4>Fair Values</h4>}>
-        <StripedTable
-          headings={['Provider', 'Client', 'Listing ID', 'Price', 'Currency', 'Up To']}
-          loading={fairValuesLoading}
-          rows={fairValues.reverse().map(fv => {
-            return {
-              elements: [
-                getName(fv.payload.provider),
-                getName(fv.payload.customer),
-                fv.payload.listingId.label,
-                fv.payload.price,
-                fv.payload.currency.label,
-                fv.payload.upTo,
-              ],
-            };
-          })}
-        />
-      </Tile>
+      <StripedTable
+        title="Fair Values"
+        headings={['Provider', 'Client', 'Listing ID', 'Price', 'Currency', 'Up To']}
+        loading={fairValuesLoading}
+        rows={fairValues.reverse().map(fv => {
+          return {
+            elements: [
+              getName(fv.payload.provider),
+              getName(fv.payload.customer),
+              fv.payload.listingId.label,
+              fv.payload.price,
+              fv.payload.currency.label,
+              fv.payload.upTo,
+            ],
+          };
+        })}
+      />
     </div>
   );
 };

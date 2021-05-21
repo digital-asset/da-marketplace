@@ -8,12 +8,14 @@ import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import Tile from '../../components/Tile/Tile';
-import { Button, Header, Table } from 'semantic-ui-react';
+import { Button, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import TitleWithActions from '../../components/Common/TitleWithActions';
+import InfoCard from '../../components/Common/InfoCard';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
@@ -233,15 +235,50 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     history.push('/app/custody/requests');
   };
 
+  let accountData = [
+    {
+      label: 'Name',
+      data: targetAccount.account.id.label,
+    },
+    { label: 'Type', data: normalAccount ? 'Normal' : 'Allocation' },
+    { label: 'Provider', data: getName(targetAccount.account.provider) },
+    { label: 'Owner', data: getName(targetAccount.account.owner) },
+    {
+      label: 'Role',
+      data: party === targetAccount.account.provider ? 'Provider' : 'Client',
+    },
+  ];
+
+  if (normalAccount) {
+    accountData = [
+      ...accountData,
+      {
+        label: 'Controllers',
+        data: damlSetValues(normalAccount.payload.ctrls)
+          .map(ctrl => getName(ctrl))
+          .sort()
+          .join(', '),
+      },
+    ];
+  }
+  if (allocationAccount) {
+    accountData = [
+      ...accountData,
+      {
+        label: 'Nominee',
+        data: allocationAccount.payload.nominee,
+      },
+    ];
+  }
+
   return (
     <>
       <BackButton />
-      <InputDialog {...transferDialogProps} />
-      <InputDialog {...creditDialogProps} />
+      <InputDialog {...transferDialogProps} isModal />
+      <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <Header as="h2">{targetAccount.account.id.label}</Header>
-        {normalAccount && (
-          <Tile header={<h4>Actions</h4>}>
+        <TitleWithActions title={targetAccount.account.id.label}>
+          {normalAccount && (
             <div className="action-row">
               <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
                 Deposit
@@ -250,101 +287,38 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                 Close
               </Button>
             </div>
-          </Tile>
-        )}
+          )}
+        </TitleWithActions>
 
-        <div className="account-overview">
-          <div className="details">
-            <Tile header={<h4>Account Details</h4>}>
-              <Table basic="very">
-                <Table.Body>
-                  <Table.Row key={0}>
-                    <Table.Cell key={0}>
-                      <b>Name</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>{targetAccount.account.id.label}</Table.Cell>
-                  </Table.Row>
-                  <Table.Row key={1}>
-                    <Table.Cell key={0}>
-                      <b>Type</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>{normalAccount ? 'Normal' : 'Allocation'}</Table.Cell>
-                  </Table.Row>
-                  <Table.Row key={2}>
-                    <Table.Cell key={0}>
-                      <b>Provider</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>{getName(targetAccount.account.provider)}</Table.Cell>
-                  </Table.Row>
-                  <Table.Row key={3}>
-                    <Table.Cell key={0}>
-                      <b>Owner</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>{getName(targetAccount.account.owner)}</Table.Cell>
-                  </Table.Row>
-                  <Table.Row key={4}>
-                    <Table.Cell key={0}>
-                      <b>Role</b>
-                    </Table.Cell>
-                    <Table.Cell key={1}>
-                      {party === targetAccount.account.provider ? 'Provider' : 'Client'}
-                    </Table.Cell>
-                  </Table.Row>
-                  {normalAccount && (
-                    <Table.Row key={5}>
-                      <Table.Cell key={0}>
-                        <b>Controllers</b>
-                      </Table.Cell>
-                      <Table.Cell key={1}>
-                        {damlSetValues(normalAccount.payload.ctrls)
-                          .map(ctrl => getName(ctrl))
-                          .sort()
-                          .join(', ')}
-                      </Table.Cell>
-                    </Table.Row>
-                  )}
-                  {allocationAccount && (
-                    <Table.Row key={5}>
-                      <Table.Cell key={0}>
-                        <b>Nominee</b>
-                      </Table.Cell>
-                      <Table.Cell key={1}>{allocationAccount.payload.nominee}</Table.Cell>
-                    </Table.Row>
-                  )}
-                </Table.Body>
-              </Table>
-            </Tile>
-          </div>
-          <div className="holdings">
-            <Tile header={<h4>Holdings</h4>}>
-              <StripedTable
-                headings={['Holding', 'Asset', '']}
-                loading={depositsLoading || updatingDeposits}
-                rows={accountDeposits.map(c => {
-                  return {
-                    elements: [
-                      c.payload.asset.quantity,
-                      c.payload.asset.id.label,
-                      <>
-                        {party === targetAccount.account.owner && normalAccount && (
-                          <div className="action-row">
-                            <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                              Withdraw
-                            </Button>
-                            {relatedAccounts.length > 0 && (
-                              <Button className="ghost" onClick={() => requestTransfer(c)}>
-                                Transfer
-                              </Button>
-                            )}
-                          </div>
+        <div className="grid-row">
+          <InfoCard title="Account Details" info={accountData} />
+          <StripedTable
+            title="Holdings"
+            headings={['Holding', 'Asset', '']}
+            loading={depositsLoading || updatingDeposits}
+            rows={accountDeposits.map(c => {
+              return {
+                elements: [
+                  c.payload.asset.quantity,
+                  c.payload.asset.id.label,
+                  <>
+                    {party === targetAccount.account.owner && normalAccount && (
+                      <div className="action-row">
+                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                          Withdraw
+                        </Button>
+                        {relatedAccounts.length > 0 && (
+                          <Button className="ghost" onClick={() => requestTransfer(c)}>
+                            Transfer
+                          </Button>
                         )}
-                      </>,
-                    ],
-                  };
-                })}
-              />
-            </Tile>
-          </div>
+                      </div>
+                    )}
+                  </>,
+                ],
+              };
+            })}
+          />
         </div>
       </div>
     </>

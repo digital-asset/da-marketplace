@@ -7,6 +7,7 @@ export type SidebarEntry = {
   children: SidebarEntry[];
   divider?: boolean;
   groupBy?: string;
+  topMenuButtons?: JSX.Element[];
 };
 
 export const getChildren = (e: SidebarEntry): SidebarEntry[] => {

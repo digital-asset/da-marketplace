@@ -57,7 +57,7 @@ const SetUp: React.FC = () => (
       name="Distributions"
       links={[
         {
-          label: 'Create New Auction',
+          label: 'New Auction',
           path: '/app/setup/distribution/new/auction',
         },
       ]}
@@ -85,7 +85,7 @@ const SetUp: React.FC = () => (
       name="Issuance"
       links={[
         {
-          label: 'Create New Issuance',
+          label: 'New Issuance',
           path: '/app/setup/issuance/new',
         },
       ]}
@@ -95,7 +95,7 @@ const SetUp: React.FC = () => (
       name="Listings"
       links={[
         {
-          label: 'Create New Listing',
+          label: 'New Listing',
           path: '/app/setup/listing/new',
         },
       ]}

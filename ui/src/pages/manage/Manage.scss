@@ -24,11 +24,12 @@
       border-width: 1px;
       border-color: var(--cool-grey-80);
       box-sizing: border-box;
+      margin-bottom: $spacing-l;
 
       .item {
         padding: 0;
         padding-bottom: $spacing-s;
-        margin-right: $spacing-xl;
+        margin-right: 5%;
 
         &.active {
           color: var(--text-color);
@@ -40,7 +41,7 @@
       }
     }
 
-    @media screen and (max-width: 1050px) {
+    @media screen and (max-width: 1030px) {
       .manage-menu {
         display: none;
       }

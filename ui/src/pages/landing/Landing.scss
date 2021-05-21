@@ -108,6 +108,9 @@
           align-items: center;
 
           .child {
+            display: flex;
+            flex-wrap: wrap;
+            justify-self: flex-end;
             margin-right: $spacing-s;
 
             &:last-child {
@@ -119,6 +122,7 @@
               background-color: var(--blue-100);
               padding: $spacing-xs $spacing-s;
               border-radius: 6px;
+              margin: $spacing-xs $spacing-xs $spacing-xs 0;
             }
           }
 
@@ -166,7 +170,7 @@
       }
     }
 
-    @media screen and (max-width: 850px) {
+    @media screen and (max-width: 1020px) {
       flex-direction: column;
       .col {
         margin-right: 0px;

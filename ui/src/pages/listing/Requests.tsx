@@ -26,6 +26,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { AddPlusIcon } from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -90,15 +91,9 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <Button
-                      color="primary"
-                      size="large"
-                      className={classes.actionButton}
-                      variant="outlined"
-                      onClick={() => history.push('/app/listing/new')}
-                    >
-                      New Listing
-                    </Button>
+                    <a className="a2 with-icon" onClick={() => history.push('/app/listing/new')}>
+                      <AddPlusIcon /> New Listing
+                    </a>
                   </Grid>
                 </Grid>
               </Grid>

@@ -42,7 +42,7 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
       <BackButton />
       <div className="market">
         <div className="orders">
-          <Tile header={<h4>Order</h4>}>
+          <Tile header="Order">
             <Table basic="very">
               <Table.Body>
                 <Table.Row key={0}>
@@ -169,29 +169,25 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
             </Table>
           </Tile>
         </div>
-        <div className="new-order">
-          <Tile header={<h4>Executions</h4>}>
-            <Table basic="very">
-              <StripedTable
-                rowsClickable
-                headings={['Match Id', 'Quantity', 'Price', 'Execution Date']}
-                loading={allOrders.loading}
-                rows={order.payload.executions.map(e => {
-                  return {
-                    elements: [
-                      e.matchId,
-                      parseFloat(e.quantity),
-                      parseFloat(e.price),
-                      DateTime.fromMillis(parseInt(e.timestamp) / 1000000).toLocaleString(
-                        DateTime.DATETIME_FULL_WITH_SECONDS
-                      ),
-                    ],
-                  };
-                })}
-              />
-            </Table>
-          </Tile>
-        </div>
+
+        <StripedTable
+          title="Executions"
+          rowsClickable
+          headings={['Match Id', 'Quantity', 'Price', 'Execution Date']}
+          loading={allOrders.loading}
+          rows={order.payload.executions.map(e => {
+            return {
+              elements: [
+                e.matchId,
+                parseFloat(e.quantity),
+                parseFloat(e.price),
+                DateTime.fromMillis(parseInt(e.timestamp) / 1000000).toLocaleString(
+                  DateTime.DATETIME_FULL_WITH_SECONDS
+                ),
+              ],
+            };
+          })}
+        />
       </div>
     </div>
   );

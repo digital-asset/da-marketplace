@@ -1,4 +1,3 @@
-@use './PaginationControls';
 @use '../../themes/variables.scss' as *;
 
 @mixin striped-table {
@@ -8,18 +7,29 @@
     width: 100%;
     align-items: flex-start;
     animation: fadeIn 0.5s;
+    margin-bottom: $spacing-m;
 
-    @include PaginationControls.pagination-controls();
+    .empty-table {
+      background-color: var(--white);
+      border: 1px solid var(--cool-grey-90);
+      min-height: 57px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      width: 100%;
+
+      .ui.loader {
+        position: inherit;
+        margin-top: $spacing-m;
+      }
+    }
 
     table {
       border-collapse: collapse;
       border: none;
       margin: 0px;
-
-      .ui.loader {
-        position: relative;
-        transform: translateX(-0%) translateY(-0%);
-      }
+      table-layout: fixed;
 
       th {
         border: none;
@@ -32,6 +42,17 @@
             background-color: var(--cool-grey-90);
             cursor: pointer;
           }
+        }
+      }
+
+      td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        .ui.button {
+          margin-left: auto;
+          padding: 4px;
         }
       }
 
@@ -53,41 +74,16 @@
       }
     }
 
-    @media screen and (max-width: 1050px) {
-      table {
-        border-bottom: none;
+    .ui.pagination.menu {
+      margin-left: auto;
 
-        thead {
-          display: none !important;
-        }
-
-        tr {
-          background-color: var(--cool-grey-100);
-          display: flex;
-          flex-direction: column;
-          padding: $spacing-xs;
-
-          td {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            flex-wrap: wrap;
-            word-break: break-all;
-            font-weight: normal;
-            text-align: left;
-            padding: $spacing-xs;
-
-            .label {
-              display: inline-flex;
-              padding-right: $spacing-xs;
-            }
-
-            .ui.button {
-              display: unset;
-              margin: unset;
-            }
-          }
-        }
+      a.item {
+        border: none;
+        color: var(--cool-grey-60);
+      }
+      a.active.item {
+        color: var(--blue-50);
+        background-color: transparent;
       }
     }
   }

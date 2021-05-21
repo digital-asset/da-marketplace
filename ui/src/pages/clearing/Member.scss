@@ -3,17 +3,5 @@
 @mixin member {
   .member {
     animation: fadeIn 0.5s;
-
-    h2 {
-      margin-bottom: $spacing-m;
-    }
-
-    table {
-      margin-bottom: $spacing-m;
-    }
-
-    .button.ghost {
-      margin-right: $spacing-s;
-    }
   }
 }

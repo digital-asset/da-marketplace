@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { useEffect, useState } from 'react';
-import { Loader, Table } from 'semantic-ui-react';
+import { Loader, Table, Header } from 'semantic-ui-react';
 import { ArrowRightIcon } from '../../icons/icons';
 
 import PaginationControls from './PaginationControls';
@@ -13,28 +13,19 @@ interface IStripedTableRow {
 const StripedTable = (props: {
   headings: React.ReactNode[];
   rows: IStripedTableRow[];
-  rowsPerPage?: number;
-  emptyLabel?: string;
   loading?: boolean;
   rowsClickable?: boolean;
   clickableIcon?: JSX.Element;
   showLabel?: boolean;
+  title?: string;
 }) => {
-  const {
-    headings,
-    rows,
-    rowsPerPage,
-    emptyLabel,
-    loading,
-    rowsClickable,
-    showLabel,
-    clickableIcon,
-  } = props;
+  const { headings, rows, loading, rowsClickable, showLabel, clickableIcon, title } = props;
 
   const clickIcon =
     clickableIcon || (rowsClickable && !clickableIcon ? <ArrowRightIcon /> : undefined);
 
-  const colSpan = clickIcon ? headings.length + 1 : headings.length;
+  const rowsPerPage = 10;
+
   const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
 
   const [activePage, setActivePage] = useState<number>(1);
@@ -48,8 +39,33 @@ const StripedTable = (props: {
     }
   }, [activePage, rows, rowsPerPage]);
 
+  // TODO: In body of empty table, provide a link to whatever needs to be done to make the table un-empty
+  if (activePageRows.length === 0) {
+    return (
+      <div className="striped-table">
+        {!!title && <Header as="h2">{title}</Header>}
+        <div className="empty-table">
+          <p className="p2">This table doesn't contain data yet...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="striped-table">
+        {!!title && <Header as="h2">{title}</Header>}
+        <div className="empty-table">
+          <Loader active indeterminate size="small" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="striped-table">
+      {!!title && <Header as="h2">{title}</Header>}
+
       <Table>
         <Table.Header>
           <Table.Row>
@@ -64,47 +80,27 @@ const StripedTable = (props: {
             {!!clickIcon && <Table.HeaderCell></Table.HeaderCell>}
           </Table.Row>
         </Table.Header>
-        {loading ? (
-          <Table.Body>
-            <Table.Row className="loading-table">
-              <Table.Cell textAlign={'center'} colSpan={headings.length}>
-                <Loader active indeterminate size="small" />
-              </Table.Cell>
-            </Table.Row>
-          </Table.Body>
-        ) : (
-          <Table.Body>
-            {rows.length > 0 ? (
-              activePageRows.map((row, i) => (
-                <Table.Row
-                  key={i}
-                  className={classNames({ clickable: rowsClickable })}
-                  onClick={row.onClick}
-                >
-                  {row.elements.map((item, j) => (
-                    <Table.Cell
-                      key={j}
-                      textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}
-                    >
-                      {showLabel && <b className="label">{headings[j]}: </b>} {item}
-                    </Table.Cell>
-                  ))}
-                  {!!clickIcon && (
-                    <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
-                      {clickIcon}
-                    </Table.Cell>
-                  )}
-                </Table.Row>
-              ))
-            ) : (
-              <Table.Row className="empty-table">
-                <Table.Cell textAlign={'center'} colSpan={colSpan}>
-                  <i>{emptyLabel || 'none'}</i>
+
+        <Table.Body>
+          {activePageRows.map((row, i) => (
+            <Table.Row
+              key={i}
+              className={classNames({ clickable: rowsClickable })}
+              onClick={row.onClick}
+            >
+              {row.elements.map((item, j) => (
+                <Table.Cell key={j} textAlign={j + 1 > row.elements.length / 2 ? 'right' : 'left'}>
+                  {showLabel && <b className="label">{headings[j]}: </b>} {item}
                 </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        )}
+              ))}
+              {!!clickIcon && (
+                <Table.Cell key={row.elements.length + 1} textAlign={'right'}>
+                  {clickIcon}
+                </Table.Cell>
+              )}
+            </Table.Row>
+          ))}
+        </Table.Body>
       </Table>
       {totalPages > 1 && (
         <PaginationControls

@@ -11,8 +11,8 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { ArrowRightIcon } from '../../icons/icons';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const party = useParty();
@@ -35,46 +35,35 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   return (
     <div className="origination-requests">
-      <Tile header={<h4>Actions</h4>}>
-        <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
-          New Instrument
-        </Button>
-      </Tile>
+      <TitleWithActions
+        title={'Origination Requests'}
+        actions={[{ path: '/app/instrument/new', label: 'New Instrument' }]}
+      />
 
-      <Tile header={<h4>Origination Requests</h4>}>
-        <StripedTable
-          rowsClickable
-          headings={[
-            'Registrar',
-            'Issuer',
-            'Asset',
-            'Description',
-            'Safekeeping Account',
-            'Action',
-          ]}
-          loading={requestsLoading}
-          rows={requests.map(c => {
-            return {
-              elements: [
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                c.payload.assetLabel,
-                c.payload.description,
-                c.payload.safekeepingAccount.id.label,
-                <>
-                  {party === c.payload.provider && (
-                    <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
-                      Originate
-                    </Button>
-                  )}
-                </>,
-              ],
-              onClick: () =>
-                history.push('/app/registry/requests/' + c.contractId.replace('#', '_')),
-            };
-          })}
-        />
-      </Tile>
+      <StripedTable
+        rowsClickable
+        headings={['Registrar', 'Issuer', 'Asset', 'Description', 'Safekeeping Account', 'Action']}
+        loading={requestsLoading}
+        rows={requests.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.assetLabel,
+              c.payload.description,
+              c.payload.safekeepingAccount.id.label,
+              <>
+                {party === c.payload.provider && (
+                  <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
+                    Originate
+                  </Button>
+                )}
+              </>,
+            ],
+            onClick: () => history.push('/app/registry/requests/' + c.contractId.replace('#', '_')),
+          };
+        })}
+      />
     </div>
   );
 };
