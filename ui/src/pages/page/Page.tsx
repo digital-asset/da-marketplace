@@ -1,7 +1,7 @@
 import React from 'react';
 import { Grid, Header, Menu } from 'semantic-ui-react';
 import classNames from 'classnames';
-import TopMenu, { ITopMenuButtonInfo } from './TopMenu';
+import TopMenu from './TopMenu';
 import { NavLink, useHistory } from 'react-router-dom';
 import { useParty } from '@daml/react';
 import PageSection from './PageSection';
@@ -10,14 +10,14 @@ import { SidebarEntry } from '../../components/Sidebar/SidebarEntry';
 import _ from 'lodash';
 import { CogIcon } from '../../icons/icons';
 import { usePartyName } from '../../config';
-
+import { getBaseSegment } from '../../App';
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
   activeMenuTitle?: boolean;
   showNotificationAlert?: boolean;
   sideBarItems?: SidebarEntry[];
-  topMenuButtons?: ITopMenuButtonInfo[];
+  topMenuButtons?: JSX.Element[];
 };
 
 const Page: React.FC<Props> = ({
@@ -50,7 +50,7 @@ const Page: React.FC<Props> = ({
           exact
           active={
             sideBarItem.activeSubroutes
-              ? history.location.pathname.includes(sideBarItem.path)
+              ? history.location.pathname.includes(getBaseSegment(sideBarItem.path))
               : undefined
           }
           key={sideBarItem.label + sideBarItem.path}

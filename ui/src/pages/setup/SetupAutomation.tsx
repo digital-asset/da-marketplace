@@ -97,34 +97,32 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({ title, token, 
     >
       <Modal.Header as="h2">{title || 'Setup Automation'}</Modal.Header>
       <Modal.Content>
-        <Tile header={<h2>Running Automation</h2>}>
-          <br />
-          <StripedTable
-            headings={['Automation', 'Action']}
-            rows={deployedAutomations.map(da => {
-              return {
-                elements: [
-                  da.config.value.name.split(':')[0],
-                  <Button.Group size="mini">
-                    <Button
-                      negative
-                      loading={undeploying.get(da.config.value.name)}
-                      className="ghost"
-                      onClick={() => {
-                        setUndeploying(prev => new Map(prev).set(da.config.value.name, true));
-                        handleUndeploy(da);
-                      }}
-                    >
-                      Undeploy
-                    </Button>
-                  </Button.Group>,
-                ],
-              };
-            })}
-          />
-        </Tile>
+        <StripedTable
+          title="Running Automation"
+          headings={['Automation', 'Action']}
+          rows={deployedAutomations.map(da => {
+            return {
+              elements: [
+                da.config.value.name.split(':')[0],
+                <Button.Group size="mini">
+                  <Button
+                    negative
+                    loading={undeploying.get(da.config.value.name)}
+                    className="ghost"
+                    onClick={() => {
+                      setUndeploying(prev => new Map(prev).set(da.config.value.name, true));
+                      handleUndeploy(da);
+                    }}
+                  >
+                    Undeploy
+                  </Button>
+                </Button.Group>,
+              ],
+            };
+          })}
+        />
         <Divider horizontal />
-        <Tile header={<h2>Deploy New Automation</h2>}>
+        <Tile header="Deploy New Automation">
           <br />
           <Form>
             <Form.Group inline widths="equal">

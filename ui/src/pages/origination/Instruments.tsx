@@ -54,7 +54,7 @@ export const InstrumentsTable: React.FC = () => {
 const InstrumentsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   return (
     <div className="instruments">
-      <Tile header={<h4>Actions</h4>}>
+      <Tile header="Actions">
         <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
           New Instrument
         </Button>

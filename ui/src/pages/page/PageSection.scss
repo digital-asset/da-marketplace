@@ -13,5 +13,16 @@
     .order-forms > .ui.form {
       padding-bottom: $spacing-l;
     }
+
+    .grid-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      :first-child {
+        margin-right: $spacing-l;
+      }
+    }
   }
 }

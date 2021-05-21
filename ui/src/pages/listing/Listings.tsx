@@ -101,48 +101,47 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
         })}
       />
       {(!!listingRequests.length || !!failedListingRequests.length) && (
-        <Tile header={<h2>Requests</h2>}>
-          <StripedTable
-            headings={[
-              'Provider',
-              'Client',
-              'Cleared By',
-              'Listing ID',
-              'Calendar ID',
-              'Traded Asset',
-              'Traded Asset Precision',
-              'Quoted Asset',
-              'Quoted Asset Precision',
-              'Status',
-            ]}
-            loading={failedListingRequestsLoading || listingRequestsLoading}
-            rows={[...listingRequests, ...failedListingRequests].map(c => {
-              return {
-                elements: [
-                  getName(c.payload.provider),
-                  getName(c.payload.customer),
-                  getMarketType(c, getName),
-                  c.payload.symbol,
-                  c.payload.calendarId,
-                  c.payload.tradedAssetId.label,
-                  c.payload.tradedAssetPrecision,
-                  c.payload.quotedAssetId.label,
-                  c.payload.quotedAssetPrecision,
-                  getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE ? 'Pending' : 'Failed',
-                  getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE
-                    ? ''
-                    : (c.payload as FailedListingCreation).error.message
-                        .replace('{', '')
-                        .replace('}', '')
-                        .replace(/'/g, ''),
-                ],
-              };
-            })}
-          />
-        </Tile>
+        <StripedTable
+          title="Requests"
+          headings={[
+            'Provider',
+            'Client',
+            'Cleared By',
+            'Listing ID',
+            'Calendar ID',
+            'Traded Asset',
+            'Traded Asset Precision',
+            'Quoted Asset',
+            'Quoted Asset Precision',
+            'Status',
+          ]}
+          loading={failedListingRequestsLoading || listingRequestsLoading}
+          rows={[...listingRequests, ...failedListingRequests].map(c => {
+            return {
+              elements: [
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                getMarketType(c, getName),
+                c.payload.symbol,
+                c.payload.calendarId,
+                c.payload.tradedAssetId.label,
+                c.payload.tradedAssetPrecision,
+                c.payload.quotedAssetId.label,
+                c.payload.quotedAssetPrecision,
+                getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE ? 'Pending' : 'Failed',
+                getTemplateId(c.templateId) === LISTING_REQUEST_TEMPLATE
+                  ? ''
+                  : (c.payload as FailedListingCreation).error.message
+                      .replace('{', '')
+                      .replace('}', '')
+                      .replace(/'/g, ''),
+              ],
+            };
+          })}
+        />
       )}
       {!!manualFVRequests.length && (
-        <Tile header={<h4>Manual Fair Requests</h4>}>
+        <Tile header="Manual Fair Requests">
           <FairValueCalculationRequests
             requests={manualFVRequests}
             loading={manualFVRequestsLoading}

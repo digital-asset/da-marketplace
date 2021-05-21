@@ -218,12 +218,12 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       </FormErrorHandled>
       <div className="asset">
         {showTradedAsset && (
-          <Tile header={<h4>Auctioned Asset</h4>}>
+          <Tile header="Auctioned Asset">
             <div ref={el1} style={{ height: '100%' }} />
           </Tile>
         )}
         {showQuotedAsset && (
-          <Tile header={<h4>Quoted Asset</h4>}>
+          <Tile header="Quoted Asset">
             <div ref={el2} style={{ height: '100%' }} />
           </Tile>
         )}

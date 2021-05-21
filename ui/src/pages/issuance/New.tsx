@@ -135,7 +135,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       </FormErrorHandled>
 
       {showAsset && (
-        <Tile header={<h3>Instrument</h3>}>
+        <Tile header="Instrument">
           <div ref={el} style={{ height: '400px', overflow: 'hidden' }} />
         </Tile>
       )}

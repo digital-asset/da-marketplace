@@ -275,7 +275,7 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
           </a>
         </div>
       </FormErrorHandled>
-      <Tile header={<h5>Payoff</h5>}>
+      <Tile header="Payoff">
         <div ref={el} style={{ height: '100%' }} />
       </Tile>
     </div>

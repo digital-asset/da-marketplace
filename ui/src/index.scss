@@ -9,6 +9,7 @@
 
 @use 'components/InputDialog/InputDialog';
 @use 'components/Common/TitleWithActions';
+@use 'components/Common/InfoCard';
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
 @use 'pages/landing/Landing';
@@ -80,6 +81,8 @@ html {
     font-size: 20px;
     line-height: 27px;
     color: var(--textcolor);
+    margin-top: 24px;
+    margin-bottom: 12px;
 
     &.dark {
       color: var(--white);
@@ -249,6 +252,7 @@ html {
         @include OverflowMenu.overflow-menu();
         @include OriginationNew.origination-new();
         @include Instrument.instrument();
+        @include InfoCard.info-card();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();

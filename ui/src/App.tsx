@@ -1,5 +1,13 @@
 import React from 'react';
-import { Redirect, Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
+import {
+  Redirect,
+  Route,
+  RouteProps,
+  Switch,
+  useLocation,
+  withRouter,
+  useHistory,
+} from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
@@ -12,7 +20,6 @@ import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
 import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
-import { CircularProgress } from '@material-ui/core';
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
@@ -54,7 +61,7 @@ import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header, Loader } from 'semantic-ui-react';
+import { Header, Loader, Button } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
@@ -68,6 +75,7 @@ type Entry = {
 
 const AppComponent = () => {
   const party = useParty();
+  const history = useHistory();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: clearingService, loading: clearingLoading } =
@@ -98,6 +106,7 @@ const AppComponent = () => {
       {
         label: 'Wallet',
         path: '/app/custody/assets',
+        activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
         children: [],
@@ -149,6 +158,11 @@ const AppComponent = () => {
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
         children: [],
+        topMenuButtons: [
+          <Button className="ghost" onClick={() => history.push('/app/manage/clearing')}>
+            Manage Clearing Services
+          </Button>,
+        ],
       },
     ],
   });
@@ -430,10 +444,6 @@ const AppComponent = () => {
 
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
 
-  function getBaseSegment(segment: string) {
-    return [segment.split('/')[0], segment.split('/')[1], segment.split('/')[2]].join('/');
-  }
-
   return (
     <Page
       sideBarItems={entriesToDisplay}
@@ -445,6 +455,7 @@ const AppComponent = () => {
           </Header>
         )
       }
+      topMenuButtons={currentEntry && currentEntry.topMenuButtons}
       showNotificationAlert={notifCount > 0}
     >
       {servicesLoading ? (
@@ -467,5 +478,9 @@ const AppComponent = () => {
     </Page>
   );
 };
+
+export function getBaseSegment(segment: string) {
+  return [segment.split('/')[0], segment.split('/')[1], segment.split('/')[2]].join('/');
+}
 
 export const App = withRouter(AppComponent);

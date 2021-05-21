@@ -38,9 +38,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
   );
 
   return (
-    <div className="assets">
-      <Header as="h2">Holdings</Header>
+    <div>
       <StripedTable
+        title="Holdings"
         rowsClickable
         headings={['Asset', 'Account', 'Owner']}
         loading={depositsLoading}

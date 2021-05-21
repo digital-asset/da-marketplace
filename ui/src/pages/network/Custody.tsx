@@ -102,29 +102,27 @@ export const AccountRequestsTable: React.FC<Props> = ({ services }) => {
   };
 
   return !!openRequests.length ? (
-    <>
-      <Header as="h2">Account Requests</Header>
-      <StripedTable
-        headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
-        loading={loading}
-        rows={openRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              damlSetValues(c.payload.ctrls).join(', '),
-              party === c.payload.provider && (
-                <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                  Process
-                </Button>
-              ),
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Account Requests"
+      headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
+      loading={loading}
+      rows={openRequests.map((c, i) => {
+        return {
+          elements: [
+            c.payload.accountId.label,
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Client',
+            damlSetValues(c.payload.ctrls).join(', '),
+            party === c.payload.provider && (
+              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
+                Process
+              </Button>
+            ),
+          ],
+        };
+      })}
+    />
   ) : (
     <></>
   );
@@ -151,29 +149,27 @@ export const AllocationAccountRequestsTable: React.FC<Props> = ({ services }) =>
   };
 
   return !!openRequests.length ? (
-    <>
-      <Header as="h2">Allocation Account Requests</Header>
-      <StripedTable
-        headings={['Account', 'Provider', 'Client', 'Role', 'Nominee', 'Action']}
-        loading={loading}
-        rows={openRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              c.payload.nominee,
-              party === c.payload.provider && (
-                <Button className="ghost" size="small" onClick={() => openAccount(c)}>
-                  Process
-                </Button>
-              ),
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Allocation Account Requests"
+      headings={['Account', 'Provider', 'Client', 'Role', 'Nominee', 'Action']}
+      loading={loading}
+      rows={openRequests.map((c, i) => {
+        return {
+          elements: [
+            c.payload.accountId.label,
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Client',
+            c.payload.nominee,
+            party === c.payload.provider && (
+              <Button className="ghost" size="small" onClick={() => openAccount(c)}>
+                Process
+              </Button>
+            ),
+          ],
+        };
+      })}
+    />
   ) : (
     <></>
   );

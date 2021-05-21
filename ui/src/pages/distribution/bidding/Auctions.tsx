@@ -23,8 +23,8 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
 
   return (
     <div className="bidding">
-      <Header as="h2">Auctions</Header>
       <StripedTable
+        title="Auctions"
         rowsClickable
         headings={['Auction ID', 'Agent', 'Issuer', 'Asset', 'Quantity']}
         loading={biddingAuctionsLoading}
@@ -42,8 +42,8 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
           };
         })}
       />
-      <Header as="h2">Bids</Header>
       <StripedTable
+        title="Bids"
         headings={[
           'Auction ID',
           'Agent',

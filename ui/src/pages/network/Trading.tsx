@@ -43,37 +43,35 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
   };
 
   return (
-    <>
-      <Header as="h2">Trading</Header>
-      <StripedTable
-        headings={[
-          'Service',
-          'Operator',
-          'Provider',
-          'Consumer',
-          'Role',
-          'Trading Account',
-          'Allocation Account',
-          'Action',
-        ]}
-        rows={services.map((c, i) => {
-          return {
-            elements: [
-              getTemplateId(c.templateId),
-              getName(c.payload.operator),
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Consumer',
-              c.payload.tradingAccount.id.label,
-              c.payload.allocationAccount.id.label,
-              <Button className="ghost warning" onClick={() => terminateService(c)}>
-                Terminate
-              </Button>,
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Trading"
+      headings={[
+        'Service',
+        'Operator',
+        'Provider',
+        'Consumer',
+        'Role',
+        'Trading Account',
+        'Allocation Account',
+        'Action',
+      ]}
+      rows={services.map((c, i) => {
+        return {
+          elements: [
+            getTemplateId(c.templateId),
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+            c.payload.tradingAccount.id.label,
+            c.payload.allocationAccount.id.label,
+            <Button className="ghost warning" onClick={() => terminateService(c)}>
+              Terminate
+            </Button>,
+          ],
+        };
+      })}
+    />
   );
 };
 

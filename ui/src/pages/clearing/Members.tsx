@@ -43,7 +43,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
   };
 
   return (
-    <div className="assets">
+    <div>
       <TitleWithActions
         title="Clearing"
         actions={[
@@ -56,8 +56,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
       </TitleWithActions>
-      <Header as="h2">Holdings</Header>
       <StripedTable
+        title="Holdings"
         rowsClickable
         headings={['Member', 'Clearing Account', 'Margin Account', 'In Good Standing']}
         loading={accountsLoading || depositsLoading || standingsLoading}
@@ -94,8 +94,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">CCP Account</Header>
       <StripedTable
+        title="CCP Account"
         headings={['Account', 'Asset', 'Amount']}
         loading={depositsLoading}
         rows={ccpDeposits.map(c => {
@@ -108,8 +108,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Accounts</Header>
       <StripedTable
+        title="Accounts"
         loading={accountsLoading}
         headings={['Account', 'Provider', 'Owner', 'Role', 'Controllers']}
         rows={accounts.map(c => {
@@ -127,8 +127,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Cleared Trades</Header>
       <StripedTable
+        title="Cleared Trades"
         loading={clearedTradesLoading}
         headings={['Provider', 'Match Id', 'Maker Order Id', 'Taker Order Id', 'Quantity', 'Price']}
         rows={clearedTrades.map(c => {
@@ -147,8 +147,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
           };
         })}
       />
-      <Header as="h2">Cleared Trade Sides</Header>
       <StripedTable
+        title="Cleared Trade Sides"
         loading={clearedTradeSidesLoading}
         headings={['Exchange', 'Member', 'Listing', 'Quantity', 'Price', 'Time Matched']}
         rows={clearedTradeSides.map(c => {

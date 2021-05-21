@@ -40,40 +40,30 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
         actions={[{ path: '/app/instrument/new', label: 'New Instrument' }]}
       />
 
-      <Tile>
-        <StripedTable
-          rowsClickable
-          headings={[
-            'Registrar',
-            'Issuer',
-            'Asset',
-            'Description',
-            'Safekeeping Account',
-            'Action',
-          ]}
-          loading={requestsLoading}
-          rows={requests.map(c => {
-            return {
-              elements: [
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                c.payload.assetLabel,
-                c.payload.description,
-                c.payload.safekeepingAccount.id.label,
-                <>
-                  {party === c.payload.provider && (
-                    <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
-                      Originate
-                    </Button>
-                  )}
-                </>,
-              ],
-              onClick: () =>
-                history.push('/app/registry/requests/' + c.contractId.replace('#', '_')),
-            };
-          })}
-        />
-      </Tile>
+      <StripedTable
+        rowsClickable
+        headings={['Registrar', 'Issuer', 'Asset', 'Description', 'Safekeeping Account', 'Action']}
+        loading={requestsLoading}
+        rows={requests.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.assetLabel,
+              c.payload.description,
+              c.payload.safekeepingAccount.id.label,
+              <>
+                {party === c.payload.provider && (
+                  <Button secondary className="ghost" onClick={() => originateInstrument(c)}>
+                    Originate
+                  </Button>
+                )}
+              </>,
+            ],
+            onClick: () => history.push('/app/registry/requests/' + c.contractId.replace('#', '_')),
+          };
+        })}
+      />
     </div>
   );
 };

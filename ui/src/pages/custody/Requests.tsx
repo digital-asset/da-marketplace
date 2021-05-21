@@ -225,43 +225,31 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
             </Grid>
           )}
           {closeRequests.length > 0 && (
-            <>
-              <Header as="h2">Close Account Requests</Header>
-              <StripedTable
-                headings={['Account', 'Provider', 'Client', 'Role', 'Action', 'Details']}
-                rows={closeRequests.map((c, i) => {
-                  return {
-                    elements: [
-                      c.payload.accountId.label,
-                      getName(c.payload.provider),
-                      getName(c.payload.customer),
-                      party === c.payload.provider ? 'Provider' : 'Client',
-                      party === c.payload.provider && (
-                        <Button
-                          color="primary"
-                          size="small"
-                          className={classes.choiceButton}
-                          variant="contained"
-                          onClick={() => closeAccount(c)}
-                        >
-                          Process
-                        </Button>
-                      ),
-                      <IconButton
+            <StripedTable
+              title="Close Account Requests"
+              headings={['Account', 'Provider', 'Client', 'Role', 'Action']}
+              rows={closeRequests.map((c, i) => {
+                return {
+                  elements: [
+                    c.payload.accountId.label,
+                    getName(c.payload.provider),
+                    getName(c.payload.customer),
+                    party === c.payload.provider ? 'Provider' : 'Client',
+                    party === c.payload.provider && (
+                      <Button
                         color="primary"
                         size="small"
-                        component="span"
-                        onClick={() =>
-                          history.push('/app/custody/account/' + c.contractId.replace('#', '_'))
-                        }
+                        className={classes.choiceButton}
+                        variant="contained"
+                        onClick={() => closeAccount(c)}
                       >
-                        <KeyboardArrowRight fontSize="small" />
-                      </IconButton>,
-                    ],
-                  };
-                })}
-              />
-            </>
+                        Process
+                      </Button>
+                    ),
+                  ],
+                };
+              })}
+            />
           )}
 
           {creditRequests.length > 0 && (

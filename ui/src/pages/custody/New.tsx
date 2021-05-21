@@ -179,7 +179,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           readOnly
           onChange={(_, change) => setAccountName(change.value as string)}
         />
-        <div className="form-select">
+        <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
           <a className="a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel

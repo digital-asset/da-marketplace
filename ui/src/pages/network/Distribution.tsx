@@ -40,24 +40,22 @@ export const DistributionServiceTable = () => {
   const services = [...auctionServices, ...biddingServices];
 
   return (
-    <>
-      <Header as="h2">Services</Header>
-      <StripedTable
-        headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
-        loading={biddingServicesLoading || auctionServicesLoading}
-        rows={services.map(c => {
-          return {
-            elements: [
-              getTemplateId(c.templateId).split('.')[2],
-              getName(c.payload.operator),
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Consumer',
-            ],
-          };
-        })}
-      />
-    </>
+    <StripedTable
+      title="Services"
+      headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role']}
+      loading={biddingServicesLoading || auctionServicesLoading}
+      rows={services.map(c => {
+        return {
+          elements: [
+            getTemplateId(c.templateId).split('.')[2],
+            getName(c.payload.operator),
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            party === c.payload.provider ? 'Provider' : 'Consumer',
+          ],
+        };
+      })}
+    />
   );
 };
 

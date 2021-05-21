@@ -18,26 +18,24 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
   const { getName } = usePartyName('');
 
   return (
-    <div>
-      <Header as="h2">Markets</Header>
-      <StripedTable
-        headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset']}
-        rowsClickable
-        clickableIcon={<ArrowRightIcon />}
-        rows={listings.map(c => {
-          return {
-            elements: [
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              c.payload.listingId.label,
-              c.payload.tradedAssetId.label,
-              c.payload.quotedAssetId.label,
-            ],
-            onClick: () => history.push('/app/trading/markets/' + c.contractId.replace('#', '_')),
-          };
-        })}
-      />
-    </div>
+    <StripedTable
+      title="Markets"
+      headings={['Provider', 'Client', 'Symbol', 'Traded Asset', 'Quoted Asset']}
+      rowsClickable
+      clickableIcon={<ArrowRightIcon />}
+      rows={listings.map(c => {
+        return {
+          elements: [
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            c.payload.listingId.label,
+            c.payload.tradedAssetId.label,
+            c.payload.quotedAssetId.label,
+          ],
+          onClick: () => history.push('/app/trading/markets/' + c.contractId.replace('#', '_')),
+        };
+      })}
+    />
   );
 };
 

@@ -11,11 +11,12 @@ export const logoHeader = (
 
 type TileProps = {
   className?: string;
-  header?: React.ReactElement;
+  header?: string;
   key?: string | number;
   dark?: boolean;
   thinGap?: boolean;
   subtitle?: string;
+  showLogoHeader?: boolean;
 };
 
 export const Tile: React.FC<TileProps> = ({
@@ -25,11 +26,13 @@ export const Tile: React.FC<TileProps> = ({
   thinGap,
   subtitle,
   header,
+  showLogoHeader,
 }) => {
   return (
     <>
       <div className={classNames('tile', className, { dark, 'thin-gap': thinGap })}>
-        {!!header && <div className="tile-header">{header}</div>}
+        {!!showLogoHeader && <div className="tile-header">{logoHeader}</div>}
+        {!!header && <Header as="h3">{header}</Header>}
         {!!subtitle && <p className="subtitle">{subtitle}</p>}
         <div className="tile-content">{children}</div>
       </div>

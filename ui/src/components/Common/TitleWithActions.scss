@@ -6,6 +6,8 @@
     flex-direction: row;
     align-items: baseline;
     flex-wrap: wrap;
+    margin-bottom: $spacing-s;
+
     a,
     button {
       margin-left: $spacing-m;

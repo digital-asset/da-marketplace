@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, RouteComponentProps, withRouter } from 'react-router-dom';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -11,7 +11,6 @@ import {
   ReduceIssuanceRequest,
   Service,
 } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
-import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import TitleWithActions from '../../components/Common/TitleWithActions';
@@ -103,46 +102,44 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
           };
         })}
       />
-      <Header as="h2">Deissuance Requests</Header>
-      <Tile header={<h4>Deissuance Requests</h4>}>
-        <StripedTable
-          headings={[
-            'Provider',
-            'Client',
-            'Role',
-            'Issuance ID',
-            'Account',
-            // 'Asset',
-            // 'Quantity',
-            'Action',
-            'Details',
-          ]}
-          loading={reduceRequestsLoading}
-          rows={reduceRequests.map(c => {
-            return {
-              elements: [
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                party === c.payload.provider ? 'Provider' : 'Client',
-                c.payload.issuanceId,
-                c.payload.accountId.label,
-                // c.payload.assetId.label,
-                // c.payload.quotedAssetId.label,
-                <>
-                  {party === c.payload.provider && (
-                    <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
-                      Deissue
-                    </Button>
-                  )}
-                </>,
-                <NavLink to={'/app/issuance/deleterequest/' + c.contractId.replace('#', '_')}>
-                  <ArrowRightIcon />
-                </NavLink>,
-              ],
-            };
-          })}
-        />
-      </Tile>
+      <StripedTable
+        title="Deissuance Requests"
+        headings={[
+          'Provider',
+          'Client',
+          'Role',
+          'Issuance ID',
+          'Account',
+          // 'Asset',
+          // 'Quantity',
+          'Action',
+          'Details',
+        ]}
+        loading={reduceRequestsLoading}
+        rows={reduceRequests.map(c => {
+          return {
+            elements: [
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Client',
+              c.payload.issuanceId,
+              c.payload.accountId.label,
+              // c.payload.assetId.label,
+              // c.payload.quotedAssetId.label,
+              <>
+                {party === c.payload.provider && (
+                  <Button secondary className="ghost" onClick={() => deleteIssuance(c)}>
+                    Deissue
+                  </Button>
+                )}
+              </>,
+              <NavLink to={'/app/issuance/deleterequest/' + c.contractId.replace('#', '_')}>
+                <ArrowRightIcon />
+              </NavLink>,
+            ],
+          };
+        })}
+      />
     </div>
   );
 };
