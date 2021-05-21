@@ -28,7 +28,7 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import { ActionTile } from './Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
@@ -49,12 +49,12 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
-      <div className="title-action">
-        <Header as="h2">Current Services</Header>
+      <TitleWithActions title="Current Services">
         <Button className="ghost" onClick={() => history.push('/app/setup/custody/offer')}>
           Offer Custody Service
         </Button>
-      </div>
+      </TitleWithActions>
+
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         rows={services.map((c, i) => {

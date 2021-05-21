@@ -4,10 +4,8 @@ import { useStreamQueries } from '../../../Main';
 import { usePartyName } from '../../../config';
 import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
 import { getAuctionStatus } from '../Utils';
-import { Header } from 'semantic-ui-react';
 import StripedTable from '../../../components/Table/StripedTable';
-import { ActionTile } from '../../network/Actions';
-import { AddPlusIcon } from '../../../icons/icons';
+import TitleWithActions from '../../../components/Common/TitleWithActions';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
@@ -15,15 +13,10 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   return (
     <div className="auction">
-      <div className="title-action">
-        <Header as="h2">Auctions</Header>
-        <a
-          className="a2 with-icon"
-          onClick={() => history.push('/app/setup/distribution/new/auction')}
-        >
-          <AddPlusIcon /> New Auction
-        </a>
-      </div>
+      <TitleWithActions
+        title="Auctions"
+        actions={[{ path: '/app/setup/distribution/new/auction', label: ' New Auction' }]}
+      />
 
       <StripedTable
         rowsClickable

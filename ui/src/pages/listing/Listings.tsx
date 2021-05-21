@@ -11,14 +11,14 @@ import {
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
 import { Listing as ListingComponent } from './Listing';
-import { Button, Header } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
   FairValue,
   ManualFairValueCalculation,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
-import { AddPlusIcon } from '../../icons/icons';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 const FAILED_LISTING_TEMPLATE = 'Marketplace.Listing.Service.FailedListingCreation';
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
@@ -59,12 +59,10 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
 
   return !contractId ? (
     <>
-      <div className="title-action">
-        <Header as="h2">Listings</Header>
-        <a className="a2 with-icon" onClick={() => history.push('/app/setup/listing/new')}>
-          <AddPlusIcon /> New Listing
-        </a>
-      </div>
+      <TitleWithActions
+        title="Listings"
+        actions={[{ path: '/app/setup/listing/new', label: ' New Listing' }]}
+      />
 
       <StripedTable
         rowsClickable
@@ -157,18 +155,15 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
   );
 };
 
+// where is this rendered? why is it here?
 const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
 }: RouteComponentProps & Props) => {
   return (
-    <div>
-      <div className="title-action">
-        <Header as="h2">Listings</Header>
-        <a className="a2 with-icon" onClick={() => history.push('/app/listing/new')}>
-          <AddPlusIcon /> New Listing
-        </a>
-      </div>
-    </div>
+    <TitleWithActions
+      title="Listings"
+      actions={[{ path: '/app/listing/new', label: ' New Listing' }]}
+    />
   );
 };
 

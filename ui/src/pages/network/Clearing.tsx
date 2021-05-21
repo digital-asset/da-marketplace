@@ -19,7 +19,7 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
-import { ActionTile } from './Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
@@ -147,16 +147,16 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   const history = useHistory();
 
   return (
-    <div className="assets">
-      <div className="title-action">
-        <Header as="h2">Current Services</Header>
+    <div>
+      <TitleWithActions title="Current Services">
         <Button className="ghost" onClick={() => history.push('/app/setup/clearing/offer')}>
           Offer Clearing Service
         </Button>
         <Button className="ghost" onClick={() => history.push('/app/setup/clearing/market/offer')}>
           Offer Market Clearing Service
         </Button>
-      </div>
+      </TitleWithActions>
+
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         loading={marketServicesLoading}

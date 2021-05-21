@@ -69,6 +69,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
+          return;
         }
       }
       case ServiceKind.CLEARING: {
@@ -79,6 +80,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, clearingRole.contractId, params);
           onClose(false);
+          return;
         }
       }
       case ServiceKind.LISTING: {
@@ -89,6 +91,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, tradingRole.contractId, params);
           onClose(false);
+          return;
         }
       }
       case ServiceKind.CUSTODY:
@@ -100,6 +103,7 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
         } else {
           await ledger.exercise(choice, custodyRole.contractId, params);
           onClose(false);
+          return;
         }
       default:
         throw new Error(`Unsupported service: ${service}`);

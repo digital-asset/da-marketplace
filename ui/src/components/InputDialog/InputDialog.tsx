@@ -20,18 +20,21 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   const [state, setState] = useState<T>(props.defaultValue);
 
   useEffect(() => props.onChange && props.onChange(state), [state]);
+
+  const content = (
+    <FieldComponents
+      fields={props.fields}
+      defaultValue={props.defaultValue}
+      onChange={state => state && setState(state)}
+    />
+  );
+
   if (props.isModal) {
     return (
       <Modal open={props.open} size="small" onClose={() => props.onClose(null)}>
         <Modal.Header as="h2">{props.title}</Modal.Header>
         <Modal.Content>
-          <Form>
-            <FieldComponents
-              fields={props.fields}
-              defaultValue={props.defaultValue}
-              onChange={state => state && setState(state)}
-            />
-          </Form>
+          <Form>{content}</Form>
         </Modal.Content>
         <Modal.Actions>
           <Button className="ghost" onClick={() => props.onClose(state)}>
@@ -50,11 +53,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
       <BackButton />
       <Header as="h2">{props.title}</Header>
       <Form>
-        <FieldComponents
-          fields={props.fields}
-          defaultValue={props.defaultValue}
-          onChange={state => state && setState(state)}
-        />
+        {content}
         <div className="submit-form">
           <Button className="ghost" onClick={() => props.onClose(state)}>
             Confirm

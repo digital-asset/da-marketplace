@@ -8,19 +8,6 @@
     align-items: flex-start;
     animation: fadeIn 0.5s;
 
-    .ui.pagination.menu {
-      margin-left: auto;
-
-      a.item {
-        border: none;
-        color: var(--cool-grey-60);
-      }
-      a.active.item {
-        color: var(--blue-50);
-        background-color: transparent;
-      }
-    }
-
     &.empty {
       background-color: var(--white);
       border: 1px solid var(--cool-grey-90);
@@ -82,6 +69,19 @@
       tr:nth-child(odd) {
         background-color: var(--blue-100);
       }
+    }
+
+    .ui.pagination.menu {
+        margin-left: auto;
+
+        a.item {
+          border: none;
+          color: var(--cool-grey-60);
+        }
+        a.active.item {
+          color: var(--blue-50);
+          background-color: transparent;
+        }
     }
 
     // @media screen and (max-width: 1050px) {

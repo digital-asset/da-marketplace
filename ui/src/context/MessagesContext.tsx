@@ -8,6 +8,11 @@ export type Message = {
   list?: string[];
 };
 
+enum MessageType {
+  ERROR = 'Error',
+  SUCCESS = 'Success',
+}
+
 type MessagesState = {
   displayErrorMessage: (message: Message) => void;
   displaySuccessMessage: (message: Message) => void;
@@ -20,17 +25,20 @@ const MessagesStateContext = React.createContext<MessagesState>({
 
 const MessagesProvider: React.FC = ({ children }) => {
   const [showMessage, setShowMessage] = useState(false);
-  const [messageType, setMessageType] = useState<'Error' | 'Success'>();
+  const [messageType, setMessageType] = useState<MessageType>();
   const [message, setMessage] = useState<Message>();
 
   function displayErrorMessage(message: Message) {
-    setMessageType('Error');
-    setShowMessage(true);
-    setMessage(message);
+    setMessageType(MessageType.ERROR);
+    handleNewMessage(message);
   }
 
   function displaySuccessMessage(message: Message) {
-    setMessageType('Success');
+    setMessageType(MessageType.SUCCESS);
+    handleNewMessage(message);
+  }
+
+  function handleNewMessage(message: Message) {
     setShowMessage(true);
     setMessage(message);
   }
@@ -52,8 +60,8 @@ const MessagesProvider: React.FC = ({ children }) => {
       {children}
       {showMessage && (
         <Message
-          error={messageType === 'Error'}
-          success={messageType === 'Success'}
+          error={messageType === MessageType.ERROR}
+          success={messageType === MessageType.SUCCESS}
           onDismiss={() => setShowMessage(false)}
           header={<Header as="h3">{message?.header || messageType}</Header>}
           content={<p>{message?.message}</p>}
@@ -67,7 +75,7 @@ const MessagesProvider: React.FC = ({ children }) => {
 function useDisplayErrorMessage() {
   const context = React.useContext<MessagesState>(MessagesStateContext);
   if (context === undefined) {
-    throw new Error('useCustomerServices must be used within a ServicesProvider');
+    throw new Error('useDisplayErrorMessage must be used within a MessagesContext');
   }
   return context.displayErrorMessage;
 }
@@ -75,7 +83,7 @@ function useDisplayErrorMessage() {
 function useDisplaySuccessMessage() {
   const context = React.useContext<MessagesState>(MessagesStateContext);
   if (context === undefined) {
-    throw new Error('useCustomerServices must be used within a ServicesProvider');
+    throw new Error('useDisplaySuccessMessage must be used within a MessagesContext');
   }
   return context.displaySuccessMessage;
 }

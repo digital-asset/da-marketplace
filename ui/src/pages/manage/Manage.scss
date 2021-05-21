@@ -20,17 +20,6 @@
       }
     }
 
-    .title-action {
-      display: flex;
-      flex-direction: row;
-      align-items: baseline;
-      flex-wrap: wrap;
-      a,
-      button {
-        margin-left: $spacing-m;
-      }
-    }
-
     .manage-menu {
       border-width: 1px;
       border-color: var(--cool-grey-80);

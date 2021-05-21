@@ -8,12 +8,13 @@ import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import Tile from '../../components/Tile/Tile';
-import { Button, Header, Table } from 'semantic-ui-react';
+import { Button, Table } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
@@ -239,8 +240,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <div className="title-action">
-          <Header as="h2">{targetAccount.account.id.label}</Header>
+        <TitleWithActions title={targetAccount.account.id.label}>
           {normalAccount && (
             <div className="action-row">
               <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
@@ -251,7 +251,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               </Button>
             </div>
           )}
-        </div>
+        </TitleWithActions>
 
         <div className="account-overview">
           <div className="details">

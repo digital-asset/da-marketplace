@@ -1,28 +1,23 @@
 import React from 'react';
-import { RouteComponentProps, withRouter, useHistory } from 'react-router-dom';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { Header } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
-import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
-import { ActionTile } from '../network/Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { AddPlusIcon } from '../../icons/icons';
 
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
   const { getName } = usePartyName('');
-  const history = useHistory();
 
   return (
     <>
-      <div className="title-action">
-        <Header as="h2">Issuances</Header>
-        <a className="a2 with-icon" onClick={() => history.push('/app/setup/issuance/new')}>
-          <AddPlusIcon /> New Issuance
-        </a>
-      </div>
-
+      <TitleWithActions
+        title={'Issuances'}
+        actions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
+      />
       <StripedTable
         headings={[
           'Issuing Agent',
@@ -51,17 +46,7 @@ export const IssuancesTable: React.FC = () => {
 };
 
 const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  return (
-    <div className="issuances">
-      <div className="title-action">
-        <Header as="h2">Issuances</Header>
-        <a className="a2 with-icon" onClick={() => history.push('/app/issuance/new')}>
-          <AddPlusIcon /> New Issuance
-        </a>
-      </div>
-      <IssuancesTable />
-    </div>
-  );
+  return <IssuancesTable />;
 };
 
 export const Issuances = withRouter(IssuancesComponent);

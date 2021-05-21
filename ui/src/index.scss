@@ -7,18 +7,16 @@
 @use 'components/Table/StripedTable';
 @use 'components/Form/CalendarInput';
 @use 'components/InputDialog/InputDialog';
-
+@use 'components/Common/TitleWithActions';
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
 @use 'pages/landing/Landing';
 @use 'pages/manage/Manage';
 @use 'pages/setup/SetUp';
 @use 'pages/page/Page';
-@use 'pages/network/Actions';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
 @use 'pages/clearing/Member';
-@use 'pages/custody/Assets';
 @use 'pages/custody/Account';
 @use 'pages/custody/New';
 @use 'pages/origination/New' as OriginationNew;
@@ -254,7 +252,6 @@ html {
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();
-        @include Assets.assets();
         @include Member.member();
         @include Account.account();
         @include New.new-account();
@@ -263,7 +260,7 @@ html {
         @include Listing.listing();
         @include Market.market();
         @include Notifications.notifications();
-        @include Actions.action-tile();
+        @include TitleWithActions.title-with-actions();
         @include InputDialog.input-dialog();
 
         .ui.message {

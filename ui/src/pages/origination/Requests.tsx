@@ -1,6 +1,6 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -12,7 +12,7 @@ import {
 import Tile from '../../components/Tile/Tile';
 import StripedTable from '../../components/Table/StripedTable';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { AddPlusIcon } from '../../icons/icons';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 
 const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const party = useParty();
@@ -35,12 +35,10 @@ const RequestsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
 
   return (
     <div className="origination-requests">
-      <div className="title-action">
-        <Header as="h2">Origination Requests</Header>
-        <a className="a2 with-icon" onClick={() => history.push('/app/instrument/new')}>
-          <AddPlusIcon /> New Instrument
-        </a>
-      </div>
+      <TitleWithActions
+        title={'Origination Requests'}
+        actions={[{ path: '/app/instrument/new', label: 'New Instrument' }]}
+      />
 
       <Tile>
         <StripedTable

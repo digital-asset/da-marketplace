@@ -19,8 +19,8 @@ import StripedTable from '../../components/Table/StripedTable';
 import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { ContractId } from '@daml/types';
-
 import { formatCurrency } from '../../util';
+import TitleWithActions from '../../componenets/Common/TitleWithActions';
 
 type Props = {
   member?: boolean;
@@ -102,8 +102,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     return (
       <div className="member">
-        <div className="title-action">
-          <Header as="h2">Standing</Header>
+        <TitleWithActions title={'Standing'}>
           <Button className="ghost" onClick={() => history.push('/app/manage/clearing')}>
             Manage Clearing Services
           </Button>
@@ -113,7 +112,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
               <MTMCalculationModal services={services} member={customer} />
             </>
           )}
-        </div>
+        </TitleWithActions>
         <StripedTable
           headings={['Margins', 'MTM', 'Margin Amount', 'Clearing Amount']}
           loading={failedMarginCalcsLoading}

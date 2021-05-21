@@ -4,11 +4,10 @@ import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
-import { ActionTile } from '../network/Actions';
+import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
-import { AddPlusIcon } from '../../icons/icons';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
@@ -19,25 +18,15 @@ export const InstrumentsTable: React.FC = () => {
 
   return (
     <div>
-      <div className="title-action">
-        <Header as="h2">Instruments</Header>
+      <TitleWithActions
+        title={'Instruments'}
+        actions={[
+          { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
+          { path: '/app/setup/instrument/new/convertiblenote', label: 'New Convertible Note' },
+          { path: '/app/setup/instrument/new/binaryoption', label: 'New Binary Option' },
+        ]}
+      />
 
-        <a className="a2 with-icon" onClick={() => history.push('/app/setup/instrument/new/base')}>
-          <AddPlusIcon /> New Base Instrument
-        </a>
-        <a
-          className="a2 with-icon"
-          onClick={() => history.push('/app/setup/instrument/new/convertiblenote')}
-        >
-          <AddPlusIcon /> New Convertible Note
-        </a>
-        <a
-          className="a2 with-icon"
-          onClick={() => history.push('/app/setup/instrument/new/binaryoption')}
-        >
-          <AddPlusIcon /> New Binary Option
-        </a>
-      </div>
       <StripedTable
         rowsClickable
         headings={['Issuer', 'Signatories', 'Id', 'Version', 'Description']}

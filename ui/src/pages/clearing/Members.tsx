@@ -111,14 +111,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
       <Header as="h2">Accounts</Header>
       <StripedTable
         loading={accountsLoading}
-        headings={[
-          'Account',
-          'Provider',
-          'Owner',
-          'Role',
-          'Controllers',
-          // 'Requests',
-        ]}
+        headings={['Account', 'Provider', 'Owner', 'Role', 'Controllers']}
         rows={accounts.map(c => {
           return {
             elements: [

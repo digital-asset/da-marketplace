@@ -10,11 +10,6 @@ interface IStripedTableRow {
   onClick?: () => void;
 }
 
-interface IEmptyTableAction {
-  text: string;
-  onClick?: () => void;
-}
-
 const StripedTable = (props: {
   headings: React.ReactNode[];
   rows: IStripedTableRow[];
@@ -43,6 +38,7 @@ const StripedTable = (props: {
     }
   }, [activePage, rows, rowsPerPage]);
 
+  // TODO: In body of empty table, provide a link to whatever needs to be done to make the table un-empty
   if (activePageRows.length === 0) {
     return (
       <div className="striped-table empty">
@@ -50,6 +46,7 @@ const StripedTable = (props: {
       </div>
     );
   }
+
   return (
     <div className="striped-table">
       <Table>
