@@ -40,16 +40,16 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
-  const addSignatoryAsDepositObserver = async (
-    deposit: CreateEvent<AssetDeposit>,
-    newObs: string[]
-  ) => {
-    const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
+  const addSignatoryAsDepositObserver = useCallback(
+    async (deposit: CreateEvent<AssetDeposit>, newObs: string[]) => {
+      const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
 
-    await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-      newObservers,
-    });
-  };
+      await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
+        newObservers,
+      });
+    },
+    [ledger]
+  );
 
   const updateDeposits = useCallback(
     async (retries: number): Promise<void[]> => {
@@ -57,18 +57,21 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
         await halfSecondPromise();
         return updateDeposits(retries - 1);
       }
-      return Promise.all(
-        deposits.map(d => {
-          const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(signatory => {
-            return !d.observers.includes(signatory);
-          });
-          if (newObservers.length > 0) {
-            addSignatoryAsDepositObserver(d, newObservers);
-          }
-        })
-      );
+
+      const addSignatoryExercises = deposits.map(d => {
+        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(signatory => {
+          return !d.observers.includes(signatory);
+        });
+
+        if (newObservers.length > 0) {
+          return addSignatoryAsDepositObserver(d, newObservers);
+        }
+        return undefined;
+      });
+
+      return Promise.all(addSignatoryExercises);
     },
-    [deposits]
+    [deposits, addSignatoryAsDepositObserver]
   );
 
   useEffect(() => {
