@@ -32,10 +32,6 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const party = useParty();
   const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
-  const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(
-    c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
-  );
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 

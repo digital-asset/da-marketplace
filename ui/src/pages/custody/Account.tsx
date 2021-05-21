@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -7,8 +7,7 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import Tile from '../../components/Tile/Tile';
-import { Button, Table } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
@@ -19,7 +18,6 @@ import InfoCard from '../../components/Common/InfoCard';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import _ from 'lodash';
 import { halfSecondPromise } from '../page/utils';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -53,27 +51,30 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const updateDeposits: any = async (retries: number) => {
-    if (retries > 0) {
-      await halfSecondPromise();
-      return updateDeposits(retries - 1);
-    }
-    return Promise.all(
-      deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
-          signatory => !d.observers.includes(signatory)
-        );
-        if (newObservers.length > 0) {
-          addSignatoryAsDepositObserver(d, newObservers);
-        }
-      })
-    );
-  };
+  const updateDeposits = useCallback(
+    async (retries: number): Promise<void[]> => {
+      if (retries > 0) {
+        await halfSecondPromise();
+        return updateDeposits(retries - 1);
+      }
+      return Promise.all(
+        deposits.map(d => {
+          const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(signatory => {
+            return !d.observers.includes(signatory);
+          });
+          if (newObservers.length > 0) {
+            addSignatoryAsDepositObserver(d, newObservers);
+          }
+        })
+      );
+    },
+    [deposits]
+  );
 
   useEffect(() => {
     setUpdatingDeposits(true);
     updateDeposits(3).then(() => setUpdatingDeposits(false));
-  }, []);
+  }, [updateDeposits]);
 
   const allAccounts = useMemo(
     () =>

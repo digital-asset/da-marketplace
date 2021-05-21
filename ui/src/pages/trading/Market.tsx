@@ -34,7 +34,6 @@ import {
 } from './Utils';
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
-import { ArrowRightIcon } from '../../icons/icons';
 import { usePartyName } from '../../config';
 
 type Props = {

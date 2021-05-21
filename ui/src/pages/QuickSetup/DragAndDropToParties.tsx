@@ -33,7 +33,7 @@ const DragAndDropToParties = (props: {
   const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
+  const { roleOffers, loading: offersLoading } = useOffers();
 
   if (rolesLoading || offersLoading || identitiesLoading) {
     return (
@@ -46,7 +46,7 @@ const DragAndDropToParties = (props: {
   let draggableItems = dropItems;
 
   if (dropItemType === DropItemTypes.AUTOMATION) {
-    draggableItems.filter(item => item.value != MarketplaceTrigger.AutoApproveTrigger); // already deployed for all parties
+    draggableItems.filter(item => item.value !== MarketplaceTrigger.AutoApproveTrigger); // already deployed for all parties
   }
 
   return (
@@ -90,7 +90,7 @@ const DragAndDropToParties = (props: {
 
   function findClearingOffer(partyId: string) {
     return !!roleOffers.find(
-      r => r.contract.payload.provider === partyId && r.role == RoleKind.CLEARING
+      r => r.contract.payload.provider === partyId && r.role === RoleKind.CLEARING
     );
   }
 };

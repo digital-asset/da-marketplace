@@ -15,7 +15,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
 import Credentials from '../../Credentials';
 
-import { httpBaseUrl, wsBaseUrl, usePartyName } from '../../config';
+import { httpBaseUrl, wsBaseUrl } from '../../config';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
@@ -49,7 +49,7 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
     });
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const { roleOffers: roleOffers, loading: offersLoading } = useOffers();
+  const { roleOffers, loading: offersLoading } = useOffers();
 
   const { contracts: operatorService, loading: operatorLoading } =
     useStreamQueries(OperatorService);

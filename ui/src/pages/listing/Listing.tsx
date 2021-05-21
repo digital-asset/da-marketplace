@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
+import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { usePartyName } from '../../config';
 import { Listing as ListingTemplate } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -83,7 +83,6 @@ const ListingComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const { contractId } = useParams<any>();
-  const history = useHistory();
   const displayErrorMessage = useDisplayErrorMessage();
 
   const cid = contractId.replace('_', '#');
