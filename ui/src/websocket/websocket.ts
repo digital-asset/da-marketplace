@@ -152,27 +152,24 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
     return ws;
   }, []);
 
-  const closeWebsocket = useCallback(
-    (token: string, templateIds: string[]) => {
-      return (event: CloseEvent) => {
-        // If this connection was closed unintentionally, set it to `null` to mark for the
-        // initialization effect hook to restart it.
-        if (event.code !== KEEP_CLOSED) {
-          setActive(false);
-          if (retries <= RETRIES_ALLOWED) {
-            setRetries(retries + 1);
+  const closeWebsocket = useCallback(() => {
+    return (event: CloseEvent) => {
+      // If this connection was closed unintentionally, set it to `null` to mark for the
+      // initialization effect hook to restart it.
+      if (event.code !== KEEP_CLOSED) {
+        setActive(false);
+        if (retries <= RETRIES_ALLOWED) {
+          setRetries(retries + 1);
+          setWebsocket(null);
+        } else {
+          setTimeout(() => {
+            setRetries(0);
             setWebsocket(null);
-          } else {
-            setTimeout(() => {
-              setRetries(0);
-              setWebsocket(null);
-            }, RETRY_TIME_INTERVAL);
-          }
+          }, RETRY_TIME_INTERVAL);
         }
-      };
-    },
-    [openWebsocket, retries]
-  );
+      }
+    };
+  }, [retries]);
 
   useEffect(() => {
     // initialize websocket
@@ -193,7 +190,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
   useEffect(() => {
     if (websocket && token) {
-      websocket.onclose = closeWebsocket(token, templateIds);
+      websocket.onclose = closeWebsocket();
     }
   }, [templateIds, token, websocket, closeWebsocket]);
 

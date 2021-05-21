@@ -13,7 +13,7 @@ import {
   Service as MarketService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button, DropdownItemProps, Form, Header } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';

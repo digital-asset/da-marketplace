@@ -12,7 +12,6 @@ import {
   TableRow,
   Typography,
 } from '@material-ui/core';
-import { Header } from 'semantic-ui-react';
 import { KeyboardArrowRight } from '@material-ui/icons';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';

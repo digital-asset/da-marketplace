@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Message } from 'semantic-ui-react';
+import React, { useState } from 'react';
+import { Form } from 'semantic-ui-react';
 import classNames from 'classnames';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
-import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
+import { parseError } from '../../pages/error/errorTypes';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;

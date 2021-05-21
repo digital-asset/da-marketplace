@@ -18,8 +18,9 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
   const [state, setState] = useState<T>(props.defaultValue);
+  const { onChange } = props;
 
-  useEffect(() => props.onChange && props.onChange(state), [state]);
+  useEffect(() => onChange && onChange(state), [state, onChange]);
 
   const content = (
     <FieldComponents

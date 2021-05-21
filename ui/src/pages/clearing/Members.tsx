@@ -11,7 +11,7 @@ import {
   MemberStanding,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Model';
 import { ServicePageProps, damlSetValues } from '../common';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import MarginCallModal from './MarginCallModal';
@@ -66,10 +66,10 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             standing => standing.payload.customer === s.payload.customer
           );
           const clearingDeposits = deposits.filter(
-            d => d.payload.account.id.label == s.payload.clearingAccount.id.label
+            d => d.payload.account.id.label === s.payload.clearingAccount.id.label
           );
           const marginDeposits = deposits.filter(
-            d => d.payload.account.id.label == s.payload.marginAccount.id.label
+            d => d.payload.account.id.label === s.payload.marginAccount.id.label
           );
           const clearingAmount = clearingDeposits.reduce(
             (acc, val) => acc + Number(val.payload.asset.quantity),

@@ -43,11 +43,13 @@ const OfferServicesPage = (props: {
 
   const [creatingOffer, setCreatingOffer] = useState(false);
 
+  const provider = offerInfo?.provider;
+
   useEffect(() => {
-    if (offerInfo?.provider) {
-      setToken(userParties.find(p => p.party === offerInfo.provider)?.token);
+    if (provider) {
+      setToken(userParties.find(p => p.party === provider)?.token);
     }
-  }, [offerInfo?.provider]);
+  }, [userParties, provider]);
 
   return (
     <div className="setup-page offer-services">
@@ -111,8 +113,8 @@ const OfferForm = (props: {
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { getName } = usePartyName('');
 
-  const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
-  const { services: services, loading: servicesLoading } = useServiceContext();
+  const { serviceOffers, loading: loadingServiceOffers } = useOffers();
+  const { services, loading: servicesLoading } = useServiceContext();
 
   const { contracts: tradingRoles, loading: tradingRoleLoading } = useStreamQueries(TradingRole);
   const { contracts: clearingRoles, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);
@@ -351,8 +353,8 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
 
 export const OffersTable = () => {
   const [loading, setLoading] = useState(false);
-  const { services: services, loading: loadingServices } = useServiceContext();
-  const { serviceOffers: serviceOffers, loading: loadingServiceOffers } = useOffers();
+  const { services, loading: loadingServices } = useServiceContext();
+  const { serviceOffers, loading: loadingServiceOffers } = useOffers();
 
   useEffect(() => {
     setLoading(loadingServiceOffers || loadingServices);

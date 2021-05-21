@@ -7,19 +7,16 @@ import { Button, Form, Icon } from 'semantic-ui-react';
 
 import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
-// import { PublicAppInfo } from '@daml.js/da-marketplace/lib/Marketplace/Operator'
 import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties, storeParties } from '../../Parties';
 import { dablHostname, deploymentMode, DeploymentMode, ledgerId } from '../../config';
 
-import Tile, { logoHeader } from '../../components/Tile/Tile';
+import Tile from '../../components/Tile/Tile';
 import TilePage from '../../components/Tile/TilePage';
 
 import { AppError } from '../error/errorTypes';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
-
-// import SetupRequired from './SetupRequired'
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -40,12 +37,6 @@ function raiseParamsToHash(loginRoute: string) {
   }
 }
 
-function getTokenFromCookie(): string {
-  const tokenCookiePair =
-    document.cookie.split('; ').find(row => row.startsWith('DABL_LEDGER_ACCESS_TOKEN')) || '';
-  return tokenCookiePair.slice(tokenCookiePair.indexOf('=') + 1);
-}
-
 type Props = {
   onLogin: (credentials: Credentials) => void;
 };
@@ -54,7 +45,6 @@ type Props = {
  * React component for the login screen of the `App`.
  */
 const LoginScreen: React.FC<Props> = ({ onLogin }) => {
-  // const appInfos = useContractQuery(PublicAppInfo, AS_PUBLIC);
   const query = useQuery();
   const history = useHistory();
   const location = useLocation();
@@ -100,9 +90,6 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     </Tile>,
   ];
 
-  // const tiles = appInfos.length !== 0
-  //   ? deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles
-  //   : [<SetupRequired/>];
   const tiles = deploymentMode === DeploymentMode.PROD_DABL ? dablTiles : localTiles;
 
   return (
@@ -113,15 +100,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
 };
 
 const QuickSetupButton = () => {
-  const [parties, setParties] = useState<PartyDetails[]>();
   const history = useHistory();
-
-  useEffect(() => {
-    const parties = retrieveParties();
-    if (parties) {
-      setParties(parties);
-    }
-  }, []);
 
   return (
     <Button className="ghost dark" onClick={() => history.push('/quick-setup')}>

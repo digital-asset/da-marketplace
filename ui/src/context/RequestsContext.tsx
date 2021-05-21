@@ -1,46 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import _ from 'lodash';
 
 import { CreateEvent } from '@daml/ledger';
 import { Template } from '@daml/types';
 
-import {
-  Request as CustodyRequest,
-  Service as CustodyService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
-import {
-  Request as ClearingRequest,
-  Service as ClearingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
-import {
-  Request as MarketClearingRequest,
-  Service as MarketClearingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import {
-  Request as AuctionRequest,
-  Service as AuctionService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
-import {
-  Request as BiddingRequest,
-  Service as BiddingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
-import {
-  Request as IssuanceRequest,
-  Service as IssuanceService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
-import {
-  Request as ListingRequest,
-  Service as ListingService,
-} from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
+import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
+import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/module';
+import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
+import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
+import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
 import {
   Offer as TradingOffer,
   Request as TradingRequest,
-  Service as TradingService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
-import {
-  Service as RegulatorService,
-  Request as RegulatorRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
+import { Request as RegulatorRequest } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
 import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
