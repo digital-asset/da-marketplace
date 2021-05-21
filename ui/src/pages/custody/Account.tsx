@@ -187,38 +187,22 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const requestCredit = (accountId: Id) => {
-    const onClose = async (state: any | null) => {
-      setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
-      if (!state) return;
-      const asset = assets.find(i => i.payload.description === state.asset);
-      if (!asset || !targetAccount) return;
+  const onRequestCredit = async (state: any | null) => {
+    setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
+    if (!state) return;
+    const asset = assets.find(i => i.payload.description === state.asset);
+    if (!asset || !targetAccount) return;
 
-      if (!service)
-        return displayErrorMessage({
-          message: `${getName(
-            targetAccount.account.provider
-          )} does not offer issuance services to ${getName(party)}`,
-        });
-
-      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
-        accountId: targetAccount.account.id,
-        asset: { id: asset.payload.assetId, quantity: state.quantity },
+    if (!service)
+      return displayErrorMessage({
+        message: `${getName(
+          targetAccount.account.provider
+        )} does not offer issuance services to ${getName(party)}`,
       });
-      // .then(() => {
-      //   setUpdatingDeposits(true);
-      //   updateDeposits(3).then(() => setUpdatingDeposits(false));
-      // });
-    };
-    setCreditDialogProps({
-      ...defaultCreditRequestDialogProps,
-      defaultValue: { ...defaultCreditRequestDialogProps.fields, account: accountId.label },
-      fields: {
-        ...defaultCreditRequestDialogProps.fields,
-        account: { label: 'Account', type: 'selection', items: [accountId.label] },
-      },
-      open: true,
-      onClose,
+
+    await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+      accountId: targetAccount.account.id,
+      asset: { id: asset.payload.assetId, quantity: state.quantity },
     });
   };
 
@@ -278,20 +262,40 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
         <Header as="h2">
           <b>Account:</b> {targetAccount.account.id.label}
         </Header>
-        {normalAccount && (
-          <div className="action-row">
-            <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
-              Close Account
-            </Button>
-          </div>
-        )}
         <div className="page-section-row">
-          <InfoCard title="Account Details" info={accountData} />
-          <Tile header="Create Deposit">
-            <InputDialog {...creditDialogProps} isInline/>
-            <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
-              Create Deposit
-            </Button>
+          <InfoCard
+            title="Account Details"
+            info={accountData}
+            actions={
+              normalAccount && [
+                <Button
+                  className="ghost warning"
+                  onClick={() => requestCloseAccount(normalAccount)}
+                >
+                  Close Account
+                </Button>,
+              ]
+            }
+          />
+          <Tile className="credit-account">
+            <InputDialog
+              {...defaultCreditRequestDialogProps}
+              open={true}
+              defaultValue={{
+                ...defaultCreditRequestDialogProps.fields,
+                account: targetAccount.account.id.label,
+              }}
+              onClose={onRequestCredit}
+              fields={{
+                ...defaultCreditRequestDialogProps.fields,
+                account: {
+                  label: 'Account',
+                  type: 'selection',
+                  items: [targetAccount.account.id.label],
+                },
+              }}
+              isInline
+            />
           </Tile>
         </div>
         <StripedTable

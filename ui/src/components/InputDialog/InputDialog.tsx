@@ -65,7 +65,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
   }
 
   return (
-    <div className={classNames("input-dialog", {'inline': props.isInline})}>
+    <div className={classNames('input-dialog', { inline: props.isInline })}>
       {!props.isInline && <BackButton />}
       <Header as="h2">{props.title}</Header>
       {subtitle}
@@ -76,9 +76,11 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           <Button className="ghost" onClick={() => props.onClose(state)}>
             Confirm
           </Button>
-          <a className="a2" onClick={() => props.onClose(null)}>
-            <IconClose /> Cancel
-          </a>
+          {!props.isInline && (
+            <a className="a2 cancel" onClick={() => props.onClose(null)}>
+              <IconClose /> Cancel
+            </a>
+          )}
         </div>
       </Form>
     </div>

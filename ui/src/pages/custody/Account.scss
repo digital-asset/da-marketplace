@@ -16,6 +16,11 @@
       display: flex;
       flex-direction: row;
       justify-content: normal;
+      margin-bottom: $spacing-s;
+    }
+
+    .credit-account {
+        width: 50%;
     }
 
     .account-overview {

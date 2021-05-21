@@ -17,14 +17,14 @@
     }
 
     .subtitle {
-        display: flex;
-        align-items: baseline;
-        margin-bottom: $spacing-m;
+      display: flex;
+      align-items: baseline;
+      margin-bottom: $spacing-m;
 
       .icon {
-          margin-right: $spacing-xs;
+        margin-right: $spacing-xs;
       }
-  }
+    }
 
     form {
       width: 40%;
@@ -37,7 +37,8 @@
 
     form,
     h2,
-    .submit, .subtitle {
+    .submit,
+    .subtitle {
       margin-left: $spacing-xl;
     }
 
@@ -66,15 +67,13 @@
     }
 
     &.inline {
-        form,
-        h2,
-        .submit, .subtitle {
-          margin-left: unset;
-        }
-
-        .submit-form, h2{
-            display: none;
-        }
+      form,
+      h2,
+      .submit,
+      .subtitle {
+        width: 90%;
+        margin-left: unset;
+      }
     }
 
     @media screen and (max-width: 980px) {
@@ -85,7 +84,8 @@
 
       form,
       h2,
-      .submit, .subtitle{
+      .submit,
+      .subtitle {
         margin-left: $spacing-s;
       }
     }
