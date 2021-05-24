@@ -1,0 +1,7 @@
+@use '../../themes/variables' as *;
+
+@mixin member {
+  .member {
+    animation: fadeIn 0.5s;
+  }
+}

@@ -1,3 +1,5 @@
+[← back](../README.md)
+
 # User Guide
 
 ## Initial party & relationship setup
@@ -13,29 +15,27 @@
    - `Bob`
 3. Download `parties.json`
 4. Open deployed UI → Quick Setup
-5. Upload `parties.json`
-6. Wait ~5 mins for all auto-approve triggers for all parties to deploy
-7. Set up `Bank`
-   - **Legal Name**: `Bank`
-   - **Location**: `NYC`
-   - **Services**: `Custody`, `Distribution`, `Settlement`
-   - **Automation**: `SettlementInstructionTrigger`
-8. Set up `Exchange`
-   - **Legal Name**: `Exchange`
-   - **Location**: `NYC`
-   - **Services**: `Custody`, `Trading`, `Matching`, `Settlement`
-   - **Automation**: `MatchingEngine`, `SettlementInstructionTrigger`
-9. Set up `Ccp`
-   - **Legal Name**: `Central Clearing Counterparty`
-   - **Location**: `NYC`
-   - **Services**: `Clearing`
-   - **Automation**: `ClearingTrigger`
-10. \*Optional - if any of the above parties still lack a Legal Name after being added in Quick Setup, login as that party and request identity verification from the Landing page
+5. Upload `parties.json`, refresh the page and click Next
+6. Wait for all auto-approve triggers for all parties to deploy...
+7. Drag and drop roles to specific parties: (then click Next)
+    - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` roles
+    - Assign `Exchange` the `Custody`, `Trading`, `Matching`, and `Settlement` roles
+    - Assign `Ccp` the `Clearing` role
+9. Drag and drop automation to specific parties: (then click Next)
+    - Assign `Bank` the `SettlementInstructionTrigger`
+    - Assign `Exchange` the `MatchingEngine`, and `SettlementInstructionTrigger`
+    - Assign `Ccp` the `ClearingTrigger`
+9. Offer services to and from specific parties: (then click Next)
+    - As `Bank` offer the `Custody`, `Issuance` services to `Issuer`
+    - As `Bank` offer the `Custody` service to `Alice`
+    - As `Bank` offer the `Custody` service to `Ccp`
+    - as `Exchange` offer the `Listing` service to `Exchange`
+    - As `Exchange` offer the `Custody` service to `Alice`
+    - As `Exchange` offer the `Custody` service to `Bob`
 
 ## Issuing new assets
 
 11. Login as `Issuer`
-12. `Issuer`: Request `Custody`, `Issuance` services from the `Bank`
 13. `Issuer`: go to Wallet and create a regular account
     - **Provider**: `Bank`
     - **Account Name** : `MainIssuer-Bank`
@@ -70,7 +70,6 @@ Auctioning off assets
     - **Floor Price** : `300`
     - **Auction ID** : `auc1`
 21. Login as `Alice`
-22. `Alice`: Request `Custody` service from `Bank`
 23. `Alice`: Go to Wallet, create a regular account with `Bank`
     - **Provider**: `Bank`
     - **Account Name** : `MainAlice-Bank`
@@ -100,7 +99,6 @@ Auctioning off assets
 Setting up tradeable, collateralized markets
 
 34. Login as `Exchange`
-35. `Exchange`: Request `Listing` service from `Exchange`
 36. `Exchange`: Go to Setup, Create New Listing
     - **Traded Asset** : `BTC`
     - **Traded Asset Precision**: `6`
@@ -112,7 +110,6 @@ Setting up tradeable, collateralized markets
     - **Description**: `Bitcoin vs USD`
     - **Cleared by**: `-- Collateralized Market --`
 37. Login as `Alice`
-38. `Alice`: Request `Custody` service from the `Exchange`
 39. `Alice`: Go to Wallet, create a regular account
     - **Provider**: `Exchange`
     - **Account Name** : `MainAlice-Exchange`
@@ -135,7 +132,6 @@ Setting up tradeable, collateralized markets
     - **Price** : `500`
     - **Quantity** : `2`
 45. Login as `Bob`
-46. `Bob`: Request `Custody` service from `Exchange`
 47. `Bob`: Go to Wallet, create a regular account
     - **Provider**: `Exchange`
     - **Account Name** : `MainBob-Exchange`
@@ -157,9 +153,107 @@ Setting up tradeable, collateralized markets
     - **Price** : `500`
     - **Quantity** : `1.0`
 
-## Central counterparty clearing
-
-Trading mediated through a CCP
-
+## Setup Clearinghouse
 52. Login as `Ccp`
-53. `Ccp`: Request Custody from `Bank`
+53. `Ccp`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `Clearing-Bank`
+    - **Account Type** : `Regular`
+54. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
+    - **Clearing Account**: `Clearing-Bank`
+55. Login as `Alice`
+56. `Alice`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `ClearingAlice-Bank`
+    - **Account Type** : `Regular`
+57. `Alice`: Go to Wallet, create an allocation account
+    - **Provider**: `Bank`
+    - **Account Name** : `MarginAlice-Bank`
+    - **Account Type** : `Allocation`
+    - **Nominee** : `Ccp`
+58. `Alice`: On Landing, click "Request Clearing Service"
+    - **Provider**: `CCP`
+    - **Clearing Account**: `ClearingAlice-Bank`
+    - **Margin Account**: `MarginAlice-Bank`
+59. `Alice`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+60. Login as `Bob`
+61. `Bob`: Go to Wallet, create a regular account
+    - **Provider**: `Bank`
+    - **Account Name** : `ClearingBob-Bank`
+    - **Account Type** : `Regular`
+62. `Bob`: Go to Wallet, create an allocation account
+    - **Provider**: `Bank`
+    - **Account Name** : `MarginBob-Bank`
+    - **Account Type** : `Allocation`
+    - **Nominee** : `Ccp`
+63. `Bob`: On Landing, click "Request Clearing Service"
+    - **Provider**: `CCP`
+    - **Clearing Account**: `ClearingBob-Bank`
+    - **Margin Account**: `MarginBob-Bank`
+64. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+
+### Test Margin Calls
+Perform successful margin call for Alice
+
+65. Login as `Ccp`
+66. `Ccp`: on `Members` page, click "Perform Margin Call":
+    - **Customer**: `Alice`
+    - **Amount**: 5000
+
+Fail and retry a margin calculation for `Bob`
+
+67. `Ccp`: on `Members` page, click "Perform Margin Call":
+    - **Customer** : `Bob`
+    - **Amount** : 12000
+68. Login as `Bob`
+69. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 5000 USD
+70. `Bob`: Go to Clearing page, click "Retry" on failed Margin Call
+
+
+### Test Mark to Market
+Transfer funds from Alice to Bob via central countrerparty.
+
+71. `Ccp`: on `Members` page, click "Perform Mark to Market":
+    - **Customer**: `Alice`
+    - **Amount**: 5000
+72. `Ccp`: on `Members` page, click "Perform Mark to Market":
+    - **Customer** : `Bob`
+    - **Amount** : -5000
+
+## Cleared Secondary Market
+Setting up tradeable, cleared markets
+
+73. Login as `Exchange`
+74. On landing page, click "Request Market Clearing"
+    - **Provider** : `Ccp`
+75. `Exchange`: Go to Setup, Create New Listing
+    - **Traded Asset** : `BTC`
+    - **Traded Asset Precision**: `6`
+    - **Quoted Asset** : `USD`
+    - **Quoted Asset Precision**: `2`
+    - **Minimum Tradable Quantity**: `1`
+    - **Maximum Tradable Quantity**: `10000`
+    - **Symbol**: `BTCUSD-CLR`
+    - **Description**: `Cleared Bitcoin vs USD`
+    - **Cleared by**: `CCP`
+76. Login as `Alice`
+77. `Alice`: Go to BTCUSD-CLR Market, place an order
+    - **Buy**
+    - **Limit**
+    - **Time in Force** : `Good Till Cancelled`
+    - **Price** : `500`
+    - **Quantity** : `2`
+78. Login as `Bob`
+79. `Bob`: Go to BTCUSD-CLR Market, place an order (to partially match `Alice`'s Buy)
+    - **Sell**
+    - **Market**
+    - **Time in Force** : `Good Till Cancelled`
+    - **Quantity** : `1.0`
+80. Login as `Ccp`
+81. On Manage/Clearing, click "Request FV" next to Exchange's Market.Clearing role
+    - **Currency** : USD
+
+# Read More
+
+- [Build &amp; deploy source code to Daml Hub](./damlhub_deployment.md)
+- [Set up a local development environment](./local_development.md)

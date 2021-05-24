@@ -1,0 +1,180 @@
+@use '../../themes/variables' as *;
+
+@mixin landing {
+  .landing {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+
+    .header {
+      display: inline-block;
+      margin-right: $spacing-m;
+    }
+
+    .col {
+      flex-basis: 100%;
+      margin-right: $spacing-m;
+
+      &.col-2 {
+        flex-grow: 2;
+        flex-basis: 100%;
+        flex-shrink: 1;
+
+        .relationships {
+          display: flex;
+          flex-direction: column;
+        }
+      }
+
+      &:last-child {
+        margin-right: 0;
+      }
+
+      .profile {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        .profile-name {
+          display: flex;
+          align-items: center;
+          background: var(--blue-100);
+          border-radius: 40px;
+          font-family: Open Sans;
+          font-style: normal;
+          font-weight: 600;
+          font-size: 24px;
+          line-height: 33px;
+          padding: $spacing-s $spacing-m;
+          margin-bottom: $spacing-s;
+          line-height: 33px;
+          text-align: center;
+          vertical-align: middle;
+        }
+
+        .id-text {
+          background-color: var(--cool-grey-90);
+          font-family: monospace;
+          color: var(--cool-grey-30);
+          border: 1px solid var(--cool-grey-70);
+          padding: $spacing-xs;
+          border-radius: 5px;
+          width: auto;
+          display: inline-block;
+          text-align: center;
+          margin-bottom: $spacing-s;
+        }
+
+        .link > a {
+          font-size: 14px;
+        }
+      }
+
+      .link-tile {
+        display: flex;
+        justify-content: space-between;
+
+        .link > a {
+          font-size: 14px;
+        }
+
+        .balance {
+          display: flex;
+          flex-direction: row;
+          align-items: baseline;
+          h3 {
+            margin: 0px;
+          }
+        }
+      }
+
+      .relationship-tile {
+        margin-right: $spacing-m;
+        padding: 16px $spacing-m;
+
+        &:last-child {
+          margin-right: 0;
+        }
+
+        @media screen and (max-width: 1070px) {
+          width: 100%;
+          margin-right: 0;
+        }
+
+        .tile-content {
+          display: flex;
+          align-items: center;
+
+          .child {
+            display: flex;
+            flex-wrap: wrap;
+            justify-self: flex-end;
+            margin-right: $spacing-s;
+
+            &:last-child {
+              margin-right: 0;
+            }
+
+            p.p2.label {
+              color: var(--cool-grey-20);
+              background-color: var(--blue-100);
+              padding: $spacing-xs $spacing-s;
+              border-radius: 6px;
+              margin: $spacing-xs $spacing-xs $spacing-xs 0;
+            }
+          }
+
+          .provider {
+            flex-grow: 1;
+          }
+
+          .profile-pic {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            border-radius: 50%;
+            min-width: 40px;
+            min-height: 40px;
+            width: 40px;
+            height: 40px;
+
+            font-family: Open Sans;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 16px;
+            line-height: 22px;
+
+            background: var(--green-40); /* default bg color */
+            color: var(--white);
+
+            &.bg-color-1 {
+              background: var(--green-40);
+            }
+
+            &.bg-color-2 {
+              background: var(--red-70);
+            }
+
+            &.bg-color-3 {
+              background: var(--cool-grey-60);
+            }
+
+            &.bg-color-4 {
+              background: #956c91;
+            }
+          }
+        }
+      }
+    }
+
+    @media screen and (max-width: 1020px) {
+      flex-direction: column;
+      .col {
+        margin-right: 0px;
+      }
+    }
+  }
+}

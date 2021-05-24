@@ -1,0 +1,18 @@
+@use '../../themes/variables.scss' as *;
+
+@mixin info-card {
+  .info-card {
+    width: fit-content;
+    min-width: 400px;
+
+    .ui.list > .item {
+      display: flex;
+      flex-direction: row;
+      align-items: baseline;
+      margin: $spacing-xs 0;
+      h4 {
+        margin-right: $spacing-s;
+      }
+    }
+  }
+}

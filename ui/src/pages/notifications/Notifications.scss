@@ -1,0 +1,32 @@
+@use '../../themes/variables.scss' as *;
+
+@mixin notifications {
+  .notifications {
+    .notification {
+      margin-bottom: $spacing-s;
+      background-color: var(--white);
+      border: 1px solid var(--cool-grey-90);
+      border-radius: 2px;
+      padding: $spacing-s;
+
+      form {
+        margin-top: $spacing-s;
+      }
+    }
+
+    .notification-content {
+      margin-top: $spacing-m;
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        padding-right: $spacing-s;
+      }
+
+      .button {
+        margin-right: $spacing-s;
+      }
+    }
+  }
+}

@@ -177,6 +177,7 @@ template FailedListingCreation
     customer : Party
     error : Error.T
     symbol : Text
+    listingType : ListingType
     calendarId : Text
     description : Text
     tradedAssetId : Id

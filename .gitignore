@@ -1,24 +1,26 @@
 /.dev
 /.daml
-*.log
-.DS_Store
-
 triggers/.daml
 integrationTesting/.daml
+pkg
 
-_exberry_integration
-_matching_engine_bot
+da-marketplace*.dar
+da-marketplace*.tmp
+da-marketplace*.dit
+da-marketplace-test-report.xml
 
-target
+*egg-info
 
-node_modules/
+daml.js/
 build
+node_modules/
 yarn-debug.log*
 yarn-error.log*
 yarn.lock
-daml.js/
 
 .idea/
 .vscode/
 
+*.log
+.DS_Store
 Pipfile.lock

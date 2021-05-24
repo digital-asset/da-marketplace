@@ -1,0 +1,28 @@
+@use '../../themes/variables' as *;
+
+@mixin page-section {
+  .page-section {
+    flex: 1;
+    width: 100%;
+    padding: $spacing-l;
+    background-color: var(--cool-grey-100);
+    border-top: 1px var(--cool-grey-90) solid;
+    border-radius: 0;
+    animation: fadeIn 0.5s;
+
+    .order-forms > .ui.form {
+      padding-bottom: $spacing-l;
+    }
+
+    .grid-row {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: space-between;
+
+      :first-child {
+        margin-right: $spacing-l;
+      }
+    }
+  }
+}

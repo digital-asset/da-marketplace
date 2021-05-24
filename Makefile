@@ -1,227 +1,249 @@
-BASENAME=$(shell yq -r '.catalog.name' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.name')
-VERSION=$(shell yq -r '.catalog.version' < dabl-meta.yaml 2> /dev/null || yq r dabl-meta.yaml 'catalog.version')
-SUBDEPLOYMENTS=$(shell yq -r '.subdeployments' < dabl-meta.yaml 2> /dev/null | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g' \
-	       || yq r dabl-meta.yaml 'subdeployments' | sed 's/\[//g' | sed 's/\]//g' | sed 's/,//g')
+VERSION := $(shell ddit ditversion)
 
-TAG_NAME=${BASENAME}-v${VERSION}
-NAME=${BASENAME}-${VERSION}
-
-dar_version := $(shell grep "^version" daml.yaml | sed 's/version: //g')
-exberry_adapter_version := $(shell cd exberry_adapter && pipenv run python setup.py --version)
-trigger_version := $(shell grep "^version" triggers/daml.yaml | sed 's/version: //g')
-ui_version := $(shell node -p "require(\"./ui2/package.json\").version")
-
+# Just the Major.Minor.Patch, excluding the prerelease portion
+SHORT_VERSION := $(shell ddit ditversion | sed -r "s/^([0-9]*)\.([0-9]*)\.([0-9]*)(-[a-zA-Z]*\.[0-9]*)?/\1.\2.\3/")
 PYTHON := pipenv run python
 
-state_dir := .dev
-daml_build_log = $(state_dir)/daml_build.log
-sandbox_pid := $(state_dir)/sandbox.pid
-sandbox_log := $(state_dir)/sandbox.log
+UI_DIR := ui
+STATE_DIR := .dev
+PKG_DIR := pkg
 
-trigger_build := triggers/.daml/dist/da-marketplace-triggers-$(trigger_version).dar
+### *-=- Artifacts -=-*
 
-exberry_adapter_dir := exberry_adapter/dist
-adapter_pid := $(state_dir)/adapter.pid
-adapter_log := $(state_dir)/adapter.log
+dar_name := da-marketplace-$(SHORT_VERSION).dar
+dar_src := .daml/dist/$(dar_name)
+dar := $(PKG_DIR)/$(dar_name)
 
-matching_engine_pid := $(state_dir)/matching_engine.pid
-matching_engine_log := $(state_dir)/matching_engine.log
+trigger_dar_name := da-marketplace-triggers-$(SHORT_VERSION).dar
+trigger_dar_src := triggers/.daml/dist/$(trigger_dar_name)
+trigger_dar := $(PKG_DIR)/$(trigger_dar_name)
 
-operator_pid := $(state_dir)/operator.pid
-operator_log := $(state_dir)/operator.log
+exberry_adapter_name := da-marketplace-exberry-adapter-$(SHORT_VERSION).tar.gz
+exberry_adapter := $(PKG_DIR)/$(exberry_adapter_name)
 
-custodian_pid := $(state_dir)/custodian.pid
-custodian_log := $(state_dir)/custodian.log
+damljs := daml.js
 
-ccp_pid := $(state_dir)/ccp.pid
-ccp_log := $(state_dir)/ccp.log
+ui_name := da-marketplace-ui-$(VERSION).zip
+ui := $(PKG_DIR)/$(ui_name)
 
-broker_pid := $(state_dir)/broker.pid
-broker_log := $(state_dir)/broker.log
+app_icon := $(PKG_DIR)/da-marketplace.svg
 
-exchange_pid := $(state_dir)/exchange.pid
-exchange_log := $(state_dir)/exchange.log
+dit := da-marketplace-$(VERSION).dit
 
-
-### DAML server
-.PHONY: clean stop_daml_server stop_operator stop_custodian stop_broker stop_exchange stop_adapter stop_matching_engine
-
-$(state_dir):
-	mkdir $(state_dir)
-
-$(daml_build_log): |$(state_dir)
-	daml build > $(daml_build_log)
-
-$(sandbox_pid): |$(daml_build_log)
-	daml start > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
-
-start_daml_server: $(sandbox_pid)
-
-stop_daml_server:
-	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
-
-
-### DA Marketplace Operator Bot
-
-$(trigger_build): $(daml_build_log)
-	cd triggers && daml build
-
-.PHONY: clean_triggers
-clean_triggers:
-	rm -rf $(trigger_build) triggers/.daml
-
-$(operator_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name OperatorTrigger:handleOperator \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Operator > $(operator_log) & echo "$$!" > $(operator_pid))
-
-start_operator: $(operator_pid)
-
-stop_operator:
-	pkill -F $(operator_pid); rm -f $(operator_pid) $(operator_log)
-
-$(ccp_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name ClearingTrigger:handleClearing \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Ccp > $(ccp_log) & echo "$$!" > $(ccp_pid))
-
-start_ccp: $(ccp_pid)
-
-stop_ccp:
-	pkill -F $(ccp_pid); rm -f $(ccp_pid) $(ccp_log)
-
-### DA Marketplace Auto-Approve Triggers (all parties)
-
-start_autoapprove: |$(state_dir) $(trigger_build)
-	./scripts/run-triggers.sh $(trigger_build) $(state_dir)
-
-stop_autoapprove: |$(state_dir)
-	./scripts/stop-triggers.sh $(state_dir)
-
-### DA Marketplace Custodian Bot
-
-$(custodian_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name CustodianTrigger:handleCustodian \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Custodian > $(custodian_log) & echo "$$!" > $(custodian_pid))
-
-start_custodian: $(custodian_pid)
-
-stop_custodian:
-	pkill -F $(custodian_pid); rm -f $(custodian_pid) $(custodian_log)
-
-### DA Marketplace Broker Bot
-
-$(broker_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name BrokerTrigger:handleBroker \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Broker > $(broker_log) & echo "$$!" > $(broker_pid))
-
-start_broker: $(broker_pid)
-
-stop_broker:
-	pkill -F $(broker_pid); rm -f $(broker_pid) $(broker_log)
-
-
-### DA Marketplace Exchange Bot
-
-$(exchange_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name AutoApproval:autoApprovalTrigger \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > $(exchange_log) & echo "$$!" > $(exchange_pid))
-
-start_exchange: $(exchange_pid)
-
-stop_exchange:
-	pkill -F $(exchange_pid); rm -f $(exchange_pid) $(exchange_log)
-
-### DA Marketplace <> Exberry Adapter
-$(exberry_adapter_dir):
-	cd exberry_adapter && $(PYTHON) setup.py sdist
-	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
-
-$(adapter_pid): |$(state_dir) $(exberry_adapter_dir)
-	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
-
-start_adapter: $(adapter_pid)
-
-stop_adapter:
-	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
-
-
-### DA Marketplace Matching Engine
-$(matching_engine_pid): |$(state_dir) $(trigger_build)
-	(daml trigger --dar $(trigger_build) \
-	    --trigger-name MatchingEngine:handleMatching \
-	    --ledger-host localhost --ledger-port 6865 \
-	    --ledger-party Exchange > $(matching_engine_log) & echo "$$!" > $(matching_engine_pid))
-
-start_matching_engine: $(matching_engine_pid)
-
-stop_matching_engine:
-	pkill -F $(matching_engine_pid); rm -f $(matching_engine_pid) $(matching_engine_log)
-
-start_bots: $(operator_pid) $(broker_pid) $(custodian_pid) $(exchange_pid)
-
-stop_bots: stop_broker stop_custodian stop_exchange stop_operator
-
-target_dir := target
-
-dar := $(target_dir)/da-marketplace-model-$(dar_version).dar
-exberry_adapter := $(target_dir)/da-marketplace-exberry-adapter-$(exberry_adapter_version).tar.gz
-ui := $(target_dir)/da-marketplace-ui-$(ui_version).zip
-dabl_meta := $(target_dir)/dabl-meta.yaml
-trigger := $(target_dir)/da-marketplace-triggers-$(trigger_version).dar
-
-$(target_dir):
+$(PKG_DIR):
 	mkdir $@
 
-.PHONY: package publish
+# Models target
+$(dar_src):
+	daml build
 
-publish: package
-	git tag -f "${TAG_NAME}"
-	ghr -replace "${TAG_NAME}" "$(target_dir)/${NAME}.dit"
+$(dar): $(dar_src) $(PKG_DIR)
+	cp $(dar_src) $@
 
-package: $(trigger) $(dar) $(ui) $(exberry_adapter) $(dabl_meta) verify-artifacts
-	cd $(target_dir) && zip -j ${NAME}.dit $(shell cd $(target_dir) && echo da-marketplace-*) ../pkg/marketplace.svg dabl-meta.yaml
+# Triggers target
+$(trigger_dar_src):
+	cd triggers && daml build
 
-$(dabl_meta): $(target_dir) dabl-meta.yaml
-	cp dabl-meta.yaml $@
+$(trigger_dar): $(trigger_dar_src) $(PKG_DIR)
+	cp $(trigger_dar_src) $@
 
-$(dar): $(target_dir) $(daml_build_log)
-	cp .daml/dist/da-marketplace-$(dar_version).dar $@
+# Exberry Adapter target
+$(exberry_adapter): $(PKG_DIR)
+	cd exberry_adapter && $(PYTHON) setup.py sdist
+	rm -fr exberry_adapter/marketplace_exchange_adapter.egg-info
+	cp exberry_adapter/dist/$(exberry_adapter_name) $@
 
-$(trigger): $(target_dir) $(trigger_build)
-	cp $(trigger_build) $@
+# Codegen target
+$(damljs): $(dar_src)
+	daml codegen js $(dar_src) -o $@
 
-$(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
-	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
+# UI target
+$(ui): $(damljs) $(trigger_dar) $(exberry_adapter) $(PKG_DIR)
+	cd $(UI_DIR) && yarn install
+	cd $(UI_DIR) && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_dar) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}') yarn build
+	cd $(UI_DIR) && zip -r $(ui_name) build
+	mv $(UI_DIR)/$(ui_name) $@
 
-.PHONY: ui
-ui: $(dar) $(ui)
+# Icon target
+$(app_icon):
+	cp $(UI_DIR)/public/marketplace.svg $@
 
-$(ui): $(exberry_adapter)
-	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
-	cd ui2 && yarn install
-	cd ui2 && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_build) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}')  yarn build
-	cd ui2 && zip -r da-marketplace-ui-$(ui_version).zip build
-	mv ui2/da-marketplace-ui-$(ui_version).zip $@
-	rm -r ui2/build
+# DIT target
+$(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
+	ddit build --force --skip-dar-build
+# TO-DO: replace above with below after ddit is patched (duplicate artifacts)
+#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
+
+.PHONY: package
+package: $(dit)
+
+### *-=- Testing -=-*
+
+.PHONY: test-ui
+test-ui: $(ui)
+	cd $(UI_DIR) && yarn test --watchAll=false
+	cd $(UI_DIR) && yarn format-check
+
+.PHONY: test-daml
+test-daml:
+	daml test --junit da-marketplace-test-report.xml
+
+.PHONY: test
+test: test-daml test-ui
+	./scripts/verify-versions.sh
+
+### *-=- Release -=-*
+
+.PHONY: tag
+tag:
+	@./scripts/tag-versions.sh \
+		$(VERSION) \
+		dabl-meta.yaml \
+		daml.yaml \
+		triggers/daml.yaml \
+		integrationTesting/daml.yaml\
+		exberry_adapter/setup.py \
+		$(UI_DIR)/package.json \
+		docs/local_development.md \
+		docs/damlhub_deployment.md
+
+.PHONY: release
+release_tag := da-marketplace-v$(VERSION)
+
+release: test package
+	@release_check=`git tag | grep $(release_tag) | wc -l`; \
+	if [ $$release_check -eq 0 ]; then \
+		echo "New tag detected - releasing" \
+		ddit release --dry-run; \
+	else \
+		echo "Tag $(release_tag) already exists... skipping release"; \
+	fi
+
+### *-=- Running -=-*
+
+$(STATE_DIR):
+	mkdir $@
+
+# Sandbox
+sandbox_pid := $(STATE_DIR)/sandbox.pid
+sandbox_log := $(STATE_DIR)/sandbox.log
+
+$(sandbox_pid): |$(STATE_DIR) $(dar_src)
+	daml start > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
+
+.PHONY: start-daml-server
+start-daml-server: $(sandbox_pid)
+
+.PHONY: stop-daml-server
+stop-daml-server:
+	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
+
+# Exberry Adapter
+party ?= Exchange
+adapter_pid := $(STATE_DIR)/adapter_$(party).pid
+adapter_log := $(STATE_DIR)/adapter_$(party).log
+
+$(adapter_pid): |$(STATE_DIR) $(exberry_adapter)
+	cd exberry_adapter && pipenv install && (DAML_LEDGER_URL=localhost:6865 DAML_LEDGER_PARTY=$(party) $(PYTHON) bot/exberry_adapter_bot.py > ../$(adapter_log) & echo "$$!" > ../$(adapter_pid))
+
+.PHONY: start-exberry-adapter
+start-exberry-adapter: $(adapter_pid)
+
+.PHONY: stop-exberry-adapter
+stop-exberry-adapter:
+	pkill -F $(adapter_pid); rm -f $(adapter_pid) $(adapter_log)
+
+# Autoapprove Triggers
+.PHONY: start-autoapprove-all
+start-autoapprove-all: |$(STATE_DIR) $(trigger_dar_src)
+	./scripts/run-autoapproval-triggers.sh $(trigger_dar_src) $(STATE_DIR)
+
+.PHONY: start-autoapprove
+start-autoapprove: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		AutoApproval:autoApprovalTrigger \
+		autoapproval_$$party \
+		$(STATE_DIR)
+	@echo "Starting auto approve trigger for $$party..."
+
+.PHONY: stop-autoapprove-all
+stop-autoapprove-all: |$(STATE_DIR)
+	./scripts/stop-autoapproval-triggers.sh $(STATE_DIR)
+
+.PHONY: stop-autoapprove
+stop-autoapprove: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		autoapproval_$$party \
+		$(STATE_DIR)
+	@echo "Stopping auto approve trigger for $$party..."
+
+# Clearing Trigger
+.PHONY: start-clearing-trigger
+start-clearing-trigger: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		ClearingTrigger:handleClearing \
+		clearing_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Starting clearing trigger for $$party..."
+
+.PHONY: stop-clearing-trigger
+stop-clearing-trigger: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		clearing_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Stopping clearing trigger for $$party..."
+
+# Matching Engine Trigger
+.PHONY: start-matching-engine
+start-matching-engine: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		MatchingEngine:handleMatching \
+		matching_engine_$$party \
+		$(STATE_DIR)
+	@echo "Starting matching engine for $$party..."
+
+.PHONY: stop-matching-engine
+stop-matching-engine: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		matching_engine_$$party \
+		$(STATE_DIR)
+	@echo "Stopping matching engine for $$party..."
+
+# Settlement Trigger
+.PHONY: start-settlement-trigger
+start-settlement-trigger: |$(STATE_DIR) $(trigger_dar_src)
+	@./scripts/run-trigger.sh \
+		$$party \
+		$(trigger_dar_src) \
+		SettlementInstructionTrigger:handleSettlementInstruction \
+		settlement_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Starting settlement trigger for $$party..."
+
+.PHONY: stop-settlement-trigger
+stop-settlement-trigger: |$(STATE_DIR)
+	@./scripts/stop-trigger.sh \
+		settlement_trigger_$$party \
+		$(STATE_DIR)
+	@echo "Stopping settlement trigger for $$party..."
+
+### *-=- Cleanup -=-*
+
+.PHONY: clean-ui
+clean-ui:
+	rm -rf daml.js
+	cd $(UI_DIR) && rm -rf build node_modules yarn.lock
+
+.PHONY: clean-daml
+clean-daml:
+	rm -rf .daml triggers/.daml
 
 .PHONY: clean
-clean: clean-ui
-	rm -rf .daml triggers/.daml $(state_dir) $(trigger) $(exberry_adapter_dir) $(trigger_build) $(dar) $(ui) $(dabl_meta) $(target_dir)/${NAME}.dit .daml
-
-clean-ui:
-	rm -rf $(ui) daml.js ui/node_modules ui/build ui/yarn.lock ui2/node_modules ui2/build ui2/yarn.lock
-
-verify-artifacts:
-	for filename in $(SUBDEPLOYMENTS) ; do \
-		test -f $(target_dir)/$$filename || (echo could not find $$filename; exit 1;) \
-	done
-	test -f $(dabl_meta) || (echo could not find $(dabl_meta); exit 1;) \
+clean: clean-daml clean-ui
+	rm -rf $(PKG_DIR) $(UI_DIR)/build $(STATE_DIR) *.dit *.log
