@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useStreamQueries } from '../../Main';
-import { Header } from 'semantic-ui-react';
 
-import { RouteComponentProps, useHistory, useParams } from 'react-router-dom';
+import { RouteComponentProps, useParams } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
@@ -44,7 +43,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
 
   deposits
     .filter(d => d.payload.asset.id.label === instrument.payload.assetId.label)
-    .map(d => {
+    .forEach(d => {
       let current = groupedDeposits.get(getName(d.payload.account.owner)) || 0;
       groupedDeposits.set(getName(d.payload.account.owner), current + +d.payload.asset.quantity);
     });

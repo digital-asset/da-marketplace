@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { useParty, useStreamQueries } from '@daml/react';
+import { useParty } from '@daml/react';
 
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { Offer as MarketClearingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service';
 import { Offer as CustodyOffer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Offer as TradingOffer } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
@@ -17,7 +16,6 @@ import { ServiceOfferDialog } from '../../components/InputDialog/ServiceDialog';
 import { ServiceKind, ServiceOffer, ServiceRoleOfferChoice } from '../../context/ServicesContext';
 import { useHistory } from 'react-router';
 import { useWellKnownParties } from '@daml/hub-react/lib';
-import SetUp from './SetUp';
 import { useVerifiedParties } from '../../config';
 
 interface RequestInterface {

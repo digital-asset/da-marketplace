@@ -32,5 +32,5 @@ export function retrieveParties(validateParties: boolean = true): PartyDetails[]
 export function retrieveUserParties() {
   const parties = retrieveParties() || [];
   const adminParty = parties.find(p => p.partyName === 'UserAdmin');
-  return parties.filter(p => p.party != adminParty?.party && p.party != publicParty);
+  return parties.filter(p => p.party !== adminParty?.party && p.party !== publicParty);
 }

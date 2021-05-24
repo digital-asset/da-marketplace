@@ -7,7 +7,6 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { usePartyName } from '../../config';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { ServicePageProps } from '../common';
-import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import TitleWithActions from '../../components/Common/TitleWithActions';

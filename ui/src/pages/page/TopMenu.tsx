@@ -4,8 +4,6 @@ import { Button, Header, Menu } from 'semantic-ui-react';
 
 import { LogoutIcon, NotificationIcon } from '../../icons/icons';
 
-import OverflowMenu, { OverflowMenuEntry } from './OverflowMenu';
-
 import classNames from 'classnames';
 import { signOut, useUserDispatch } from '../../context/UserContext';
 

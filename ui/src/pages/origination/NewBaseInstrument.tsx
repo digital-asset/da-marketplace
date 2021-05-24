@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
@@ -32,10 +31,6 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const party = useParty();
   const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
-  const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(
-    c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
-  );
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 

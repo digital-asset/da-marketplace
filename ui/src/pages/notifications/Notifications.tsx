@@ -1,6 +1,4 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
-import { Button } from 'semantic-ui-react';
 
 import {
   Offer as CustodyRoleOffer,
@@ -653,8 +651,6 @@ type Props = {
 };
 
 const Notifications: React.FC<Props> = ({ notifications }) => {
-  const history = useHistory();
-
   const count = notifications.reduce((count, ns) => count + ns.contracts.length, 0);
 
   return (
@@ -690,6 +686,8 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       rejectChoice={n.choices.reject}
                     />
                   ));
+                default:
+                  return null;
               }
             })
           : 'No Notifications.'}
