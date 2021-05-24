@@ -27,13 +27,13 @@ const TitleWithActions: React.FC<Params> = ({ iconActions, otherActions, title, 
         </Link>
       ))}
       {otherActions?.map(a => (
-        <Link to={a.path}>
+        <Link key={a.path} to={a.path}>
           <Button className="ghost">{a.label}</Button>
         </Link>
       ))}
       <OverflowMenu>
         {[...(iconActions || []), ...(otherActions || [])]?.map(a => (
-          <OverflowMenuEntry label={a.label} onClick={() => history.push(a.path)} />
+          <OverflowMenuEntry key={a.path} label={a.label} onClick={() => history.push(a.path)} />
         ))}
       </OverflowMenu>
       {children}
