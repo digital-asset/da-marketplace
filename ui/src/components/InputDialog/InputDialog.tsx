@@ -70,7 +70,6 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
       {!props.isInline && <BackButton />}
       <Header as="h2">{props.title}</Header>
       {subtitle}
-
       <Form>
         {content}
         <div className="submit-form">

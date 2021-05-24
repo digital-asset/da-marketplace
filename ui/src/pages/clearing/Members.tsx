@@ -46,7 +46,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
     <div>
       <TitleWithActions
         title="Clearing"
-        addNewActions={[
+        iconActions={[
           {
             label: 'Manage Clearing Services',
             path: '/app/manage/clearing',

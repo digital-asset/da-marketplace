@@ -1,6 +1,5 @@
 import React from 'react';
 import { useHistory } from 'react-router-dom';
-
 import { Header, Button } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 import { AddPlusIcon } from '../../icons/icons';
@@ -12,17 +11,17 @@ type Action = {
 };
 
 type Params = {
-  addNewActions?: Action[];
+  iconActions?: Action[];
   otherActions?: Action[];
   title: string;
 };
 
-const TitleWithActions: React.FC<Params> = ({ addNewActions, otherActions, title, children }) => {
+const TitleWithActions: React.FC<Params> = ({ iconActions, otherActions, title, children }) => {
   const history = useHistory();
   return (
     <div className="title-with-actions">
       <Header as="h2">{title}</Header>
-      {addNewActions?.map(a => (
+      {iconActions?.map(a => (
         <Link className="a2 with-icon" to={a.path}>
           <AddPlusIcon /> {a.label}
         </Link>
@@ -33,7 +32,7 @@ const TitleWithActions: React.FC<Params> = ({ addNewActions, otherActions, title
         </Link>
       ))}
       <OverflowMenu>
-        {[...(addNewActions || []), ...(otherActions || [])]?.map(a => (
+        {[...(iconActions || []), ...(otherActions || [])]?.map(a => (
           <OverflowMenuEntry label={a.label} onClick={() => history.push(a.path)} />
         ))}
       </OverflowMenu>

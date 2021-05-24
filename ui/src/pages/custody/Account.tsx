@@ -74,6 +74,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     [deposits, addSignatoryAsDepositObserver]
   );
 
+
+// TODO: test
 //   useEffect(() => {
 //     setUpdatingDeposits(true);
 //     updateDeposits(3).then(() => setUpdatingDeposits(false));

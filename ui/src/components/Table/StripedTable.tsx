@@ -23,20 +23,20 @@ const StripedTable = (props: {
   const clickIcon =
     clickableIcon || (rowsClickable && !clickableIcon ? <ArrowRightIcon /> : undefined);
 
-  const rowsPerPage = undefined || 0;
+  const ROWS_PER_PAGE = undefined || 0;
 
-  const totalPages = rowsPerPage ? Math.ceil(rows.length / rowsPerPage) : 0;
+  const totalPages = ROWS_PER_PAGE ? Math.ceil(rows.length / ROWS_PER_PAGE) : 0;
 
   const [activePage, setActivePage] = useState<number>(1);
   const [activePageRows, setActivePageRows] = useState<IStripedTableRow[]>([]);
 
   useEffect(() => {
-    if (rowsPerPage) {
-      setActivePageRows(rows.slice((activePage - 1) * rowsPerPage, activePage * rowsPerPage));
+    if (ROWS_PER_PAGE) {
+      setActivePageRows(rows.slice((activePage - 1) * ROWS_PER_PAGE, activePage * ROWS_PER_PAGE));
     } else {
       setActivePageRows(rows);
     }
-  }, [activePage, rows, rowsPerPage]);
+  }, [activePage, rows, ROWS_PER_PAGE]);
 
   // TODO: In body of empty table, provide a link to whatever needs to be done to make the table un-empty
   if (activePageRows.length === 0) {

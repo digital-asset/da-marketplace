@@ -64,7 +64,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     <div className="issuance-requests">
       <TitleWithActions
         title="Issuance Requests"
-        addNewActions={[{ path: '/app/issuance/new', label: 'New Issuance' }]}
+        iconActions={[{ path: '/app/issuance/new', label: 'New Issuance' }]}
       />
 
       <StripedTable
