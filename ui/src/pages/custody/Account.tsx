@@ -74,7 +74,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       account: { label: 'Account', type: 'selection', items: [] },
       asset: { label: 'Asset', type: 'selection', items: assetNames },
       quantity: { label: 'Quantity', type: 'number' },
-      observers: { label: 'Add Asset Signatories as Observers', type: 'checkbox' },
     },
     onClose: async function (state: any | null) {},
   };
@@ -129,7 +128,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       const service = clientServices.find(
         s => s.payload.provider === targetAccount.account.provider
       );
-      if (!service || !transferToAccount) return;
+      if (!service || !transferToAccount) {
+        return;
+      }
 
       await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
         accountId: targetAccount.account.id,
@@ -163,14 +164,17 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       const service = clientServices.find(
         s => s.payload.provider === targetAccount.account.provider
       );
-      if (!service) return;
+      if (!service) {
+        return displayErrorMessage({
+          message: 'The account provider does not offer issuance services.',
+        });
+      }
 
-      await ledger
-        .exercise(Service.RequestCreditAccount, service.contractId, {
-          accountId: targetAccount.account.id,
-          asset: { id: asset.payload.assetId, quantity: state.quantity },
-          observers: makeDamlSet(state.observers ? asset.signatories : [])
-        })
+      await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+        accountId: targetAccount.account.id,
+        asset: { id: asset.payload.assetId, quantity: state.quantity },
+        observers: makeDamlSet(asset.signatories),
+      });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,

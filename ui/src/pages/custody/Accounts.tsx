@@ -71,7 +71,6 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
       account: { label: 'Account', type: 'selection', items: [] },
       asset: { label: 'Asset', type: 'selection', items: assetNames },
       quantity: { label: 'Quantity', type: 'number' },
-      observers: { label: 'Add Asset Signatories as Observers', type: 'checkbox' },
     },
     onClose: async function (state: any | null) {},
   };
@@ -93,8 +92,8 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
       await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
         accountId: account.payload.account.id,
         asset: { id: asset.payload.assetId, quantity: state.quantity },
-        observers: makeDamlSet(state.observers ? asset.signatories : [])
-    });
+        observers: makeDamlSet(asset.signatories),
+      });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,

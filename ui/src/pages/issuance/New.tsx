@@ -33,7 +33,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const [assetLabel, setAssetLabel] = useState('');
   const [accountLabel, setAccountLabel] = useState('');
   const [issuanceId, setIssuanceId] = useState('');
-  const [addObservers, setAddObservers] = useState<boolean>();
   const [quantity, setQuantity] = useState('');
 
   const ledger = useLedger();
@@ -54,8 +53,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     !!accountLabel &&
     !!account &&
     !!issuanceId &&
-    !!quantity &&
-    !!addObservers;
+    !!quantity;
 
   useEffect(() => {
     if (!el.current || !asset) return;
@@ -79,7 +77,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       accountId: account.id,
       assetId: asset.payload.assetId,
       quantity,
-      observers: makeDamlSet(addObservers ? asset.signatories : []),
+      observers: makeDamlSet(asset.signatories),
     });
     history.push('/app/manage/issuance');
   };
@@ -136,10 +134,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
           placeholder="Quantity"
           value={quantity}
           onChange={e => setQuantity(e.currentTarget.value)}
-        />
-        <Form.Checkbox
-          label={<Header as="h4">Add Asset Signatories as Observers</Header>}
-          onChange={(_, change) => setAddObservers(change.checked)}
         />
 
         <Button type="submit" disabled={!canRequest} className="ghost">
