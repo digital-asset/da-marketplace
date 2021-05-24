@@ -6,11 +6,23 @@
     flex-direction: row;
     align-items: baseline;
     flex-wrap: wrap;
-    margin-bottom: $spacing-s;
 
-    a,
-    button {
+    a {
       margin-left: $spacing-m;
+    }
+
+    .overflow-menu-title {
+      display: none;
+    }
+
+    @media screen and (max-width: 980px) {
+      .overflow-menu .overflow-menu-title {
+        display: flex;
+        margin: 0 $spacing-s;
+      }
+      a {
+        display: none;
+      }
     }
   }
 }

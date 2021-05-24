@@ -7,7 +7,7 @@ interface ICardInfo {
   data: string;
 }
 
-const InfoCard = (props: { title: string; info: ICardInfo[] }) => (
+const InfoCard = (props: { title: string; info: ICardInfo[]; actions?: JSX.Element[] }) => (
   <Tile className="info-card">
     <Header as="h3">{props.title}</Header>
     <List>
@@ -17,6 +17,7 @@ const InfoCard = (props: { title: string; info: ICardInfo[] }) => (
         </List.Item>
       ))}
     </List>
+    {props.actions}
   </Tile>
 );
 

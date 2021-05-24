@@ -65,7 +65,7 @@ const AccountsComponent: React.FC<RouteComponentProps & Props> = ({
 
   const defaultCreditRequestDialogProps: InputDialogProps<any> = {
     open: false,
-    title: 'Credit Account Request',
+    title: 'Create Deposit',
     defaultValue: { account: '', asset: '', quantity: 0 },
     fields: {
       account: { label: 'Account', type: 'selection', items: [] },

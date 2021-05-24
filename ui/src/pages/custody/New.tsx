@@ -64,7 +64,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         ) === undefined && !!accountNominee);
 
   const custodyService = services.filter(s => s.payload.customer === party);
-  if (custodyService.length === 0) return <>Not a custody service customer</>;
+  if (custodyService.length === 0) return <>Not a custody service customer</>; // add MissingServiceModal
 
   const requestAccount = async () => {
     const service = services.find(
