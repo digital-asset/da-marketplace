@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Form, Header } from 'semantic-ui-react';
+import React, { useState } from 'react';
+import { Button, Form } from 'semantic-ui-react';
 
 import { useLedger } from '@daml/react';
 import { ContractId } from '@daml/types';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Field, FieldComponents, Fields } from '../../components/InputDialog/Fields';
+import { FieldComponents, Fields } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
 
 import {
@@ -20,7 +20,6 @@ import {
   RequestRejectChoice,
   RequestTemplates,
 } from './NotificationTypes';
-import { Offer } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;

@@ -11,7 +11,6 @@ import {
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import Tile from '../../components/Tile/Tile';
 import { Listing as ListingComponent } from './Listing';
-import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import {
   FairValue,
@@ -20,7 +19,6 @@ import {
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 
-const FAILED_LISTING_TEMPLATE = 'Marketplace.Listing.Service.FailedListingCreation';
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
 
 type Props = {

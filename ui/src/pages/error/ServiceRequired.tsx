@@ -1,29 +1,26 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Button, Form, Modal } from 'semantic-ui-react';
+import { Button, Modal } from 'semantic-ui-react';
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
 import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { useParty, useStreamQueries } from '@daml/react';
 import { ServiceRequestDialog } from '../../components/InputDialog/ServiceDialog';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import {
   ServiceKind,
   ServiceRequest,
   ServiceRequestTemplates,
-  useProviderServices,
   useServiceKindsProvided,
 } from '../../context/ServicesContext';
 import { Template } from '@daml/types';
 import { NavLink, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useRequestKinds } from '../../context/RequestsContext';
 import { InformationIcon } from '../../icons/icons';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';

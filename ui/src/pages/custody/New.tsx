@@ -19,7 +19,6 @@ import { IconClose } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { CreateEvent } from '@daml/ledger';
-import _ from 'lodash';
 
 enum AccountType {
   REGULAR = 'Regular',
@@ -88,6 +87,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
         history.push('/app/custody/assets');
+        break;
       case AccountType.ALLOCATION:
         const nomineeIdentity = identities.find(i => i.payload.customer === accountNominee);
         if (!nomineeIdentity) return;
@@ -102,6 +102,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
         history.push('/app/custody/assets');
+        break;
     }
   };
 

@@ -31,7 +31,7 @@ export function FieldComponents<T extends Record<string, string>>(props: FieldCo
   const { defaultValue, fields, placeholderLabels, onChange } = props;
   const [state, setState] = useState<T>(defaultValue);
 
-  useEffect(() => onChange && onChange(state), [state]);
+  useEffect(() => onChange && onChange(state), [state, onChange]);
 
   function fieldsToInput([fieldName, field]: [string, Field]): JSX.Element {
     const key = field.label + field.type;

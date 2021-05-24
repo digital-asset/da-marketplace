@@ -3,7 +3,6 @@ import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
-import { Header } from 'semantic-ui-react';
 import StripedTable from '../../components/Table/StripedTable';
 import { ArrowRightIcon } from '../../icons/icons';
 

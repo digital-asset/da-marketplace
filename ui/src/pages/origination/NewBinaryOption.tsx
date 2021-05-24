@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { MenuProps } from '@material-ui/core';
-import useStyles from '../styles';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
@@ -23,8 +21,6 @@ import { IconCircledCheck, IconClose } from '../../icons/icons';
 import classNames from 'classnames';
 
 const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
-  const classes = useStyles();
-
   const el = useRef<HTMLDivElement>(null);
 
   const [isCall, setIsCall] = useState(true);
@@ -35,9 +31,6 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
   const [account, setAccount] = useState('');
-
-  const canRequest =
-    !!underlying && !!strike && !!expiry && !!currency && !!label && !!description && !!account;
 
   const ledger = useLedger();
   const party = useParty();
@@ -117,11 +110,6 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
     history.push('/app/instrument/requests');
   };
 
-  const menuProps: Partial<MenuProps> = {
-    anchorOrigin: { vertical: 'bottom', horizontal: 'left' },
-    transformOrigin: { vertical: 'top', horizontal: 'left' },
-    getContentAnchorEl: null,
-  };
   return (
     <div className="input-dialog">
       <BackButton />

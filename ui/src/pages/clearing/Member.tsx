@@ -43,10 +43,10 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     const standing = standings.find(standing => standing.payload.customer === customer);
     const clearingDeposits = deposits.filter(
-      d => d.payload.account.id.label == service?.clearingAccount.id.label
+      d => d.payload.account.id.label === service?.clearingAccount.id.label
     );
     const marginDeposits = deposits.filter(
-      d => d.payload.account.id.label == service?.marginAccount.id.label
+      d => d.payload.account.id.label === service?.marginAccount.id.label
     );
     const clearingAmount = clearingDeposits.reduce(
       (acc, val) => acc + Number(val.payload.asset.quantity),
@@ -56,10 +56,6 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
       (acc, val) => acc + Number(val.payload.asset.quantity),
       0
     );
-    const standingText =
-      !!standing && standing.payload.marginSatisfied && standing.payload.mtmSatisfied
-        ? 'Yes'
-        : 'No';
 
     const { contracts: pendingMarginCalcs, loading: pendingMarginCalcsLoading } =
       useStreamQueries(MarginCalculation);
