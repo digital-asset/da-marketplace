@@ -8,7 +8,6 @@ import qualified DA.Finance.Asset as AssetDeposit
 import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
 import qualified Marketplace.Clearing.Service as Clearing
-import qualified Marketplace.Clearing.Market.Service as MarketClearing
 import qualified Marketplace.Custody.Role as Custodian
 import qualified Marketplace.Custody.Service as Custody
 import qualified Marketplace.Issuance.Service as Issuance

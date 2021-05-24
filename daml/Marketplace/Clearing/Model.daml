@@ -44,7 +44,7 @@ template MarginCalculation
     provider : Party
     customer : Party
     accountId : Id
-    currency : Text
+    currency : Id
     targetAmount : Decimal
     calculationTime : Time
     calculationId : Text
@@ -114,7 +114,7 @@ template MarkToMarketCalculation
     provider : Party
     customer : Party
     accountId : Id
-    currency : Text
+    currency : Id
     mtmAmount : Decimal
     calculationTime : Time
     calculationId : Text
