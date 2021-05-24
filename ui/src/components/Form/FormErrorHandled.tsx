@@ -42,7 +42,7 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
     const error = parseError(err);
     const errorMsgList = error?.message instanceof Array ? error.message : undefined;
     const errorMsgContent = error?.message instanceof Array ? undefined : error?.message;
-    displayErrorMessage({ header: error?.header, message: errorMsgContent, list: errorMsgList });
+    displayErrorMessage({ header: error?.header, message: errorMsgContent, list: errorMsgList?.map(e => !! e ? e.substr(0,256) + '...' : '')});
   }
 
   return (

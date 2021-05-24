@@ -202,8 +202,9 @@ export type OfferDeclineChoice = Choice<
   undefined
 >;
 
-export type OfferAcceptFields<A> = {
+export type OfferAcceptFields<A, T> = {
   acceptFields?: { [K in keyof Extract<OfferAccepts, A>]: Field };
+  constructedFields?: { [K in keyof Extract<OfferAccepts, A>]: (contract: T) => Field };
   lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
 };
 
@@ -216,7 +217,7 @@ export type OfferNotificationSet = {
     decline: OfferDeclineChoice;
   };
   contracts: readonly CreateEvent<OfferTemplates>[];
-} & OfferAcceptFields<Record<string, any>>;
+} & OfferAcceptFields<Record<string, OfferAccepts>, OfferTemplates>;
 
 // -------------------------------------------------------------
 

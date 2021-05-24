@@ -5,7 +5,7 @@ import { useLedger } from '@daml/react';
 import { ContractId } from '@daml/types';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { FieldComponents, Fields } from '../../components/InputDialog/Fields';
+import { FieldComponents, Fields, Field } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
 
 import {
@@ -25,21 +25,24 @@ const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
 };
 
-type OfferProps<F extends Fields> = {
-  contract: ContractId<OfferTemplates>;
+type OfferProps<F extends Fields, T = OfferTemplates> = {
+  contractId: ContractId<T>;
+  contract: T;
   serviceText: string;
 
   offerer: string;
   acceptChoice: OfferAcceptChoice;
   declineChoice: OfferDeclineChoice;
-} & OfferAcceptFields<F>;
+} & OfferAcceptFields<F, T>;
 
 export function OfferNotification<T extends Fields>({
   acceptChoice,
   declineChoice,
   contract,
+  contractId,
   offerer,
   acceptFields,
+  constructedFields,
   lookupFields,
   serviceText,
 }: OfferProps<T>) {
@@ -51,14 +54,19 @@ export function OfferNotification<T extends Fields>({
 
   const onAccept = async () => {
     if (lookupFields) {
+      console.log('going...');
       const args = lookupFields(acceptArgs);
-      ledger.exercise(acceptChoice, contract, args);
+      await ledger.exercise(acceptChoice, contractId, args);
     }
   };
 
   const onDecline = async () => {
-    ledger.exercise(declineChoice, contract, {});
+    ledger.exercise(declineChoice, contractId, {});
   };
+
+  const createdFields: Record<any, Field> | undefined = !!constructedFields
+    ? Object.fromEntries(Object.entries(constructedFields).map(([k, v]) => [k, v(contract)]))
+    : undefined;
 
   return (
     <Notification>
@@ -76,6 +84,14 @@ export function OfferNotification<T extends Fields>({
                 onChange={state => state && setAcceptArgs(state)}
               />
             )}
+            {createdFields && (
+              <FieldComponents
+                placeholderLabels
+                fields={createdFields}
+                defaultValue={acceptArgs}
+                onChange={state => state && setAcceptArgs(state)}
+              />
+            )}
             <Button
               className="ghost"
               content="Accept"
@@ -84,6 +100,7 @@ export function OfferNotification<T extends Fields>({
                 acceptFields &&
                 Object.entries(acceptArgs).length !== Object.entries(acceptFields).length
               }
+              onClick={() => loadAndCatch(onAccept)}
             />
             <Button
               className="ghost warning"
@@ -150,7 +167,12 @@ export function RequestNotification<T extends Fields>({
               />
             )}
 
-            <Button className="ghost" content="Approve" type="submit" />
+            <Button
+              className="ghost"
+              content="Approve"
+              type="submit"
+              onClick={() => loadAndCatch(onApprove)}
+            />
             <Button
               className="ghost warning"
               content="Reject"

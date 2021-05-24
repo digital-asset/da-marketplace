@@ -2,7 +2,10 @@
 
 module Marketplace.Clearing.Service where
 
+import DA.Set qualified as Set
+
 import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
 import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
@@ -179,6 +182,16 @@ template Service
         (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
         archive standingCid
 
+assertAccounts : Party -> Account -> Account -> Update ()
+assertAccounts provider clearingAccount marginAccount = do
+  (_,marginAccountRule) <- fetchByKey @AllocationAccountRule.T marginAccount.id
+  assertMsg "provider must be nominee on margin account" $ marginAccountRule.nominee == provider
+
+  (_,clearingAccountRule) <- fetchByKey @AssetSettlementRule clearingAccount.id
+  assertMsg "provider must be an observer, ctrl, or the provider on the clearing account"
+    $ Set.member provider clearingAccountRule.observers
+   || Set.member provider clearingAccountRule.ctrls
+   || clearingAccount.provider == provider
 
 template Offer
   with
@@ -195,6 +208,7 @@ template Offer
           clearingAccount : Account
           marginAccount : Account
         do
+          assertAccounts provider clearingAccount marginAccount
           createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
           createOrLookup Service with ..
 
@@ -229,5 +243,6 @@ template Request
         ccpAccount : Account
       controller operator, provider
       do
+        assertAccounts provider clearingAccount marginAccount
         createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
         createOrLookup Service with ..
