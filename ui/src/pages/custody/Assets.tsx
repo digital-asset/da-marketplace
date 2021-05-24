@@ -64,7 +64,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       />
       <TitleWithActions
         title="Accounts"
-        actions={[{ path: '/app/custody/accounts/new', label: 'New Account' }]}
+        iconActions={[{ path: '/app/custody/accounts/new', label: 'New Account' }]}
       />
       <StripedTable
         rowsClickable

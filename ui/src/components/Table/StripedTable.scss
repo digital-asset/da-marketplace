@@ -86,5 +86,32 @@
         background-color: transparent;
       }
     }
+
+    @media screen and (max-width: 900px) {
+      thead {
+        display: none;
+      }
+      table {
+        td {
+          text-align: left;
+          display: flex;
+          flex-direction: row;
+
+          b.label {
+            display: flex;
+            margin-right: $spacing-xs;
+          }
+
+          &.click-icon {
+            justify-content: flex-end;
+            padding-top: 0px;
+          }
+        }
+
+        tr {
+          position: relative;
+        }
+      }
+    }
   }
 }
