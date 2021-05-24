@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback} from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -74,12 +74,11 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     [deposits, addSignatoryAsDepositObserver]
   );
 
-
-// TODO: test
-//   useEffect(() => {
-//     setUpdatingDeposits(true);
-//     updateDeposits(3).then(() => setUpdatingDeposits(false));
-//   }, [updateDeposits]);
+  // TODO: test
+  //   useEffect(() => {
+  //     setUpdatingDeposits(true);
+  //     updateDeposits(3).then(() => setUpdatingDeposits(false));
+  //   }, [updateDeposits]);
 
   const allAccounts = useMemo(
     () =>
