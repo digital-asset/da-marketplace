@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Label, Header } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -38,7 +38,6 @@ import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/R
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import { Fields } from '../../components/InputDialog/Fields';
-import _ from 'lodash';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {

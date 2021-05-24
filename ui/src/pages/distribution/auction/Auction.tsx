@@ -13,7 +13,6 @@ import {
   Auction as BiddingAuction,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 
 import { CreateEvent } from '@daml/ledger';
 import { getAuctionStatus, getBidAllocation, getBidStatus } from '../Utils';

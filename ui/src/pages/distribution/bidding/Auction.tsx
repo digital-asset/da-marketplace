@@ -3,7 +3,7 @@ import {
   Auction as BiddingAuctionContract,
   Bid,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -31,7 +31,6 @@ export const BiddingAuction: React.FC<ServicePageProps<Service>> = ({
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
-  const history = useHistory();
   const { contractId } = useParams<any>();
 
   const [quantity, setQuantity] = useState<number>(0);

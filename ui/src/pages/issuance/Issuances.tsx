@@ -1,12 +1,10 @@
 import React from 'react';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Header } from 'semantic-ui-react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
-import { AddPlusIcon } from '../../icons/icons';
 
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
