@@ -59,7 +59,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     <>
       <TitleWithActions
         title="Listings"
-        actions={[{ path: '/app/setup/listing/new', label: ' New Listing' }]}
+        iconActions={[{ path: '/app/setup/listing/new', label: ' New Listing' }]}
       />
 
       <StripedTable
@@ -159,7 +159,7 @@ const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
   return (
     <TitleWithActions
       title="Listings"
-      actions={[{ path: '/app/listing/new', label: ' New Listing' }]}
+      iconActions={[{ path: '/app/listing/new', label: ' New Listing' }]}
     />
   );
 };
