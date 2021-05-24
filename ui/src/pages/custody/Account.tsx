@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -8,7 +8,6 @@ import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Button, Header } from 'semantic-ui-react';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
@@ -19,7 +18,6 @@ import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import _ from 'lodash';
-import { halfSecondPromise } from '../page/utils';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -31,8 +29,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
 
-  //   const [updatingDeposits, setUpdatingDeposits] = useState(false);
-
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
@@ -40,39 +36,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     useStreamQueries(AllocationAccountRule);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const addSignatoryAsDepositObserver = async (
-    deposit: CreateEvent<AssetDeposit>,
-    newObs: string[]
-  ) => {
-    const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
-
-    await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-      newObservers,
-    });
-  };
-
-  //   const updateDeposits: any = async (retries: number) => {
-  //     if (retries > 0) {
-  //       await halfSecondPromise();
-  //       return updateDeposits(retries - 1);
-  //     }
-  //     return Promise.all(
-  //       deposits.map(d => {
-  //         const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(
-  //           signatory => !d.observers.includes(signatory)
-  //         );
-  //         if (newObservers.length > 0) {
-  //           addSignatoryAsDepositObserver(d, newObservers);
-  //         }
-  //       })
-  //     );
-  //   };
-
-  //   useEffect(() => {
-  //     setUpdatingDeposits(true);
-  //     updateDeposits(3).then(() => setUpdatingDeposits(false));
-  //   }, []);
 
   const allAccounts = useMemo(
     () =>
