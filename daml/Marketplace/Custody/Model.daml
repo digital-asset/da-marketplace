@@ -74,6 +74,7 @@ template CreditAccountRequest
     customer : Party
     accountId : Id
     asset : Asset
+    observers: Set Party
   where
     signatory operator, provider, customer
 

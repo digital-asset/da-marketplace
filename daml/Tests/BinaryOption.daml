@@ -93,7 +93,7 @@ requestExercise underlyingPrice observationDate = script do
       description = "Tesla Binary Option"
       safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
-      observers = []
+      observers = [alice.mainAccount.provider, bob.mainAccount.provider]
   (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 
   -- Alice issues the option
@@ -103,6 +103,7 @@ requestExercise underlyingPrice observationDate = script do
       accountId = Id (Set.fromList [alice.customer, providers.bank]) alice.mainAccount.id.label 0
       assetId = optionDesc.assetId
       quantity = 1000.0
+      observers = Set.fromList [alice.mainAccount.provider, bob.mainAccount.provider]
   (_issuanceCid, optionDepositCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
 
   -- Alice gifts the option to Bob
@@ -118,6 +119,8 @@ requestExercise underlyingPrice observationDate = script do
   corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestCreditAccount with
     accountId = alice.mainAccount.id
     asset = usdAsset
+    observers = Set.fromList [alice.mainAccount.provider, bob.mainAccount.provider]
+
   corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid CreditAccount with
     creditAccountRequestCid = corpActReqCid
 

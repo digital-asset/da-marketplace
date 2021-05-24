@@ -110,6 +110,7 @@ requestExerciseBond usdAmount notional coupon dates = script do
       accountId = Id (Set.fromList [alice.customer, providers.bank]) alice.mainAccount.id.label 0
       assetId = optionDesc.assetId
       quantity = 1.0
+      observers = Set.fromList [alice.mainAccount.provider, bob.mainAccount.provider]
   (_, bondCid) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ CreateIssuance createReqCid
 
   -- Alice gifts the bond to Bob
@@ -122,6 +123,8 @@ requestExerciseBond usdAmount notional coupon dates = script do
   corpActReqCid <- submit alice.customer $ exerciseCmd alice.custodyServiceCid RequestCreditAccount with
     accountId = alice.mainAccount.id
     asset = usdAsset
+    observers = Set.fromList [alice.mainAccount.provider, bob.mainAccount.provider]
+
   corpActDepositCid <- submit providers.bank $ exerciseCmd alice.custodyServiceCid CreditAccount with
     creditAccountRequestCid = corpActReqCid
 

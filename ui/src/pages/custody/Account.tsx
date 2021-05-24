@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -30,8 +30,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
 
-  const [updatingDeposits, setUpdatingDeposits] = useState(false);
-
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
@@ -39,45 +37,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     useStreamQueries(AllocationAccountRule);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const addSignatoryAsDepositObserver = useCallback(
-    async (deposit: CreateEvent<AssetDeposit>, newObs: string[]) => {
-      const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
-
-      await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-        newObservers,
-      });
-    },
-    [ledger]
-  );
-
-  const updateDeposits = useCallback(
-    async (retries: number): Promise<void[]> => {
-      if (retries > 0) {
-        await halfSecondPromise();
-        return updateDeposits(retries - 1);
-      }
-
-      const addSignatoryExercises = deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(signatory => {
-          return !d.observers.includes(signatory);
-        });
-
-        if (newObservers.length > 0) {
-          return addSignatoryAsDepositObserver(d, newObservers);
-        }
-        return undefined;
-      });
-
-      return Promise.all(addSignatoryExercises);
-    },
-    [deposits, addSignatoryAsDepositObserver]
-  );
-
-  useEffect(() => {
-    setUpdatingDeposits(true);
-    updateDeposits(3).then(() => setUpdatingDeposits(false));
-  }, [updateDeposits]);
 
   const allAccounts = useMemo(
     () =>
@@ -115,6 +74,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       account: { label: 'Account', type: 'selection', items: [] },
       asset: { label: 'Asset', type: 'selection', items: assetNames },
       quantity: { label: 'Quantity', type: 'number' },
+      observers: { label: 'Add Asset Signatories as Observers', type: 'checkbox' },
     },
     onClose: async function (state: any | null) {},
   };
@@ -209,11 +169,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
         .exercise(Service.RequestCreditAccount, service.contractId, {
           accountId: targetAccount.account.id,
           asset: { id: asset.payload.assetId, quantity: state.quantity },
+          observers: makeDamlSet(state.observers ? asset.signatories : [])
         })
-        .then(() => {
-          setUpdatingDeposits(true);
-          updateDeposits(3).then(() => setUpdatingDeposits(false));
-        });
     };
     setCreditDialogProps({
       ...defaultCreditRequestDialogProps,
@@ -299,7 +256,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
           <StripedTable
             title="Holdings"
             headings={['Holding', 'Asset', '']}
-            loading={depositsLoading || updatingDeposits}
+            loading={depositsLoading}
             rows={accountDeposits.map(c => {
               return {
                 elements: [

@@ -4,6 +4,7 @@ import Common
 import ContingentClaims.Claim (Claim(Zero), serialize)
 import ContingentClaims.FinancialClaim (unrollDates)
 import Daml.Script
+import DA.Set
 import DA.Date (date, Month(..))
 import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Asset.Settlement
@@ -50,7 +51,7 @@ examples Providers{..} Assets{..} issuer = do
       submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
 
     issue issuanceId assetId quantity = do
-      createIssuanceRequestCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestCreateIssuance with ..
+      createIssuanceRequestCid <- submit issuer.customer $ exerciseCmd issuer.issuanceServiceCid Issuance.RequestCreateIssuance with observers = fromList [issuer.customer], ..
       submit bank $ exerciseCmd issuer.issuanceServiceCid $ Issuance.CreateIssuance with ..
 
     transfer : Customer -> Customer -> ContractId AssetDeposit -> Decimal -> Script (ContractId AssetDeposit, Optional (ContractId AssetDeposit))
