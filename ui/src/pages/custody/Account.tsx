@@ -128,9 +128,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       const service = clientServices.find(
         s => s.payload.provider === targetAccount.account.provider
       );
-      if (!service || !transferToAccount) {
-        return;
-      }
+      if (!service || !transferToAccount) return;
 
       await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
         accountId: targetAccount.account.id,

@@ -171,7 +171,7 @@ onboardCustomer Providers{..} party = do
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = customer
   regulatorServiceCid             <- submit customer      do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
-  identityVerificationRequestCid  <- submit customer      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = party ; location = party <> " Location"; observers = [public]
+  identityVerificationRequestCid  <- submit customer      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = party; location = party <> " Location"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
   -- Bidding Service
