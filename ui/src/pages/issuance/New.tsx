@@ -48,12 +48,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   const account = accounts.find(a => a.id.label === accountLabel);
 
   const canRequest =
-    !!assetLabel &&
-    !!asset &&
-    !!accountLabel &&
-    !!account &&
-    !!issuanceId &&
-    !!quantity;
+    !!assetLabel && !!asset && !!accountLabel && !!account && !!issuanceId && !!quantity;
 
   useEffect(() => {
     if (!el.current || !asset) return;
