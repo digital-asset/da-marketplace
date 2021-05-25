@@ -118,7 +118,8 @@ template Service
         do
           Custody.CreditAccountRequest{accountId; asset; observers} <- fetchAndArchive creditAccountRequestCid
           depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
-          exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = observers
+          deposit <- fetch depositCid
+          exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = observers `union` deposit.observers
 
       nonconsuming DebitAccount : Asset
         with
