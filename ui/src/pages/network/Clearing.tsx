@@ -228,7 +228,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
                   <Button.Group floated="right">
                     {c.payload.customer === party ? (
                       <>
-                        <ClearingOfferModal offer={c} services={services}/>
+                        <ClearingOfferModal offer={c} services={services} />
                         <Button className="ghost warning" onClick={() => rejectOffer(c)}>
                           Reject
                         </Button>

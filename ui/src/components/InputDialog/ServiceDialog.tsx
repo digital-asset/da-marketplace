@@ -156,7 +156,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
   onClose,
   title,
   subtitle,
-  disabled
+  disabled,
 }: RequestProps<T>) => {
   const ledger = useLedger();
 
