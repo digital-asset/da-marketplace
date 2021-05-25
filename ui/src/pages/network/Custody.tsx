@@ -31,12 +31,10 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <>
-      <TitleWithActions title="Current Services">
-        <Button className="ghost" onClick={() => history.push('/app/setup/custody/offer')}>
-          Offer Custody Service
-        </Button>
-      </TitleWithActions>
-
+      <TitleWithActions
+        title="Current Services"
+        otherActions={[{ label: 'Offer Custody Service', path: '/app/setup/custody/offer' }]}
+      />
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}
         rows={services.map((c, i) => {

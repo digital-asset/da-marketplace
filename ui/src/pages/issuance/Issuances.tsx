@@ -14,7 +14,7 @@ export const IssuancesTable: React.FC = () => {
     <>
       <TitleWithActions
         title={'Issuances'}
-        actions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
+        iconActions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
       />
       <StripedTable
         headings={[

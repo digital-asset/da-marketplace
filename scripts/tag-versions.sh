@@ -6,6 +6,17 @@ set -eu
 
 app_version=$1
 
+# Should match a semver subset of things like: "1.2.3", "1.2.3-rc.1", "42.10.999-alpha.87"
+# This requires the -r flag to sed, which enables extended regular expressions
+vregex='[0-9]*\.[0-9]*\.[0-9]*(-[a-zA-Z]*\.[0-9]*)?'
+
+# daml.yaml files can't handle full semver versions, keep just the
+# MAJOR.MINOR.PATCH fields for them
+capture_regex="([0-9]*)\.([0-9]*)\.([0-9]*)(-[a-zA-Z]*\.[0-9]*)?"
+short_version=$(echo $app_version | sed -r "s/^$capture_regex/\1.\2.\3/")
+
+echo "Application version is $app_version, short version is $short_version."
+
 dabl_meta=$2
 daml_yaml=$3
 daml_yaml_triggers=$4
@@ -15,24 +26,40 @@ package_json=$7
 docs_localdev=$8
 docs_damlhub=$9
 
-vregex='[0-9]*\.[0-9]*\.[0-9]*'
+echo "Retagging versions in all files..."
 
-yq w -i $daml_yaml 'version' "$app_version"
+echo "  Tagging dabl-meta.yaml"
+if echo "$app_version" | grep -q '-'; then
+    sed -ri "s/tags:.*/tags: [dabl-sample-app, application, experimental]/" $dabl_meta
+else
+    sed -ri "s/tags:.*/tags: [dabl-sample-app, application]/" $dabl_meta
+fi
 
-yq w -i $daml_yaml_triggers 'version' "$app_version"
+echo "  Tagging daml.yaml"
+yq w -i $daml_yaml 'version' "$short_version"
+
+echo "  Tagging triggers daml.yaml"
+yq w -i $daml_yaml_triggers 'version' "$short_version"
 yq w -i $daml_yaml_triggers 'data-dependencies' ""
-yq w -i $daml_yaml_triggers 'data-dependencies[+]' "../.daml/dist/da-marketplace-$app_version.dar"
+yq w -i $daml_yaml_triggers 'data-dependencies[+]' "../.daml/dist/da-marketplace-$short_version.dar"
 
-yq w -i $daml_yaml_it 'version' "$app_version"
+echo "  Tagging integrationTesting daml.yaml"
+yq w -i $daml_yaml_it 'version' "$short_version"
 yq w -i $daml_yaml_it 'data-dependencies' ""
-yq w -i $daml_yaml_it 'data-dependencies[+]' "../.daml/dist/da-marketplace-$app_version.dar"
+yq w -i $daml_yaml_it 'data-dependencies[+]' "../.daml/dist/da-marketplace-$short_version.dar"
 
-sed -i "s/version='$vregex/version='$app_version/" $exberry_setup
+echo "  Tagging exberry_adapter setup.py"
+sed -ri "s/version='$vregex/version='$short_version/" $exberry_setup
 
-sed -i "s/\"version\": \"$vregex/\"version\": \"$app_version/" $package_json
-sed -i "s/da-marketplace\-$vregex\"/da-marketplace\-$app_version\"/" $package_json
+echo "  Tagging ui package.json"
+sed -ri "s/\"version\": \"$vregex/\"version\": \"$app_version/" $package_json
+sed -ri "s/da-marketplace\-$vregex\"/da-marketplace\-$short_version\"/" $package_json
 
-sed -i "s/da-marketplace\-$vregex/da-marketplace\-$app_version/" $docs_localdev
+echo "  Tagging docs"
+sed -ri "s/da-marketplace\-$vregex/da-marketplace\-$short_version/" $docs_localdev
 
-sed -i "s/da-marketplace\-$vregex/da-marketplace\-$app_version/g" $docs_damlhub
-sed -i "s/da-marketplace-exberry-adapter\-$vregex/da-marketplace-exberry-adapter\-$app_version/" $docs_damlhub
+sed -ri "s/da-marketplace\-$vregex.dit/da-marketplace\-$app_version.dit/" $docs_damlhub
+sed -ri "s/da-marketplace\-$vregex.dar/da-marketplace\-$short_version.dar/" $docs_damlhub
+sed -ri "s/da-marketplace-exberry-adapter\-$vregex/da-marketplace-exberry-adapter\-$short_version/" $docs_damlhub
+
+echo "Tagged all files... check results before committing"

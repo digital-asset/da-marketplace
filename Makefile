@@ -1,31 +1,34 @@
-VERSION = $(shell ddit ditversion)
-PYTHON = pipenv run python
+VERSION := $(shell ddit ditversion)
 
-UI_DIR = ui
-STATE_DIR = .dev
-PKG_DIR = pkg
+# Just the Major.Minor.Patch, excluding the prerelease portion
+SHORT_VERSION := $(shell ddit ditversion | sed -r "s/^([0-9]*)\.([0-9]*)\.([0-9]*)(-[a-zA-Z]*\.[0-9]*)?/\1.\2.\3/")
+PYTHON := pipenv run python
+
+UI_DIR := ui
+STATE_DIR := .dev
+PKG_DIR := pkg
 
 ### *-=- Artifacts -=-*
 
-dar_name = da-marketplace-$(VERSION).dar
-dar_src = .daml/dist/$(dar_name)
-dar = $(PKG_DIR)/$(dar_name)
+dar_name := da-marketplace-$(SHORT_VERSION).dar
+dar_src := .daml/dist/$(dar_name)
+dar := $(PKG_DIR)/$(dar_name)
 
-trigger_dar_name = da-marketplace-triggers-$(VERSION).dar
-trigger_dar_src = triggers/.daml/dist/$(trigger_dar_name)
-trigger_dar = $(PKG_DIR)/$(trigger_dar_name)
+trigger_dar_name := da-marketplace-triggers-$(SHORT_VERSION).dar
+trigger_dar_src := triggers/.daml/dist/$(trigger_dar_name)
+trigger_dar := $(PKG_DIR)/$(trigger_dar_name)
 
-exberry_adapter_name = da-marketplace-exberry-adapter-$(VERSION).tar.gz
-exberry_adapter = $(PKG_DIR)/$(exberry_adapter_name)
+exberry_adapter_name := da-marketplace-exberry-adapter-$(SHORT_VERSION).tar.gz
+exberry_adapter := $(PKG_DIR)/$(exberry_adapter_name)
 
-damljs = daml.js
+damljs := daml.js
 
-ui_name = da-marketplace-ui-$(VERSION).zip
-ui = $(PKG_DIR)/$(ui_name)
+ui_name := da-marketplace-ui-$(VERSION).zip
+ui := $(PKG_DIR)/$(ui_name)
 
-app_icon = $(PKG_DIR)/da-marketplace.svg
+app_icon := $(PKG_DIR)/da-marketplace.svg
 
-dit = da-marketplace-$(VERSION).dit
+dit := da-marketplace-$(VERSION).dit
 
 $(PKG_DIR):
 	mkdir $@
@@ -103,12 +106,11 @@ tag:
 		$(UI_DIR)/package.json \
 		docs/local_development.md \
 		docs/damlhub_deployment.md
-	@echo "Tagged files... check results before committing"
 
 .PHONY: release
-release_tag = da-marketplace-v$(VERSION)
+release_tag := da-marketplace-v$(VERSION)
 
-release:
+release: test package
 	@release_check=`git tag | grep $(release_tag) | wc -l`; \
 	if [ $$release_check -eq 0 ]; then \
 		echo "New tag detected - releasing" \

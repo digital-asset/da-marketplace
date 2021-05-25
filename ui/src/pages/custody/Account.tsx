@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
+
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -7,17 +8,18 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import { Button } from 'semantic-ui-react';
+import { Button, Header } from 'semantic-ui-react';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
-import TitleWithActions from '../../components/Common/TitleWithActions';
 import InfoCard from '../../components/Common/InfoCard';
+import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import _ from 'lodash';
 import { halfSecondPromise } from '../page/utils';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -29,8 +31,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
   const { contractId } = useParams<any>();
-
-  const [updatingDeposits, setUpdatingDeposits] = useState(false);
 
   const cid = contractId.replace('_', '#');
 
@@ -74,10 +74,11 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     [deposits, addSignatoryAsDepositObserver]
   );
 
-  useEffect(() => {
-    setUpdatingDeposits(true);
-    updateDeposits(3).then(() => setUpdatingDeposits(false));
-  }, [updateDeposits]);
+  // TODO: test
+  //   useEffect(() => {
+  //     setUpdatingDeposits(true);
+  //     updateDeposits(3).then(() => setUpdatingDeposits(false));
+  //   }, [updateDeposits]);
 
   const allAccounts = useMemo(
     () =>
@@ -135,6 +136,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const normalAccount = accounts.find(a => a.contractId === targetAccount.contractId);
   const allocationAccount = allocatedAccounts.find(a => a.contractId === targetAccount.contractId);
+  const service = clientServices.find(s => s.payload.provider === targetAccount.account.provider);
 
   const accountDeposits = deposits.filter(
     d =>
@@ -144,7 +146,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   );
 
   const requestWithdrawDeposit = async (c: CreateEvent<AssetDeposit>) => {
-    const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service)
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
@@ -166,9 +167,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       setTransferDialogProps({ ...defaultTransferRequestDialogProps, open: false });
       if (!state) return;
       const transferToAccount = accounts.find(a => a.payload.account.id.label === state.account);
-      const service = clientServices.find(
-        s => s.payload.provider === targetAccount.account.provider
-      );
+
       if (!service || !transferToAccount) return;
 
       await ledger.exercise(Service.RequestTransferDeposit, service.contractId, {
@@ -194,41 +193,26 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const requestCredit = (accountId: Id) => {
-    const onClose = async (state: any | null) => {
-      setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
-      if (!state) return;
-      const asset = assets.find(i => i.payload.description === state.asset);
-      if (!asset || !targetAccount) return;
-      const service = clientServices.find(
-        s => s.payload.provider === targetAccount.account.provider
-      );
-      if (!service) return;
+  const onRequestCredit = async (state: any | null) => {
+    setCreditDialogProps({ ...defaultCreditRequestDialogProps, open: false });
+    if (!state) return;
+    const asset = assets.find(i => i.payload.description === state.asset);
+    if (!asset || !targetAccount) return;
 
-      await ledger
-        .exercise(Service.RequestCreditAccount, service.contractId, {
-          accountId: targetAccount.account.id,
-          asset: { id: asset.payload.assetId, quantity: state.quantity },
-        })
-        .then(() => {
-          setUpdatingDeposits(true);
-          updateDeposits(3).then(() => setUpdatingDeposits(false));
-        });
-    };
-    setCreditDialogProps({
-      ...defaultCreditRequestDialogProps,
-      defaultValue: { ...defaultCreditRequestDialogProps.fields, account: accountId.label },
-      fields: {
-        ...defaultCreditRequestDialogProps.fields,
-        account: { label: 'Account', type: 'selection', items: [accountId.label] },
-      },
-      open: true,
-      onClose,
+    if (!service)
+      return displayErrorMessage({
+        message: `${getName(
+          targetAccount.account.provider
+        )} does not offer issuance services to ${getName(party)}`,
+      });
+
+    await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
+      accountId: targetAccount.account.id,
+      asset: { id: asset.payload.assetId, quantity: state.quantity },
     });
   };
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
-    const service = clientServices.find(s => s.payload.provider === c.payload.account.provider);
     if (!service)
       return displayErrorMessage({
         message: 'The account provider does not offer issuance services.',
@@ -281,49 +265,72 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <TitleWithActions title={targetAccount.account.id.label}>
-          {normalAccount && (
-            <div className="action-row">
-              <Button className="ghost" onClick={() => requestCredit(targetAccount.account.id)}>
-                Deposit
-              </Button>
-              <Button className="ghost" onClick={() => requestCloseAccount(normalAccount)}>
-                Close
-              </Button>
-            </div>
-          )}
-        </TitleWithActions>
-
-        <div className="grid-row">
-          <InfoCard title="Account Details" info={accountData} />
-          <StripedTable
-            title="Holdings"
-            headings={['Holding', 'Asset', '']}
-            loading={depositsLoading || updatingDeposits}
-            rows={accountDeposits.map(c => {
-              return {
-                elements: [
-                  c.payload.asset.quantity,
-                  c.payload.asset.id.label,
-                  <>
-                    {party === targetAccount.account.owner && normalAccount && (
-                      <div className="action-row">
-                        <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                          Withdraw
-                        </Button>
-                        {relatedAccounts.length > 0 && (
-                          <Button className="ghost" onClick={() => requestTransfer(c)}>
-                            Transfer
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </>,
-                ],
-              };
-            })}
+        <Header as="h2">
+          <b>Account:</b> {targetAccount.account.id.label}
+        </Header>
+        <div className="page-section-row">
+          <InfoCard
+            title="Account Details"
+            info={accountData}
+            actions={
+              normalAccount && [
+                <Button
+                  className="ghost warning"
+                  onClick={() => requestCloseAccount(normalAccount)}
+                >
+                  Close Account
+                </Button>,
+              ]
+            }
           />
+          <Tile className="credit-account">
+            <InputDialog
+              {...defaultCreditRequestDialogProps}
+              open={true}
+              defaultValue={{
+                ...defaultCreditRequestDialogProps.fields,
+                account: targetAccount.account.id.label,
+              }}
+              onClose={onRequestCredit}
+              fields={{
+                ...defaultCreditRequestDialogProps.fields,
+                account: {
+                  label: 'Account',
+                  type: 'selection',
+                  items: [targetAccount.account.id.label],
+                },
+              }}
+              isInline
+            />
+          </Tile>
         </div>
+        <StripedTable
+          title="Holdings"
+          headings={['Holding', 'Asset', '']}
+          loading={depositsLoading}
+          rows={accountDeposits.map(c => {
+            return {
+              elements: [
+                c.payload.asset.quantity,
+                c.payload.asset.id.label,
+                <>
+                  {party === targetAccount.account.owner && normalAccount && (
+                    <div className="action-row">
+                      <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
+                        Withdraw
+                      </Button>
+                      {relatedAccounts.length > 0 && (
+                        <Button className="ghost" onClick={() => requestTransfer(c)}>
+                          Transfer
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>,
+              ],
+            };
+          })}
+        />
       </div>
     </>
   );

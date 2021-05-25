@@ -18,7 +18,7 @@ export const InstrumentsTable: React.FC = () => {
     <div>
       <TitleWithActions
         title={'Instruments'}
-        actions={[
+        iconActions={[
           { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
           { path: '/app/setup/instrument/new/convertiblenote', label: 'New Convertible Note' },
           { path: '/app/setup/instrument/new/binaryoption', label: 'New Binary Option' },
