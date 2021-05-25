@@ -63,10 +63,6 @@ const OfferServicesPage = (props: {
       setToken(token);
     }
   }, [userParties, provider]);
-  console.log(creatingOffer);
-  console.log(offerInfo);
-  console.log(offerInfo?.provider);
-  console.log(token);
 
   return (
     <div className="setup-page offer-services">
@@ -347,13 +343,9 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
     const custodyRoleId = custodyRoles[0]?.contractId;
 
     async function offerServices() {
-      console.log(services);
       if (services && services.length > 0) {
         await Promise.all(
           services.map(async service => {
-            console.log('offering', service, clearingRoleId, tradingRoleId, custodyRoleId);
-            // console.log('offering', service);
-
             switch (service) {
               case OfferServiceKind.TRADING:
                 await ledger.exercise(TradingRole.OfferTradingService, clearingRoleId, params);
@@ -379,7 +371,6 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
           })
         );
       }
-      console.log('done');
       onFinish();
     }
     offerServices();
@@ -456,27 +447,28 @@ export const OffersTable = () => {
 
 function sortByProvider(contracts: ServiceContract[]): IOfferRowInfo {
   return contracts.reduce((acc, r) => {
-    const toRet = [];
     const providerDetails = acc.find(
       i => i.provider === r.contract.payload.provider && i.service === r.service
     );
-    console.log(providerDetails);
-    if (!providerDetails) {
-      return [
-        ...acc,
-        {
-          provider: r.contract.payload.provider,
-          service: r.service,
-          customers: [r.contract.payload.customer],
-        },
-      ];
-    } else {
-      const { provider, service, customers } = providerDetails;
-      return [
-        ...acc.filter(a => a !== providerDetails),
-        { provider, service, customers: [...customers, r.contract.payload.customer] },
-      ];
+
+    let baseAcc = acc;
+
+    const provider = providerDetails?.provider || r.contract.payload.provider;
+    const service = providerDetails?.service || r.service;
+    const newCustomers = [...(providerDetails?.customers || []), r.contract.payload.customer];
+
+    if (providerDetails) {
+      baseAcc = acc.filter(a => a !== providerDetails);
     }
+
+    return [
+      ...baseAcc,
+      {
+        provider,
+        service,
+        customers: newCustomers,
+      },
+    ];
   }, [] as IOfferRowInfo);
 }
 
