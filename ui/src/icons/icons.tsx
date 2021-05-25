@@ -1,15 +1,12 @@
 import React from 'react';
 
-import marketplaceLogo from './marketplace.svg';
-// import lock from './lock.svg'
-
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
   color?: 'green' | 'blue' | 'white' | 'grey';
   strokeColor?: string;
 };
 
-export const ArrowRightIcon: React.FC<IconProps> = ({ size, color }) => (
+export const ArrowRightIcon: React.FC<IconProps> = ({ color }) => (
   <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
     <path
       className={color ? `fill-${color}` : 'fill-blue'}
@@ -20,7 +17,7 @@ export const ArrowRightIcon: React.FC<IconProps> = ({ size, color }) => (
   </svg>
 );
 
-export const ArrowLeftIcon: React.FC<IconProps> = ({ size, color }) => (
+export const ArrowLeftIcon: React.FC<IconProps> = ({ color }) => (
   <svg className="icon arrow-left-icon" viewBox="0 0 13 12">
     <path
       className={color ? `fill-${color}` : 'fill-blue'}
@@ -96,55 +93,6 @@ export const ControlsIcon = () => (
   </svg>
 );
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const GlobeIcon = () => (
-  <svg className="icon globe-icon" viewBox="0 0 16 16">
-    <path
-      className="fill-blue"
-      d="M4.79999 5.86678V5.36678C4.52385 5.36678 4.29999 5.59064 4.29999 5.86678H4.79999ZM4.79999
-        6.93345L5.15354 7.287L5.29999 7.14055V6.93345H4.79999ZM2.97908 7.24587L2.62552 7.59942H2.62552L2.97908
-        7.24587ZM6.93332 13.8668H7.43332V13.6597L7.28688 13.5132L6.93332 13.8668ZM5.86666 12.8001H5.36666V13.0072L5.5131
-        13.1537L5.86666 12.8001ZM5.86666 11.2001H6.36666V10.993L6.22021 10.8466L5.86666 11.2001ZM4.79999 10.1334H4.29999V10.3406L4.44644
-        10.487L4.79999 10.1334ZM4.79999 9.06678V8.56678C4.52385 8.56678 4.29999 8.79064 4.29999 9.06678H4.79999ZM9.63332
-        0.533447V2.66678H10.6333V0.533447H9.63332ZM9.06666 3.23345H7.99999V4.23345H9.06666V3.23345ZM5.86666
-        5.36678H4.79999V6.36678H5.86666V5.36678ZM4.29999 5.86678V6.93345H5.29999V5.86678H4.29999ZM4.44644
-        6.57989L4.13402 6.89231L4.84113 7.59942L5.15354 7.287L4.44644 6.57989ZM3.33263 6.89231L1.42021
-        4.97989L0.713105 5.687L2.62552 7.59942L3.33263 6.89231ZM6.43332 4.80011C6.43332 5.11307 6.17962
-        5.36678 5.86666 5.36678V6.36678C6.7319 6.36678 7.43332 5.66536 7.43332 4.80011H6.43332ZM7.99999
-        3.23345C7.13475 3.23345 6.43332 3.93487 6.43332 4.80011H7.43332C7.43332 4.48715 7.68703 4.23345
-        7.99999 4.23345V3.23345ZM4.13402 6.89231C3.91272 7.11361 3.55393 7.11361 3.33263 6.89231L2.62552
-        7.59942C3.23735 8.21124 4.2293 8.21124 4.84113 7.59942L4.13402 6.89231ZM9.63332 2.66678C9.63332
-        2.97974 9.37962 3.23345 9.06666 3.23345V4.23345C9.9319 4.23345 10.6333 3.53203 10.6333 2.66678H9.63332ZM7.43332
-        15.4668V13.8668H6.43332V15.4668H7.43332ZM7.28688 13.5132L6.22021 12.4466L5.5131 13.1537L6.57977 14.2203L7.28688
-        13.5132ZM6.36666 12.8001V11.2001H5.36666V12.8001H6.36666ZM6.22021 10.8466L5.15354 9.77989L4.44644 10.487L5.5131
-        11.5537L6.22021 10.8466ZM5.29999 10.1334V9.06678H4.29999V10.1334H5.29999ZM4.79999 9.56678H9.06666V8.56678H4.79999V9.56678ZM9.63332
-        10.1334V10.8446H10.6333V10.1334H9.63332ZM11.5555 12.7668H14.4V11.7668H11.5555V12.7668ZM10.7 11.9112C10.7 12.3837
-        11.083 12.7668 11.5555 12.7668V11.7668C11.6353 11.7668 11.7 11.8314 11.7 11.9112H10.7ZM10.4889 11.7001C10.6055
-        11.7001 10.7 11.7946 10.7 11.9112H11.7C11.7 11.2423 11.1578 10.7001 10.4889 10.7001V11.7001ZM9.63332 10.8446C9.63332
-        11.3171 10.0164 11.7001 10.4889 11.7001V10.7001C10.5687 10.7001 10.6333 10.7648 10.6333 10.8446H9.63332ZM9.06666
-        9.56678C9.37962 9.56678 9.63332 9.82049 9.63332 10.1334H10.6333C10.6333 9.2682 9.9319 8.56678 9.06666
-        8.56678V9.56678ZM7.99999 14.9668C4.15241 14.9668 1.03333 11.8477 1.03333 8.00011H0.0333252C0.0333252
-        12.4 3.60012 15.9668 7.99999 15.9668V14.9668ZM14.9667 8.00011C14.9667 11.8477 11.8476 14.9668
-        7.99999 14.9668V15.9668C12.3999 15.9668 15.9667 12.4 15.9667 8.00011H14.9667ZM7.99999
-        1.03345C11.8476 1.03345 14.9667 4.15253 14.9667 8.00011H15.9667C15.9667 3.60025 12.3999 0.0334473 7.99999
-        0.0334473V1.03345ZM7.99999 0.0334473C3.60012 0.0334473 0.0333252 3.60025 0.0333252 8.00011H1.03333C1.03333
-        4.15253 4.15241 1.03345 7.99999 1.03345V0.0334473Z"
-    />
-  </svg>
-);
-
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const LogoIcon: React.FC<IconProps> = ({ size }) => (
-  <img
-    className={`icon logo-icon icon-size-${size}`}
-    src={marketplaceLogo}
-    color={'#4BE725'}
-    alt="command"
-  />
-);
-
 export const OpenMarketplaceLogo: React.FC<IconProps> = ({ size }) => (
   <svg
     className={`icon open-marketplace-icon icon-size-${size}`}
@@ -158,52 +106,6 @@ export const OpenMarketplaceLogo: React.FC<IconProps> = ({ size }) => (
       d="M1 4V28H25M14.2414 4V9.7931M5.96552 19.7241V23.8621M5.96552 10.6207V13.1034M22.5172 10.6207V14.7586M22.5172 21.3793V25.5172M4.31034 13.1034H7.62069V19.7241H4.31034V13.1034ZM12.5862 9.7931H15.8966V16.4138H12.5862V9.7931ZM20.8621 14.7586H24.1724V21.3793H20.8621V14.7586Z"
       stroke="#4BE725"
     />
-  </svg>
-);
-
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const CandlestickIcon = () => (
-  <svg
-    className="icon icon-size-24 candlestick-icon"
-    width="20"
-    preserveAspectRatio="none"
-    height="20"
-    viewBox="0 0 20 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <line y1="9.9165" x2="18" y2="9.9165" stroke="white" strokeWidth="1.5" strokeDasharray="1 1" />
-    <line
-      x1="3.5"
-      y1="0.5"
-      x2="3.5"
-      y2="15.5"
-      stroke="white"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <line
-      x1="9.5"
-      y1="0.5"
-      x2="9.5"
-      y2="15.5"
-      stroke="white"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <line
-      x1="15.5"
-      y1="0.5"
-      x2="15.5"
-      y2="15.5"
-      stroke="white"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <rect x="2.5" y="3.5" width="2" height="3" fill="white" stroke="white" />
-    <rect x="8.5" y="7.5" width="2" height="5" fill="white" stroke="white" />
-    <rect x="14.5" y="4.30957" width="2" height="7.38095" fill="white" stroke="white" />
   </svg>
 );
 
@@ -287,34 +189,6 @@ export const LogoutIcon = () => (
   </svg>
 );
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const MarketIcon = () => (
-  <svg
-    className="icon market-icon"
-    width="14"
-    height="17"
-    viewBox="0 0 14 17"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M0 4.36865L2.94737 6.05286L6.73684 4.36865L10.5263 6.05286L13.4737 4.36865V17.0002H0V4.36865Z"
-      fill="#303132"
-    />
-    <path
-      d="M2.10523 6.89474C1.96488 4.92982 2.6947 1 6.73681 1"
-      stroke="#303132"
-      strokeWidth="1.5"
-    />
-    <path
-      d="M10.9314 6.89474C11.0717 4.92982 10.3419 1 6.29981 1"
-      stroke="#303132"
-      strokeWidth="1.5"
-    />
-  </svg>
-);
-
 export const OrdersIcon: React.FC<IconProps> = ({ size }) => (
   <svg
     className={`icon orders-icon icon-size-${size}`}
@@ -364,39 +238,6 @@ export const PublicIcon: React.FC<IconProps> = ({ size }) => (
   </svg>
 );
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const UserIcon: React.FC<IconProps> = ({ size }) => (
-  <svg
-    className={`icon user-icon icon-size-${size}`}
-    width="18"
-    height="18"
-    viewBox="0 0 18 18"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <mask
-      id="mask0"
-      mask-type="alpha"
-      maskUnits="userSpaceOnUse"
-      x="0"
-      y="0"
-      width="18"
-      height="18"
-    >
-      <path fillRule="evenodd" clipRule="evenodd" d="M0 0H17.9999V17.9997H0V0Z" fill="white" />
-    </mask>
-    <g mask="url(#mask0)">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M14.7325 14.4805C14.5144 13.1707 13.7531 10.7609 11.1685 9.87462C12.096 9.20121 12.7059 8.11591 12.7059 6.88238C12.7059 4.83568 11.0467 3.1765 9.00002 3.1765C6.95331 3.1765 5.29413 4.83568 5.29413 6.88238C5.29413 8.11591 5.90402 9.20121 6.83155 9.87462C4.24696 10.7609 3.4846 13.1697 3.26755 14.4805C1.90272 13.0532 1.05884 11.1251 1.05884 9.00003C1.05884 4.62074 4.62072 1.05885 9.00002 1.05885C13.3793 1.05885 16.9412 4.62074 16.9412 9.00003C16.9412 11.1251 16.0973 13.0532 14.7325 14.4805ZM6.35319 6.88239C6.35319 5.42227 7.54119 4.23533 9.00025 4.23533C10.4593 4.23533 11.6473 5.42227 11.6473 6.88239C11.6473 8.34145 10.4593 9.52945 9.00025 9.52945C7.54119 9.52945 6.35319 8.34145 6.35319 6.88239ZM4.23522 15.3381C4.23733 15.0523 4.3411 10.5883 8.99992 10.5883C13.6355 10.5883 13.7615 15.047 13.7636 15.3381C12.4358 16.3387 10.7883 16.9412 8.99992 16.9412C7.21051 16.9412 5.56404 16.3387 4.23522 15.3381ZM9 0C4.02988 0 0 4.02882 0 9C0 13.9701 4.02988 18 9 18C13.9701 18 18 13.9701 18 9C18 4.02882 13.9701 0 9 0Z"
-        fill="#B4F5A3"
-      />
-    </g>
-  </svg>
-);
-
 export const WalletIcon: React.FC<IconProps> = ({ size }) => (
   <svg
     className={`icon wallet-icon icon-size-${size}`}
@@ -417,10 +258,6 @@ export const WalletIcon: React.FC<IconProps> = ({ size }) => (
   </svg>
 );
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const CircleIcon = () => <div className="icon circle-icon"></div>;
-
 export const IconClose = () => (
   <svg className="icon close" viewBox="0 0 14 14">
     <path
@@ -429,23 +266,6 @@ export const IconClose = () => (
           L3,11c-0.3,0.3-0.3,0.8,0,1.1c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2l3.5-3.5l3.5,3.5c0.1,0.1,0.3,0.2,0.5,0.2s0.4-0.1,0.5-0.2
           c0.3-0.3,0.3-0.8,0-1.1L8.6,7.5z"
     />
-  </svg>
-);
-
-const IconChevronDown = () => (
-  <svg className="icon chevron-down" viewBox="0 -6 16 16">
-    <path
-      className="fill-blue"
-      d="M7,7L1,1h2l4.5,4.4L12,1h2.1l-6,6C7.9,7.1,7.7,7.2,7.5,7.2C7.3,7.2,7.1,7.1,7,7z"
-    />
-  </svg>
-);
-
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const IconChevronUp = () => (
-  <svg className="icon chevron-up" viewBox="0 3 16 16">
-    <IconChevronDown />
   </svg>
 );
 
@@ -473,25 +293,6 @@ export const OverflowIcon = () => (
     <circle className="fill-blue" cx="2" cy="2.3" r="2" />
     <circle className="fill-blue" cx="8.9" cy="2.3" r="2" />
     <circle className="fill-blue" cx="15.8" cy="2.3" r="2" />
-  </svg>
-);
-
-// Do we want to keep this?
-// ts-prune-ignore-next
-export const EditIcon = () => (
-  <svg className="icon edit-icon fill-blue" viewBox="0 0 15 15">
-    <polygon className="fill-blue" points="11.1,7.1 8.9,4.9 3.4,10.4 5.6,12.6 " />
-    <polygon className="fill-blue" points="3,10.8 3,13 5.2,13 " />
-    <path
-      className="fill-blue"
-      d="M12.8,5.4c0.2-0.2,0.2-0.6,0-0.8l-1.4-1.4c-0.2-0.2-0.6-0.2-0.8,0L9.5,4.3l2.2,2.2L12.8,5.4z"
-    />
-    <g>
-      <path
-        className="fill-blue"
-        d="M13.5,15.1h-10c-0.3,0-0.5-0.2-0.5-0.5s0.2-0.5,0.5-0.5h10c0.3,0,0.5,0.2,0.5,0.5S13.8,15.1,13.5,15.1z"
-      />
-    </g>
   </svg>
 );
 

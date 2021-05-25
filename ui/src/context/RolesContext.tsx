@@ -107,8 +107,6 @@ const RolesProvider: React.FC = ({ children }) => {
   );
 };
 
-// Do we want to keep this?
-// eslint-disable-next-line
 function useRoleKinds(): Set<RoleKind> {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
@@ -125,4 +123,4 @@ function useRolesContext() {
   return context;
 }
 
-export { RolesProvider, useRolesContext };
+export { RolesProvider, useRolesContext, useRoleKinds };

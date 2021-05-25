@@ -80,14 +80,4 @@ function useDisplayErrorMessage() {
   return context.displayErrorMessage;
 }
 
-// Do we want to keep this?
-// eslint-disable-next-line
-function useDisplaySuccessMessage() {
-  const context = React.useContext<MessagesState>(MessagesStateContext);
-  if (context === undefined) {
-    throw new Error('useDisplaySuccessMessage must be used within a MessagesContext');
-  }
-  return context.displaySuccessMessage;
-}
-
 export { MessagesProvider, useDisplayErrorMessage };
