@@ -4,6 +4,8 @@ import { useHistory } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
+import { Button } from 'semantic-ui-react';
+
 import { ArrowRightIcon } from '../../icons/icons';
 
 import { loginUser, useUserDispatch } from '../../context/UserContext';
@@ -65,7 +67,7 @@ const LoginTileGrid = () => {
         <div
           className="log-in-tile"
           key={p.payload.customer}
-          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
+          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer), true)}
         >
           <div className="log-in-row page-row">
             <h4>{p.payload.legalName}</h4>
@@ -77,12 +79,17 @@ const LoginTileGrid = () => {
             {allRoles
               .filter(r => r.contract.payload.provider === p.payload.customer)
               .map(r => r.role)
-              .join(',')}
+              .join(', ')}
           </p>
         </div>
       ))}
+      <Button onClick={() => openAll()}>Open All</Button>
     </div>
   );
+
+  function openAll() {
+    return;
+  }
 };
 
 export default FinishPage;
