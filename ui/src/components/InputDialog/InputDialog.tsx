@@ -17,19 +17,14 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
   onChange?: (state: T | null) => void;
   isModal?: boolean;
   isInline?: boolean;
+  disabled?: boolean;
 }
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
   const [state, setState] = useState<T>(props.defaultValue);
-  const [disabled, setDisabled] = useState(false);
   const { onChange } = props;
 
   useEffect(() => onChange && onChange(state), [state, onChange]);
-  useEffect(() => {
-    setDisabled(
-      Object.values(state).filter(v => v !== '').length !== Object.values(props.fields).length
-    );
-  }, [state]);
 
   const content = (
     <FieldComponents
@@ -55,12 +50,12 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
         onClose={() => props.onClose(null)}
       >
         <Modal.Header as="h2">{props.title}</Modal.Header>
-        <Modal.Content>{props.subtitle}</Modal.Content>
+        {!!subtitle && <Modal.Content>{props.subtitle}</Modal.Content>}
         <Modal.Content>
           <Form>{content}</Form>
         </Modal.Content>
         <Modal.Actions>
-          <Button className="ghost" onClick={() => props.onClose(state)} disabled={disabled}>
+          <Button className="ghost" onClick={() => props.onClose(state)} disabled={props.disabled}>
             Confirm
           </Button>
           <Button className="ghost warning" onClick={() => props.onClose(null)}>
@@ -79,7 +74,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
       <Form>
         {content}
         <div className="submit-form">
-          <Button className="ghost" onClick={() => props.onClose(state)} disabled={disabled}>
+          <Button className="ghost" onClick={() => props.onClose(state)} disabled={props.disabled}>
             Confirm
           </Button>
           {!props.isInline && (

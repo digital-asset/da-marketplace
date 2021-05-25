@@ -22,16 +22,11 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-enum AccountType {
-  REGULAR = 'Regular',
-  ALLOCATION = 'Allocation',
-}
-
-type MarginCallProps = {
+type OfferProps = {
   offer?: CreateEvent<Offer>;
 };
 
-const ClearingOfferModal: React.FC<ServicePageProps<Service> & MarginCallProps> = ({
+const ClearingOfferModal: React.FC<ServicePageProps<Service> & OfferProps> = ({
   services,
   offer,
 }) => {
