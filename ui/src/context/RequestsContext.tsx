@@ -22,7 +22,7 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 
 import { useStreamQueries } from '../Main';
 
-export enum ServiceKind {
+enum ServiceKind {
   CUSTODY = 'Custody',
   MARKET_CLEARING = 'Market Clearing',
   AUCTION = 'Auction',
@@ -37,6 +37,8 @@ export enum ServiceKind {
   REGULATOR = 'Regulator',
 }
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export type ServiceRoleOfferChoice =
   | typeof ClearingRole.OfferClearingService
   | typeof ClearingRole.OfferMarketService
@@ -45,9 +47,11 @@ export type ServiceRoleOfferChoice =
   | typeof CustodyRole.OfferIssuanceService
   | typeof CustodyRole.OfferCustodyService;
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string>;
 
-export type ServiceRequestTemplates =
+type ServiceRequestTemplates =
   | CustodyRequest
   | ClearingRequest
   | MarketClearingRequest
@@ -57,8 +61,11 @@ export type ServiceRequestTemplates =
   | ListingRequest
   | TradingRequest;
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
-export type ServiceOfferTemplates = TradingOffer;
+
+type ServiceOfferTemplates = TradingOffer;
 
 type RequestContract =
   | CreateEvent<CustodyRequest>

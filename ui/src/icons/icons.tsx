@@ -96,6 +96,8 @@ export const ControlsIcon = () => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const GlobeIcon = () => (
   <svg className="icon globe-icon" viewBox="0 0 16 16">
     <path
@@ -132,6 +134,8 @@ export const GlobeIcon = () => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const LogoIcon: React.FC<IconProps> = ({ size }) => (
   <img
     className={`icon logo-icon icon-size-${size}`}
@@ -157,6 +161,8 @@ export const OpenMarketplaceLogo: React.FC<IconProps> = ({ size }) => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const CandlestickIcon = () => (
   <svg
     className="icon icon-size-24 candlestick-icon"
@@ -281,6 +287,8 @@ export const LogoutIcon = () => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const MarketIcon = () => (
   <svg
     className="icon market-icon"
@@ -356,6 +364,8 @@ export const PublicIcon: React.FC<IconProps> = ({ size }) => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const UserIcon: React.FC<IconProps> = ({ size }) => (
   <svg
     className={`icon user-icon icon-size-${size}`}
@@ -407,6 +417,8 @@ export const WalletIcon: React.FC<IconProps> = ({ size }) => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const CircleIcon = () => <div className="icon circle-icon"></div>;
 
 export const IconClose = () => (
@@ -420,7 +432,7 @@ export const IconClose = () => (
   </svg>
 );
 
-export const IconChevronDown = () => (
+const IconChevronDown = () => (
   <svg className="icon chevron-down" viewBox="0 -6 16 16">
     <path
       className="fill-blue"
@@ -429,6 +441,8 @@ export const IconChevronDown = () => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const IconChevronUp = () => (
   <svg className="icon chevron-up" viewBox="0 3 16 16">
     <IconChevronDown />
@@ -462,6 +476,8 @@ export const OverflowIcon = () => (
   </svg>
 );
 
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const EditIcon = () => (
   <svg className="icon edit-icon fill-blue" viewBox="0 0 15 15">
     <polygon className="fill-blue" points="11.1,7.1 8.9,4.9 3.4,10.4 5.6,12.6 " />

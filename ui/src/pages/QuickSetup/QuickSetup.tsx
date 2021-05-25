@@ -39,7 +39,7 @@ import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
-export enum MenuItems {
+enum MenuItems {
   ADD_PARTIES = 'Add Parties',
   SELECT_ROLES = 'Select Roles',
   SELECT_AUTOMATION = 'Select Automation',
@@ -47,7 +47,7 @@ export enum MenuItems {
   REVIEW = 'Review',
 }
 
-export enum LoadingStatus {
+enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }

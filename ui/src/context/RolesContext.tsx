@@ -32,7 +32,7 @@ type RoleContract =
   | CreateEvent<SettlementService>
   | CreateEvent<MatchingService>;
 
-export type Role = {
+type Role = {
   contract: RoleContract;
   role: RoleKind;
 };
@@ -107,6 +107,8 @@ const RolesProvider: React.FC = ({ children }) => {
   );
 };
 
+// Do we want to keep this?
+// eslint-disable-next-line
 function useRoleKinds(): Set<RoleKind> {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
@@ -118,9 +120,9 @@ function useRoleKinds(): Set<RoleKind> {
 function useRolesContext() {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
-    throw new Error('useRoles must be used within a RolessProvider');
+    throw new Error('useRoles must be used within a RolesProvider');
   }
   return context;
 }
 
-export { RolesProvider, useRolesContext, useRoleKinds };
+export { RolesProvider, useRolesContext };

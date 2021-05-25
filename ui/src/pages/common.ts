@@ -6,7 +6,7 @@ export type ServicePageProps<T extends object> = {
   services: Readonly<CreateEvent<T, any, any>[]>;
 };
 
-export function isStringArray(strArr: any): strArr is string[] {
+function isStringArray(strArr: any): strArr is string[] {
   if (Array.isArray(strArr)) {
     return strArr.reduce((acc, elem) => {
       return acc && typeof elem === 'string';
@@ -38,7 +38,7 @@ export const createDropdownProp = (
   return { key, value, text };
 };
 
-export type DamlSet<T> = { map: Map<T, {}> };
+type DamlSet<T> = { map: Map<T, {}> };
 
 export function makeDamlSet<T>(items: T[]): DamlSet<T> {
   return { map: items.reduce((map, val) => map.set(val, {}), emptyMap<T, {}>()) };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Message, Header } from 'semantic-ui-react';
 
-export type Message = {
+type Message = {
   header?: string;
   message?: string;
   list?: string[];

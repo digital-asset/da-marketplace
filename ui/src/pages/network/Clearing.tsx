@@ -335,5 +335,3 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     </div>
   );
 };
-
-export default ClearingServiceTable;

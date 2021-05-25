@@ -222,6 +222,8 @@ function useProviderServices(party: string): GroupedCustomerServices {
 }
 
 /* Retrieve all customers who are using services provided by you */
+// Do we want to keep this?
+// eslint-disable-next-line
 function useCustomerServices(party: string) {
   const context = React.useContext<ServicesState>(ServicesStateContext);
   if (context === undefined) {
@@ -238,10 +240,4 @@ function useServiceContext() {
   return context;
 }
 
-export {
-  ServicesProvider,
-  useProviderServices,
-  useCustomerServices,
-  useServiceKindsProvided,
-  useServiceContext,
-};
+export { ServicesProvider, useProviderServices, useServiceKindsProvided, useServiceContext };

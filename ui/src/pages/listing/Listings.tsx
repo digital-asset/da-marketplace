@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouteComponentProps, useHistory, useParams, withRouter } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useParty, useStreamQueries } from '@daml/react';
 import { usePartyName, getTemplateId } from '../../config';
@@ -151,17 +151,3 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     <ListingComponent services={services} />
   );
 };
-
-// where is this rendered? why is it here?
-const ListingsComponent: React.FC<RouteComponentProps & Props> = ({
-  history,
-}: RouteComponentProps & Props) => {
-  return (
-    <TitleWithActions
-      title="Listings"
-      actions={[{ path: '/app/listing/new', label: ' New Listing' }]}
-    />
-  );
-};
-
-export const Listings = withRouter(ListingsComponent);

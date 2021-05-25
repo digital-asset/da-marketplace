@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Header } from 'semantic-ui-react';
 
-export interface RegularField {
+interface RegularField {
   label: string;
   type: 'text' | 'number' | 'date';
 }
 
-export interface SelectionField {
+interface SelectionField {
   label: string;
   type: 'selection';
   items: string[];
 }
 
-export interface CheckBoxField {
+interface CheckBoxField {
   label: string;
   type: 'checkbox';
 }
