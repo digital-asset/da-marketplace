@@ -318,14 +318,18 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
           return {
             label: 'Trading Account',
             type: 'selection',
-            items: accountRules.filter(ar => ar.payload.observers.map.has(c.provider)).map(ar => ar.payload.account.id.label),
+            items: accountRules
+              .filter(ar => ar.payload.observers.map.has(c.provider))
+              .map(ar => ar.payload.account.id.label),
           };
         },
         allocationAccount: (c: TradingServiceOffer) => {
           return {
             label: 'Allocation Account',
             type: 'selection',
-            items: allocationAccountRules.filter(ar => ar.payload.nominee == c.provider).map(ar => ar.payload.account.id.label),
+            items: allocationAccountRules
+              .filter(ar => ar.payload.nominee == c.provider)
+              .map(ar => ar.payload.account.id.label),
           };
         },
       },

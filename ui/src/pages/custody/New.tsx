@@ -44,7 +44,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [observers, setObservers] = useState<string[]>([]);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
-  const identityOptions = identities.map(iden => createDropdownProp(iden.payload.legalName, iden.payload.customer))
+  const identityOptions = identities.map(iden =>
+    createDropdownProp(iden.payload.legalName, iden.payload.customer)
+  );
 
   const canRequest =
     !!operator &&
