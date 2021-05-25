@@ -61,6 +61,15 @@ export const ServiceOfferDialog = <T extends ServiceOfferTemplates>({
 
     switch (service) {
       case ServiceKind.TRADING:
+        if (!tradingRole || !choice) {
+          return displayErrorMessage({
+            message: `You can not offer ${service} services without a Trading Role contract.`,
+          });
+        } else {
+          await ledger.exercise(choice, tradingRole.contractId, params);
+          onClose(false);
+          return;
+        }
       case ServiceKind.MARKET_CLEARING: {
         if (!clearingRole || !choice) {
           return displayErrorMessage({
@@ -159,6 +168,7 @@ export const ServiceRequestDialog = <T extends ServiceRequestTemplates>({
 
   return (
     <InputDialog
+      isModal
       open={!!open}
       title={title || `Request ${service} Service`}
       defaultValue={{

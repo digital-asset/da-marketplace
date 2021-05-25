@@ -313,25 +313,20 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: TradingServiceOffer.Accept as OfferAcceptChoice,
         decline: TradingServiceOffer.Decline as OfferDeclineChoice,
       },
-      constructedFields: {
-        allocationAccount: (c: TradingServiceOffer) => {
+      fromContractFields: {
+        tradingAccount: (c: TradingServiceOffer) => {
           return {
             label: 'Trading Account',
             type: 'selection',
-            items: accountRules.filter(ar => ar.payload.observers.map.has(c.provider)),
+            items: accountRules.filter(ar => ar.payload.observers.map.has(c.provider)).map(ar => ar.payload.account.id.label),
           };
         },
-      },
-      acceptFields: {
-        tradingAccount: {
-          label: 'Trading Account',
-          type: 'selection',
-          items: accountNames,
-        },
-        allocationAccount: {
-          label: 'Allocation Account',
-          type: 'selection',
-          items: allocationAccounts.map(a => a.id.label),
+        allocationAccount: (c: TradingServiceOffer) => {
+          return {
+            label: 'Allocation Account',
+            type: 'selection',
+            items: allocationAccountRules.filter(ar => ar.payload.nominee == c.provider).map(ar => ar.payload.account.id.label),
+          };
         },
       },
       lookupFields: fields => {
@@ -391,7 +386,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: ClearingServiceOffer.Accept as OfferAcceptChoice,
         decline: ClearingServiceOffer.Decline as OfferDeclineChoice,
       },
-      constructedFields: {
+      fromContractFields: {
         clearingAccount: (c: ClearingServiceOffer) => {
           return {
             label: 'Clearing Account',
@@ -688,7 +683,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       contractId={c.contractId}
                       contract={c.payload}
                       serviceText={n.service + ' ' + n.kind}
-                      constructedFields={n.constructedFields}
+                      fromContractFields={n.fromContractFields}
                       offerer={c.signatories.length > 1 ? c.payload.provider : c.signatories[0]}
                       acceptChoice={n.choices.accept}
                       acceptFields={n.acceptFields}

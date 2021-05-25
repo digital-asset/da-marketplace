@@ -41,8 +41,10 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const [accountName, setAccountName] = useState<string>('');
   const [accountType, setAccountType] = useState(AccountType.REGULAR);
   const [accountNominee, setAccountNominee] = useState<Party>();
+  const [observers, setObservers] = useState<string[]>([]);
 
   const identities = useStreamQueries(VerifiedIdentity).contracts;
+  const identityOptions = identities.map(iden => createDropdownProp(iden.payload.legalName, iden.payload.customer))
 
   const canRequest =
     !!operator &&
@@ -82,7 +84,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          observers: [],
+          observers,
           ctrls: [service.payload.provider, service.payload.customer],
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
@@ -97,7 +99,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label: accountName,
             version: '0',
           },
-          observers: makeDamlSet<string>([]),
+          observers: makeDamlSet<string>(observers),
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
@@ -168,9 +170,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             label="Nominee"
             placeholder="Select..."
             required
-            options={identities.map(iden =>
-              createDropdownProp(iden.payload.legalName, iden.payload.customer)
-            )}
+            options={identityOptions}
             onChange={(_, change) => setAccountNominee(change.value as Party)}
           />
         )}
@@ -179,6 +179,15 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           placeholder="0"
           readOnly
           onChange={(_, change) => setAccountName(change.value as string)}
+        />
+        <Form.Select
+          label="Observers"
+          multiple
+          placeholder="Select..."
+          options={identityOptions}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setObservers(result.value);
+          }}
         />
         <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />

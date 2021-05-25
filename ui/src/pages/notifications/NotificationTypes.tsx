@@ -204,7 +204,7 @@ export type OfferDeclineChoice = Choice<
 
 export type OfferAcceptFields<A, T> = {
   acceptFields?: { [K in keyof Extract<OfferAccepts, A>]: Field };
-  constructedFields?: { [K in keyof Extract<OfferAccepts, A>]: (contract: T) => Field };
+  fromContractFields?: { [K in keyof Extract<OfferAccepts, A>]: (contract: T) => Field };
   lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
 };
 

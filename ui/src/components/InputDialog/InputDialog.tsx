@@ -18,9 +18,15 @@ export interface InputDialogProps<T extends { [key: string]: any }> {
 
 export function InputDialog<T extends { [key: string]: any }>(props: InputDialogProps<T>) {
   const [state, setState] = useState<T>(props.defaultValue);
+  const [disabled, setDisabled] = useState(false);
   const { onChange } = props;
 
   useEffect(() => onChange && onChange(state), [state, onChange]);
+  useEffect(() => {
+    setDisabled(
+      Object.values(state).filter(v => v !== '').length !== Object.values(props.fields).length
+    );
+  }, [state]);
 
   const content = (
     <FieldComponents
@@ -38,7 +44,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
           <Form>{content}</Form>
         </Modal.Content>
         <Modal.Actions>
-          <Button className="ghost" onClick={() => props.onClose(state)}>
+          <Button className="ghost" onClick={() => props.onClose(state)} disabled={disabled}>
             Confirm
           </Button>
           <Button className="ghost warning" onClick={() => props.onClose(null)}>
@@ -56,7 +62,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
       <Form>
         {content}
         <div className="submit-form">
-          <Button className="ghost" onClick={() => props.onClose(state)}>
+          <Button className="ghost" onClick={() => props.onClose(state)} disabled={disabled}>
             Confirm
           </Button>
           <a className="a2" onClick={() => props.onClose(null)}>

@@ -42,7 +42,7 @@ export function OfferNotification<T extends Fields>({
   contractId,
   offerer,
   acceptFields,
-  constructedFields,
+  fromContractFields,
   lookupFields,
   serviceText,
 }: OfferProps<T>) {
@@ -54,18 +54,19 @@ export function OfferNotification<T extends Fields>({
 
   const onAccept = async () => {
     if (lookupFields) {
-      console.log('going...');
       const args = lookupFields(acceptArgs);
       await ledger.exercise(acceptChoice, contractId, args);
+    } else {
+      await ledger.exercise(acceptChoice, contractId, {});
     }
   };
 
   const onDecline = async () => {
-    ledger.exercise(declineChoice, contractId, {});
+    await ledger.exercise(declineChoice, contractId, {});
   };
 
-  const createdFields: Record<any, Field> | undefined = !!constructedFields
-    ? Object.fromEntries(Object.entries(constructedFields).map(([k, v]) => [k, v(contract)]))
+  const createdFields: Record<any, Field> | undefined = !!fromContractFields
+    ? Object.fromEntries(Object.entries(fromContractFields).map(([k, v]) => [k, v(contract)]))
     : undefined;
 
   return (
@@ -97,10 +98,10 @@ export function OfferNotification<T extends Fields>({
               content="Accept"
               type="submit"
               disabled={
-                acceptFields &&
-                Object.entries(acceptArgs).length !== Object.entries(acceptFields).length
+                Object.entries(acceptArgs).length !==
+                Object.entries(acceptFields || {}).length +
+                  Object.entries(fromContractFields || {}).length
               }
-              onClick={() => loadAndCatch(onAccept)}
             />
             <Button
               className="ghost warning"
