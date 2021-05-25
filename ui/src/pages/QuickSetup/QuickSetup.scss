@@ -208,6 +208,9 @@
 
         .offer-select {
           margin: $spacing-s 0;
+          .dropdown {
+            max-width: 196px;
+          }
         }
 
         .ghost.offer {
@@ -216,28 +219,33 @@
 
         .warning {
           display: flex;
-          margin: $spacing-m $spacing-s 0 0;
+          margin: $spacing-xs $spacing-s 0 0;
           width: 285px;
           font-size: 12px;
-          p {
+
+          p,
+          a.a2 {
             font-size: 12px;
           }
           .icon {
             flex: none;
             margin-right: $spacing-xs;
           }
-
-          a {
-            font-size: 14px;
-          }
         }
 
         .all-offers {
           width: 450px;
+
+          .offer-table {
+            display: block;
+            max-height: 330px;
+            overflow: auto;
+          }
         }
 
         .offers {
           border: 1px solid var(--cool-grey-80);
+
           overflow: auto;
           height: 360px;
 
@@ -253,21 +261,10 @@
             font-size: 14px;
             line-height: 26px;
             padding: $spacing-s;
+            border-bottom: 1px solid var(--cool-grey-80);
 
             &.empty {
               padding: 0px;
-            }
-          }
-
-          .offer {
-            display: flex;
-            flex-direction: row;
-            align-items: baseline;
-            white-space: nowrap;
-
-            p {
-              margin: 0 $spacing-xs;
-              color: var(--cool-grey-30);
             }
           }
         }
