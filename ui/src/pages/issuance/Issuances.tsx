@@ -14,7 +14,7 @@ export const IssuancesTable: React.FC = () => {
     <>
       <TitleWithActions
         title={'Issuances'}
-        actions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
+        iconActions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
       />
       <StripedTable
         headings={[
@@ -42,9 +42,3 @@ export const IssuancesTable: React.FC = () => {
     </>
   );
 };
-
-const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  return <IssuancesTable />;
-};
-
-export const Issuances = withRouter(IssuancesComponent);

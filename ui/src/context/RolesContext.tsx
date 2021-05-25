@@ -32,7 +32,7 @@ type RoleContract =
   | CreateEvent<SettlementService>
   | CreateEvent<MatchingService>;
 
-export type Role = {
+type Role = {
   contract: RoleContract;
   role: RoleKind;
 };
@@ -118,7 +118,7 @@ function useRoleKinds(): Set<RoleKind> {
 function useRolesContext() {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
-    throw new Error('useRoles must be used within a RolessProvider');
+    throw new Error('useRoles must be used within a RolesProvider');
   }
   return context;
 }

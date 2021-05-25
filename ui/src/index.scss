@@ -18,10 +18,7 @@
 @use 'pages/page/Page';
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
-@use 'pages/clearing/Member';
 @use 'pages/custody/Account';
-@use 'pages/origination/New' as OriginationNew;
-@use 'pages/origination/Instrument';
 
 @use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
@@ -250,13 +247,10 @@ html {
         @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
-        @include OriginationNew.origination-new();
-        @include Instrument.instrument();
         @include InfoCard.info-card();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();
-        @include Member.member();
         @include Account.account();
         @include Auction.auction();
         @include Bidding.bidding();

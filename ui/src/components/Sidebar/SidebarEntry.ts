@@ -9,7 +9,3 @@ export type SidebarEntry = {
   groupBy?: string;
   topMenuButtons?: JSX.Element[];
 };
-
-export const getChildren = (e: SidebarEntry): SidebarEntry[] => {
-  return e.children.concat(e.children.flatMap(c => getChildren(c)));
-};

@@ -27,8 +27,8 @@ const setPaletteType = (paletteType: PaletteType) => {
 const reducer = (_: ThemeState, { darkMode }: DispatchAction) =>
   darkMode ? setPaletteType('dark') : setPaletteType('light');
 
-export const ThemeContextState = React.createContext<ThemeState>(setPaletteType('dark'));
-export const ThemeContextDispatch = React.createContext<React.Dispatch<DispatchAction>>(
+const ThemeContextState = React.createContext<ThemeState>(setPaletteType('dark'));
+const ThemeContextDispatch = React.createContext<React.Dispatch<DispatchAction>>(
   {} as React.Dispatch<DispatchAction>
 );
 

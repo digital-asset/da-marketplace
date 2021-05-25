@@ -19,8 +19,10 @@ import {
   useServiceKindsProvided,
 } from '../../context/ServicesContext';
 import { Template } from '@daml/types';
+
 import { useHistory } from 'react-router-dom';
 import { useRequestKinds } from '../../context/RequestsContext';
+import MissingServiceModal from '../../components/Common/MissingServiceModal';
 
 type ServiceRequiredProps = {
   service: ServiceKind;
@@ -177,7 +179,6 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
         });
         break;
       case ServiceKind.AUCTION:
-        console.log('auction request');
         requestService(AuctionRequest, {
           tradingAccount: {
             label: 'Trading Account',
@@ -216,20 +217,30 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
 
   const requests = useRequestKinds();
   const serviceKinds = useServiceKindsProvided(party);
+  const [showRequiredServiceRequest, setShowRequiredServiceRequest] = useState(false);
+
   if (!serviceKinds.has(service)) {
     return (
       <div>
         {!requests.has(service) || newRequest ? (
-          <ServiceRequestDialog
-            open={openDialog}
-            service={service}
-            fields={fields}
-            params={requestParams}
-            request={request}
-            onChange={state => setDialogState(state)}
-            onClose={onClose}
-            title={`${service} service, is required to ${action}, please request and try again`}
-          />
+          showRequiredServiceRequest ? (
+            <ServiceRequestDialog
+              open={openDialog}
+              service={service}
+              fields={fields}
+              params={requestParams}
+              request={request}
+              onChange={state => setDialogState(state)}
+              onClose={onClose}
+            />
+          ) : (
+            <MissingServiceModal
+              onClose={() => history.goBack()}
+              onRequest={() => setShowRequiredServiceRequest(true)}
+              missingService={service}
+              action={action}
+            />
+          )
         ) : (
           <Modal open={openDialog} size="small" onClose={() => history.goBack()}>
             <Modal.Header as="h2">
