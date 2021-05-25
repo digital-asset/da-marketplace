@@ -58,7 +58,7 @@ type RoleOffer = {
   role: RoleKind;
 };
 
-type ServiceOffer = {
+export type ServiceOffer = {
   contract: OfferServiceContract;
   service: OfferServiceKind;
 };
