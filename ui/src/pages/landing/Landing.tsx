@@ -37,7 +37,8 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
-import { Fields, Field } from '../../components/InputDialog/Fields';
+import { Fields, Field, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import _ from 'lodash';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -65,9 +66,6 @@ function getProfileAbbr(party: string): string {
     return getAbbreviation(party);
   }
 }
-
-type FilterField = (party: Party) => Field;
-type FilterFields = Record<string, FilterField>;
 
 interface RelationshipProps {
   provider: string;
@@ -180,13 +178,11 @@ const Landing = () => {
   const allocationAccounts = allocationAccountRules
     .filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
-  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
     .filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
-  const accountNames = accounts.map(a => a.id.label);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
@@ -194,7 +190,7 @@ const Landing = () => {
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
   const [fields, setFields] = useState<object>({});
-  const [filterFields, setFilterFields] = useState<FilterFields>({});
+  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     provider: '',
@@ -262,13 +258,12 @@ const Landing = () => {
   );
 
   useEffect(() => {
-    console.log('state change');
     const provider =
       identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
-    const filteredFields: Fields = Object.fromEntries(
-      Object.entries(filterFields).map(([k, v]) => [k, v(provider)])
+
+    const filteredFields: Fields = _.mapValues(fieldsFromProvider, createFieldFn =>
+      createFieldFn(provider)
     );
-    console.log(filteredFields);
     setFields({
       ...fields,
       ...filteredFields,
@@ -279,9 +274,9 @@ const Landing = () => {
     service: Template<T, undefined, string>,
     kind: ServiceKind,
     extraFields?: Fields,
-    filterFields?: Record<string, (party: Party) => Field>
+    fieldsFromProvider?: FieldCallbacks<Party>
   ) => {
-    setFilterFields(filterFields || {});
+    setFieldsFromProvider(fieldsFromProvider || {});
     setFields({
       provider: {
         label: 'Provider',
@@ -319,7 +314,7 @@ const Landing = () => {
     );
   }
   const makeAccountFilterField =
-    (label: string): FilterField =>
+    (label: string): FieldCallback<Party> =>
     provider => {
       return {
         label,
@@ -332,7 +327,7 @@ const Landing = () => {
       };
     };
   const makeAllocationAccountFilterField =
-    (label: string): FilterField =>
+    (label: string): FieldCallback<Party> =>
     provider => {
       return {
         label,

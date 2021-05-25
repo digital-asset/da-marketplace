@@ -132,7 +132,7 @@ import {
 import { CreateEvent } from '@daml/ledger';
 import { Choice, ContractId } from '@daml/types';
 import { ServiceKind } from '../../context/ServicesContext';
-import { Field, Fields } from '../../components/InputDialog/Fields';
+import { Field, FieldCallback } from '../../components/InputDialog/Fields';
 
 export type OfferTemplates =
   | CustodyRoleOffer
@@ -204,7 +204,7 @@ export type OfferDeclineChoice = Choice<
 
 export type OfferAcceptFields<A, T> = {
   acceptFields?: { [K in keyof Extract<OfferAccepts, A>]: Field };
-  fromContractFields?: { [K in keyof Extract<OfferAccepts, A>]: (contract: T) => Field };
+  fromContractFields?: { [K in keyof Extract<OfferAccepts, A>]: FieldCallback<T> };
   lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
 };
 

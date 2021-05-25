@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 
+import _ from 'lodash';
+
 import { useLedger } from '@daml/react';
 import { ContractId } from '@daml/types';
 
@@ -66,7 +68,7 @@ export function OfferNotification<T extends Fields>({
   };
 
   const createdFields: Record<any, Field> | undefined = !!fromContractFields
-    ? Object.fromEntries(Object.entries(fromContractFields).map(([k, v]) => [k, v(contract)]))
+    ? _.mapValues(fromContractFields, createFieldFn => createFieldFn(contract))
     : undefined;
 
   return (
