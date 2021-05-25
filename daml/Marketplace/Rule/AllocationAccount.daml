@@ -1,7 +1,7 @@
 module Marketplace.Rule.AllocationAccount where
 
 import DA.Record
-import DA.Set (Set, insert)
+import DA.Set 
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Finance.Types (Account, Id, Asset)
 import DA.Finance.Asset (AssetDeposit(..))
@@ -41,8 +41,9 @@ template AllocationAccountRule
       credit = \asset -> create AssetDeposit with observers = assetObservers, ..
       creditAccount : Account -> Asset -> Update (ContractId AssetDeposit)
       creditAccount = \account asset -> do
-       depocitCid <- exerciseByKey @AssetSettlementRule account.id AssetSettlement_Credit with ctrl = nominee, ..
-       exercise depocitCid AssetDeposit.AssetDeposit_SetObservers with newObservers = assetObservers
+       depositCid <- exerciseByKey @AssetSettlementRule account.id AssetSettlement_Credit with ctrl = nominee, ..
+       deposit <- fetch depositCid
+       exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = assetObservers `union` deposit.observers
 
     controller nominee, account.owner can
       nonconsuming Transfer : ContractId AssetDeposit

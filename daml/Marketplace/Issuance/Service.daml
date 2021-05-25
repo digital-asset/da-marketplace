@@ -92,7 +92,7 @@ template Service
           let asset = Asset with id = assetId; quantity
           depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
           deposit <- fetch depositCid
-          exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = observers `union` deposit.observers
+          depositCid <- exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = observers `union` deposit.observers
           pure (issuanceCid, depositCid)
 
       nonconsuming ReduceIssuance : ContractId Issuance
