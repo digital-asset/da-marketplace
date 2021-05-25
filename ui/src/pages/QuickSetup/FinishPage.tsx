@@ -54,9 +54,7 @@ const LoginTileGrid = () => {
   if (identities.length === 0) {
     return (
       <div className="setup-page loading">
-        <p>
-          There are no parties to Log In as. Go back to Quick Setup and add parties.
-        </p>
+        <p>There are no parties to Log In as. Go back to Quick Setup and add parties.</p>
       </div>
     );
   }
