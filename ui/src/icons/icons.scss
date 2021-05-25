@@ -26,33 +26,6 @@
       transform: rotate(180deg);
     }
 
-    &.candlestick-icon {
-      line,
-      rect {
-        fill: var(--white);
-        stroke: var(--white);
-      }
-    }
-
-    &.circle-icon {
-      border-radius: 50px/50px;
-      border: solid 1px var(--textcolor);
-      width: 16px;
-      height: 16px;
-      margin-right: $spacing-xs;
-    }
-
-    &.chevron-up {
-      transform: scaleY(-1);
-      padding-left: $spacing-xs;
-      margin-right: $spacing-xs !important;
-    }
-
-    &.chevron-down {
-      padding-left: $spacing-xs;
-      margin-right: $spacing-xs !important;
-    }
-
     &.fill-blue,
     path.fill-blue {
       fill: var(--blue-60);

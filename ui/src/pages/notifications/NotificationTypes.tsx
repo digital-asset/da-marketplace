@@ -177,7 +177,7 @@ export type OfferAcceptChoice = Choice<
   undefined
 >;
 
-export type OfferDeclines =
+type OfferDeclines =
   | CustodyRoleDecline
   | TradingRoleDecline
   | ClearingRoleDecline
@@ -207,7 +207,7 @@ export type OfferAcceptFields<A> = {
   lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
 };
 
-export type OfferNotificationSet = {
+type OfferNotificationSet = {
   kind: 'Role' | 'Service';
   service: ServiceKind;
   tag: 'offer';
@@ -263,7 +263,7 @@ export type RequestApproveChoice = Choice<
   undefined
 >;
 
-export type RequestRejects =
+type RequestRejects =
   | CustodyRoleReject
   | TradingRoleReject
   | ClearingRoleReject

@@ -6,20 +6,20 @@ import { expiredToken } from '@daml/hub-react';
 
 import { ledgerId, publicParty } from './config';
 
-export const APPLICATION_ID: string = 'da-marketplace';
+const APPLICATION_ID: string = 'da-marketplace';
 
 // NOTE: This is for testing purposes only.
 // To handle authentication properly,
 // see https://docs.daml.com/app-dev/authentication.html.
-export const SECRET_KEY: string = 'secret';
+const SECRET_KEY: string = 'secret';
 
-export type Credentials = {
+type Credentials = {
   party: string;
   token: string;
   ledgerId: string;
 };
 
-export function isCredentials(credentials: any): credentials is Credentials {
+function isCredentials(credentials: any): credentials is Credentials {
   return (
     typeof credentials.party === 'string' &&
     typeof credentials.token === 'string' &&
@@ -56,7 +56,7 @@ export function retrieveCredentials(): Credentials | undefined {
   return undefined;
 }
 
-export function computeToken(party: string): string {
+function computeToken(party: string): string {
   const payload = {
     'https://daml.com/ledger-api': {
       ledgerId: ledgerId,

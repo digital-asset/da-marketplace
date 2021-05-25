@@ -42,9 +42,3 @@ export const IssuancesTable: React.FC = () => {
     </>
   );
 };
-
-const IssuancesComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  return <IssuancesTable />;
-};
-
-export const Issuances = withRouter(IssuancesComponent);
