@@ -95,7 +95,7 @@ const DragAndDropToParties = (props: {
   }
 };
 
-export const PartyRowDropZone = (props: {
+const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
   handleAddItem: (partyOrToken: string, item: string | RoleKind) => void;
   roles: RoleKind[];
@@ -172,7 +172,7 @@ export const PartyRowDropZone = (props: {
   }
 };
 
-export const DraggableItemTile = (props: { item: { name: string; value: string } }) => {
+const DraggableItemTile = (props: { item: { name: string; value: string } }) => {
   const { item } = props;
 
   function handleDragStart(evt: any) {

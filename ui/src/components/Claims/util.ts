@@ -3,7 +3,7 @@ import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observ
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
 import { Date } from '@daml/types';
 
-export const transformObservation = (obs: Observation<Date, boolean>, linkText: string): any => {
+const transformObservation = (obs: Observation<Date, boolean>, linkText: string): any => {
   switch (obs.tag) {
     case 'DateEqu':
       const left1 = transformObservation(obs.value._1, 'left');
