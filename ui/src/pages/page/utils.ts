@@ -59,3 +59,22 @@ export async function halfSecondPromise() {
     setTimeout(() => resolve(), 500);
   });
 }
+
+export function itemListAsText(a: Array<string>, conjunction?: string): string {
+  const LIMIT = 8;
+
+  if (!a.length) {
+    return '';
+  } else if (a.length === 1) {
+    return a[0];
+  }
+
+  const breakpoint = Math.min(a.length - 1, LIMIT);
+
+  const first = a.slice(0, breakpoint);
+  const rest = a.slice(breakpoint);
+
+  return [first.join(', '), rest.length > 1 ? rest.length + ' others' : rest[0]].join(
+    conjunction || ' and '
+  );
+}
