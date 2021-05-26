@@ -16,7 +16,7 @@ import classNames from 'classnames';
 
 import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
-import { ledgerId, publicParty, isHubDeployment } from '../../config';
+import { ledgerId, publicParty, isHubDeployment, publicParty } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties } from '../../Parties';
@@ -98,7 +98,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
         Promise.all(
           [
-            ...parties,
+            ...parties.filter(p => p.party !== publicParty),
             {
               ...adminCredentials,
             },
