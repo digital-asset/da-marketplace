@@ -1,11 +1,9 @@
 import React from 'react';
-import { RouteComponentProps, useHistory, withRouter } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import StripedTable from '../../components/Table/StripedTable';
-import { Button } from 'semantic-ui-react';
-import Tile from '../../components/Tile/Tile';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 
@@ -50,19 +48,3 @@ export const InstrumentsTable: React.FC = () => {
     </div>
   );
 };
-
-const InstrumentsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
-  return (
-    <div className="instruments">
-      <Tile header="Actions">
-        <Button secondary className="ghost" onClick={() => history.push('/app/instrument/new')}>
-          New Instrument
-        </Button>
-      </Tile>
-
-      <InstrumentsTable />
-    </div>
-  );
-};
-
-export const Instruments = withRouter(InstrumentsComponent);

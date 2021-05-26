@@ -39,7 +39,7 @@ import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
-export enum MenuItems {
+enum MenuItems {
   ADD_PARTIES = 'Add Parties',
   SELECT_ROLES = 'Select Roles',
   SELECT_AUTOMATION = 'Select Automation',
@@ -47,7 +47,7 @@ export enum MenuItems {
   REVIEW = 'Review',
 }
 
-export enum LoadingStatus {
+enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }
@@ -60,7 +60,7 @@ const QuickSetup = () => {
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
-    MenuItems.ADD_PARTIES
+    isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.SELECT_ROLES
   );
 
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
@@ -187,23 +187,25 @@ const QuickSetup = () => {
         <div className="quick-setup-tile">
           {activeMenuItem && (
             <Menu pointing secondary className="quick-setup-menu page-row">
-              {Object.values(MenuItems).map((item, i) => (
-                <>
-                  <Menu.Item
-                    key={i}
-                    disabled={checkIsDisabled(item)}
-                    active={activeMenuItem === item}
-                    onClick={() => setActiveMenuItem(item)}
-                  >
-                    <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
-                  </Menu.Item>
-                  {i + 1 !== Object.values(MenuItems).length && (
-                    <ArrowRightIcon
-                      color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
-                    />
-                  )}
-                </>
-              ))}
+              {Object.values(MenuItems)
+                .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
+                .map((item, i) => (
+                  <>
+                    <Menu.Item
+                      key={i}
+                      disabled={checkIsDisabled(item)}
+                      active={activeMenuItem === item}
+                      onClick={() => setActiveMenuItem(item)}
+                    >
+                      <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
+                    </Menu.Item>
+                    {i + 1 !== Object.values(MenuItems).length && (
+                      <ArrowRightIcon
+                        color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
+                      />
+                    )}
+                  </>
+                ))}
             </Menu>
           )}
           {activePage}
