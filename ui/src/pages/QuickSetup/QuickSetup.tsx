@@ -2,7 +2,14 @@ import React, { useEffect, useState } from 'react';
 
 import { Button, Loader, Menu } from 'semantic-ui-react';
 
-import { useHistory } from 'react-router-dom';
+import {
+  useHistory,
+  Switch,
+  Route,
+  RouteComponentProps,
+  withRouter,
+  NavLink,
+} from 'react-router-dom';
 
 import classNames from 'classnames';
 
@@ -40,11 +47,12 @@ import FinishPage from './FinishPage';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 
 export enum MenuItems {
-  ADD_PARTIES = 'Add Parties',
-  SELECT_ROLES = 'Select Roles',
-  SELECT_AUTOMATION = 'Select Automation',
-  OFFER_SERVICES = 'Offer Services',
-  REVIEW = 'Review',
+  ADD_PARTIES = 'add-parties',
+  SELECT_ROLES = 'select-roles',
+  SELECT_AUTOMATION = 'select-automation',
+  OFFER_SERVICES = 'offer-services',
+  REVIEW = 'review',
+  LOG_IN = 'login-in-parties',
 }
 
 export enum LoadingStatus {
@@ -52,27 +60,34 @@ export enum LoadingStatus {
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }
 
-const QuickSetup = () => {
+const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
   const parties = retrieveParties() || [];
   const userParties = retrieveUserParties() || [];
 
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>(
-    isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.SELECT_ROLES
-  );
+  const matchPath = props.match.path;
+  const matchUrl = props.match.url;
+  const menuItems = Object.values(MenuItems);
 
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [activeMenuItem, setActiveMenuItem] = useState<MenuItems | undefined>();
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
 
   useEffect(() => {
+    const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
+    const newMenuItem = Object.values(MenuItems).find(s => s === newSegment);
+    if (newMenuItem) {
+      setActiveMenuItem(newMenuItem);
+    }
+
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.partyName === 'UserAdmin');
       if (adminParty) {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [activeMenuItem]);
+  }, [history.location]);
 
   useEffect(() => {
     // deploy auto-trigger for all parties
@@ -105,61 +120,6 @@ const QuickSetup = () => {
     deployAllTriggers();
   }, [parties, adminCredentials]);
 
-  let activePage;
-
-  if (activeMenuItem === MenuItems.ADD_PARTIES) {
-    activePage = (
-      <AddPartiesPage
-        localOperator={localCreds.party}
-        onComplete={() => {
-          setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS);
-          setActiveMenuItem(MenuItems.SELECT_ROLES);
-        }}
-      />
-    );
-  } else if (activeMenuItem === MenuItems.SELECT_ROLES) {
-    activePage = loadingStatus ? (
-      <div className="setup-page loading">
-        <LoadingWheel label={loadingStatus} />
-      </div>
-    ) : (
-      <SelectRolesPage
-        adminCredentials={adminCredentials}
-        onComplete={() => setActiveMenuItem(MenuItems.SELECT_AUTOMATION)}
-      />
-    );
-  } else if (activeMenuItem === MenuItems.SELECT_AUTOMATION) {
-    activePage = isHubDeployment ? (
-      <SelectAutomationPage
-        adminCredentials={adminCredentials}
-        onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)}
-      />
-    ) : (
-      <UnsupportedPageStep onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)} />
-    );
-  } else if (activeMenuItem === MenuItems.OFFER_SERVICES) {
-    activePage = (
-      <OfferServicesPage
-        adminCredentials={adminCredentials}
-        onComplete={() => {
-          setActiveMenuItem(MenuItems.REVIEW);
-        }}
-        backToSelectRoles={() => setActiveMenuItem(MenuItems.SELECT_ROLES)}
-      />
-    );
-  } else if (activeMenuItem === MenuItems.REVIEW) {
-    activePage = (
-      <ReviewPage
-        adminCredentials={adminCredentials}
-        onComplete={() => {
-          setActiveMenuItem(undefined);
-        }}
-      />
-    );
-  } else if (activeMenuItem === undefined) {
-    activePage = <FinishPage adminCredentials={adminCredentials} />;
-  }
-
   return (
     <WellKnownPartiesProvider>
       <div className="quick-setup">
@@ -168,47 +128,117 @@ const QuickSetup = () => {
             <ArrowLeftIcon color={'white'} />
             Back
           </Button>
-          <Button
-            className="ghost dark control-button"
-            onClick={() => setActiveMenuItem(undefined)}
-          >
-            Skip to Log In
-            <ArrowRightIcon color={'white'} />
-          </Button>
+          <NavLink to={matchUrl + '/log-in-parties'}>
+            <Button className="button ghost dark control-button">
+              Skip to Log In
+              <ArrowRightIcon color={'white'} />
+            </Button>
+          </NavLink>
         </div>
 
         <div className="quick-setup-header">
           <h1 className="logo-header">
             <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
           </h1>
-          {activeMenuItem ? <h2>Market Set-Up</h2> : <h2>Log In</h2>}
+          {activeMenuItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
         </div>
 
         <div className="quick-setup-tile">
-          {activeMenuItem && (
-            <Menu pointing secondary className="quick-setup-menu page-row">
-              {Object.values(MenuItems)
-                .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
-                .map((item, i) => (
-                  <>
-                    <Menu.Item
-                      key={i}
-                      disabled={checkIsDisabled(item)}
-                      active={activeMenuItem === item}
-                      onClick={() => setActiveMenuItem(item)}
-                    >
+          <Menu pointing secondary className="quick-setup-menu page-row">
+            {menuItems
+              .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
+              .map(item => (
+                <>
+                  {menuItems.indexOf(item) !== menuItems.length && (
+                    <ArrowRightIcon color={checkIsDisabled(item) ? 'grey' : 'blue'} />
+                  )}
+                  <NavLink to={`${matchUrl}/${item}`}>
+                    <Menu.Item key={item}>
                       <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
                     </Menu.Item>
-                    {i + 1 !== Object.values(MenuItems).length && (
-                      <ArrowRightIcon
-                        color={checkIsDisabled(Object.values(MenuItems)[i + 1]) ? 'grey' : 'blue'}
-                      />
-                    )}
+                  </NavLink>
+                </>
+              ))}
+          </Menu>
+
+          <Switch>
+            <Route
+              path={`${matchUrl}/${MenuItems.ADD_PARTIES}`}
+              component={() => (
+                <>
+                  <AddPartiesPage
+                    localOperator={localCreds.party}
+                    onComplete={() => {
+                      setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS);
+                    }}
+                  />
+                  <NavLink to={`${matchUrl}/${MenuItems.SELECT_ROLES}`}>
+                    <Button className="ghost next">Next</Button>
+                  </NavLink>
+                </>
+              )}
+            />
+            <Route
+              path={`${matchUrl}/${MenuItems.SELECT_ROLES}`}
+              component={() =>
+                loadingStatus ? (
+                  <div className="setup-page loading">
+                    <LoadingWheel label={loadingStatus} />
+                  </div>
+                ) : (
+                  <>
+                    <SelectRolesPage adminCredentials={adminCredentials} />
+                    <NavLink to={`${matchUrl}/${MenuItems.SELECT_AUTOMATION}`}>
+                      <Button className="ghost next">Next</Button>
+                    </NavLink>
                   </>
-                ))}
-            </Menu>
-          )}
-          {activePage}
+                )
+              }
+            />
+            <Route
+              path={`${matchUrl}/${MenuItems.SELECT_AUTOMATION}`}
+              component={() =>
+                isHubDeployment ? (
+                  <>
+                    <SelectAutomationPage adminCredentials={adminCredentials} />
+                    <NavLink to={`${matchUrl}/${MenuItems.OFFER_SERVICES}`}>
+                      <Button className="ghost next">Next</Button>
+                    </NavLink>
+                  </>
+                ) : (
+                  <UnsupportedPageStep
+                    onComplete={() => setActiveMenuItem(MenuItems.OFFER_SERVICES)}
+                  />
+                )
+              }
+            />
+            <Route
+              path={`${matchUrl}/${MenuItems.OFFER_SERVICES}`}
+              component={() => (
+                <>
+                  <OfferServicesPage adminCredentials={adminCredentials} />
+                  <NavLink to={`${matchUrl}/${MenuItems.REVIEW}`}>
+                    <Button className="ghost next">Next</Button>
+                  </NavLink>
+                </>
+              )}
+            />
+            <Route
+              path={`${matchUrl}/${MenuItems.REVIEW}`}
+              component={() => (
+                <>
+                  <ReviewPage adminCredentials={adminCredentials} />
+                  <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
+                    <Button className="ghost next">Next</Button>
+                  </NavLink>
+                </>
+              )}
+            />
+            <Route
+              path={`${matchUrl}/${MenuItems.LOG_IN}`}
+              component={() => <FinishPage adminCredentials={adminCredentials} />}
+            />
+          </Switch>
         </div>
 
         {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS && (
@@ -255,7 +285,7 @@ const QuickSetup = () => {
     }
     return false;
   }
-};
+});
 
 const UnsupportedPageStep = (props: { onComplete: () => void }) => {
   return (
