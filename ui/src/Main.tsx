@@ -31,7 +31,7 @@ export default function Main({ defaultPath }: MainProps) {
       <Switch>
         <Route exact path={paths.root} component={() => <Redirect to={defaultPath} />} />
         <PrivateRoute
-          path={paths.app}
+          path={paths.app.root}
           component={() => {
             return (
               <WellKnownPartiesProvider>
@@ -55,7 +55,7 @@ export default function Main({ defaultPath }: MainProps) {
             );
           }}
         />
-        <PublicRoute path={paths.quickSetup} component={QuickSetup} />
+        <PublicRoute path={paths.quickSetup.root} component={QuickSetup} />
         <PublicRoute path={paths.login} component={Login} />
         <Route component={ErrorComponent} />
       </Switch>
