@@ -53,8 +53,7 @@
           }
         }
         a {
-            border-bottom: 3px solid transparent;
-
+          border-bottom: 3px solid transparent;
         }
 
         a.active,
@@ -156,55 +155,66 @@
         }
 
         &.finish {
-          display: grid;
-          grid-template-columns: 33% 33% 33%;
+          align-items: center;
+          justify-content: flex-start;
           background-color: var(--cool-grey-20);
+          padding-top: 0px;
 
-          .log-in-tile {
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-            background-color: var(--white);
-            width: auto;
-            min-height: 72px;
-            padding: $spacing-s;
-            margin: $spacing-s;
+          p {
+            margin-bottom: $spacing-s;
+          }
 
-            .log-in-row {
-              justify-content: space-between;
-              align-items: baseline;
-              overflow: hidden;
+          .log-in-tile-grid {
+            display: grid;
+            grid-template-columns: 33% 33% 33%;
+            width: 100%;
 
-              h4 {
-                display: unset;
-                white-space: nowrap;
-                width: unset;
-                align-items: unset;
+            .log-in-tile {
+              display: flex;
+              flex-direction: column;
+              border-radius: 4px;
+              background-color: var(--white);
+              width: auto;
+              min-height: 72px;
+              padding: $spacing-s;
+              margin: $spacing-s;
+
+              .log-in-row {
+                justify-content: space-between;
+                align-items: baseline;
                 overflow: hidden;
-                text-overflow: ellipsis;
-              }
 
-              p.p2.log-in {
-                align-items: center;
-                border: none;
-                color: var(--blue-60);
-                padding: 0px;
-                white-space: nowrap;
+                h4 {
+                  display: unset;
+                  white-space: nowrap;
+                  width: unset;
+                  align-items: unset;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                }
 
-                .icon {
-                  margin-left: $spacing-xs;
+                p.p2.log-in {
+                  align-items: center;
+                  border: none;
+                  color: var(--blue-60);
+                  padding: 0px;
+                  white-space: nowrap;
+
+                  .icon {
+                    margin-left: $spacing-xs;
+                  }
                 }
               }
-            }
 
-            &:hover {
-              background-color: var(--blue-100);
-              cursor: pointer;
-            }
+              &:hover {
+                background-color: var(--blue-100);
+                cursor: pointer;
+              }
 
-            .finished-roles {
-              font-size: 12px;
-              color: var(--cool-grey-30);
+              .finished-roles {
+                font-size: 12px;
+                color: var(--cool-grey-30);
+              }
             }
           }
         }

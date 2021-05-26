@@ -54,7 +54,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   );
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [activeItem, setActiveItem] = useState<MenuItems>();
+  const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
 
   const NextButton = (props: { item: MenuItems; disabled?: boolean }) => {
     if (props.disabled) {
@@ -72,12 +72,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
-    console.log('changing segment and admin creds');
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
 
     if (activeMenuItem) {
-      setActiveItem(activeMenuItem);
+      setActiveMenuItem(activeMenuItem);
     }
 
     if (isHubDeployment) {
@@ -139,11 +138,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           <h1 className="logo-header">
             <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
           </h1>
-          {activeItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
+          {activeMenuItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
         </div>
 
         <div className="quick-setup-tile">
-          {activeItem !== MenuItems.LOG_IN && (
+          {activeMenuItem !== MenuItems.LOG_IN && (
             <Menu pointing secondary className="quick-setup-menu page-row">
               {menuItems.map(item => (
                 <>
@@ -152,8 +151,8 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                       <ArrowRightIcon color={checkIsDisabled(item) ? 'grey' : 'blue'} />
                     )}
 
-                  {activeItem === MenuItems.ADD_PARTIES || activeItem === item ? (
-                    <Menu.Item disabled={activeItem === MenuItems.ADD_PARTIES} key={item}>
+                  {activeMenuItem === MenuItems.ADD_PARTIES || activeMenuItem === item ? (
+                    <Menu.Item disabled={activeMenuItem === MenuItems.ADD_PARTIES} key={item}>
                       <p className={classNames({ visited: !checkIsDisabled(item) })}>
                         {formatMenuItem(item)}
                       </p>
@@ -237,12 +236,12 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   );
 
   function checkIsDisabled(item: MenuItems) {
-    if (!activeItem) {
+    if (!activeMenuItem) {
       return false;
     }
 
     const clickedItemIndex = Object.values(MenuItems).indexOf(item);
-    const activeItemIndex = Object.values(MenuItems).indexOf(activeItem);
+    const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
     if (clickedItemIndex > activeItemIndex) {
       return true;
     }

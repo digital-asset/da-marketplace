@@ -62,46 +62,45 @@ const LoginTileGrid = () => {
   }
 
   return (
-    <div className="setup-page finish">
-      {identities.map(p => (
-        <div
-          className="log-in-tile"
-          key={p.payload.customer}
-          onClick={e => handleClick(e, p.payload.customer)}
-        >
-          <div className="log-in-row page-row">
-            <h4>{p.payload.legalName}</h4>
-            <p className="p2 log-in page-row">
-              Log in <ArrowRightIcon />
-            </p>
-          </div>
-          <p className="finished-roles">
-            {allRoles
-              .filter(r => r.contract.payload.provider === p.payload.customer)
-              .map(r => r.role)
-              .join(', ')}
-          </p>
+    <>
+      <div className="setup-page finish">
+        <p className="dark details">cmd + click on a tile to Log In on a new tab </p>
+        <div className="log-in-tile-grid">
+          {identities.map(p => (
+            <div
+              className="log-in-tile"
+              key={p.payload.customer}
+              onClick={e => handleClick(e, p.payload.customer)}
+            >
+              <div className="log-in-row page-row">
+                <h4>{p.payload.legalName}</h4>
+                <p className="p2 log-in page-row">
+                  Log in <ArrowRightIcon />
+                </p>
+              </div>
+              <p className="finished-roles">
+                {allRoles
+                  .filter(r => r.contract.payload.provider === p.payload.customer)
+                  .map(r => r.role)
+                  .join(', ')}
+              </p>
+            </div>
+          ))}
         </div>
-      ))}
-      ctrl + click to Log in party on a new tab
-      <Button onClick={() => openAll()}>Open All</Button>
-    </div>
+      </div>
+    </>
   );
 
   function handleClick(event: React.MouseEvent, party: string) {
     event.stopPropagation();
-    
-    // In that case, event.ctrlKey does the trick.
-    if (event.ctrlKey) {
-      console.debug('Ctrl+click has just happened!');
-      
+
+    let newWindow = false;
+
+    if (event.metaKey) {
+      newWindow = true;
     }
 
-    //loginUser(dispatch, history, computeCredentials(party), true);
-  }
-
-  function openAll() {
-    return;
+    loginUser(dispatch, history, computeCredentials(party), newWindow);
   }
 };
 

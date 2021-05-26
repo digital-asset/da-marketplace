@@ -92,16 +92,10 @@ async function loginUser(
 
   try {
     if (newTab) {
-      const loginWindow = window.open('/app#/quick-setup/log-in-parties');
-      loginWindow?.focus();
-      storeCredentials(credentials);
-      dispatch({ type: 'LOGIN_SUCCESS', party, token });
-      //
-    } else {
-      storeCredentials(credentials);
-      dispatch({ type: 'LOGIN_SUCCESS', party, token });
-      history.push('/app');
+      window.open('/app#/quick-setup/log-in-parties');
     }
+    storeCredentials(credentials);
+    dispatch({ type: 'LOGIN_SUCCESS', party, token });
   } catch {
     dispatch({ type: 'LOGIN_FAILURE' });
   }
