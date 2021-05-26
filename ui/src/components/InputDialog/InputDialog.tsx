@@ -78,7 +78,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
             Confirm
           </Button>
           {!props.isInline && (
-            <Button className="a2 cancel" onClick={() => props.onClose(null)}>
+            <Button className="a a2 cancel" onClick={() => props.onClose(null)}>
               <IconClose /> Cancel
             </Button>
           )}

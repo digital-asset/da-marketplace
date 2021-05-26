@@ -211,7 +211,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         <Form.Input label="Trading Calendar ID" required readOnly placeholder={calendarId} />
         <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-          <Button className="a2" onClick={() => history.goBack()}>
+          <Button className="a a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel
           </Button>
         </div>

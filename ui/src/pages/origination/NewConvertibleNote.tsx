@@ -249,7 +249,7 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
         />
         <div className="submit-form">
           <Button className="ghost" type="submit" content="Request Origination" />
-          <Button className="a2" onClick={() => history.goBack()}>
+          <Button className="a a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel
           </Button>
         </div>

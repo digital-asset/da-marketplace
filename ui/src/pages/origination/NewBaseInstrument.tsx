@@ -150,7 +150,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
         )}
         <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-          <Button className="a2" onClick={() => history.goBack()}>
+          <Button className="a a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel
           </Button>
         </div>
