@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Button, Form, Modal } from 'semantic-ui-react';
+import React from 'react';
+import { Button, Modal } from 'semantic-ui-react';
 import { InformationIcon } from '../../icons/icons';
 
 const MissingServiceModal = (props: {

@@ -23,7 +23,7 @@ const Manage: React.FC = ({ children }) => {
     if (item) {
       setCurrentMenuItem(item);
     }
-  }, [path]);
+  }, [path, menuItems]);
 
   return (
     <div className="manage">

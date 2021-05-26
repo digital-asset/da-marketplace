@@ -79,7 +79,7 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({ title, token, 
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [token]);
+  }, [token, userToken]);
 
   const currentTriggerOptions = triggerOptions.filter(
     to =>

@@ -72,7 +72,7 @@ const QuickSetup = () => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [activeMenuItem]);
+  }, [parties, activeMenuItem]);
 
   useEffect(() => {
     // deploy auto-trigger for all parties
@@ -188,7 +188,7 @@ const QuickSetup = () => {
           {activeMenuItem && (
             <Menu pointing secondary className="quick-setup-menu page-row">
               {Object.values(MenuItems)
-                .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
+                .filter(item => (isHubDeployment ? true : item !== MenuItems.ADD_PARTIES))
                 .map((item, i) => (
                   <>
                     <Menu.Item
@@ -326,13 +326,16 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       return onComplete();
     }
   }, [
+    ledger,
+    party,
+    userParties,
+    onComplete,
     verifiedIdentities,
     verifiedIdentitiesLoading,
     regulatorServices,
     regulatorServicesLoading,
     verifiedIdentityRequestsLoading,
     verifiedIdentityRequests,
-    party,
   ]);
 
   return null;
@@ -353,40 +356,40 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
     useStreamQueries(RegulatorOffer);
 
-  const createOperatorService = async () => {
-    return await ledger.create(OperatorService, { operator: adminCredentials.party });
-  };
-
-  const createRegulatorRole = async () => {
-    return await ledger.create(RegulatorRole, {
-      operator: adminCredentials.party,
-      provider: adminCredentials.party,
-    });
-  };
-
-  const offerRegulatorService = async (party: string) => {
-    const regulatorRoleId = regulatorRoles[0]?.contractId;
-    if (regulatorRoleId) {
-      return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
-        customer: party,
-      });
-    }
-  };
-
-  const offerRegulatorServices = async () => {
-    await Promise.all(
-      userParties.map(async party => {
-        if (
-          !regulatorServices.find(c => c.payload.customer === party.party) &&
-          !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-        ) {
-          return await offerRegulatorService(party.party);
-        }
-      })
-    );
-  };
-
   useEffect(() => {
+    const createOperatorService = async () => {
+      return await ledger.create(OperatorService, { operator: adminCredentials.party });
+    };
+
+    const createRegulatorRole = async () => {
+      return await ledger.create(RegulatorRole, {
+        operator: adminCredentials.party,
+        provider: adminCredentials.party,
+      });
+    };
+
+    const offerRegulatorService = async (party: string) => {
+      const regulatorRoleId = regulatorRoles[0]?.contractId;
+      if (regulatorRoleId) {
+        return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+          customer: party,
+        });
+      }
+    };
+
+    const offerRegulatorServices = async () => {
+      await Promise.all(
+        userParties.map(async party => {
+          if (
+            !regulatorServices.find(c => c.payload.customer === party.party) &&
+            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
+          ) {
+            return await offerRegulatorService(party.party);
+          }
+        })
+      );
+    };
+
     if (
       operatorServiceLoading ||
       regulatorRolesLoading ||
@@ -413,6 +416,10 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       offerRegulatorServices();
     }
   }, [
+    ledger,
+    adminCredentials.party,
+    userParties,
+    onComplete,
     regulatorRolesLoading,
     operatorServiceLoading,
     regulatorServicesLoading,

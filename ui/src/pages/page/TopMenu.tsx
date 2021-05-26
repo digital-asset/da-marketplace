@@ -54,10 +54,6 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
           </Menu.Item>
         </Menu.Menu>
       </Menu>
-
-      {/* <div className='notifications'>
-                { notifications }
-            </div> */}
     </div>
   );
 };

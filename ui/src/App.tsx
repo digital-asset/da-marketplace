@@ -317,14 +317,6 @@ const AppComponent = () => {
           </Manage>
         ),
       },
-      // {
-      //   path: '/app/manage/listings/:contractId',
-      //   render: () => (
-      //     <Manage>
-      //       <ListingComponent services={listingService} />
-      //     </Manage>
-      //   ),
-      // },
     ],
   });
 

@@ -272,8 +272,11 @@ const OfferForm = (props: {
       return setWarning(
         <p>
           {getName(provider)} must have a {missingRole} Role Contract to offer {service} services.{' '}
-          Go back to the <a onClick={() => backToSelectRoles()}>Select Roles</a> page to assign{' '}
-          {getName(provider)} a {missingRole} Role.
+          Go back to the
+          <Button className="a a2 ghost" onClick={() => backToSelectRoles()}>
+            Select Roles
+          </Button>{' '}
+          page to assign {getName(provider)} a {missingRole} Role.
         </p>
       );
     }
@@ -346,7 +349,22 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
       onFinish();
     }
     offerServices();
-  }, [tradingRoleLoading, clearingRoleLoading, custodyRoleLoading]);
+  }, [
+    tradingRoleLoading,
+    clearingRoleLoading,
+    custodyRoleLoading,
+    clearingRoles,
+    custodyRoles,
+    customer,
+    getName,
+    ledger,
+    offerInfo.customer,
+    onFinish,
+    operator,
+    provider,
+    service,
+    tradingRoles,
+  ]);
 
   return null;
 };

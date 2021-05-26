@@ -215,7 +215,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       {(!!offers.length || !!marketOffers.length) && (
         <StripedTable
           title="Offers"
-          headings={['Type', 'Provider', 'Consumer', 'Actions' /* 'Details' */]}
+          headings={['Type', 'Provider', 'Consumer', 'Actions']}
           loading={offersLoading || marketOffersLoading}
           rows={[
             ...offers.map(c => {

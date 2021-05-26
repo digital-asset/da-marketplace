@@ -1,5 +1,4 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';

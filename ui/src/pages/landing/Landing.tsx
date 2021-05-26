@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
@@ -174,15 +174,23 @@ const Landing = () => {
   const { identities, legalNames } = useVerifiedParties();
 
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = allocationAccountRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
+  const allocationAccounts = useMemo(
+    () =>
+      allocationAccountRules
+        .filter(c => c.payload.account.owner === party)
+        .map(c => c.payload.account),
+    [party, allocationAccountRules]
+  );
   const allocationAccountNames = allocationAccounts.map(a => a.id.label);
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
+  const accounts = useMemo(
+    () =>
+      assetSettlementRules
+        .filter(c => c.payload.account.owner === party)
+        .map(c => c.payload.account),
+    [party, assetSettlementRules]
+  );
   const accountNames = accounts.map(a => a.id.label);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
@@ -249,7 +257,7 @@ const Landing = () => {
     }
 
     setRequestParams(params);
-  }, [dialogState]);
+  }, [dialogState, accounts, allocationAccounts, identities, party]);
 
   const portfolio = formatCurrency(
     deposits

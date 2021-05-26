@@ -77,7 +77,7 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
         setPartyToken(token);
       }
     }
-  }, []);
+  }, [defaultPartyToken]);
 
   const publicParty = useWellKnownParties()?.parties?.publicParty || 'Public';
 
@@ -232,7 +232,7 @@ export function useContractQuery<T extends object, K, I extends string = string>
         subscribeTemplate(templateId, template, AS_PUBLIC);
       }
     }
-  }, [asPublic, templateId, publicTemplateIds, subscribeTemplate]);
+  }, [asPublic, template, templateId, publicTemplateIds, subscribeTemplate]);
 
   useEffect(() => {
     if (asPublic !== AS_PUBLIC) {
@@ -240,7 +240,7 @@ export function useContractQuery<T extends object, K, I extends string = string>
         subscribeTemplate(templateId, template);
       }
     }
-  }, [asPublic, templateId, partyTemplateIds, subscribeTemplate]);
+  }, [asPublic, template, templateId, partyTemplateIds, subscribeTemplate]);
 
   return filtered;
 }
