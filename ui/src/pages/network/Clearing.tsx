@@ -14,7 +14,6 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { Button, DropdownItemProps, Form } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { createDropdownProp } from '../common';
 import { FairValueRequest } from '../listing/Listing';
@@ -57,19 +56,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     }
   };
 
-  // setClearingAccountName is never used, but clearingAccountName is. How does this work?
-  // eslint-disable-next-line
-  const [clearingAccountName, setClearingAccountName] = useState('');
-
-  // setMarginAccountName is never used, but marginAccountName is. How does this work?
-  // eslint-disable-next-line
-  const [marginAccountName, setMarginAccountName] = useState('');
-
   const [ccpAccountName, setCcpAccountName] = useState('');
-  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = allocationAccountRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
@@ -111,15 +98,8 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
     }
   };
 
-  const acceptOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
-    if (getTemplateId(c.templateId) === CLEARING_OFFER_TEMPLATE) {
-      const clearingAccount = accounts.find(a => a.id.label === clearingAccountName);
-      const marginAccount = allocationAccounts.find(a => a.id.label === marginAccountName);
-      if (!clearingAccount || !marginAccount) return;
-      await ledger.exercise(Offer.Accept, c.contractId, { marginAccount, clearingAccount });
-    } else {
-      await ledger.exercise(MarketOffer.Accept, c.contractId, {});
-    }
+  const acceptOffer = async (c: CreateEvent<MarketOffer>) => {
+    await ledger.exercise(MarketOffer.Accept, c.contractId, {});
   };
 
   const withdrawOffer = async (c: CreateEvent<Offer> | CreateEvent<MarketOffer>) => {
