@@ -19,7 +19,7 @@ import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 import { ledgerId, publicParty, isHubDeployment } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
-import { retrieveParties, retrieveUserParties } from '../../Parties';
+import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
@@ -31,7 +31,6 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
-import { MenuItem } from '@material-ui/core';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
