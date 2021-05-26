@@ -67,7 +67,7 @@ template Service
       nonconsuming CreateMarginCalculation : ContractId MarginCalculation
         with
           targetAmount : Decimal
-          currency : Text
+          currency : Id -- TODO: make different currencies work
           calculationId : Text
         do
           calculationTime <- getTime
@@ -76,7 +76,7 @@ template Service
       nonconsuming CreateMarkToMarket : ContractId MarkToMarketCalculation
         with
           mtmAmount : Decimal
-          currency : Text
+          currency : Id -- TODO: make different currencies work
           calculationId : Text
         do
           calculationTime <- getTime
