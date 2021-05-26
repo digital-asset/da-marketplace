@@ -19,6 +19,7 @@ import { IconClose } from '../../icons/icons';
 import Tile from '../../components/Tile/Tile';
 import { preciseInputSteps } from '../../util';
 import BackButton from '../../components/Common/BackButton';
+import paths from '../../paths';
 
 const COLLATERALIZED_VALUE = 'COLLATERALIZED_MARKET';
 
@@ -102,7 +103,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       observers: [publicParty],
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
-    history.push('/app/manage/listings');
+    history.push(paths.app.manage.listings);
   };
 
   const { step, placeholder } = preciseInputSteps(+tradedAssetPrecision);

@@ -19,6 +19,7 @@ import { makeDamlSet } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconCircledCheck, IconClose } from '../../icons/icons';
 import classNames from 'classnames';
+import paths from '../../paths';
 
 const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -107,7 +108,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       safekeepingAccount,
       observers: [service.payload.provider, party],
     });
-    history.push('/app/instrument/requests');
+    history.push(paths.app.instrument.requests);
   };
 
   return (

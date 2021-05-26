@@ -6,6 +6,7 @@ import { LogoutIcon, NotificationIcon } from '../../icons/icons';
 
 import classNames from 'classnames';
 import { signOut, useUserDispatch } from '../../context/UserContext';
+import paths from '../../paths';
 
 type Props = {
   title?: React.ReactElement;
@@ -39,7 +40,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
         </Menu.Menu>
         <Menu.Menu position="right">
           <Menu.Item className="notification-button">
-            <Link className="ghost smaller" to="/app/notifications">
+            <Link className="ghost smaller" to={paths.app.notifications}>
               <div>
                 <NotificationIcon />
               </div>

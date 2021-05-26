@@ -13,6 +13,7 @@ import {
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import paths from '../../paths';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -31,7 +32,7 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
     <>
       <TitleWithActions
         title="Current Services"
-        otherActions={[{ label: 'Offer Custody Service', path: '/app/setup/custody/offer' }]}
+        otherActions={[{ label: 'Offer Custody Service', path: paths.app.setup.custody.offer }]}
       />
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}

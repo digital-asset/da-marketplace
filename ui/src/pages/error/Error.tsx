@@ -3,6 +3,7 @@ import { Button, Grid, Paper, Typography } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import useStyles from './styles';
+import paths from '../../paths';
 
 export default function Error() {
   var classes = useStyles();
@@ -32,7 +33,7 @@ export default function Error() {
           variant="contained"
           color="primary"
           component={Link}
-          to="/"
+          to={paths.root}
           size="large"
           className={classes.backButton}
         >

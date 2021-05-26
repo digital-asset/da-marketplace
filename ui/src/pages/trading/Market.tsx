@@ -35,6 +35,7 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { usePartyName } from '../../config';
+import paths from '../../paths';
 
 type Props = {
   cid: string;
@@ -343,7 +344,8 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                     />
                   ),
                 ],
-                onClick: () => history.push(`/app/trading/order/${c.contractId.replace('#', '_')}`),
+                onClick: () =>
+                  history.push(`${paths.app.trading.order}/${c.contractId.replace('#', '_')}`),
               };
             })}
           />
