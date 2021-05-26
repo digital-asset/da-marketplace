@@ -132,7 +132,7 @@ import {
 import { CreateEvent } from '@daml/ledger';
 import { Choice, ContractId } from '@daml/types';
 import { ServiceKind } from '../../context/ServicesContext';
-import { Field, Fields } from '../../components/InputDialog/Fields';
+import { Field, FieldCallback } from '../../components/InputDialog/Fields';
 
 export type OfferTemplates =
   | CustodyRoleOffer
@@ -202,8 +202,9 @@ export type OfferDeclineChoice = Choice<
   undefined
 >;
 
-export type OfferAcceptFields<A> = {
+export type OfferAcceptFields<A, T> = {
   acceptFields?: { [K in keyof Extract<OfferAccepts, A>]: Field };
+  fromContractFields?: { [K in keyof Extract<OfferAccepts, A>]: FieldCallback<T> };
   lookupFields?: (fields: { [k: string]: string }) => { [k: string]: object | string };
 };
 
@@ -216,7 +217,7 @@ type OfferNotificationSet = {
     decline: OfferDeclineChoice;
   };
   contracts: readonly CreateEvent<OfferTemplates>[];
-} & OfferAcceptFields<Record<string, any>>;
+} & OfferAcceptFields<Record<string, OfferAccepts>, OfferTemplates>;
 
 // -------------------------------------------------------------
 

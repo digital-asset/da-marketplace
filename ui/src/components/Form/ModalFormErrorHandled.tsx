@@ -16,12 +16,14 @@ type Props = {
   className?: string;
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
+  disabled?: boolean;
 };
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   title,
   children,
   onSubmit,
+  disabled,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -72,6 +74,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
           Cancel
         </Button>
         <Button
+          disabled={disabled}
           content="Submit"
           labelPosition="right"
           icon="checkmark"
