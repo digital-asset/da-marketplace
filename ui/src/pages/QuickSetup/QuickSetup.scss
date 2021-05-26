@@ -41,7 +41,7 @@
         align-items: center;
         border-bottom: none;
         border-radius: 6px 6px 0px 0px;
-        padding: $spacing-s $spacing-s 0 $spacing-s;
+        padding: $spacing-xs $spacing-s 0 $spacing-s;
         margin-bottom: 0px;
         background-color: var(--cool-grey-100);
 
@@ -52,11 +52,20 @@
             color: var(--blue-60);
           }
         }
+        a {
+            border-bottom: 3px solid transparent;
 
-        a.active {
+        }
+
+        a.active,
+        a:hover {
           color: var(--blue-60);
           border-bottom: 3px solid var(--blue-60);
         }
+      }
+
+      button.ghost.next {
+        margin: 0 $spacing-m $spacing-m auto;
       }
 
       .setup-page {
@@ -89,12 +98,6 @@
         .ui.loader {
           position: static;
           transform: translateX(-0%) translateY(-0%);
-        }
-
-        .ghost.next {
-          align-self: flex-end;
-          position: absolute;
-          bottom: $spacing-m;
         }
 
         .party-names {

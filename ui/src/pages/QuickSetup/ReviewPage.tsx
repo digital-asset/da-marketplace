@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button } from 'semantic-ui-react';
-
 import DamlLedger from '@daml/react';
+
+import { LoadingWheel } from './QuickSetup';
 
 import { PublishedInstance, getAutomationInstances } from '../../automation';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
@@ -20,27 +20,45 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
 
   return (
+    <DamlLedger
+      party={adminCredentials.party}
+      token={adminCredentials.token}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <ServicesProvider>
+          <RolesProvider>
+            <OffersProvider>
+              <ReviewItems />
+            </OffersProvider>
+          </RolesProvider>
+        </ServicesProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
+  );
+};
+
+const ReviewItems = () => {
+  const { loading: idsLoading } = useVerifiedParties();
+
+  const { loading: rolesLoading } = useRolesContext();
+
+  if (idsLoading || rolesLoading) {
+    return (
+      <div className="setup-page loading">
+        <LoadingWheel label=" Loading review data..." />
+      </div>
+    );
+  }
+
+  return (
     <div className="setup-page review">
       <h4>Review</h4>
-      <DamlLedger
-        party={adminCredentials.party}
-        token={adminCredentials.token}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <ServicesProvider>
-            <RolesProvider>
-              <OffersProvider>
-                <div className="page-row">
-                  <PartiesReview />
-                  <OffersTable />
-                </div>
-              </OffersProvider>
-            </RolesProvider>
-          </ServicesProvider>
-        </QueryStreamProvider>
-      </DamlLedger>
+      <div className="page-row">
+        <PartiesReview />
+        <OffersTable />
+      </div>
     </div>
   );
 };

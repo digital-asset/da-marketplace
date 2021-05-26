@@ -66,7 +66,6 @@ const DragAndDropRoles = () => {
       dropItems={roleOptions}
       dropItemType={DropItemTypes.ROLES}
       title={'Drag and Drop Roles to Parties'}
-      nextPage={MenuItems.SELECT_AUTOMATION}
     />
   );
 

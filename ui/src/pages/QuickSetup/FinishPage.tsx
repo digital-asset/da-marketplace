@@ -67,7 +67,7 @@ const LoginTileGrid = () => {
         <div
           className="log-in-tile"
           key={p.payload.customer}
-          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer), true)}
+          onClick={e => handleClick(e, p.payload.customer)}
         >
           <div className="log-in-row page-row">
             <h4>{p.payload.legalName}</h4>
@@ -83,9 +83,22 @@ const LoginTileGrid = () => {
           </p>
         </div>
       ))}
+      ctrl + click to Log in party on a new tab
       <Button onClick={() => openAll()}>Open All</Button>
     </div>
   );
+
+  function handleClick(event: React.MouseEvent, party: string) {
+    event.stopPropagation();
+    
+    // In that case, event.ctrlKey does the trick.
+    if (event.ctrlKey) {
+      console.debug('Ctrl+click has just happened!');
+      
+    }
+
+    //loginUser(dispatch, history, computeCredentials(party), true);
+  }
 
   function openAll() {
     return;

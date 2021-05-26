@@ -9,6 +9,7 @@ import {
   RouteComponentProps,
   withRouter,
   NavLink,
+  Redirect,
 } from 'react-router-dom';
 
 import classNames from 'classnames';
@@ -30,6 +31,7 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import { MenuItem } from '@material-ui/core';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -37,7 +39,7 @@ export enum MenuItems {
   SELECT_AUTOMATION = 'select-automation',
   OFFER_SERVICES = 'offer-services',
   REVIEW = 'review',
-  LOG_IN = 'login-in-parties',
+  LOG_IN = 'log-in-parties',
 }
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
@@ -47,9 +49,12 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
-  const menuItems = Object.values(MenuItems);
+  const menuItems = Object.values(MenuItems).filter(item =>
+    isHubDeployment ? true : item != MenuItems.ADD_PARTIES && item !== MenuItems.LOG_IN
+  );
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
+  const [activeItem, setActiveItem] = useState<MenuItems>();
 
   const NextButton = (props: { item: MenuItems; disabled?: boolean }) => {
     if (props.disabled) {
@@ -67,7 +72,14 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
-    console.log('setting admin creds');
+    console.log('changing segment and admin creds');
+    const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
+    const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
+
+    if (activeMenuItem) {
+      setActiveItem(activeMenuItem);
+    }
+
     if (isHubDeployment) {
       const adminParty = parties.find(p => p.partyName === 'UserAdmin');
       if (adminParty) {
@@ -115,7 +127,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             <ArrowLeftIcon color={'white'} />
             Back
           </Button>
-          <NavLink to={matchUrl + '/log-in-parties'}>
+          <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
             <Button className="button ghost dark control-button">
               Skip to Log In
               <ArrowRightIcon color={'white'} />
@@ -127,26 +139,38 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           <h1 className="logo-header">
             <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
           </h1>
-          {/* {activeMenuItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>} */}
+          {activeItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
         </div>
 
         <div className="quick-setup-tile">
-          <Menu pointing secondary className="quick-setup-menu page-row">
-            {menuItems
-              .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
-              .map(item => (
+          {activeItem !== MenuItems.LOG_IN && (
+            <Menu pointing secondary className="quick-setup-menu page-row">
+              {menuItems.map(item => (
                 <>
-                  {menuItems.indexOf(item) !== menuItems.length && (
-                    <ArrowRightIcon color={checkIsDisabled(item) ? 'grey' : 'blue'} />
-                  )}
-                  <NavLink to={`${matchUrl}/${item}`}>
-                    <Menu.Item key={item}>
-                      <p className={classNames({ visited: !checkIsDisabled(item) })}>{item}</p>
+                  {menuItems.indexOf(item) !== menuItems.length &&
+                    menuItems.indexOf(item) !== 0 && (
+                      <ArrowRightIcon color={checkIsDisabled(item) ? 'grey' : 'blue'} />
+                    )}
+
+                  {activeItem === MenuItems.ADD_PARTIES || activeItem === item ? (
+                    <Menu.Item disabled={activeItem === MenuItems.ADD_PARTIES} key={item}>
+                      <p className={classNames({ visited: !checkIsDisabled(item) })}>
+                        {formatMenuItem(item)}
+                      </p>
                     </Menu.Item>
-                  </NavLink>
+                  ) : (
+                    <NavLink to={`${matchUrl}/${item}`}>
+                      <Menu.Item key={item}>
+                        <p className={classNames({ visited: !checkIsDisabled(item) })}>
+                          {formatMenuItem(item)}
+                        </p>
+                      </Menu.Item>
+                    </NavLink>
+                  )}
                 </>
               ))}
-          </Menu>
+            </Menu>
+          )}
 
           <Switch>
             <Route
@@ -201,6 +225,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               path={`${matchPath}/${MenuItems.LOG_IN}`}
               component={() => <FinishPage adminCredentials={adminCredentials} />}
             />
+            <Redirect
+              to={`${matchPath}/${
+                isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.SELECT_ROLES
+              }`}
+            />
           </Switch>
         </div>
       </div>
@@ -208,19 +237,23 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   );
 
   function checkIsDisabled(item: MenuItems) {
-    const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
-    const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
-
-    if (!activeMenuItem) {
+    if (!activeItem) {
       return false;
     }
 
     const clickedItemIndex = Object.values(MenuItems).indexOf(item);
-    const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
+    const activeItemIndex = Object.values(MenuItems).indexOf(activeItem);
     if (clickedItemIndex > activeItemIndex) {
       return true;
     }
     return false;
+  }
+
+  function formatMenuItem(item: MenuItems) {
+    return item
+      .split('-')
+      .map(i => `${i.substring(0, 1).toUpperCase()}${i.substring(1)}`)
+      .join(' ');
   }
 });
 

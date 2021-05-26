@@ -41,7 +41,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
 
   const [inputValue, setInputValue] = useState<string>();
   const [error, setError] = useState<string>();
-  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus | undefined>();
+  const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
 
   const storedParties = retrieveUserParties() || [];
 
@@ -91,10 +91,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
             <QueryStreamProvider defaultPartyToken={p.token}>
               <CreateVerifiedIdentity
                 party={p}
-                onComplete={() => {
-                  history.push(MenuItems.SELECT_ROLES);
-                  setLoadingStatus(undefined);
-                }}
+                onComplete={() => history.push(MenuItems.SELECT_ROLES)}
               />
             </QueryStreamProvider>
           </PublicDamlProvider>
@@ -152,7 +149,12 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
         </>
       )}
 
-      <Button onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}>Next</Button>
+      <Button
+        className="ghost next"
+        onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+      >
+        Next
+      </Button>
     </div>
   );
 
