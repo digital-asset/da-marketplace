@@ -17,8 +17,8 @@ import Credentials from '../../Credentials';
 
 import { httpBaseUrl, wsBaseUrl } from '../../config';
 
-const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
-  const { adminCredentials, onComplete } = props;
+const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
 
   return (
     <DamlLedger
@@ -30,7 +30,7 @@ const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () 
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
         <RolesProvider>
           <OffersProvider>
-            <DragAndDropRoles onComplete={onComplete} />
+            <DragAndDropRoles />
           </OffersProvider>
         </RolesProvider>
       </QueryStreamProvider>
@@ -38,9 +38,7 @@ const SelectRolesPage = (props: { adminCredentials: Credentials; onComplete: () 
   );
 };
 
-const DragAndDropRoles = (props: { onComplete: () => void }) => {
-  const { onComplete } = props;
-
+const DragAndDropRoles = () => {
   const ledger = useLedger();
   const roleOptions = Object.values(RoleKind)
     .filter(s => s !== RoleKind.REGULATOR)
@@ -68,7 +66,6 @@ const DragAndDropRoles = (props: { onComplete: () => void }) => {
       dropItems={roleOptions}
       dropItemType={DropItemTypes.ROLES}
       title={'Drag and Drop Roles to Parties'}
-      onComplete={onComplete}
     />
   );
 

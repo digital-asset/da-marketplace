@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
 
-import { Button } from 'semantic-ui-react';
-
 import { ArrowLeftIcon } from '../../icons/icons';
 
 import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
@@ -28,9 +26,8 @@ const DragAndDropToParties = (props: {
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
   title: string;
-  onComplete: () => void;
 }) => {
-  const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
+  const { handleAddItem, dropItems, dropItemType, title } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers, loading: offersLoading } = useOffers();
@@ -82,9 +79,6 @@ const DragAndDropToParties = (props: {
           </div>
         </div>
       </div>
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
     </div>
   );
 
