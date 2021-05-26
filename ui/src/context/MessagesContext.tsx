@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { Message, Header } from 'semantic-ui-react';
 
-export type Message = {
+type Message = {
   header?: string;
   message?: string;
   list?: string[];
@@ -80,12 +80,4 @@ function useDisplayErrorMessage() {
   return context.displayErrorMessage;
 }
 
-function useDisplaySuccessMessage() {
-  const context = React.useContext<MessagesState>(MessagesStateContext);
-  if (context === undefined) {
-    throw new Error('useDisplaySuccessMessage must be used within a MessagesContext');
-  }
-  return context.displaySuccessMessage;
-}
-
-export { MessagesProvider, useDisplayErrorMessage, useDisplaySuccessMessage };
+export { MessagesProvider, useDisplayErrorMessage };

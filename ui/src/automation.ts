@@ -2,6 +2,9 @@ import { dablHostname, deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } f
 import { computeCredentials } from './Credentials';
 
 export const TRIGGER_HASH = process.env.REACT_APP_TRIGGER_HASH;
+
+// Do we want to keep this?
+// ts-prune-ignore-next
 export const EXBERRY_HASH = process.env.REACT_APP_EXBERRY_HASH;
 
 export enum MarketplaceTrigger {
@@ -17,7 +20,7 @@ type PublicTokenAPIResult =
     }
   | undefined;
 
-export const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
+const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
   let publicToken = undefined;
 
   if (deploymentMode === DeploymentMode.DEV) {
@@ -67,7 +70,7 @@ export type PublishedInstance = {
 
 type PublishedInstanceAPIResult = PublishedInstance[] | undefined;
 
-export type AutomationValue = {
+type AutomationValue = {
   packageIds: [string];
   entityName: string;
   metadata: {};
