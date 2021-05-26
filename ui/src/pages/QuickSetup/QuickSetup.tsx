@@ -49,7 +49,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
   const menuItems = Object.values(MenuItems).filter(item =>
-    isHubDeployment ? true : item != MenuItems.ADD_PARTIES && item !== MenuItems.LOG_IN
+    isHubDeployment ? true : item !== MenuItems.ADD_PARTIES && item !== MenuItems.LOG_IN
   );
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
@@ -84,7 +84,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties.length]);
+  }, [history.location, parties]);
 
   useEffect(() => {
     // deploy auto-trigger for all parties

@@ -15,7 +15,7 @@ import { LoadingWheel } from './QuickSetup';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
 
-import { InformationIcon, CheckMarkIcon } from '../../icons/icons';
+import { InformationIcon } from '../../icons/icons';
 
 import {
   ServicesProvider,

@@ -265,9 +265,14 @@ html {
         @include TitleWithActions.title-with-actions();
         @include InputDialog.input-dialog();
 
+        button.button.a,
         button.button.a.ghost {
           @include link();
-          display: inline-block;
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
           padding: 0;
           margin: 0;
           border: none;
