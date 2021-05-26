@@ -42,12 +42,8 @@ interface IOfferServiceInfo {
   services?: OfferServiceKind[];
 }
 
-const OfferServicesPage = (props: {
-  adminCredentials: Credentials;
-  onComplete: () => void;
-  backToSelectRoles: () => void;
-}) => {
-  const { adminCredentials, onComplete, backToSelectRoles } = props;
+const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
 
   const [offerInfo, setOfferInfo] = useState<IOfferServiceInfo>();
@@ -84,7 +80,6 @@ const OfferServicesPage = (props: {
                   setOfferInfo={setOfferInfo}
                   createOffer={() => setCreatingOffer(true)}
                   creatingOffer={creatingOffer}
-                  backToSelectRoles={backToSelectRoles}
                 />
                 <OffersTable />
               </div>
@@ -109,10 +104,6 @@ const OfferServicesPage = (props: {
           </QueryStreamProvider>
         </DamlLedger>
       )}
-
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
     </div>
   );
 };
@@ -122,9 +113,8 @@ const OfferForm = (props: {
   setOfferInfo: (info?: IOfferServiceInfo) => void;
   createOffer: () => void;
   creatingOffer: boolean;
-  backToSelectRoles: () => void;
 }) => {
-  const { offerInfo, setOfferInfo, createOffer, creatingOffer, backToSelectRoles } = props;
+  const { offerInfo, setOfferInfo, createOffer, creatingOffer } = props;
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { getName } = usePartyName('');
@@ -503,11 +493,6 @@ const OfferRow = (props: {
         {providerName} {isAccepted ? 'provides' : 'offered'} {service} Service to{' '}
         {itemListAsText(customerNames)}
       </p>
-      {isAccepted && (
-        <p className="accepted">
-          <CheckMarkIcon />
-        </p>
-      )}
     </div>
   );
 };
