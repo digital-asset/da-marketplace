@@ -85,17 +85,14 @@ function useUserDispatch() {
 async function loginUser(
   dispatch: React.Dispatch<any>,
   history: History,
-  credentials: Credentials,
-  newTab?: boolean
+  credentials: Credentials
 ) {
   const { party, token } = credentials;
 
   try {
-    if (newTab) {
-      window.open('/app#/quick-setup/log-in-parties');
-    }
     storeCredentials(credentials);
     dispatch({ type: 'LOGIN_SUCCESS', party, token });
+    history.push('/app');
   } catch {
     dispatch({ type: 'LOGIN_FAILURE' });
   }

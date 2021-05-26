@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
@@ -62,13 +62,14 @@ const LoginTileGrid = () => {
   return (
     <>
       <div className="setup-page finish">
-        <p className="dark details">cmd + click on a tile to Log In on a new tab </p>
+        <p className="dark details">cmd + click on a tile to launch a new tab </p>
         <div className="log-in-tile-grid">
           {identities.map(p => (
-            <div
+            <Link
               className="log-in-tile"
               key={p.payload.customer}
-              onClick={e => handleClick(e, p.payload.customer)}
+              onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
+              to={'/quick-setup/log-in-parties'}
             >
               <div className="log-in-row page-row">
                 <h4>{p.payload.legalName}</h4>
@@ -82,24 +83,12 @@ const LoginTileGrid = () => {
                   .map(r => r.role)
                   .join(', ')}
               </p>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
     </>
   );
-
-  function handleClick(event: React.MouseEvent, party: string) {
-    event.stopPropagation();
-
-    let newWindow = false;
-
-    if (event.metaKey) {
-      newWindow = true;
-    }
-
-    loginUser(dispatch, history, computeCredentials(party), newWindow);
-  }
 };
 
 export default FinishPage;
