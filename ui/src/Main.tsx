@@ -31,7 +31,7 @@ export default function Main({ defaultPath }: MainProps) {
       <Switch>
         <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
         <PrivateRoute
-          path="/app/"
+          path="/app"
           component={() => {
             return (
               <WellKnownPartiesProvider>
