@@ -2,7 +2,9 @@
 module Marketplace.Trading.Service where
 
 import DA.Foldable (sequence_)
+import DA.Set qualified as Set
 import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule)
 import DA.Finance.Types (Account)
 import DA.Finance.Utils (fetchAndArchive)
 import Marketplace.Trading.Model qualified as Order
@@ -179,6 +181,17 @@ template Service
       controller ctrl
       do pure ()
 
+assertAccounts : Party -> Account -> Account -> Update ()
+assertAccounts provider tradingAccount allocationAccount = do
+  (_,allocationAccountRule) <- fetchByKey @AllocationAccountRule.T allocationAccount.id
+  assertMsg "provider must be nominee on allocation account" $ allocationAccountRule.nominee == provider
+
+  (_,tradingAccountRule) <- fetchByKey @AssetSettlementRule tradingAccount.id
+  assertMsg "provider must be an observer, ctrl, or the provider on the trading account"
+    $ Set.member provider tradingAccountRule.observers
+   || Set.member provider tradingAccountRule.ctrls
+   || tradingAccount.provider == provider
+
 template Offer
   with
     operator : Party
@@ -193,7 +206,7 @@ template Offer
           tradingAccount : Account
           allocationAccount : Account
         do
-          -- TODO: Check necessary conditions, ie. both are visibe to the provider and provider is nominee on allocationAccount
+          assertAccounts provider tradingAccount allocationAccount
           createOrLookup Service with ..
 
       Decline : ()
@@ -226,6 +239,7 @@ template Request
         operator : Party
       controller operator, provider
       do
+        assertAccounts provider tradingAccount allocationAccount
         createOrLookup Service with ..
 
 template CreateOrderRequest

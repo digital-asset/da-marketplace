@@ -3,7 +3,6 @@ import { Button, Grid, Paper, Typography } from '@material-ui/core';
 import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import useStyles from './styles';
-import loginLogo from '../../images/companyLogo.svg';
 
 export default function Error() {
   var classes = useStyles();
@@ -11,7 +10,6 @@ export default function Error() {
   return (
     <Grid container className={classes.container}>
       <div className={classes.logotype}>
-        <img className={classes.logotypeIcon} src={loginLogo} alt="logo" />
         <Typography variant="h3" className={classes.logotypeText}>
           Digital Securities Depository
         </Typography>

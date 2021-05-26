@@ -93,7 +93,7 @@ type ServiceContract =
   | CreateEvent<ListingService>
   | CreateEvent<TradingService>;
 
-type Service = {
+export type Service = {
   contract: ServiceContract;
   service: ServiceKind;
 };
