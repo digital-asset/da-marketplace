@@ -159,7 +159,11 @@ const AppComponent = () => {
         icon: <WalletIcon />,
         children: [],
         topMenuButtons: [
-          <Button className="ghost" onClick={() => history.push('/app/manage/clearing')}>
+          <Button
+            key="manage-clearing"
+            className="ghost"
+            onClick={() => history.push('/app/manage/clearing')}
+          >
             Manage Clearing Services
           </Button>,
         ],

@@ -22,7 +22,7 @@ const TitleWithActions: React.FC<Params> = ({ iconActions, otherActions, title, 
     <div className="title-with-actions">
       <Header as="h2">{title}</Header>
       {iconActions?.map(a => (
-        <Link className="a2 with-icon" to={a.path}>
+        <Link key={a.path} className="a2 with-icon" to={a.path}>
           <AddPlusIcon /> {a.label}
         </Link>
       ))}
