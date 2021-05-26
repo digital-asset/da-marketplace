@@ -20,7 +20,7 @@ import { retrieveParties } from '../../Parties';
 
 export enum DropItemTypes {
   AUTOMATION = 'automation',
-  ROLES = 'roles',
+  ROLES = 'services',
 }
 
 const DragAndDropToParties = (props: {
@@ -28,9 +28,10 @@ const DragAndDropToParties = (props: {
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
   title: string;
+  subtitle?: string;
   onComplete: () => void;
 }) => {
-  const { handleAddItem, dropItems, dropItemType, title, onComplete } = props;
+  const { handleAddItem, dropItems, dropItemType, title, onComplete, subtitle } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers, loading: offersLoading } = useOffers();
@@ -52,6 +53,7 @@ const DragAndDropToParties = (props: {
   return (
     <div className={classNames('setup-page select', { dropItemType })}>
       <h4>{title}</h4>
+      <p className='subtitle'>{subtitle}</p>
       <div className="page-row">
         <div>
           <p className="bold">Parties</p>

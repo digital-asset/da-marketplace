@@ -66,6 +66,9 @@ const OfferServicesPage = (props: {
 
   return (
     <div className="setup-page offer-services">
+      <h4>Build Network</h4>
+      <p className="subtitle"></p>
+
       <DamlLedger
         party={adminCredentials.party}
         token={adminCredentials.token}
@@ -192,6 +195,15 @@ const OfferForm = (props: {
         options={partyOptions}
       />
 
+      <Button
+        className="ghost offer"
+        disabled={
+          !offerInfo?.provider || !offerInfo.customer || !offerInfo.services || creatingOffer
+        }
+        onClick={() => handleOffer()}
+      >
+        {creatingOffer ? 'Creating Offer...' : 'Offer'}
+      </Button>
       <Button
         className="ghost offer"
         disabled={

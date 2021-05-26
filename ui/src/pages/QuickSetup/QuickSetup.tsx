@@ -41,9 +41,9 @@ import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace
 
 enum MenuItems {
   ADD_PARTIES = 'Add Parties',
-  SELECT_ROLES = 'Select Roles',
+  SELECT_ROLES = 'Select Services',
   SELECT_AUTOMATION = 'Select Automation',
-  OFFER_SERVICES = 'Offer Services',
+  OFFER_SERVICES = 'Build Network',
   REVIEW = 'Review',
 }
 

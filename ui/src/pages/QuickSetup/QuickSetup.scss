@@ -76,6 +76,10 @@
           height: 100%;
         }
 
+        p.subtitle {
+            margin-bottom: $spacing-s;
+        }
+
         .page-row {
           display: flex;
           flex-direction: row;
@@ -361,9 +365,7 @@
         &.select {
           justify-content: unset;
 
-          i {
-            margin-bottom: $spacing-s;
-          }
+  
 
           &.roles {
             .party-name p.dropped-items {

@@ -63,6 +63,7 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
       dropItemType={DropItemTypes.AUTOMATION}
       title={'Drag and Drop Automation to Parties'}
       onComplete={onComplete}
+      subtitle='Choose automations to run on behalf of a specific party'
     />
   );
 
