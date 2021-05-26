@@ -17,7 +17,7 @@ function layoutReducer(state: LayoutState, action: any) {
   }
 }
 
-const LayoutProvider: React.FC = ({ children }) => {
+export const LayoutProvider: React.FC = ({ children }) => {
   var [state, dispatch] = React.useReducer(layoutReducer, {
     isSidebarOpened: true,
   });
@@ -27,28 +27,3 @@ const LayoutProvider: React.FC = ({ children }) => {
     </LayoutStateContext.Provider>
   );
 };
-
-function useLayoutState() {
-  var context = React.useContext(LayoutStateContext);
-  if (context === undefined) {
-    throw new Error('useLayoutState must be used within a LayoutProvider');
-  }
-  return context;
-}
-
-function useLayoutDispatch() {
-  var context = React.useContext(LayoutDispatchContext);
-  if (context === undefined) {
-    throw new Error('useLayoutDispatch must be used within a LayoutProvider');
-  }
-  return context;
-}
-
-export { LayoutProvider, useLayoutState, useLayoutDispatch, toggleSidebar };
-
-// ###########################################################
-function toggleSidebar(dispatch: React.Dispatch<any>) {
-  dispatch({
-    type: 'TOGGLE_SIDEBAR',
-  });
-}

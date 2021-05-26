@@ -10,9 +10,9 @@ import useDamlStreamQuery, { StreamErrors } from './websocket';
 import { CreateEvent } from '@daml/ledger';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 
-export const AS_PUBLIC = true;
+const AS_PUBLIC = true;
 
-export type QueryStream = {
+type QueryStream = {
   templateMap: Map<string, Template<any, any, any>>;
   publicTemplateIds: string[];
   publicContracts: CreateEvent<any, any, any>[];
@@ -30,7 +30,7 @@ export type QueryStream = {
   connectionActive: boolean;
 };
 
-export const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
+const QueryStreamContext = createContext<QueryStream | undefined>(undefined);
 
 type PublicTokenAPIResult =
   | {
@@ -38,7 +38,7 @@ type PublicTokenAPIResult =
     }
   | undefined;
 
-export const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
+const getPublicToken = async (publicParty: string): Promise<string | undefined> => {
   let publicToken = undefined;
 
   if (deploymentMode === DeploymentMode.DEV) {
@@ -190,31 +190,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
 
   return React.createElement(QueryStreamContext.Provider, { value: queryStream }, children);
 };
-
-export function usePublicToken() {
-  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.publicToken;
-}
-
-export function usePublicLoading() {
-  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.publicLoading;
-}
-
-export function usePartyLoading() {
-  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.partyLoading;
-}
-
-export function useLoading() {
-  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.publicLoading || queryStream?.partyLoading;
-}
-
-export function useConnectionActive() {
-  const queryStream: QueryStream | undefined = React.useContext(QueryStreamContext);
-  return queryStream?.connectionActive;
-}
 
 export function useContractQuery<T extends object, K, I extends string = string>(
   template: Template<T, K, I>,

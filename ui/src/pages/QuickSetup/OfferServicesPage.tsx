@@ -9,16 +9,28 @@ import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Cus
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
-import Credentials from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 import { LoadingWheel } from './QuickSetup';
 import { useStreamQueries } from '../../Main';
+import { itemListAsText } from '../../pages/page/utils';
 
 import { InformationIcon, CheckMarkIcon } from '../../icons/icons';
 
-import { ServicesProvider, useServiceContext, ServiceKind } from '../../context/ServicesContext';
+import {
+  ServicesProvider,
+  useServiceContext,
+  ServiceKind,
+  Service,
+} from '../../context/ServicesContext';
+import _ from 'lodash';
 
-import { OffersProvider, useOffers, OfferServiceKind } from '../../context/OffersContext';
+import {
+  OffersProvider,
+  useOffers,
+  OfferServiceKind,
+  ServiceOffer,
+} from '../../context/OffersContext';
 import { RoleKind } from '../../context/RolesContext';
 
 import { useWellKnownParties } from '@daml/hub-react/lib';
@@ -27,7 +39,7 @@ import { retrieveUserParties } from '../../Parties';
 interface IOfferServiceInfo {
   provider?: string;
   customer?: string;
-  service?: OfferServiceKind;
+  services?: OfferServiceKind[];
 }
 
 const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
@@ -43,7 +55,8 @@ const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
 
   useEffect(() => {
     if (provider) {
-      setToken(userParties.find(p => p.party === provider)?.token);
+      const token = computeToken(provider);
+      setToken(token);
     }
   }, [userParties, provider]);
 
@@ -79,7 +92,7 @@ const OfferServicesPage = (props: { adminCredentials: Credentials }) => {
           wsBaseUrl={wsBaseUrl}
         >
           <QueryStreamProvider defaultPartyToken={token}>
-            <CreateServiceOffer
+            <CreateServiceOffers
               offerInfo={offerInfo}
               onFinish={() => {
                 setCreatingOffer(false);
@@ -114,7 +127,7 @@ const OfferForm = (props: {
     return { text: i, value: i };
   });
 
-  const [warning, setWarning] = useState<JSX.Element>();
+  const [warnings, setWarnings] = useState<JSX.Element[]>();
 
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
@@ -148,10 +161,11 @@ const OfferForm = (props: {
       />
       <Form.Select
         className="offer-select"
-        label={<p className="input-label">Service:</p>}
+        label={<p className="input-label">Services:</p>}
         placeholder="Select..."
+        multiple
         onChange={(_, data: any) =>
-          setOfferInfo({ ...offerInfo, service: data.value as OfferServiceKind })
+          setOfferInfo({ ...offerInfo, services: data.value as OfferServiceKind[] })
         }
         options={serviceOptions}
       />
@@ -171,33 +185,35 @@ const OfferForm = (props: {
       <Button
         className="ghost offer"
         disabled={
-          !offerInfo?.provider || !offerInfo.customer || !offerInfo.service || creatingOffer
+          !offerInfo?.provider || !offerInfo.customer || !offerInfo.services || creatingOffer
         }
         onClick={() => handleOffer()}
       >
         {creatingOffer ? 'Creating Offer...' : 'Offer'}
       </Button>
-      {warning && offerInfo && (
-        <div className="warning">
-          <InformationIcon /> {warning}
-        </div>
-      )}
+      {warnings &&
+        offerInfo &&
+        warnings.map(w => (
+          <div className="warning">
+            <InformationIcon /> {w}
+          </div>
+        ))}
     </div>
   );
 
-  function findExistingOffer() {
+  function findExistingOffer(service: OfferServiceKind) {
     return !!serviceOffers.find(
       p =>
-        p.service === offerInfo?.service &&
+        p.service === service &&
         p.contract.payload.provider === offerInfo?.provider &&
         p.contract.payload.customer === offerInfo?.customer
     );
   }
 
-  function findExistingService() {
+  function findExistingService(service: OfferServiceKind) {
     return !!services.find(
       p =>
-        (p.service as string) === (offerInfo?.service as string) &&
+        (p.service as string) === (service as string) &&
         p.contract.payload.provider === offerInfo?.provider &&
         p.contract.payload.customer === offerInfo?.customer
     );
@@ -224,61 +240,70 @@ const OfferForm = (props: {
     return undefined;
   }
 
-  function findExistingAction() {
-    if (findExistingOffer()) {
+  function findExistingAction(service: OfferServiceKind) {
+    if (findExistingOffer(service)) {
       return 'offered';
-    } else if (findExistingService()) {
+    } else if (findExistingService(service)) {
       return 'provides';
     }
     return undefined;
   }
 
   function handleOffer() {
-    setWarning(undefined);
+    setWarnings([]);
 
     if (!offerInfo) {
       return;
     }
 
-    const { service, provider, customer } = offerInfo;
+    const { services, provider, customer } = offerInfo;
 
-    if (!service || !provider || !customer) {
+    if (!services || !provider || !customer) {
       return;
     }
 
-    const existingAction = findExistingAction();
+    let warningList: JSX.Element[] = [];
 
-    if (existingAction) {
-      return setWarning(
-        <p>
-          {getName(provider)} already {existingAction} {getName(customer)} with a {service} Service
-        </p>
-      );
-    }
+    services.forEach(service => {
+      const existingAction = findExistingAction(service);
 
-    const missingRole = findMissingRole(service);
+      if (existingAction) {
+        warningList = [
+          ...warningList,
+          <p>
+            Existing Service: {getName(provider)} already {existingAction} {getName(customer)} with
+            a {service} Service
+          </p>,
+        ];
+      }
 
-    if (missingRole) {
-      return setWarning(
-        <p>
-          {getName(provider)} must have a {missingRole} Role Contract to offer {service} services.{' '}
-          Go back to the <a onClick={() => backToSelectRoles()}>Select Roles</a> page to assign{' '}
-          {getName(provider)} a {missingRole} Role.
-        </p>
-      );
+      const missingRole = findMissingRole(service);
+
+      if (missingRole) {
+        warningList = [
+          ...warningList,
+          <p>
+            Missing Roles: {getName(provider)} must have a {missingRole} Role Contract to offer{' '}
+            {service} services.
+          </p>,
+        ];
+      }
+    });
+
+    if (warningList.length > 0) {
+      return setWarnings(warningList);
     }
 
     return createOffer();
   }
 };
 
-const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () => void }) => {
+const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: () => void }) => {
   const { offerInfo, onFinish } = props;
 
-  const { provider, customer, service } = offerInfo;
+  const { provider, customer, services } = offerInfo;
 
   const ledger = useLedger();
-  const { getName } = usePartyName('');
 
   const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
 
@@ -290,14 +315,13 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
     if (
       !provider ||
       !customer ||
-      !service ||
+      !services ||
       tradingRoleLoading ||
       clearingRoleLoading ||
       custodyRoleLoading
     ) {
       return;
     }
-
     const params = {
       customer,
       provider,
@@ -309,29 +333,33 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
     const custodyRoleId = custodyRoles[0]?.contractId;
 
     async function offerServices() {
-      console.log('Creating Service Offer', service, 'for', getName(offerInfo.customer || ''));
-
-      switch (service) {
-        case OfferServiceKind.TRADING:
-          await ledger.exercise(TradingRole.OfferTradingService, clearingRoleId, params);
-          break;
-        case OfferServiceKind.MARKET_CLEARING:
-          await ledger.exercise(ClearingRole.OfferMarketService, clearingRoleId, params);
-          break;
-        case OfferServiceKind.CLEARING:
-          await ledger.exercise(ClearingRole.OfferClearingService, clearingRoleId, params);
-          break;
-        case OfferServiceKind.LISTING:
-          await ledger.exercise(TradingRole.OfferListingService, tradingRoleId, params);
-          break;
-        case OfferServiceKind.CUSTODY:
-          await ledger.exercise(CustodyRole.OfferCustodyService, custodyRoleId, params);
-          break;
-        case OfferServiceKind.ISSUANCE:
-          await ledger.exercise(CustodyRole.OfferIssuanceService, custodyRoleId, params);
-          break;
-        default:
-          throw new Error(`Unsupported service: ${service}`);
+      if (services && services.length > 0) {
+        await Promise.all(
+          services.map(async service => {
+            switch (service) {
+              case OfferServiceKind.TRADING:
+                await ledger.exercise(TradingRole.OfferTradingService, clearingRoleId, params);
+                break;
+              case OfferServiceKind.MARKET_CLEARING:
+                await ledger.exercise(ClearingRole.OfferMarketService, clearingRoleId, params);
+                break;
+              case OfferServiceKind.CLEARING:
+                await ledger.exercise(ClearingRole.OfferClearingService, clearingRoleId, params);
+                break;
+              case OfferServiceKind.LISTING:
+                await ledger.exercise(TradingRole.OfferListingService, tradingRoleId, params);
+                break;
+              case OfferServiceKind.CUSTODY:
+                await ledger.exercise(CustodyRole.OfferCustodyService, custodyRoleId, params);
+                break;
+              case OfferServiceKind.ISSUANCE:
+                await ledger.exercise(CustodyRole.OfferIssuanceService, custodyRoleId, params);
+                break;
+              default:
+                throw new Error(`Unsupported service: ${service}`);
+            }
+          })
+        );
       }
       onFinish();
     }
@@ -340,6 +368,14 @@ const CreateServiceOffer = (props: { offerInfo: IOfferServiceInfo; onFinish: () 
 
   return null;
 };
+
+type IOfferRowInfo = {
+  provider: string;
+  customers: string[];
+  service: string;
+}[];
+
+type ServiceContract = Service | ServiceOffer;
 
 export const OffersTable = () => {
   const [loading, setLoading] = useState(false);
@@ -361,26 +397,29 @@ export const OffersTable = () => {
     );
   }
 
+  const serviceOffersByProvider = sortByProvider(serviceOffers);
+  const createdServicesByProvider = sortByProvider(services);
+
   return (
     <div className="all-offers">
       <>
         <h4>Services</h4>
-        {serviceOffers.length > 0 || createdServices.length > 0 ? (
+        {serviceOffersByProvider.length > 0 || createdServices.length > 0 ? (
           <div className="offers">
-            {serviceOffers.map(r => (
+            {serviceOffersByProvider.map((r, i) => (
               <OfferRow
-                key={r.contract.contractId}
-                provider={r.contract.payload.provider}
-                customer={r.contract.payload.customer}
+                key={i}
+                provider={r.provider}
+                customers={r.customers}
                 service={r.service}
                 isAccepted={false}
               />
             ))}
-            {createdServices.map(r => (
+            {createdServicesByProvider.map((r, i) => (
               <OfferRow
-                key={r.contract.contractId}
-                provider={r.contract.payload.provider}
-                customer={r.contract.payload.customer}
+                key={i}
+                provider={r.provider}
+                customers={r.customers}
                 service={r.service}
                 isAccepted={true}
               />
@@ -396,25 +435,52 @@ export const OffersTable = () => {
   );
 };
 
+function sortByProvider(contracts: ServiceContract[]): IOfferRowInfo {
+  return contracts.reduce((acc, r) => {
+    const providerDetails = acc.find(
+      i => i.provider === r.contract.payload.provider && i.service === r.service
+    );
+
+    let baseAcc = acc;
+
+    const provider = providerDetails?.provider || r.contract.payload.provider;
+    const service = providerDetails?.service || r.service;
+    const newCustomers = [...(providerDetails?.customers || []), r.contract.payload.customer];
+
+    if (providerDetails) {
+      baseAcc = acc.filter(a => a !== providerDetails);
+    }
+
+    return [
+      ...baseAcc,
+      {
+        provider,
+        service,
+        customers: newCustomers,
+      },
+    ];
+  }, [] as IOfferRowInfo);
+}
+
 const OfferRow = (props: {
   provider: string;
-  customer: string;
+  customers: string[];
   service: string;
   isAccepted: boolean;
 }) => {
-  const { provider, customer, service, isAccepted } = props;
+  const { provider, customers, service, isAccepted } = props;
 
   const { getName } = usePartyName('');
 
   const providerName = getName(provider);
-  const customerName = getName(customer);
+  const customerNames = customers.map(c => getName(c));
 
   return (
     <div className="offer-row">
-      <div className="offer">
-        {providerName} <p>{isAccepted ? 'provides' : 'offered'}</p> {service} Service <p>to</p>{' '}
-        {customerName}
-      </div>
+      <p>
+        {providerName} {isAccepted ? 'provides' : 'offered'} {service} Service to{' '}
+        {itemListAsText(customerNames)}
+      </p>
       {isAccepted && (
         <p className="accepted">
           <CheckMarkIcon />

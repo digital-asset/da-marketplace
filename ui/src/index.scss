@@ -19,7 +19,6 @@
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
 @use 'pages/custody/Account';
-@use 'pages/origination/New' as OriginationNew;
 
 @use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
@@ -248,7 +247,6 @@ html {
         @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
-        @include OriginationNew.origination-new();
         @include InfoCard.info-card();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();

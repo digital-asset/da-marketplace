@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export interface IDismissable<T extends HTMLElement, C extends HTMLElement> {
+interface IDismissable<T extends HTMLElement, C extends HTMLElement> {
   refDismissable: React.RefObject<T>;
   refControl: React.RefObject<C>;
 }
@@ -58,4 +58,23 @@ export async function halfSecondPromise() {
   await new Promise<void>((resolve, _) => {
     setTimeout(() => resolve(), 500);
   });
+}
+
+export function itemListAsText(a: Array<string>, conjunction?: string): string {
+  const LIMIT = 8;
+
+  if (!a.length) {
+    return '';
+  } else if (a.length === 1) {
+    return a[0];
+  }
+
+  const breakpoint = Math.min(a.length - 1, LIMIT);
+
+  const first = a.slice(0, breakpoint);
+  const rest = a.slice(breakpoint);
+
+  return [first.join(', '), rest.length > 1 ? rest.length + ' others' : rest[0]].join(
+    conjunction || ' and '
+  );
 }

@@ -55,7 +55,7 @@ export enum MenuItems {
   LOG_IN = 'login-in-parties',
 }
 
-export enum LoadingStatus {
+enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }
