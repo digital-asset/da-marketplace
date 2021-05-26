@@ -481,11 +481,6 @@ const OfferRow = (props: {
         {providerName} {isAccepted ? 'provides' : 'offered'} {service} Service to{' '}
         {itemListAsText(customerNames)}
       </p>
-      {isAccepted && (
-        <p className="accepted">
-          <CheckMarkIcon />
-        </p>
-      )}
     </div>
   );
 };

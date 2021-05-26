@@ -125,12 +125,14 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             <ArrowLeftIcon color={'white'} />
             Back
           </Button>
-          <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
-            <Button className="button ghost dark control-button">
-              Skip to Log In
-              <ArrowRightIcon color={'white'} />
-            </Button>
-          </NavLink>
+          {activeMenuItem !== MenuItems.LOG_IN && (
+            <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
+              <Button className="button ghost dark control-button">
+                Skip to Log In
+                <ArrowRightIcon color={'white'} />
+              </Button>
+            </NavLink>
+          )}
         </div>
 
         <div className="quick-setup-header">
