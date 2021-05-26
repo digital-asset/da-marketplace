@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Header } from 'semantic-ui-react';
 
+export type FieldCallback<T> = (arg: T) => Field;
+export type FieldCallbacks<T> = Record<string, FieldCallback<T>>;
+
 interface RegularField {
   label: string;
   type: 'text' | 'number' | 'date';

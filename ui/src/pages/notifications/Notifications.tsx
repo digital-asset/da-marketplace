@@ -118,12 +118,14 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const biddingServiceOffers = useStreamQueries(BiddingServiceOffer);
   const biddingServiceRequests = useStreamQueries(BiddingServiceRequest);
 
+  const accountRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useStreamQueries(AssetSettlementRule)
     .contracts.filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
 
   const accountNames = accounts.map(a => a.id.label);
 
+  const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
   const allocationAccounts = useStreamQueries(AllocationAccountRule)
     .contracts.filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
@@ -311,16 +313,24 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: TradingServiceOffer.Accept as OfferAcceptChoice,
         decline: TradingServiceOffer.Decline as OfferDeclineChoice,
       },
-      acceptFields: {
-        tradingAccount: {
-          label: 'Trading Account',
-          type: 'selection',
-          items: accountNames,
+      fromContractFields: {
+        tradingAccount: (c: TradingServiceOffer) => {
+          return {
+            label: 'Trading Account',
+            type: 'selection',
+            items: accountRules
+              .filter(ar => ar.payload.observers.map.has(c.provider))
+              .map(ar => ar.payload.account.id.label),
+          };
         },
-        allocationAccount: {
-          label: 'Allocation Account',
-          type: 'selection',
-          items: allocationAccounts,
+        allocationAccount: (c: TradingServiceOffer) => {
+          return {
+            label: 'Allocation Account',
+            type: 'selection',
+            items: allocationAccountRules
+              .filter(ar => ar.payload.nominee == c.provider)
+              .map(ar => ar.payload.account.id.label),
+          };
         },
       },
       lookupFields: fields => {
@@ -380,16 +390,24 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
         accept: ClearingServiceOffer.Accept as OfferAcceptChoice,
         decline: ClearingServiceOffer.Decline as OfferDeclineChoice,
       },
-      acceptFields: {
-        clearingAccount: {
-          label: 'Clearing Account',
-          type: 'selection',
-          items: accountNames,
+      fromContractFields: {
+        clearingAccount: (c: ClearingServiceOffer) => {
+          return {
+            label: 'Clearing Account',
+            type: 'selection',
+            items: accountRules
+              .filter(ar => ar.payload.observers.map.has(c.provider))
+              .map(acc => acc.payload.account.id.label),
+          };
         },
-        marginAccount: {
-          label: 'Margin Account',
-          type: 'selection',
-          items: allocationAccountNames,
+        marginAccount: (c: ClearingServiceOffer) => {
+          return {
+            label: 'Margin Account',
+            type: 'selection',
+            items: allocationAccountRules
+              .filter(ar => ar.payload.nominee == c.provider)
+              .map(acc => acc.payload.account.id.label),
+          };
         },
       },
       lookupFields: fields => {
@@ -666,8 +684,10 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                   return n.contracts.map(c => (
                     <OfferNotification
                       key={c.contractId}
-                      contract={c.contractId}
+                      contractId={c.contractId}
+                      contract={c.payload}
                       serviceText={n.service + ' ' + n.kind}
+                      fromContractFields={n.fromContractFields}
                       offerer={c.signatories.length > 1 ? c.payload.provider : c.signatories[0]}
                       acceptChoice={n.choices.accept}
                       acceptFields={n.acceptFields}

@@ -130,7 +130,7 @@ clearedTradingTest = do
   -- Have Bob fail a margin call
   calculationCid <- submit clearinghouse $
     exerciseCmd bob.clearingServiceCid Clearing.CreateMarginCalculation with
-      currency = "USD"; targetAmount = 50_000.0; calculationId = "34556"
+      currency = usd.id; targetAmount = 50_000.0; calculationId = "34556"
 
   submit clearinghouse $
     exerciseByKeyCmd @Clearing.Service (operator,clearinghouse,bob.customer) Clearing.PerformMarginFill
