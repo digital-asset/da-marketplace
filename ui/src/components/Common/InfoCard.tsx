@@ -12,7 +12,7 @@ const InfoCard = (props: { title: string; info: ICardInfo[]; actions?: JSX.Eleme
     <Header as="h3">{props.title}</Header>
     <List>
       {props.info.map(i => (
-        <List.Item>
+        <List.Item key={i.label}>
           <Header as="h4">{i.label}:</Header> <p>{i.data}</p>
         </List.Item>
       ))}

@@ -150,37 +150,6 @@ export const render = (el, data) => {
       d.x0 = d.x;
       d.y0 = d.y;
     });
-
-    // Link annotations
-    // const link = svg.append("g")
-    //     .attr("fill", "none")
-    //     .attr("stroke", "black")
-    //     .attr("stroke-width", 0.5)
-    //   .selectAll(".link")
-    //   .data(links)
-    //   .enter()
-    //     .append("g");
-    // link.insert("path", ".node")
-    //   .attr("class", "link")
-    //   .attr("d", renderLink);
-    // link.append("rect")
-    //   .attr("x", d => 0.5 * (d.source.x + d.target.x) - 30)
-    //   .attr("y", d => 0.5 * (d.source.y + d.target.y) - 6)
-    //   .attr("width", 60)
-    //   .attr("height", 12)
-    //   .attr("rx", 2)
-    //   .attr("ry", 2)
-    //   .attr("stroke-width", 0)
-    //   .attr("fill", "#f2f2f2");
-    // link.append("text")
-    //   .text(d => d.target.data.linkText)
-    //   .attr("x", d => 0.5 * (d.source.x + d.target.x))
-    //   .attr("y", d => 0.5 * (d.source.y + d.target.y))
-    //   .attr("stroke-width", 0)
-    //   .attr("fill", "black")
-    //   .attr("dominant-baseline", "central")
-    //   .style("text-anchor", "middle")
-    //   .style("font-size", "10px")
   };
 
   const renderLegend = () => {

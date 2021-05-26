@@ -94,7 +94,7 @@ const Offer: React.FC<{ service: ServiceKind }> = ({ service }) => {
         operator,
       });
     }
-  }, [dialogState]);
+  }, [dialogState, identities, operator, provider]);
 
   const onClose = (open: boolean) => {
     setOpenDialog(open);

@@ -15,7 +15,7 @@ import { LoadingWheel } from './QuickSetup';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
 
-import { InformationIcon, CheckMarkIcon } from '../../icons/icons';
+import { InformationIcon } from '../../icons/icons';
 
 import {
   ServicesProvider,
@@ -23,7 +23,6 @@ import {
   ServiceKind,
   Service,
 } from '../../context/ServicesContext';
-import _ from 'lodash';
 
 import {
   OffersProvider,
@@ -364,7 +363,21 @@ const CreateServiceOffers = (props: { offerInfo: IOfferServiceInfo; onFinish: ()
       onFinish();
     }
     offerServices();
-  }, [tradingRoleLoading, clearingRoleLoading, custodyRoleLoading]);
+  }, [
+    services,
+    tradingRoleLoading,
+    clearingRoleLoading,
+    custodyRoleLoading,
+    clearingRoles,
+    custodyRoles,
+    customer,
+    ledger,
+    offerInfo.customer,
+    onFinish,
+    operator,
+    provider,
+    tradingRoles,
+  ]);
 
   return null;
 };

@@ -237,6 +237,9 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       return onComplete();
     }
   }, [
+    ledger,
+    onComplete,
+    userParties,
     verifiedIdentities,
     verifiedIdentitiesLoading,
     regulatorServices,
@@ -264,40 +267,40 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
     useStreamQueries(RegulatorOffer);
 
-  const createOperatorService = async () => {
-    return await ledger.create(OperatorService, { operator: adminCredentials.party });
-  };
-
-  const createRegulatorRole = async () => {
-    return await ledger.create(RegulatorRole, {
-      operator: adminCredentials.party,
-      provider: adminCredentials.party,
-    });
-  };
-
-  const offerRegulatorService = async (party: string) => {
-    const regulatorRoleId = regulatorRoles[0]?.contractId;
-    if (regulatorRoleId) {
-      return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
-        customer: party,
-      });
-    }
-  };
-
-  const offerRegulatorServices = async () => {
-    await Promise.all(
-      userParties.map(async party => {
-        if (
-          !regulatorServices.find(c => c.payload.customer === party.party) &&
-          !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-        ) {
-          return await offerRegulatorService(party.party);
-        }
-      })
-    );
-  };
-
   useEffect(() => {
+    const createOperatorService = async () => {
+      return await ledger.create(OperatorService, { operator: adminCredentials.party });
+    };
+
+    const createRegulatorRole = async () => {
+      return await ledger.create(RegulatorRole, {
+        operator: adminCredentials.party,
+        provider: adminCredentials.party,
+      });
+    };
+
+    const offerRegulatorService = async (party: string) => {
+      const regulatorRoleId = regulatorRoles[0]?.contractId;
+      if (regulatorRoleId) {
+        return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
+          customer: party,
+        });
+      }
+    };
+
+    const offerRegulatorServices = async () => {
+      await Promise.all(
+        userParties.map(async party => {
+          if (
+            !regulatorServices.find(c => c.payload.customer === party.party) &&
+            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
+          ) {
+            return await offerRegulatorService(party.party);
+          }
+        })
+      );
+    };
+
     if (
       operatorServiceLoading ||
       regulatorRolesLoading ||
@@ -324,6 +327,10 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       offerRegulatorServices();
     }
   }, [
+    ledger,
+    adminCredentials.party,
+    userParties,
+    onComplete,
     regulatorRolesLoading,
     operatorServiceLoading,
     regulatorServicesLoading,

@@ -65,7 +65,7 @@ const inferPartyName = (party: string, wellKnownParties: Parties | null): string
 };
 
 export const usePartyName = (party: string) => {
-  const { contracts: verifiedIdentities, loading } = useStreamQueries(VerifiedIdentity);
+  const { contracts: verifiedIdentities } = useStreamQueries(VerifiedIdentity);
   const { parties: wellKnownParties } = useWellKnownParties();
 
   const getName = useCallback(
@@ -87,7 +87,7 @@ export const usePartyName = (party: string) => {
       // Cannot find an identity contract or infer the party name, so fallback to party ID
       return party;
     },
-    [verifiedIdentities, loading]
+    [wellKnownParties, verifiedIdentities]
   );
 
   const name = useMemo(() => getName(party), [party, getName]);

@@ -9,7 +9,7 @@ import {
   RequestOpenAllocationAccount,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { CreateEvent } from '@daml/ledger';
-import { DropdownItemProps, Form, Button } from 'semantic-ui-react';
+import { DropdownItemProps, Form } from 'semantic-ui-react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { createDropdownProp } from '../common';

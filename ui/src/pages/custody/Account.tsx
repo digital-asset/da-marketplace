@@ -9,7 +9,6 @@ import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Button, Header } from 'semantic-ui-react';
-import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
@@ -19,7 +18,6 @@ import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import _ from 'lodash';
 import { halfSecondPromise } from '../page/utils';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -73,12 +71,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     },
     [deposits, addSignatoryAsDepositObserver]
   );
-
-  // TODO: test
-  //   useEffect(() => {
-  //     setUpdatingDeposits(true);
-  //     updateDeposits(3).then(() => setUpdatingDeposits(false));
-  //   }, [updateDeposits]);
 
   const allAccounts = useMemo(
     () =>

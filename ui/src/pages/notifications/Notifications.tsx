@@ -328,7 +328,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
             label: 'Allocation Account',
             type: 'selection',
             items: allocationAccountRules
-              .filter(ar => ar.payload.nominee == c.provider)
+              .filter(ar => ar.payload.nominee === c.provider)
               .map(ar => ar.payload.account.id.label),
           };
         },
@@ -405,7 +405,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
             label: 'Margin Account',
             type: 'selection',
             items: allocationAccountRules
-              .filter(ar => ar.payload.nominee == c.provider)
+              .filter(ar => ar.payload.nominee === c.provider)
               .map(acc => acc.payload.account.id.label),
           };
         },

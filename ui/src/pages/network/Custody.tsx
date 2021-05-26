@@ -1,5 +1,4 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
 import { Button } from 'semantic-ui-react';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
@@ -21,7 +20,6 @@ type Props = {
 
 export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   const party = useParty();
-  const history = useHistory();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 

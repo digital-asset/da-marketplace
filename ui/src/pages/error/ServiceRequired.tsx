@@ -51,7 +51,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       allocationAccountRules
         .filter(c => c.payload.account.owner === party)
         .map(c => c.payload.account),
-    [allocationAccountRules]
+    [party, allocationAccountRules]
   );
   const allocationAccountNames = useMemo(
     () => allocationAccounts.map(a => a.id.label),
@@ -64,7 +64,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
       assetSettlementRules
         .filter(c => c.payload.account.owner === party)
         .map(c => c.payload.account),
-    [assetSettlementRules]
+    [party, assetSettlementRules]
   );
   const accountNames = useMemo(() => accounts.map(a => a.id.label), [accounts]);
 
@@ -130,25 +130,25 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
     }
 
     setRequestParams(params);
-  }, [dialogState]);
-
-  const requestService = <T extends ServiceRequestTemplates>(
-    service: Template<T, undefined, string>,
-    extraFields?: object
-  ) => {
-    setFields({
-      provider: {
-        label: 'Provider',
-        type: 'selection',
-        items: legalNames,
-      },
-      ...extraFields,
-    });
-
-    setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
-  };
+  }, [dialogState, accounts, allocationAccounts, identities, party]);
 
   useEffect(() => {
+    const requestService = <T extends ServiceRequestTemplates>(
+      service: Template<T, undefined, string>,
+      extraFields?: object
+    ) => {
+      setFields({
+        provider: {
+          label: 'Provider',
+          type: 'selection',
+          items: legalNames,
+        },
+        ...extraFields,
+      });
+
+      setRequest(service as unknown as Template<ServiceRequestTemplates, undefined, string>);
+    };
+
     switch (service) {
       case ServiceKind.CLEARING:
         requestService(ClearingRequest, {
@@ -207,7 +207,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
         requestService(ListingRequest);
         break;
     }
-  }, [legalNames, accountNames, allocationAccountNames]);
+  }, [service, legalNames, accountNames, allocationAccountNames]);
 
   const history = useHistory();
   const onClose = (open: boolean) => {

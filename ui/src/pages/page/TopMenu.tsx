@@ -32,7 +32,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
             </Header>
           </Menu.Item>
           {buttons?.map(b => (
-            <Menu.Item className="menu-button">{b}</Menu.Item>
+            <Menu.Item key={b.key} className="menu-button">
+              {b}
+            </Menu.Item>
           ))}
         </Menu.Menu>
         <Menu.Menu position="right">
@@ -54,10 +56,6 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
           </Menu.Item>
         </Menu.Menu>
       </Menu>
-
-      {/* <div className='notifications'>
-                { notifications }
-            </div> */}
     </div>
   );
 };
