@@ -16,8 +16,8 @@ import { OffersProvider } from '../../context/OffersContext';
 import { retrieveParties } from '../../Parties';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
-const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
-  const { adminCredentials, onComplete } = props;
+const ReviewPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
 
   return (
     <div className="setup-page review">
@@ -41,10 +41,6 @@ const ReviewPage = (props: { adminCredentials: Credentials; onComplete: () => vo
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
-
-      <Button className="ghost next" onClick={() => onComplete()}>
-        Next
-      </Button>
     </div>
   );
 };
