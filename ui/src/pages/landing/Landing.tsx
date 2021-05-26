@@ -31,13 +31,14 @@ import {
   Request as RegulatorRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
-import { Template } from '@daml/types';
+import { Template, Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
-import { Fields } from '../../components/InputDialog/Fields';
+import { Fields, Field, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import _ from 'lodash';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -177,13 +178,11 @@ const Landing = () => {
   const allocationAccounts = allocationAccountRules
     .filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
-  const allocationAccountNames = allocationAccounts.map(a => a.id.label);
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules
     .filter(c => c.payload.account.owner === party)
     .map(c => c.payload.account);
-  const accountNames = accounts.map(a => a.id.label);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
@@ -191,6 +190,7 @@ const Landing = () => {
   const [serviceKind, setServiceKind] = useState<ServiceKind>();
   const [openDialog, setOpenDialog] = useState(false);
   const [fields, setFields] = useState<object>({});
+  const [fieldsFromProvider, setFieldsFromProvider] = useState<FieldCallbacks<Party>>({});
   const [dialogState, setDialogState] = useState<any>({});
   const [requestParams, setRequestParams] = useState<RequestInterface>({
     provider: '',
@@ -257,11 +257,26 @@ const Landing = () => {
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
   );
 
+  useEffect(() => {
+    const provider =
+      identities.find(i => i.payload.legalName === dialogState?.provider)?.payload.customer || '';
+
+    const filteredFields: Fields = _.mapValues(fieldsFromProvider, createFieldFn =>
+      createFieldFn(provider)
+    );
+    setFields({
+      ...fields,
+      ...filteredFields,
+    });
+  }, [dialogState]);
+
   const requestService = <T extends ServiceRequestTemplates>(
     service: Template<T, undefined, string>,
     kind: ServiceKind,
-    extraFields?: Fields
+    extraFields?: Fields,
+    fieldsFromProvider?: FieldCallbacks<Party>
   ) => {
+    setFieldsFromProvider(fieldsFromProvider || {});
     setFields({
       provider: {
         label: 'Provider',
@@ -275,6 +290,12 @@ const Landing = () => {
     setServiceKind(kind);
     setOpenDialog(true);
   };
+  const [dialogDisabled, setDialogDisabled] = useState(false);
+  useEffect(() => {
+    setDialogDisabled(
+      Object.values(dialogState).filter(v => v !== '').length !== Object.values(fields).length
+    );
+  }, [dialogState]);
 
   if (serviceKind && request) {
     return (
@@ -285,10 +306,37 @@ const Landing = () => {
         params={requestParams}
         request={request}
         onChange={state => setDialogState(state)}
-        onClose={() => setServiceKind(undefined)}
+        disabled={dialogDisabled}
+        onClose={() => {
+          setServiceKind(undefined);
+        }}
       />
     );
   }
+  const makeAccountFilterField =
+    (label: string): FieldCallback<Party> =>
+    provider => {
+      return {
+        label,
+        type: 'selection',
+        items: assetSettlementRules
+          .filter(
+            ar => ar.payload.observers.map.has(provider) || ar.payload.account.provider == provider
+          )
+          .map(ar => ar.payload.account.id.label),
+      };
+    };
+  const makeAllocationAccountFilterField =
+    (label: string): FieldCallback<Party> =>
+    provider => {
+      return {
+        label,
+        type: 'selection',
+        items: allocationAccountRules
+          .filter(ar => ar.payload.nominee == provider)
+          .map(ar => ar.payload.account.id.label),
+      };
+    };
 
   return (
     <div className="landing">
@@ -340,74 +388,76 @@ const Landing = () => {
             <OverflowMenuEntry
               label="Request Clearing Service"
               onClick={() =>
-                requestService(ClearingRequest, ServiceKind.CLEARING, {
-                  clearingAccount: {
-                    label: 'Clearing Account',
-                    type: 'selection',
-                    items: accountNames,
-                  },
-                  marginAccount: {
-                    label: 'Margin Account',
-                    type: 'selection',
-                    items: allocationAccountNames,
-                  },
-                })
+                requestService(
+                  ClearingRequest,
+                  ServiceKind.CLEARING,
+                  {},
+                  {
+                    clearingAccount: makeAccountFilterField(
+                      'Clearing Account (requires provider to be observer on account'
+                    ),
+                    marginAccount: makeAllocationAccountFilterField(
+                      'Margin Account (requires provider to be nominee of allocation account)'
+                    ),
+                  }
+                )
               }
             />
             <OverflowMenuEntry
               label="Request Trading Service"
               onClick={() =>
-                requestService(TradingRequest, ServiceKind.TRADING, {
-                  tradingAccount: {
-                    label: 'Trading Account',
-                    type: 'selection',
-                    items: accountNames,
-                  },
-                  allocationAccount: {
-                    label: 'Allocation Account',
-                    type: 'selection',
-                    items: allocationAccountNames,
-                  },
-                })
+                requestService(
+                  TradingRequest,
+                  ServiceKind.TRADING,
+                  {},
+                  {
+                    tradingAccount: makeAccountFilterField(
+                      'Trading Account (requires provider to be provider on account)'
+                    ),
+                    allocationAccount: makeAllocationAccountFilterField(
+                      'Allocation Account (requires provider to be nominee on account)'
+                    ),
+                  }
+                )
               }
             />
             <OverflowMenuEntry
               label="Request Auction Service"
               onClick={() =>
-                requestService(AuctionRequest, ServiceKind.AUCTION, {
-                  tradingAccount: {
-                    label: 'Trading Account',
-                    type: 'selection',
-                    items: accountNames,
-                  },
-                  allocationAccount: {
-                    label: 'Allocation Account',
-                    type: 'selection',
-                    items: allocationAccountNames,
-                  },
-                  receivableAccount: {
-                    label: 'Receivable Account',
-                    type: 'selection',
-                    items: accountNames,
-                  },
-                })
+                requestService(
+                  AuctionRequest,
+                  ServiceKind.AUCTION,
+                  {},
+                  {
+                    tradingAccount: makeAccountFilterField(
+                      'Trading Account (requires provider to be provider or observer on account)'
+                    ),
+                    allocationAccount: makeAllocationAccountFilterField(
+                      'Allocation Account (requires provider to be nominee on account)'
+                    ),
+                    receivableAccount: makeAccountFilterField(
+                      'Receivable Account (requires provider to be provider or observer on account)'
+                    ),
+                  }
+                )
               }
             />
             <OverflowMenuEntry
               label="Request Bidding Service"
               onClick={() =>
-                requestService(BiddingRequest, ServiceKind.BIDDING, {
-                  tradingAccount: {
-                    label: 'Trading Account',
-                    type: 'selection',
-                    items: accountNames,
-                  },
-                  allocationAccount: {
-                    label: 'Allocation Account',
-                    type: 'selection',
-                    items: allocationAccountNames,
-                  },
-                })
+                requestService(
+                  BiddingRequest,
+                  ServiceKind.BIDDING,
+                  {},
+                  {
+                    tradingAccount: makeAccountFilterField(
+                      'Trading Account (requires provider to be provider on account)'
+                    ),
+                    allocationAccount: makeAllocationAccountFilterField(
+                      'Allocation Account (requires provider to be nominee on account)'
+                    ),
+                  }
+                )
               }
             />
           </OverflowMenu>
