@@ -16,8 +16,8 @@ import DragAndDropToParties, { formatTriggerName, DropItemTypes } from './DragAn
 
 import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
 
-const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
-  const { adminCredentials, onComplete } = props;
+const SelectAutomationPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
 
   return (
     <DamlLedger
@@ -30,7 +30,7 @@ const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete
         <AutomationProvider publicParty={publicParty}>
           <RolesProvider>
             <OffersProvider>
-              <DragAndDropAutomation onComplete={onComplete} />
+              <DragAndDropAutomation />
             </OffersProvider>
           </RolesProvider>
         </AutomationProvider>
@@ -39,9 +39,7 @@ const SelectAutomationPage = (props: { adminCredentials: Credentials; onComplete
   );
 };
 
-const DragAndDropAutomation = (props: { onComplete: () => void }) => {
-  const { onComplete } = props;
-
+const DragAndDropAutomation = () => {
   const automations = useAutomations();
 
   const triggerOptions = makeAutomationOptions(automations)?.map(option => {
@@ -62,7 +60,6 @@ const DragAndDropAutomation = (props: { onComplete: () => void }) => {
       dropItems={triggerOptions}
       dropItemType={DropItemTypes.AUTOMATION}
       title={'Drag and Drop Automation to Parties'}
-      onComplete={onComplete}
     />
   );
 

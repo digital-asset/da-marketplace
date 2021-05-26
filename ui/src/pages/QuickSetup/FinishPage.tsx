@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
@@ -60,28 +60,34 @@ const LoginTileGrid = () => {
   }
 
   return (
-    <div className="setup-page finish">
-      {identities.map(p => (
-        <div
-          className="log-in-tile"
-          key={p.payload.customer}
-          onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
-        >
-          <div className="log-in-row page-row">
-            <h4>{p.payload.legalName}</h4>
-            <p className="p2 log-in page-row">
-              Log in <ArrowRightIcon />
-            </p>
-          </div>
-          <p className="finished-roles">
-            {allRoles
-              .filter(r => r.contract.payload.provider === p.payload.customer)
-              .map(r => r.role)
-              .join(',')}
-          </p>
+    <>
+      <div className="setup-page finish">
+        <p className="dark details">cmd + click on a tile to launch a new tab </p>
+        <div className="log-in-tile-grid">
+          {identities.map(p => (
+            <Link
+              className="log-in-tile"
+              key={p.payload.customer}
+              onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
+              to={'/quick-setup/log-in-parties'}
+            >
+              <div className="log-in-row page-row">
+                <h4>{p.payload.legalName}</h4>
+                <p className="p2 log-in page-row">
+                  Log in <ArrowRightIcon />
+                </p>
+              </div>
+              <p className="finished-roles">
+                {allRoles
+                  .filter(r => r.contract.payload.provider === p.payload.customer)
+                  .map(r => r.role)
+                  .join(', ')}
+              </p>
+            </Link>
+          ))}
         </div>
-      ))}
-    </div>
+      </div>
+    </>
   );
 };
 
