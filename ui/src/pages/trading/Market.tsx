@@ -200,7 +200,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     } else if (
       deposits.reduce((acc, cur) => acc + parseFloat(cur.payload.asset.quantity), 0) >= quantity
     ) {
-      const [[headDeposit, ...tailDeposits], _] = deposits
+      const [[headDeposit, ...tailDeposits]] = deposits
         .sort((a, b) => parseFloat(a.payload.asset.quantity) - parseFloat(b.payload.asset.quantity))
         .reduce(
           ([assetDeposits, total], cur): [CreateEvent<AssetDeposit>[], number] => {
