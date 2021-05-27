@@ -4,8 +4,6 @@ import { useHistory, Link } from 'react-router-dom';
 
 import DamlLedger from '@daml/react';
 
-import { Button } from 'semantic-ui-react';
-
 import { ArrowRightIcon } from '../../icons/icons';
 
 import { loginUser, useUserDispatch } from '../../context/UserContext';
@@ -91,10 +89,6 @@ const LoginTileGrid = () => {
       </div>
     </>
   );
-
-  function openAll() {
-    return;
-  }
 };
 
 export default FinishPage;

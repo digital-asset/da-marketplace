@@ -60,7 +60,6 @@ const DragAndDropAutomation = () => {
       dropItems={triggerOptions}
       dropItemType={DropItemTypes.AUTOMATION}
       title={'Drag and Drop Automation to Parties'}
-      subtitle="Choose automations to run on behalf of a specific party"
     />
   );
 

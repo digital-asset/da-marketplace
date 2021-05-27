@@ -26,9 +26,8 @@ const DragAndDropToParties = (props: {
   dropItems: { name: string; value: string }[];
   dropItemType: DropItemTypes;
   title: string;
-  subtitle?: string;
 }) => {
-  const { handleAddItem, dropItems, dropItemType, title, subtitle } = props;
+  const { handleAddItem, dropItems, dropItemType, title } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers, loading: offersLoading } = useOffers();
@@ -50,7 +49,6 @@ const DragAndDropToParties = (props: {
   return (
     <div className={classNames('setup-page select', { dropItemType })}>
       <h4>{title}</h4>
-      <p className="subtitle">{subtitle}</p>
       <div className="page-row">
         <div>
           <p className="bold">Parties</p>
@@ -129,7 +127,7 @@ const PartyRowDropZone = (props: {
   let rolesList = roles as string[];
 
   if (clearingOffer) {
-    rolesList = [...rolesList, 'Clearing House (pending)'];
+    rolesList = [...rolesList, 'Clearing (pending)'];
   }
 
   return (

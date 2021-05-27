@@ -65,8 +65,7 @@ const DragAndDropRoles = () => {
       handleAddItem={createRoleContract}
       dropItems={roleOptions}
       dropItemType={DropItemTypes.ROLES}
-      title={'Drag and Drop Services to Parties'}
-      subtitle="For each party, specify the services it can provide in the marketplace."
+      title={'Drag and Drop Roles to Parties'}
     />
   );
 
