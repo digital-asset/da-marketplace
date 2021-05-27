@@ -67,40 +67,38 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
 
   return (
     <div className="setup-page request-services">
-      <div className="page-row">
+      <DamlLedger
+        party={adminCredentials.party}
+        token={adminCredentials.token}
+        httpBaseUrl={httpBaseUrl}
+        wsBaseUrl={wsBaseUrl}
+      >
+        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+          <ServicesProvider>
+            <RequestForm
+              requestInfo={requestInfo}
+              setRequestInfo={setRequestInfo}
+              createRequest={() => setCreatingRequest(true)}
+              creatingRequest={creatingRequest}
+            />
+          </ServicesProvider>
+        </QueryStreamProvider>
+      </DamlLedger>
+      {creatingRequest && requestInfo && requestInfo.provider && token && (
         <DamlLedger
-          party={adminCredentials.party}
-          token={adminCredentials.token}
+          token={token}
+          party={requestInfo.provider}
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
-          <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-            <ServicesProvider>
-              <RequestForm
-                requestInfo={requestInfo}
-                setRequestInfo={setRequestInfo}
-                createRequest={() => setCreatingRequest(true)}
-                creatingRequest={creatingRequest}
-              />
-            </ServicesProvider>
+          <QueryStreamProvider defaultPartyToken={token}>
+            <CreateServiceRequests
+              requestInfo={requestInfo}
+              onFinish={() => setCreatingRequest(false)}
+            />
           </QueryStreamProvider>
         </DamlLedger>
-        {creatingRequest && requestInfo && requestInfo.provider && token && (
-          <DamlLedger
-            token={token}
-            party={requestInfo.provider}
-            httpBaseUrl={httpBaseUrl}
-            wsBaseUrl={wsBaseUrl}
-          >
-            <QueryStreamProvider defaultPartyToken={token}>
-              <CreateServiceRequests
-                requestInfo={requestInfo}
-                onFinish={() => setCreatingRequest(false)}
-              />
-            </QueryStreamProvider>
-          </DamlLedger>
-        )}
-      </div>
+      )}
     </div>
   );
 };

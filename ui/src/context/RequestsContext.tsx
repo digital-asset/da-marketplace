@@ -77,7 +77,7 @@ type RequestContract =
   | CreateEvent<ListingRequest>
   | CreateEvent<TradingRequest>;
 
-export type Request = {
+type Request = {
   contract: RequestContract;
   service: ServiceKind;
 };
