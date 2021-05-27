@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form, List, Table } from 'semantic-ui-react';
+import { Button, Form, List } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
@@ -26,7 +26,6 @@ import {
   ServiceKind,
   ServiceRequestTemplates,
 } from '../../context/ServicesContext';
-import { RequestsProvider, useRequests, Request as IRequest } from '../../context/RequestsContext';
 import _ from 'lodash';
 
 import { retrieveUserParties } from '../../Parties';
@@ -53,7 +52,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [token, setToken] = useState<string>();
 
   const [creatingRequest, setCreatingRequest] = useState(false);
-  const [selectedParty, setSelectedParty] = useState(userParties[0]);
 
   const provider = requestInfo?.provider;
 
@@ -66,12 +64,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
       }
     }
   }, [userParties, provider]);
-
-  const partyOptions = userParties.map(p => {
-    return { text: p.partyName, value: p.party };
-  });
-
-  console.log(selectedParty);
 
   return (
     <div className="setup-page request-services">
@@ -93,36 +85,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
             </ServicesProvider>
           </QueryStreamProvider>
         </DamlLedger>
-        <div className="all-requests">
-          <div className="page-row request-contract-party-select">
-            <h4>Request contracts</h4>
-            <Form.Select
-              inline
-              placeholder="Select..."
-              onChange={(_, data: any) => {
-                const newParty = userParties.find(p => p.party === data.value);
-                if (newParty) {
-                  setSelectedParty(newParty);
-                }
-              }}
-              options={partyOptions}
-              value={selectedParty.party}
-            />
-          </div>
-
-          <DamlLedger
-            token={selectedParty.token}
-            party={selectedParty.party}
-            httpBaseUrl={httpBaseUrl}
-            wsBaseUrl={wsBaseUrl}
-          >
-            <QueryStreamProvider defaultPartyToken={selectedParty.token}>
-              <RequestsProvider>
-                <RequestTable party={selectedParty.party} />
-              </RequestsProvider>
-            </QueryStreamProvider>
-          </DamlLedger>
-        </div>
         {creatingRequest && requestInfo && requestInfo.provider && token && (
           <DamlLedger
             token={token}
@@ -140,38 +102,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
         )}
       </div>
     </div>
-  );
-};
-
-const RequestTable = (props: { party: string }) => {
-  const requests = useRequests() || [];
-
-  console.log(props.party, requests);
-  return (
-    <Table>
-      <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell>Provider</Table.HeaderCell>
-          <Table.HeaderCell>Customer</Table.HeaderCell>
-          <Table.HeaderCell>Service</Table.HeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {requests.length === 0 ? (
-          <Table.Row>
-            <Table.Cell col-span={3}>No requests have been made by this party</Table.Cell>
-          </Table.Row>
-        ) : (
-          requests.map((r, i) => (
-            <Table.Row key={i}>
-              <Table.Cell>{r.contract.payload.provider}</Table.Cell>
-              <Table.Cell>{r.contract.payload.customer}</Table.Cell>
-              <Table.Cell>{r.service}</Table.Cell>
-            </Table.Row>
-          ))
-        )}
-      </Table.Body>
-    </Table>
   );
 };
 
