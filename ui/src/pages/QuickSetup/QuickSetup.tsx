@@ -85,7 +85,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties]);
+  }, [history.location, parties.length]);
 
   useEffect(() => {
     // deploy auto-trigger for all parties
@@ -116,7 +116,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
 
     deployAllTriggers();
-  }, [parties, adminCredentials]);
+  }, [parties.length, adminCredentials]);
 
   return (
     <WellKnownPartiesProvider>
