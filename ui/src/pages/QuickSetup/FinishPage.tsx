@@ -9,13 +9,17 @@ import { ArrowRightIcon } from '../../icons/icons';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
-import Credentials, { computeCredentials } from '../../Credentials';
+import Credentials from '../../Credentials';
+
+import { retrieveParties } from '../../Parties';
 
 import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+
+import { AppError } from '../error/errorTypes';
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -38,6 +42,7 @@ const FinishPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
+  const parties = retrieveParties() || [];
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 
@@ -68,7 +73,7 @@ const LoginTileGrid = () => {
             <Link
               className="log-in-tile"
               key={p.payload.customer}
-              onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
+              onClick={() => handleLogin(p.payload.customer)}
               to={'/quick-setup/log-in-parties'}
             >
               <div className="log-in-row page-row">
@@ -89,6 +94,16 @@ const LoginTileGrid = () => {
       </div>
     </>
   );
+
+  async function handleLogin(party: string) {
+    const partyDetails = parties?.find(p => p.party === party);
+
+    if (partyDetails) {
+      loginUser(dispatch, history, partyDetails);
+    } else {
+      throw new AppError('Failed to Login', 'No parties.json or party selected');
+    }
+  }
 };
 
 export default FinishPage;
