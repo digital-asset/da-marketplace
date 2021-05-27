@@ -22,6 +22,7 @@ import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
+import { PartyDetails } from '@daml/hub-react';
 
 import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
 
@@ -45,7 +46,6 @@ export enum MenuItems {
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
-  const parties = retrieveParties() || [];
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -72,6 +72,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
 
@@ -85,9 +86,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties.length]);
+  }, [history.location]);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
+
     // deploy auto-trigger for all parties
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
@@ -116,7 +119,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
 
     deployAllTriggers();
-  }, [parties.length, adminCredentials]);
+  }, [adminCredentials]);
 
   return (
     <WellKnownPartiesProvider>
