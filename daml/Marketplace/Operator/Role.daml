@@ -7,10 +7,12 @@ import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
+import DA.Set (Set)
 
 template Role
   with
     operator : Party
+    observers : Set Party
   where
     signatory operator
 
@@ -29,7 +31,6 @@ template Role
           provider : Party
         do
           create Exchange.Offer with ..
-
 
       nonconsuming OfferRegulatorRole: ContractId Regulator.Offer
         with

@@ -2,13 +2,16 @@ module Marketplace.Trading.Role where
 
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Trading.Service qualified as Trading
+import DA.Set (Set)
 
 template Role
   with
     operator : Party
     provider : Party
+    observers : Set Party
   where
     signatory operator, provider
+    observer observers
 
     key (operator, provider) : (Party, Party)
     maintainer key._1
@@ -55,6 +58,7 @@ template Offer
   with
     operator : Party
     provider : Party
+    observers : Set Party
   where
     signatory operator
 
@@ -76,6 +80,8 @@ template Request
 
     controller operator can
       Approve : ContractId Role
+        with
+          observers : Set Party
         do
           create Role with ..
 

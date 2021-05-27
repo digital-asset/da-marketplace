@@ -29,6 +29,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
+import {makeDamlSet} from '../common';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -269,13 +270,14 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
   useEffect(() => {
     const createOperatorService = async () => {
-      return await ledger.create(OperatorService, { operator: adminCredentials.party });
+      return await ledger.create(OperatorService, { operator: adminCredentials.party, observers: makeDamlSet([publicParty])});
     };
 
     const createRegulatorRole = async () => {
       return await ledger.create(RegulatorRole, {
         operator: adminCredentials.party,
         provider: adminCredentials.party,
+        observers: makeDamlSet([publicParty])
       });
     };
 
