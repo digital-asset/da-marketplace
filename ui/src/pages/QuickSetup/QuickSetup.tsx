@@ -22,7 +22,6 @@ import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
-import { PartyDetails } from '@daml/hub-react';
 
 import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
 
