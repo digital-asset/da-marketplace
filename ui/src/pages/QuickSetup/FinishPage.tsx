@@ -9,7 +9,7 @@ import { ArrowRightIcon } from '../../icons/icons';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
-import Credentials from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 
 import { retrieveParties } from '../../Parties';
 
@@ -17,7 +17,7 @@ import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 
 import { AppError } from '../error/errorTypes';
 
@@ -96,12 +96,14 @@ const LoginTileGrid = () => {
   );
 
   async function handleLogin(party: string) {
-    const partyDetails = parties?.find(p => p.party === party);
+    if (isHubDeployment) {
+      const partyDetails = parties?.find(p => p.party === party);
 
-    if (partyDetails) {
-      loginUser(dispatch, history, partyDetails);
+      if (partyDetails) {
+        loginUser(dispatch, history, partyDetails);
+      }
     } else {
-      throw new AppError('Failed to Login', 'No parties.json or party selected');
+      loginUser(dispatch, history, computeCredentials(party));
     }
   }
 };
