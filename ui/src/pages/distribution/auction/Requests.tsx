@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
+import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
 import {
   Button,
   Grid,
@@ -64,12 +64,9 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
               <Grid container direction="row" justify="center">
                 <Grid item xs={12}>
                   <Grid container justify="center">
-                    <a
-                      className="a2 with-icon"
-                      onClick={() => history.push('/app/distribution/new')}
-                    >
+                    <Link className="a2 with-icon" to="/app/distribution/new">
                       <AddPlusIcon /> New Auction
-                    </a>
+                    </Link>
                   </Grid>
                 </Grid>
               </Grid>

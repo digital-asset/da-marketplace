@@ -88,7 +88,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const messageHandlerScoped = useCallback(
     (templateMap: Map<string, Template<T, K, I>>) => {
       return (message: { data: string }) => {
-        if (timer != null) {
+        if (timer !== null) {
           clearInterval(timer);
           setTimer(
             setInterval(() => {
@@ -103,12 +103,12 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
         const data: { events: any[]; offset: string | undefined } = JSON.parse(message.data);
 
         if (isWarningMessage(data)) {
-          console.warn('Warning emitted from DAML websocket: ', data.warnings);
+          console.warn('Warning emitted from Daml websocket: ', data.warnings);
         }
 
         if (isErrorMessage(data)) {
           console.error(
-            `Errors emitted from DAML websocket: ${data.errors}. Shutting down stream.`
+            `Errors emitted from Daml websocket: ${data.errors}. Shutting down stream.`
           );
           setErrors(data);
         }
@@ -139,7 +139,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
         }
       };
     },
-    [contracts, loading]
+    [contracts, timer]
   );
 
   const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
@@ -181,12 +181,17 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
 
     return () => {
       if (websocket) {
-        clearInterval(timer);
         websocket.close(KEEP_CLOSED);
         setWebsocket(null);
       }
     };
   }, [errors, token, templateIds, templateMap, websocket, setWebsocket, openWebsocket]);
+
+  useEffect(() => {
+    if (websocket === null) {
+      clearInterval(timer);
+    }
+  }, [websocket, timer]);
 
   useEffect(() => {
     if (websocket && token) {

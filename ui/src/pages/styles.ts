@@ -34,8 +34,6 @@ export default makeStyles((theme: any) =>
     heading: {
       padding: '10px',
       textAlign: 'center',
-      // fontSize: theme.typography.pxToRem(15),
-      // fontWeight: theme.typography.fontWeightRegular,
     },
     buttonLifecycle: {
       width: '90%',
@@ -46,15 +44,9 @@ export default makeStyles((theme: any) =>
       paddingTop: 0,
       paddingBottom: 0,
       marginRight: 5,
-      // color: "white",
       color: theme.palette.text.primary,
-      // borderWidth: "1px",
-      // borderStyle: "solid",
       borderColor: '#009900',
       background: theme.palette.background.default,
-      // "&:hover, &:focus": {
-      //   backgroundColor: theme.palette.background.light,
-      // },
     },
     newButton: {
       marginTop: 50,

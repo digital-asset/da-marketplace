@@ -73,9 +73,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
     render(el2.current, data);
   }, [el2, quotedAsset, showQuotedAsset]);
 
-  console.log(customerServices);
   const service = customerServices[0];
-  if (!service) return <p>Not an auction service customer.</p>;
+  if (!service) return <p>Not an auction service customer.</p>; // add MissingServiceModal
 
   const rightsizeAsset = async (
     deposit: CreateEvent<AssetDeposit>,
@@ -173,9 +172,9 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
         />
         <div className="submit-form">
           <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-          <a className="a2" onClick={() => history.goBack()}>
+          <Button className="a a2" onClick={() => history.goBack()}>
             <IconClose /> Cancel
-          </a>
+          </Button>
         </div>
       </FormErrorHandled>
       <div className="asset">

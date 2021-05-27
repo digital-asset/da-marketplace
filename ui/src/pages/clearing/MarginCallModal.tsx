@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useLedger, useParty, useStreamQueries } from '@daml/react';
 import { Party } from '@daml/types';
-import { ServicePageProps, createDropdownProp } from '../common';
+import { ServicePageProps } from '../common';
 import { Form } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 import {

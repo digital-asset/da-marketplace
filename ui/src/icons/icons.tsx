@@ -33,8 +33,8 @@ export const CheckMarkIcon = () => (
     <path
       d="M2.66675 8.66663L6.00008 12L13.3334 4.66663"
       stroke="#B4F5A3"
-      stroke-width="2"
-      stroke-linecap="round"
+      strokeWidth="2"
+      strokeLinecap="round"
     />
   </svg>
 );

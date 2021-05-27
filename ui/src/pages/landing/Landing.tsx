@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, Header } from 'semantic-ui-react';
 
 import { useLedger, useParty } from '@daml/react';
@@ -37,7 +37,7 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
-import { Fields, Field, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
+import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
 import _ from 'lodash';
 
 type DamlHubParty = string;
@@ -175,14 +175,22 @@ const Landing = () => {
   const { identities, legalNames } = useVerifiedParties();
 
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
-  const allocationAccounts = allocationAccountRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
+  const allocationAccounts = useMemo(
+    () =>
+      allocationAccountRules
+        .filter(c => c.payload.account.owner === party)
+        .map(c => c.payload.account),
+    [party, allocationAccountRules]
+  );
 
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
-  const accounts = assetSettlementRules
-    .filter(c => c.payload.account.owner === party)
-    .map(c => c.payload.account);
+  const accounts = useMemo(
+    () =>
+      assetSettlementRules
+        .filter(c => c.payload.account.owner === party)
+        .map(c => c.payload.account),
+    [party, assetSettlementRules]
+  );
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
@@ -249,7 +257,7 @@ const Landing = () => {
     }
 
     setRequestParams(params);
-  }, [dialogState]);
+  }, [dialogState, accounts, allocationAccounts, identities, party]);
 
   const portfolio = formatCurrency(
     deposits
@@ -264,11 +272,12 @@ const Landing = () => {
     const filteredFields: Fields = _.mapValues(fieldsFromProvider, createFieldFn =>
       createFieldFn(provider)
     );
-    setFields({
+
+    setFields(fields => ({
       ...fields,
       ...filteredFields,
-    });
-  }, [dialogState]);
+    }));
+  }, [dialogState, fieldsFromProvider, identities]);
 
   const requestService = <T extends ServiceRequestTemplates>(
     service: Template<T, undefined, string>,
@@ -291,11 +300,12 @@ const Landing = () => {
     setOpenDialog(true);
   };
   const [dialogDisabled, setDialogDisabled] = useState(false);
+
   useEffect(() => {
     setDialogDisabled(
       Object.values(dialogState).filter(v => v !== '').length !== Object.values(fields).length
     );
-  }, [dialogState]);
+  }, [fields, dialogState]);
 
   if (serviceKind && request) {
     return (
@@ -321,7 +331,7 @@ const Landing = () => {
         type: 'selection',
         items: assetSettlementRules
           .filter(
-            ar => ar.payload.observers.map.has(provider) || ar.payload.account.provider == provider
+            ar => ar.payload.observers.map.has(provider) || ar.payload.account.provider === provider
           )
           .map(ar => ar.payload.account.id.label),
       };
@@ -333,7 +343,7 @@ const Landing = () => {
         label,
         type: 'selection',
         items: allocationAccountRules
-          .filter(ar => ar.payload.nominee == provider)
+          .filter(ar => ar.payload.nominee === provider)
           .map(ar => ar.payload.account.id.label),
       };
     };

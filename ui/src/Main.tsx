@@ -8,7 +8,6 @@ import { Template } from '@daml/types';
 import ErrorComponent from './pages/error/Error';
 import { useUserState } from './context/UserContext';
 import Login from './pages/login/Login';
-// import Apps from "./Apps";
 import { App } from './App';
 import QuickSetup from './pages/QuickSetup/QuickSetup';
 import { ServicesProvider } from './context/ServicesContext';
@@ -55,13 +54,6 @@ export default function Main({ defaultPath }: MainProps) {
             );
           }}
         />
-        {/* <PrivateRoute path="/apps/network" component={Network} />
-        <PrivateRoute path="/apps/custody" component={Custody} />
-        <PrivateRoute path="/apps/registry" component={Registry} />
-        <PrivateRoute path="/apps/issuance" component={Issuance} />
-        <PrivateRoute path="/apps/distribution" component={Distribution} />
-        <PrivateRoute path="/apps/listing" component={Listing} />
-        <PrivateRoute path="/apps/trading" component={Trading} /> */}
         <PublicRoute path="/quick-setup" component={QuickSetup} />
         <PublicRoute path="/login" component={Login} />
         <Route component={ErrorComponent} />
