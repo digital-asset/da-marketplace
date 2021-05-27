@@ -17,12 +17,8 @@ import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
-<<<<<<< HEAD
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
 import paths from '../../paths';
-=======
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
->>>>>>> main
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
