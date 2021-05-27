@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form, List } from 'semantic-ui-react';
+import { Button, Form, List, Table } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
@@ -26,6 +26,7 @@ import {
   ServiceKind,
   ServiceRequestTemplates,
 } from '../../context/ServicesContext';
+import { RequestsProvider, useRequests, Request as IRequest } from '../../context/RequestsContext';
 import _ from 'lodash';
 
 import { retrieveUserParties } from '../../Parties';
@@ -51,9 +52,8 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
 
-  const [status, setStatus] = useState<string[]>([]);
-
   const [creatingRequest, setCreatingRequest] = useState(false);
+  const [selectedParty, setSelectedParty] = useState(userParties[0]);
 
   const provider = requestInfo?.provider;
 
@@ -66,6 +66,12 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
       }
     }
   }, [userParties, provider]);
+
+  const partyOptions = userParties.map(p => {
+    return { text: p.partyName, value: p.party };
+  });
+
+  console.log(selectedParty);
 
   return (
     <div className="setup-page request-services">
@@ -88,12 +94,34 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           </QueryStreamProvider>
         </DamlLedger>
         <div className="all-requests">
-          <h4>Requests</h4>
-          <List>
-            {status.map(s => (
-              <List.Item>{s}</List.Item>
-            ))}
-          </List>
+          <div className="page-row request-contract-party-select">
+            <h4>Request contracts</h4>
+            <Form.Select
+              inline
+              placeholder="Select..."
+              onChange={(_, data: any) => {
+                const newParty = userParties.find(p => p.party === data.value);
+                if (newParty) {
+                  setSelectedParty(newParty);
+                }
+              }}
+              options={partyOptions}
+              value={selectedParty.party}
+            />
+          </div>
+
+          <DamlLedger
+            token={selectedParty.token}
+            party={selectedParty.party}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <QueryStreamProvider defaultPartyToken={selectedParty.token}>
+              <RequestsProvider>
+                <RequestTable party={selectedParty.party} />
+              </RequestsProvider>
+            </QueryStreamProvider>
+          </DamlLedger>
         </div>
         {creatingRequest && requestInfo && requestInfo.provider && token && (
           <DamlLedger
@@ -106,14 +134,44 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
               <CreateServiceRequests
                 requestInfo={requestInfo}
                 onFinish={() => setCreatingRequest(false)}
-                setStatus={setStatus}
-                status={status}
               />
             </QueryStreamProvider>
           </DamlLedger>
         )}
       </div>
     </div>
+  );
+};
+
+const RequestTable = (props: { party: string }) => {
+  const requests = useRequests() || [];
+
+  console.log(props.party, requests);
+  return (
+    <Table>
+      <Table.Header>
+        <Table.Row>
+          <Table.HeaderCell>Provider</Table.HeaderCell>
+          <Table.HeaderCell>Customer</Table.HeaderCell>
+          <Table.HeaderCell>Service</Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {requests.length === 0 ? (
+          <Table.Row>
+            <Table.Cell col-span={3}>No requests have been made by this party</Table.Cell>
+          </Table.Row>
+        ) : (
+          requests.map((r, i) => (
+            <Table.Row key={i}>
+              <Table.Cell>{r.contract.payload.provider}</Table.Cell>
+              <Table.Cell>{r.contract.payload.customer}</Table.Cell>
+              <Table.Cell>{r.service}</Table.Cell>
+            </Table.Row>
+          ))
+        )}
+      </Table.Body>
+    </Table>
   );
 };
 
@@ -248,17 +306,13 @@ const RequestForm = (props: {
 
 const CreateServiceRequests = (props: {
   requestInfo: IRequestServiceInfo;
-  setStatus: (status: string[]) => void;
-  status: string[];
   onFinish: () => void;
 }) => {
-  const { requestInfo, onFinish, setStatus, status } = props;
+  const { requestInfo, onFinish } = props;
 
   const { provider, customer, services } = requestInfo;
 
   const ledger = useLedger();
-
-  const { getName } = usePartyName('');
 
   useEffect(() => {
     if (!provider || !customer || !services) {
@@ -271,24 +325,21 @@ const CreateServiceRequests = (props: {
     };
 
     async function offerServices() {
-      let newStatus: string[] = [];
-
       if (services && provider && customer && services.length > 0) {
         await Promise.all(
           services.map(async service => {
             switch (service) {
               case ServiceKind.MARKET_CLEARING:
-                const hi = await doRequest(MarketClearingRequest, params, service);
-                newStatus = [...newStatus, hi];
+                await doRequest(MarketClearingRequest, params);
                 break;
               case ServiceKind.LISTING:
-                newStatus = [...newStatus, await doRequest(ListingRequest, params, service)];
+                await doRequest(ListingRequest, params);
                 break;
               case ServiceKind.CUSTODY:
-                newStatus = [...newStatus, await doRequest(CustodyRequest, params, service)];
+                await doRequest(CustodyRequest, params);
                 break;
               case ServiceKind.ISSUANCE:
-                newStatus = [...newStatus, await doRequest(IssuanceRequest, params, service)];
+                await doRequest(IssuanceRequest, params);
                 break;
               default:
                 throw new Error(`Unsupported service: ${service}`);
@@ -296,7 +347,6 @@ const CreateServiceRequests = (props: {
           })
         );
       }
-      setStatus([...status, ...newStatus]);
       onFinish();
     }
     offerServices();
@@ -304,20 +354,9 @@ const CreateServiceRequests = (props: {
 
   async function doRequest(
     request: Template<ServiceRequestTemplates, undefined, string>,
-    params: { customer: string; provider: string },
-    service: ServiceKind
+    params: { customer: string; provider: string }
   ) {
-    let newStatus: string = '';
-    await ledger
-      .create(request, params)
-      .then(
-        () =>
-          (newStatus = `${getName(params.provider)} requested ${service} from ${getName(
-            params.customer
-          )}`)
-      )
-      .catch(() => (newStatus = `Error creating ${service} Request`));
-    return newStatus;
+    return await ledger.create(request, params);
   }
 
   return null;

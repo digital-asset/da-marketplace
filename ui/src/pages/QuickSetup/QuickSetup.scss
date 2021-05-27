@@ -250,15 +250,26 @@
           }
         }
 
-        .all-requests {
-          width: 450px;
-
-          .party-names {
-            width: unset;
+        &.request-services {
+          .all-requests {
+            margin-left: $spacing-m;
           }
+          .page-row.request-contract-party-select {
+            justify-content: unset;
+            h4 {
+              margin-right: $spacing-s;
+            }
+          }
+          .page-row {
+            width: 100%;
+            height: 100%;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+
           tbody {
             display: block;
-            max-height: 330px;
+            max-height: 280px;
             overflow: auto;
             border-collapse: collapse;
           }
@@ -269,18 +280,6 @@
             width: 100%;
             table-layout: fixed;
             border-collapse: collapse;
-            &.sub-row td {
-              border-top: none;
-            }
-          }
-        }
-
-        &.request-services {
-          .page-row {
-            width: 100%;
-            height: 100%;
-            justify-content: space-between;
-            align-items: flex-start;
           }
 
           .input-label {
