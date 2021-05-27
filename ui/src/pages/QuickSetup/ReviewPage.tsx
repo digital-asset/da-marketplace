@@ -10,7 +10,7 @@ import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
 
 import { formatTriggerName } from './DragAndDropToParties';
-import { OffersTable } from './OfferServicesPage';
+import { RequestTable } from './RequestServicesPage';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { retrieveParties } from '../../Parties';
@@ -57,7 +57,7 @@ const ReviewItems = () => {
       <h4>Review</h4>
       <div className="page-row">
         <PartiesReview />
-        <OffersTable />
+        <RequestTable />
       </div>
     </div>
   );

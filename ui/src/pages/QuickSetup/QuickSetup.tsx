@@ -28,7 +28,7 @@ import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
 import SelectAutomationPage from './SelectAutomationPage';
-import OfferServicesPage from './OfferServicesPage';
+import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 
@@ -36,7 +36,7 @@ export enum MenuItems {
   ADD_PARTIES = 'add-parties',
   SELECT_ROLES = 'select-roles',
   SELECT_AUTOMATION = 'select-automation',
-  OFFER_SERVICES = 'offer-services',
+  REQUEST_SERVICES = 'request-services',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
 }
@@ -48,9 +48,10 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
-  const menuItems = Object.values(MenuItems).filter(item =>
-    isHubDeployment ? true : item != MenuItems.ADD_PARTIES && item !== MenuItems.LOG_IN
-  );
+
+  const menuItems = Object.values(MenuItems)
+    .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
+    .filter(item => item !== MenuItems.LOG_IN);
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
@@ -199,15 +200,15 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                   ) : (
                     <UnsupportedPageStep />
                   )}
-                  <NextButton item={MenuItems.OFFER_SERVICES} />
+                  <NextButton item={MenuItems.REQUEST_SERVICES} />
                 </>
               )}
             />
             <Route
-              path={`${matchPath}/${MenuItems.OFFER_SERVICES}`}
+              path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
               component={() => (
                 <>
-                  <OfferServicesPage adminCredentials={adminCredentials} />
+                  <RequestServicesPage adminCredentials={adminCredentials} />
                   <NextButton item={MenuItems.REVIEW} />
                 </>
               )}

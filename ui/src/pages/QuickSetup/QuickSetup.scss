@@ -85,7 +85,7 @@
         }
 
         p.subtitle {
-            margin-bottom: $spacing-s;
+          margin-bottom: $spacing-s;
         }
 
         .page-row {
@@ -223,20 +223,20 @@
           }
         }
 
-        .offer-select {
+        .request-select {
           margin: $spacing-s 0;
           .dropdown {
             max-width: 196px;
           }
         }
 
-        .ghost.offer {
+        .ghost.request {
           border-color: var(--blue-60);
         }
 
         .warning {
           display: flex;
-          margin: $spacing-xs $spacing-s 0 0;
+          margin: $spacing-s $spacing-s 0 0;
           width: 285px;
           font-size: 12px;
 
@@ -250,43 +250,30 @@
           }
         }
 
-        .all-offers {
+        .all-requests {
           width: 450px;
 
-          .offer-table {
+          .party-names {
+            width: unset;
+          }
+
+          table {
             display: block;
             max-height: 330px;
             overflow: auto;
-          }
-        }
+            border-collapse: collapse;
 
-        .offers {
-          border: 1px solid var(--cool-grey-80);
+            tr.sub-row {
+              border-collapse: collapse;
 
-          overflow: auto;
-          height: 360px;
-
-          &.empty {
-            border: none;
-          }
-
-          .offer-row {
-            display: flex;
-            flex-direction: row;
-            align-items: basline;
-            justify-content: space-between;
-            font-size: 14px;
-            line-height: 26px;
-            padding: $spacing-s;
-            border-bottom: 1px solid var(--cool-grey-80);
-
-            &.empty {
-              padding: 0px;
+              td {
+                border-top: none;
+              }
             }
           }
         }
 
-        &.offer-services {
+        &.request-services {
           .page-row {
             width: 100%;
             height: 100%;
@@ -353,14 +340,14 @@
               min-width: unset;
             }
           }
-          .all-offers,
+          .all-requests,
           .all-parties {
             width: 48%;
           }
-          .all-offers {
+          .all-requests {
             margin-left: $spacing-m;
 
-            .offers {
+            .requests {
               height: 330px;
             }
           }
@@ -377,8 +364,6 @@
 
         &.select {
           justify-content: unset;
-
-  
 
           &.roles {
             .party-name p.dropped-items {

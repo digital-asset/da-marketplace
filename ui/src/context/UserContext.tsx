@@ -96,8 +96,8 @@ async function loginUser(
       window.focus();
       storeCredentials(credentials);
       dispatch({ type: 'LOGIN_SUCCESS', party, token });
-    //   window.open('/app');
-    //   window.focus();
+      //   window.open('/app');
+      //   window.focus();
     } else {
       storeCredentials(credentials);
       dispatch({ type: 'LOGIN_SUCCESS', party, token });
