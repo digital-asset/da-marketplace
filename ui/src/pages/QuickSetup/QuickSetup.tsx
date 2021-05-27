@@ -31,6 +31,7 @@ import SelectAutomationPage from './SelectAutomationPage';
 import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import paths from '../../paths';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -122,7 +123,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     <WellKnownPartiesProvider>
       <div className="quick-setup">
         <div className="page-controls">
-          <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
+          <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
             <ArrowLeftIcon color={'white'} />
             Back
           </Button>

@@ -17,6 +17,7 @@ import TilePage from '../../components/Tile/TilePage';
 import { AppError } from '../error/errorTypes';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { loginUser, useUserDispatch } from '../../context/UserContext';
+import paths from '../../paths';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -103,7 +104,7 @@ const QuickSetupButton = () => {
   const history = useHistory();
 
   return (
-    <Button className="ghost dark" onClick={() => history.push('/quick-setup')}>
+    <Button className="ghost dark" onClick={() => history.push(paths.quickSetup.root)}>
       Quick Setup
     </Button>
   );

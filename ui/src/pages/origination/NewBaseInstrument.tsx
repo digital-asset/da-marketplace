@@ -15,6 +15,7 @@ import classNames from 'classnames';
 import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/icons';
 import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
+import paths from '../../paths';
 
 const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -71,7 +72,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
       safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],
     });
-    history.push('/app/manage/instruments');
+    history.push(paths.app.manage.instruments);
   };
 
   const FormLabel = (props: { label: string; subLabel?: string }) => (

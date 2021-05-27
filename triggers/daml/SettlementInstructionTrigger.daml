@@ -4,15 +4,20 @@
 module SettlementInstructionTrigger where
 
 import Daml.Trigger
+import DA.Action (unless)
 import DA.Foldable (forA_)
-import Marketplace.Settlement.Model (SettlementInstruction, Settle(..))
+import DA.List (head)
+import DA.Record (HasField)
+import Marketplace.Settlement.Model (SettlementInstruction)
+import Marketplace.Settlement.Service (Service, SettleInstruction(..))
 
 handleSettlementInstruction : Trigger ()
 handleSettlementInstruction = Trigger
   { initialize = pure ()
   , updateState = \_ -> pure ()
   , rule = handleSettlementInstructionRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @SettlementInstruction ]
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @SettlementInstruction
+    , registeredTemplate @Service ]
   , heartbeat = None
   }
 
@@ -21,10 +26,18 @@ handleSettlementInstructionRule : Party -> TriggerA () ()
 handleSettlementInstructionRule party = do
   debug "Running Settlement Instruction rule..."
 
-  -- Accept all 'SettlementInstructions'
-  settlementInstructions <- query @SettlementInstruction
+  let providerFilter : forall t. (Template t, HasField "provider" t Party) => [(ContractId t, t)] -> [(ContractId t, t)]
+      providerFilter = filter ((== party) . (.provider) . snd)
 
-  -- TODO: Should call the settlement service instead
-  forA_ settlementInstructions \(siCid, si) -> do
-    debug $ "Processing Settlement Instruction: " <> show si
-    emitCommands [exerciseCmd siCid Settle] [toAnyContractId siCid]
+  -- Accept all 'SettlementInstructions'
+  settlementInstructions <- providerFilter <$> query @SettlementInstruction
+
+  unless (null settlementInstructions) do
+    settlementServices <- providerFilter <$> query @Service
+    unless (null settlementServices) do
+      let (ssCid, _) = head settlementServices
+      forA_ settlementInstructions \(siCid, si) -> do
+        debug $ "Processing Settlement Instruction: " <> show si
+        emitCommands [exerciseCmd ssCid (SettleInstruction siCid) ] [toAnyContractId siCid]
+      pure ()
+    pure ()

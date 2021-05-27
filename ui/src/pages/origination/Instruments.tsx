@@ -6,6 +6,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { damlSetValues } from '../common';
+import paths from '../../paths';
 
 export const InstrumentsTable: React.FC = () => {
   const history = useHistory();
@@ -19,9 +20,9 @@ export const InstrumentsTable: React.FC = () => {
       <TitleWithActions
         title={'Instruments'}
         iconActions={[
-          { path: '/app/setup/instrument/new/base', label: 'New Base Instrument' },
-          { path: '/app/setup/instrument/new/convertiblenote', label: 'New Convertible Note' },
-          { path: '/app/setup/instrument/new/binaryoption', label: 'New Binary Option' },
+          { path: paths.app.setup.instrument.new.base, label: 'New Base Instrument' },
+          { path: paths.app.setup.instrument.new.convertiblenote, label: 'New Convertible Note' },
+          { path: paths.app.setup.instrument.new.binaryoption, label: 'New Binary Option' },
         ]}
       />
 
@@ -41,7 +42,8 @@ export const InstrumentsTable: React.FC = () => {
               c.payload.assetId.version,
               c.payload.description,
             ],
-            onClick: () => history.push(`/app/manage/instrument/${c.contractId.replace('#', '_')}`),
+            onClick: () =>
+              history.push(`${paths.app.manage.instrument}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

@@ -9,6 +9,10 @@
     justify-content: space-between;
     margin-top: $spacing-m;
 
+    h3.ui.header {
+      margin-bottom: $spacing-m;
+    }
+
     .orders {
       display: flex;
       flex-direction: column;

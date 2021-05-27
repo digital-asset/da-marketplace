@@ -5,6 +5,7 @@ import Credentials, {
   retrieveCredentials,
   storeCredentials,
 } from '../Credentials';
+import paths from '../paths';
 
 const UserStateContext = React.createContext<UserState>({
   isAuthenticated: false,
@@ -92,7 +93,7 @@ async function loginUser(
   try {
     storeCredentials(credentials);
     dispatch({ type: 'LOGIN_SUCCESS', party, token });
-    history.push('/app');
+    history.push(paths.app.root);
   } catch {
     dispatch({ type: 'LOGIN_FAILURE' });
   }
@@ -101,7 +102,7 @@ async function loginUser(
 function signOut(dispatch: React.Dispatch<any>, history: History) {
   clearCredentials();
   dispatch({ type: 'SIGN_OUT_SUCCESS' });
-  history.push('/login');
+  history.push(paths.login);
 }
 
 export { UserProvider, useUserState, useUserDispatch, loginUser, signOut };
