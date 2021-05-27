@@ -17,6 +17,7 @@ import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
+import paths from '../../paths';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
@@ -72,7 +73,7 @@ const LoginTileGrid = () => {
               className="log-in-tile"
               key={p.payload.customer}
               onClick={() => handleLogin(p.payload.customer)}
-              to={'/quick-setup/log-in-parties'}
+              to={paths.quickSetup.logInParties}
             >
               <div className="log-in-row page-row">
                 <h4>{p.payload.legalName}</h4>

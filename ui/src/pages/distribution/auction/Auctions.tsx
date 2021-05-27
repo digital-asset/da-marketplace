@@ -6,6 +6,7 @@ import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Au
 import { getAuctionStatus } from '../Utils';
 import StripedTable from '../../../components/Table/StripedTable';
 import TitleWithActions from '../../../components/Common/TitleWithActions';
+import paths from '../../../paths';
 
 const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComponentProps) => {
   const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
@@ -15,7 +16,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="auction">
       <TitleWithActions
         title="Auctions"
-        iconActions={[{ path: '/app/setup/distribution/new/auction', label: ' New Auction' }]}
+        iconActions={[{ path: paths.app.setup.distribution.new.auction, label: ' New Auction' }]}
       />
 
       <StripedTable
@@ -32,7 +33,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
               getAuctionStatus(c.payload.status),
             ],
             onClick: () =>
-              history.push('/app/distribution/auctions/' + c.contractId.replace('#', '_')),
+              history.push(`${paths.app.distribution.auctions}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

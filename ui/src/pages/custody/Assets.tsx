@@ -10,6 +10,7 @@ import { ServicePageProps } from '../common';
 import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import TitleWithActions from '../../components/Common/TitleWithActions';
+import paths from '../../paths';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -54,7 +55,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             ],
             onClick: () =>
               history.push(
-                '/app/custody/account/' +
+                paths.app.custody.account +
                   allAccounts
                     .find(a => a.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
@@ -64,7 +65,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
       />
       <TitleWithActions
         title="Accounts"
-        iconActions={[{ path: '/app/custody/accounts/new', label: 'New Account' }]}
+        iconActions={[{ path: paths.app.custody.accounts.new, label: 'New Account' }]}
       />
       <StripedTable
         rowsClickable
@@ -79,7 +80,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
               getName(a.account.owner),
               party === a.account.provider ? 'Provider' : 'Client',
             ],
-            onClick: () => history.push('/app/custody/account/' + a.contractId),
+            onClick: () => history.push(`${paths.app.custody.account}/${a.contractId}`),
           };
         })}
       />

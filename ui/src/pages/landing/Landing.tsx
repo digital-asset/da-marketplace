@@ -39,6 +39,7 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
 import _ from 'lodash';
+import paths from '../../paths';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -152,7 +153,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
     return (
       <div className="link">
         {damlHubParty}
-        <Link to="/app/setup/identity">Request Identity Verification</Link>
+        <Link to={paths.app.setup.identity}>Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {
@@ -367,7 +368,7 @@ const Landing = () => {
               </span>
             </div>
             <div className="link">
-              <NavLink to="/app/custody/assets">View Wallet</NavLink>
+              <NavLink to={paths.app.custody.assets}>View Wallet</NavLink>
             </div>
           </div>
         </Tile>

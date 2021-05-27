@@ -19,6 +19,7 @@ import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { halfSecondPromise } from '../page/utils';
+import paths from '../../paths';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -146,7 +147,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       accountId: c.payload.account.id,
       debit: { depositCid: c.contractId },
     });
-    history.push('/app/custody/requests');
+    history.push(paths.app.custody.requests);
   };
 
   const relatedAccounts = accounts
@@ -212,7 +213,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });
-    history.push('/app/custody/requests');
+    history.push(paths.app.custody.requests);
   };
 
   let accountData = [

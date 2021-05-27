@@ -19,6 +19,7 @@ import { IconClose } from '../../../icons/icons';
 import Tile from '../../../components/Tile/Tile';
 import { ServicePageProps } from '../../common';
 import BackButton from '../../../components/Common/BackButton';
+import paths from '../../../paths';
 
 const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -107,7 +108,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       depositCid,
     };
     await ledger.exercise(Service.RequestCreateAuction, service.contractId, request);
-    history.push('/app/manage/distributions');
+    history.push(paths.app.manage.distributions);
   };
 
   return (

@@ -22,6 +22,7 @@ import StripedTable from '../../../components/Table/StripedTable';
 import { usePartyName } from '../../../config';
 import Tile from '../../../components/Tile/Tile';
 import BackButton from '../../../components/Common/BackButton';
+import paths from '../../../paths';
 
 type Props = {
   auctionServices: Readonly<CreateEvent<AuctionService, any, any>[]>;
@@ -86,7 +87,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
       auctionProviderService.contractId,
       { auctionCid: auction.contractId, bidCids }
     );
-    history.push('/app/distribution/auctions/' + result._1.replace('#', '_'));
+    history.push(paths.app.distribution.auctions + result._1.replace('#', '_'));
   };
 
   const requestBid = async (biddingService: CreateEvent<BiddingService>) => {

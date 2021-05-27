@@ -9,6 +9,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
 import { getBidAllocation, getBidStatus } from '../Utils';
 import StripedTable from '../../../components/Table/StripedTable';
+import paths from '../../../paths';
 
 const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
   history,
@@ -35,7 +36,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
               c.payload.asset.quantity,
             ],
             onClick: () =>
-              history.push('/app/distribution/bidding/' + c.contractId.replace('#', '_')),
+              history.push(`${paths.app.distribution.bidding}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />
