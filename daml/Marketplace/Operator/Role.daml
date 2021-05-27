@@ -26,11 +26,23 @@ template Role
         do
           create Custodian.Offer with ..
 
+      nonconsuming ApproveCustodianRequest : ContractId Custodian.Role
+        with
+          custodianRequestCid : ContractId Custodian.Request
+        do
+          exercise custodianRequestCid Custodian.Approve with ..
+
       nonconsuming OfferExchangeRole : ContractId Exchange.Offer
         with
           provider : Party
         do
           create Exchange.Offer with ..
+
+      nonconsuming ApproveExchangeRequest : ContractId Exchange.Role
+        with
+          exchangeRequestCid : ContractId Exchange.Request
+        do
+          exercise exchangeRequestCid Exchange.Approve with ..
 
       nonconsuming OfferRegulatorRole: ContractId Regulator.Offer
         with
@@ -38,11 +50,23 @@ template Role
         do
           create Regulator.Offer with ..
 
+      nonconsuming ApproveRegulatorRequest : ContractId Regulator.Role
+        with
+          regulatorRequestCid : ContractId Regulator.Request
+        do
+          exercise regulatorRequestCid Regulator.Approve with ..
+
       nonconsuming OfferMatchingService : ContractId Matching.Offer
         with
           provider : Party
         do
           create Matching.Offer with ..
+
+      nonconsuming ApproveMatchingRequest : ContractId Matching.Service
+        with
+          matchingRequestCid : ContractId Matching.Request
+        do
+          exercise matchingRequestCid Matching.Approve
 
       nonconsuming OfferSettlementService : ContractId Settlement.Offer
         with
@@ -50,14 +74,32 @@ template Role
         do
           create Settlement.Offer with ..
 
+      nonconsuming ApproveSettlementRequest : ContractId Settlement.Service
+        with
+          settlementRequestCid : ContractId Settlement.Request
+        do
+          exercise settlementRequestCid Settlement.Approve
+
       nonconsuming OfferDistributorRole : ContractId Distributor.Offer
         with
           provider : Party
         do
           create Distributor.Offer with ..
 
+      nonconsuming ApproveDistributorRequest : ContractId Distributor.Role
+        with
+          distributorRequestCid : ContractId Distributor.Request
+        do
+          exercise distributorRequestCid Distributor.Approve with ..
+
       nonconsuming OfferClearingRole : ContractId Clearing.Offer
         with
           provider : Party
         do
           create Clearing.Offer with ..
+
+      nonconsuming ApproveClearingRequest : ContractId Clearing.Role
+        with
+          clearingRequestCid : ContractId Clearing.Request
+        do
+          exercise clearingRequestCid Clearing.Approve with ..
