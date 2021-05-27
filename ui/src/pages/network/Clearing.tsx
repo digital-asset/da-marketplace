@@ -20,6 +20,7 @@ import { FairValueRequest } from '../listing/Listing';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import ClearingOfferModal from '../clearing/ClearingOfferModal';
+import paths from '../../paths';
 
 const CLEARING_SERVICE_TEMPLATE = 'Marketplace.Clearing.Service.Service';
 const CLEARING_REQUEST_TEMPLATE = 'Marketplace.Clearing.Service.Request';
@@ -133,8 +134,14 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
       <TitleWithActions
         title="Current Services"
         otherActions={[
-          { label: 'Offer Clearing Service', path: '/app/setup/clearing/offer' },
-          { label: 'Offer Market Clearing Service', path: '/app/setup/clearing/market/offer' },
+          {
+            label: 'Offer Clearing Service',
+            path: paths.app.setup.clearing.offer,
+          },
+          {
+            label: 'Offer Market Clearing Service',
+            path: paths.app.setup.clearing.market.offer,
+          },
         ]}
       />
 

@@ -11,6 +11,7 @@ import _ from 'lodash';
 import { CogIcon } from '../../icons/icons';
 import { usePartyName } from '../../config';
 import { getBaseSegment } from '../../App';
+import paths from '../../paths';
 type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
@@ -73,7 +74,7 @@ const Page: React.FC<Props> = ({
       <Grid.Column className="page-sidemenu">
         <Menu secondary vertical>
           <Menu.Menu>
-            <Menu.Item as={NavLink} to="/app/" exact className="home-item">
+            <Menu.Item as={NavLink} to={paths.app.root} exact className="home-item">
               <Header as="h1" className="dark">
                 @{name}
               </Header>

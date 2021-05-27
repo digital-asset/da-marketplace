@@ -15,6 +15,7 @@ import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { Button, Form, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
+import paths from '../../paths';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -72,7 +73,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       assetId: asset.payload.assetId,
       quantity,
     });
-    history.push('/app/manage/issuance');
+    history.push(paths.app.manage.issuance);
   };
 
   return (

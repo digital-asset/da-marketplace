@@ -25,6 +25,7 @@ import { usePartyName } from '../../../config';
 import { ServicePageProps } from '../../common';
 import { useDisplayErrorMessage } from '../../../context/MessagesContext';
 import { AddPlusIcon } from '../../../icons/icons';
+import paths from '../../../paths';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -49,7 +50,7 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
     await ledger.exercise(Service.CreateAuction, service.contractId, {
       createAuctionRequestCid: c.contractId,
     });
-    history.push('/app/distribution/auctions');
+    history.push(paths.app.distribution.auctions);
   };
 
   return (
@@ -148,7 +149,7 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
                           component="span"
                           onClick={() =>
                             history.push(
-                              '/app/distribution/requests/' + c.contractId.replace('#', '_')
+                              `${paths.app.distribution.requests}/${c.contractId.replace('#', '_')}`
                             )
                           }
                         >

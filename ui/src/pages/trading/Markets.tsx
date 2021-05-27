@@ -5,6 +5,7 @@ import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { CreateEvent } from '@daml/ledger';
 import StripedTable from '../../components/Table/StripedTable';
 import { ArrowRightIcon } from '../../icons/icons';
+import paths from '../../paths';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
@@ -31,7 +32,8 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
             c.payload.tradedAssetId.label,
             c.payload.quotedAssetId.label,
           ],
-          onClick: () => history.push('/app/trading/markets/' + c.contractId.replace('#', '_')),
+          onClick: () =>
+            history.push(`${paths.app.trading.markets}/${c.contractId.replace('#', '_')}`),
         };
       })}
     />
