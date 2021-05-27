@@ -1,32 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form, List } from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
 
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  useVerifiedParties,
-  usePartyName,
-  isHubDeployment,
-} from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
-import { InformationIcon } from '../../icons/icons';
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import {
-  ServicesProvider,
-  useServiceContext,
-  ServiceKind,
-  ServiceRequestTemplates,
-} from '../../context/ServicesContext';
-import _ from 'lodash';
+import { ServiceKind, ServiceRequestTemplates } from '../../context/ServicesContext';
 
 import { retrieveUserParties } from '../../Parties';
 
@@ -74,14 +61,12 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
         wsBaseUrl={wsBaseUrl}
       >
         <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <ServicesProvider>
-            <RequestForm
-              requestInfo={requestInfo}
-              setRequestInfo={setRequestInfo}
-              createRequest={() => setCreatingRequest(true)}
-              creatingRequest={creatingRequest}
-            />
-          </ServicesProvider>
+          <RequestForm
+            requestInfo={requestInfo}
+            setRequestInfo={setRequestInfo}
+            createRequest={() => setCreatingRequest(true)}
+            creatingRequest={creatingRequest}
+          />
         </QueryStreamProvider>
       </DamlLedger>
       {creatingRequest && requestInfo && requestInfo.provider && token && (
@@ -111,11 +96,7 @@ const RequestForm = (props: {
 }) => {
   const { requestInfo, setRequestInfo, createRequest, creatingRequest } = props;
 
-  const [warnings, setWarnings] = useState<string[]>([]);
-
-  const { getName } = usePartyName('');
   const { identities, loading: identitiesLoading } = useVerifiedParties();
-  const { services, loading: servicesLoading } = useServiceContext();
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
@@ -125,32 +106,7 @@ const RequestForm = (props: {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
 
-  useEffect(() => {
-    if (!requestInfo) {
-      return;
-    }
-
-    const { services, provider, customer } = requestInfo;
-
-    if (!!services && !!provider && !!customer) {
-      let warningList: string[] = [];
-
-      services.forEach(service => {
-        const existingAction = findExistingService(service);
-        if (existingAction) {
-          warningList = [
-            ...warningList,
-            `${getName(customer)} already provides ${getName(
-              provider
-            )} with the ${existingAction} service `,
-          ];
-        }
-      });
-      setWarnings(warningList);
-    }
-  }, [requestInfo, creatingRequest]);
-
-  if (servicesLoading || identitiesLoading) {
+  if (identitiesLoading) {
     return null;
   }
 
@@ -201,34 +157,14 @@ const RequestForm = (props: {
           !requestInfo?.provider ||
           !requestInfo.customer ||
           !requestInfo.services ||
-          creatingRequest ||
-          warnings.length > 0
+          creatingRequest
         }
         onClick={() => createRequest()}
       >
         {creatingRequest ? 'Creating Request...' : 'Request'}
       </Button>
-      {warnings && requestInfo && (
-        <List>
-          {warnings.map(w => (
-            <List.Item>
-              <InformationIcon />
-              <List.Content>{w}</List.Content>
-            </List.Item>
-          ))}
-        </List>
-      )}
     </div>
   );
-
-  function findExistingService(service: ServiceKind) {
-    return services.find(
-      p =>
-        p.service === service &&
-        p.contract.payload.provider === requestInfo?.provider &&
-        p.contract.payload.customer === requestInfo?.customer
-    )?.service;
-  }
 };
 
 const CreateServiceRequests = (props: {
@@ -237,47 +173,44 @@ const CreateServiceRequests = (props: {
 }) => {
   const { requestInfo, onFinish } = props;
 
-  const { provider, customer, services } = requestInfo;
-
   const ledger = useLedger();
 
-  useEffect(() => {
-    if (!provider || !customer || !services) {
-      return;
-    }
+  const { provider, customer, services } = requestInfo;
 
-    const params = {
-      customer: provider,
-      provider: customer,
-    };
+  if (!provider || !customer || !services) {
+    return null;
+  }
 
-    async function offerServices() {
-      if (services && provider && customer && services.length > 0) {
-        await Promise.all(
-          services.map(async service => {
-            switch (service) {
-              case ServiceKind.MARKET_CLEARING:
-                await doRequest(MarketClearingRequest, params);
-                break;
-              case ServiceKind.LISTING:
-                await doRequest(ListingRequest, params);
-                break;
-              case ServiceKind.CUSTODY:
-                await doRequest(CustodyRequest, params);
-                break;
-              case ServiceKind.ISSUANCE:
-                await doRequest(IssuanceRequest, params);
-                break;
-              default:
-                throw new Error(`Unsupported service: ${service}`);
-            }
-          })
-        );
-      }
-      onFinish();
+  const params = {
+    customer: provider,
+    provider: customer,
+  };
+
+  async function offerServices() {
+    if (services && provider && customer && services.length > 0) {
+      await Promise.all(
+        services.map(async service => {
+          switch (service) {
+            case ServiceKind.MARKET_CLEARING:
+              await doRequest(MarketClearingRequest, params);
+              break;
+            case ServiceKind.LISTING:
+              await doRequest(ListingRequest, params);
+              break;
+            case ServiceKind.CUSTODY:
+              await doRequest(CustodyRequest, params);
+              break;
+            case ServiceKind.ISSUANCE:
+              await doRequest(IssuanceRequest, params);
+              break;
+            default:
+              throw new Error(`Unsupported service: ${service}`);
+          }
+        })
+      );
     }
-    offerServices();
-  }, []);
+    onFinish();
+  }
 
   async function doRequest(
     request: Template<ServiceRequestTemplates, undefined, string>,
@@ -285,6 +218,8 @@ const CreateServiceRequests = (props: {
   ) {
     return await ledger.create(request, params);
   }
+
+  offerServices();
 
   return null;
 };

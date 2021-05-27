@@ -50,7 +50,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const matchUrl = props.match.url;
 
   const menuItems = Object.values(MenuItems)
-    .filter(item => (isHubDeployment ? true : item != MenuItems.ADD_PARTIES))
+    .filter(item => (isHubDeployment ? true : item !== MenuItems.ADD_PARTIES))
     .filter(item => item !== MenuItems.LOG_IN);
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
