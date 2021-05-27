@@ -14,13 +14,13 @@ import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/R
 import { useStreamQueries } from '../Main';
 
 export enum RoleKind {
-  CLEARING = 'Clearing House',
-  CUSTODY = 'Custodian',
-  TRADING = 'Exchange',
-  MATCHING = 'Matching Service',
-  SETTLEMENT = 'Settlement Service',
+  CLEARING = 'Clearing',
+  CUSTODY = 'Custody',
+  TRADING = 'Trading',
+  MATCHING = 'Matching',
+  SETTLEMENT = 'Settlement',
   REGULATOR = 'Regulator',
-  DISTRIBUTION = 'Distributor',
+  DISTRIBUTION = 'Distribution',
 }
 
 type RoleContract =

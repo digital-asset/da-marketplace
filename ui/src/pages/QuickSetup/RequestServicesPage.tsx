@@ -1,27 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form, List, Table } from 'semantic-ui-react';
+import { Button, Form, List } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
+import { Template } from '@daml/types';
 
-import classNames from 'classnames';
-
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
+import {
+  httpBaseUrl,
+  wsBaseUrl,
+  useVerifiedParties,
+  usePartyName,
+  isHubDeployment,
+} from '../../config';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
-import { LoadingWheel } from './QuickSetup';
-import { itemListAsText } from '../page/utils';
 
 import { InformationIcon } from '../../icons/icons';
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
-import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
-import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
-import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
-import { ServicesProvider, useServiceContext, ServiceKind } from '../../context/ServicesContext';
+import {
+  ServicesProvider,
+  useServiceContext,
+  ServiceKind,
+  ServiceRequestTemplates,
+} from '../../context/ServicesContext';
 import _ from 'lodash';
 
 import { retrieveUserParties } from '../../Parties';
@@ -32,6 +36,14 @@ interface IRequestServiceInfo {
   services?: ServiceKind[];
 }
 
+// without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
+const SUPPORTED_REQUESTS = [
+  ServiceKind.MARKET_CLEARING,
+  ServiceKind.LISTING,
+  ServiceKind.CUSTODY,
+  ServiceKind.ISSUANCE,
+];
+
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   const userParties = retrieveUserParties() || [];
@@ -39,56 +51,68 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
 
+  const [status, setStatus] = useState<string[]>([]);
+
   const [creatingRequest, setCreatingRequest] = useState(false);
 
   const provider = requestInfo?.provider;
 
   useEffect(() => {
     if (provider) {
-      const token = computeToken(provider);
-      setToken(token);
+      if (isHubDeployment) {
+        setToken(userParties.find(p => p.party === provider)?.token);
+      } else {
+        setToken(computeToken(provider));
+      }
     }
   }, [userParties, provider]);
 
   return (
     <div className="setup-page request-services">
-      <DamlLedger
-        party={adminCredentials.party}
-        token={adminCredentials.token}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <ServicesProvider>
-            <div className="page-row">
+      <div className="page-row">
+        <DamlLedger
+          party={adminCredentials.party}
+          token={adminCredentials.token}
+          httpBaseUrl={httpBaseUrl}
+          wsBaseUrl={wsBaseUrl}
+        >
+          <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+            <ServicesProvider>
               <RequestForm
                 requestInfo={requestInfo}
                 setRequestInfo={setRequestInfo}
                 createRequest={() => setCreatingRequest(true)}
                 creatingRequest={creatingRequest}
               />
-              <RequestTable />
-            </div>
-          </ServicesProvider>
-        </QueryStreamProvider>
-      </DamlLedger>
-      {creatingRequest && requestInfo && requestInfo.provider && token && (
-        <DamlLedger
-          token={token}
-          party={requestInfo.provider}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
-        >
-          <QueryStreamProvider defaultPartyToken={token}>
-            <CreateServiceRequests
-              requestInfo={requestInfo}
-              onFinish={() => {
-                setCreatingRequest(false);
-              }}
-            />
+            </ServicesProvider>
           </QueryStreamProvider>
         </DamlLedger>
-      )}
+        <div className="all-requests">
+          <h4>Requests</h4>
+          <List>
+            {status.map(s => (
+              <List.Item>{s}</List.Item>
+            ))}
+          </List>
+        </div>
+        {creatingRequest && requestInfo && requestInfo.provider && token && (
+          <DamlLedger
+            token={token}
+            party={requestInfo.provider}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <QueryStreamProvider defaultPartyToken={token}>
+              <CreateServiceRequests
+                requestInfo={requestInfo}
+                onFinish={() => setCreatingRequest(false)}
+                setStatus={setStatus}
+                status={status}
+              />
+            </QueryStreamProvider>
+          </DamlLedger>
+        )}
+      </div>
     </div>
   );
 };
@@ -106,7 +130,7 @@ const RequestForm = (props: {
 
   const { services, loading: servicesLoading } = useServiceContext();
 
-  const serviceOptions = Object.values(ServiceKind).map(i => {
+  const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
   });
 
@@ -156,7 +180,7 @@ const RequestForm = (props: {
         onChange={(_, data: any) =>
           setRequestInfo({
             ...requestInfo,
-            provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
           })
         }
         options={partyOptions}
@@ -180,7 +204,7 @@ const RequestForm = (props: {
         onChange={(_, data: any) =>
           setRequestInfo({
             ...requestInfo,
-            customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
           })
         }
         options={partyOptions}
@@ -224,48 +248,47 @@ const RequestForm = (props: {
 
 const CreateServiceRequests = (props: {
   requestInfo: IRequestServiceInfo;
+  setStatus: (status: string[]) => void;
+  status: string[];
   onFinish: () => void;
 }) => {
-  const { requestInfo, onFinish } = props;
+  const { requestInfo, onFinish, setStatus, status } = props;
 
   const { provider, customer, services } = requestInfo;
 
   const ledger = useLedger();
 
+  const { getName } = usePartyName('');
+
   useEffect(() => {
     if (!provider || !customer || !services) {
       return;
     }
+
     const params = {
       customer: provider,
       provider: customer,
     };
 
     async function offerServices() {
-      if (services && services.length > 0) {
+      let newStatus: string[] = [];
+
+      if (services && provider && customer && services.length > 0) {
         await Promise.all(
           services.map(async service => {
             switch (service) {
-              case ServiceKind.TRADING:
-                // await ledger.create(TradingRequest, params);
-                break;
               case ServiceKind.MARKET_CLEARING:
-                await ledger.create(MarketClearingRequest, params);
-                break;
-              case ServiceKind.CLEARING:
-                // await ledger.create(ClearingRequest, params);
-                break;
-              case ServiceKind.AUCTION:
-                // await ledger.create(ClearingRequest, params);
+                const hi = await doRequest(MarketClearingRequest, params, service);
+                newStatus = [...newStatus, hi];
                 break;
               case ServiceKind.LISTING:
-                await ledger.create(ListingRequest, params);
+                newStatus = [...newStatus, await doRequest(ListingRequest, params, service)];
                 break;
               case ServiceKind.CUSTODY:
-                await ledger.create(CustodyRequest, params);
+                newStatus = [...newStatus, await doRequest(CustodyRequest, params, service)];
                 break;
               case ServiceKind.ISSUANCE:
-                await ledger.create(IssuanceRequest, params);
+                newStatus = [...newStatus, await doRequest(IssuanceRequest, params, service)];
                 break;
               default:
                 throw new Error(`Unsupported service: ${service}`);
@@ -273,123 +296,31 @@ const CreateServiceRequests = (props: {
           })
         );
       }
+      setStatus([...status, ...newStatus]);
       onFinish();
     }
     offerServices();
   }, []);
 
-  return null;
-};
-
-type IServiceRowInfo = {
-  provider: string;
-  customers: string[];
-  service: string;
-}[];
-
-export const RequestTable = () => {
-  const { services, loading: loadingServices } = useServiceContext();
-
-  const defaultServices = [ServiceKind.REGULATOR];
-
-  const createdServices = services.filter(s => !defaultServices.includes(s.service));
-
-  if (loadingServices) {
-    return (
-      <div className="setup-page loading">
-        <LoadingWheel label="Loading Services..." />
-      </div>
-    );
+  async function doRequest(
+    request: Template<ServiceRequestTemplates, undefined, string>,
+    params: { customer: string; provider: string },
+    service: ServiceKind
+  ) {
+    let newStatus: string = '';
+    await ledger
+      .create(request, params)
+      .then(
+        () =>
+          (newStatus = `${getName(params.provider)} requested ${service} from ${getName(
+            params.customer
+          )}`)
+      )
+      .catch(() => (newStatus = `Error creating ${service} Request`));
+    return newStatus;
   }
 
-  const servicesByProvider = createdServices
-    .reduce((acc, r) => {
-      const providerDetails = acc.find(
-        i => i.provider === r.contract.payload.provider && i.service === r.service
-      );
-
-      let baseAcc = acc;
-
-      const provider = providerDetails?.provider || r.contract.payload.provider;
-      const service = providerDetails?.service || r.service;
-      const newCustomers = [...(providerDetails?.customers || []), r.contract.payload.customer];
-
-      if (providerDetails) {
-        baseAcc = acc.filter(a => a !== providerDetails);
-      }
-
-      return [
-        ...baseAcc,
-        {
-          provider,
-          service,
-          customers: newCustomers,
-        },
-      ];
-    }, [] as IServiceRowInfo)
-    .sort((a, b) => (a.provider > b.provider ? 1 : b.provider > a.provider ? -1 : 0));
-
-  return (
-    <div className="all-requests">
-      <>
-        <h4>Network</h4>
-        {servicesByProvider.length > 0 ? (
-          <Table>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>
-                  <h4>Provider</h4>
-                </Table.HeaderCell>
-                <Table.HeaderCell>
-                  <h4>Service</h4>
-                </Table.HeaderCell>
-                <Table.HeaderCell>
-                  <h4>Customers</h4>
-                </Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {servicesByProvider.map((r, i) => (
-                <ServiceRow
-                  key={i}
-                  provider={
-                    servicesByProvider[i - 1]?.provider != r.provider ? r.provider : undefined
-                  }
-                  customers={r.customers}
-                  service={r.service}
-                />
-              ))}
-            </Table.Body>
-          </Table>
-        ) : (
-          <div className="request-row empty">No services are being provided to any parties.</div>
-        )}
-      </>
-    </div>
-  );
-};
-
-const ServiceRow = (props: { provider?: string; customers: string[]; service: string }) => {
-  const { provider, customers, service } = props;
-
-  const { getName } = usePartyName('');
-
-  const providerName = provider ? getName(provider) : '';
-  const customerNames = customers.map(c => getName(c));
-
-  return (
-    <Table.Row className={classNames({ 'sub-row': !provider })}>
-      <Table.Cell>
-        <p className="p2">{providerName} </p>
-      </Table.Cell>
-      <Table.Cell>
-        <p className="p2">{service}</p>
-      </Table.Cell>
-      <Table.Cell>
-        <p className="p2">{customerNames.join(', ')}</p>
-      </Table.Cell>
-    </Table.Row>
-  );
+  return null;
 };
 
 export default RequestServicesPage;

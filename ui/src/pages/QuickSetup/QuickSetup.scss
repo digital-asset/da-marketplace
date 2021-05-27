@@ -256,19 +256,21 @@
           .party-names {
             width: unset;
           }
-
-          table {
+          tbody {
             display: block;
             max-height: 330px;
             overflow: auto;
             border-collapse: collapse;
+          }
 
-            tr.sub-row {
-              border-collapse: collapse;
-
-              td {
-                border-top: none;
-              }
+          thead,
+          tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            &.sub-row td {
+              border-top: none;
             }
           }
         }

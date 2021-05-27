@@ -174,4 +174,12 @@ function useRequestKinds(): Set<ServiceKind> {
   return context.requests.reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
 }
 
-export { RequestsProvider, useRequestKinds };
+function useRequests(): Request[] {
+  const context = React.useContext<RequestsState>(RequestsStateContext);
+  if (context === undefined) {
+    throw new Error('useProviderServices  must be used within a ServicesProvider');
+  }
+  return context.requests;
+}
+
+export { RequestsProvider, useRequestKinds, useRequests };
