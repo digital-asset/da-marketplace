@@ -46,11 +46,11 @@ const SUPPORTED_REQUESTS = [
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
+
   const userParties = retrieveUserParties() || [];
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
-
   const [creatingRequest, setCreatingRequest] = useState(false);
 
   const provider = requestInfo?.provider;
@@ -110,17 +110,16 @@ const RequestForm = (props: {
   creatingRequest: boolean;
 }) => {
   const { requestInfo, setRequestInfo, createRequest, creatingRequest } = props;
+
+  const [warnings, setWarnings] = useState<string[]>([]);
+
   const { getName } = usePartyName('');
-
   const { identities, loading: identitiesLoading } = useVerifiedParties();
-
   const { services, loading: servicesLoading } = useServiceContext();
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
   });
-
-  const [warnings, setWarnings] = useState<string[]>([]);
 
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
