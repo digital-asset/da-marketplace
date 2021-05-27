@@ -154,6 +154,8 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
             <Icon name="eye" link onClick={() => setShowQuotedAsset(true)} />
           )}
         </div>
+        <Form.Field label="Auction Type" />
+        <Form.Radio label="Dutch Auction" checked={true} />
         <Form.Input
           label="Quantity"
           type="number"

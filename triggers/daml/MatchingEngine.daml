@@ -83,7 +83,7 @@ handleOrder party orders op@(orderCid, order) = do
             Order.Buy  -> oppositelimitOrders
             Order.Sell -> reverse oppositelimitOrders
           oppositeMarketOrders = sortOn (\(_, o) -> Down o.details.asset.quantity) $ filter (\(_, o) -> o.details.orderType == Order.Market) $ filter isOppositeOrder orders
-          crossing      = takeWhile (isCrossingLimitOrders (orderCid,order)) oppositelimitOrders'
+          crossing = takeWhile (isCrossingLimitOrders (orderCid,order)) oppositelimitOrders'
 
       case order.details.orderType of
         Order.Market -> unless (null oppositelimitOrders') $ fill (orderCid, order) (head oppositelimitOrders')
@@ -124,7 +124,7 @@ handleOrder party orders op@(orderCid, order) = do
             (_, _) -> error "Shouldn't be here - can't match two market orders together"
           makerOrderId = passive.details.id.label
           takerOrderId = aggressive.details.id.label
-          quantity = min passive.details.asset.quantity aggressive.details.asset.quantity
+          quantity = min passive.remainingQuantity aggressive.remainingQuantity
 
       time <- getTime
 
