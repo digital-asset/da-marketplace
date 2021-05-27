@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Header } from 'semantic-ui-react';
 import { OpenMarketplaceLogo } from '../../icons/icons';
 
-export const logoHeader = (
+const logoHeader = (
   <Header className="dark logo-header">
     <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
   </Header>
@@ -19,7 +19,7 @@ type TileProps = {
   showLogoHeader?: boolean;
 };
 
-export const Tile: React.FC<TileProps> = ({
+const Tile: React.FC<TileProps> = ({
   children,
   className,
   dark,

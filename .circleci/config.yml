@@ -101,8 +101,7 @@ jobs:
           command: |
             echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
             source $BASH_ENV
-            # TODO fix ts warnings and remove "CI="
-            CI= make test-ui
+            make test-ui
       - save_cache:
           paths:
             - ~/.daml
@@ -128,8 +127,7 @@ jobs:
           command: |
             echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
             source $BASH_ENV
-            # TODO fix ts warnings and remove "CI="
-            CI= make release
+            make release
 
 workflows:
   version: 2

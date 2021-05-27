@@ -39,7 +39,7 @@ export const AutomationProvider: React.FC<AutomationProviderProps> = ({
       });
     }, 2000);
     return () => clearInterval(timer);
-  }, [publicParty]);
+  }, [automations, publicParty]);
   return (
     <AutomationStateContext.Provider value={{ automations, loading }}>
       {children}

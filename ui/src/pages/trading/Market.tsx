@@ -7,7 +7,6 @@ import {
   Order,
   OrderType,
   Side,
-  Status,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { CreateEvent } from '@daml/ledger';
@@ -29,6 +28,7 @@ import {
   getStatusReason,
   getTimeInForceText,
   getVolume,
+  isPendingLimitOrder,
   timeInForceOptions,
   TimeInForces,
 } from './Utils';
@@ -134,8 +134,6 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     o => o.payload.details.listingId.label === listing.payload.listingId.label
   );
   const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
-  const isPendingLimitOrder = (status: Status) =>
-    ['New', 'PendingExecution', 'PartiallyExecuted'].includes(status.tag);
   const bids = limits
     .filter(c => c.payload.details.side === Side.Buy)
     .filter(c => isPendingLimitOrder(c.payload.status))

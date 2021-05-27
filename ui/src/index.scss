@@ -19,7 +19,6 @@
 @use 'pages/page/WelcomeHeader';
 @use 'pages/page/OverflowMenu';
 @use 'pages/custody/Account';
-@use 'pages/origination/New' as OriginationNew;
 
 @use 'pages/notifications/Notifications';
 @use 'pages/distribution/auction/Auction';
@@ -154,7 +153,7 @@ html {
     }
   }
 
-  a {
+  @mixin link() {
     color: var(--blue-50);
     font-family: Open Sans;
     font-style: normal;
@@ -190,6 +189,11 @@ html {
       cursor: pointer;
     }
   }
+
+  a {
+    @include link();
+  }
+
   .ui.dimmer {
     background: rgba(255, 255, 255, 0.85);
   }
@@ -248,7 +252,6 @@ html {
         @include SetUp.set-up();
         @include Page.page();
         @include OverflowMenu.overflow-menu();
-        @include OriginationNew.origination-new();
         @include InfoCard.info-card();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
@@ -261,6 +264,19 @@ html {
         @include Notifications.notifications();
         @include TitleWithActions.title-with-actions();
         @include InputDialog.input-dialog();
+
+        button.button.a,
+        button.button.a.ghost {
+          @include link();
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          padding: 0;
+          margin: 0;
+          border: none;
+        }
 
         .ui.message {
           position: absolute;
