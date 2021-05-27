@@ -19,8 +19,6 @@ import QueryStreamProvider from '../../websocket/queryStream';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 
-import { AppError } from '../error/errorTypes';
-
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   return (
