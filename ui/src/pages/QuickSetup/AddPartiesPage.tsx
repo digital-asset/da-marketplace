@@ -106,12 +106,14 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
           </>
         ))}
 
-      <Button
-        className="ghost next"
-        onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-      >
-        Next
-      </Button>
+      {!loadingStatus && (
+        <Button
+          className="ghost next"
+          onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+        >
+          Next
+        </Button>
+      )}
 
       {loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS && (
         <div className="setup-page loading">
