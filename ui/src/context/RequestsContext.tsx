@@ -13,6 +13,7 @@ import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as RegulatorRequest } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
 import { Request as TradingRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import { Request as DistributionRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
 import { Request as CustodyRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Request as ClearingRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
@@ -25,6 +26,7 @@ type RoleRequestContract =
   | CreateEvent<ClearingRoleRequest>
   | CreateEvent<DistributionRoleRequest>
   | CreateEvent<CustodyRoleRequest>
+  | CreateEvent<SettlementRequest>
   | CreateEvent<ClearingRoleRequest>;
 
 type RoleRequest = {
@@ -86,6 +88,8 @@ const RequestsProvider: React.FC = ({ children }) => {
     useStreamQueries(DistributionRoleRequest);
   const { contracts: custodyRoleRequest, loading: custodyRoleLoading } =
     useStreamQueries(CustodyRoleRequest);
+  const { contracts: settlementRequest, loading: settlementLoading } =
+    useStreamQueries(SettlementRequest);
 
   useEffect(
     () =>
@@ -102,6 +106,7 @@ const RequestsProvider: React.FC = ({ children }) => {
           tradingRoleLoading ||
           distributionRoleLoading ||
           custodyRoleLoading ||
+          settlementLoading ||
           regulatorLoading
       ),
     [
@@ -118,6 +123,7 @@ const RequestsProvider: React.FC = ({ children }) => {
       tradingRoleLoading,
       distributionRoleLoading,
       custodyRoleLoading,
+      settlementLoading,
     ]
   );
 
@@ -151,11 +157,18 @@ const RequestsProvider: React.FC = ({ children }) => {
     () =>
       setRoleRequests([
         ...clearingRoleRequest.map(c => ({ contract: c, role: RoleKind.CLEARING })),
+        ...settlementRequest.map(c => ({ contract: c, role: RoleKind.SETTLEMENT })),
         ...custodyRoleRequest.map(c => ({ contract: c, role: RoleKind.CUSTODY })),
         ...tradingRoleRequest.map(c => ({ contract: c, role: RoleKind.TRADING })),
         ...distributionRoleRequest.map(c => ({ contract: c, role: RoleKind.DISTRIBUTION })),
       ]),
-    [clearingRoleRequest, custodyRoleRequest, tradingRoleRequest, distributionRoleRequest]
+    [
+      clearingRoleRequest,
+      custodyRoleRequest,
+      tradingRoleRequest,
+      settlementRequest,
+      distributionRoleRequest,
+    ]
   );
 
   return (
@@ -168,7 +181,7 @@ const RequestsProvider: React.FC = ({ children }) => {
 function useServiceRequestKinds(): Set<ServiceKind> {
   const context = React.useContext<RequestsState>(RequestsStateContext);
   if (context === undefined) {
-    throw new Error('useProviderServices  must be used within a ServicesProvider');
+    throw new Error('useServiceRequestKinds  must be used within a ServicesProvider');
   }
   return context.serviceRequests.reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
 }
@@ -176,7 +189,7 @@ function useServiceRequestKinds(): Set<ServiceKind> {
 function useRoleRequestKinds(): Set<RoleKind> {
   const context = React.useContext<RequestsState>(RequestsStateContext);
   if (context === undefined) {
-    throw new Error('useProviderServices  must be used within a ServicesProvider');
+    throw new Error('useRoleRequestKinds must be used within a ServicesProvider');
   }
   return context.roleRequests.reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
 }

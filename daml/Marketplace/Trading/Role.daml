@@ -68,9 +68,9 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Matching.Service, ContractId Settlement.Service)
         do
-          matchingCid <- createOrLookup Matching.Service with ..
+          matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
-          roleCid <- createOrLookup Role with ..
+          roleCid       <- createOrLookup Role with ..
           return (roleCid, matchingCid, settlementCid)
 
       Decline : ()
@@ -89,9 +89,9 @@ template Request
         with
           observers : Set Party
         do
-          matchingCid <- createOrLookup Matching.Service with ..
+          matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
-          roleCid <- createOrLookup Role with ..
+          roleCid       <- createOrLookup Role with ..
           return (roleCid, matchingCid, settlementCid)
 
       Reject : ()

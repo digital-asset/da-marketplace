@@ -139,7 +139,7 @@ const RolesProvider: React.FC = ({ children }) => {
 function usePartyRoleKinds(party: Party): Set<RoleKind> {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
-    throw new Error('useRoleKinds must be used within a RolesProvider');
+    throw new Error('usePartyRoleKinds must be used within a RolesProvider');
   }
   return context.roles
     .filter(r => r.contract.payload.provider === party)
