@@ -12,7 +12,6 @@ import { Service as MatchingService } from '@daml.js/da-marketplace/lib/Marketpl
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import { useStreamQueries } from '../Main';
-import { ServiceKind } from './ServicesContext';
 
 export enum RoleKind {
   CLEARING = 'Clearing',

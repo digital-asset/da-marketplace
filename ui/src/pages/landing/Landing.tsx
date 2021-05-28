@@ -174,7 +174,7 @@ const Landing = () => {
   const { name, getName } = usePartyName(party);
   const providers = useProviderServices(party);
 
-  const { identities, legalNames } = useVerifiedParties();
+  const { identities } = useVerifiedParties();
   const providersByRole = useProvidersByRole();
 
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
