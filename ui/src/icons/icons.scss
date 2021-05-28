@@ -53,6 +53,12 @@
       z-index: 2;
     }
 
+    &.megaphone-icon {
+      path {
+        fill: none;
+      }
+    }
+
     &.notification-icon {
       width: 18px;
       height: 18px;

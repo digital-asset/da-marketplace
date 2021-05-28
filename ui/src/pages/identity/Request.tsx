@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Form, Header } from 'semantic-ui-react';
-import { CircularProgress } from '@material-ui/core';
+import { Button, Form, Header, Loader } from 'semantic-ui-react';
 import classNames from 'classnames';
 
 import { useLedger, useParty } from '@daml/react';
@@ -40,12 +39,13 @@ const Request = () => {
   if (loading) {
     return (
       <div>
-        <CircularProgress color="secondary" />
+        <Loader active indeterminate size="small"></Loader>
       </div>
     );
   }
 
   if (!service) {
+    // TO-DO: Add MissingService modal
     return <h2>Not a Regulator customer.</h2>;
   }
 

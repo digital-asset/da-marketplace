@@ -35,9 +35,36 @@
         > .header > .content {
           display: flex;
           align-items: center;
+
           .icon-header {
-            .icon path {
-              fill: var(--green-50);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            .icon-wrapper {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 4px;
+              margin-right: $spacing-s;
+
+              .icon {
+                padding: 0;
+                margin: 0;
+                width: 20px;
+                height: 20px;
+
+                &.wallet-icon,
+                &.orders-icon {
+                  path {
+                    fill: var(--cool-grey-60);
+                  }
+                }
+
+                path {
+                  stroke: var(--cool-grey-60);
+                }
+              }
             }
           }
         }

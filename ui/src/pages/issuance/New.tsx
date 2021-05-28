@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-import { IconButton } from '@material-ui/core';
-import useStyles from '../styles';
 import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
-import { Visibility, VisibilityOff } from '@material-ui/icons';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { CreateEvent } from '@daml/ledger';
@@ -16,6 +13,7 @@ import { Button, Form, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
+import { EyeClosed, EyeOpen } from '../../icons/icons';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -25,8 +23,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   services,
 }: RouteComponentProps & Props) => {
-  const classes = useStyles();
-
   const el = useRef<HTMLDivElement>(null);
 
   const [showAsset, setShowAsset] = useState(false);
@@ -92,15 +88,9 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
             value={assetLabel}
             onChange={(_, d) => setAssetLabel((d.value && (d.value as string)) || '')}
           />
-          <IconButton
-            className={classes.marginLeft10}
-            color="primary"
-            size="small"
-            component="span"
-            onClick={() => setShowAsset(!showAsset)}
-          >
-            {showAsset ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-          </IconButton>
+          <Button className="icon-button ghost" onClick={() => setShowAsset(!showAsset)}>
+            {showAsset ? <EyeClosed /> : <EyeOpen />}
+          </Button>
         </div>
 
         <Form.Select

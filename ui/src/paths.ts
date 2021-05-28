@@ -57,7 +57,6 @@ const paths = {
     distribution: {
       auctions: '/app/distribution/auctions',
       new: '/app/distribution/new',
-      requests: '/app/distribution/requests',
       bidding: '/app/distribution/bidding',
     },
     instrument: {

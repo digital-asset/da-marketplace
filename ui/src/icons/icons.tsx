@@ -1,10 +1,14 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
   color?: 'green' | 'blue' | 'white' | 'grey';
   strokeColor?: string;
 };
+
+export const EyeOpen = () => <Icon link name="eye" />;
+export const EyeClosed = () => <Icon link name="eye slash" />;
 
 export const ArrowRightIcon: React.FC<IconProps> = ({ color }) => (
   <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
@@ -24,17 +28,6 @@ export const ArrowLeftIcon: React.FC<IconProps> = ({ color }) => (
       d="M6.3,2.3L9,5H0.8C0.4,5,0,5.3,0,5.8s0.3,0.8,0.8,0.8H9L6.3,9.3C6.2,9.4,6.1,9.6,6.1,9.8s0.1,0.4,0.2,0.5
               c0.3,0.3,0.8,0.3,1.1,0l4-4c0.1-0.1,0.1-0.2,0.1-0.3c0.1-0.1,0.1-0.4,0-0.5c0-0.1-0.1-0.2-0.2-0.2l-4-4C7,1,6.5,1,6.2,1.3
               C6,1.5,6,2,6.3,2.3"
-    />
-  </svg>
-);
-
-export const CheckMarkIcon = () => (
-  <svg className="icon check-mark-icon " width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path
-      d="M2.66675 8.66663L6.00008 12L13.3334 4.66663"
-      stroke="#B4F5A3"
-      strokeWidth="2"
-      strokeLinecap="round"
     />
   </svg>
 );
@@ -324,6 +317,7 @@ export const MegaphoneIcon = () => (
       d="m 0.5,5.4999075 c 0,-0.92048 0.74552,-1.66667 1.66599,-1.66667 1.12223,0 2.5887,0 3.66735,0 2,0 4.66666,-3.33332998 4.66666,-3.33332998 V 10.499858 c 0,0 -2.66666,-3.3332905 -4.66666,-3.3332905 -1.07865,0 -2.54512,0 -3.66734,0 -0.92048,0 -1.666,-0.74619 -1.666,-1.66666 z"
       stroke="#b4f5a3"
       strokeLinejoin="round"
+      fill="none"
       id="path833"
     />
     <path
@@ -332,9 +326,10 @@ export const MegaphoneIcon = () => (
       d="M 2.5,7.1664075 3.83334,11.166458 H 6.5 L 5.16667,7.1664075 Z"
       stroke="#b4f5a3"
       strokeLinejoin="round"
+      fill="none"
       id="path835"
     />
-    <path d="m 5.16667,3.8331575 v 3.33333" stroke="#b4f5a3" id="path837" />
+    <path fill="none" d="m 5.16667,3.8331575 v 3.33333" stroke="#b4f5a3" id="path837" />
   </svg>
 );
 
