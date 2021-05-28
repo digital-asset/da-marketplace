@@ -72,8 +72,6 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
     history.push(paths.app.manage.issuance);
   };
 
-  console.log('in the issuance!');
-
   return (
     <div className="input-dialog">
       <BackButton />

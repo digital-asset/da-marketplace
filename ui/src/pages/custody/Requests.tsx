@@ -121,8 +121,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     return extract(deposit.payload);
   };
 
-  console.log('hello custody requests!');
-
   return (
     <>
       <BackButton />
