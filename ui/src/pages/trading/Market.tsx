@@ -201,7 +201,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     } else if (
       deposits.reduce((acc, cur) => acc + parseFloat(cur.payload.asset.quantity), 0) >= quantity
     ) {
-      const [[headDeposit, ...tailDeposits]] = deposits
+      const [[headDeposit, ...tailDeposits], depositTotal] = deposits
         .sort((a, b) => parseFloat(a.payload.asset.quantity) - parseFloat(b.payload.asset.quantity))
         .reduce(
           ([assetDeposits, total], cur): [CreateEvent<AssetDeposit>[], number] => {
@@ -212,18 +212,21 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
           [[], 0] as [CreateEvent<AssetDeposit>[], number]
         );
 
-      const [[split]] = await Promise.resolve()
-        .then(() =>
-          ledger.exercise(AssetDeposit.AssetDeposit_Merge, headDeposit.contractId, {
-            depositCids: tailDeposits.map(d => d.contractId),
-          })
-        )
-        .then(([depositCid, _]) =>
-          ledger.exercise(AssetDeposit.AssetDeposit_Split, depositCid, {
-            quantities: [quantity.toString()],
-          })
-        );
-      return split;
+      const [mergedDepositCid] = await ledger.exercise(
+        AssetDeposit.AssetDeposit_Merge,
+        headDeposit.contractId,
+        {
+          depositCids: tailDeposits.map(d => d.contractId),
+        }
+      );
+
+      if (depositTotal === quantity) return mergedDepositCid;
+      else {
+        const [[split]] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, mergedDepositCid, {
+          quantities: [quantity.toString()],
+        });
+        return split;
+      }
     } else return null;
   };
 
