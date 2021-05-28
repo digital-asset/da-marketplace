@@ -40,7 +40,6 @@ data Providers = Providers
     custodianRoleCid : ContractId Custodian.Role
     exchangeRoleCid : ContractId Exchange.Role
     matchingServiceCid : ContractId Matching.Service
-    settlementServiceCid : ContractId Settlement.Service
     distributorRoleCid : ContractId Distributor.Role
 
 -- TODO: consider whether these services need to be more granular. i.e. does a custody relationship allow execution, tarde-away, safekeeping etc. in one go
@@ -69,7 +68,7 @@ onboardProviders = do
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
-  operatorRoleCid           <- submit operator  do createCmd Operator.Role with ..
+  operatorRoleCid           <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
 
   custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
   custodianRoleCid          <- submit bank      do exerciseCmd custodianRoleOfferCid Custodian.Accept
@@ -85,6 +84,9 @@ onboardProviders = do
 
   distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
+
+  settlementServiceOfferCid <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferSettlementService with provider = bank
+  settlementServiceCid      <- submit bank      do exerciseCmd settlementServiceOfferCid Settlement.Accept
 
   -- Identities
   regulatorRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorRole with provider = operator

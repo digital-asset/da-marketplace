@@ -48,7 +48,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
-  if (!auction || !isAuctionProvider) return <></>; // TODO: Return 404 not found
+  if (!auction) return <></>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
 
   const biddingAuctions = allBiddingAuctions.filter(
@@ -137,37 +137,39 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
         <BackButton />
       </div>
       <div className="auction">
-        <StripedTable
-          title="Bids"
-          headings={[
-            'Bidder',
-            'Quantity',
-            'Price',
-            'Percentage',
-            'Submitted',
-            'Visibility',
-            'Status',
-            'Allocation',
-          ]}
-          loading={allBidsLoading}
-          rows={bids.map(c => {
-            return {
-              elements: [
-                getName(c.payload.customer),
-                c.payload.details.quantity,
-                c.payload.details.price,
-                (
-                  (100.0 * parseFloat(c.payload.details.quantity)) /
-                  parseFloat(auction.payload.asset.quantity)
-                ).toFixed(2) + '%',
-                DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL),
-                c.payload.allowPublishing ? 'Public' : 'Private',
-                getBidStatus(c.payload.status),
-                getBidAllocation(c.payload),
-              ],
-            };
-          })}
-        />
+        {isAuctionProvider && (
+          <StripedTable
+            title="Bids"
+            headings={[
+              'Bidder',
+              'Quantity',
+              'Price',
+              'Percentage',
+              'Submitted',
+              'Visibility',
+              'Status',
+              'Allocation',
+            ]}
+            loading={allBidsLoading}
+            rows={bids.map(c => {
+              return {
+                elements: [
+                  getName(c.payload.customer),
+                  c.payload.details.quantity,
+                  c.payload.details.price,
+                  (
+                    (100.0 * parseFloat(c.payload.details.quantity)) /
+                    parseFloat(auction.payload.asset.quantity)
+                  ).toFixed(2) + '%',
+                  DateTime.fromISO(c.payload.details.time).toLocaleString(DateTime.DATETIME_FULL),
+                  c.payload.allowPublishing ? 'Public' : 'Private',
+                  getBidStatus(c.payload.status),
+                  getBidAllocation(c.payload),
+                ],
+              };
+            })}
+          />
+        )}
         <div className="details">
           <Tile header="Details">
             <Table basic="very">
@@ -218,38 +220,39 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
                   </Table.Cell>
                   <Table.Cell>{getAuctionStatus(auction.payload.status)}</Table.Cell>
                 </Table.Row>
-                {getFinalPrice(auction.payload.status) ? (
-                  <Table.Row>
-                    <Table.Cell>
-                      <b>Final price</b>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {getFinalPrice(auction.payload.status)} {auction.payload.quotedAssetId.label}
-                    </Table.Cell>
-                  </Table.Row>
-                ) : (
-                  <Table.Row>
-                    <Table.Cell>
-                      <b>Current price</b>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {currentPrice.toFixed(2)} {auction.payload.quotedAssetId.label}
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-                {getParticallyAllocatedUnits(auction.payload) && (
-                  <Table.Row>
-                    <Table.Cell>
-                      <b>Allocated</b>
-                    </Table.Cell>
-                    <Table.Cell>
-                      {getParticallyAllocatedUnits(auction.payload)?.toFixed(2)}{' '}
-                      {auction.payload.asset.id.label}
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-                <Table.Row>
-                  <Table.Cell>
+                {isAuctionProvider && (
+                  <>
+                    {getFinalPrice(auction.payload.status) ? (
+                      <Table.Row>
+                        <Table.Cell>
+                          <b>Final price</b>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {getFinalPrice(auction.payload.status)}{' '}
+                          {auction.payload.quotedAssetId.label}
+                        </Table.Cell>
+                      </Table.Row>
+                    ) : (
+                      <Table.Row>
+                        <Table.Cell>
+                          <b>Current price</b>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {currentPrice.toFixed(2)} {auction.payload.quotedAssetId.label}
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
+                    {getParticallyAllocatedUnits(auction.payload) && (
+                      <Table.Row>
+                        <Table.Cell>
+                          <b>Allocated</b>
+                        </Table.Cell>
+                        <Table.Cell>
+                          {getParticallyAllocatedUnits(auction.payload)?.toFixed(2)}{' '}
+                          {auction.payload.asset.id.label}
+                        </Table.Cell>
+                      </Table.Row>
+                    )}
                     <Button
                       type="submit"
                       className="ghost details-button"
@@ -258,41 +261,41 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
                     >
                       Close Auction
                     </Button>
-                  </Table.Cell>
-                  <Table.Cell />
-                </Table.Row>
+                  </>
+                )}
               </Table.Body>
             </Table>
           </Tile>
-
-          <StripedTable
-            title="Investors"
-            headings={['Investor', 'Status', 'Action']}
-            rows={biddingProviderServices
-              .filter(c => c.payload.customer !== auction.payload.customer)
-              .map(c => {
-                return {
-                  elements: [
-                    getName(c.payload.customer),
-                    getbiddingAuctionstatus(c.payload.customer),
-                    isAuctionProvider && (
-                      <Button
-                        floated="right"
-                        type="submit"
-                        className="ghost"
-                        disabled={
-                          getbiddingAuctionstatus(c.payload.customer) !== 'No bid requested' ||
-                          auction.payload.status.tag !== 'Open'
-                        }
-                        onClick={() => requestBid(c)}
-                      >
-                        Request Bid
-                      </Button>
-                    ),
-                  ],
-                };
-              })}
-          />
+          {isAuctionProvider && (
+            <StripedTable
+              title="Investors"
+              headings={['Investor', 'Status', 'Action']}
+              rows={biddingProviderServices
+                .filter(c => c.payload.customer !== auction.payload.customer)
+                .map(c => {
+                  return {
+                    elements: [
+                      getName(c.payload.customer),
+                      getbiddingAuctionstatus(c.payload.customer),
+                      isAuctionProvider && (
+                        <Button
+                          floated="right"
+                          type="submit"
+                          className="ghost"
+                          disabled={
+                            getbiddingAuctionstatus(c.payload.customer) !== 'No bid requested' ||
+                            auction.payload.status.tag !== 'Open'
+                          }
+                          onClick={() => requestBid(c)}
+                        >
+                          Request Bid
+                        </Button>
+                      ),
+                    ],
+                  };
+                })}
+            />
+          )}
         </div>
       </div>
     </>
