@@ -6,10 +6,13 @@
 @use 'components/Tile/Tile';
 @use 'components/Table/StripedTable';
 @use 'components/Form/CalendarInput';
+@use 'components/Widget/Widget';
 
 @use 'components/InputDialog/InputDialog';
 @use 'components/Common/TitleWithActions';
 @use 'components/Common/InfoCard';
+
+@use 'pages/error/Error';
 @use 'pages/login/Login';
 @use 'pages/QuickSetup/QuickSetup';
 @use 'pages/landing/Landing';
@@ -253,6 +256,7 @@ html {
         @include Page.page();
         @include OverflowMenu.overflow-menu();
         @include InfoCard.info-card();
+        @include Error.error-page();
         @include Login.login-screen();
         @include QuickSetup.quick-setup();
         @include Landing.landing();
@@ -264,6 +268,7 @@ html {
         @include Notifications.notifications();
         @include TitleWithActions.title-with-actions();
         @include InputDialog.input-dialog();
+        @include Widget.widget();
 
         button.button.a,
         button.button.a.ghost {

@@ -32,6 +32,7 @@ import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 import paths from '../../paths';
+import Widget from '../../components/Widget/Widget';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -120,30 +121,27 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   return (
     <WellKnownPartiesProvider>
-      <div className="quick-setup">
-        <div className="page-controls">
-          <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
-            <ArrowLeftIcon color={'white'} />
-            Back
-          </Button>
-          {activeMenuItem !== MenuItems.LOG_IN && (
-            <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
-              <Button className="button ghost dark control-button">
-                Skip to Log In
-                <ArrowRightIcon color={'white'} />
-              </Button>
-            </NavLink>
-          )}
-        </div>
-
-        <div className="quick-setup-header">
-          <h1 className="logo-header">
-            <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
-          </h1>
-          {activeMenuItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
-        </div>
-
-        <div className="quick-setup-tile">
+      <Widget
+        subtitle={activeMenuItem === MenuItems.LOG_IN ? 'Log In' : 'Market Set-Up'}
+        pageControls={{
+          left: (
+            <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
+              <ArrowLeftIcon color={'white'} />
+              Back
+            </Button>
+          ),
+          right:
+            activeMenuItem !== MenuItems.LOG_IN ? (
+              <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
+                <Button className="button ghost dark control-button">
+                  Skip to Log In
+                  <ArrowRightIcon color={'white'} />
+                </Button>
+              </NavLink>
+            ) : undefined,
+        }}
+      >
+        <div className="quick-setup">
           {activeMenuItem !== MenuItems.LOG_IN && (
             <Menu pointing secondary className="quick-setup-menu page-row">
               {menuItems.map(item => (
@@ -233,7 +231,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             />
           </Switch>
         </div>
-      </div>
+      </Widget>
     </WellKnownPartiesProvider>
   );
 

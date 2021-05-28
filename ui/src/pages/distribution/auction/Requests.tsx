@@ -53,6 +53,8 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
     history.push(paths.app.distribution.auctions);
   };
 
+  console.log('Auction requests!!');
+
   return (
     <>
       <Grid container direction="column">
