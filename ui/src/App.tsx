@@ -447,7 +447,7 @@ const AppComponent = () => {
       menuTitle={
         currentEntry && (
           <Header className="bold icon-header" as="h3">
-            {currentEntry.icon}
+            <span className="icon-wrapper">{currentEntry.icon}</span>
             {currentEntry.label}
           </Header>
         )

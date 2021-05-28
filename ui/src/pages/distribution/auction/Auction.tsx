@@ -133,6 +133,8 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
     }
   };
 
+  console.log('Auction!!!!!');
+
   return (
     <>
       <div>
