@@ -1,7 +1,10 @@
 module Marketplace.Trading.Role where
 
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Utils
 import DA.Set (Set)
 
 template Role
@@ -63,9 +66,12 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : ContractId Role
+      Accept : (ContractId Role, ContractId Matching.Service, ContractId Settlement.Service)
         do
-          create Role with ..
+          matchingCid <- createOrLookup Matching.Service with ..
+          settlementCid <- createOrLookup Settlement.Service with ..
+          roleCid <- createOrLookup Role with ..
+          return (roleCid, matchingCid, settlementCid)
 
       Decline : ()
         do
@@ -79,11 +85,14 @@ template Request
     signatory provider
 
     controller operator can
-      Approve : ContractId Role
+      Approve : (ContractId Role, ContractId Matching.Service, ContractId Settlement.Service)
         with
           observers : Set Party
         do
-          create Role with ..
+          matchingCid <- createOrLookup Matching.Service with ..
+          settlementCid <- createOrLookup Settlement.Service with ..
+          roleCid <- createOrLookup Role with ..
+          return (roleCid, matchingCid, settlementCid)
 
       Reject : ()
         do

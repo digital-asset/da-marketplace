@@ -41,7 +41,7 @@ const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
 const DragAndDropRoles = () => {
   const ledger = useLedger();
   const roleOptions = Object.values(RoleKind)
-    .filter(s => s !== RoleKind.REGULATOR)
+    .filter(s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING)
     .map(i => {
       return { name: i, value: i };
     });
@@ -100,14 +100,6 @@ const DragAndDropRoles = () => {
       case RoleKind.TRADING:
         await ledger.exercise(
           OperatorService.OfferExchangeRole,
-          operatorServiceContract.contractId,
-          provider
-        );
-        return;
-
-      case RoleKind.MATCHING:
-        await ledger.exercise(
-          OperatorService.OfferMatchingService,
           operatorServiceContract.contractId,
           provider
         );

@@ -73,14 +73,8 @@ onboardProviders = do
   custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
   custodianRoleCid          <- submit bank      do exerciseCmd custodianRoleOfferCid Custodian.Accept
 
-  exchangeRoleOfferCid      <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
-  exchangeRoleCid           <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
-
-  matchingServiceOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferMatchingService with provider = exchange
-  matchingServiceCid        <- submit exchange  do exerciseCmd matchingServiceOfferCid Matching.Accept
-
-  settlementServiceOfferCid <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferSettlementService with provider = exchange
-  settlementServiceCid      <- submit exchange  do exerciseCmd settlementServiceOfferCid Settlement.Accept
+  exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
+  (exchangeRoleCid, matchingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
 
   distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
@@ -98,14 +92,14 @@ onboardProviders = do
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
   regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = exchange
-  regulatorServiceCid             <- submit exchange      do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
-  identityVerificationRequestCid  <- submit exchange      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Exchange"; location = "Exchange Location"; observers = [public]
+  regulatorServiceCid             <- submit exchange  do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
+  identityVerificationRequestCid  <- submit exchange  do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "Exchange"; location = "Exchange Location"; observers = [public]
   verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
-  regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = clearinghouse
-  regulatorServiceCid             <- submit clearinghouse      do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
-  identityVerificationRequestCid  <- submit clearinghouse      do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "CCP"; location = "CCP Location"; observers = [public]
-  verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
+  regulatorServiceOfferCid        <- submit operator      do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = clearinghouse
+  regulatorServiceCid             <- submit clearinghouse do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
+  identityVerificationRequestCid  <- submit clearinghouse do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = "CCP"; location = "CCP Location"; observers = [public]
+  verifiedIdentity                <- submit operator      do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
 
   -- Clearing
   custodyServiceOfferCid <- submit bank do exerciseCmd custodianRoleCid Custodian.OfferCustodyService with customer = clearinghouse, ..
