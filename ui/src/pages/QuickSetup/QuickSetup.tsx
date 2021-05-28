@@ -23,7 +23,7 @@ import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
-import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';

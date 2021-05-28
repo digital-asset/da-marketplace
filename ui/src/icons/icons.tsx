@@ -28,17 +28,6 @@ export const ArrowLeftIcon: React.FC<IconProps> = ({ color }) => (
   </svg>
 );
 
-export const CheckMarkIcon = () => (
-  <svg className="icon check-mark-icon " width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path
-      d="M2.66675 8.66663L6.00008 12L13.3334 4.66663"
-      stroke="#B4F5A3"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
 export const InformationIcon = () => (
   <svg className="icon information-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
     <path
