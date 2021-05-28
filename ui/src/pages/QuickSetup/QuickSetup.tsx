@@ -45,7 +45,6 @@ export enum MenuItems {
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
-  const parties = retrieveParties() || [];
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -72,6 +71,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
 
@@ -85,9 +85,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties]);
+  }, [history.location]);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
+
     // deploy auto-trigger for all parties
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
@@ -116,7 +118,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
 
     deployAllTriggers();
-  }, [parties, adminCredentials]);
+  }, [adminCredentials]);
 
   return (
     <WellKnownPartiesProvider>
