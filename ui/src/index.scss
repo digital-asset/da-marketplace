@@ -283,6 +283,22 @@ html {
           border: none;
         }
 
+        button.ui.button.icon-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          padding: 0px;
+          margin: 8px;
+          width: 32px;
+          height: 32px;
+
+          .icon {
+            margin: 0;
+          }
+        }
+
         .ui.message {
           position: absolute;
           top: 0px;

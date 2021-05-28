@@ -1,10 +1,14 @@
 import React from 'react';
+import { Icon } from 'semantic-ui-react';
 
 type IconProps = {
   size?: '24' | '32' | '48' | '64';
   color?: 'green' | 'blue' | 'white' | 'grey';
   strokeColor?: string;
 };
+
+export const EyeOpen = () => <Icon link name="eye" />;
+export const EyeClosed = () => <Icon link name="eye slash" />;
 
 export const ArrowRightIcon: React.FC<IconProps> = ({ color }) => (
   <svg className="icon arrow-right-icon" viewBox="0 0 13 12">
