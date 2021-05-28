@@ -2,7 +2,6 @@ import React from 'react';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
 import { RouteComponentProps, useParams } from 'react-router-dom';
-import useStyles from '../../styles';
 import {
   Auction as AuctionContract,
   Status as AuctionStatus,
@@ -34,7 +33,6 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   auctionServices,
   biddingServices,
 }: RouteComponentProps & Props) => {
-  const classes = useStyles();
   const { contractId } = useParams<any>();
   const cid = contractId.replace('_', '#');
 
@@ -176,93 +174,99 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
           <Tile header="Details">
             <Table basic="very">
               <Table.Body>
-                <Table.Row key={0}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Issuer</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(auction.payload.customer)}</Table.Cell>
+                  <Table.Cell>{getName(auction.payload.customer)}</Table.Cell>
                 </Table.Row>
-                <Table.Row key={1}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Agent</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getName(auction.payload.provider)}</Table.Cell>
+                  <Table.Cell>{getName(auction.payload.provider)}</Table.Cell>
                 </Table.Row>
-                <Table.Row key={2}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Auction ID</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{auction.payload.auctionId}</Table.Cell>
+                  <Table.Cell>{auction.payload.auctionId}</Table.Cell>
                 </Table.Row>
-                <Table.Row key={3}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Asset</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>
+                  <Table.Cell>
                     {auction.payload.asset.quantity} {auction.payload.asset.id.label}
                   </Table.Cell>
                 </Table.Row>
-                <Table.Row key={4}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Floor</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>
+                  <Table.Cell>
                     {auction.payload.floorPrice} {auction.payload.quotedAssetId.label}
                   </Table.Cell>
                 </Table.Row>
-                <Table.Row key={5}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Subscribed %</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{filledPerc.toFixed(2)}%</Table.Cell>
+                  <Table.Cell>{filledPerc.toFixed(2)}%</Table.Cell>
                 </Table.Row>
-                <Table.Row key={6}>
-                  <Table.Cell key={0}>
+                <Table.Row>
+                  <Table.Cell>
                     <b>Status</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{getAuctionStatus(auction.payload.status)}</Table.Cell>
+                  <Table.Cell>{getAuctionStatus(auction.payload.status)}</Table.Cell>
                 </Table.Row>
                 {getFinalPrice(auction.payload.status) ? (
-                  <Table.Row key={7} className={classes.tableRow}>
-                    <Table.Cell key={0}>
+                  <Table.Row>
+                    <Table.Cell>
                       <b>Final price</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>
+                    <Table.Cell>
                       {getFinalPrice(auction.payload.status)} {auction.payload.quotedAssetId.label}
                     </Table.Cell>
                   </Table.Row>
                 ) : (
-                  <Table.Row key={8} className={classes.tableRow}>
-                    <Table.Cell key={0}>
+                  <Table.Row>
+                    <Table.Cell>
                       <b>Current price</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>
+                    <Table.Cell>
                       {currentPrice.toFixed(2)} {auction.payload.quotedAssetId.label}
                     </Table.Cell>
                   </Table.Row>
                 )}
                 {getParticallyAllocatedUnits(auction.payload) && (
-                  <Table.Row key={9} className={classes.tableRow}>
-                    <Table.Cell key={0}>
+                  <Table.Row>
+                    <Table.Cell>
                       <b>Allocated</b>
                     </Table.Cell>
-                    <Table.Cell key={1}>
+                    <Table.Cell>
                       {getParticallyAllocatedUnits(auction.payload)?.toFixed(2)}{' '}
                       {auction.payload.asset.id.label}
                     </Table.Cell>
                   </Table.Row>
                 )}
-                <Button
-                  type="submit"
-                  className="ghost details-button"
-                  disabled={auction.payload.status.tag !== 'Open' || bids.length === 0}
-                  onClick={closeAuction}
-                >
-                  Close Auction
-                </Button>
+                <Table.Row>
+                  <Table.Cell>
+                    <Button
+                      type="submit"
+                      className="ghost details-button"
+                      disabled={auction.payload.status.tag !== 'Open' || bids.length === 0}
+                      onClick={closeAuction}
+                    >
+                      Close Auction
+                    </Button>
+                  </Table.Cell>
+                  <Table.Cell />
+                </Table.Row>
               </Table.Body>
             </Table>
           </Tile>
+
           <StripedTable
             title="Investors"
             headings={['Investor', 'Status', 'Action']}
