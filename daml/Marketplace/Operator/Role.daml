@@ -15,6 +15,7 @@ template Role
     observers : Set Party
   where
     signatory operator
+    observer observers
 
     key operator : Party
     maintainer key

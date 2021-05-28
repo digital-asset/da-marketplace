@@ -146,9 +146,11 @@ handleApprovalRule party = do
     generateRoleCommands CustodyRole.ApproveIssuanceRequest issuanceServiceRequests custodyRoles
 
   clearingServiceRequests <- queryByParty @ClearingService.Request  (.provider)
+  marketClearingRequests  <- queryByParty @MarketClearingService.Request (.provider)
   clearingRoles           <- queryByParty @ClearingRole.Role        (.provider)
   submitCommands $
-    generateRoleCommands ClearingRole.ApproveClearingRequest clearingServiceRequests clearingRoles
+    generateRoleCommands ClearingRole.ApproveClearingRequest clearingServiceRequests clearingRoles ++
+    generateRoleCommands ClearingRole.ApproveMarketRequest marketClearingRequests clearingRoles
 
   auctionServiceRequests  <- queryByParty @AuctionService.Request (.provider)
   biddingServiceRequests  <- queryByParty @BiddingService.Request (.provider)
