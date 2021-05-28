@@ -18,6 +18,7 @@ import MarginCallModal from './MarginCallModal';
 import MTMCalculationModal from './MTMCalculationModal';
 import { CreateEvent } from '@daml/ledger';
 import { formatCurrency } from '../../util';
+import paths from '../../paths';
 
 const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -49,7 +50,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         iconActions={[
           {
             label: 'Manage Clearing Services',
-            path: '/app/manage/clearing',
+            path: paths.app.manage.clearing,
           },
         ]}
       >
@@ -90,7 +91,8 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
               formatCurrency(marginAmount),
               standingText,
             ],
-            onClick: () => history.push(`/app/clearing/member/${s.contractId.replace('#', '_')}`),
+            onClick: () =>
+              history.push(`${paths.app.clearing.member}/${s.contractId.replace('#', '_')}`),
           };
         })}
       />

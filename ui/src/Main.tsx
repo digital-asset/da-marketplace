@@ -17,6 +17,7 @@ import { computeCredentials } from './Credentials';
 import QueryStreamProvider, { useContractQuery } from './websocket/queryStream';
 import { RolesProvider } from './context/RolesContext';
 import { RequestsProvider } from './context/RequestsContext';
+import paths from './paths';
 
 type MainProps = {
   defaultPath: string;
@@ -28,9 +29,9 @@ export default function Main({ defaultPath }: MainProps) {
   return (
     <HashRouter>
       <Switch>
-        <Route exact path="/" component={() => <Redirect to={defaultPath} />} />
+        <Route exact path={paths.root} component={() => <Redirect to={defaultPath} />} />
         <PrivateRoute
-          path="/app"
+          path={paths.app.root}
           component={() => {
             return (
               <WellKnownPartiesProvider>
@@ -54,8 +55,8 @@ export default function Main({ defaultPath }: MainProps) {
             );
           }}
         />
-        <PublicRoute path="/quick-setup" component={QuickSetup} />
-        <PublicRoute path="/login" component={Login} />
+        <PublicRoute path={paths.quickSetup.root} component={QuickSetup} />
+        <PublicRoute path={paths.login} component={Login} />
         <Route component={ErrorComponent} />
       </Switch>
     </HashRouter>
@@ -69,7 +70,7 @@ export default function Main({ defaultPath }: MainProps) {
           user.isAuthenticated ? (
             React.createElement(component, props)
           ) : (
-            <Redirect to={{ pathname: '/login', state: { from: props.location } }} />
+            <Redirect to={{ pathname: paths.login, state: { from: props.location } }} />
           )
         }
       />
@@ -82,7 +83,7 @@ export default function Main({ defaultPath }: MainProps) {
         {...rest}
         render={props =>
           user.isAuthenticated ? (
-            <Redirect to={{ pathname: '/' }} />
+            <Redirect to={paths.root} />
           ) : (
             React.createElement(component, props)
           )

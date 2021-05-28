@@ -31,6 +31,7 @@ import SelectAutomationPage from './SelectAutomationPage';
 import OfferServicesPage from './OfferServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import paths from '../../paths';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -44,7 +45,6 @@ export enum MenuItems {
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
-  const parties = retrieveParties() || [];
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -71,6 +71,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
 
@@ -84,9 +85,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties]);
+  }, [history.location]);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
+
     // deploy auto-trigger for all parties
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
@@ -115,13 +118,13 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
 
     deployAllTriggers();
-  }, [parties, adminCredentials]);
+  }, [adminCredentials]);
 
   return (
     <WellKnownPartiesProvider>
       <div className="quick-setup">
         <div className="page-controls">
-          <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
+          <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
             <ArrowLeftIcon color={'white'} />
             Back
           </Button>

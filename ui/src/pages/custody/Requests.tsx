@@ -20,6 +20,8 @@ import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import paths from '../../paths';
+
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
 };
@@ -48,7 +50,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
@@ -61,7 +63,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CloseAccount, service.contractId, {
       closeAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
@@ -74,7 +76,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CreditAccount, service.contractId, {
       creditAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
@@ -87,7 +89,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.DebitAccount, service.contractId, {
       debitAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
@@ -100,7 +102,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.TransferDeposit, service.contractId, {
       transferDepositRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const getDebitDepositDetail = (
@@ -127,7 +129,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
       {openRequests.length > 0 && (
         <StripedTable
           title="Open Account Requests"
-          rowsClickable
           headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
           rows={openRequests.map((c, i) => {
             return {
@@ -143,8 +144,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                   </Button>
                 ),
               ],
-              onClick: () =>
-                history.push('/app/custody/openrequest/' + c.contractId.replace('#', '_')),
             };
           })}
         />

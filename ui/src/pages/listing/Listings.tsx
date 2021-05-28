@@ -18,6 +18,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Model/module';
 import { FairValueCalculationRequests } from './ManualCalculationRequests';
 import TitleWithActions from '../../components/Common/TitleWithActions';
+import paths from '../../paths';
 
 const LISTING_REQUEST_TEMPLATE = 'Marketplace.Listing.Service.CreateListingRequest';
 
@@ -59,7 +60,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     <>
       <TitleWithActions
         title="Listings"
-        iconActions={[{ path: '/app/setup/listing/new', label: ' New Listing' }]}
+        iconActions={[{ path: paths.app.setup.listing.new, label: ' New Listing' }]}
       />
 
       <StripedTable
@@ -94,7 +95,8 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               c.payload.quotedAssetPrecision,
               fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
             ],
-            onClick: () => history.push('/app/manage/listings/' + c.contractId.replace('#', '_')),
+            onClick: () =>
+              history.push(`${paths.app.manage.listings}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />
