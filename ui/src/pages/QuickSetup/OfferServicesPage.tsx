@@ -219,15 +219,11 @@ const OfferForm = (props: {
   }
 
   function findMissingRole(service?: OfferServiceKind) {
-    if (
-      service === OfferServiceKind.TRADING ||
-      service === OfferServiceKind.MARKET_CLEARING ||
-      service === OfferServiceKind.CLEARING
-    ) {
+    if (service === OfferServiceKind.MARKET_CLEARING || service === OfferServiceKind.CLEARING) {
       if (!clearingRoles.find(r => r.payload.provider === offerInfo?.provider)) {
         return RoleKind.CLEARING;
       }
-    } else if (service === OfferServiceKind.LISTING) {
+    } else if (service === OfferServiceKind.LISTING || service === OfferServiceKind.TRADING) {
       if (!tradingRoles.find(r => r.payload.provider === offerInfo?.provider)) {
         return RoleKind.TRADING;
       }
