@@ -8,7 +8,7 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
@@ -254,13 +254,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <BackButton />
+      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <Header as="h2">
-          <b>Account:</b> {targetAccount.account.id.label}
-        </Header>
         <div className="page-section-row">
           <InfoCard
             title="Account Details"
