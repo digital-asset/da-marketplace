@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Redirect,
   Route,
@@ -7,7 +7,6 @@ import {
   useLocation,
   withRouter,
   useHistory,
-  useParams,
 } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { New as CustodyNew } from './pages/custody/New';
@@ -39,7 +38,6 @@ import { ClearingServiceTable } from './pages/network/Clearing';
 import { CustodyServiceTable } from './pages/network/Custody';
 import { TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
-
 import Page from './pages/page/Page';
 import {
   ControlsIcon,
@@ -78,7 +76,6 @@ type Entry = {
 
 const AppComponent = () => {
   const party = useParty();
-
   const history = useHistory();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);

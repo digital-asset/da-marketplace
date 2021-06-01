@@ -63,6 +63,8 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
   const contractId = path.split('/')[4];
 
   useEffect(() => {
+    setContractTitle(undefined);
+
     if (
       accountsLoading ||
       allocatedAccountsLoading ||
@@ -75,28 +77,47 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
     ) {
       return;
     }
+
     if (hasContractId(path, paths.app.custody.account)) {
-      setContractTitle(allAccounts.find(c => c.contractId == contractId)?.account.id.label);
+      const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;
+      if (accountLabel) {
+        return setContractTitle(accountLabel);
+      }
     } else if (hasContractId(path, paths.app.clearing.member)) {
-      const customer = services.find(c => c.contractId == contractId)?.payload.customer;
+      const customer = services.find(c => c.contractId === contractId)?.payload.customer;
       if (customer) {
-        setContractTitle(getName(customer));
+        return setContractTitle(getName(customer));
       }
     } else if (hasContractId(path, paths.app.distribution.auctions)) {
-      setContractTitle(auctions.find(c => c.contractId == contractId)?.payload.auctionId);
+      const auctionId = auctions.find(c => c.contractId === contractId)?.payload.auctionId;
+      if (auctionId) {
+        return setContractTitle(auctionId);
+      }
     } else if (hasContractId(path, paths.app.distribution.bidding)) {
-      setContractTitle(biddingAuctions.find(c => c.contractId == contractId)?.payload.auctionId);
+      const biddingId = biddingAuctions.find(c => c.contractId === contractId)?.payload.auctionId;
+      if (biddingId) {
+        return setContractTitle(biddingId);
+      }
     } else if (hasContractId(path, paths.app.trading.order)) {
-      setContractTitle(orders.find(c => c.contractId == contractId)?.payload.details.id.label);
+      const orderLabel = orders.find(c => c.contractId === contractId)?.payload.details.id.label;
+      if (orderLabel) {
+        return setContractTitle(orderLabel);
+      }
     } else if (hasContractId(path, paths.app.manage.instrument)) {
-      setContractTitle(instruments.find(c => c.contractId == contractId)?.payload.assetId.label);
+      const instrumentLabel = instruments.find(c => c.contractId === contractId)?.payload.assetId
+        .label;
+      if (instrumentLabel) {
+        return setContractTitle(instrumentLabel);
+      }
     } else if (hasContractId(path, paths.app.manage.listings)) {
-      setContractTitle(listings.find(c => c.contractId == contractId)?.payload.listingId.label);
-    } else {
-      setContractTitle(undefined);
+      const listingLabel = listings.find(c => c.contractId === contractId)?.payload.listingId.label;
+      if (listingLabel) {
+        return setContractTitle(listingLabel);
+      }
     }
   }, [
     path,
+    contractId,
     accountsLoading,
     allocatedAccountsLoading,
     servicesLoading,
