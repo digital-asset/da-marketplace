@@ -158,7 +158,6 @@ const Landing = () => {
       .filter(d => d.payload.asset.id.label === 'USD')
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
   );
-  console.log(Object.values(roleRequests.values));
 
   return (
     <div className="landing">
@@ -174,7 +173,7 @@ const Landing = () => {
           <div className="role-tile">
             <div>
               <Header as="h2" className="header">
-                Roles
+                Services Provided
               </Header>
               <RoleRequestMenu />
             </div>
