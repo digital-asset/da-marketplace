@@ -25,13 +25,13 @@
     - Assign `Bank` the `SettlementInstructionTrigger`
     - Assign `Exchange` the `MatchingEngine`, and `SettlementInstructionTrigger`
     - Assign `Ccp` the `ClearingTrigger`
-9. Offer services to and from specific parties: (then click Next)
+9. Request services from specific parties: (then click Next)
     - As `Issuer` request `Custody`, `Issuance` services from `Bank`
     - As `Bank` request `Custody` services from `Alice`
     - As `Ccp` request `Custody` services from `Bank`
     - As `Exchange` request `Listing` services from `Exchange`
     - As `Alice` request `Custody` services from `Exchange`
-    - As `Bob` request `Custody` services from `Exchange`
+    - As `Bob` request `Custody` services from `Exchange` and `Bank`
 
 ## Issuing new assets
 
