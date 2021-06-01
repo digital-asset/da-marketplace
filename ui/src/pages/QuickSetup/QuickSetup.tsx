@@ -27,7 +27,6 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
-import SelectAutomationPage from './SelectAutomationPage';
 import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
