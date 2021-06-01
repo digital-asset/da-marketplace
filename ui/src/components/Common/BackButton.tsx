@@ -6,12 +6,12 @@ import { ArrowLeftIcon } from '../../icons/icons';
 
 import { useHistory } from 'react-router-dom';
 
-const BackButton = () => {
+const BackButton = (props: { prevPage?: string }) => {
   const history = useHistory();
 
   return (
     <Button className="ghost back-button" onClick={() => history.goBack()}>
-      <ArrowLeftIcon /> back
+      <ArrowLeftIcon /> back {props.prevPage ? `to ${props.prevPage}` : ''}
     </Button>
   );
 };
