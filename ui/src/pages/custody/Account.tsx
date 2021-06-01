@@ -268,6 +268,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             actions={
               normalAccount && [
                 <Button
+                  key="close-account"
                   className="ghost warning"
                   onClick={() => requestCloseAccount(normalAccount)}
                 >
@@ -283,6 +284,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               defaultValue={{
                 ...defaultCreditRequestDialogProps.fields,
                 account: targetAccount.account.id.label,
+                asset: '',
               }}
               onClose={onRequestCredit}
               fields={{
@@ -291,6 +293,11 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                   label: 'Account',
                   type: 'selection',
                   items: [targetAccount.account.id.label],
+                },
+                asset: {
+                  label: 'Asset',
+                  type: 'selection',
+                  items: assetNames,
                 },
               }}
               isInline

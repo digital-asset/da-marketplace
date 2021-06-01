@@ -11,7 +11,6 @@ import {
   OpenAccountRequest,
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import useStyles from '../styles';
 import { usePartyName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -30,7 +29,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   services,
 }: RouteComponentProps & Props) => {
-  const classes = useStyles();
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
@@ -139,9 +137,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 party === c.payload.provider ? 'Provider' : 'Client',
                 damlSetValues(c.payload.ctrls).join(', '),
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => openAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => openAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -160,9 +156,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getName(c.payload.customer),
                 party === c.payload.provider ? 'Provider' : 'Client',
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => closeAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => closeAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -183,9 +177,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 c.payload.asset.id.label,
                 c.payload.asset.quantity,
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => creditAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => creditAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -205,9 +197,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getDebitDepositDetail(c, d => d.asset.id.label),
                 getDebitDepositDetail(c, d => d.asset.quantity),
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => debitAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => debitAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -228,9 +218,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getTransferDepositDetail(c, d => d.asset.quantity),
                 c.payload.transfer.receiverAccountId.label,
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => transferDeposit(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => transferDeposit(c)}>Process</Button>
                 ),
               ],
             };

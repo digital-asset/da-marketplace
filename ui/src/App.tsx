@@ -199,10 +199,6 @@ const AppComponent = () => {
           </ServiceRequired>
         ),
       },
-      {
-        path: paths.app.distribution.requests,
-        render: () => <AuctionRequests services={auctionService} />,
-      },
     ],
   });
   entries.push({
@@ -284,6 +280,7 @@ const AppComponent = () => {
         path: paths.app.manage.distributions,
         render: () => (
           <Manage>
+            <AuctionRequests services={auctionService} />
             <Auctions />
             <DistributionServiceTable />
           </Manage>
@@ -447,7 +444,7 @@ const AppComponent = () => {
       menuTitle={
         currentEntry && (
           <Header className="bold icon-header" as="h3">
-            {currentEntry.icon}
+            <span className="icon-wrapper">{currentEntry.icon}</span>
             {currentEntry.label}
           </Header>
         )
