@@ -53,16 +53,16 @@
                 margin: 0;
                 width: 20px;
                 height: 20px;
-
-                &.wallet-icon,
-                &.orders-icon {
-                  path {
-                    fill: var(--cool-grey-60);
-                  }
-                }
-
                 path {
-                  stroke: var(--cool-grey-60);
+                  stroke: var(--green-50);
+                }
+                &.wallet-icon,
+                &.orders-icon,
+                &.tool-icon {
+                  path {
+                    stroke: unset;
+                    fill: var(--green-50);
+                  }
                 }
               }
             }

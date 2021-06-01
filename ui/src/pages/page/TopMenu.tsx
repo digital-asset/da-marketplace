@@ -1,12 +1,23 @@
-import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { Button, Header, Menu } from 'semantic-ui-react';
 
 import { LogoutIcon, NotificationIcon } from '../../icons/icons';
+import { useStreamQueries } from '../../Main';
 
 import classNames from 'classnames';
 import { signOut, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
+import { usePartyName } from '../../config';
+
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
+import { Auction } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Model';
+import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Model';
+import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 
 type Props = {
   title?: React.ReactElement;
@@ -18,6 +29,87 @@ type Props = {
 const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotificationAlert }) => {
   const history = useHistory();
   const userDispatch = useUserDispatch();
+  const { getName } = usePartyName('');
+
+  const [contractTitle, setContractTitle] = useState<string>();
+  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
+    useStreamQueries(AllocationAccountRule);
+  const { contracts: services, loading: servicesLoading } = useStreamQueries(Service);
+  const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
+  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } =
+    useStreamQueries(BiddingAuctionContract);
+  const { contracts: orders, loading: ordersLoading } = useStreamQueries(Order);
+  const { contracts: instruments, loading: instrumentsLoading } =
+    useStreamQueries(AssetDescription);
+  const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
+
+  const allAccounts = useMemo(
+    () =>
+      accounts
+        .map(a => {
+          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+        })
+        .concat(
+          allocatedAccounts.map(a => {
+            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
+          })
+        ),
+    [accounts, allocatedAccounts]
+  );
+
+  const path = useLocation().pathname;
+
+  const contractId = path.split('/')[4];
+
+  useEffect(() => {
+    if (
+      accountsLoading ||
+      allocatedAccountsLoading ||
+      servicesLoading ||
+      auctionsLoading ||
+      biddingAuctionsLoading ||
+      ordersLoading ||
+      instrumentsLoading ||
+      listingsLoading
+    ) {
+      return;
+    }
+    if (hasContractId(path, paths.app.custody.account)) {
+      setContractTitle(allAccounts.find(c => c.contractId == contractId)?.account.id.label);
+    } else if (hasContractId(path, paths.app.clearing.member)) {
+      const customer = services.find(c => c.contractId == contractId)?.payload.customer;
+      if (customer) {
+        setContractTitle(getName(customer));
+      }
+    } else if (hasContractId(path, paths.app.distribution.auctions)) {
+      setContractTitle(auctions.find(c => c.contractId == contractId)?.payload.auctionId);
+    } else if (hasContractId(path, paths.app.distribution.bidding)) {
+      setContractTitle(biddingAuctions.find(c => c.contractId == contractId)?.payload.auctionId);
+    } else if (hasContractId(path, paths.app.trading.order)) {
+      setContractTitle(orders.find(c => c.contractId == contractId)?.payload.details.id.label);
+    } else if (hasContractId(path, paths.app.manage.instrument)) {
+      setContractTitle(instruments.find(c => c.contractId == contractId)?.payload.assetId.label);
+    } else if (hasContractId(path, paths.app.manage.listings)) {
+      setContractTitle(listings.find(c => c.contractId == contractId)?.payload.listingId.label);
+    } else {
+      setContractTitle(undefined);
+    }
+  }, [
+    path,
+    accountsLoading,
+    allocatedAccountsLoading,
+    servicesLoading,
+    auctionsLoading,
+    biddingAuctionsLoading,
+    ordersLoading,
+    instrumentsLoading,
+    listingsLoading,
+  ]);
+
+  function hasContractId(path: string, matchPath: string) {
+    return path.includes(matchPath) && path.split('/').length > 3;
+  }
 
   return (
     <div className="top-section">
@@ -29,7 +121,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
             onClick={history.goBack}
           >
             <Header as="h1">
-              <Header.Content>{title}</Header.Content>
+              <Header.Content>{contractTitle || title}</Header.Content>
             </Header>
           </Menu.Item>
           {buttons?.map(b => (
