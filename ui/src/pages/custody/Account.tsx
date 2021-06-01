@@ -254,7 +254,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <BackButton prevPage="Wallet" />
+      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
