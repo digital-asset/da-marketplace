@@ -30,19 +30,14 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
   const history = useHistory();
   const userDispatch = useUserDispatch();
   const { getName } = usePartyName('');
+  const path = useLocation().pathname;
+
+  const contractId = path.split('/')[4];
 
   const [contractTitle, setContractTitle] = useState<string>();
-  const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
-    useStreamQueries(AllocationAccountRule);
-  const { contracts: services, loading: servicesLoading } = useStreamQueries(Service);
-  const { contracts: auctions, loading: auctionsLoading } = useStreamQueries(Auction);
-  const { contracts: biddingAuctions, loading: biddingAuctionsLoading } =
-    useStreamQueries(BiddingAuctionContract);
-  const { contracts: orders, loading: ordersLoading } = useStreamQueries(Order);
-  const { contracts: instruments, loading: instrumentsLoading } =
-    useStreamQueries(AssetDescription);
-  const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
+
+  const { contracts: accounts } = useStreamQueries(AssetSettlementRule);
+  const { contracts: allocatedAccounts } = useStreamQueries(AllocationAccountRule);
 
   const allAccounts = useMemo(
     () =>
@@ -58,74 +53,49 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
     [accounts, allocatedAccounts]
   );
 
-  const path = useLocation().pathname;
-
-  const contractId = path.split('/')[4];
+  const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;
+  const customerId = useStreamQueries(Service).contracts.find(c => c.contractId === contractId)
+    ?.payload.customer;
+  const customer = customerId && getName(customerId);
+  const auctionId = useStreamQueries(Auction).contracts.find(c => c.contractId === contractId)
+    ?.payload.auctionId;
+  const biddingId = useStreamQueries(BiddingAuctionContract).contracts.find(
+    c => c.contractId === contractId
+  )?.payload.auctionId;
+  const orderLabel = useStreamQueries(Order).contracts.find(c => c.contractId === contractId)
+    ?.payload.details.id.label;
+  const instrumentLabel = useStreamQueries(AssetDescription).contracts.find(
+    c => c.contractId === contractId
+  )?.payload.assetId.label;
+  const listingLabel = useStreamQueries(Listing).contracts.find(c => c.contractId === contractId)
+    ?.payload.listingId.label;
 
   useEffect(() => {
     setContractTitle(undefined);
-
-    if (
-      accountsLoading ||
-      allocatedAccountsLoading ||
-      servicesLoading ||
-      auctionsLoading ||
-      biddingAuctionsLoading ||
-      ordersLoading ||
-      instrumentsLoading ||
-      listingsLoading
-    ) {
-      return;
-    }
-
     if (hasContractId(path, paths.app.custody.account)) {
-      const accountLabel = allAccounts.find(c => c.contractId === contractId)?.account.id.label;
-      if (accountLabel) {
-        return setContractTitle(accountLabel);
-      }
+      return setContractTitle(accountLabel);
     } else if (hasContractId(path, paths.app.clearing.member)) {
-      const customer = services.find(c => c.contractId === contractId)?.payload.customer;
-      if (customer) {
-        return setContractTitle(getName(customer));
-      }
+      return setContractTitle(customer);
     } else if (hasContractId(path, paths.app.distribution.auctions)) {
-      const auctionId = auctions.find(c => c.contractId === contractId)?.payload.auctionId;
-      if (auctionId) {
-        return setContractTitle(auctionId);
-      }
+      return setContractTitle(auctionId);
     } else if (hasContractId(path, paths.app.distribution.bidding)) {
-      const biddingId = biddingAuctions.find(c => c.contractId === contractId)?.payload.auctionId;
-      if (biddingId) {
-        return setContractTitle(biddingId);
-      }
+      return setContractTitle(biddingId);
     } else if (hasContractId(path, paths.app.trading.order)) {
-      const orderLabel = orders.find(c => c.contractId === contractId)?.payload.details.id.label;
-      if (orderLabel) {
-        return setContractTitle(orderLabel);
-      }
+      return setContractTitle(orderLabel);
     } else if (hasContractId(path, paths.app.manage.instrument)) {
-      const instrumentLabel = instruments.find(c => c.contractId === contractId)?.payload.assetId
-        .label;
-      if (instrumentLabel) {
-        return setContractTitle(instrumentLabel);
-      }
+      return setContractTitle(instrumentLabel);
     } else if (hasContractId(path, paths.app.manage.listings)) {
-      const listingLabel = listings.find(c => c.contractId === contractId)?.payload.listingId.label;
-      if (listingLabel) {
-        return setContractTitle(listingLabel);
-      }
+      return setContractTitle(listingLabel);
     }
   }, [
     path,
-    contractId,
-    accountsLoading,
-    allocatedAccountsLoading,
-    servicesLoading,
-    auctionsLoading,
-    biddingAuctionsLoading,
-    ordersLoading,
-    instrumentsLoading,
-    listingsLoading,
+    accountLabel,
+    customer,
+    auctionId,
+    biddingId,
+    orderLabel,
+    instrumentLabel,
+    listingLabel,
   ]);
 
   function hasContractId(path: string, matchPath: string) {
