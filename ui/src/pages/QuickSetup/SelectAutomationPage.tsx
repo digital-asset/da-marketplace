@@ -58,7 +58,6 @@ const DragAndDropAutomation = () => {
     <DragAndDropToParties
       handleAddItem={handleAddItem}
       dropItems={triggerOptions}
-      dropItemType={DropItemTypes.AUTOMATION}
       title={'Drag and Drop Automation to Parties'}
     />
   );

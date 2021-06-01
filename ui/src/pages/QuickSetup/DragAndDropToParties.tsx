@@ -16,38 +16,27 @@ import { isHubDeployment, useVerifiedParties } from '../../config';
 import { CreateEvent } from '@daml/ledger';
 import { retrieveParties } from '../../Parties';
 
-export enum DropItemTypes {
-  AUTOMATION = 'automation',
-  ROLES = 'roles',
-}
-
 const DragAndDropToParties = (props: {
-  handleAddItem: (partyOrToken: string, item: string) => void;
+  handleAddItem: (party: string, token: string, item: string) => void;
   dropItems: { name: string; value: string }[];
-  dropItemType: DropItemTypes;
   title: string;
 }) => {
-  const { handleAddItem, dropItems, dropItemType, title } = props;
+  const { handleAddItem, dropItems, title } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
-  const { roleOffers, loading: offersLoading } = useOffers();
 
-  if (rolesLoading || offersLoading || identitiesLoading) {
+  if (rolesLoading || identitiesLoading) {
     return (
       <div className="setup-page loading">
-        <LoadingWheel label={`Loading parties and ${dropItemType}...`} />
+        <LoadingWheel label={`Loading parties and roles...`} />
       </div>
     );
   }
 
   let draggableItems = dropItems;
 
-  if (dropItemType === DropItemTypes.AUTOMATION) {
-    draggableItems.filter(item => item.value !== MarketplaceTrigger.AutoApproveTrigger); // already deployed for all parties
-  }
-
   return (
-    <div className={classNames('setup-page select', { dropItemType })}>
+    <div className="setup-page select">
       <h4>{title}</h4>
       <div className="page-row">
         <div>
@@ -61,8 +50,7 @@ const DragAndDropToParties = (props: {
                 roles={allRoles
                   .filter(r => r.contract.payload.provider === p.payload.customer)
                   .map(r => r.role)}
-                triggers={dropItemType === DropItemTypes.AUTOMATION ? dropItems : undefined}
-                clearingOffer={findClearingOffer(p.payload.customer)}
+                triggers={dropItems}
               />
             ))}
           </div>
@@ -71,7 +59,7 @@ const DragAndDropToParties = (props: {
           <ArrowLeftIcon color="grey" />
         </div>
         <div>
-          <p className="bold">{dropItemType}</p>
+          <p className="bold">Roles</p>
           <div className="drag-tiles page-row ">
             {draggableItems.map((item, i) => (
               <DraggableItemTile key={i} item={item} />
@@ -81,22 +69,16 @@ const DragAndDropToParties = (props: {
       </div>
     </div>
   );
-
-  function findClearingOffer(partyId: string) {
-    return !!roleOffers.find(
-      r => r.contract.payload.provider === partyId && r.role === RoleKind.CLEARING
-    );
-  }
 };
 
 const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
-  handleAddItem: (partyOrToken: string, item: string | RoleKind) => void;
+  handleAddItem: (party: string, token: string, item: string | RoleKind) => void;
   roles: RoleKind[];
   triggers?: { name: string; value: string }[];
-  clearingOffer: boolean;
 }) => {
-  const { party, handleAddItem, roles, triggers, clearingOffer } = props;
+  const { party, handleAddItem, roles, triggers } = props;
+  const { roleOffers } = useOffers();
 
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const [dragCount, setDragCount] = useState(0);
@@ -116,14 +98,7 @@ const PartyRowDropZone = (props: {
     }
   }, [token]);
 
-  const currentTriggerOptions =
-    triggers?.filter(
-      to =>
-        !deployedAutomations
-          .map(da => `${da.config.value.name}#${da.entityInfo.artifactHash}`)
-          .includes(String(to.value))
-    ) || [];
-
+  const clearingOffer = findClearingOffer(party.payload.customer);
   let rolesList = roles as string[];
 
   if (clearingOffer) {
@@ -145,23 +120,22 @@ const PartyRowDropZone = (props: {
         </div>
       )}
 
-      {triggers && (
-        <p className="dropped-items">
-          {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
-        </p>
-      )}
+      <p className="dropped-items">
+        {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
+      </p>
     </div>
   );
 
+  function findClearingOffer(partyId: string) {
+    return !!roleOffers.find(
+      r => r.contract.payload.provider === partyId && r.role === RoleKind.CLEARING
+    );
+  }
+
   function handleDrop(item: string) {
     setDragCount(dragCount - 1);
-
-    if (!!triggers && token) {
-      if (currentTriggerOptions.map(i => i.value).includes(item)) {
-        handleAddItem(token, item);
-      }
-    } else {
-      handleAddItem(party.payload.customer, item);
+    if (token) {
+      handleAddItem(party.payload.customer, token, item);
     }
   }
 };

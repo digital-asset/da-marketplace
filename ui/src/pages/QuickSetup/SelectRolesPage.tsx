@@ -12,10 +12,11 @@ import QueryStreamProvider from '../../websocket/queryStream';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 
-import DragAndDropToParties, { DropItemTypes } from './DragAndDropToParties';
+import DragAndDropToParties from './DragAndDropToParties';
 import Credentials from '../../Credentials';
-
-import { httpBaseUrl, wsBaseUrl } from '../../config';
+import { MarketplaceTrigger, deployAutomation } from '../../automation';
+import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
+import { AutomationProvider } from '../../context/AutomationContext';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -28,11 +29,13 @@ const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
       wsBaseUrl={wsBaseUrl}
     >
       <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <RolesProvider>
-          <OffersProvider>
-            <DragAndDropRoles />
-          </OffersProvider>
-        </RolesProvider>
+        <AutomationProvider publicParty={publicParty}>
+          <RolesProvider>
+            <OffersProvider>
+              <DragAndDropRoles />
+            </OffersProvider>
+          </RolesProvider>
+        </AutomationProvider>
       </QueryStreamProvider>
     </DamlLedger>
   );
@@ -64,12 +67,11 @@ const DragAndDropRoles = () => {
     <DragAndDropToParties
       handleAddItem={createRoleContract}
       dropItems={roleOptions}
-      dropItemType={DropItemTypes.ROLES}
       title={'Drag and Drop Roles to Parties'}
     />
   );
 
-  async function createRoleContract(partyId: string, role: string) {
+  async function createRoleContract(partyId: string, token: string, role: string) {
     const operatorServiceContract = operatorService[0];
 
     if (
@@ -95,6 +97,7 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
+        handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
         return;
 
       case RoleKind.TRADING:
@@ -111,6 +114,7 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
+        handleDeployment(token, MarketplaceTrigger.MatchingEngine);
         return;
 
       case RoleKind.SETTLEMENT:
@@ -119,6 +123,7 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
+        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
         return;
 
       case RoleKind.DISTRIBUTION:
@@ -131,6 +136,14 @@ const DragAndDropRoles = () => {
 
       default:
         throw new Error(`Unsupported role: ${role}`);
+    }
+  }
+
+  async function handleDeployment(token: string, auto: string) {
+    const [name, hash] = auto.split('#');
+
+    if (hash) {
+      deployAutomation(hash, name, token, publicParty);
     }
   }
 

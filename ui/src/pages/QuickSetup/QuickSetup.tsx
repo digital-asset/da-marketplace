@@ -37,7 +37,6 @@ import Widget from '../../components/Widget/Widget';
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
   SELECT_ROLES = 'select-roles',
-  SELECT_AUTOMATION = 'select-automation',
   OFFER_SERVICES = 'offer-services',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
@@ -187,19 +186,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
               component={() => (
                 <>
                   <SelectRolesPage adminCredentials={adminCredentials} />
-                  <NextButton item={MenuItems.SELECT_AUTOMATION} />
-                </>
-              )}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.SELECT_AUTOMATION}`}
-              component={() => (
-                <>
-                  {isHubDeployment ? (
-                    <SelectAutomationPage adminCredentials={adminCredentials} />
-                  ) : (
-                    <UnsupportedPageStep />
-                  )}
                   <NextButton item={MenuItems.OFFER_SERVICES} />
                 </>
               )}
