@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { ArrowLeftIcon } from '../../icons/icons';
 
-import { PublishedInstance, getAutomationInstances, MarketplaceTrigger } from '../../automation';
+import { PublishedInstance, getAutomationInstances } from '../../automation';
 
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
@@ -18,10 +18,9 @@ import { retrieveParties } from '../../Parties';
 
 const DragAndDropToParties = (props: {
   handleAddItem: (party: string, token: string, item: string) => void;
-  dropItems: { name: string; value: string }[];
   title: string;
 }) => {
-  const { handleAddItem, dropItems, title } = props;
+  const { handleAddItem, title } = props;
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
 
@@ -33,10 +32,14 @@ const DragAndDropToParties = (props: {
     );
   }
 
-  let draggableItems = dropItems;
+  const roleOptions = Object.values(RoleKind)
+    .filter(s => s !== RoleKind.REGULATOR)
+    .map(i => {
+      return { name: i, value: i };
+    });
 
   return (
-    <div className="setup-page select">
+    <div className="setup-page drag-and-drop">
       <h4>{title}</h4>
       <div className="page-row">
         <div>
@@ -50,7 +53,6 @@ const DragAndDropToParties = (props: {
                 roles={allRoles
                   .filter(r => r.contract.payload.provider === p.payload.customer)
                   .map(r => r.role)}
-                triggers={dropItems}
               />
             ))}
           </div>
@@ -61,7 +63,7 @@ const DragAndDropToParties = (props: {
         <div>
           <p className="bold">Roles</p>
           <div className="drag-tiles page-row ">
-            {draggableItems.map((item, i) => (
+            {roleOptions.map((item, i) => (
               <DraggableItemTile key={i} item={item} />
             ))}
           </div>

@@ -153,7 +153,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                     )}
 
                   {activeMenuItem === MenuItems.ADD_PARTIES || activeMenuItem === item ? (
-                    <Menu.Item disabled={activeMenuItem === MenuItems.ADD_PARTIES} key={item}>
+                    <Menu.Item key={item}>
                       <p className={classNames({ visited: !checkIsDisabled(item) })}>
                         {formatMenuItem(item)}
                       </p>

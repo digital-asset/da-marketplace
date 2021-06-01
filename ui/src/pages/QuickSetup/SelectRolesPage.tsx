@@ -15,8 +15,8 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import DragAndDropToParties from './DragAndDropToParties';
 import Credentials from '../../Credentials';
 import { MarketplaceTrigger, deployAutomation } from '../../automation';
-import { httpBaseUrl, wsBaseUrl, publicParty } from '../../config';
-import { AutomationProvider } from '../../context/AutomationContext';
+import { httpBaseUrl, wsBaseUrl, publicParty, isHubDeployment } from '../../config';
+import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -43,11 +43,18 @@ const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
 
 const DragAndDropRoles = () => {
   const ledger = useLedger();
-  const roleOptions = Object.values(RoleKind)
-    .filter(s => s !== RoleKind.REGULATOR)
-    .map(i => {
-      return { name: i, value: i };
-    });
+  const automations = useAutomations();
+
+  const allTriggers =
+    automations?.flatMap(auto => {
+      if (auto.automationEntity.tag === 'DamlTrigger') {
+        return auto.automationEntity.value.triggerNames.map(tn => {
+          return `${tn}#${auto.artifactHash}`;
+        });
+      } else {
+        return `${auto.automationEntity.value.entityName}#${auto.artifactHash}`;
+      }
+    }) || [];
 
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers, loading: offersLoading } = useOffers();
@@ -66,7 +73,6 @@ const DragAndDropRoles = () => {
   return (
     <DragAndDropToParties
       handleAddItem={createRoleContract}
-      dropItems={roleOptions}
       title={'Drag and Drop Roles to Parties'}
     />
   );
@@ -97,7 +103,9 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
-        handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
+        if (isHubDeployment) {
+          handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
+        }
         return;
 
       case RoleKind.TRADING:
@@ -114,7 +122,9 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
-        handleDeployment(token, MarketplaceTrigger.MatchingEngine);
+        if (isHubDeployment) {
+          handleDeployment(token, MarketplaceTrigger.MatchingEngine);
+        }
         return;
 
       case RoleKind.SETTLEMENT:
@@ -123,7 +133,10 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
-        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
+
+        if (isHubDeployment) {
+          handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
+        }
         return;
 
       case RoleKind.DISTRIBUTION:
@@ -139,11 +152,16 @@ const DragAndDropRoles = () => {
     }
   }
 
-  async function handleDeployment(token: string, auto: string) {
-    const [name, hash] = auto.split('#');
+  async function handleDeployment(token: string, autoName: string) {
+    console.log(allTriggers);
+    const trigger = allTriggers.find(auto => auto.startsWith(autoName));
+    if (trigger) {
+      console.log(trigger);
+      const [name, hash] = trigger.split('#');
 
-    if (hash) {
-      deployAutomation(hash, name, token, publicParty);
+      if (hash) {
+        deployAutomation(hash, name, token, publicParty);
+      }
     }
   }
 

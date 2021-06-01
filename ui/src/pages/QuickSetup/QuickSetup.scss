@@ -18,6 +18,11 @@
           color: var(--blue-60);
         }
       }
+
+      .item {
+        align-self: unset;
+      }
+
       a {
         border-bottom: 3px solid transparent;
       }
@@ -36,7 +41,6 @@
     .setup-page {
       display: flex;
       align-items: flex-start;
-      justify-content: space-between;
       flex-direction: column;
       padding: $spacing-m;
       animation: fadeIn 0.2s;
@@ -187,9 +191,6 @@
 
       .request-select {
         margin: $spacing-s 0;
-        .dropdown {
-          max-width: 196px;
-        }
       }
     }
 
@@ -228,7 +229,7 @@
       }
     }
 
-    &.add-parties {
+    .add-parties {
       justify-content: unset;
       .page-row,
       .upload-parties {
@@ -253,7 +254,7 @@
           justify-content: center;
         }
       }
-      &.review {
+      .review {
         .page-row {
           justify-content: space-between;
           width: 100%;
@@ -290,7 +291,32 @@
         }
       }
     }
-    &.review {
+    .drag-and-drop {
+      height: unset;
+      .drag-tiles {
+        flex-wrap: wrap;
+
+        .drag-tile {
+          padding: $spacing-s $spacing-m;
+          border: 1px solid var(--cool-grey-80);
+          border-radius: 4px;
+          background-color: var(--white);
+          margin: $spacing-xs $spacing-xs $spacing-xs 0;
+
+          p {
+            font-weight: 600;
+          }
+
+          &:hover {
+            background-color: var(--blue-100);
+            cursor: pointer;
+          }
+        }
+      }
+    }
+    .review {
+      height: unset;
+
       .page-row {
         justify-content: space-between;
         width: 100%;
@@ -298,54 +324,8 @@
         &.select {
           justify-content: unset;
 
-          &.roles {
-            .party-name p.dropped-items {
-              width: unset;
-            }
-          }
-        }
-      }
-
-      &.review,
-      &.select {
-        justify-content: unset;
-
-        .party-names {
-          margin-top: $spacing-xs;
-        }
-      }
-
-      &.select {
-        justify-content: unset;
-
-        i {
-          margin-bottom: $spacing-s;
-        }
-
-        &.roles {
           .party-name p.dropped-items {
             width: unset;
-          }
-        }
-
-        .drag-tiles {
-          flex-wrap: wrap;
-
-          .drag-tile {
-            padding: $spacing-s $spacing-m;
-            border: 1px solid var(--cool-grey-80);
-            border-radius: 4px;
-            background-color: var(--white);
-            margin: $spacing-xs $spacing-xs $spacing-xs 0;
-
-            p {
-              font-weight: 600;
-            }
-
-            &:hover {
-              background-color: var(--blue-100);
-              cursor: pointer;
-            }
           }
         }
       }
