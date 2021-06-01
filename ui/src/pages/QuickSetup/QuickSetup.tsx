@@ -153,7 +153,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
                     )}
 
                   {activeMenuItem === MenuItems.ADD_PARTIES || activeMenuItem === item ? (
-                    <Menu.Item key={item}>
+                    <Menu.Item disabled={activeMenuItem === MenuItems.ADD_PARTIES} key={item}>
                       <p className={classNames({ visited: !checkIsDisabled(item) })}>
                         {formatMenuItem(item)}
                       </p>
@@ -244,14 +244,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
       .join(' ');
   }
 });
-
-const UnsupportedPageStep = () => {
-  return (
-    <div className="setup-page not-supported">
-      <p className="page-row">This step is not supported locally.</p>
-    </div>
-  );
-};
 
 export const LoadingWheel = (props: { label?: string }) => {
   return (

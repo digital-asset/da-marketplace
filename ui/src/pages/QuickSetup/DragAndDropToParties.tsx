@@ -77,9 +77,8 @@ const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
   handleAddItem: (party: string, token: string, item: string | RoleKind) => void;
   roles: RoleKind[];
-  triggers?: { name: string; value: string }[];
 }) => {
-  const { party, handleAddItem, roles, triggers } = props;
+  const { party, handleAddItem, roles } = props;
   const { roleOffers } = useOffers();
 
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
