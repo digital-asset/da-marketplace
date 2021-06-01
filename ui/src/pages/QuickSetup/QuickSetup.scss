@@ -185,123 +185,72 @@
         }
       }
 
-      .offer-select {
+      .request-select {
         margin: $spacing-s 0;
         .dropdown {
           max-width: 196px;
         }
       }
+    }
 
-      .ghost.offer {
-        border-color: var(--blue-60);
-      }
+    .ghost.request {
+      border-color: var(--blue-60);
+    }
 
-      .warning {
-        display: flex;
-        margin: $spacing-xs $spacing-s 0 0;
-        width: 285px;
+    .warning {
+      display: flex;
+      margin: $spacing-s $spacing-s 0 0;
+      width: 285px;
+      font-size: 12px;
+
+      p,
+      a.a2 {
         font-size: 12px;
-
-        p,
-        a.a2 {
-          font-size: 12px;
-        }
-        .icon {
-          flex: none;
-          margin-right: $spacing-xs;
-        }
       }
 
-      .all-offers {
-        width: 450px;
-
-        .offer-table {
-          display: block;
-          max-height: 330px;
-          overflow: auto;
-        }
-      }
-
-      .offers {
-        border: 1px solid var(--cool-grey-80);
-
-        overflow: auto;
-        height: 360px;
-
-        &.empty {
-          border: none;
-        }
-
-        .offer-row {
-          display: flex;
-          flex-direction: row;
-          align-items: basline;
-          justify-content: space-between;
-          font-size: 14px;
-          line-height: 26px;
-          padding: $spacing-s;
-          border-bottom: 1px solid var(--cool-grey-80);
-
-          &.empty {
-            padding: 0px;
-          }
-        }
-      }
-
-      &.offer-services {
-        .page-row {
-          width: 100%;
-          height: 100%;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
+      &.request-services {
         .input-label {
           margin-bottom: $spacing-xs;
         }
       }
+    }
 
-      &.add-parties {
-        justify-content: unset;
-        .page-row,
-        .upload-parties {
-          width: 100%;
-          height: 100%;
-        }
+    &.offer-services {
+      .page-row {
+        width: 100%;
+        height: 100%;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
 
-        .party-names,
-        .uploaded {
-          margin-top: $spacing-xs;
-          max-height: 370px;
-        }
+      .input-label {
+        margin-bottom: $spacing-xs;
+      }
+    }
 
-        .upload-parties {
-          display: flex;
-          align-items: center;
-          flex-direction: column;
-          justify-content: space-evenly;
+    &.add-parties {
+      justify-content: unset;
+      .page-row,
+      .upload-parties {
+        width: 100%;
+        height: 100%;
+      }
 
-          &.uploaded {
-            margin-left: $spacing-xl;
-            justify-content: center;
-          }
-        }
+      .party-names,
+      .uploaded {
+        margin-top: $spacing-xs;
+        max-height: 370px;
+      }
 
-        .party-input {
-          margin-top: $spacing-xs;
-        }
+      .upload-parties {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: space-evenly;
 
-        .custom-file-upload {
-          width: fit-content;
-          height: 44px;
-          border-radius: 4px;
-          background-color: var(--white);
-          border: 1px solid var(--green-50);
-          cursor: pointer;
-
-          > input[type='file'] {
-            display: none;
-          }
+        &.uploaded {
+          margin-left: $spacing-xl;
+          justify-content: center;
         }
       }
       &.review {
@@ -315,15 +264,44 @@
             min-width: unset;
           }
         }
-        .all-offers,
+        .all-requests,
         .all-parties {
           width: 48%;
         }
-        .all-offers {
+        .all-requests {
           margin-left: $spacing-m;
 
-          .offers {
+          .requests {
             height: 330px;
+          }
+        }
+      }
+
+      .custom-file-upload {
+        width: fit-content;
+        height: 44px;
+        border-radius: 4px;
+        background-color: var(--white);
+        border: 1px solid var(--green-50);
+        cursor: pointer;
+
+        > input[type='file'] {
+          display: none;
+        }
+      }
+    }
+    &.review {
+      .page-row {
+        justify-content: space-between;
+        width: 100%;
+
+        &.select {
+          justify-content: unset;
+
+          &.roles {
+            .party-name p.dropped-items {
+              width: unset;
+            }
           }
         }
       }
