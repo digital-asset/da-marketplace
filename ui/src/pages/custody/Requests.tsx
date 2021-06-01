@@ -11,7 +11,6 @@ import {
   OpenAccountRequest,
   TransferDepositRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import useStyles from '../styles';
 import { usePartyName } from '../../config';
 import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
@@ -20,6 +19,8 @@ import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import paths from '../../paths';
+
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
 };
@@ -28,7 +29,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
   history,
   services,
 }: RouteComponentProps & Props) => {
-  const classes = useStyles();
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
@@ -48,7 +48,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
@@ -61,7 +61,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CloseAccount, service.contractId, {
       closeAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
@@ -74,7 +74,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CreditAccount, service.contractId, {
       creditAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
@@ -87,7 +87,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.DebitAccount, service.contractId, {
       debitAccountRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
@@ -100,7 +100,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.TransferDeposit, service.contractId, {
       transferDepositRequestCid: c.contractId,
     });
-    history.push('/app/custody/accounts');
+    history.push(paths.app.custody.accounts.root);
   };
 
   const getDebitDepositDetail = (
@@ -127,7 +127,6 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
       {openRequests.length > 0 && (
         <StripedTable
           title="Open Account Requests"
-          rowsClickable
           headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
           rows={openRequests.map((c, i) => {
             return {
@@ -138,13 +137,9 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 party === c.payload.provider ? 'Provider' : 'Client',
                 damlSetValues(c.payload.ctrls).join(', '),
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => openAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => openAccount(c)}>Process</Button>
                 ),
               ],
-              onClick: () =>
-                history.push('/app/custody/openrequest/' + c.contractId.replace('#', '_')),
             };
           })}
         />
@@ -161,9 +156,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getName(c.payload.customer),
                 party === c.payload.provider ? 'Provider' : 'Client',
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => closeAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => closeAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -184,9 +177,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 c.payload.asset.id.label,
                 c.payload.asset.quantity,
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => creditAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => creditAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -206,9 +197,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getDebitDepositDetail(c, d => d.asset.id.label),
                 getDebitDepositDetail(c, d => d.asset.quantity),
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => debitAccount(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => debitAccount(c)}>Process</Button>
                 ),
               ],
             };
@@ -229,9 +218,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
                 getTransferDepositDetail(c, d => d.asset.quantity),
                 c.payload.transfer.receiverAccountId.label,
                 party === c.payload.provider && (
-                  <Button className={classes.choiceButton} onClick={() => transferDeposit(c)}>
-                    Process
-                  </Button>
+                  <Button onClick={() => transferDeposit(c)}>Process</Button>
                 ),
               ],
             };

@@ -4,6 +4,7 @@ import { Header } from 'semantic-ui-react';
 import { SetupAutomation } from './SetupAutomation';
 import { isHubDeployment, publicParty } from '../../config';
 import { AutomationProvider } from '../../context/AutomationContext';
+import paths from '../../paths';
 
 type SetupServiceProps = {
   name: string;
@@ -34,7 +35,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Custody Service',
-          path: '/app/setup/custody/offer',
+          path: paths.app.setup.custody.offer,
         },
       ]}
     />
@@ -44,11 +45,11 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Clearing Service',
-          path: '/app/setup/clearing/offer',
+          path: paths.app.setup.clearing.offer,
         },
         {
           label: 'Offer Market Clearing Service',
-          path: '/app/setup/clearing/market/offer',
+          path: paths.app.setup.clearing.market.offer,
         },
       ]}
     />
@@ -58,7 +59,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Auction',
-          path: '/app/setup/distribution/new/auction',
+          path: paths.app.setup.distribution.new.auction,
         },
       ]}
     />
@@ -68,15 +69,15 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Create Base Instrument',
-          path: '/app/setup/instrument/new/base',
+          path: paths.app.setup.instrument.new.base,
         },
         {
           label: 'Create Binary Option',
-          path: '/app/setup/instrument/new/binaryoption',
+          path: paths.app.setup.instrument.new.binaryoption,
         },
         {
           label: 'Create Convertible Note',
-          path: '/app/setup/instrument/new/convertiblenote',
+          path: paths.app.setup.instrument.new.convertiblenote,
         },
       ]}
     />
@@ -86,7 +87,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Issuance',
-          path: '/app/setup/issuance/new',
+          path: paths.app.setup.issuance.new,
         },
       ]}
     />
@@ -96,7 +97,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Listing',
-          path: '/app/setup/listing/new',
+          path: paths.app.setup.listing.new,
         },
       ]}
     />
@@ -106,7 +107,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Trading Service',
-          path: '/app/setup/trading/offer',
+          path: paths.app.setup.trading.offer,
         },
       ]}
     />
@@ -114,7 +115,7 @@ const SetUp: React.FC = () => (
     {isHubDeployment && (
       <AutomationProvider publicParty={publicParty}>
         <SetupService name="Setup Automation" links={[]}>
-          <SetupAutomation modalTrigger={<NavLink to="#">Setup Automation</NavLink>} />
+          <SetupAutomation modalTrigger={<NavLink to={paths.root}>Setup Automation</NavLink>} />
         </SetupService>
       </AutomationProvider>
     )}

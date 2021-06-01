@@ -11,11 +11,14 @@ import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 
+import { retrieveParties } from '../../Parties';
+
 import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties } from '../../config';
+import paths from '../../paths';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 
 const FinishPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -38,6 +41,7 @@ const FinishPage = (props: { adminCredentials: Credentials }) => {
 const LoginTileGrid = () => {
   const history = useHistory();
   const dispatch = useUserDispatch();
+  const parties = retrieveParties() || [];
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 
@@ -68,8 +72,8 @@ const LoginTileGrid = () => {
             <Link
               className="log-in-tile"
               key={p.payload.customer}
-              onClick={() => loginUser(dispatch, history, computeCredentials(p.payload.customer))}
-              to={'/quick-setup/log-in-parties'}
+              onClick={() => handleLogin(p.payload.customer)}
+              to={paths.quickSetup.logInParties}
             >
               <div className="log-in-row page-row">
                 <h4>{p.payload.legalName}</h4>
@@ -89,6 +93,18 @@ const LoginTileGrid = () => {
       </div>
     </>
   );
+
+  async function handleLogin(party: string) {
+    if (isHubDeployment) {
+      const partyDetails = parties?.find(p => p.party === party);
+
+      if (partyDetails) {
+        loginUser(dispatch, history, partyDetails);
+      }
+    } else {
+      loginUser(dispatch, history, computeCredentials(party));
+    }
+  }
 };
 
 export default FinishPage;

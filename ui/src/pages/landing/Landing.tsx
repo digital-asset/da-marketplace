@@ -39,6 +39,8 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import { Fields, FieldCallbacks, FieldCallback } from '../../components/InputDialog/Fields';
 import _ from 'lodash';
+import paths from '../../paths';
+import { useProvidersByRole, RoleKind } from '../../context/RolesContext';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -152,7 +154,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
     return (
       <div className="link">
         {damlHubParty}
-        <Link to="/app/setup/identity">Request Identity Verification</Link>
+        <Link to={paths.app.setup.identity}>Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {
@@ -169,10 +171,11 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
 
 const Landing = () => {
   const party = useParty();
-  const { name } = usePartyName(party);
+  const { name, getName } = usePartyName(party);
   const providers = useProviderServices(party);
 
-  const { identities, legalNames } = useVerifiedParties();
+  const { identities } = useVerifiedParties();
+  const providersByRole = useProvidersByRole();
 
   const allocationAccountRules = useStreamQueries(AllocationAccountRule).contracts;
   const allocationAccounts = useMemo(
@@ -282,15 +285,17 @@ const Landing = () => {
   const requestService = <T extends ServiceRequestTemplates>(
     service: Template<T, undefined, string>,
     kind: ServiceKind,
+    role: RoleKind,
     extraFields?: Fields,
     fieldsFromProvider?: FieldCallbacks<Party>
   ) => {
+    const providerNames = providersByRole.get(role)?.map(p => getName(p.payload.provider)) || [];
     setFieldsFromProvider(fieldsFromProvider || {});
     setFields({
       provider: {
         label: 'Provider',
         type: 'selection',
-        items: legalNames,
+        items: providerNames,
       },
       ...extraFields,
     });
@@ -367,7 +372,7 @@ const Landing = () => {
               </span>
             </div>
             <div className="link">
-              <NavLink to="/app/custody/assets">View Wallet</NavLink>
+              <NavLink to={paths.app.custody.assets}>View Wallet</NavLink>
             </div>
           </div>
         </Tile>
@@ -381,19 +386,27 @@ const Landing = () => {
           <OverflowMenu>
             <OverflowMenuEntry
               label="Request Custody Service"
-              onClick={() => requestService(CustodyRequest, ServiceKind.CUSTODY)}
+              onClick={() => requestService(CustodyRequest, ServiceKind.CUSTODY, RoleKind.CUSTODY)}
             />
             <OverflowMenuEntry
               label="Request Issuance Service"
-              onClick={() => requestService(IssuanceRequest, ServiceKind.ISSUANCE)}
+              onClick={() =>
+                requestService(IssuanceRequest, ServiceKind.ISSUANCE, RoleKind.CUSTODY)
+              }
             />
             <OverflowMenuEntry
               label="Request Listing Service"
-              onClick={() => requestService(ListingRequest, ServiceKind.LISTING)}
+              onClick={() => requestService(ListingRequest, ServiceKind.LISTING, RoleKind.TRADING)}
             />
             <OverflowMenuEntry
               label="Request Market Clearing Service"
-              onClick={() => requestService(MarketClearingRequest, ServiceKind.MARKET_CLEARING)}
+              onClick={() =>
+                requestService(
+                  MarketClearingRequest,
+                  ServiceKind.MARKET_CLEARING,
+                  RoleKind.CLEARING
+                )
+              }
             />
             <OverflowMenuEntry
               label="Request Clearing Service"
@@ -401,6 +414,7 @@ const Landing = () => {
                 requestService(
                   ClearingRequest,
                   ServiceKind.CLEARING,
+                  RoleKind.CLEARING,
                   {},
                   {
                     clearingAccount: makeAccountFilterField(
@@ -419,6 +433,7 @@ const Landing = () => {
                 requestService(
                   TradingRequest,
                   ServiceKind.TRADING,
+                  RoleKind.TRADING,
                   {},
                   {
                     tradingAccount: makeAccountFilterField(
@@ -437,6 +452,7 @@ const Landing = () => {
                 requestService(
                   AuctionRequest,
                   ServiceKind.AUCTION,
+                  RoleKind.DISTRIBUTION,
                   {},
                   {
                     tradingAccount: makeAccountFilterField(
@@ -458,6 +474,7 @@ const Landing = () => {
                 requestService(
                   BiddingRequest,
                   ServiceKind.BIDDING,
+                  RoleKind.DISTRIBUTION,
                   {},
                   {
                     tradingAccount: makeAccountFilterField(

@@ -8,7 +8,7 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
@@ -19,6 +19,7 @@ import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { halfSecondPromise } from '../page/utils';
+import paths from '../../paths';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -146,7 +147,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       accountId: c.payload.account.id,
       debit: { depositCid: c.contractId },
     });
-    history.push('/app/custody/requests');
+    history.push(paths.app.custody.requests);
   };
 
   const relatedAccounts = accounts
@@ -212,7 +213,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });
-    history.push('/app/custody/requests');
+    history.push(paths.app.custody.requests);
   };
 
   let accountData = [
@@ -253,13 +254,10 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <BackButton />
+      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
       <InputDialog {...transferDialogProps} isModal />
       <InputDialog {...creditDialogProps} isModal />
       <div className="account">
-        <Header as="h2">
-          <b>Account:</b> {targetAccount.account.id.label}
-        </Header>
         <div className="page-section-row">
           <InfoCard
             title="Account Details"
@@ -267,6 +265,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
             actions={
               normalAccount && [
                 <Button
+                  key="close-account"
                   className="ghost warning"
                   onClick={() => requestCloseAccount(normalAccount)}
                 >
@@ -282,6 +281,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               defaultValue={{
                 ...defaultCreditRequestDialogProps.fields,
                 account: targetAccount.account.id.label,
+                asset: '',
               }}
               onClose={onRequestCredit}
               fields={{
@@ -290,6 +290,11 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
                   label: 'Account',
                   type: 'selection',
                   items: [targetAccount.account.id.label],
+                },
+                asset: {
+                  label: 'Asset',
+                  type: 'selection',
+                  items: assetNames,
                 },
               }}
               isInline

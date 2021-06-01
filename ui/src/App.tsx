@@ -66,6 +66,7 @@ import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
 import { ServiceRequired } from './pages/error/ServiceRequired';
+import paths from './paths';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -105,7 +106,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Wallet',
-        path: '/app/custody/assets',
+        path: paths.app.custody.assets,
         activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
@@ -114,15 +115,15 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/custody/accounts/new',
+        path: paths.app.custody.accounts.new,
         render: () => <CustodyNew services={custodyService} />,
       },
       {
-        path: '/app/custody/account/:contractId',
+        path: paths.app.custody.account + '/:contractId',
         render: () => <Account services={custodyService} />,
       },
       {
-        path: '/app/custody/requests',
+        path: paths.app.custody.requests,
         render: () => <CustodyRequests services={custodyService} />,
       },
     ],
@@ -134,7 +135,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Members',
-        path: '/app/clearing/members',
+        path: paths.app.clearing.members,
         render: () => <ClearingMembers services={clearingProvider} />,
         icon: <WalletIcon />,
         children: [],
@@ -142,7 +143,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/clearing/member/:contractId',
+        path: paths.app.clearing.member + '/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
       },
     ],
@@ -154,7 +155,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Clearing',
-        path: `/app/clearing/member`,
+        path: paths.app.clearing.member,
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
         children: [],
@@ -162,7 +163,7 @@ const AppComponent = () => {
           <Button
             key="manage-clearing"
             className="ghost"
-            onClick={() => history.push('/app/manage/clearing')}
+            onClick={() => history.push(paths.app.manage.clearing)}
           >
             Manage Clearing Services
           </Button>,
@@ -176,7 +177,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Auctions',
-        path: '/app/distribution/auctions',
+        path: paths.app.distribution.auctions,
         render: () => <Auctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -185,22 +186,18 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/distribution/auctions/:contractId',
-        render: props => (
+        path: paths.app.distribution.auctions + '/:contractId',
+        render: (props: any) => (
           <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
         ),
       },
       {
-        path: '/app/distribution/new',
+        path: paths.app.distribution.new,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
             <DistributionNew services={auctionService} />
           </ServiceRequired>
         ),
-      },
-      {
-        path: '/app/distribution/requests',
-        render: () => <AuctionRequests services={auctionService} />,
       },
     ],
   });
@@ -209,7 +206,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Bidding Auctions',
-        path: '/app/distribution/bidding',
+        path: paths.app.distribution.bidding,
         render: () => <BiddingAuctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -218,7 +215,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/distribution/bidding/:contractId',
+        path: paths.app.distribution.bidding + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
       },
     ],
@@ -229,13 +226,13 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Markets',
-        path: '/app/trading/markets',
+        path: paths.app.trading.markets,
         render: () => <Markets listings={listings} />,
         icon: <OrdersIcon />,
         groupBy: 'Secondary Market',
         children: listings.map(c => ({
           label: c.payload.listingId.label,
-          path: '/app/trading/markets/' + c.contractId.replace('#', '_'),
+          path: paths.app.trading.markets + c.contractId.replace('#', '_'),
           render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
           icon: <ExchangeIcon />,
           children: [],
@@ -244,7 +241,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/trading/order/:contractId',
+        path: paths.app.trading.order + '/:contractId',
         render: () => <TradingOrder listings={listings} />,
       },
     ],
@@ -255,16 +252,16 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Manage',
-        path: '/app/manage',
+        path: paths.app.manage.root,
         activeSubroutes: true,
-        render: () => <Redirect to="/app/manage/custody" />,
+        render: () => <Redirect to={paths.app.manage.custody} />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
       {
-        path: '/app/manage/clearing',
+        path: paths.app.manage.clearing,
         render: () => (
           <Manage>
             <ClearingServiceTable services={clearingService} />
@@ -272,7 +269,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/custody',
+        path: paths.app.manage.custody,
         render: () => (
           <Manage>
             <CustodyServiceTable services={custodyService} />
@@ -280,25 +277,26 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/distributions',
+        path: paths.app.manage.distributions,
         render: () => (
           <Manage>
+            <AuctionRequests services={auctionService} />
             <Auctions />
             <DistributionServiceTable />
           </Manage>
         ),
       },
       {
-        path: '/app/manage/instruments',
+        path: paths.app.manage.instruments,
         render: () => (
           <Manage>
             <InstrumentsTable />
           </Manage>
         ),
       },
-      { path: '/app/manage/instrument/:contractId', component: Instrument },
+      { path: paths.app.manage.instrument + '/:contractId', component: Instrument },
       {
-        path: '/app/manage/issuance',
+        path: paths.app.manage.issuance,
         render: () => (
           <Manage>
             <IssuancesTable />
@@ -306,7 +304,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/trading',
+        path: paths.app.manage.trading,
         render: () => (
           <Manage>
             <TradingServiceTable services={tradingService} />
@@ -314,7 +312,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/manage/listings/:contractId?',
+        path: paths.app.manage.listings + '/:contractId?',
         render: () => (
           <Manage>
             <ListingsTable services={listingService} listings={listings} />
@@ -329,7 +327,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Setup',
-        path: '/app/setup',
+        path: paths.app.setup.root,
         activeSubroutes: true,
         render: () => <SetUp />,
         icon: <ToolIcon />,
@@ -338,19 +336,19 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: '/app/setup/custody/offer',
+        path: paths.app.setup.custody.offer,
         render: () => <Offer service={ServiceKind.CUSTODY} />,
       },
       {
-        path: '/app/setup/clearing/offer',
+        path: paths.app.setup.clearing.offer,
         render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
-        path: '/app/setup/clearing/market/offer',
+        path: paths.app.setup.clearing.market.offer,
         render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
       },
       {
-        path: '/app/setup/distribution/new/auction',
+        path: paths.app.setup.distribution.new.auction,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
             <NewAuction services={auctionService} />
@@ -358,11 +356,11 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/identity',
+        path: paths.app.setup.identity,
         render: () => <RequestIdentityVerification />,
       },
       {
-        path: '/app/setup/instrument/new/base',
+        path: paths.app.setup.instrument.new.base,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
             <NewBaseInstrument />
@@ -370,7 +368,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/instrument/new/convertiblenote',
+        path: paths.app.setup.instrument.new.convertiblenote,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
             <NewConvertibleNote />
@@ -378,7 +376,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/instrument/new/binaryoption',
+        path: paths.app.setup.instrument.new.binaryoption,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
             <NewBinaryOption />
@@ -386,7 +384,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/issuance/new',
+        path: paths.app.setup.issuance.new,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
             <IssuanceNew services={issuanceService} />
@@ -394,7 +392,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/listing/new',
+        path: paths.app.setup.listing.new,
         render: () => (
           <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
             <ListingNew services={listingService} />
@@ -402,7 +400,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: '/app/setup/trading/offer',
+        path: paths.app.setup.trading.offer,
         render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
@@ -416,7 +414,7 @@ const AppComponent = () => {
     sidebar: [],
     additionalRoutes: [
       {
-        path: '/app/notifications',
+        path: paths.app.notifications,
         render: () => <Notifications notifications={notifications} />,
       },
     ],
@@ -446,7 +444,7 @@ const AppComponent = () => {
       menuTitle={
         currentEntry && (
           <Header className="bold icon-header" as="h3">
-            {currentEntry.icon}
+            <span className="icon-wrapper">{currentEntry.icon}</span>
             {currentEntry.label}
           </Header>
         )
@@ -463,7 +461,7 @@ const AppComponent = () => {
       ) : (
         <div>
           <Switch>
-            <Route exact path="/app" component={Landing} />
+            <Route exact path={paths.app.root} component={Landing} />
             {routeEntries(entriesToDisplay)}
             {additionRouting.map((routeProps, i) => (
               <Route key={i} {...routeProps} />

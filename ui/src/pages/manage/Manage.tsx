@@ -2,19 +2,21 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { NavLink, useHistory, useLocation } from 'react-router-dom';
 import { Form, Menu } from 'semantic-ui-react';
 
+import paths from '../../paths';
+
 const Manage: React.FC = ({ children }) => {
   const history = useHistory();
   const path = useLocation().pathname;
 
   const menuItems = useMemo(
     () => [
-      { text: 'Custody', value: '/app/manage/custody' },
-      { text: 'Clearing', value: '/app/manage/clearing' },
-      { text: 'Distributions', value: '/app/manage/distributions' },
-      { text: 'Instruments', value: '/app/manage/instruments' },
-      { text: 'Issuances', value: '/app/manage/issuance' },
-      { text: 'Listings', value: '/app/manage/listings' },
-      { text: 'Trading', value: '/app/manage/trading' },
+      { text: 'Custody', value: paths.app.manage.custody },
+      { text: 'Clearing', value: paths.app.manage.clearing },
+      { text: 'Distributions', value: paths.app.manage.distributions },
+      { text: 'Instruments', value: paths.app.manage.instruments },
+      { text: 'Issuances', value: paths.app.manage.issuance },
+      { text: 'Listings', value: paths.app.manage.listings },
+      { text: 'Trading', value: paths.app.manage.trading },
     ],
     []
   );

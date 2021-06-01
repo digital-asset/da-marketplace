@@ -1,22 +1,8 @@
 import React from 'react';
-import { RouteComponentProps, withRouter, Link } from 'react-router-dom';
-import {
-  Button,
-  Grid,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  Typography,
-} from '@material-ui/core';
-import { KeyboardArrowRight } from '@material-ui/icons';
+import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../../Main';
-import useStyles from '../../styles';
 import {
   CreateAuctionRequest,
   Service,
@@ -24,19 +10,20 @@ import {
 import { usePartyName } from '../../../config';
 import { ServicePageProps } from '../../common';
 import { useDisplayErrorMessage } from '../../../context/MessagesContext';
-import { AddPlusIcon } from '../../../icons/icons';
+import paths from '../../../paths';
+import StripedTable from '../../../components/Table/StripedTable';
+import { Button } from 'semantic-ui-react';
 
 const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
   services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
-  const classes = useStyles();
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
 
-  const requests = useStreamQueries(CreateAuctionRequest).contracts;
+  const { contracts: requests, loading } = useStreamQueries(CreateAuctionRequest);
   const providerServices = services.filter(s => s.payload.provider === party);
 
   const createAuction = async (c: CreateEvent<CreateAuctionRequest>) => {
@@ -49,121 +36,44 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
     await ledger.exercise(Service.CreateAuction, service.contractId, {
       createAuctionRequestCid: c.contractId,
     });
-    history.push('/app/distribution/auctions');
+    history.push(paths.app.distribution.auctions);
   };
 
+  if (!loading && requests.length === 0) {
+    return <></>;
+  }
+
   return (
-    <>
-      <Grid container direction="column">
-        <Grid container direction="row">
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Actions</Typography>
-              </Grid>
-              <Grid container direction="row" justify="center">
-                <Grid item xs={12}>
-                  <Grid container justify="center">
-                    <Link className="a2 with-icon" to="/app/distribution/new">
-                      <AddPlusIcon /> New Auction
-                    </Link>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper className={classes.paper}>
-              <Grid container direction="row" justify="center" className={classes.paperHeading}>
-                <Typography variant="h2">Auction Requests</Typography>
-              </Grid>
-              <Table size="small">
-                <TableHead>
-                  <TableRow className={classes.tableRow}>
-                    <TableCell key={0} className={classes.tableCell}>
-                      <b>Agent</b>
-                    </TableCell>
-                    <TableCell key={1} className={classes.tableCell}>
-                      <b>Issuer</b>
-                    </TableCell>
-                    <TableCell key={2} className={classes.tableCell}>
-                      <b>Auction ID</b>
-                    </TableCell>
-                    <TableCell key={3} className={classes.tableCell}>
-                      <b>Auctioned Asset</b>
-                    </TableCell>
-                    <TableCell key={4} className={classes.tableCell}>
-                      <b>Quoted Asset</b>
-                    </TableCell>
-                    <TableCell key={5} className={classes.tableCell}>
-                      <b>Floor Price</b>
-                    </TableCell>
-                    <TableCell key={6} className={classes.tableCell}>
-                      <b>Action</b>
-                    </TableCell>
-                    <TableCell key={7} className={classes.tableCell}>
-                      <b>Details</b>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requests.map((c, i) => (
-                    <TableRow key={i} className={classes.tableRow}>
-                      <TableCell key={0} className={classes.tableCell}>
-                        {getName(c.payload.provider)}
-                      </TableCell>
-                      <TableCell key={1} className={classes.tableCell}>
-                        {getName(c.payload.customer)}
-                      </TableCell>
-                      <TableCell key={2} className={classes.tableCell}>
-                        {c.payload.auctionId}
-                      </TableCell>
-                      <TableCell key={3} className={classes.tableCell}>
-                        {c.payload.asset.quantity} {c.payload.asset.id.label}
-                      </TableCell>
-                      <TableCell key={4} className={classes.tableCell}>
-                        {c.payload.quotedAssetId.label}
-                      </TableCell>
-                      <TableCell key={5} className={classes.tableCell}>
-                        {c.payload.floorPrice} {c.payload.quotedAssetId.label}
-                      </TableCell>
-                      <TableCell key={6} className={classes.tableCell}>
-                        {party === c.payload.provider && (
-                          <Button
-                            color="primary"
-                            size="small"
-                            className={classes.choiceButton}
-                            variant="contained"
-                            onClick={() => createAuction(c)}
-                          >
-                            Create
-                          </Button>
-                        )}
-                        {/* {party === c.payload.client && <Button color="primary" size="small" className={classes.choiceButton} variant="contained" onClick={() => cancelRequest(c)}>Cancel</Button>} */}
-                      </TableCell>
-                      <TableCell key={7} className={classes.tableCell}>
-                        <IconButton
-                          color="primary"
-                          size="small"
-                          component="span"
-                          onClick={() =>
-                            history.push(
-                              '/app/distribution/requests/' + c.contractId.replace('#', '_')
-                            )
-                          }
-                        >
-                          <KeyboardArrowRight fontSize="small" />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Grid>
-    </>
+    <StripedTable
+      title="Auction Creation Requests"
+      headings={[
+        'Agent',
+        'Issuer',
+        'Auction ID',
+        'Auctioned Asset',
+        'Quoted Asset',
+        'Floor Price',
+        'Action',
+      ]}
+      loading={loading}
+      rows={requests.map(c => {
+        return {
+          elements: [
+            getName(c.payload.provider),
+            getName(c.payload.customer),
+            c.payload.auctionId,
+            `${c.payload.asset.quantity} ${c.payload.asset.id.label}`,
+            c.payload.quotedAssetId.label,
+            `${c.payload.floorPrice} ${c.payload.quotedAssetId.label}`,
+            party === c.payload.provider && (
+              <Button className="ghost small floating" onClick={() => createAuction(c)}>
+                Create
+              </Button>
+            ),
+          ],
+        };
+      })}
+    />
   );
 };
 

@@ -5,14 +5,17 @@ import DA.Finance.Types
 import Marketplace.Clearing.Service qualified as Clearing
 import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Utils
+import DA.Set (Set)
 
 template Role
   with
     operator : Party
     provider : Party
+    observers : Set Party
     ccpAccount : Account
   where
     signatory operator, provider
+    observer observers
 
     key (operator, provider) :  (Party, Party)
     maintainer key._1
@@ -71,6 +74,7 @@ template Offer
   with
     operator : Party
     provider : Party
+    observers : Set Party
   where
     signatory operator
 
@@ -95,6 +99,8 @@ template Request
 
     controller operator can
       Approve : ContractId Role
+        with
+          observers : Set Party
         do
           createOrLookup Role with ..
 

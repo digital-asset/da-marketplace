@@ -23,7 +23,7 @@ import { retrieveParties } from '../../Parties';
 
 import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
-import { ArrowLeftIcon, ArrowRightIcon, OpenMarketplaceLogo } from '../../icons/icons';
+import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
@@ -31,6 +31,8 @@ import SelectAutomationPage from './SelectAutomationPage';
 import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
+import paths from '../../paths';
+import Widget from '../../components/Widget/Widget';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
@@ -44,7 +46,6 @@ export enum MenuItems {
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
   const history = useHistory();
-  const parties = retrieveParties() || [];
 
   const matchPath = props.match.path;
   const matchUrl = props.match.url;
@@ -72,6 +73,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   };
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
     const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
     const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
 
@@ -85,9 +87,11 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
       }
     }
-  }, [history.location, parties]);
+  }, [history.location]);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
+
     // deploy auto-trigger for all parties
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
@@ -116,34 +120,31 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
 
     deployAllTriggers();
-  }, [parties, adminCredentials]);
+  }, [adminCredentials]);
 
   return (
     <WellKnownPartiesProvider>
-      <div className="quick-setup">
-        <div className="page-controls">
-          <Button className="ghost dark control-button" onClick={() => history.push('/login')}>
-            <ArrowLeftIcon color={'white'} />
-            Back
-          </Button>
-          {activeMenuItem !== MenuItems.LOG_IN && (
-            <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
-              <Button className="button ghost dark control-button">
-                Skip to Log In
-                <ArrowRightIcon color={'white'} />
-              </Button>
-            </NavLink>
-          )}
-        </div>
-
-        <div className="quick-setup-header">
-          <h1 className="logo-header">
-            <OpenMarketplaceLogo size="32" /> Daml Open Marketplace
-          </h1>
-          {activeMenuItem === MenuItems.LOG_IN ? <h2>Log In</h2> : <h2>Market Set-Up</h2>}
-        </div>
-
-        <div className="quick-setup-tile">
+      <Widget
+        subtitle={activeMenuItem === MenuItems.LOG_IN ? 'Log In' : 'Market Set-Up'}
+        pageControls={{
+          left: (
+            <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
+              <ArrowLeftIcon color={'white'} />
+              Back
+            </Button>
+          ),
+          right:
+            activeMenuItem !== MenuItems.LOG_IN ? (
+              <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
+                <Button className="button ghost dark control-button">
+                  Skip to Log In
+                  <ArrowRightIcon color={'white'} />
+                </Button>
+              </NavLink>
+            ) : undefined,
+        }}
+      >
+        <div className="quick-setup">
           {activeMenuItem !== MenuItems.LOG_IN && (
             <Menu pointing secondary className="quick-setup-menu page-row">
               {menuItems.map(item => (
@@ -233,7 +234,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             />
           </Switch>
         </div>
-      </div>
+      </Widget>
     </WellKnownPartiesProvider>
   );
 

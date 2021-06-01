@@ -4,6 +4,7 @@ import { usePartyName } from '../../config';
 import { Issuance } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Model';
 import StripedTable from '../../components/Table/StripedTable';
 import TitleWithActions from '../../components/Common/TitleWithActions';
+import paths from '../../paths';
 
 export const IssuancesTable: React.FC = () => {
   const { contracts: issuances, loading: issuancesLoading } = useStreamQueries(Issuance);
@@ -13,7 +14,7 @@ export const IssuancesTable: React.FC = () => {
     <>
       <TitleWithActions
         title={'Issuances'}
-        iconActions={[{ path: '/app/setup/issuance/new', label: 'New Issuance' }]}
+        iconActions={[{ path: paths.app.setup.issuance.new, label: 'New Issuance' }]}
       />
       <StripedTable
         headings={[

@@ -110,9 +110,25 @@ const RolesProvider: React.FC = ({ children }) => {
 function useRoleKinds(): Set<RoleKind> {
   const context = React.useContext<RolesState>(RolesStateContext);
   if (context === undefined) {
-    throw new Error('useProviderServices  must be used within a ServicesProvider');
+    throw new Error('useRoleKinds must be used within a RolesProvider');
   }
   return context.roles.reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
+}
+
+function useProvidersByRole(): Map<RoleKind, [RoleContract]> {
+  const context = React.useContext<RolesState>(RolesStateContext);
+  if (context === undefined) {
+    throw new Error('useProvidersByRole must be used within a RolesProvider');
+  }
+  let map = new Map<RoleKind, [RoleContract]>();
+  context.roles.forEach(r => {
+    if (map.has(r.role)) {
+      map.get(r.role)?.push(r.contract);
+    } else {
+      map.set(r.role, [r.contract]);
+    }
+  });
+  return map;
 }
 
 function useRolesContext() {
@@ -123,4 +139,4 @@ function useRolesContext() {
   return context;
 }
 
-export { RolesProvider, useRolesContext, useRoleKinds };
+export { RolesProvider, useRolesContext, useRoleKinds, useProvidersByRole };

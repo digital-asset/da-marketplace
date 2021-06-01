@@ -35,6 +35,7 @@ import {
 import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { usePartyName } from '../../config';
+import paths from '../../paths';
 
 type Props = {
   cid: string;
@@ -181,22 +182,55 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     deposits: CreateEvent<AssetDeposit>[],
     quantity: number
   ): Promise<ContractId<AssetDeposit> | null> => {
-    const deposit = deposits.find(c => parseFloat(c.payload.asset.quantity) >= quantity);
-    if (!deposit) return null;
-    if (parseFloat(deposit.payload.asset.quantity) > quantity) {
-      const [[split]] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, deposit.contractId, {
-        quantities: [quantity.toString()],
-      });
-      return split;
-    }
-    return deposit.contractId;
+    const deposit = deposits
+      .sort((a, b) => parseFloat(a.payload.asset.quantity) - parseFloat(b.payload.asset.quantity))
+      .find(c => parseFloat(c.payload.asset.quantity) >= quantity);
+
+    if (!!deposit) {
+      if (parseFloat(deposit.payload.asset.quantity) > quantity) {
+        const [[split]] = await ledger.exercise(
+          AssetDeposit.AssetDeposit_Split,
+          deposit.contractId,
+          {
+            quantities: [quantity.toString()],
+          }
+        );
+        return split;
+      }
+      return deposit.contractId;
+    } else if (
+      deposits.reduce((acc, cur) => acc + parseFloat(cur.payload.asset.quantity), 0) >= quantity
+    ) {
+      const [[headDeposit, ...tailDeposits], depositTotal] = deposits
+        .sort((a, b) => parseFloat(a.payload.asset.quantity) - parseFloat(b.payload.asset.quantity))
+        .reduce(
+          ([assetDeposits, total], cur): [CreateEvent<AssetDeposit>[], number] => {
+            if (total < quantity)
+              return [[cur, ...assetDeposits], parseFloat(cur.payload.asset.quantity) + total];
+            else return [assetDeposits, total];
+          },
+          [[], 0] as [CreateEvent<AssetDeposit>[], number]
+        );
+
+      const [mergedDepositCid] = await ledger.exercise(
+        AssetDeposit.AssetDeposit_Merge,
+        headDeposit.contractId,
+        {
+          depositCids: tailDeposits.map(d => d.contractId),
+        }
+      );
+
+      if (depositTotal === quantity) return mergedDepositCid;
+      else {
+        const [[split]] = await ledger.exercise(AssetDeposit.AssetDeposit_Split, mergedDepositCid, {
+          quantities: [quantity.toString()],
+        });
+        return split;
+      }
+    } else return null;
   };
 
   const requestCreateOrder = async () => {
-    const depositCid = isBuy
-      ? await getAsset(quotedAssets, price * quantity)
-      : await getAsset(tradedAssets, quantity);
-
     const orderId: string =
       Date.now().toString() + crypto.getRandomValues(new Uint16Array(1))[0].toString();
     const details: Details = {
@@ -214,6 +248,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     };
     clearOrderForm();
     if (listing.payload.listingType.tag === 'Collateralized') {
+      const depositCid = isBuy
+        ? await getAsset(quotedAssets, price * quantity)
+        : await getAsset(tradedAssets, quantity);
+
       if (!depositCid) return;
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
         details,
@@ -343,7 +381,8 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                     />
                   ),
                 ],
-                onClick: () => history.push(`/app/trading/order/${c.contractId.replace('#', '_')}`),
+                onClick: () =>
+                  history.push(`${paths.app.trading.order}/${c.contractId.replace('#', '_')}`),
               };
             })}
           />
