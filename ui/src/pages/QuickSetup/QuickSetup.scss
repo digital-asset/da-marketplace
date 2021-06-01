@@ -185,115 +185,115 @@
         }
       }
 
-        .request-select {
-          margin: $spacing-s 0;
-          .dropdown {
-            max-width: 196px;
-          }
+      .request-select {
+        margin: $spacing-s 0;
+        .dropdown {
+          max-width: 196px;
         }
       }
+    }
 
-        .ghost.request {
-          border-color: var(--blue-60);
-        }
+    .ghost.request {
+      border-color: var(--blue-60);
+    }
 
-        .warning {
-          display: flex;
-          margin: $spacing-s $spacing-s 0 0;
-          width: 285px;
-          font-size: 12px;
+    .warning {
+      display: flex;
+      margin: $spacing-s $spacing-s 0 0;
+      width: 285px;
+      font-size: 12px;
 
-        p,
-        a.a2 {
-          font-size: 12px;
-        }
-
-        &.request-services {
-          .input-label {
-            margin-bottom: $spacing-xs;
-          }
-        }
+      p,
+      a.a2 {
+        font-size: 12px;
       }
 
-      &.offer-services {
-        .page-row {
-          width: 100%;
-          height: 100%;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-
+      &.request-services {
         .input-label {
           margin-bottom: $spacing-xs;
         }
       }
+    }
 
-      &.add-parties {
-        justify-content: unset;
-        .page-row,
-        .upload-parties {
-          width: 100%;
-          height: 100%;
-        }
+    &.offer-services {
+      .page-row {
+        width: 100%;
+        height: 100%;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
 
-        .party-names,
-        .uploaded {
-          margin-top: $spacing-xs;
-          max-height: 370px;
-        }
+      .input-label {
+        margin-bottom: $spacing-xs;
+      }
+    }
 
-        .upload-parties {
-          display: flex;
-          align-items: center;
-          flex-direction: column;
-          justify-content: space-evenly;
+    &.add-parties {
+      justify-content: unset;
+      .page-row,
+      .upload-parties {
+        width: 100%;
+        height: 100%;
+      }
 
-          &.uploaded {
-            margin-left: $spacing-xl;
-            justify-content: center;
-          }
-        }
-        &.review {
-          .page-row {
-            justify-content: space-between;
-            width: 100%;
+      .party-names,
+      .uploaded {
+        margin-top: $spacing-xs;
+        max-height: 370px;
+      }
 
-            .party-name,
-            .party-names {
-              width: unset;
-              min-width: unset;
-            }
-          }
-          .all-requests,
-          .all-parties {
-            width: 48%;
-          }
-          .all-requests {
-            margin-left: $spacing-m;
+      .upload-parties {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        justify-content: space-evenly;
 
-            .requests {
-              height: 330px;
-            }
-          }
-        }
-
-        .custom-file-upload {
-          width: fit-content;
-          height: 44px;
-          border-radius: 4px;
-          background-color: var(--white);
-          border: 1px solid var(--green-50);
-          cursor: pointer;
-
-          > input[type='file'] {
-            display: none;
-          }
+        &.uploaded {
+          margin-left: $spacing-xl;
+          justify-content: center;
         }
       }
       &.review {
         .page-row {
           justify-content: space-between;
           width: 100%;
+
+          .party-name,
+          .party-names {
+            width: unset;
+            min-width: unset;
+          }
+        }
+        .all-requests,
+        .all-parties {
+          width: 48%;
+        }
+        .all-requests {
+          margin-left: $spacing-m;
+
+          .requests {
+            height: 330px;
+          }
+        }
+      }
+
+      .custom-file-upload {
+        width: fit-content;
+        height: 44px;
+        border-radius: 4px;
+        background-color: var(--white);
+        border: 1px solid var(--green-50);
+        cursor: pointer;
+
+        > input[type='file'] {
+          display: none;
+        }
+      }
+    }
+    &.review {
+      .page-row {
+        justify-content: space-between;
+        width: 100%;
 
         &.select {
           justify-content: unset;
