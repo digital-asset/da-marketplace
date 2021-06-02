@@ -64,7 +64,8 @@ const RoleRequestMenu: React.FC = () => {
 
   useEffect(() => {
     const operator =
-      identities.find(i => i.payload.legalName === dialogState?.operator)?.payload.customer || '';
+      identities.find(i => i.payload.legalName === dialogState?.operator)?.payload.customer ||
+      'Operator';
 
     let params: RequestInterface = {
       operator,
