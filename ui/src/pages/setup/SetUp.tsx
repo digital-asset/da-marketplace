@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { Header } from 'semantic-ui-react';
 import { SetupAutomation } from './SetupAutomation';
 import { isHubDeployment, publicParty } from '../../config';
@@ -115,7 +115,7 @@ const SetUp: React.FC = () => (
     {isHubDeployment && (
       <AutomationProvider publicParty={publicParty}>
         <SetupService name="Setup Automation" links={[]}>
-          <SetupAutomation modalTrigger={<NavLink to={paths.root}>Setup Automation</NavLink>} />
+          <SetupAutomation modalTrigger={<Link to='#'>Setup Automation</Link>} />
         </SetupService>
       </AutomationProvider>
     )}
