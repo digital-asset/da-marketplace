@@ -39,7 +39,7 @@ template Role
         do
           create Exchange.Offer with ..
 
-      nonconsuming ApproveExchangeRequest : ContractId Exchange.Role
+      nonconsuming ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Settlement.Service)
         with
           exchangeRequestCid : ContractId Exchange.Request
         do
