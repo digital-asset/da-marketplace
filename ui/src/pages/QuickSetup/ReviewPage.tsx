@@ -9,11 +9,14 @@ import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../
 import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
 
-import { formatTriggerName } from './DragAndDropToParties';
 import { ServicesProvider } from '../../context/ServicesContext';
 import { OffersProvider } from '../../context/OffersContext';
 import { retrieveParties } from '../../Parties';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+
+import { formatTriggerName } from './SelectRolesPage';
+import QuickSetupPage from './QuickSetupPage';
+import { MenuItems } from './QuickSetup';
 
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -52,12 +55,11 @@ const ReviewItems = () => {
   }
 
   return (
-    <div className="setup-page review">
-      <h4>Review</h4>
+    <QuickSetupPage className="select-roles" title="Review" nextItem={MenuItems.LOG_IN}>
       <div className="page-row">
         <PartiesReview />
       </div>
-    </div>
+    </QuickSetupPage>
   );
 };
 
@@ -68,7 +70,6 @@ const PartiesReview = () => {
 
   return (
     <div className="all-parties">
-      <h4>Parties</h4>
       <div className="party-names">
         {identities.map(p => (
           <PartyRow

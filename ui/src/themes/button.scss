@@ -10,14 +10,14 @@
 
     &.ghost {
       color: var(--textcolor);
-      background: var(--white);
+      background-color: var(--white);
       align-items: center;
       border: 1px solid var(--green-50);
       border-radius: 4px;
       font-weight: 400;
 
       &:hover {
-        background-color: var(--lightblue);
+        background-color: var(--blue-100);
         cursor: pointer;
       }
 

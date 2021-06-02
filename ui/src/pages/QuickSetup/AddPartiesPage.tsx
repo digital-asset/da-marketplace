@@ -4,7 +4,7 @@ import { DablPartiesInput, PartyDetails } from '@daml/hub-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 
-import { Form, Button } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 
 import { useHistory } from 'react-router-dom';
 
@@ -13,9 +13,9 @@ import { storeParties, retrieveUserParties } from '../../Parties';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { PublicDamlProvider, useStreamQueries } from '../../Main';
-import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
+import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from '../../config';
 
-import Credentials, { computeCredentials } from '../../Credentials';
+import Credentials from '../../Credentials';
 
 import { halfSecondPromise } from '../page/utils';
 
@@ -31,6 +31,8 @@ import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { makeDamlSet } from '../common';
 
+import QuickSetupPage from './QuickSetupPage';
+
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
@@ -40,7 +42,6 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
   const history = useHistory();
 
-  const [inputValue, setInputValue] = useState<string>();
   const [error, setError] = useState<string>();
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
 
@@ -57,89 +58,11 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
     </label>
   );
 
-  return (
-    <div className="setup-page add-parties">
-      {!loadingStatus &&
-        (isHubDeployment ? (
-          storedParties.length > 0 ? (
-            <div className="page-row">
-              <div>
-                <p className="details">Parties</p>
-                <div className="party-names uploaded">
-                  {storedParties.map(p => (
-                    <p className="party-name" key={p.party}>
-                      {p.partyName}
-                    </p>
-                  ))}
-                </div>
-              </div>
-              <div className="upload-parties uploaded">{uploadButton}</div>
-            </div>
-          ) : (
-            <div className="upload-parties">
-              <p className="details">
-                Download the .json file from the Users tab on Daml Hub, and upload it here then
-                refresh.
-              </p>
-              {uploadButton}
-              <span className="login-details dark">{error}</span>
-            </div>
-          )
-        ) : (
-          <>
-            <p>Type a party name and press 'Enter'</p>
-            <Form.Input
-              className="party-input"
-              placeholder="Username"
-              value={inputValue}
-              onChange={e => setInputValue(e.currentTarget.value)}
-              onKeyDown={handleAddParty}
-            />
-            {storedParties.length > 0 && (
-              <div className="party-names">
-                {storedParties.map(p => (
-                  <p className="party-name" key={p.party}>
-                    {p.partyName}
-                  </p>
-                ))}
-              </div>
-            )}
-          </>
-        ))}
-
-      {!loadingStatus && (
-        <Button
-          className="ghost next"
-          onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-        >
-          Next
-        </Button>
-      )}
-
-      {loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS && (
-        <div className="setup-page loading">
-          <LoadingWheel label={loadingStatus} />
-          {storedParties.map(p => (
-            <PublicDamlProvider
-              party={p.party}
-              token={p.token}
-              httpBaseUrl={httpBaseUrl}
-              wsBaseUrl={wsBaseUrl}
-            >
-              <QueryStreamProvider defaultPartyToken={p.token}>
-                <CreateVerifiedIdentity
-                  party={p}
-                  onComplete={() => history.push(MenuItems.SELECT_ROLES)}
-                />
-              </QueryStreamProvider>
-            </PublicDamlProvider>
-          ))}
-        </div>
-      )}
-
-      {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS && (
-        <div className="setup-page loading">
-          <LoadingWheel label={loadingStatus} />
+  if (loadingStatus) {
+    return (
+      <QuickSetupPage>
+        <LoadingWheel label={loadingStatus} />
+        {loadingStatus === LoadingStatus.CREATING_ADMIN_CONTRACTS ? (
           <DamlLedger
             token={adminCredentials.token}
             party={adminCredentials.party}
@@ -153,30 +76,61 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
               />
             </QueryStreamProvider>
           </DamlLedger>
+        ) : loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS ? (
+          storedParties.map(p => (
+            <PublicDamlProvider
+              party={p.party}
+              token={p.token}
+              httpBaseUrl={httpBaseUrl}
+              wsBaseUrl={wsBaseUrl}
+            >
+              <QueryStreamProvider defaultPartyToken={p.token}>
+                <CreateVerifiedIdentity
+                  party={p}
+                  onComplete={() => history.push(MenuItems.SELECT_ROLES)}
+                />
+              </QueryStreamProvider>
+            </PublicDamlProvider>
+          ))
+        ) : null}
+      </QuickSetupPage>
+    );
+  }
+
+  return (
+    <QuickSetupPage className="add-parties">
+      {storedParties.length > 0 ? (
+        <div className="page-row">
+          <div>
+            <p className="bold">Parties</p>
+            <div className="party-names uploaded">
+              {storedParties.map(p => (
+                <p className="party-name" key={p.party}>
+                  {p.partyName}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="upload-parties uploaded">{uploadButton}</div>
+        </div>
+      ) : (
+        <div className="upload-parties">
+          <p className="details">
+            Download the .json file from the Users tab on Daml Hub, and upload it here then refresh.
+          </p>
+          {uploadButton}
+          <span className="login-details dark">{error}</span>
         </div>
       )}
-    </div>
+
+      <Button
+        className="ghost next"
+        onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+      >
+        Next
+      </Button>
+    </QuickSetupPage>
   );
-
-  function handleAddParty(event: any) {
-    if (!inputValue) return;
-
-    switch (event.key) {
-      case 'Enter':
-        const { ledgerId, party, token } = computeCredentials(inputValue);
-        let newLocalParty = {
-          ledgerId,
-          party,
-          token,
-          owner: 'Operator',
-          partyName: inputValue,
-        };
-        storeParties([...storedParties, newLocalParty]);
-        setInputValue('');
-        event.preventDefault();
-        event.stopPropagation();
-    }
-  }
 };
 
 const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDetails }) => {
