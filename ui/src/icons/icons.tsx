@@ -300,6 +300,16 @@ export const IconCircledCheck = () => (
   </svg>
 );
 
+export const IconCheck = () => (
+  <svg className="icon check-icon fill-green" viewBox="0 0 12 12">
+    <path
+      className="fill-green"
+      d="M6.16873 10.4437C6.00449 10.4437 5.8465 10.3839 5.72243 10.2741L3 7.84354L3.89171 6.84472L6.10893 8.82361L10.2997 4L11.311 4.87921L6.67394 10.2134C6.55701 10.3491 6.3901 10.4303 6.21068 10.4419C6.19729 10.4428 6.18301 10.4437 6.16873 10.4437Z"
+      fill="#3A62CA"
+    />
+  </svg>
+);
+
 export const ToolIcon = () => (
   <svg className="icon tool-icon" viewBox="0 0 15 15">
     <path

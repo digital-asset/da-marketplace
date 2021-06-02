@@ -27,7 +27,6 @@ import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
 import AddPartiesPage from './AddPartiesPage';
 import SelectRolesPage from './SelectRolesPage';
-import SelectAutomationPage from './SelectAutomationPage';
 import RequestServicesPage from './RequestServicesPage';
 import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
@@ -37,7 +36,6 @@ import Widget from '../../components/Widget/Widget';
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
   SELECT_ROLES = 'select-roles',
-  SELECT_AUTOMATION = 'select-automation',
   REQUEST_SERVICES = 'request-services',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
@@ -56,21 +54,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
-
-  const NextButton = (props: { item: MenuItems; disabled?: boolean }) => {
-    if (props.disabled) {
-      return (
-        <Button disabled className="ghost next">
-          Next
-        </Button>
-      );
-    }
-    return (
-      <NavLink to={`${matchUrl}/${props.item}`}>
-        <Button className="ghost next">Next</Button>
-      </NavLink>
-    );
-  };
 
   useEffect(() => {
     const parties = retrieveParties() || [];
@@ -177,51 +160,20 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           <Switch>
             <Route
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
-              component={() => (
-                <>
-                  <AddPartiesPage adminCredentials={adminCredentials} />
-                </>
-              )}
+              component={() => <AddPartiesPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.SELECT_ROLES}`}
-              component={() => (
-                <>
-                  <SelectRolesPage adminCredentials={adminCredentials} />
-                  <NextButton item={MenuItems.SELECT_AUTOMATION} />
-                </>
-              )}
+              component={() => <SelectRolesPage adminCredentials={adminCredentials} />}
             />
-            <Route
-              path={`${matchPath}/${MenuItems.SELECT_AUTOMATION}`}
-              component={() => (
-                <>
-                  {isHubDeployment ? (
-                    <SelectAutomationPage adminCredentials={adminCredentials} />
-                  ) : (
-                    <UnsupportedPageStep />
-                  )}
-                  <NextButton item={MenuItems.REQUEST_SERVICES} />
-                </>
-              )}
-            />
+
             <Route
               path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
-              component={() => (
-                <>
-                  <RequestServicesPage adminCredentials={adminCredentials} />
-                  <NextButton item={MenuItems.REVIEW} />
-                </>
-              )}
+              component={() => <RequestServicesPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.REVIEW}`}
-              component={() => (
-                <>
-                  <ReviewPage adminCredentials={adminCredentials} />
-                  <NextButton item={MenuItems.LOG_IN} />
-                </>
-              )}
+              component={() => <ReviewPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.LOG_IN}`}
@@ -258,14 +210,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
       .join(' ');
   }
 });
-
-const UnsupportedPageStep = () => {
-  return (
-    <div className="setup-page not-supported">
-      <p className="page-row">This step is not supported locally.</p>
-    </div>
-  );
-};
 
 export const LoadingWheel = (props: { label?: string }) => {
   return (

@@ -16,6 +16,7 @@ import { retrieveParties } from '../../Parties';
 import { LoadingWheel } from './QuickSetup';
 
 import QueryStreamProvider from '../../websocket/queryStream';
+import QuickSetupPage from './QuickSetupPage';
 
 import paths from '../../paths';
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
@@ -49,49 +50,47 @@ const LoginTileGrid = () => {
 
   if (rolesLoading || identitiesLoading) {
     return (
-      <div className="setup-page loading">
+      <QuickSetupPage className="loading">
         <LoadingWheel label="Loading Log In Data..." />
-      </div>
+      </QuickSetupPage>
     );
   }
 
   if (identities.length === 0) {
     return (
-      <div className="setup-page loading">
+      <div>
         <p>There are no parties to Log In as. Go back to Quick Setup and add parties.</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="setup-page finish">
-        <p className="dark details">cmd + click on a tile to launch a new tab </p>
-        <div className="log-in-tile-grid">
-          {identities.map(p => (
-            <Link
-              className="log-in-tile"
-              key={p.payload.customer}
-              onClick={() => handleLogin(p.payload.customer)}
-              to={paths.quickSetup.logInParties}
-            >
-              <div className="log-in-row page-row">
-                <h4>{p.payload.legalName}</h4>
-                <p className="p2 log-in page-row">
-                  Log in <ArrowRightIcon />
-                </p>
-              </div>
-              <p className="finished-roles">
-                {allRoles
-                  .filter(r => r.contract.payload.provider === p.payload.customer)
-                  .map(r => r.role)
-                  .join(', ')}
+    <QuickSetupPage className="finish">
+      <p className="dark details">cmd + click on a tile to launch a new tab </p>
+      <div className="log-in-tile-grid">
+        {identities.map(p => (
+          <Link
+            className="log-in-tile"
+            key={p.payload.customer}
+            onClick={() => handleLogin(p.payload.customer)}
+            to={paths.quickSetup.logInParties}
+          >
+            <div className="log-in-row page-row">
+              <h4>{p.payload.legalName}</h4>
+              <p className="log-in page-row">
+                Log in <ArrowRightIcon />
               </p>
-            </Link>
-          ))}
-        </div>
+            </div>
+            <p className="finished-roles">
+              {allRoles
+                .filter(r => r.contract.payload.provider === p.payload.customer)
+                .map(r => r.role)
+                .join(', ')}
+            </p>
+          </Link>
+        ))}
       </div>
-    </>
+    </QuickSetupPage>
   );
 
   async function handleLogin(party: string) {

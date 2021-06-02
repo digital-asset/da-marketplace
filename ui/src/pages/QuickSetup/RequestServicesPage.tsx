@@ -6,6 +6,7 @@ import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
 
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
+import { itemListAsText } from '../../pages/page/utils';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
@@ -16,6 +17,10 @@ import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { ServiceKind, ServiceRequestTemplates } from '../../context/ServicesContext';
 
 import { retrieveUserParties } from '../../Parties';
+import { IconCheck } from '../../icons/icons';
+
+import QuickSetupPage from './QuickSetupPage';
+import { MenuItems, LoadingWheel } from './QuickSetup';
 
 interface IRequestServiceInfo {
   provider?: string;
@@ -39,6 +44,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
   const [creatingRequest, setCreatingRequest] = useState(false);
+  const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
   const provider = requestInfo?.provider;
 
@@ -52,8 +58,17 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
     }
   }, [userParties, provider]);
 
+  const onFinishCreatingRequest = (success: boolean) => {
+    if (success) {
+      setAddedSuccessfully(true);
+      setTimeout(() => {
+        setAddedSuccessfully(false);
+      }, 2500);
+    }
+  };
+
   return (
-    <div className="setup-page request-services">
+    <>
       <DamlLedger
         party={adminCredentials.party}
         token={adminCredentials.token}
@@ -66,6 +81,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
             setRequestInfo={setRequestInfo}
             createRequest={() => setCreatingRequest(true)}
             creatingRequest={creatingRequest}
+            addedSuccessfully={addedSuccessfully}
           />
         </QueryStreamProvider>
       </DamlLedger>
@@ -79,12 +95,15 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           <QueryStreamProvider defaultPartyToken={token}>
             <CreateServiceRequests
               requestInfo={requestInfo}
-              onFinish={() => setCreatingRequest(false)}
+              onFinish={success => {
+                setCreatingRequest(false);
+                onFinishCreatingRequest(success);
+              }}
             />
           </QueryStreamProvider>
         </DamlLedger>
       )}
-    </div>
+    </>
   );
 };
 
@@ -93,8 +112,9 @@ const RequestForm = (props: {
   setRequestInfo: (info?: IRequestServiceInfo) => void;
   createRequest: () => void;
   creatingRequest: boolean;
+  addedSuccessfully: boolean;
 }) => {
-  const { requestInfo, setRequestInfo, createRequest, creatingRequest } = props;
+  const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully } = props;
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
 
@@ -107,69 +127,83 @@ const RequestForm = (props: {
   });
 
   if (identitiesLoading) {
-    return null;
+    return (
+      <QuickSetupPage className="loading">
+        <LoadingWheel label="Loading parties..." />
+      </QuickSetupPage>
+    );
   }
 
   return (
-    <div className="request-form">
-      <h4>Request Services</h4>
-      <Form.Select
-        disabled={creatingRequest}
-        className="request-select"
-        label={<p className="input-label">As:</p>}
-        placeholder="Select..."
-        onChange={(_, data: any) =>
-          setRequestInfo({
-            ...requestInfo,
-            customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-          })
-        }
-        options={partyOptions}
-      />
-      <Form.Select
-        disabled={creatingRequest}
-        className="request-select"
-        label={<p className="input-label">Request Service:</p>}
-        placeholder="Select..."
-        multiple
-        onChange={(_, data: any) =>
-          setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
-        }
-        options={serviceOptions}
-      />
-      <Form.Select
-        disabled={creatingRequest}
-        className="request-select"
-        label={<p className="input-label">From:</p>}
-        placeholder="Select..."
-        onChange={(_, data: any) =>
-          setRequestInfo({
-            ...requestInfo,
-            provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-          })
-        }
-        options={partyOptions}
-      />
-
-      <Button
-        className="ghost request"
-        disabled={
-          !requestInfo?.provider ||
-          !requestInfo.customer ||
-          !requestInfo.services ||
-          creatingRequest
-        }
-        onClick={() => createRequest()}
-      >
-        {creatingRequest ? 'Creating Request...' : 'Request'}
-      </Button>
-    </div>
+    <QuickSetupPage
+      className="request-services"
+      nextItem={MenuItems.REVIEW}
+      title="Request Services"
+    >
+      <Form>
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">As:</p>}
+          placeholder="Select..."
+          onChange={(_, data: any) =>
+            setRequestInfo({
+              ...requestInfo,
+              customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            })
+          }
+          options={partyOptions}
+        />
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">Request Service:</p>}
+          placeholder="Select..."
+          multiple
+          onChange={(_, data: any) =>
+            setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
+          }
+          options={serviceOptions}
+        />
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">From:</p>}
+          placeholder="Select..."
+          onChange={(_, data: any) =>
+            setRequestInfo({
+              ...requestInfo,
+              provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            })
+          }
+          options={partyOptions}
+        />
+        <Button
+          className="ghost request"
+          disabled={
+            !requestInfo ||
+            !requestInfo.provider ||
+            !requestInfo.customer ||
+            !requestInfo.services ||
+            creatingRequest
+          }
+          onClick={() => createRequest()}
+        >
+          {creatingRequest ? 'Creating Request...' : 'Request'}
+        </Button>
+        {addedSuccessfully && (
+          <p>
+            <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
+          </p>
+        )}
+      </Form>
+    </QuickSetupPage>
   );
 };
 
 const CreateServiceRequests = (props: {
   requestInfo: IRequestServiceInfo;
-  onFinish: () => void;
+  onFinish: (success: boolean) => void;
 }) => {
   const { requestInfo, onFinish } = props;
 
@@ -187,29 +221,31 @@ const CreateServiceRequests = (props: {
   };
 
   async function offerServices() {
+    let success = true;
     if (services && provider && customer && services.length > 0) {
       await Promise.all(
         services.map(async service => {
           switch (service) {
             case ServiceKind.MARKET_CLEARING:
-              await doRequest(MarketClearingRequest, params);
+              await doRequest(MarketClearingRequest, params).catch(_ => (success = false));
               break;
             case ServiceKind.LISTING:
-              await doRequest(ListingRequest, params);
+              await doRequest(ListingRequest, params).catch(_ => (success = false));
               break;
             case ServiceKind.CUSTODY:
-              await doRequest(CustodyRequest, params);
+              await doRequest(CustodyRequest, params).catch(_ => (success = false));
               break;
             case ServiceKind.ISSUANCE:
-              await doRequest(IssuanceRequest, params);
+              await doRequest(IssuanceRequest, params).catch(_ => (success = false));
               break;
             default:
+              success = false;
               throw new Error(`Unsupported service: ${service}`);
           }
         })
       );
     }
-    onFinish();
+    onFinish(success);
   }
 
   async function doRequest(
