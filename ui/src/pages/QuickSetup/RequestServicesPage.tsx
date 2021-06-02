@@ -288,7 +288,6 @@ const CreateServiceRequests = (props: {
   };
 
   async function offerServices() {
-    console.log('here');
     let success = true;
 
     if (services && provider && customer && services.length > 0) {
