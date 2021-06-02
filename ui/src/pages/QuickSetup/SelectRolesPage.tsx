@@ -156,7 +156,6 @@ const DragAndDropRoles = () => {
     console.log(allTriggers);
     const trigger = allTriggers.find(auto => auto.startsWith(autoName));
     if (trigger) {
-      console.log(trigger);
       const [name, hash] = trigger.split('#');
 
       if (hash) {
