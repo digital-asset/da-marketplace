@@ -242,8 +242,16 @@
     }
 
     .request-services {
+        .page-row {
+            justify-content: space-between;
+        }
+        .success-message {
+            max-width: 300px;
+
+        }
       .request-select {
-        margin-bottom: $spacing-s;
+        margin-bottom:$spacing-s;
+        width: 300px;
       }
       button.ghost.request {
         align-self: flex-start;

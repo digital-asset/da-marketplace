@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Table } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
 
-import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
+import {
+  httpBaseUrl,
+  wsBaseUrl,
+  useVerifiedParties,
+  isHubDeployment,
+  usePartyName,
+} from '../../config';
 import { itemListAsText } from '../../pages/page/utils';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
@@ -17,9 +23,10 @@ import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import {
   ServiceKind,
   ServiceRequestTemplates,
-  useProviderServices,
+  ServicesProvider,
+  useServiceContext,
 } from '../../context/ServicesContext';
-import { RequestsProvider } from '../../context/RequestsContext';
+import { RequestsProvider, useServiceRequestKinds } from '../../context/RequestsContext';
 
 import { retrieveUserParties } from '../../Parties';
 import { IconCheck } from '../../icons/icons';
@@ -65,12 +72,10 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
 
   const onFinishCreatingRequest = (success: boolean) => {
     if (success) {
-      console.log('here');
-      setRequestInfo(undefined);
-
       setAddedSuccessfully(true);
       setTimeout(() => {
         setAddedSuccessfully(false);
+        setRequestInfo(undefined);
       }, 2500);
     }
   };
@@ -84,13 +89,15 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
         wsBaseUrl={wsBaseUrl}
       >
         <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <RequestForm
-            requestInfo={requestInfo}
-            setRequestInfo={setRequestInfo}
-            createRequest={() => setCreatingRequest(true)}
-            creatingRequest={creatingRequest}
-            addedSuccessfully={addedSuccessfully}
-          />
+          <ServicesProvider>
+            <RequestForm
+              requestInfo={requestInfo}
+              setRequestInfo={setRequestInfo}
+              createRequest={() => setCreatingRequest(true)}
+              creatingRequest={creatingRequest}
+              addedSuccessfully={addedSuccessfully}
+            />{' '}
+          </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
       {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
@@ -125,8 +132,10 @@ const RequestForm = (props: {
   addedSuccessfully: boolean;
 }) => {
   const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully } = props;
-
+  const [existingServices, setExistingServices] = useState<ServiceKind[]>([]);
   const { identities, loading: identitiesLoading } = useVerifiedParties();
+  const { services } = useServiceContext();
+  const { getName } = usePartyName('');
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
@@ -135,6 +144,32 @@ const RequestForm = (props: {
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
+
+  useEffect(() => {
+    if (!requestInfo) {
+      return;
+    }
+
+    const { customer, provider, services: requestServices } = requestInfo;
+
+    if (!customer || !provider || !requestServices) {
+      return;
+    }
+
+    const matchingContracts = services.filter(
+      s => s.contract.payload.provider === provider && s.contract.payload.customer === customer
+    );
+
+    const existingServices = requestServices.filter(
+      service => !!matchingContracts.find(s => s.service === service)
+    );
+
+    if (existingServices.length > 0) {
+      setExistingServices(existingServices);
+    } else {
+      setExistingServices([]);
+    }
+  }, [requestInfo]);
 
   if (identitiesLoading) {
     return (
@@ -150,66 +185,85 @@ const RequestForm = (props: {
       nextItem={MenuItems.REVIEW}
       title="Request Services"
     >
-      <Form>
-        <Form.Select
-          disabled={creatingRequest}
-          className="request-select"
-          label={<p className="input-label">As:</p>}
-          value={requestInfo?.customer || ''}
-          placeholder="Select..."
-          onChange={(_, data: any) =>
-            setRequestInfo({
-              ...requestInfo,
-              customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-            })
-          }
-          options={partyOptions}
-        />
-        <Form.Select
-          disabled={creatingRequest}
-          className="request-select"
-          label={<p className="input-label">Request Service:</p>}
-          placeholder="Select..."
-          value={requestInfo?.services || []}
-          multiple
-          onChange={(_, data: any) =>
-            setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
-          }
-          options={serviceOptions}
-        />
-        <Form.Select
-          disabled={creatingRequest}
-          className="request-select"
-          label={<p className="input-label">From:</p>}
-          placeholder="Select..."
-          value={requestInfo?.provider || ''}
-          onChange={(_, data: any) =>
-            setRequestInfo({
-              ...requestInfo,
-              provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-            })
-          }
-          options={partyOptions}
-        />
-        <Button
-          className="ghost request"
-          disabled={
-            !requestInfo ||
-            !requestInfo.provider ||
-            !requestInfo.customer ||
-            !requestInfo.services ||
-            creatingRequest
-          }
-          onClick={() => createRequest()}
-        >
-          {creatingRequest ? 'Creating Request...' : 'Request'}
-        </Button>
-        {addedSuccessfully && (
-          <p>
-            <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
-          </p>
-        )}
-      </Form>
+      <div className="page-row">
+        <Form>
+          <Form.Select
+            disabled={creatingRequest}
+            className="request-select"
+            label={<p className="input-label">As:</p>}
+            value={requestInfo?.customer || ''}
+            placeholder="Select..."
+            onChange={(_, data: any) =>
+              setRequestInfo({
+                ...requestInfo,
+                customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              })
+            }
+            options={partyOptions}
+          />
+          <Form.Select
+            disabled={creatingRequest}
+            className="request-select"
+            label={<p className="input-label">Request Service:</p>}
+            placeholder="Select..."
+            value={requestInfo?.services || []}
+            multiple
+            onChange={(_, data: any) =>
+              setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
+            }
+            options={serviceOptions}
+          />
+          <Form.Select
+            disabled={creatingRequest}
+            className="request-select"
+            label={<p className="input-label">From:</p>}
+            placeholder="Select..."
+            value={requestInfo?.provider || ''}
+            onChange={(_, data: any) =>
+              setRequestInfo({
+                ...requestInfo,
+                provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              })
+            }
+            options={partyOptions}
+          />
+          <Button
+            className="ghost request"
+            disabled={
+              !requestInfo ||
+              !requestInfo.provider ||
+              !requestInfo.customer ||
+              !requestInfo.services ||
+              creatingRequest ||
+              existingServices.length > 0
+            }
+            onClick={() => createRequest()}
+          >
+            {creatingRequest ? 'Creating Request...' : 'Request'}
+          </Button>
+          {addedSuccessfully && (
+            <p className="success-message">
+              <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
+            </p>
+          )}
+          {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
+            <p className="success-message">
+              {getName(requestInfo?.provider)} already provides{' '}
+              {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
+            </p>
+          )}
+        </Form>
+        <div className="party-names">
+          {services.map((s, i) => (
+            <div className="party-name" key={i}>
+              <p>
+                {s.contract.payload.provider} provides {s.service} service to{' '}
+                {s.contract.payload.customer}{' '}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
     </QuickSetupPage>
   );
 };
@@ -241,7 +295,6 @@ const CreateServiceRequests = (props: {
     let success = true;
 
     if (services && provider && customer && services.length > 0) {
-      console.log('here');
       await Promise.all(
         services.map(async service => {
           switch (service) {
