@@ -14,7 +14,12 @@ import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service';
-import { ServiceKind, ServiceRequestTemplates } from '../../context/ServicesContext';
+import {
+  ServiceKind,
+  ServiceRequestTemplates,
+  useProviderServices,
+} from '../../context/ServicesContext';
+import { RequestsProvider } from '../../context/RequestsContext';
 
 import { retrieveUserParties } from '../../Parties';
 import { IconCheck } from '../../icons/icons';
@@ -46,20 +51,23 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
-  const provider = requestInfo?.provider;
+  const customer = requestInfo?.customer;
 
   useEffect(() => {
-    if (provider) {
+    if (customer) {
       if (isHubDeployment) {
-        setToken(userParties.find(p => p.party === provider)?.token);
+        setToken(userParties.find(p => p.party === customer)?.token);
       } else {
-        setToken(computeToken(provider));
+        setToken(computeToken(customer));
       }
     }
-  }, [userParties, provider]);
+  }, [userParties, customer]);
 
   const onFinishCreatingRequest = (success: boolean) => {
     if (success) {
+      console.log('here');
+      setRequestInfo(undefined);
+
       setAddedSuccessfully(true);
       setTimeout(() => {
         setAddedSuccessfully(false);
@@ -85,21 +93,23 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           />
         </QueryStreamProvider>
       </DamlLedger>
-      {creatingRequest && requestInfo && requestInfo.provider && token && (
+      {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
         <DamlLedger
           token={token}
-          party={requestInfo.provider}
+          party={requestInfo.customer}
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
           <QueryStreamProvider defaultPartyToken={token}>
-            <CreateServiceRequests
-              requestInfo={requestInfo}
-              onFinish={success => {
-                setCreatingRequest(false);
-                onFinishCreatingRequest(success);
-              }}
-            />
+            <RequestsProvider>
+              <CreateServiceRequests
+                requestInfo={requestInfo}
+                onFinish={success => {
+                  setCreatingRequest(false);
+                  onFinishCreatingRequest(success);
+                }}
+              />
+            </RequestsProvider>
           </QueryStreamProvider>
         </DamlLedger>
       )}
@@ -145,6 +155,7 @@ const RequestForm = (props: {
           disabled={creatingRequest}
           className="request-select"
           label={<p className="input-label">As:</p>}
+          value={requestInfo?.customer || ''}
           placeholder="Select..."
           onChange={(_, data: any) =>
             setRequestInfo({
@@ -159,6 +170,7 @@ const RequestForm = (props: {
           className="request-select"
           label={<p className="input-label">Request Service:</p>}
           placeholder="Select..."
+          value={requestInfo?.services || []}
           multiple
           onChange={(_, data: any) =>
             setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
@@ -170,6 +182,7 @@ const RequestForm = (props: {
           className="request-select"
           label={<p className="input-label">From:</p>}
           placeholder="Select..."
+          value={requestInfo?.provider || ''}
           onChange={(_, data: any) =>
             setRequestInfo({
               ...requestInfo,
@@ -211,18 +224,24 @@ const CreateServiceRequests = (props: {
 
   const { provider, customer, services } = requestInfo;
 
+  useEffect(() => {
+    offerServices();
+  }, []);
+
   if (!provider || !customer || !services) {
     return null;
   }
 
   const params = {
-    customer: provider,
-    provider: customer,
+    customer: customer,
+    provider: provider,
   };
 
   async function offerServices() {
     let success = true;
+
     if (services && provider && customer && services.length > 0) {
+      console.log('here');
       await Promise.all(
         services.map(async service => {
           switch (service) {
@@ -254,8 +273,6 @@ const CreateServiceRequests = (props: {
   ) {
     return await ledger.create(request, params);
   }
-
-  offerServices();
 
   return null;
 };
