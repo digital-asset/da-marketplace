@@ -135,7 +135,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
 
   return (
     <div className="input-dialog">
-      <BackButton />
+      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
       <Header as="h2">New Account Request</Header>
       <FormErrorHandled onSubmit={() => requestAccount()}>
         <Form.Select
