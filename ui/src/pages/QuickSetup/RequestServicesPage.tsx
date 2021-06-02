@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-import { Button, Form, Table } from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { Template } from '@daml/types';
@@ -96,7 +96,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
               createRequest={() => setCreatingRequest(true)}
               creatingRequest={creatingRequest}
               addedSuccessfully={addedSuccessfully}
-            />{' '}
+            />
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
