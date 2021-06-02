@@ -169,7 +169,7 @@ const RequestForm = (props: {
     } else {
       setExistingServices([]);
     }
-  }, [requestInfo]);
+  }, [requestInfo, services]);
 
   if (identitiesLoading) {
     return (
@@ -278,10 +278,6 @@ const CreateServiceRequests = (props: {
 
   const { provider, customer, services } = requestInfo;
 
-  useEffect(() => {
-    offerServices();
-  }, []);
-
   if (!provider || !customer || !services) {
     return null;
   }
@@ -292,6 +288,7 @@ const CreateServiceRequests = (props: {
   };
 
   async function offerServices() {
+    console.log('here');
     let success = true;
 
     if (services && provider && customer && services.length > 0) {
@@ -326,7 +323,7 @@ const CreateServiceRequests = (props: {
   ) {
     return await ledger.create(request, params);
   }
-
+  offerServices();
   return null;
 };
 
