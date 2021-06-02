@@ -115,7 +115,7 @@ const SetUp: React.FC = () => (
     {isHubDeployment && (
       <AutomationProvider publicParty={publicParty}>
         <SetupService name="Setup Automation" links={[]}>
-          <SetupAutomation modalTrigger={<Link to='#'>Setup Automation</Link>} />
+          <SetupAutomation modalTrigger={<Link to="#">Setup Automation</Link>} />
         </SetupService>
       </AutomationProvider>
     )}
