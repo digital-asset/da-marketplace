@@ -170,12 +170,7 @@ export type OfferAccepts =
   | AuctionServiceAccept
   | BiddingServiceAccept;
 
-export type OfferAcceptChoice = Choice<
-  OfferTemplates,
-  OfferAccepts,
-  ContractId<OfferTemplates>,
-  undefined
->;
+export type OfferAcceptChoice = Choice<OfferTemplates, OfferAccepts, unknown, undefined>;
 
 type OfferDeclines =
   | CustodyRoleDecline
@@ -257,12 +252,7 @@ export type RequestApproves =
   | AuctionServiceApprove
   | BiddingServiceApprove;
 
-export type RequestApproveChoice = Choice<
-  RequestTemplates,
-  RequestApproves,
-  ContractId<RequestTemplates>,
-  undefined
->;
+export type RequestApproveChoice = Choice<RequestTemplates, RequestApproves, unknown, undefined>;
 
 type RequestRejects =
   | CustodyRoleReject

@@ -21,7 +21,7 @@ import {
 import { Template } from '@daml/types';
 
 import { useHistory } from 'react-router-dom';
-import { useRequestKinds } from '../../context/RequestsContext';
+import { useServiceRequestKinds } from '../../context/RequestsContext';
 import MissingServiceModal from '../../components/Common/MissingServiceModal';
 
 type ServiceRequiredProps = {
@@ -215,7 +215,7 @@ export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, actio
     history.goBack();
   };
 
-  const requests = useRequestKinds();
+  const requests = useServiceRequestKinds();
   const serviceKinds = useServiceKindsProvided(party);
   const [showRequiredServiceRequest, setShowRequiredServiceRequest] = useState(false);
 

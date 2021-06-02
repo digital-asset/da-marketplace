@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
 import { CreateEvent } from '@daml/ledger';
-import { Template } from '@daml/types';
 
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/module';
@@ -10,64 +9,32 @@ import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketpla
 import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/module';
 import { Request as ListingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/module';
-import {
-  Offer as TradingOffer,
-  Request as TradingRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import { Request as RegulatorRequest } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/module';
 
-import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
-import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
-import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+import { Request as TradingRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Request as SettlementRequest } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
+import { Request as DistributionRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
+import { Request as CustodyRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Request as ClearingRoleRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { useStreamQueries } from '../Main';
+import { ServiceKind } from './ServicesContext';
+import { RoleKind } from './RolesContext';
 
-enum ServiceKind {
-  CUSTODY = 'Custody',
-  MARKET_CLEARING = 'Market Clearing',
-  AUCTION = 'Auction',
-  BIDDING = 'Bidding',
-  ISSUANCE = 'Issuance',
-  LISTING = 'Listing',
-  TRADING = 'Trading',
-  CLEARING = 'Clearing',
-  MATCHING = 'Matching',
-  SETTLEMENT = 'Settlement',
-  DISTRIBUTOR = 'Distributor',
-  REGULATOR = 'Regulator',
-}
+type RoleRequestContract =
+  | CreateEvent<ClearingRoleRequest>
+  | CreateEvent<DistributionRoleRequest>
+  | CreateEvent<CustodyRoleRequest>
+  | CreateEvent<SettlementRequest>
+  | CreateEvent<ClearingRoleRequest>;
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export type ServiceRoleOfferChoice =
-  | typeof ClearingRole.OfferClearingService
-  | typeof ClearingRole.OfferMarketService
-  | typeof TradingRole.OfferTradingService
-  | typeof TradingRole.OfferListingService
-  | typeof CustodyRole.OfferIssuanceService
-  | typeof CustodyRole.OfferCustodyService;
+type RoleRequest = {
+  contract: RoleRequestContract;
+  role: RoleKind;
+};
 
-// Do we want to keep this?
-// ts-prune-ignore-next
-export type ServiceRequest = Template<ServiceRequestTemplates, undefined, string>;
-
-type ServiceRequestTemplates =
-  | CustodyRequest
-  | ClearingRequest
-  | MarketClearingRequest
-  | AuctionRequest
-  | BiddingRequest
-  | IssuanceRequest
-  | ListingRequest
-  | TradingRequest;
-
-// Do we want to keep this?
-// ts-prune-ignore-next
-export type ServiceOffer = Template<ServiceOfferTemplates, undefined, string>;
-
-type ServiceOfferTemplates = TradingOffer;
-
-type RequestContract =
+type ServiceRequestContract =
   | CreateEvent<CustodyRequest>
   | CreateEvent<ClearingRequest>
   | CreateEvent<MarketClearingRequest>
@@ -77,20 +44,26 @@ type RequestContract =
   | CreateEvent<ListingRequest>
   | CreateEvent<TradingRequest>;
 
-type Request = {
-  contract: RequestContract;
+type ServiceRequest = {
+  contract: ServiceRequestContract;
   service: ServiceKind;
 };
 
 type RequestsState = {
-  requests: Request[];
+  serviceRequests: ServiceRequest[];
+  roleRequests: RoleRequest[];
   loading: boolean;
 };
 
-const RequestsStateContext = React.createContext<RequestsState>({ requests: [], loading: false });
+const RequestsStateContext = React.createContext<RequestsState>({
+  roleRequests: [],
+  serviceRequests: [],
+  loading: false,
+});
 
 const RequestsProvider: React.FC = ({ children }) => {
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+  const [roleRequests, setRoleRequests] = useState<RoleRequest[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   const { contracts: clearingRequest, loading: clearingLoading } =
@@ -107,6 +80,17 @@ const RequestsProvider: React.FC = ({ children }) => {
   const { contracts: regulatorRequest, loading: regulatorLoading } =
     useStreamQueries(RegulatorRequest);
 
+  const { contracts: clearingRoleRequest, loading: clearingRoleLoading } =
+    useStreamQueries(ClearingRoleRequest);
+  const { contracts: tradingRoleRequest, loading: tradingRoleLoading } =
+    useStreamQueries(TradingRoleRequest);
+  const { contracts: distributionRoleRequest, loading: distributionRoleLoading } =
+    useStreamQueries(DistributionRoleRequest);
+  const { contracts: custodyRoleRequest, loading: custodyRoleLoading } =
+    useStreamQueries(CustodyRoleRequest);
+  const { contracts: settlementRequest, loading: settlementLoading } =
+    useStreamQueries(SettlementRequest);
+
   useEffect(
     () =>
       setLoading(
@@ -118,6 +102,11 @@ const RequestsProvider: React.FC = ({ children }) => {
           issuanceLoading ||
           listingLoading ||
           tradingLoading ||
+          clearingRoleLoading ||
+          tradingRoleLoading ||
+          distributionRoleLoading ||
+          custodyRoleLoading ||
+          settlementLoading ||
           regulatorLoading
       ),
     [
@@ -130,12 +119,17 @@ const RequestsProvider: React.FC = ({ children }) => {
       listingLoading,
       tradingLoading,
       regulatorLoading,
+      clearingRoleLoading,
+      tradingRoleLoading,
+      distributionRoleLoading,
+      custodyRoleLoading,
+      settlementLoading,
     ]
   );
 
   useEffect(
     () =>
-      setRequests([
+      setServiceRequests([
         ...clearingRequest.map(c => ({ contract: c, service: ServiceKind.CLEARING })),
         ...marketClearingRequest.map(c => ({ contract: c, service: ServiceKind.MARKET_CLEARING })),
         ...custodyRequest.map(c => ({ contract: c, service: ServiceKind.CUSTODY })),
@@ -159,19 +153,45 @@ const RequestsProvider: React.FC = ({ children }) => {
     ]
   );
 
+  useEffect(
+    () =>
+      setRoleRequests([
+        ...clearingRoleRequest.map(c => ({ contract: c, role: RoleKind.CLEARING })),
+        ...settlementRequest.map(c => ({ contract: c, role: RoleKind.SETTLEMENT })),
+        ...custodyRoleRequest.map(c => ({ contract: c, role: RoleKind.CUSTODY })),
+        ...tradingRoleRequest.map(c => ({ contract: c, role: RoleKind.TRADING })),
+        ...distributionRoleRequest.map(c => ({ contract: c, role: RoleKind.DISTRIBUTION })),
+      ]),
+    [
+      clearingRoleRequest,
+      custodyRoleRequest,
+      tradingRoleRequest,
+      settlementRequest,
+      distributionRoleRequest,
+    ]
+  );
+
   return (
-    <RequestsStateContext.Provider value={{ requests, loading }}>
+    <RequestsStateContext.Provider value={{ serviceRequests, roleRequests, loading }}>
       {children}
     </RequestsStateContext.Provider>
   );
 };
 
-function useRequestKinds(): Set<ServiceKind> {
+function useServiceRequestKinds(): Set<ServiceKind> {
   const context = React.useContext<RequestsState>(RequestsStateContext);
   if (context === undefined) {
-    throw new Error('useProviderServices  must be used within a ServicesProvider');
+    throw new Error('useServiceRequestKinds  must be used within a ServicesProvider');
   }
-  return context.requests.reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
+  return context.serviceRequests.reduce((acc, v) => acc.add(v.service), new Set<ServiceKind>());
 }
 
-export { RequestsProvider, useRequestKinds };
+function useRoleRequestKinds(): Set<RoleKind> {
+  const context = React.useContext<RequestsState>(RequestsStateContext);
+  if (context === undefined) {
+    throw new Error('useRoleRequestKinds must be used within a ServicesProvider');
+  }
+  return context.roleRequests.reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
+}
+
+export { RequestsProvider, useServiceRequestKinds, useRoleRequestKinds };
