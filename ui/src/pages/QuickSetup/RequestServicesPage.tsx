@@ -26,10 +26,10 @@ import {
   ServicesProvider,
   useServiceContext,
 } from '../../context/ServicesContext';
-import { RequestsProvider, useServiceRequestKinds } from '../../context/RequestsContext';
+import { RequestsProvider } from '../../context/RequestsContext';
 
 import { retrieveUserParties } from '../../Parties';
-import { IconCheck } from '../../icons/icons';
+import { IconCheck, InformationIcon } from '../../icons/icons';
 
 import QuickSetupPage from './QuickSetupPage';
 import { MenuItems, LoadingWheel } from './QuickSetup';
@@ -242,13 +242,13 @@ const RequestForm = (props: {
             {creatingRequest ? 'Creating Request...' : 'Request'}
           </Button>
           {addedSuccessfully && (
-            <p className="success-message">
+            <p className="message">
               <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
             </p>
           )}
           {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
-            <p className="success-message">
-              {getName(requestInfo?.provider)} already provides{' '}
+            <p className="message">
+              <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
               {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
             </p>
           )}
