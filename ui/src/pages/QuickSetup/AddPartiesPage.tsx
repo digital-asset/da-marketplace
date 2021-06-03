@@ -43,18 +43,27 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
   const history = useHistory();
 
   const [error, setError] = useState<string>();
+  const [parties, setParties] = useState<PartyDetails[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
 
-  const storedParties = retrieveUserParties() || [];
+  useEffect(() => {
+    const storedParties = retrieveUserParties();
+    if (storedParties) {
+      setParties(storedParties);
+    }
+  }, []);
 
   const uploadButton = (
     <label className="custom-file-upload button ui">
       <DablPartiesInput
         ledgerId={ledgerId}
         onError={error => setError(error)}
-        onLoad={(newParties: PartyDetails[]) => storeParties(newParties)}
+        onLoad={partyDetails => {
+          storeParties(partyDetails);
+          setParties(partyDetails);
+        }}
       />
-      <p>Upload {storedParties.length > 0 ? 'a new ' : ''}.JSON file</p>
+      <p>Upload {parties.length > 0 ? 'a new ' : ''}.JSON file</p>
     </label>
   );
 
@@ -77,7 +86,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
             </QueryStreamProvider>
           </DamlLedger>
         ) : loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS ? (
-          storedParties.map(p => (
+          parties.map(p => (
             <PublicDamlProvider
               party={p.party}
               token={p.token}
@@ -99,12 +108,12 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
 
   return (
     <QuickSetupPage className="add-parties">
-      {storedParties.length > 0 ? (
+      {parties.length > 0 ? (
         <div className="page-row">
           <div>
             <p className="bold">Parties</p>
             <div className="party-names uploaded">
-              {storedParties.map(p => (
+              {parties.map(p => (
                 <p className="party-name" key={p.party}>
                   {p.partyName}
                 </p>
@@ -116,7 +125,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
       ) : (
         <div className="upload-parties">
           <p className="details">
-            Download the .json file from the Users tab on Daml Hub, and upload it here then refresh.
+            Download the .json file from the Users tab on Daml Hub, and upload it here.
           </p>
           {uploadButton}
           <span className="login-details dark">{error}</span>
