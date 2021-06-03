@@ -242,16 +242,20 @@ const RequestForm = (props: {
           >
             {creatingRequest ? 'Creating Request...' : 'Request'}
           </Button>
-          {addedSuccessfully && (
+          {addedSuccessfully ? (
             <p className="message">
               <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
             </p>
-          )}
-          {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
-            <p className="message">
-              <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
-              {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
-            </p>
+          ) : (
+            existingServices.length > 0 &&
+            requestInfo?.provider &&
+            requestInfo?.customer && (
+              <p className="message">
+                <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
+                {itemListAsText(existingServices || [])} services to{' '}
+                {getName(requestInfo?.customer)}
+              </p>
+            )
           )}
         </Form>
         <div className="party-names">
