@@ -66,9 +66,9 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
         do
-          custodyCid    <- createOrLookup Custody.Service with customer = provider, ..
-          issuanceCid   <- createOrLookup Issuance.Service with customer = provider, ..
-          roleCid       <- createOrLookup Role with ..
+          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid     <- createOrLookup Role with ..
           return (roleCid, issuanceCid, custodyCid)
 
       Decline : ()
@@ -87,9 +87,9 @@ template Request
         with
           observers : Set Party
         do
-          custodyCid    <- createOrLookup Custody.Service with customer = provider, ..
-          issuanceCid   <- createOrLookup Issuance.Service with customer = provider, ..
-          roleCid <- createOrLookup Role with ..
+          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid     <- createOrLookup Role with ..
           return (roleCid, issuanceCid, custodyCid)
 
       Reject : ()

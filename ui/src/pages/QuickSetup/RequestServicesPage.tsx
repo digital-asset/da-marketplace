@@ -41,7 +41,7 @@ export interface IRequestServiceInfo {
 }
 
 // without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
-export const SUPPORTED_REQUESTS = [
+const SUPPORTED_REQUESTS = [
   ServiceKind.MARKET_CLEARING,
   ServiceKind.LISTING,
   ServiceKind.CUSTODY,
@@ -273,7 +273,7 @@ const RequestForm = (props: {
   );
 };
 
-export const CreateServiceRequests = (props: {
+const CreateServiceRequests = (props: {
   requestInfo: IRequestServiceInfo;
   onFinish: (success: boolean) => void;
 }) => {

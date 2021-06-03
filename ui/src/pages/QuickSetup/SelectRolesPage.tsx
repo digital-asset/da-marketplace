@@ -130,7 +130,6 @@ const DragAndDropRoles = () => {
     ) {
       return;
     }
-    console.log('ereeerereeeeeeeeee');
 
     const provider = { provider: partyId };
 

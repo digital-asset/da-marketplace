@@ -83,8 +83,8 @@ template Offer
         with
           ccpAccount : Account
         do
-          marketCid      <- createOrLookup Market.Service with customer = provider, ..
-          roleCid        <- createOrLookup Role with ..
+          marketCid <- createOrLookup Market.Service with customer = provider, ..
+          roleCid   <- createOrLookup Role with ..
           return (roleCid, marketCid)
 
       Decline : ()
@@ -104,8 +104,8 @@ template Request
         with
           observers : Set Party
         do
-          marketCid      <- createOrLookup Market.Service with customer = provider, ..
-          roleCid        <- createOrLookup Role with ..
+          marketCid <- createOrLookup Market.Service with customer = provider, ..
+          roleCid   <- createOrLookup Role with ..
           return (roleCid, marketCid)
 
       Reject : ()
