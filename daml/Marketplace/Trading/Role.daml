@@ -66,12 +66,13 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : (ContractId Role, ContractId Matching.Service, ContractId Settlement.Service)
+      Accept : (ContractId Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
         do
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
+          listingCid    <- createOrLookup Listing.Service with customer = provider, ..
           roleCid       <- createOrLookup Role with ..
-          return (roleCid, matchingCid, settlementCid)
+          return (roleCid, matchingCid, listingCid, settlementCid)
 
       Decline : ()
         do
@@ -85,14 +86,15 @@ template Request
     signatory provider
 
     controller operator can
-      Approve : (ContractId Role, ContractId Matching.Service, ContractId Settlement.Service)
+      Approve : (ContractId Role, ContractId Matching.Service,ContractId Listing.Service,  ContractId Settlement.Service)
         with
           observers : Set Party
         do
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
+          listingCid    <- createOrLookup Listing.Service with customer = provider, ..
           roleCid       <- createOrLookup Role with ..
-          return (roleCid, matchingCid, settlementCid)
+          return (roleCid, matchingCid, listingCid, settlementCid)
 
       Reject : ()
         do

@@ -26,7 +26,7 @@
     - As `Alice` request `Custody` services from `Bank`
     - As `Bob` request `Custody` services from `Bank`
     - As `Ccp` request `Custody` services from `Bank`
-    - As `Exchange` request `Listing` services from `Exchange`, and `MarketClearing` services from `Ccp`
+    - As `Exchange` request `MarketClearing` services from `Ccp`
 
 ## Issuing new assets
 

@@ -11,6 +11,8 @@ import Marketplace.Clearing.Service qualified as ClearingService
 import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Listing.Service qualified as Listing
+
 import DA.Set (Set)
 
 template Role
@@ -43,7 +45,7 @@ template Role
         do
           create Exchange.Offer with ..
 
-      nonconsuming ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Settlement.Service)
+      nonconsuming ApproveExchangeRequest : (ContractId Exchange.Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
         with
           exchangeRequestCid : ContractId Exchange.Request
         do
