@@ -32,14 +32,14 @@ export const AutomationProvider: React.FC<AutomationProviderProps> = ({
     const timer = setInterval(() => {
       getPublicAutomation(publicParty).then(autos => {
         setAutomations(autos);
-        if (!!automations && automations.length > 0) {
+        if (!!autos && autos.length > 0) {
           clearInterval(timer);
           setLoading(false);
         }
       });
     }, 2000);
     return () => clearInterval(timer);
-  }, [automations, publicParty]);
+  }, [publicParty]);
   return (
     <AutomationStateContext.Provider value={{ automations, loading }}>
       {children}

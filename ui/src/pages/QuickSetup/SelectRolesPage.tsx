@@ -159,6 +159,9 @@ const DragAndDropRoles = () => {
           operatorServiceContract.contractId,
           provider
         );
+        if (isHubDeployment) {
+          handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
+        }
         return;
 
       case RoleKind.SETTLEMENT:
