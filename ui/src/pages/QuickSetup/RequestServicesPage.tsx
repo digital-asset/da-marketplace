@@ -34,15 +34,14 @@ import { IconCheck, InformationIcon } from '../../icons/icons';
 import QuickSetupPage from './QuickSetupPage';
 import { MenuItems, LoadingWheel } from './QuickSetup';
 
-interface IRequestServiceInfo {
+export interface IRequestServiceInfo {
   provider?: string;
   customer?: string;
   services?: ServiceKind[];
-  token?: string;
 }
 
 // without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
-const SUPPORTED_REQUESTS = [
+export const SUPPORTED_REQUESTS = [
   ServiceKind.MARKET_CLEARING,
   ServiceKind.LISTING,
   ServiceKind.CUSTODY,
@@ -55,26 +54,22 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const userParties = retrieveUserParties() || [];
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
+  const [token, setToken] = useState<string>();
   const [creatingRequest, setCreatingRequest] = useState(false);
+
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
-  useEffect(() => {
-    const customer = requestInfo?.customer;
+  const customer = requestInfo?.customer;
 
+  useEffect(() => {
     if (customer) {
       if (isHubDeployment) {
-        setRequestInfo({
-          ...requestInfo,
-          token: userParties.find(p => p.party === customer)?.token,
-        });
+        setToken(userParties.find(p => p.party === customer)?.token);
       } else {
-        setRequestInfo({
-          ...requestInfo,
-          token: computeToken(customer),
-        });
+        setToken(computeToken(customer));
       }
     }
-  }, [userParties, requestInfo]);
+  }, [userParties, customer]);
 
   const onFinishCreatingRequest = (success: boolean) => {
     if (success) {
@@ -106,30 +101,26 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
-      {creatingRequest &&
-        requestInfo &&
-        requestInfo.provider &&
-        requestInfo.customer &&
-        requestInfo.token && (
-          <DamlLedger
-            token={requestInfo.token}
-            party={requestInfo.customer}
-            httpBaseUrl={httpBaseUrl}
-            wsBaseUrl={wsBaseUrl}
-          >
-            <QueryStreamProvider defaultPartyToken={requestInfo.token}>
-              <RequestsProvider>
-                <CreateServiceRequests
-                  requestInfo={requestInfo}
-                  onFinish={success => {
-                    setCreatingRequest(false);
-                    onFinishCreatingRequest(success);
-                  }}
-                />
-              </RequestsProvider>
-            </QueryStreamProvider>
-          </DamlLedger>
-        )}
+      {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
+        <DamlLedger
+          token={token}
+          party={requestInfo.customer}
+          httpBaseUrl={httpBaseUrl}
+          wsBaseUrl={wsBaseUrl}
+        >
+          <QueryStreamProvider defaultPartyToken={token}>
+            <RequestsProvider>
+              <CreateServiceRequests
+                requestInfo={requestInfo}
+                onFinish={success => {
+                  setCreatingRequest(false);
+                  onFinishCreatingRequest(success);
+                }}
+              />
+            </RequestsProvider>
+          </QueryStreamProvider>
+        </DamlLedger>
+      )}
     </>
   );
 };
@@ -267,8 +258,8 @@ const RequestForm = (props: {
           {services.map((s, i) => (
             <div className="party-name" key={i}>
               <p>
-                {getName(s.contract.payload.provider)} provides {s.service} service to{' '}
-                {getName(s.contract.payload.customer)}{' '}
+                {s.contract.payload.provider} provides {s.service} service to{' '}
+                {s.contract.payload.customer}{' '}
               </p>
             </div>
           ))}
@@ -278,12 +269,12 @@ const RequestForm = (props: {
   );
 };
 
-const CreateServiceRequests = (props: {
+export const CreateServiceRequests = (props: {
   requestInfo: IRequestServiceInfo;
   onFinish: (success: boolean) => void;
 }) => {
   const { requestInfo, onFinish } = props;
-
+  console.log('creating reqyest');
   const ledger = useLedger();
 
   const { provider, customer, services } = requestInfo;

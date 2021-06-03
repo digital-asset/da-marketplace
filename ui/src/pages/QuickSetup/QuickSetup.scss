@@ -168,6 +168,15 @@
     }
 
     .add-parties {
+      .page-content {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        .party-names {
+          max-height: 90%;
+        }
+      }
       .upload-parties {
         display: flex;
         align-items: center;
@@ -181,9 +190,6 @@
           margin-left: $spacing-xl;
           justify-content: center;
         }
-      }
-
-      .ghost.next {
       }
 
       .custom-file-upload {

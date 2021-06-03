@@ -130,6 +130,7 @@ const DragAndDropRoles = () => {
     ) {
       return;
     }
+    console.log('ereeerereeeeeeeeee');
 
     const provider = { provider: partyId };
 
@@ -200,10 +201,9 @@ const PartyRowDropZone = (props: {
 
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const [dragCount, setDragCount] = useState(0);
-
-  const token =
-    parties.find(p => p.party === party.payload.customer)?.token ||
-    computeToken(party.payload.customer);
+  const token = isHubDeployment
+    ? parties.find(p => p.party === party.payload.customer)?.token
+    : computeToken(party.payload.customer);
 
   const roles = allRoles
     .filter(r => r.contract.payload.provider === party.payload.customer)
