@@ -262,8 +262,8 @@ const RequestForm = (props: {
           {services.map((s, i) => (
             <div className="party-name" key={i}>
               <p>
-                {s.contract.payload.provider} provides {s.service} service to{' '}
-                {s.contract.payload.customer}{' '}
+                {getName(s.contract.payload.provider)} provides {s.service} service to{' '}
+                {getName(s.contract.payload.customer)}{' '}
               </p>
             </div>
           ))}
