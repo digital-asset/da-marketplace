@@ -21,7 +21,7 @@ template Role
 
     controller provider can
 
-      nonconsuming c : ContractId Trading.Offer
+      nonconsuming OfferTradingService : ContractId Trading.Offer
         with
           customer : Party
         do
