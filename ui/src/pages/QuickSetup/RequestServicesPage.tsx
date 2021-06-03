@@ -34,7 +34,7 @@ import { IconCheck, InformationIcon } from '../../icons/icons';
 import QuickSetupPage from './QuickSetupPage';
 import { MenuItems, LoadingWheel } from './QuickSetup';
 
-interface IRequestServiceInfo {
+export interface IRequestServiceInfo {
   provider?: string;
   customer?: string;
   services?: ServiceKind[];
@@ -56,6 +56,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
   const [creatingRequest, setCreatingRequest] = useState(false);
+
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
   const customer = requestInfo?.customer;
@@ -241,16 +242,20 @@ const RequestForm = (props: {
           >
             {creatingRequest ? 'Creating Request...' : 'Request'}
           </Button>
-          {addedSuccessfully && (
-            <p className="message">
+          {addedSuccessfully ? (
+            <p className="p2 message">
               <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
             </p>
-          )}
-          {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
-            <p className="message">
-              <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
-              {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
-            </p>
+          ) : (
+            existingServices.length > 0 &&
+            requestInfo?.provider &&
+            requestInfo?.customer && (
+              <p className="p2 message">
+                <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
+                {itemListAsText(existingServices || [])} services to{' '}
+                {getName(requestInfo?.customer)}
+              </p>
+            )
           )}
         </Form>
         <div className="party-names">
