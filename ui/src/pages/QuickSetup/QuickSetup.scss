@@ -255,7 +255,12 @@
         justify-content: space-between;
       }
       .message {
+        margin-top: $spacing-m;
         max-width: 300px;
+        display: flex;
+        .icon {
+          margin-right: $spacing-xs;
+        }
       }
       .request-select {
         margin-bottom: $spacing-s;
@@ -263,6 +268,7 @@
 
         a.ui.label {
           background-color: var(--cool-grey-100);
+          color: var(--cool-grey-10);
           .delete.icon {
             height: unset;
             color: var(--blue-50);

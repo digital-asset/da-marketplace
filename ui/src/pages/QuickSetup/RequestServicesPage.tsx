@@ -243,14 +243,14 @@ const RequestForm = (props: {
             {creatingRequest ? 'Creating Request...' : 'Request'}
           </Button>
           {addedSuccessfully ? (
-            <p className="message">
+            <p className="p2 message">
               <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
             </p>
           ) : (
             existingServices.length > 0 &&
             requestInfo?.provider &&
             requestInfo?.customer && (
-              <p className="message">
+              <p className="p2 message">
                 <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
                 {itemListAsText(existingServices || [])} services to{' '}
                 {getName(requestInfo?.customer)}
