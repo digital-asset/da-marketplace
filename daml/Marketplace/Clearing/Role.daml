@@ -105,8 +105,8 @@ template Request
         with
           observers : Set Party
         do
-          clearingCid    <- createOrLookup Clearing.Service with customer = provider, clearingAccount= ccpAccount, marginAccount=ccpAccount, ..
           marketCid      <- createOrLookup Market.Service with customer = provider, ..
+          clearingCid    <- createOrLookup Clearing.Service with customer = provider, clearingAccount= ccpAccount, marginAccount=ccpAccount, ..
           roleCid        <- createOrLookup Role with ..
           return (roleCid, clearingCid, marketCid)
 

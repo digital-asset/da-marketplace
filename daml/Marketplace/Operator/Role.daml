@@ -5,6 +5,10 @@ import Marketplace.Custody.Role qualified as Custodian
 import Marketplace.Clearing.Role qualified as Clearing
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Clearing.Service qualified as ClearingService
+import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
 import DA.Set (Set)
@@ -27,7 +31,7 @@ template Role
         do
           create Custodian.Offer with ..
 
-      nonconsuming ApproveCustodianRequest : ContractId Custodian.Role
+      nonconsuming ApproveCustodianRequest : (ContractId Custodian.Role, ContractId Issuance.Service, ContractId Custody.Service)
         with
           custodianRequestCid : ContractId Custodian.Request
         do
@@ -99,7 +103,7 @@ template Role
         do
           create Clearing.Offer with ..
 
-      nonconsuming ApproveClearingRequest : ContractId Clearing.Role
+      nonconsuming ApproveClearingRequest : (ContractId Clearing.Role, ContractId ClearingService.Service, ContractId Market.Service)
         with
           clearingRequestCid : ContractId Clearing.Request
         do
