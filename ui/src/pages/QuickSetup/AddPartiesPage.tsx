@@ -134,7 +134,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
 
       <Button
         className="ghost next"
-        disabled={storedParties.length === 0}
+        disabled={parties.length === 0}
         onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
       >
         Next
