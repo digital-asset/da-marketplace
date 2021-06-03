@@ -19,7 +19,7 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
     await ledger.exercise(Service.Terminate, c.contractId, { ctrl: party });
   };
 
-return (
+  return (
     <StripedTable
       title="Trading"
       headings={[
