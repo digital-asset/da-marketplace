@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
-import { Button, Form } from 'semantic-ui-react';
+import { Button, Form, Modal } from 'semantic-ui-react';
 
-import DamlLedger, { useLedger } from '@daml/react';
-import { Template } from '@daml/types';
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import { Template, Party } from '@daml/types';
 
 import {
   httpBaseUrl,
@@ -16,6 +16,8 @@ import { itemListAsText } from '../../pages/page/utils';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -30,14 +32,33 @@ import { RequestsProvider } from '../../context/RequestsContext';
 
 import { retrieveUserParties } from '../../Parties';
 import { IconCheck, InformationIcon } from '../../icons/icons';
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 import QuickSetupPage from './QuickSetupPage';
 import { MenuItems, LoadingWheel } from './QuickSetup';
+import { NewAccountModal } from '../custody/NewModal';
+import { CreateEvent } from '@daml/ledger';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import ClearingSelectionModal from './ClearingSelectionModal';
+import TradingSelectionModal from './TradingSelectionModal';
 
-interface IRequestServiceInfo {
+type AccountsForServices = {
+  clearing?: {
+    clearingAccount?: Account;
+    marginAccount?: Account;
+  };
+  trading?: {
+    tradingAccount?: Account;
+    allocationAccount?: Account;
+  };
+};
+
+export interface IRequestServiceInfo {
   provider?: string;
   customer?: string;
   services?: ServiceKind[];
+  accounts?: AccountsForServices;
 }
 
 // without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
@@ -46,6 +67,8 @@ const SUPPORTED_REQUESTS = [
   ServiceKind.LISTING,
   ServiceKind.CUSTODY,
   ServiceKind.ISSUANCE,
+  ServiceKind.CLEARING,
+  ServiceKind.TRADING,
 ];
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
@@ -96,6 +119,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
               createRequest={() => setCreatingRequest(true)}
               creatingRequest={creatingRequest}
               addedSuccessfully={addedSuccessfully}
+              token={token}
             />
           </ServicesProvider>
         </QueryStreamProvider>
@@ -124,18 +148,50 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   );
 };
 
+export interface PartyAccountsI {
+  accounts: CreateEvent<AssetSettlementRule>[];
+  allocAccounts: CreateEvent<AllocationAccountRule>[];
+}
+const AccountsForParty = (props: {
+  party?: Party;
+  setAccountsForParty: (accounts?: PartyAccountsI) => void;
+}) => {
+  const { party, setAccountsForParty } = props;
+  const allAccounts = useStreamQueries(AssetSettlementRule);
+  const accounts = useMemo(
+    () => allAccounts.contracts.filter(c => c.payload.account.owner === party),
+    [allAccounts]
+  );
+
+  const allAllocationAccounts = useStreamQueries(AllocationAccountRule);
+  const allocAccounts = useMemo(
+    () => allAllocationAccounts.contracts.filter(c => c.payload.account.owner === party),
+    [allAllocationAccounts]
+  );
+  useEffect(() => setAccountsForParty({ accounts, allocAccounts }), [accounts, allocAccounts]);
+  return null;
+};
+
 const RequestForm = (props: {
   requestInfo?: IRequestServiceInfo;
   setRequestInfo: (info?: IRequestServiceInfo) => void;
   createRequest: () => void;
   creatingRequest: boolean;
   addedSuccessfully: boolean;
+  token?: string;
 }) => {
-  const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully } = props;
+  const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully, token } =
+    props;
   const [existingServices, setExistingServices] = useState<ServiceKind[]>([]);
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { services } = useServiceContext();
   const { getName } = usePartyName('');
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [showTradingAccountModal, setShowTradingAccountModal] = useState(false);
+  const [accountsForParty, setAccountsForParty] = useState<PartyAccountsI>();
+
+  console.log(accountsForParty?.accounts);
+  // console.log(accountsForParty?.allocAccounts);
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
@@ -154,6 +210,24 @@ const RequestForm = (props: {
 
     if (!customer || !provider || !requestServices) {
       return;
+    }
+
+    if (requestServices.includes(ServiceKind.CLEARING)) {
+      const clearingAccounts = requestInfo?.accounts?.clearing;
+      if (
+        !clearingAccounts ||
+        !clearingAccounts?.clearingAccount ||
+        !clearingAccounts?.marginAccount
+      ) {
+        setShowAccountModal(true);
+      }
+    }
+
+    if (requestServices.includes(ServiceKind.TRADING)) {
+      const tradingAccounts = requestInfo?.accounts?.trading;
+      if (!tradingAccounts?.tradingAccount || !tradingAccounts?.allocationAccount) {
+        setShowTradingAccountModal(true);
+      }
     }
 
     const matchingContracts = services.filter(
@@ -185,6 +259,7 @@ const RequestForm = (props: {
       nextItem={MenuItems.REVIEW}
       title="Request Services"
     >
+      <div className="page-row"></div>
       <div className="page-row">
         <Form>
           <Form.Select
@@ -264,6 +339,56 @@ const RequestForm = (props: {
           ))}
         </div>
       </div>
+      {requestInfo && requestInfo.customer && token && (
+        <DamlLedger
+          token={token}
+          party={requestInfo.customer}
+          httpBaseUrl={httpBaseUrl}
+          wsBaseUrl={wsBaseUrl}
+        >
+          <Modal open={showAccountModal}>
+            {' '}
+            <Modal.Content>Test</Modal.Content>
+            <Button
+              className="ghost warning"
+              color="black"
+              onClick={() => {
+                const { services: requestServices } = requestInfo;
+                if (!!requestServices) {
+                  setRequestInfo({
+                    ...requestInfo,
+                    services: requestServices.filter(s => s !== ServiceKind.CLEARING),
+                  });
+                }
+                setShowAccountModal(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </Modal>
+          <AccountsForParty
+            party={requestInfo.customer}
+            setAccountsForParty={setAccountsForParty}
+          />
+          <ClearingSelectionModal
+            open={showAccountModal}
+            requestInfo={requestInfo}
+            setRequestInfo={setRequestInfo}
+            setOpen={setShowAccountModal}
+            party={requestInfo.customer}
+            accountsForParty={accountsForParty}
+          />
+          <TradingSelectionModal
+            open={showTradingAccountModal}
+            requestInfo={requestInfo}
+            setRequestInfo={setRequestInfo}
+            setOpen={setShowTradingAccountModal}
+            party={requestInfo.customer}
+            accountsForParty={accountsForParty}
+          />
+          <NewAccountModal party={requestInfo.customer} />
+        </DamlLedger>
+      )}
     </QuickSetupPage>
   );
 };
@@ -305,6 +430,38 @@ const CreateServiceRequests = (props: {
               break;
             case ServiceKind.ISSUANCE:
               await doRequest(IssuanceRequest, params).catch(_ => (success = false));
+              break;
+            case ServiceKind.CLEARING:
+              const clearingAccounts = requestInfo?.accounts?.clearing;
+              if (
+                !clearingAccounts ||
+                !clearingAccounts?.clearingAccount ||
+                !clearingAccounts?.marginAccount
+              ) {
+                return;
+              }
+              const clearingParams = {
+                ...params,
+                clearingAccount: clearingAccounts.clearingAccount,
+                marginAccount: clearingAccounts.marginAccount,
+              };
+              await ledger.create(ClearingRequest, clearingParams);
+              break;
+            case ServiceKind.TRADING:
+              const tradingAccounts = requestInfo?.accounts?.trading;
+              if (
+                !tradingAccounts ||
+                !tradingAccounts?.tradingAccount ||
+                !tradingAccounts?.allocationAccount
+              ) {
+                return;
+              }
+              const tradingParams = {
+                ...params,
+                tradingAccount: tradingAccounts.tradingAccount,
+                allocationAccount: tradingAccounts.allocationAccount,
+              };
+              await ledger.create(TradingRequest, tradingParams);
               break;
             default:
               success = false;

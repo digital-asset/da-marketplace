@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
+import { Link } from 'react-router-dom';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;
@@ -17,6 +18,7 @@ type Props = {
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
   disabled?: boolean;
+  button?: boolean;
 };
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
@@ -24,6 +26,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   children,
   onSubmit,
   disabled,
+  button,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -56,9 +59,13 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onOpen={() => setOpen(true)}
       open={open}
       trigger={
-        <Button className="ghost" onClick={e => e.stopPropagation()}>
-          {title}
-        </Button>
+        button ? (
+          <Button as="link" className="ghost" onClick={e => e.stopPropagation()}>
+            {title}
+          </Button>
+        ) : (
+          <a onClick={e => e.stopPropagation()}>{title}</a>
+        )
       }
     >
       <Modal.Header as="h2">{title}</Modal.Header>

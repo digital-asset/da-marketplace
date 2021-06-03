@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { RouteComponentProps, withRouter } from 'react-router-dom';
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
@@ -11,26 +10,25 @@ import {
 import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { createDropdownProp, ServicePageProps, makeDamlSet } from '../common';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import BackButton from '../../components/Common/BackButton';
-import { Button, Form, Header } from 'semantic-ui-react';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
-import { IconClose } from '../../icons/icons';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { CreateEvent } from '@daml/ledger';
-import paths from '../../paths';
+import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
+import { Form } from 'semantic-ui-react';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
 
 enum AccountType {
   REGULAR = 'Regular',
   ALLOCATION = 'Allocation',
 }
 
-const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
-  history,
-  services,
-}: RouteComponentProps & ServicePageProps<Service>) => {
-  const party = useParty();
+type Props = {
+  party: Party;
+  custodyServices?: Readonly<CreateEvent<CustodyService, any, any>[]> | undefined;
+};
+
+const NewComponent: React.FC<Props> = ({ party, custodyServices }) => {
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 
@@ -48,6 +46,10 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   const identityOptions = identities.map(iden =>
     createDropdownProp(iden.payload.legalName, iden.payload.customer)
   );
+
+  const { contracts: servicesStream, loading: custodyLoading } = useStreamQueries(CustodyService);
+  const customerCustodyServices = servicesStream.filter(cs => cs.payload.customer === party);
+  const services = !!custodyServices ? servicesStream : customerCustodyServices;
 
   const canRequest =
     !!operator &&
@@ -91,7 +93,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           ctrls: [service.payload.provider, service.payload.customer],
         };
         await ledger.exercise(Service.RequestOpenAccount, service.contractId, accountRequest);
-        history.push(paths.app.custody.assets);
         break;
       case AccountType.ALLOCATION:
         const nomineeIdentity = identities.find(i => i.payload.customer === accountNominee);
@@ -106,7 +107,6 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
           nominee: nomineeIdentity.payload.customer,
         };
         await ledger.exercise(Service.RequestOpenAllocationAccount, service.contractId, request);
-        history.push(paths.app.custody.assets);
         break;
     }
   };
@@ -134,73 +134,68 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       }));
 
   return (
-    <div className="input-dialog">
-      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
-      <Header as="h2">New Account Request</Header>
-      <FormErrorHandled onSubmit={() => requestAccount()}>
+    <ModalFormErrorHandled
+      onSubmit={() => requestAccount()}
+      title="New Account"
+      disabled={!canRequest}
+      button={false}
+    >
+      <Form.Select
+        label="Operator"
+        placeholder="Select..."
+        required
+        options={operators}
+        onChange={(_, change) => setOperator(change.value as Party)}
+      />
+      <Form.Select
+        label="Provider"
+        placeholder="Select..."
+        disabled={!operator}
+        required
+        options={operator ? providerByOperator(operator) : []}
+        onChange={(_, change) => setProvider(change.value as Party)}
+      />
+      <Form.Input label="Customer" placeholder={getName(party)} readOnly />
+      <Form.Input
+        label="Account Name"
+        placeholder="Provide an Account Name"
+        required
+        onChange={(_, change) => setAccountName(change.value as string)}
+      />
+      <Form.Select
+        label="Account Type"
+        placeholder="Account Type..."
+        value={accountType}
+        options={Object.values(AccountType).map(at => createDropdownProp(at))}
+        required
+        onChange={(_, change) => setAccountType(change.value as AccountType)}
+      />
+      {accountType === AccountType.ALLOCATION && (
         <Form.Select
-          label="Operator"
+          label="Nominee"
           placeholder="Select..."
           required
-          options={operators}
-          onChange={(_, change) => setOperator(change.value as Party)}
-        />
-        <Form.Select
-          label="Provider"
-          placeholder="Select..."
-          disabled={!operator}
-          required
-          options={operator ? providerByOperator(operator) : []}
-          onChange={(_, change) => setProvider(change.value as Party)}
-        />
-        <Form.Input label="Customer" placeholder={getName(party)} readOnly />
-        <Form.Input
-          label="Account Name"
-          placeholder="Provide an Account Name"
-          required
-          onChange={(_, change) => setAccountName(change.value as string)}
-        />
-        <Form.Select
-          label="Account Type"
-          placeholder="Account Type..."
-          value={accountType}
-          options={Object.values(AccountType).map(at => createDropdownProp(at))}
-          required
-          onChange={(_, change) => setAccountType(change.value as AccountType)}
-        />
-        {accountType === AccountType.ALLOCATION && (
-          <Form.Select
-            label="Nominee"
-            placeholder="Select..."
-            required
-            options={identityOptions}
-            onChange={(_, change) => setAccountNominee(change.value as Party)}
-          />
-        )}
-        <Form.Input
-          label="Version"
-          placeholder="0"
-          readOnly
-          onChange={(_, change) => setAccountName(change.value as string)}
-        />
-        <Form.Select
-          label="Observers"
-          multiple
-          placeholder="Select..."
           options={identityOptions}
-          onChange={(event: React.SyntheticEvent, result: any) => {
-            setObservers(result.value);
-          }}
+          onChange={(_, change) => setAccountNominee(change.value as Party)}
         />
-        <div className="submit-form">
-          <Button type="submit" className="ghost" disabled={!canRequest} content="Submit" />
-          <Button className="a a2" onClick={() => history.goBack()}>
-            <IconClose /> Cancel
-          </Button>
-        </div>
-      </FormErrorHandled>
-    </div>
+      )}
+      <Form.Input
+        label="Version"
+        placeholder="0"
+        readOnly
+        onChange={(_, change) => setAccountName(change.value as string)}
+      />
+      <Form.Select
+        label="Observers"
+        multiple
+        placeholder="Select..."
+        options={identityOptions}
+        onChange={(event: React.SyntheticEvent, result: any) => {
+          setObservers(result.value);
+        }}
+      />
+    </ModalFormErrorHandled>
   );
 };
 
-export const New = withRouter(NewComponent);
+export const NewAccountModal = NewComponent;
