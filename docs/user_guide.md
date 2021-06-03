@@ -21,11 +21,7 @@
     - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` roles
     - Assign `Exchange` the `Custody`, `Trading`, `Matching`, and `Settlement` roles
     - Assign `Ccp` the `Clearing` role
-9. Drag and drop automation to specific parties: (then click Next)
-    - Assign `Bank` the `SettlementInstructionTrigger`
-    - Assign `Exchange` the `MatchingEngine`, and `SettlementInstructionTrigger`
-    - Assign `Ccp` the `ClearingTrigger`
-9. Request services from specific parties: (then click Next)
+8. Request services from specific parties: (then click Next)
     - As `Issuer` request `Custody`, `Issuance` services from `Bank`
     - As `Bank` request `Custody` services from `Alice`
     - As `Ccp` request `Custody` services from `Bank`
@@ -35,22 +31,22 @@
 
 ## Issuing new assets
 
-11. Login as `Issuer`
-13. `Issuer`: go to Wallet and create a regular account
+1. Login as `Issuer`
+2. `Issuer`: go to Wallet and create a regular account
     - **Provider**: `Bank`
     - **Account Name** : `MainIssuer-Bank`
     - **Account Type** : `Regular`
-14. `Issuer`: go to Wallet and create an allocation account
+3. `Issuer`: go to Wallet and create an allocation account
     - **Provider**: `Bank`
     - **Account Name** : `AllocIssuer-Bank`
     - **Account Type** : `Allocation`
     - **Nominee** : `Bank`
-15. `Issuer`: go to Setup and create a base instrument for USD
-16. `Issuer`: go to Setup and create a base instrument for BTC
-17. `Issuer`: go to Setup and create an issuance of USD
+4. `Issuer`: go to Setup and create a base instrument for USD
+5. `Issuer`: go to Setup and create a base instrument for BTC
+6. `Issuer`: go to Setup and create an issuance of USD
     - **Issuance ID**: `iss1`
     - **Quantity**: `1000`
-18. `Issuer`: go to Setup and create an issuance of BTC
+7. `Issuer`: go to Setup and create an issuance of BTC
     - **Issuance ID**: `iss2`
     - **Quantity**: `1000`
 
@@ -58,48 +54,48 @@
 
 Auctioning off assets
 
-19. `Issuer`: on Landing, request `Auction` service from the `Bank`
+1. `Issuer`: on Landing, request `Auction` service from the `Bank`
     - **Provider**: `Bank`
     - **Trading Account**: `MainIssuer-Bank`
     - **Allocation Account**: `AllocIssuer-Bank`
     - **Receivable Account**: `MainIssuer-Bank`
-20. `Issuer`: go to Setup and create a new auction
+2. `Issuer`: go to Setup and create a new auction
     - **Auctioned Asset** : `BTC`
     - **Quoted Asset** : `USD`
     - **Quantity** : `500`
     - **Floor Price** : `300`
     - **Auction ID** : `auc1`
-21. Login as `Alice`
-23. `Alice`: Go to Wallet, create a regular account with `Bank`
+3. Login as `Alice`
+4. `Alice`: Go to Wallet, create a regular account with `Bank`
     - **Provider**: `Bank`
     - **Account Name** : `MainAlice-Bank`
     - **Account Type** : `Regular`
-24. `Alice`: Click on newly created account row
-25. `Alice`: Deposit 5000 US Dollars to account
-26. `Alice`: Go to Wallet, create an allocation account
+5. `Alice`: Click on newly created account row
+6. `Alice`: Deposit 5000 US Dollars to account
+7. `Alice`: Go to Wallet, create an allocation account
     - **Provider**: `Bank`
     - **Account Name** : `AllocAlice-Bank`
     - **Account Type** : `Allocation`
     - **Nominee** : `Bank`
-27. `Alice`: Request `Bidding` service from `Bank`
+8. `Alice`: Request `Bidding` service from `Bank`
     - **Trading Account**: `MainAlice-Bank`
     - **Allocation Account**: `AllocAlice-Bank`
-28. Login as `Bank`
-29. `Bank`: Go to Auctions, click on the auction opened by the Issuer, and Request Bid from `Alice`
-30. Login as `Alice`
-31. `Alice`: Go to Bidding Auctions, click on the auction, and submit a Bid
+9. Login as `Bank`
+10. `Bank`: Go to Auctions, click on the auction opened by the Issuer, and Request Bid from `Alice`
+11. Login as `Alice`
+12. `Alice`: Go to Bidding Auctions, click on the auction, and submit a Bid
     - **Quantity**: `2`
     - **Price**: `500`
     - **Publish Bid**: ✅
-32. Login as `Bank`
-33. Go to auction, click `Close Auction`
+13. Login as `Bank`
+14. Go to auction, click `Close Auction`
 
 ## Secondary distribution
 
 Setting up tradeable, collateralized markets
 
-34. Login as `Exchange`
-36. `Exchange`: Go to Setup, Create New Listing
+1. Login as `Exchange`
+2. `Exchange`: Go to Setup, Create New Listing
     - **Traded Asset** : `BTC`
     - **Traded Asset Precision**: `6`
     - **Quoted Asset** : `USD`
@@ -109,23 +105,23 @@ Setting up tradeable, collateralized markets
     - **Symbol**: `BTCUSD`
     - **Description**: `Bitcoin vs USD`
     - **Cleared by**: `-- Collateralized Market --`
-37. Login as `Alice`
-39. `Alice`: Go to Wallet, create a regular account
+3. Login as `Alice`
+4. `Alice`: Go to Wallet, create a regular account
     - **Provider**: `Exchange`
     - **Account Name** : `MainAlice-Exchange`
     - **Account Type** : `Regular`
-40. `Alice`: Go to Wallet, create an allocation account
+5. `Alice`: Go to Wallet, create an allocation account
     - **Provider**: `Exchange`
     - **Account Name** : `AllocAlice-Exchange`
     - **Account Type** : `Allocation`
     - **Nominee** : `Exchange`
-41. `Alice`: Go to Wallet, click on row for `MainAlice-Exchange`
-42. `Alice`: Deposit 1000 USD into `MainAlice-Exchange`
-43. `Alice`: Request `Trading` service from `Exchange`
+6. `Alice`: Go to Wallet, click on row for `MainAlice-Exchange`
+7. `Alice`: Deposit 1000 USD into `MainAlice-Exchange`
+8. `Alice`: Request `Trading` service from `Exchange`
     - **Provider**: `Exchange`
     - **Trading Account**: `MainAlice-Exchange`
     - **Allocation Account**: `AllocAlice-Exchange`
-44. `Alice`: Go to BTCUSD Market, place an order
+9. `Alice`: Go to BTCUSD Market, place an order
     - **Buy**
     - **Limit**
     - **Time in Force** : `Good Till Cancelled`

@@ -58,9 +58,9 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
-  const customer = requestInfo?.customer;
-
   useEffect(() => {
+    const customer = requestInfo?.customer;
+
     if (customer) {
       if (isHubDeployment) {
         setRequestInfo({
@@ -74,7 +74,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
         });
       }
     }
-  }, [userParties, customer]);
+  }, [userParties, requestInfo]);
 
   const onFinishCreatingRequest = (success: boolean) => {
     if (success) {
@@ -267,8 +267,8 @@ const RequestForm = (props: {
           {services.map((s, i) => (
             <div className="party-name" key={i}>
               <p>
-                {s.contract.payload.provider} provides {s.service} service to{' '}
-                {s.contract.payload.customer}{' '}
+                {getName(s.contract.payload.provider)} provides {s.service} service to{' '}
+                {getName(s.contract.payload.customer)}{' '}
               </p>
             </div>
           ))}
