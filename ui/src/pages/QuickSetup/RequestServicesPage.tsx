@@ -278,7 +278,7 @@ export const CreateServiceRequests = (props: {
   onFinish: (success: boolean) => void;
 }) => {
   const { requestInfo, onFinish } = props;
-  console.log('creating reqyest');
+
   const ledger = useLedger();
 
   const { provider, customer, services } = requestInfo;

@@ -7,7 +7,6 @@ import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Issuance.Service qualified as Issuance
 import Marketplace.Custody.Service qualified as Custody
-import Marketplace.Clearing.Service qualified as ClearingService
 import Marketplace.Clearing.Market.Service qualified as Market
 import Marketplace.Trading.Role qualified as Exchange
 import Marketplace.Trading.Matching.Service qualified as Matching
@@ -105,7 +104,7 @@ template Role
         do
           create Clearing.Offer with ..
 
-      nonconsuming ApproveClearingRequest : (ContractId Clearing.Role, ContractId ClearingService.Service, ContractId Market.Service)
+      nonconsuming ApproveClearingRequest : (ContractId Clearing.Role, ContractId Market.Service)
         with
           clearingRequestCid : ContractId Clearing.Request
         do

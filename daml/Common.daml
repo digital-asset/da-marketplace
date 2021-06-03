@@ -113,7 +113,7 @@ onboardProviders = do
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
 
   clearingRoleOfferCid  <- submit operator do exerciseCmd operatorRoleCid Operator.OfferClearingRole with provider = clearinghouse
-  (clearingRoleCid, clearingServiceCid, marketServiceCid)       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
+  (clearingRoleCid, marketServiceCid)       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
   pure Providers with ..
 
 onboardCustomer : Providers -> Text -> Script Customer

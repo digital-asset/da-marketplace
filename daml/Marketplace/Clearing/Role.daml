@@ -79,14 +79,13 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : (ContractId Role, ContractId Clearing.Service, ContractId Market.Service)
+      Accept : (ContractId Role, ContractId Market.Service)
         with
           ccpAccount : Account
         do
-          clearingCid    <- createOrLookup Clearing.Service with customer = provider, clearingAccount = ccpAccount, marginAccount = ccpAccount, ..
           marketCid      <- createOrLookup Market.Service with customer = provider, ..
           roleCid        <- createOrLookup Role with ..
-          return (roleCid, clearingCid, marketCid)
+          return (roleCid, marketCid)
 
       Decline : ()
         do
@@ -101,14 +100,13 @@ template Request
     signatory provider
 
     controller operator can
-      Approve : (ContractId Role, ContractId Clearing.Service, ContractId Market.Service)
+      Approve : (ContractId Role, ContractId Market.Service)
         with
           observers : Set Party
         do
           marketCid      <- createOrLookup Market.Service with customer = provider, ..
-          clearingCid    <- createOrLookup Clearing.Service with customer = provider, clearingAccount = ccpAccount, marginAccount = ccpAccount, ..
           roleCid        <- createOrLookup Role with ..
-          return (roleCid, clearingCid, marketCid)
+          return (roleCid, marketCid)
 
       Reject : ()
         do
