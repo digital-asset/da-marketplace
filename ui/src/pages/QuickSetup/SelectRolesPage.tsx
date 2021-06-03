@@ -143,6 +143,7 @@ const DragAndDropRoles = () => {
         return;
       case RoleKind.TRADING:
         doCreate(OperatorService.OfferExchangeRole, provider);
+        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
         return;
       case RoleKind.SETTLEMENT:
         doCreate(OperatorService.OfferSettlementService, provider);
