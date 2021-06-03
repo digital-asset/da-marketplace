@@ -2,6 +2,7 @@ module Marketplace.Custody.Role where
 
 import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Utils
 import DA.Set (Set)
 
 template Role
@@ -63,9 +64,12 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : ContractId Role
+      Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
         do
-          create Role with ..
+          custodyCid    <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid   <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid       <- createOrLookup Role with ..
+          return (roleCid, issuanceCid, custodyCid)
 
       Decline : ()
         do
@@ -79,11 +83,14 @@ template Request
     signatory provider
 
     controller operator can
-      Approve : ContractId Role
+      Approve : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
         with
           observers : Set Party
         do
-          create Role with ..
+          custodyCid    <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid   <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid <- createOrLookup Role with ..
+          return (roleCid, issuanceCid, custodyCid)
 
       Reject : ()
         do

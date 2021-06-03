@@ -38,6 +38,7 @@ interface IRequestServiceInfo {
   provider?: string;
   customer?: string;
   services?: ServiceKind[];
+  token?: string;
 }
 
 // without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
@@ -54,7 +55,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const userParties = retrieveUserParties() || [];
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
-  const [token, setToken] = useState<string>();
   const [creatingRequest, setCreatingRequest] = useState(false);
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
@@ -63,9 +63,15 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   useEffect(() => {
     if (customer) {
       if (isHubDeployment) {
-        setToken(userParties.find(p => p.party === customer)?.token);
+        setRequestInfo({
+          ...requestInfo,
+          token: userParties.find(p => p.party === customer)?.token,
+        });
       } else {
-        setToken(computeToken(customer));
+        setRequestInfo({
+          ...requestInfo,
+          token: computeToken(customer),
+        });
       }
     }
   }, [userParties, customer]);
@@ -100,26 +106,30 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           </ServicesProvider>
         </QueryStreamProvider>
       </DamlLedger>
-      {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
-        <DamlLedger
-          token={token}
-          party={requestInfo.customer}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
-        >
-          <QueryStreamProvider defaultPartyToken={token}>
-            <RequestsProvider>
-              <CreateServiceRequests
-                requestInfo={requestInfo}
-                onFinish={success => {
-                  setCreatingRequest(false);
-                  onFinishCreatingRequest(success);
-                }}
-              />
-            </RequestsProvider>
-          </QueryStreamProvider>
-        </DamlLedger>
-      )}
+      {creatingRequest &&
+        requestInfo &&
+        requestInfo.provider &&
+        requestInfo.customer &&
+        requestInfo.token && (
+          <DamlLedger
+            token={requestInfo.token}
+            party={requestInfo.customer}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <QueryStreamProvider defaultPartyToken={requestInfo.token}>
+              <RequestsProvider>
+                <CreateServiceRequests
+                  requestInfo={requestInfo}
+                  onFinish={success => {
+                    setCreatingRequest(false);
+                    onFinishCreatingRequest(success);
+                  }}
+                />
+              </RequestsProvider>
+            </QueryStreamProvider>
+          </DamlLedger>
+        )}
     </>
   );
 };
