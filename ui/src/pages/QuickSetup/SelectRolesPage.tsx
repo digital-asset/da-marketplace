@@ -4,6 +4,7 @@ import classNames from 'classnames';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { CreateEvent } from '@daml/ledger';
+import { Choice, ContractId } from '@daml/types';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
