@@ -68,10 +68,10 @@ onboardProviders = do
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
-  operatorRoleCid           <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
+  operatorRoleCid <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
 
-  custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
-  (custodianRoleCid, issuanceServiceCid, custodyServiceCid)          <- submit bank      do exerciseCmd custodianRoleOfferCid Custodian.Accept
+  custodianRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
+  (custodianRoleCid, issuanceServiceCid, custodyServiceCid)  <- submit bank  do exerciseCmd custodianRoleOfferCid Custodian.Accept
 
   exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
   (exchangeRoleCid, matchingServiceCid, listingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
