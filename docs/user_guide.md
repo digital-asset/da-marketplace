@@ -24,7 +24,9 @@
 9. Request services from specific parties: (then click Next)
     - As `Issuer` request `Custody`, `Issuance` services from `Bank`
     - As `Alice` request `Custody` services from `Bank`
+    - As `Alice`, request `Trading` services from `Exchange` and `Clearing` services from `Ccp`, use `Bank` as custody provider
     - As `Bob` request `Custody` services from `Bank`
+    - As `Bob`, request `Trading` services from `Exchange` and `Clearing` services from `Ccp`, use `Bank` as custody provider
     - As `Ccp` request `Custody` services from `Bank`
     - As `Exchange` request `Listing` services from `Exchange`, and `MarketClearing` services from `Ccp`
 
@@ -113,22 +115,8 @@ Setting up tradeable, collateralized markets
     - **Description**: `Bitcoin vs USD`
     - **Cleared by**: `-- Collateralized Market --`
 37. Login as `Alice`
-39. `Alice`: If you skipped the Auction section, go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `MainAlice-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Exchange`
-40. `Alice`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocAlice-Exchange`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Exchange`
-41. `Alice`: Go to Wallet, click on row for `MainAlice-Bank`
-42. `Alice`: Deposit 1000 USD into `MainAlice-Bank`
-43. `Alice`: Request `Trading` service from `Exchange`
-    - **Provider**: `Exchange`
-    - **Trading Account**: `MainAlice-Bank`
-    - **Allocation Account**: `AllocAlice-Exchange`
+41. `Alice`: Go to Wallet, click on row for `Alice-Exchange-trading`
+42. `Alice`: Deposit 1000 USD into `Alice-Exchange-trading`
 44. `Alice`: Go to BTCUSD Market, place an order
     - **Buy**
     - **Limit**
@@ -136,21 +124,7 @@ Setting up tradeable, collateralized markets
     - **Price** : `500`
     - **Quantity** : `2`
 45. Login as `Bob`
-47. `Bob`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `MainBob-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Exchange`
-48. `Bob`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocBob-Exchange`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Exchange`
-49. `Bob`: Go to Wallet, click on row for `MainBob-Bank`, Deposit 500 BTC
-50. `Bob`: Request `Trading` service from `Exchange`
-    - **Provider**: `Exchange`
-    - **Trading Account**: `MainBob-Bank`
-    - **Allocation Account**: `AllocBob-Exchange`
+49. `Bob`: Go to Wallet, click on row for `Bob-Exchange-trading`, Deposit 500 BTC
 51. `Bob`: Go to BTCUSD Market, place an order (to partially match `Alice`'s Buy)
     - **Sell**
     - **Limit**
@@ -167,37 +141,9 @@ Setting up tradeable, collateralized markets
 54. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
     - **Clearing Account**: `Clearing-Bank`
 55. Login as `Alice`
-56. `Alice`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `ClearingAlice-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Ccp`
-57. `Alice`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `MarginAlice-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Ccp`
-58. `Alice`: On Landing, click "Request Clearing Service"
-    - **Provider**: `CCP`
-    - **Clearing Account**: `ClearingAlice-Bank`
-    - **Margin Account**: `MarginAlice-Bank`
-59. `Alice`: Go to Wallet, click on row for `ClearingAlice-Bank`, Deposit 10,000 USD
+59. `Alice`: Go to Wallet, click on row for `Alice-Ccp-clearing`, Deposit 10,000 USD
 60. Login as `Bob`
-61. `Bob`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `ClearingBob-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Ccp`
-62. `Bob`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `MarginBob-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Ccp`
-63. `Bob`: On Landing, click "Request Clearing Service"
-    - **Provider**: `CCP`
-    - **Clearing Account**: `ClearingBob-Bank`
-    - **Margin Account**: `MarginBob-Bank`
-64. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+64. `Bob`: Go to Wallet, click on row for `Bob-Ccp-clearing`, Deposit 10,000 USD
 
 ### Test Margin Calls
 Perform successful margin call for Alice
@@ -231,8 +177,6 @@ Transfer funds from Alice to Bob via central countrerparty.
 Setting up tradeable, cleared markets
 
 73. Login as `Exchange`
-74. On landing page, click "Request Market Clearing"
-    - **Provider** : `Ccp`
 75. `Exchange`: Go to Setup, Create New Listing
     - **Traded Asset** : `BTC`
     - **Traded Asset Precision**: `6`
