@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-import { Button, Form, Modal } from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 
 import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
 import { Template, Party } from '@daml/types';
@@ -83,6 +83,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
   const [token, setToken] = useState<string>();
   const [creatingRequest, setCreatingRequest] = useState(false);
+
   const [addedSuccessfully, setAddedSuccessfully] = useState(false);
 
   const customer = requestInfo?.customer;
@@ -142,7 +143,6 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
                 onFinish={success => {
                   setCreatingRequest(false);
                   onFinishCreatingRequest(success);
-                  // setRequestInfo({ ...requestInfo, accounts: undefined });
                 }}
               />
             </RequestsProvider>
@@ -284,7 +284,6 @@ const RequestForm = (props: {
     }
 
     const { customer, provider, services: requestServices } = requestInfo;
-    console.log(requestServices);
 
     if (!customer || !provider || !requestServices) {
       return;
@@ -401,24 +400,28 @@ const RequestForm = (props: {
           >
             {creatingRequest ? 'Creating Request...' : 'Request'}
           </Button>
-          {addedSuccessfully && (
-            <p className="message">
+          {addedSuccessfully ? (
+            <p className="p2 message">
               <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
             </p>
-          )}
-          {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
-            <p className="message">
-              <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
-              {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
-            </p>
+          ) : (
+            existingServices.length > 0 &&
+            requestInfo?.provider &&
+            requestInfo?.customer && (
+              <p className="p2 message">
+                <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
+                {itemListAsText(existingServices || [])} services to{' '}
+                {getName(requestInfo?.customer)}
+              </p>
+            )
           )}
         </Form>
         <div className="party-names">
           {services.map((s, i) => (
             <div className="party-name" key={i}>
               <p>
-                {s.contract.payload.provider} provides {s.service} service to{' '}
-                {s.contract.payload.customer}{' '}
+                {getName(s.contract.payload.provider)} provides {s.service} service to{' '}
+                {getName(s.contract.payload.customer)}{' '}
               </p>
             </div>
           ))}
@@ -431,26 +434,6 @@ const RequestForm = (props: {
           httpBaseUrl={httpBaseUrl}
           wsBaseUrl={wsBaseUrl}
         >
-          <Modal open={showAccountModal}>
-            {' '}
-            <Modal.Content>Test</Modal.Content>
-            <Button
-              className="ghost warning"
-              color="black"
-              onClick={() => {
-                const { services: requestServices } = requestInfo;
-                if (!!requestServices) {
-                  setRequestInfo({
-                    ...requestInfo,
-                    services: requestServices.filter(s => s !== ServiceKind.CLEARING),
-                  });
-                }
-                setShowAccountModal(false);
-              }}
-            >
-              Cancel
-            </Button>
-          </Modal>
           <AccountsForParty
             party={requestInfo.customer}
             setAccountsForParty={setAccountsForParty}

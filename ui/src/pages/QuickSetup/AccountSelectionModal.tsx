@@ -181,7 +181,9 @@ const AccountSelectionModal: React.FC<Props> = ({
         setOpen(false);
       }}
     >
-      <Modal.Header as="h2">{`Select Accounts for ${getName(party)} requesting from ${getName(serviceProvider || '')}`}</Modal.Header>
+      <Modal.Header as="h2">{`Select Accounts for ${getName(party)} requesting from ${getName(
+        serviceProvider || ''
+      )}`}</Modal.Header>
       <Modal.Content>
         {!custodyServices.length && (allocationAccountNeeded || accountNeeded) ? (
           <>This party must have at least one Custody service</>
