@@ -63,7 +63,6 @@ export interface IRequestServiceInfo {
   accounts?: AccountsForServices;
 }
 
-// without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
 const SUPPORTED_REQUESTS = [
   ServiceKind.MARKET_CLEARING,
   ServiceKind.LISTING,
