@@ -80,7 +80,6 @@ const AccountSelectionModal: React.FC<Props> = ({
     );
   }, [accountInfos]);
 
-  console.log(accountNamesState);
   const disabled = _.values(accountNamesState).reduce((acc, name) => acc || !name, false);
 
   const allocationAccountRules = accountsForParty?.allocAccounts || [];
@@ -171,20 +170,18 @@ const AccountSelectionModal: React.FC<Props> = ({
       open={open}
       onSubmit={() => {
         const accts = _.mapValues(accountInfos, (accountInfo, k) => {
-          console.log(accountNamesState);
           const account =
             accountInfo.accountType === AccountType.REGULAR
               ? accounts.find(a => a.id.label === accountNamesState[k])
               : allocationAccounts.find(a => a.id.label === accountNamesState[k]);
           return account;
         });
-        console.log('calling on finish');
         onFinish(accts);
         setAccountNamesState(emptyNamesState);
         setOpen(false);
       }}
     >
-      <Modal.Header as="h2">Select Accounts</Modal.Header>
+      <Modal.Header as="h2">{`Select Accounts for ${getName(party)} requesting from ${getName(serviceProvider || '')}`}</Modal.Header>
       <Modal.Content>
         {!custodyServices.length && (allocationAccountNeeded || accountNeeded) ? (
           <>This party must have at least one Custody service</>
