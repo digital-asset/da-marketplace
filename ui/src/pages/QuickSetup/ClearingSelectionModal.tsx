@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
+import { ServicePageProps, damlSetValues, makeDamlSet, createDropdownProp } from '../common';
 import { useStreamQueries } from '../../Main';
 import { Offer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {

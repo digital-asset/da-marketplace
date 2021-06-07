@@ -17,6 +17,7 @@ import { CreateEvent } from '@daml/ledger';
 import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
 import { Form } from 'semantic-ui-react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/module';
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
 
 enum AccountType {
   REGULAR = 'Regular',
@@ -26,9 +27,10 @@ enum AccountType {
 type Props = {
   party: Party;
   custodyServices?: Readonly<CreateEvent<CustodyService, any, any>[]> | undefined;
+  modal?: boolean;
 };
 
-const NewComponent: React.FC<Props> = ({ party, custodyServices }) => {
+const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 
@@ -133,13 +135,8 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices }) => {
         value: c.payload.provider,
       }));
 
-  return (
-    <ModalFormErrorHandled
-      onSubmit={() => requestAccount()}
-      title="New Account"
-      disabled={!canRequest}
-      button={false}
-    >
+  const fields = (
+    <>
       <Form.Select
         label="Operator"
         placeholder="Select..."
@@ -194,8 +191,21 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices }) => {
           setObservers(result.value);
         }}
       />
+    </>
+  );
+
+  return modal ? (
+    <ModalFormErrorHandled
+      onSubmit={() => requestAccount()}
+      title="New Account"
+      disabled={!canRequest}
+      button={false}
+    >
+      {fields}
     </ModalFormErrorHandled>
+  ) : (
+    <FormErrorHandled onSubmit={() => requestAccount()}>{fields}</FormErrorHandled>
   );
 };
 
-export const NewAccountModal = NewComponent;
+export const NewAccount = NewComponent;

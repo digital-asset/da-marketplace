@@ -65,9 +65,6 @@ const TradingSelectionModal: React.FC<Props> = ({
     .filter(c => damlSetValues(c.payload.observers).find(obs => obs === requestInfo.provider))
     .map(c => c.payload.account);
   const accountNames: DropdownItemProps[] = accounts.map(a => createDropdownProp(a.id.label));
-  console.log(`rules: ${assetSettlementRules}`);
-  console.log(assetSettlementRules);
-  console.log(accounts);
 
   const openAccountRequests = useStreamQueries(OpenAccountRequest).contracts.filter(rq =>
     damlSetValues(rq.payload.observers).find(obs => obs === requestInfo.provider)
