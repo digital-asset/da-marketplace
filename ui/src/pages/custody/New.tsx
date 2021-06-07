@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLedger, useParty } from '@daml/react';
+import { useLedger } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { usePartyName } from '../../config';
 import {
@@ -9,7 +9,7 @@ import {
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Party } from '@daml/types';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
-import { createDropdownProp, ServicePageProps, makeDamlSet } from '../common';
+import { createDropdownProp, makeDamlSet } from '../common';
 import { DropdownItemProps } from 'semantic-ui-react/dist/commonjs/modules/Dropdown/DropdownItem';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount/module';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -49,7 +49,7 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
     createDropdownProp(iden.payload.legalName, iden.payload.customer)
   );
 
-  const { contracts: servicesStream, loading: custodyLoading } = useStreamQueries(CustodyService);
+  const { contracts: servicesStream } = useStreamQueries(CustodyService);
   const customerCustodyServices = servicesStream.filter(cs => cs.payload.customer === party);
   const services = !!custodyServices ? servicesStream : customerCustodyServices;
 

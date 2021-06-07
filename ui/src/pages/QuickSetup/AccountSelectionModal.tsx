@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import ModalFormErrorHandled from '../../components/Form/ModalFormErrorHandled';
-import { ServicePageProps, damlSetValues, makeDamlSet, createDropdownProp } from '../common';
+import { damlSetValues, makeDamlSet, createDropdownProp } from '../common';
 import { useStreamQueries } from '../../Main';
-import { Offer } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import {
   Service,
   RequestOpenAccount,
@@ -17,9 +15,8 @@ import {
   OpenAccountRequest,
   OpenAllocationAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import { IRequestServiceInfo, PartyAccountsI } from './RequestServicesPage';
+import { IPartyAccounts } from './RequestServicesPage';
 import { Party } from '@daml/types';
-import { ServiceKind } from '../../context/ServicesContext';
 import _ from 'lodash';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
@@ -42,10 +39,10 @@ type Props = {
   serviceProvider?: Party;
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  accountsForParty?: PartyAccountsI;
+  accountsForParty?: IPartyAccounts;
   accountInfos: AccountInfos;
   onCancel: () => void;
-  onFinish: SetFunction
+  onFinish: SetFunction;
 };
 
 const AccountSelectionModal: React.FC<Props> = ({
@@ -58,7 +55,6 @@ const AccountSelectionModal: React.FC<Props> = ({
   onFinish,
   onCancel,
 }) => {
-  const [loading, setLoading] = useState(false);
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 
@@ -71,12 +67,20 @@ const AccountSelectionModal: React.FC<Props> = ({
     false
   );
 
-  const [accountNamesState, setAccountNamesState] = useState<NameMap>(
-    _.mapValues(accountInfos, () => {
-      return undefined;
-    })
-  );
+  const emptyNamesState = _.mapValues(accountInfos, () => {
+    return undefined;
+  });
+  const [accountNamesState, setAccountNamesState] = useState<NameMap>(emptyNamesState);
 
+  useEffect(() => {
+    setAccountNamesState(prev =>
+      _.mapValues(accountInfos, (_, key) => {
+        return prev[key] || undefined;
+      })
+    );
+  }, [accountInfos]);
+
+  console.log(accountNamesState);
   const disabled = _.values(accountNamesState).reduce((acc, name) => acc || !name, false);
 
   const allocationAccountRules = accountsForParty?.allocAccounts || [];
@@ -108,7 +112,7 @@ const AccountSelectionModal: React.FC<Props> = ({
   );
 
   const makeAccountName = (accountInfo: AccountInfo) =>
-    `${party}-${serviceProvider}-${accountInfo.accountLabel.replace(' ', '')}`;
+    `${party}-${serviceProvider}-${accountInfo.accountLabel.replace(/\s+/g, '')}`;
 
   const requestAccount = async (provider: string, accountInfo: AccountInfo) => {
     if (!serviceProvider) return;
@@ -116,7 +120,7 @@ const AccountSelectionModal: React.FC<Props> = ({
     if (!service) return;
     const accountId = {
       signatories: makeDamlSet([service.payload.provider, service.payload.customer]),
-      label: makeAccountName(accountInfo), // `${party}-${serviceProvider}-${accountInfo.accountLabel.replace(' ', '')}`,
+      label: makeAccountName(accountInfo),
       version: '0',
     };
 
@@ -176,6 +180,7 @@ const AccountSelectionModal: React.FC<Props> = ({
         });
         console.log('calling on finish');
         onFinish(accts);
+        setAccountNamesState(emptyNamesState);
         setOpen(false);
       }}
     >
@@ -237,6 +242,7 @@ const AccountSelectionModal: React.FC<Props> = ({
           onClick={() => {
             onCancel();
             setOpen(false);
+            setAccountNamesState(emptyNamesState);
           }}
         >
           Cancel
@@ -247,7 +253,6 @@ const AccountSelectionModal: React.FC<Props> = ({
           labelPosition="right"
           icon="checkmark"
           type="submit"
-          loading={loading}
           positive
         />
       </Modal.Actions>

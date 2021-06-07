@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
-import { Link } from 'react-router-dom';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;
@@ -64,7 +63,10 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
             {title}
           </Button>
         ) : (
-          <a onClick={e => e.stopPropagation()}>{title}</a>
+          // eslint-disable-next-line
+          <a href="#" onClick={e => e.stopPropagation()}>
+            {title}
+          </a>
         )
       }
     >
