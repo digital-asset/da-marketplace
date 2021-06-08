@@ -77,3 +77,20 @@ template Request
       Reject : ()
         do
           return ()
+
+template RequestServiceTermination
+  with
+    operator : Party
+    provider : Party
+    serviceCid  : ContractId Service
+  where
+    signatory provider
+
+    controller operator can
+      TerminateAccept: ()
+        do
+          archive serviceCid
+
+      TerminateDecline: ()
+        do
+          return ()

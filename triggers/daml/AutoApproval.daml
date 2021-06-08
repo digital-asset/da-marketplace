@@ -29,49 +29,55 @@ autoApprovalTrigger = Trigger
   { initialize = pure ()
   , updateState = \_ -> pure ()
   , rule = handleApprovalRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
-    , registeredTemplate @Operator.Role
-    , registeredTemplate @CustodyRole.Request
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator.Role
+    , registeredTemplate @CustodyRole.Role
+    , registeredTemplate @CustodyRole.Offer
+    , registeredTemplate @CustodyRole.RequestRoleTermination
     , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @CustodyService.Request
+    , registeredTemplate @CustodyService.Service
+    , registeredTemplate @Custody.OpenAccountRequest
+    , registeredTemplate @Custody.OpenAllocationAccountRequest
+    , registeredTemplate @Custody.CreditAccountRequest
+    , registeredTemplate @Custody.TransferDepositRequest
     , registeredTemplate @ClearingRole.Role
+    , registeredTemplate @ClearingRole.RequestRoleTermination
     , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
     , registeredTemplate @MarketClearingService.Request
-    , registeredTemplate @DistributionRole.Offer
-    , registeredTemplate @DistributionRole.Request
-    , registeredTemplate @IssuanceService.Offer
-    , registeredTemplate @ListingService.Offer
+    , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorRole.Offer
     , registeredTemplate @RegulatorRole.Request
-    , registeredTemplate @RegulatorRole.Role
+    , registeredTemplate @RegulatorRole.RequestRoleTermination
     , registeredTemplate @RegulatorService.Offer
     , registeredTemplate @RegulatorService.Request
     , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
     , registeredTemplate @SettlementService.Request
+    , registeredTemplate @SettlementService.RequestServiceTermination
+    , registeredTemplate @TradingRole.Role
     , registeredTemplate @TradingRole.Offer
     , registeredTemplate @TradingRole.Request
+    , registeredTemplate @TradingRole.RequestRoleTermination
+    , registeredTemplate @TradingService.Request
     , registeredTemplate @MatchingService.Offer
     , registeredTemplate @MatchingService.Request
-    , registeredTemplate @CustodyService.Request
-    , registeredTemplate @IssuanceService.Request
-    , registeredTemplate @CustodyRole.Role
-    , registeredTemplate @AuctionService.Request
-    , registeredTemplate @BiddingService.Request
-    , registeredTemplate @DistributionRole.Role
-    , registeredTemplate @TradingService.Request
+    , registeredTemplate @MatchingService.RequestServiceTermination
+    , registeredTemplate @ListingService.Offer
     , registeredTemplate @ListingService.Request
     , registeredTemplate @ListingService.CreateListingRequest
-    , registeredTemplate @TradingRole.Role
+    , registeredTemplate @IssuanceService.Offer
+    , registeredTemplate @IssuanceService.Request
+    , registeredTemplate @IssuanceService.Service
     , registeredTemplate @IssuanceService.OriginationRequest
     , registeredTemplate @IssuanceService.CreateIssuanceRequest
-    , registeredTemplate @IssuanceService.Service
-    , registeredTemplate @Custody.OpenAccountRequest
-    , registeredTemplate @Custody.OpenAllocationAccountRequest
-    , registeredTemplate @Custody.CreditAccountRequest
-    , registeredTemplate @Custody.TransferDepositRequest
-    , registeredTemplate @CustodyService.Service
+    , registeredTemplate @DistributionRole.Offer
+    , registeredTemplate @DistributionRole.Request
+    , registeredTemplate @DistributionRole.Role
+    , registeredTemplate @DistributionRole.RequestRoleTermination
+    , registeredTemplate @BiddingService.Request
+    , registeredTemplate @AuctionService.Request
     , registeredTemplate @AuctionService.Service
     , registeredTemplate @AuctionService.CreateAuctionRequest ]
   , heartbeat = None
@@ -198,6 +204,23 @@ handleApprovalRule party = do
   submitCommands $
     generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
 
+  -- Process role termination requests
+  terminateCustodyRole       <- queryByParty @CustodyRole.RequestRoleTermination          (.operator)
+  terminateClearingRole      <- queryByParty @ClearingRole.RequestRoleTermination         (.operator)
+  terminateDistributionRole  <- queryByParty @DistributionRole.RequestRoleTermination     (.operator)
+  terminateRegulatorRole     <- queryByParty @RegulatorRole.RequestRoleTermination        (.operator)
+  terminateTradingRole       <- queryByParty @TradingRole.RequestRoleTermination          (.operator)
+  terminateSettlementService <- queryByParty @SettlementService.RequestServiceTermination (.operator)
+  terminateMatchingService   <- queryByParty @MatchingService.RequestServiceTermination   (.operator)
+
+  submitCommands $
+    generateCommands CustodyRole.TerminateAccept       terminateCustodyRole       ++
+    generateCommands ClearingRole.TerminateAccept      terminateClearingRole      ++
+    generateCommands DistributionRole.TerminateAccept  terminateDistributionRole  ++
+    generateCommands RegulatorRole.TerminateAccept     terminateRegulatorRole     ++
+    generateCommands TradingRole.TerminateAccept       terminateTradingRole       ++
+    generateCommands SettlementService.TerminateAccept terminateSettlementService ++
+    generateCommands MatchingService.TerminateAccept   terminateMatchingService
 
 -- | Generates exersise commands for a specific choice on multiple contracts which expose that choice
 generateCommands : forall t c r. Choice t c r => c -> [(ContractId t, t)] -> [(AnyContractId, Command)]

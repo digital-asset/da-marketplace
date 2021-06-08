@@ -147,7 +147,7 @@ const Landing = () => {
   const providers = useProviderServices(party);
   const roles = useRolesContext()
     .roles.filter(r => r.contract.payload.provider === party)
-    .map(r => r.role);
+    .map(r => r.roleKind);
 
   const roleRequests = useRoleRequestKinds();
 
