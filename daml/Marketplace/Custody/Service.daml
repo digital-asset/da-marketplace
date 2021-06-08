@@ -11,7 +11,6 @@ import DA.Set
 import Marketplace.Issuance.AssetDescription (Claims)
 import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
 import Marketplace.Custody.Model qualified as Custody
-
 import Marketplace.Utils
 
 template Service
