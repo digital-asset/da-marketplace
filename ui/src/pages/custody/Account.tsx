@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
@@ -18,7 +18,6 @@ import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { halfSecondPromise } from '../page/utils';
 import paths from '../../paths';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
@@ -38,40 +37,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     useStreamQueries(AllocationAccountRule);
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const addSignatoryAsDepositObserver = useCallback(
-    async (deposit: CreateEvent<AssetDeposit>, newObs: string[]) => {
-      const newObservers = makeDamlSet([...deposit.observers, ...newObs]);
-
-      await ledger.exercise(AssetDeposit.AssetDeposit_SetObservers, deposit.contractId, {
-        newObservers,
-      });
-    },
-    [ledger]
-  );
-
-  const updateDeposits = useCallback(
-    async (retries: number): Promise<void[]> => {
-      if (retries > 0) {
-        await halfSecondPromise();
-        return updateDeposits(retries - 1);
-      }
-
-      const addSignatoryExercises = deposits.map(d => {
-        const newObservers = damlSetValues(d.payload.asset.id.signatories).filter(signatory => {
-          return !d.observers.includes(signatory);
-        });
-
-        if (newObservers.length > 0) {
-          return addSignatoryAsDepositObserver(d, newObservers);
-        }
-        return undefined;
-      });
-
-      return Promise.all(addSignatoryExercises);
-    },
-    [deposits, addSignatoryAsDepositObserver]
-  );
 
   const allAccounts = useMemo(
     () =>

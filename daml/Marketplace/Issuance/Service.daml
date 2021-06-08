@@ -1,10 +1,11 @@
 module Marketplace.Issuance.Service where
 
 import DA.Finance.Asset
+import DA.Finance.Asset qualified as AssetDeposit
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Map qualified as Map
-import DA.Set (Set, fromList)
+import DA.Set (Set, fromList, union)
 import Marketplace.Issuance.Model (Issuance(..))
 import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
@@ -89,6 +90,8 @@ template Service
 
           let asset = Asset with id = assetId; quantity
           depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+          deposit    <- fetch depositCid
+          depositCid <- exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.asset.id.signatories `union` deposit.observers
           pure (issuanceCid, depositCid)
 
       nonconsuming ReduceIssuance : ContractId Issuance
