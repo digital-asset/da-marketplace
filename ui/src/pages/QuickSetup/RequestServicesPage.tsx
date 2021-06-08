@@ -252,10 +252,10 @@ const RequestForm = (props: {
           setModalAccountInfos({
             auctionAccount: {
               accountType: AccountType.REGULAR,
-              accountLabel: 'Auction Trading Account',
+              accountLabel: 'Main Auction Account',
             },
             auctionAllocAccount: {
-              accountType: AccountType.REGULAR,
+              accountType: AccountType.ALLOCATION,
               accountLabel: 'Locked Auction Account',
             },
             receivableAccount: {
@@ -342,7 +342,6 @@ const RequestForm = (props: {
       nextItem={MenuItems.REVIEW}
       title="Request Services"
     >
-      <div className="page-row"></div>
       <div className="page-row">
         <Form>
           <Form.Select

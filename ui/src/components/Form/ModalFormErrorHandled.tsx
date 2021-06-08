@@ -17,7 +17,7 @@ type Props = {
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
   disabled?: boolean;
-  button?: boolean;
+  trigger?: JSX.Element;
 };
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
@@ -25,7 +25,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   children,
   onSubmit,
   disabled,
-  button,
+  trigger,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -58,15 +58,10 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onOpen={() => setOpen(true)}
       open={open}
       trigger={
-        button ? (
-          <Button as="link" className="ghost" onClick={e => e.stopPropagation()}>
+        trigger || (
+          <Button className="ghost">
             {title}
           </Button>
-        ) : (
-          // eslint-disable-next-line
-          <a href="#" onClick={e => e.stopPropagation()}>
-            {title}
-          </a>
         )
       }
     >

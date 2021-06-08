@@ -26,7 +26,7 @@ enum AccountType {
 
 type Props = {
   party: Party;
-  custodyServices?: Readonly<CreateEvent<CustodyService, any, any>[]> | undefined;
+  custodyServices?: Readonly<CreateEvent<CustodyService>[]> | undefined;
   modal?: boolean;
 };
 
@@ -117,7 +117,7 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
     .reduce(
       (acc, cur) =>
         acc.find(a => a.payload.operator === cur.payload.operator) ? acc : [...acc, cur],
-      [] as CreateEvent<Service, any, any>[]
+      [] as CreateEvent<Service>[]
     )
     .map((c, i) => ({
       key: i,
@@ -199,7 +199,6 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
       onSubmit={() => requestAccount()}
       title="New Account"
       disabled={!canRequest}
-      button={false}
     >
       {fields}
     </ModalFormErrorHandled>
