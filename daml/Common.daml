@@ -68,13 +68,13 @@ onboardProviders = do
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
   -- Roles
-  operatorRoleCid           <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
+  operatorRoleCid <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
 
-  custodianRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
-  custodianRoleCid          <- submit bank      do exerciseCmd custodianRoleOfferCid Custodian.Accept
+  custodianRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferCustodianRole with provider = bank
+  (custodianRoleCid, issuanceServiceCid, custodyServiceCid)  <- submit bank  do exerciseCmd custodianRoleOfferCid Custodian.Accept
 
   exchangeRoleOfferCid  <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferExchangeRole with provider = exchange
-  (exchangeRoleCid, matchingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
+  (exchangeRoleCid, matchingServiceCid, listingServiceCid, settlementServiceCid) <- submit exchange  do exerciseCmd exchangeRoleOfferCid Exchange.Accept
 
   distributorRoleOfferCid   <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferDistributorRole with provider = bank
   distributorRoleCid        <- submit bank      do exerciseCmd distributorRoleOfferCid Distributor.Accept
@@ -113,8 +113,7 @@ onboardProviders = do
   submit bank do exerciseCmd custodyServiceCid Custody.OpenAccount with openAccountRequestCid = openAccountRequestCid
 
   clearingRoleOfferCid  <- submit operator do exerciseCmd operatorRoleCid Operator.OfferClearingRole with provider = clearinghouse
-  clearingRoleCid       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
-
+  (clearingRoleCid, marketServiceCid)       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
   pure Providers with ..
 
 onboardCustomer : Providers -> Text -> Script Customer

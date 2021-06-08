@@ -79,11 +79,13 @@ template Offer
     signatory operator
 
     controller provider can
-      Accept : ContractId Role
+      Accept : (ContractId Role, ContractId Market.Service)
         with
           ccpAccount : Account
         do
-          createOrLookup Role with ..
+          marketCid <- createOrLookup Market.Service with customer = provider, ..
+          roleCid   <- createOrLookup Role with ..
+          return (roleCid, marketCid)
 
       Decline : ()
         do
@@ -98,11 +100,13 @@ template Request
     signatory provider
 
     controller operator can
-      Approve : ContractId Role
+      Approve : (ContractId Role, ContractId Market.Service)
         with
           observers : Set Party
         do
-          createOrLookup Role with ..
+          marketCid <- createOrLookup Market.Service with customer = provider, ..
+          roleCid   <- createOrLookup Role with ..
+          return (roleCid, marketCid)
 
       Reject : ()
         do

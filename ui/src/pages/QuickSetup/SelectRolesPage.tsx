@@ -4,6 +4,7 @@ import classNames from 'classnames';
 
 import DamlLedger, { useLedger } from '@daml/react';
 import { CreateEvent } from '@daml/ledger';
+import { Choice, ContractId } from '@daml/types';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
@@ -132,8 +133,6 @@ const DragAndDropRoles = () => {
   );
 
   async function createRoleContract(partyId: string, token: string, role: string) {
-    const operatorServiceContract = operatorService[0];
-
     if (
       findExistingRoleOffer(partyId, role as RoleKind) ||
       findExistingRole(partyId, role as RoleKind)
@@ -145,60 +144,40 @@ const DragAndDropRoles = () => {
 
     switch (role) {
       case RoleKind.CUSTODY:
-        await ledger.exercise(
-          OperatorService.OfferCustodianRole,
-          operatorServiceContract.contractId,
-          provider
-        );
+        doCreate(OperatorService.OfferCustodianRole, provider);
         return;
       case RoleKind.CLEARING:
-        await ledger.exercise(
-          OperatorService.OfferClearingRole,
-          operatorServiceContract.contractId,
-          provider
-        );
-        if (isHubDeployment) {
-          handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
-        }
+        doCreate(OperatorService.OfferClearingRole, provider);
+        handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
         return;
-
       case RoleKind.TRADING:
-        await ledger.exercise(
-          OperatorService.OfferExchangeRole,
-          operatorServiceContract.contractId,
-          provider
-        );
-        if (isHubDeployment) {
-          handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
-        }
+        doCreate(OperatorService.OfferExchangeRole, provider);
+        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
         return;
-
       case RoleKind.SETTLEMENT:
-        await ledger.exercise(
-          OperatorService.OfferSettlementService,
-          operatorServiceContract.contractId,
-          provider
-        );
-
-        if (isHubDeployment) {
-          handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
-        }
+        doCreate(OperatorService.OfferSettlementService, provider);
+        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
         return;
-
       case RoleKind.DISTRIBUTION:
-        await ledger.exercise(
-          OperatorService.OfferDistributorRole,
-          operatorServiceContract.contractId,
-          provider
-        );
+        doCreate(OperatorService.OfferDistributorRole, provider);
         return;
-
       default:
         throw new Error(`Unsupported role: ${role}`);
     }
   }
 
+  async function doCreate(
+    choice: Choice<OperatorService, any, ContractId<any>, string>,
+    provider: { provider: string }
+  ) {
+    const operatorServiceContract = operatorService[0];
+    return await ledger.exercise(choice, operatorServiceContract.contractId, provider);
+  }
+
   async function handleDeployment(token: string, autoName: string) {
+    if (!isHubDeployment) {
+      return;
+    }
     const trigger = allTriggers.find(auto => auto.startsWith(autoName));
 
     if (trigger) {
@@ -280,8 +259,9 @@ const PartyRowDropZone = (props: {
 
   const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
   const [dragCount, setDragCount] = useState(0);
-
-  const token = parties.find(p => p.party === party.payload.customer)?.token;
+  const token = isHubDeployment
+    ? parties.find(p => p.party === party.payload.customer)?.token
+    : computeToken(party.payload.customer);
 
   const roles = allRoles.filter(r => r.contract.payload.provider === party.payload.customer);
 
