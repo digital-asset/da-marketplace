@@ -89,7 +89,7 @@ test-daml:
 	daml test --junit da-marketplace-test-report.xml
 
 .PHONY: test
-test: test-daml test-ui
+test: test-daml
 	./scripts/verify-versions.sh
 
 ### *-=- Release -=-*
