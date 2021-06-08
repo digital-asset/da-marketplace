@@ -15,7 +15,7 @@ import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
 import InfoCard from '../../components/Common/InfoCard';
 import Tile from '../../components/Tile/Tile';
-import { ServicePageProps, damlSetValues, makeDamlSet } from '../common';
+import { ServicePageProps, damlSetValues } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import paths from '../../paths';
@@ -33,8 +33,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const cid = contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
-  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
-    useStreamQueries(AllocationAccountRule);
+  const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } = useStreamQueries(
+    AllocationAccountRule
+  );
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
