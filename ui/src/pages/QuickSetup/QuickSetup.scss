@@ -1,4 +1,4 @@
-@use './themes/variables.scss' as *;
+@use 'themes/variables' as *;
 
 @mixin quick-setup {
   .quick-setup {
@@ -240,8 +240,6 @@
           p:hover,
           .ui.basic.label:hover {
             cursor: pointer;
-            // border: 1px solid var(--cool-grey-20);
-            // background-color: red;
           }
         }
 

@@ -28,7 +28,7 @@ import {
   deployAutomation,
 } from '../../automation';
 import { retrieveParties } from '../../Parties';
-import Credentials from '../../Credentials';
+import Credentials, { computeToken } from '../../Credentials';
 import {
   httpBaseUrl,
   wsBaseUrl,
@@ -38,7 +38,7 @@ import {
 } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
 import { LoadingWheel, MenuItems } from './QuickSetup';
-import { Label, Icon } from 'semantic-ui-react';
+import { Label, Icon, Loader } from 'semantic-ui-react';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -86,7 +86,9 @@ const DragAndDropRoles = () => {
     }) || [];
 
   const roleOptions = Object.values(RoleKind)
-    .filter(s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING)
+    .filter(
+      s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING && s !== RoleKind.CLEARING_PENDING
+    )
     .map(i => {
       return { name: i, value: i };
     });
@@ -239,6 +241,34 @@ const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
   );
 };
 
+const ServiceLabelLedger: React.FC<{ role: Role }> = ({ role }) => {
+  const [token, setToken] = useState('');
+  const [party, setParty] = useState('');
+
+  useEffect(() => {
+    const parties = retrieveParties();
+    const party = role.contract.payload.provider;
+    const token = isHubDeployment
+      ? parties?.find(p => p.party === party)?.token
+      : computeToken(party);
+
+    if (party && token) {
+      setParty(party);
+      setToken(token);
+    }
+  }, [role]);
+
+  if (!token || !party) {
+    return <Loader active inline size="mini" />;
+  }
+
+  return (
+    <DamlLedger token={token} party={party} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
+      <ServiceLabel role={role} />
+    </DamlLedger>
+  );
+};
+
 const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
   handleAddItem: (party: string, token: string, item: string | RoleKind) => void;
@@ -286,7 +316,7 @@ const PartyRowDropZone = (props: {
           <div className="dropped-items">
             {roles.map((r, i) => [
               i > 0 && ', ',
-              <ServiceLabel key={r.contract.contractId} role={r} />,
+              <ServiceLabelLedger key={r.contract.contractId} role={r} />,
             ])}
           </div>
         </div>
