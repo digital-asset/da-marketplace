@@ -226,6 +226,9 @@
           display: inline-block;
 
           .ui.basic.label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 0 $spacing-xs;
             margin: 0;
             line-height: inherit;
@@ -234,7 +237,12 @@
             box-shadow: none;
             font-size: 12px;
             font-family: 'Open sans';
-            color: var(--text-color) !important;
+            font-weight: normal;
+            color: var(--cool-grey-50);
+
+            .icon {
+              opacity: unset;
+            }
           }
 
           p {

@@ -35,6 +35,12 @@ template Role
         do
           archive regulatorServiceCid
 
+    controller operator can
+
+      TerminateRole : ()
+        do
+          return ()
+
 template Offer
   with
     operator : Party
@@ -67,22 +73,5 @@ template Request
           createOrLookup Role with ..
 
       Reject : ()
-        do
-          return ()
-
-template RequestRoleTermination
-  with
-    operator : Party
-    provider : Party
-    roleCid  : ContractId Role
-  where
-    signatory provider
-
-    controller operator can
-      TerminateAccept: ()
-        do
-          archive roleCid
-
-      TerminateDecline: ()
         do
           return ()

@@ -32,7 +32,6 @@ autoApprovalTrigger = Trigger
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator.Role
     , registeredTemplate @CustodyRole.Role
     , registeredTemplate @CustodyRole.Offer
-    , registeredTemplate @CustodyRole.RequestRoleTermination
     , registeredTemplate @CustodyService.Offer
     , registeredTemplate @CustodyService.Request
     , registeredTemplate @CustodyService.Service
@@ -41,29 +40,24 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @Custody.CreditAccountRequest
     , registeredTemplate @Custody.TransferDepositRequest
     , registeredTemplate @ClearingRole.Role
-    , registeredTemplate @ClearingRole.RequestRoleTermination
     , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
     , registeredTemplate @MarketClearingService.Request
     , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorRole.Offer
     , registeredTemplate @RegulatorRole.Request
-    , registeredTemplate @RegulatorRole.RequestRoleTermination
     , registeredTemplate @RegulatorService.Offer
     , registeredTemplate @RegulatorService.Request
     , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
     , registeredTemplate @SettlementService.Request
-    , registeredTemplate @SettlementService.RequestServiceTermination
     , registeredTemplate @TradingRole.Role
     , registeredTemplate @TradingRole.Offer
     , registeredTemplate @TradingRole.Request
-    , registeredTemplate @TradingRole.RequestRoleTermination
     , registeredTemplate @TradingService.Request
     , registeredTemplate @MatchingService.Offer
     , registeredTemplate @MatchingService.Request
-    , registeredTemplate @MatchingService.RequestServiceTermination
     , registeredTemplate @ListingService.Offer
     , registeredTemplate @ListingService.Request
     , registeredTemplate @ListingService.CreateListingRequest
@@ -75,7 +69,6 @@ autoApprovalTrigger = Trigger
     , registeredTemplate @DistributionRole.Offer
     , registeredTemplate @DistributionRole.Request
     , registeredTemplate @DistributionRole.Role
-    , registeredTemplate @DistributionRole.RequestRoleTermination
     , registeredTemplate @BiddingService.Request
     , registeredTemplate @AuctionService.Request
     , registeredTemplate @AuctionService.Service
@@ -203,24 +196,6 @@ handleApprovalRule party = do
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)
   submitCommands $
     generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
-
-  -- Process role termination requests
-  terminateCustodyRole       <- queryByParty @CustodyRole.RequestRoleTermination          (.operator)
-  terminateClearingRole      <- queryByParty @ClearingRole.RequestRoleTermination         (.operator)
-  terminateDistributionRole  <- queryByParty @DistributionRole.RequestRoleTermination     (.operator)
-  terminateRegulatorRole     <- queryByParty @RegulatorRole.RequestRoleTermination        (.operator)
-  terminateTradingRole       <- queryByParty @TradingRole.RequestRoleTermination          (.operator)
-  terminateSettlementService <- queryByParty @SettlementService.RequestServiceTermination (.operator)
-  terminateMatchingService   <- queryByParty @MatchingService.RequestServiceTermination   (.operator)
-
-  submitCommands $
-    generateCommands CustodyRole.TerminateAccept       terminateCustodyRole       ++
-    generateCommands ClearingRole.TerminateAccept      terminateClearingRole      ++
-    generateCommands DistributionRole.TerminateAccept  terminateDistributionRole  ++
-    generateCommands RegulatorRole.TerminateAccept     terminateRegulatorRole     ++
-    generateCommands TradingRole.TerminateAccept       terminateTradingRole       ++
-    generateCommands SettlementService.TerminateAccept terminateSettlementService ++
-    generateCommands MatchingService.TerminateAccept   terminateMatchingService
 
 -- | Generates exersise commands for a specific choice on multiple contracts which expose that choice
 generateCommands : forall t c r. Choice t c r => c -> [(ContractId t, t)] -> [(AnyContractId, Command)]

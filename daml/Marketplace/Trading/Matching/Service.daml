@@ -46,6 +46,10 @@ template Service
             let clearinghouse = makerOrder.collateral.clearinghouse
             Cleared <$> create Clearing.ClearedTrade with ..
 
+    controller operator can
+      Terminate : ()
+        do return ()
+
 template Offer
   with
     operator : Party
@@ -75,22 +79,5 @@ template Request
           createOrLookup Service with ..
 
       Reject : ()
-        do
-          return ()
-
-template RequestServiceTermination
-  with
-    operator : Party
-    provider : Party
-    serviceCid  : ContractId Service
-  where
-    signatory provider
-
-    controller operator can
-      TerminateAccept: ()
-        do
-          archive serviceCid
-
-      TerminateDecline: ()
         do
           return ()

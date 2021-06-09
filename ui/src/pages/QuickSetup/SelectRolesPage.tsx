@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -21,7 +21,7 @@ import { AutomationProvider, useAutomations } from '../../context/AutomationCont
 
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
-import { ArrowLeftIcon } from '../../icons/icons';
+import { ArrowLeftIcon, IconClose } from '../../icons/icons';
 import {
   PublishedInstance,
   getAutomationInstances,
@@ -39,7 +39,7 @@ import {
 } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
 import { LoadingWheel, MenuItems } from './QuickSetup';
-import { Label, Icon, Loader } from 'semantic-ui-react';
+import { Label } from 'semantic-ui-react';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -200,52 +200,27 @@ const DragAndDropRoles = () => {
 
 const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
   const [hovering, setHovering] = useState(false);
+  const divRef = useRef<HTMLDivElement | null>(null);
 
   const ledger = useLedger();
 
   return (
     <div
+      ref={divRef}
       className="service-label"
       onMouseOver={() => setHovering(true)}
       onMouseEnter={() => setHovering(true)}
       onMouseOut={() => setHovering(false)}
+      onMouseLeave={() => setHovering(false)}
     >
       {hovering ? (
         <Label basic onClick={() => terminateRole(role, ledger)}>
-          {role.roleKind} <Icon name="close" />
+          {role.roleKind} <IconClose />
         </Label>
       ) : (
         <p>{role.roleKind}</p>
       )}
     </div>
-  );
-};
-
-const ServiceLabelLedger: React.FC<{ role: Role }> = ({ role }) => {
-  const [token, setToken] = useState('');
-  const [party, setParty] = useState('');
-
-  useEffect(() => {
-    const parties = retrieveParties();
-    const party = role.contract.payload.provider;
-    const token = isHubDeployment
-      ? parties?.find(p => p.party === party)?.token
-      : computeToken(party);
-
-    if (party && token) {
-      setParty(party);
-      setToken(token);
-    }
-  }, [role]);
-
-  if (!token || !party) {
-    return <Loader active inline size="mini" />;
-  }
-
-  return (
-    <DamlLedger token={token} party={party} httpBaseUrl={httpBaseUrl} wsBaseUrl={wsBaseUrl}>
-      <ServiceLabel role={role} />
-    </DamlLedger>
   );
 };
 
@@ -297,7 +272,7 @@ const PartyRowDropZone = (props: {
           <div className="dropped-items">
             {roles.map((r, i) => [
               i > 0 && ', ',
-              <ServiceLabelLedger key={r.contract.contractId} role={r} />,
+              <ServiceLabel key={r.contract.contractId} role={r} />,
             ])}
           </div>
         </div>

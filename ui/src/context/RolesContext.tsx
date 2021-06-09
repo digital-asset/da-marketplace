@@ -6,38 +6,29 @@ import {
   Role as ClearingRole,
   Request as ClearingRequest,
   Offer as ClearingOffer,
-  RequestRoleTermination as ClearingRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import {
   Role as CustodianRole,
   Request as CustodianRequest,
-  RequestRoleTermination as CustodianRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import {
   Role as DistributorRole,
   Request as DistributorRequest,
-  RequestRoleTermination as DistributorRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
 import {
   Service as SettlementService,
   Request as SettlementRequest,
-  RequestServiceTermination as SettlementRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Settlement/Service';
 import {
   Role as ExchangeRole,
   Request as ExchangeRequest,
-  RequestRoleTermination as ExchangeRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import {
   Service as MatchingService,
   Request as MatchingRequest,
-  RequestServiceTermination as MatchingRequestTermination,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Matching/Service';
 
-import {
-  Role as RegulatorRole,
-  RequestRoleTermination as RegulatorRequestTermination,
-} from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
+import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import { useStreamQueries } from '../Main';
 import { Template, Party, ContractId } from '@daml/types';
@@ -79,60 +70,31 @@ export type Role = {
 
 export const terminateRole = async (role: Role, ledger: Ledger) => {
   const cid = role.contract.contractId;
-  const { operator, provider } = role.contract.payload;
 
   switch (role.roleKind) {
     case RoleKind.CLEARING:
-      ledger.create(ClearingRequestTermination, {
-        operator,
-        provider,
-        roleCid: cid as ContractId<ClearingRole>,
-      });
+      ledger.exercise(ClearingRole.TerminateRole, cid, {});
       break;
     case RoleKind.CLEARING_PENDING:
       ledger.archive(ClearingOffer, cid as ContractId<ClearingOffer>);
       break;
     case RoleKind.CUSTODY:
-      ledger.create(CustodianRequestTermination, {
-        operator,
-        provider,
-        roleCid: cid as ContractId<CustodianRole>,
-      });
+      ledger.exercise(CustodianRole.TerminateRole, cid, {});
       break;
     case RoleKind.TRADING:
-      ledger.create(ExchangeRequestTermination, {
-        operator,
-        provider,
-        roleCid: cid as ContractId<ExchangeRole>,
-      });
+      ledger.exercise(ExchangeRole.TerminateRole, cid, {});
       break;
     case RoleKind.DISTRIBUTION:
-      ledger.create(DistributorRequestTermination, {
-        operator,
-        provider,
-        roleCid: cid as ContractId<DistributorRole>,
-      });
+      ledger.exercise(DistributorRole.TerminateRole, cid, {});
       break;
     case RoleKind.REGULATOR:
-      ledger.create(RegulatorRequestTermination, {
-        operator,
-        provider,
-        roleCid: cid as ContractId<RegulatorRole>,
-      });
+      ledger.exercise(RegulatorRole.TerminateRole, cid, {});
       break;
     case RoleKind.SETTLEMENT:
-      ledger.create(SettlementRequestTermination, {
-        operator,
-        provider,
-        serviceCid: cid as ContractId<SettlementService>,
-      });
+      ledger.exercise(SettlementService.Terminate, cid, {});
       break;
     case RoleKind.MATCHING:
-      ledger.create(MatchingRequestTermination, {
-        operator,
-        provider,
-        serviceCid: cid as ContractId<MatchingService>,
-      });
+      ledger.exercise(MatchingService.Terminate, cid, {});
       break;
     default:
       throw new Error(`Unsupported Role Kind ${role.roleKind}`);
