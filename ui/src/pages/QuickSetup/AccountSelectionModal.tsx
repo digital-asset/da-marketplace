@@ -162,7 +162,6 @@ const AccountSelectionModal: React.FC<Props> = ({
           onClick={() => {
             onCancel();
             setOpen(false);
-            // setAccountNamesState(emptyNamesState);
           }}
         >
           Cancel
