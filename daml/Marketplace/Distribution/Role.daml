@@ -55,8 +55,7 @@ template Role
           archive biddingServiceCid
 
     controller operator can
-
-      TerminateRole : ()
+      Terminate : ()
         do
           return ()
 

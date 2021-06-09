@@ -73,22 +73,22 @@ export const terminateRole = async (role: Role, ledger: Ledger) => {
 
   switch (role.roleKind) {
     case RoleKind.CLEARING:
-      ledger.exercise(ClearingRole.TerminateRole, cid, {});
+      ledger.exercise(ClearingRole.Terminate, cid, {});
       break;
     case RoleKind.CLEARING_PENDING:
       ledger.archive(ClearingOffer, cid as ContractId<ClearingOffer>);
       break;
     case RoleKind.CUSTODY:
-      ledger.exercise(CustodianRole.TerminateRole, cid, {});
+      ledger.exercise(CustodianRole.Terminate, cid, {});
       break;
     case RoleKind.TRADING:
-      ledger.exercise(ExchangeRole.TerminateRole, cid, {});
+      ledger.exercise(ExchangeRole.Terminate, cid, {});
       break;
     case RoleKind.DISTRIBUTION:
-      ledger.exercise(DistributorRole.TerminateRole, cid, {});
+      ledger.exercise(DistributorRole.Terminate, cid, {});
       break;
     case RoleKind.REGULATOR:
-      ledger.exercise(RegulatorRole.TerminateRole, cid, {});
+      ledger.exercise(RegulatorRole.Terminate, cid, {});
       break;
     case RoleKind.SETTLEMENT:
       ledger.exercise(SettlementService.Terminate, cid, {});
@@ -149,30 +149,12 @@ const RolesProvider: React.FC = ({ children }) => {
   useEffect(
     () =>
       setRoles([
-        ...clearingRoles.map(c => ({
-          contract: c,
-          roleKind: RoleKind.CLEARING,
-        })),
-        ...custodianRoles.map(c => ({
-          contract: c,
-          roleKind: RoleKind.CUSTODY,
-        })),
-        ...exchangeRoles.map(c => ({
-          contract: c,
-          roleKind: RoleKind.TRADING,
-        })),
-        ...distributorRoles.map(c => ({
-          contract: c,
-          roleKind: RoleKind.DISTRIBUTION,
-        })),
-        ...settlementServices.map(c => ({
-          contract: c,
-          roleKind: RoleKind.SETTLEMENT,
-        })),
-        ...matchingServices.map(c => ({
-          contract: c,
-          roleKind: RoleKind.MATCHING,
-        })),
+        ...clearingRoles.map(c => ({ contract: c, roleKind: RoleKind.CLEARING })),
+        ...custodianRoles.map(c => ({ contract: c, roleKind: RoleKind.CUSTODY })),
+        ...exchangeRoles.map(c => ({ contract: c, roleKind: RoleKind.TRADING })),
+        ...distributorRoles.map(c => ({ contract: c, roleKind: RoleKind.DISTRIBUTION })),
+        ...settlementServices.map(c => ({ contract: c, roleKind: RoleKind.SETTLEMENT })),
+        ...matchingServices.map(c => ({ contract: c, roleKind: RoleKind.MATCHING })),
       ]),
     [
       clearingRoles,

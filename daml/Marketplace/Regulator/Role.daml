@@ -36,8 +36,7 @@ template Role
           archive regulatorServiceCid
 
     controller operator can
-
-      TerminateRole : ()
+      Terminate : ()
         do
           return ()
 
