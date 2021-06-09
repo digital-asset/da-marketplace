@@ -1,6 +1,7 @@
 module Marketplace.Custody.Service where
 
 import DA.Finance.Asset
+import qualified DA.Finance.Asset as AssetDeposit
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 import DA.Finance.Utils (fetchAndArchive)
@@ -115,7 +116,9 @@ template Service
           creditAccountRequestCid : ContractId Custody.CreditAccountRequest
         do
           Custody.CreditAccountRequest{accountId; asset} <- fetchAndArchive creditAccountRequestCid
-          exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+          depositCid <- exerciseByKey @AssetSettlementRule accountId AssetSettlement_Credit with ctrl = provider; ..
+          deposit <- fetch depositCid
+          exercise depositCid AssetDeposit.AssetDeposit_SetObservers with newObservers = deposit.asset.id.signatories `union` deposit.observers
 
       nonconsuming DebitAccount : Asset
         with
