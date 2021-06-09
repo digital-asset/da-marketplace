@@ -132,7 +132,7 @@ const DragAndDropRoles = () => {
     </QuickSetupPage>
   );
 
-  async function createRoleContract(partyId: string, token: string, role: string) {
+  async function createRoleContract(partyId: string, token: string, role: RoleKind) {
     if (
       findExistingRoleOffer(partyId, role as RoleKind) ||
       findExistingRole(partyId, role as RoleKind)
@@ -206,6 +206,7 @@ const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
   return (
     <div
       className="service-label"
+      onMouseOver={() => setHovering(true)}
       onMouseEnter={() => setHovering(true)}
       onMouseOut={() => setHovering(false)}
     >
@@ -250,7 +251,7 @@ const ServiceLabelLedger: React.FC<{ role: Role }> = ({ role }) => {
 
 const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
-  handleAddItem: (party: string, token: string, item: string | RoleKind) => void;
+  handleAddItem: (party: string, token: string, item: RoleKind) => void;
 }) => {
   const { party, handleAddItem } = props;
   const { roleOffers } = useOffers();
@@ -285,7 +286,7 @@ const PartyRowDropZone = (props: {
   return (
     <div
       className={classNames('party-name page-row', { 'drag-over': dragCount > 0 })}
-      onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as string)}
+      onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as RoleKind)}
       onDragEnter={_ => setDragCount(dragCount + 1)}
       onDragLeave={_ => setDragCount(dragCount - 1)}
       onDragOver={evt => evt.preventDefault()}
@@ -314,7 +315,7 @@ const PartyRowDropZone = (props: {
     );
   }
 
-  function handleDrop(item: string) {
+  function handleDrop(item: RoleKind) {
     setDragCount(dragCount - 1);
     if (token) {
       handleAddItem(party.payload.customer, token, item);
