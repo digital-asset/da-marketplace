@@ -36,7 +36,9 @@ const TitleWithActions: React.FC<Params> = ({ iconActions, otherActions, title, 
           <OverflowMenuEntry key={a.path} label={a.label} onClick={() => history.push(a.path)} />
         ))}
       </OverflowMenu>
+      <div className="children">
       {children}
+    </div>
     </div>
   );
 };

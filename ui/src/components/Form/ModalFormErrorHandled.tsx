@@ -17,6 +17,7 @@ type Props = {
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
   disabled?: boolean;
+  trigger?: JSX.Element;
 };
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
@@ -24,6 +25,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   children,
   onSubmit,
   disabled,
+  trigger,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -56,9 +58,11 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onOpen={() => setOpen(true)}
       open={open}
       trigger={
-        <Button className="ghost" onClick={e => e.stopPropagation()}>
-          {title}
-        </Button>
+        trigger || (
+          <Button className="ghost">
+            {title}
+          </Button>
+        )
       }
     >
       <Modal.Header as="h2">{title}</Modal.Header>
