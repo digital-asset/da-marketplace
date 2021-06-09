@@ -200,13 +200,11 @@ const DragAndDropRoles = () => {
 
 const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
   const [hovering, setHovering] = useState(false);
-  const divRef = useRef<HTMLDivElement | null>(null);
 
   const ledger = useLedger();
 
   return (
     <div
-      ref={divRef}
       className="service-label"
       onMouseOver={() => setHovering(true)}
       onMouseEnter={() => setHovering(true)}
