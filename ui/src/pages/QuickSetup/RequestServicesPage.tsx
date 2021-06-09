@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 import { Button, Form } from 'semantic-ui-react';
 
-import DamlLedger, { useLedger } from '@daml/react';
-import { Template } from '@daml/types';
+import DamlLedger, { useLedger, useStreamQueries } from '@daml/react';
+import { Template, Party } from '@daml/types';
 
 import {
   httpBaseUrl,
@@ -16,6 +16,10 @@ import { itemListAsText } from '../../pages/page/utils';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
 
+import { Request as AuctionRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
+import { Request as BiddingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+import { Request as TradingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
 import { Request as CustodyRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { Request as MarketClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Market/Service/module';
 import { Request as IssuanceRequest } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
@@ -30,22 +34,44 @@ import { RequestsProvider } from '../../context/RequestsContext';
 
 import { retrieveUserParties } from '../../Parties';
 import { IconCheck, InformationIcon } from '../../icons/icons';
+import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
 import QuickSetupPage from './QuickSetupPage';
 import { MenuItems, LoadingWheel } from './QuickSetup';
+import { NewAccount } from '../custody/New';
+import { CreateEvent } from '@daml/ledger';
+import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
+import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
+import AccountSelectionModal, { AccountType, AccountInfos } from './AccountSelectionModal';
+
+type AccountsForServices = {
+  clearingAccount?: Account;
+  marginAccount?: Account;
+  tradingAccount?: Account;
+  tradingAllocAccount?: Account;
+  biddingAccount?: Account;
+  biddingAllocAccount?: Account;
+  auctionAccount?: Account;
+  auctionAllocAccount?: Account;
+  receivableAccount?: Account;
+};
 
 export interface IRequestServiceInfo {
   provider?: string;
   customer?: string;
   services?: ServiceKind[];
+  accounts?: AccountsForServices;
 }
 
-// without the ability to create accounts from quick setup, these requests are the only ones supported at this stage
 const SUPPORTED_REQUESTS = [
   ServiceKind.MARKET_CLEARING,
   ServiceKind.LISTING,
   ServiceKind.CUSTODY,
   ServiceKind.ISSUANCE,
+  ServiceKind.CLEARING,
+  ServiceKind.TRADING,
+  ServiceKind.AUCTION,
+  ServiceKind.BIDDING,
 ];
 
 const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
@@ -97,6 +123,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
               createRequest={() => setCreatingRequest(true)}
               creatingRequest={creatingRequest}
               addedSuccessfully={addedSuccessfully}
+              token={token}
             />
           </ServicesProvider>
         </QueryStreamProvider>
@@ -125,18 +152,48 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   );
 };
 
+export interface IPartyAccounts {
+  accounts: CreateEvent<AssetSettlementRule>[];
+  allocAccounts: CreateEvent<AllocationAccountRule>[];
+}
+const AccountsForParty = (props: {
+  party?: Party;
+  setAccountsForParty: (accounts?: IPartyAccounts) => void;
+}) => {
+  const { party, setAccountsForParty } = props;
+  const allAccounts = useStreamQueries(AssetSettlementRule);
+  const accounts = useMemo(
+    () => allAccounts.contracts.filter(c => c.payload.account.owner === party),
+    [allAccounts, party]
+  );
+
+  const allAllocationAccounts = useStreamQueries(AllocationAccountRule);
+  const allocAccounts = useMemo(
+    () => allAllocationAccounts.contracts.filter(c => c.payload.account.owner === party),
+    [allAllocationAccounts, party]
+  );
+  useEffect(
+    () => setAccountsForParty({ accounts, allocAccounts }),
+    [accounts, allocAccounts, setAccountsForParty]
+  );
+  return null;
+};
+
 const RequestForm = (props: {
   requestInfo?: IRequestServiceInfo;
   setRequestInfo: (info?: IRequestServiceInfo) => void;
   createRequest: () => void;
   creatingRequest: boolean;
   addedSuccessfully: boolean;
+  token?: string;
 }) => {
-  const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully } = props;
+  const { requestInfo, setRequestInfo, createRequest, creatingRequest, addedSuccessfully, token } =
+    props;
   const [existingServices, setExistingServices] = useState<ServiceKind[]>([]);
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { services } = useServiceContext();
   const { getName } = usePartyName('');
+  const [accountsForParty, setAccountsForParty] = useState<IPartyAccounts>();
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
@@ -145,6 +202,80 @@ const RequestForm = (props: {
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
+
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [modalAccountInfos, setModalAccountInfos] = useState<AccountInfos>({});
+  const [modalOnCancelFunction, setModalOnCancelFunction] = useState<() => void>(() => {
+    return;
+  });
+
+  const selectAccounts = useCallback(
+    (serviceType: ServiceKind) => {
+      switch (serviceType) {
+        case ServiceKind.CLEARING:
+          setModalAccountInfos({
+            clearingAccount: {
+              accountType: AccountType.REGULAR,
+              accountLabel: 'Clearing Account',
+            },
+            marginAccount: {
+              accountType: AccountType.ALLOCATION,
+              accountLabel: 'Margin Account',
+            },
+          });
+          break;
+        case ServiceKind.TRADING:
+          setModalAccountInfos({
+            tradingAccount: {
+              accountType: AccountType.REGULAR,
+              accountLabel: 'Exchange Trading Account',
+            },
+            tradingAllocAccount: {
+              accountType: AccountType.ALLOCATION,
+              accountLabel: 'Locked Account',
+            },
+          });
+          break;
+        case ServiceKind.BIDDING:
+          setModalAccountInfos({
+            biddingAccount: {
+              accountType: AccountType.REGULAR,
+              accountLabel: 'Bidding Account',
+            },
+            biddingAllocAccount: {
+              accountType: AccountType.ALLOCATION,
+              accountLabel: 'Bidding Locked Account',
+            },
+          });
+          break;
+        case ServiceKind.AUCTION:
+          setModalAccountInfos({
+            auctionAccount: {
+              accountType: AccountType.REGULAR,
+              accountLabel: 'Main Auction Account',
+            },
+            auctionAllocAccount: {
+              accountType: AccountType.ALLOCATION,
+              accountLabel: 'Locked Auction Account',
+            },
+            receivableAccount: {
+              accountType: AccountType.REGULAR,
+              accountLabel: 'Receivables Account',
+            },
+          });
+          break;
+      }
+      setModalOnCancelFunction(
+        () => () =>
+          setRequestInfo({
+            ...requestInfo,
+            services: requestInfo?.services?.filter(s => s !== serviceType),
+          })
+      );
+      setShowAccountModal(true);
+    },
+    [requestInfo, setRequestInfo]
+  );
 
   useEffect(() => {
     if (!requestInfo) {
@@ -155,6 +286,31 @@ const RequestForm = (props: {
 
     if (!customer || !provider || !requestServices) {
       return;
+    }
+
+    const accounts = requestInfo?.accounts;
+    if (requestServices.includes(ServiceKind.CLEARING)) {
+      if (!accounts?.clearingAccount || !accounts?.marginAccount)
+        selectAccounts(ServiceKind.CLEARING);
+    }
+
+    if (requestServices.includes(ServiceKind.TRADING)) {
+      if (!accounts?.tradingAccount || !accounts?.tradingAllocAccount)
+        selectAccounts(ServiceKind.TRADING);
+    }
+
+    if (requestServices.includes(ServiceKind.BIDDING)) {
+      if (!accounts?.biddingAccount || !accounts?.biddingAllocAccount)
+        selectAccounts(ServiceKind.BIDDING);
+    }
+
+    if (requestServices.includes(ServiceKind.AUCTION)) {
+      if (
+        !accounts?.auctionAccount ||
+        !accounts?.auctionAllocAccount ||
+        !accounts?.receivableAccount
+      )
+        selectAccounts(ServiceKind.AUCTION);
     }
 
     const matchingContracts = services.filter(
@@ -170,7 +326,7 @@ const RequestForm = (props: {
     } else {
       setExistingServices([]);
     }
-  }, [requestInfo, services]);
+  }, [requestInfo, services, setModalAccountInfos, setShowAccountModal, selectAccounts]);
 
   if (identitiesLoading) {
     return (
@@ -269,6 +425,35 @@ const RequestForm = (props: {
           ))}
         </div>
       </div>
+      {requestInfo && requestInfo.customer && token && (
+        <DamlLedger
+          token={token}
+          party={requestInfo.customer}
+          httpBaseUrl={httpBaseUrl}
+          wsBaseUrl={wsBaseUrl}
+        >
+          <AccountsForParty
+            party={requestInfo.customer}
+            setAccountsForParty={setAccountsForParty}
+          />
+          <AccountSelectionModal
+            accountInfos={modalAccountInfos}
+            open={showAccountModal}
+            serviceProvider={requestInfo?.provider}
+            setOpen={setShowAccountModal}
+            party={requestInfo.customer}
+            accountsForParty={accountsForParty}
+            onCancel={modalOnCancelFunction}
+            onFinish={(accts: { [k: string]: Account | undefined }) => {
+              setRequestInfo({
+                ...requestInfo,
+                accounts: { ...requestInfo?.accounts, ...accts },
+              });
+            }}
+          />
+          <NewAccount party={requestInfo.customer} modal />
+        </DamlLedger>
+      )}
     </QuickSetupPage>
   );
 };
@@ -310,6 +495,60 @@ const CreateServiceRequests = (props: {
               break;
             case ServiceKind.ISSUANCE:
               await doRequest(IssuanceRequest, params).catch(_ => (success = false));
+              break;
+            case ServiceKind.CLEARING:
+              const clearingAccounts = requestInfo?.accounts;
+              if (!clearingAccounts?.clearingAccount || !clearingAccounts?.marginAccount) {
+                return;
+              }
+              const clearingParams = {
+                ...params,
+                clearingAccount: clearingAccounts.clearingAccount,
+                marginAccount: clearingAccounts.marginAccount,
+              };
+              await ledger.create(ClearingRequest, clearingParams);
+              break;
+            case ServiceKind.TRADING:
+              const tradingAccounts = requestInfo?.accounts;
+              if (!tradingAccounts?.tradingAccount || !tradingAccounts?.tradingAllocAccount) {
+                return;
+              }
+              const tradingParams = {
+                ...params,
+                tradingAccount: tradingAccounts.tradingAccount,
+                allocationAccount: tradingAccounts.tradingAllocAccount,
+              };
+              await ledger.create(TradingRequest, tradingParams);
+              break;
+            case ServiceKind.BIDDING:
+              const biddingAccounts = requestInfo?.accounts;
+              if (!biddingAccounts?.biddingAccount || !biddingAccounts?.biddingAllocAccount) {
+                return;
+              }
+              const biddingParams = {
+                ...params,
+                tradingAccount: biddingAccounts.biddingAccount,
+                allocationAccount: biddingAccounts.biddingAllocAccount,
+              };
+              await ledger.create(BiddingRequest, biddingParams);
+              break;
+
+            case ServiceKind.AUCTION:
+              const accounts = requestInfo?.accounts;
+              if (
+                !accounts?.auctionAccount ||
+                !accounts?.auctionAllocAccount ||
+                !accounts?.receivableAccount
+              ) {
+                return;
+              }
+              const auctionParams = {
+                ...params,
+                tradingAccount: accounts.auctionAccount,
+                allocationAccount: accounts.auctionAllocAccount,
+                receivableAccount: accounts.receivableAccount,
+              };
+              await ledger.create(AuctionRequest, auctionParams);
               break;
             default:
               success = false;
