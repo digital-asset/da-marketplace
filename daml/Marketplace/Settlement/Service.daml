@@ -23,6 +23,10 @@ template Service
         do
           exercise settlementInstructionCid Settle
 
+    controller operator can
+      Terminate : ()
+        do return ()
+
 template Offer
   with
     operator : Party

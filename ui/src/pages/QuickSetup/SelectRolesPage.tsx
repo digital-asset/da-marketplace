@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -9,13 +9,19 @@ import { Choice, ContractId } from '@daml/types';
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { RolesProvider, useRolesContext, RoleKind } from '../../context/RolesContext';
-import { OffersProvider, useOffers } from '../../context/OffersContext';
+import {
+  terminateRole,
+  RolesProvider,
+  useRolesContext,
+  RoleKind,
+  Role,
+} from '../../context/RolesContext';
+import { OffersProvider, useOffers, RoleOffer } from '../../context/OffersContext';
 import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
-import { ArrowLeftIcon } from '../../icons/icons';
+import { ArrowLeftIcon, IconClose } from '../../icons/icons';
 import {
   PublishedInstance,
   getAutomationInstances,
@@ -33,6 +39,7 @@ import {
 } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
 import { LoadingWheel, MenuItems } from './QuickSetup';
+import { Label } from 'semantic-ui-react';
 
 const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -80,7 +87,9 @@ const DragAndDropRoles = () => {
     }) || [];
 
   const roleOptions = Object.values(RoleKind)
-    .filter(s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING)
+    .filter(
+      s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING && s !== RoleKind.CLEARING_PENDING
+    )
     .map(i => {
       return { name: i, value: i };
     });
@@ -123,7 +132,7 @@ const DragAndDropRoles = () => {
     </QuickSetupPage>
   );
 
-  async function createRoleContract(partyId: string, token: string, role: string) {
+  async function createRoleContract(partyId: string, token: string, role: RoleKind) {
     if (
       findExistingRoleOffer(partyId, role as RoleKind) ||
       findExistingRole(partyId, role as RoleKind)
@@ -185,13 +194,37 @@ const DragAndDropRoles = () => {
   }
 
   function findExistingRole(provider: string, role: RoleKind) {
-    return !!allRoles.find(c => c.role === role && c.contract.payload.provider === provider);
+    return !!allRoles.find(c => c.roleKind === role && c.contract.payload.provider === provider);
   }
+};
+
+const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
+  const [hovering, setHovering] = useState(false);
+
+  const ledger = useLedger();
+
+  return (
+    <div
+      className="service-label"
+      onMouseOver={() => setHovering(true)}
+      onMouseEnter={() => setHovering(true)}
+      onMouseOut={() => setHovering(false)}
+      onMouseLeave={() => setHovering(false)}
+    >
+      {hovering ? (
+        <Label basic onClick={() => terminateRole(role, ledger)}>
+          {role.roleKind} <IconClose />
+        </Label>
+      ) : (
+        <p>{role.roleKind}</p>
+      )}
+    </div>
+  );
 };
 
 const PartyRowDropZone = (props: {
   party: CreateEvent<VerifiedIdentity>;
-  handleAddItem: (party: string, token: string, item: string | RoleKind) => void;
+  handleAddItem: (party: string, token: string, item: RoleKind) => void;
 }) => {
   const { party, handleAddItem } = props;
   const { roleOffers } = useOffers();
@@ -204,9 +237,7 @@ const PartyRowDropZone = (props: {
     ? parties.find(p => p.party === party.payload.customer)?.token
     : computeToken(party.payload.customer);
 
-  const roles = allRoles
-    .filter(r => r.contract.payload.provider === party.payload.customer)
-    .map(r => r.role) as string[];
+  const roles = allRoles.filter(r => r.contract.payload.provider === party.payload.customer);
 
   const clearingOffer = findClearingOffer(party.payload.customer);
 
@@ -221,16 +252,14 @@ const PartyRowDropZone = (props: {
     }
   }, [token]);
 
-  let rolesList = roles;
-
   if (clearingOffer) {
-    rolesList = [...rolesList, 'Clearing (pending)'];
+    roles.push({ contract: clearingOffer.contract, roleKind: RoleKind.CLEARING_PENDING });
   }
 
   return (
     <div
       className={classNames('party-name page-row', { 'drag-over': dragCount > 0 })}
-      onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as string)}
+      onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as RoleKind)}
       onDragEnter={_ => setDragCount(dragCount + 1)}
       onDragLeave={_ => setDragCount(dragCount - 1)}
       onDragOver={evt => evt.preventDefault()}
@@ -238,7 +267,12 @@ const PartyRowDropZone = (props: {
       {roles && (
         <div className="party-details">
           <p>{party.payload.legalName}</p>
-          <p className="dropped-items">{rolesList.join(', ')}</p>
+          <div className="dropped-items">
+            {roles.map((r, i) => [
+              i > 0 && ', ',
+              <ServiceLabel key={r.contract.contractId} role={r} />,
+            ])}
+          </div>
         </div>
       )}
 
@@ -248,13 +282,13 @@ const PartyRowDropZone = (props: {
     </div>
   );
 
-  function findClearingOffer(partyId: string) {
-    return !!roleOffers.find(
+  function findClearingOffer(partyId: string): RoleOffer | undefined {
+    return roleOffers.find(
       r => r.contract.payload.provider === partyId && r.role === RoleKind.CLEARING
     );
   }
 
-  function handleDrop(item: string) {
+  function handleDrop(item: RoleKind) {
     setDragCount(dragCount - 1);
     if (token) {
       handleAddItem(party.payload.customer, token, item);

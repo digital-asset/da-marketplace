@@ -29,49 +29,48 @@ autoApprovalTrigger = Trigger
   { initialize = pure ()
   , updateState = \_ -> pure ()
   , rule = handleApprovalRule
-  , registeredTemplates = RegisteredTemplates [ registeredTemplate @CustodyRole.Offer
-    , registeredTemplate @Operator.Role
-    , registeredTemplate @CustodyRole.Request
+  , registeredTemplates = RegisteredTemplates [ registeredTemplate @Operator.Role
+    , registeredTemplate @CustodyRole.Role
+    , registeredTemplate @CustodyRole.Offer
     , registeredTemplate @CustodyService.Offer
+    , registeredTemplate @CustodyService.Request
+    , registeredTemplate @CustodyService.Service
+    , registeredTemplate @Custody.OpenAccountRequest
+    , registeredTemplate @Custody.OpenAllocationAccountRequest
+    , registeredTemplate @Custody.CreditAccountRequest
+    , registeredTemplate @Custody.TransferDepositRequest
     , registeredTemplate @ClearingRole.Role
     , registeredTemplate @ClearingService.Request
     , registeredTemplate @MarketClearingService.Offer
     , registeredTemplate @MarketClearingService.Request
-    , registeredTemplate @DistributionRole.Offer
-    , registeredTemplate @DistributionRole.Request
-    , registeredTemplate @IssuanceService.Offer
-    , registeredTemplate @ListingService.Offer
+    , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorRole.Offer
     , registeredTemplate @RegulatorRole.Request
-    , registeredTemplate @RegulatorRole.Role
     , registeredTemplate @RegulatorService.Offer
     , registeredTemplate @RegulatorService.Request
     , registeredTemplate @RegulatorService.Service
     , registeredTemplate @RegulatorService.IdentityVerificationRequest
     , registeredTemplate @SettlementService.Offer
     , registeredTemplate @SettlementService.Request
+    , registeredTemplate @TradingRole.Role
     , registeredTemplate @TradingRole.Offer
     , registeredTemplate @TradingRole.Request
+    , registeredTemplate @TradingService.Request
     , registeredTemplate @MatchingService.Offer
     , registeredTemplate @MatchingService.Request
-    , registeredTemplate @CustodyService.Request
-    , registeredTemplate @IssuanceService.Request
-    , registeredTemplate @CustodyRole.Role
-    , registeredTemplate @AuctionService.Request
-    , registeredTemplate @BiddingService.Request
-    , registeredTemplate @DistributionRole.Role
-    , registeredTemplate @TradingService.Request
+    , registeredTemplate @ListingService.Offer
     , registeredTemplate @ListingService.Request
     , registeredTemplate @ListingService.CreateListingRequest
-    , registeredTemplate @TradingRole.Role
+    , registeredTemplate @IssuanceService.Offer
+    , registeredTemplate @IssuanceService.Request
+    , registeredTemplate @IssuanceService.Service
     , registeredTemplate @IssuanceService.OriginationRequest
     , registeredTemplate @IssuanceService.CreateIssuanceRequest
-    , registeredTemplate @IssuanceService.Service
-    , registeredTemplate @Custody.OpenAccountRequest
-    , registeredTemplate @Custody.OpenAllocationAccountRequest
-    , registeredTemplate @Custody.CreditAccountRequest
-    , registeredTemplate @Custody.TransferDepositRequest
-    , registeredTemplate @CustodyService.Service
+    , registeredTemplate @DistributionRole.Offer
+    , registeredTemplate @DistributionRole.Request
+    , registeredTemplate @DistributionRole.Role
+    , registeredTemplate @BiddingService.Request
+    , registeredTemplate @AuctionService.Request
     , registeredTemplate @AuctionService.Service
     , registeredTemplate @AuctionService.CreateAuctionRequest ]
   , heartbeat = None
@@ -197,7 +196,6 @@ handleApprovalRule party = do
   auctionServices         <- queryByParty @AuctionService.Service       (.provider)
   submitCommands $
     generateServiceCommands AuctionService.CreateAuction auctionRequests auctionServices
-
 
 -- | Generates exersise commands for a specific choice on multiple contracts which expose that choice
 generateCommands : forall t c r. Choice t c r => c -> [(ContractId t, t)] -> [(AnyContractId, Command)]

@@ -35,6 +35,11 @@ template Role
         do
           archive regulatorServiceCid
 
+    controller operator can
+      TerminateRole : ()
+        do
+          return ()
+
 template Offer
   with
     operator : Party

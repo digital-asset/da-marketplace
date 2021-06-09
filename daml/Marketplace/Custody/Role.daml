@@ -55,6 +55,11 @@ template Role
         do
           archive issuanceServiceCid
 
+    controller operator can
+      TerminateRole: ()
+        do
+          return ()
+
 template Offer
   with
     operator : Party

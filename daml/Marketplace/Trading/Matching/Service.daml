@@ -46,6 +46,10 @@ template Service
             let clearinghouse = makerOrder.collateral.clearinghouse
             Cleared <$> create Clearing.ClearedTrade with ..
 
+    controller operator can
+      Terminate : ()
+        do return ()
+
 template Offer
   with
     operator : Party

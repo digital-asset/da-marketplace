@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 
-import { CreateEvent } from '@daml/ledger';
+import Ledger, { CreateEvent } from '@daml/ledger';
 
 import {
   Role as ClearingRole,
   Request as ClearingRequest,
+  Offer as ClearingOffer,
 } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import {
   Role as CustodianRole,
@@ -30,10 +31,11 @@ import {
 import { Role as RegulatorRole } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Role';
 
 import { useStreamQueries } from '../Main';
-import { Template, Party } from '@daml/types';
+import { Template, Party, ContractId } from '@daml/types';
 
 export enum RoleKind {
   CLEARING = 'Clearing',
+  CLEARING_PENDING = 'Clearing (pending)',
   CUSTODY = 'Custody',
   TRADING = 'Exchange',
   MATCHING = 'Matching',
@@ -61,9 +63,42 @@ export type RoleRequestTemplates =
   | SettlementRequest
   | MatchingRequest;
 
-type Role = {
+export type Role = {
   contract: RoleContract;
-  role: RoleKind;
+  roleKind: RoleKind;
+};
+
+export const terminateRole = async (role: Role, ledger: Ledger) => {
+  const cid = role.contract.contractId;
+
+  switch (role.roleKind) {
+    case RoleKind.CLEARING:
+      ledger.exercise(ClearingRole.TerminateRole, cid, {});
+      break;
+    case RoleKind.CLEARING_PENDING:
+      ledger.archive(ClearingOffer, cid as ContractId<ClearingOffer>);
+      break;
+    case RoleKind.CUSTODY:
+      ledger.exercise(CustodianRole.TerminateRole, cid, {});
+      break;
+    case RoleKind.TRADING:
+      ledger.exercise(ExchangeRole.TerminateRole, cid, {});
+      break;
+    case RoleKind.DISTRIBUTION:
+      ledger.exercise(DistributorRole.TerminateRole, cid, {});
+      break;
+    case RoleKind.REGULATOR:
+      ledger.exercise(RegulatorRole.TerminateRole, cid, {});
+      break;
+    case RoleKind.SETTLEMENT:
+      ledger.exercise(SettlementService.Terminate, cid, {});
+      break;
+    case RoleKind.MATCHING:
+      ledger.exercise(MatchingService.Terminate, cid, {});
+      break;
+    default:
+      throw new Error(`Unsupported Role Kind ${role.roleKind}`);
+  }
 };
 
 type RolesState = {
@@ -114,12 +149,12 @@ const RolesProvider: React.FC = ({ children }) => {
   useEffect(
     () =>
       setRoles([
-        ...clearingRoles.map(c => ({ contract: c, role: RoleKind.CLEARING })),
-        ...custodianRoles.map(c => ({ contract: c, role: RoleKind.CUSTODY })),
-        ...exchangeRoles.map(c => ({ contract: c, role: RoleKind.TRADING })),
-        ...distributorRoles.map(c => ({ contract: c, role: RoleKind.DISTRIBUTION })),
-        ...settlementServices.map(c => ({ contract: c, role: RoleKind.SETTLEMENT })),
-        ...matchingServices.map(c => ({ contract: c, role: RoleKind.MATCHING })),
+        ...clearingRoles.map(c => ({ contract: c, roleKind: RoleKind.CLEARING })),
+        ...custodianRoles.map(c => ({ contract: c, roleKind: RoleKind.CUSTODY })),
+        ...exchangeRoles.map(c => ({ contract: c, roleKind: RoleKind.TRADING })),
+        ...distributorRoles.map(c => ({ contract: c, roleKind: RoleKind.DISTRIBUTION })),
+        ...settlementServices.map(c => ({ contract: c, roleKind: RoleKind.SETTLEMENT })),
+        ...matchingServices.map(c => ({ contract: c, roleKind: RoleKind.MATCHING })),
       ]),
     [
       clearingRoles,
@@ -143,7 +178,7 @@ function usePartyRoleKinds(party: Party): Set<RoleKind> {
   }
   return context.roles
     .filter(r => r.contract.payload.provider === party)
-    .reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
+    .reduce((acc, v) => acc.add(v.roleKind), new Set<RoleKind>());
 }
 
 function useRoleKinds(): Set<RoleKind> {
@@ -151,7 +186,7 @@ function useRoleKinds(): Set<RoleKind> {
   if (context === undefined) {
     throw new Error('useRoleKinds must be used within a RolesProvider');
   }
-  return context.roles.reduce((acc, v) => acc.add(v.role), new Set<RoleKind>());
+  return context.roles.reduce((acc, v) => acc.add(v.roleKind), new Set<RoleKind>());
 }
 
 function useProvidersByRole(): Map<RoleKind, [RoleContract]> {
@@ -161,10 +196,10 @@ function useProvidersByRole(): Map<RoleKind, [RoleContract]> {
   }
   let map = new Map<RoleKind, [RoleContract]>();
   context.roles.forEach(r => {
-    if (map.has(r.role)) {
-      map.get(r.role)?.push(r.contract);
+    if (map.has(r.roleKind)) {
+      map.get(r.roleKind)?.push(r.contract);
     } else {
-      map.set(r.role, [r.contract]);
+      map.set(r.roleKind, [r.contract]);
     }
   });
   return map;

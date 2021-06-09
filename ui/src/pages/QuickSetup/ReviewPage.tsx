@@ -77,7 +77,7 @@ const PartiesReview = () => {
             partyId={p.payload.customer}
             roles={allRoles
               .filter(r => r.contract.payload.provider === p.payload.customer)
-              .map(r => r.role)}
+              .map(r => r.roleKind)}
           />
         ))}
       </div>

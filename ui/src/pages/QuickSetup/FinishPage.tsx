@@ -84,7 +84,7 @@ const LoginTileGrid = () => {
             <p className="finished-roles">
               {allRoles
                 .filter(r => r.contract.payload.provider === p.payload.customer)
-                .map(r => r.role)
+                .map(r => r.roleKind)
                 .join(', ')}
             </p>
           </Link>

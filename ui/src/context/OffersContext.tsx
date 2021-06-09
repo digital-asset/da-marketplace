@@ -53,7 +53,7 @@ type OffersState = {
   loading: boolean;
 };
 
-type RoleOffer = {
+export type RoleOffer = {
   contract: OfferRoleContract;
   role: RoleKind;
 };

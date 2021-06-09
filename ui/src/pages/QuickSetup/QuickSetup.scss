@@ -1,4 +1,4 @@
-@use './themes/variables.scss' as *;
+@use 'themes/variables' as *;
 
 @mixin quick-setup {
   .quick-setup {
@@ -215,13 +215,53 @@
         &.drag-over {
           background-color: var(--blue-100);
 
-          p.dropped-items {
+          p.dropped-items,
+          div.dropped-items {
             font-weight: 600;
             color: var(--cool-grey-10);
           }
         }
 
-        p.dropped-items {
+        .service-label {
+          display: inline-block;
+
+          .ui.basic.label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 $spacing-xs;
+            margin: 0;
+            line-height: inherit;
+            background: none;
+            border-radius: 0;
+            box-shadow: none;
+            font-size: 12px;
+            font-family: 'Open sans';
+            font-weight: normal;
+            color: var(--cool-grey-50);
+
+            .icon {
+              opacity: unset;
+            }
+          }
+
+          p {
+            border: 1px solid rgba(0, 0, 0, 0);
+          }
+
+          p,
+          .ui.basic.label {
+            font-size: 12px;
+          }
+
+          p:hover,
+          .ui.basic.label:hover {
+            cursor: pointer;
+          }
+        }
+
+        p.dropped-items,
+        div.dropped-items {
           padding-right: $spacing-s;
           width: 190px;
           font-size: 12px;

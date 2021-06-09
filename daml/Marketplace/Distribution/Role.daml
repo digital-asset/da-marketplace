@@ -54,6 +54,11 @@ template Role
         do
           archive biddingServiceCid
 
+    controller operator can
+      TerminateRole : ()
+        do
+          return ()
+
 template Offer
   with
     operator : Party
