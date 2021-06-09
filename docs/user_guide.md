@@ -23,76 +23,55 @@
     - Assign `Ccp` the `Clearing` role
 8. Request services from specific parties: (then click Next)
     - As `Issuer` request `Custody`, `Issuance` services from `Bank`
+    - as `Issuer` `Auction` services from `Bank`
+        - Auction Trading Account: Request from Bank
+        - Locked Auction Account: Request from Bank
+        - Receivable Account: Request from Bank
     - As `Alice` request `Custody` services from `Bank`
+    - As `Alice`, request `Trading` services from `Exchange` `Clearing` services from `Ccp`, and `Bidding` service from `Bank`, use "Request Account" results for all accounts.
     - As `Bob` request `Custody` services from `Bank`
+    - As `Bob`, request `Trading` services from `Exchange` and `Clearing` services from `Ccp`, use "Request Account" results for all accounts.
     - As `Ccp` request `Custody` services from `Bank`
     - As `Exchange` request `MarketClearing` services from `Ccp`
 
 ## Issuing new assets
 
 1. Login as `Issuer`
-2. `Issuer`: go to Wallet and create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `MainIssuer-Bank`
-    - **Account Type** : `Regular`
-3. `Issuer`: go to Wallet and create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocIssuer-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Bank`
-4. `Issuer`: go to Setup and create a base instrument for USD
-    - **Account** : MainIssuer-Bank
-5. `Issuer`: go to Setup and create a base instrument for BTC
-    - **Account** : MainIssuer-Bank
-6. `Issuer`: go to Setup and create an issuance of USD
+2. `Issuer`: go to Setup and create a base instrument for USD
+    - **Account** : Issuer-Bank-MainAuctionAccount
+3. `Issuer`: go to Setup and create a base instrument for BTC
+    - **Account** : Issuer-Bank-MainAuctionAccount
+4. `Issuer`: go to Setup and create an issuance of USD
     - **Issuance ID**: `iss1`
-    - **Account** : MainIssuer-Bank
+    - **Account** : Issuer-Bank-MainAuctionAccount
     - **Quantity**: `1000`
-7. `Issuer`: go to Setup and create an issuance of BTC
+5. `Issuer`: go to Setup and create an issuance of BTC
     - **Issuance ID**: `iss2`
-    - **Account** : MainIssuer-Bank
+    - **Account** : Issuer-Bank-MainAuctionAccount
     - **Quantity**: `1000`
 
 ## Primary distribution
 
 Auctioning off assets
 
-1. `Issuer`: on Landing, request `Auction` service from the `Bank`
-    - **Provider**: `Bank`
-    - **Trading Account**: `MainIssuer-Bank`
-    - **Allocation Account**: `AllocIssuer-Bank`
-    - **Receivable Account**: `MainIssuer-Bank`
-2. `Issuer`: go to Setup and create a new auction
+1. `Issuer`: go to Setup and create a new auction
     - **Auctioned Asset** : `BTC`
     - **Quoted Asset** : `USD`
     - **Quantity** : `500`
     - **Floor Price** : `300`
     - **Auction ID** : `auc1`
-3. Login as `Alice`
-4. `Alice`: Go to Wallet, create a regular account with `Bank`
-    - **Provider**: `Bank`
-    - **Account Name** : `MainAlice-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Exchange`
-5. `Alice`: Click on newly created account row
-6. `Alice`: Deposit 5000 US Dollars to account
-7. `Alice`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocAlice-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Bank`
-8. `Alice`: Request `Bidding` service from `Bank`
-    - **Trading Account**: `MainAlice-Bank`
-    - **Allocation Account**: `AllocAlice-Bank`
-9. Login as `Bank`
-10. `Bank`: Go to Auctions, click on the auction opened by the Issuer, and Request Bid from `Alice`
-11. Login as `Alice`
-12. `Alice`: Go to Bidding Auctions, click on the auction, and submit a Bid
+2. Login as `Alice`
+3. Go to "Wallet" and click on Alice-Bank-BiddingAccount
+4. `Alice`: Deposit 5000 US Dollars to account
+5. Login as `Bank`
+6. `Bank`: Go to Auctions, click on the auction opened by the Issuer, and Request Bid from `Alice`
+7. Login as `Alice`
+8. `Alice`: Go to Bidding Auctions, click on the auction, and submit a Bid
     - **Quantity**: `2`
     - **Price**: `500`
     - **Publish Bid**: ✅
-13. Login as `Bank`
-14. Go to auction, click `Close Auction`
+9. Login as `Bank`
+10. Go to auction, click `Close Auction`
 
 ## Secondary distribution
 
@@ -113,45 +92,17 @@ Setting up tradeable, collateralized markets
     - **Description**: `Bitcoin vs USD`
     - **Cleared by**: `-- Collateralized Market --`
 4. Login as `Alice`
-5. `Alice`: If you skipped the Auction section, go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `MainAlice-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Exchange`
-6. `Alice`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocAlice-Exchange`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Exchange`
-7. `Alice`: Go to Wallet, click on row for `MainAlice-Bank`
-8. `Alice`: Deposit 1000 USD into `MainAlice-Bank`
-9. `Alice`: Request `Trading` service from `Exchange`
-    - **Provider**: `Exchange`
-    - **Trading Account**: `MainAlice-Bank`
-    - **Allocation Account**: `AllocAlice-Exchange`
-10. `Alice`: Go to BTCUSD Market, place an order
+5. `Alice`: Go to Wallet, click on row for `Alice-Exchange-ExchangeTradingAccount`
+6. `Alice`: Deposit 1000 USD
+7. `Alice`: Go to BTCUSD Market, place an order
     - **Buy**
     - **Limit**
     - **Time in Force** : `Good Till Cancelled`
     - **Price** : `500`
     - **Quantity** : `2`
-11. Login as `Bob`
-12. `Bob`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `MainBob-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Exchange`
-13. `Bob`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `AllocBob-Exchange`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Exchange`
-14. `Bob`: Go to Wallet, click on row for `MainBob-Bank`, Deposit 500 BTC
-15. `Bob`: Request `Trading` service from `Exchange`
-    - **Provider**: `Exchange`
-    - **Trading Account**: `MainBob-Bank`
-    - **Allocation Account**: `AllocBob-Exchange`
-16. `Bob`: Go to BTCUSD Market, place an order (to partially match `Alice`'s Buy)
+8. Login as `Bob`
+9. `Bob`: Go to Wallet, click on row for `Bob-Exchange-ExchangeTradingAccount`, Deposit 500 BTC
+10. `Bob`: Go to BTCUSD Market, place an order (to partially match `Alice`'s Buy)
     - **Sell**
     - **Limit**
     - **Time in Force** : `Good Till Cancelled`
@@ -167,37 +118,9 @@ Setting up tradeable, collateralized markets
 3. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
     - **Clearing Account**: `Clearing-Bank`
 4. Login as `Alice`
-5. `Alice`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `ClearingAlice-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Ccp`
-6. `Alice`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `MarginAlice-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Ccp`
-7. `Alice`: On Landing, click "Request Clearing Service"
-    - **Provider**: `CCP`
-    - **Clearing Account**: `ClearingAlice-Bank`
-    - **Margin Account**: `MarginAlice-Bank`
-8. `Alice`: Go to Wallet, click on row for `ClearingAlice-Bank`, Deposit 10,000 USD
-9. Login as `Bob`
-10. `Bob`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `ClearingBob-Bank`
-    - **Account Type** : `Regular`
-    - **Observers** : `Ccp`
-11. `Bob`: Go to Wallet, create an allocation account
-    - **Provider**: `Bank`
-    - **Account Name** : `MarginBob-Bank`
-    - **Account Type** : `Allocation`
-    - **Nominee** : `Ccp`
-12. `Bob`: On Landing, click "Request Clearing Service"
-    - **Provider**: `CCP`
-    - **Clearing Account**: `ClearingBob-Bank`
-    - **Margin Account**: `MarginBob-Bank`
-13. `Bob`: Go to Wallet, click on row for `ClearingBob-Bank`, Deposit 10,000 USD
+5. `Alice`: Go to Wallet, click on row for `Alice-Ccp-ClearingAccount`, Deposit 10,000 USD
+6. Login as `Bob`
+7. `Bob`: Go to Wallet, click on row for `Bob-Ccp-ClearingAccount`, Deposit 10,000 USD
 
 ### Test Margin Calls
 Perform successful margin call for Alice
@@ -231,9 +154,7 @@ Transfer funds from Alice to Bob via central countrerparty.
 Setting up tradeable, cleared markets
 
 1. Login as `Exchange`
-2. On landing page, click "Request Market Clearing"
-    - **Provider** : `Ccp`
-3. `Exchange`: Go to Setup, Create New Listing
+2. `Exchange`: Go to Setup, Create New Listing
     - **Traded Asset** : `BTC`
     - **Traded Asset Precision**: `6`
     - **Quoted Asset** : `USD`
@@ -243,21 +164,21 @@ Setting up tradeable, cleared markets
     - **Symbol**: `BTCUSD-CLR`
     - **Description**: `Cleared Bitcoin vs USD`
     - **Cleared by**: `CCP`
-4. Login as `Alice`
-5. `Alice`: Go to BTCUSD-CLR Market, place an order
+3. Login as `Alice`
+4. `Alice`: Go to BTCUSD-CLR Market, place an order
     - **Buy**
     - **Limit**
     - **Time in Force** : `Good Till Cancelled`
     - **Price** : `500`
     - **Quantity** : `2`
-6. Login as `Bob`
-7. `Bob`: Go to BTCUSD-CLR Market, place an order (to partially match `Alice`'s Buy)
+5. Login as `Bob`
+6. `Bob`: Go to BTCUSD-CLR Market, place an order (to partially match `Alice`'s Buy)
     - **Sell**
     - **Market**
     - **Time in Force** : `Good Till Cancelled`
     - **Quantity** : `1.0`
-8. Login as `Ccp`
-9. On Manage/Clearing, click "Request FV" next to Exchange's Market.Clearing role
+7. Login as `Ccp`
+8. On Manage/Clearing, click "Request FV" next to Exchange's Market.Clearing role
     - **Currency** : USD
 
 # Read More

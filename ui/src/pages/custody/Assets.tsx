@@ -11,9 +11,11 @@ import StripedTable from '../../components/Table/StripedTable';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import TitleWithActions from '../../components/Common/TitleWithActions';
 import paths from '../../paths';
+import { NewAccount } from './New';
 
 const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
+  services,
 }: RouteComponentProps & ServicePageProps<Service>) => {
   const party = useParty();
   const { getName } = usePartyName(party);
@@ -55,7 +57,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             ],
             onClick: () =>
               history.push(
-                paths.app.custody.account +
+                paths.app.custody.account + '/' +
                   allAccounts
                     .find(a => a.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
@@ -63,10 +65,9 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
           };
         })}
       />
-      <TitleWithActions
-        title="Accounts"
-        iconActions={[{ path: paths.app.custody.accounts.new, label: 'New Account' }]}
-      />
+      <TitleWithActions title="Accounts">
+        <NewAccount custodyServices={services} party={party} modal />
+      </TitleWithActions>
       <StripedTable
         rowsClickable
         headings={['Account', 'Type', 'Provider', 'Owner', 'Role']}

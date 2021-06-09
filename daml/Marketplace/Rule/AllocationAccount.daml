@@ -20,7 +20,6 @@ template AllocationAccountRule
   where
     signatory operator, provider, account.owner
     observer insert nominee observers
-    ensure nominee /= account.owner
 
     key account.id : Id
     maintainer key.signatories
