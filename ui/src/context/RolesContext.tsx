@@ -73,22 +73,22 @@ export const terminateRole = async (role: Role, ledger: Ledger) => {
 
   switch (role.roleKind) {
     case RoleKind.CLEARING:
-      ledger.exercise(ClearingRole.Terminate, cid, {});
+      ledger.exercise(ClearingRole.TerminateRole, cid, {});
       break;
     case RoleKind.CLEARING_PENDING:
       ledger.archive(ClearingOffer, cid as ContractId<ClearingOffer>);
       break;
     case RoleKind.CUSTODY:
-      ledger.exercise(CustodianRole.Terminate, cid, {});
+      ledger.exercise(CustodianRole.TerminateRole, cid, {});
       break;
     case RoleKind.TRADING:
-      ledger.exercise(ExchangeRole.Terminate, cid, {});
+      ledger.exercise(ExchangeRole.TerminateRole, cid, {});
       break;
     case RoleKind.DISTRIBUTION:
-      ledger.exercise(DistributorRole.Terminate, cid, {});
+      ledger.exercise(DistributorRole.TerminateRole, cid, {});
       break;
     case RoleKind.REGULATOR:
-      ledger.exercise(RegulatorRole.Terminate, cid, {});
+      ledger.exercise(RegulatorRole.TerminateRole, cid, {});
       break;
     case RoleKind.SETTLEMENT:
       ledger.exercise(SettlementService.Terminate, cid, {});

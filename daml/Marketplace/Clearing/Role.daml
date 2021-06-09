@@ -71,7 +71,7 @@ template Role
           archive marketServiceCid
 
     controller operator can
-      Terminate : ()
+      TerminateRole : ()
         do
           return ()
 
