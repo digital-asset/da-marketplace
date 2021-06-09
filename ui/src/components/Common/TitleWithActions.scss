@@ -11,6 +11,17 @@
       margin-left: $spacing-m;
     }
 
+    .children {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        flex-wrap: wrap;
+
+        button {
+          margin-left: $spacing-m;
+        }
+    }
+
     .overflow-menu-title {
       display: none;
     }

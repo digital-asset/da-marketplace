@@ -9,7 +9,6 @@ import {
   useHistory,
 } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
-import { New as CustodyNew } from './pages/custody/New';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { Account } from './pages/custody/Account';
 import { useParty } from '@daml/react';
@@ -114,10 +113,6 @@ const AppComponent = () => {
       },
     ],
     additionalRoutes: [
-      {
-        path: paths.app.custody.accounts.new,
-        render: () => <CustodyNew services={custodyService} />,
-      },
       {
         path: paths.app.custody.account + '/:contractId',
         render: () => <Account services={custodyService} />,
