@@ -70,9 +70,7 @@ $(app_icon):
 
 # DIT target
 $(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
-	ddit build --force --skip-dar-build
-# TO-DO: replace above with below after ddit is patched (duplicate artifacts)
-#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
+	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
@@ -88,9 +86,12 @@ test-ui: $(ui)
 test-daml:
 	daml test --junit da-marketplace-test-report.xml
 
-.PHONY: test
-test: test-daml
+.PHONY: test-tags
+check-versions:
 	./scripts/verify-versions.sh
+
+.PHONY: test
+test: test-daml test-ui test-tags
 
 ### *-=- Release -=-*
 
