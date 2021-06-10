@@ -70,9 +70,7 @@ $(app_icon):
 
 # DIT target
 $(dit): $(dar) $(trigger_dar) $(exberry_adapter) $(ui) $(app_icon)
-	ddit build --force --skip-dar-build
-# TO-DO: replace above with below after ddit is patched (duplicate artifacts)
-#	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
+	ddit build --force --skip-dar-build --subdeployment $(dar) $(trigger_dar) $(exberry_adapter) $(ui)
 
 .PHONY: package
 package: $(dit)
@@ -88,9 +86,12 @@ test-ui: $(ui)
 test-daml:
 	daml test --junit da-marketplace-test-report.xml
 
-.PHONY: test
-test: test-daml
+.PHONY: test-tags
+test-tags:
 	./scripts/verify-versions.sh
+
+.PHONY: test
+test: test-daml test-ui test-tags
 
 ### *-=- Release -=-*
 
@@ -110,11 +111,15 @@ tag:
 .PHONY: release
 release_tag := da-marketplace-v$(VERSION)
 
-release: test package
+release: test-daml test-ui package
+	ddit release
+
+.PHONY: publish
+publish: test-tags
 	@release_check=`git tag | grep $(release_tag) | wc -l`; \
 	if [ $$release_check -eq 0 ]; then \
 		echo "New tag detected - releasing" \
-		ddit release --dry-run; \
+		make release; \
 	else \
 		echo "Tag $(release_tag) already exists... skipping release"; \
 	fi

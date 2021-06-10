@@ -40,7 +40,7 @@ Under the deployments tab, click on "Upload File":
 
 ![3_upload_file](https://user-images.githubusercontent.com/71082197/98857330-ec817480-242c-11eb-8b07-4b0f88d3a39f.png)
 
-Upload the packaged `da-marketplace-0.2.0.dit` file.
+Upload the packaged `da-marketplace-0.2.0-rc.1.dit` file.
 
 Click "Launch" for both the UI and the Model:
 

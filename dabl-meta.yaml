@@ -1,6 +1,6 @@
 catalog:
   name: da-marketplace
-  version: 0.2.0
+  version: 0.2.0-rc.1
   short_description: DA Marketplace
   description: A marketplace for issuing and trading digital tokens.
   release_date: 2020-10-14
@@ -8,10 +8,5 @@ catalog:
   url: https://github.com/digital-asset/da-marketplace
   source_url: https://github.com/digital-asset/da-marketplace
   license: 0BSD
-  tags: [dabl-sample-app, application]
+  tags: [dabl-sample-app, application, experimental]
   icon_file: da-marketplace.svg
-subdeployments:
-  - da-marketplace-0.2.0.dar
-  - da-marketplace-triggers-0.2.0.dar
-  - da-marketplace-exberry-adapter-0.2.0.tar.gz
-  - da-marketplace-ui-0.2.0.zip
