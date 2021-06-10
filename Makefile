@@ -111,11 +111,15 @@ tag:
 .PHONY: release
 release_tag := da-marketplace-v$(VERSION)
 
-release: test package
+release: test-daml test-ui package
+	ddit release
+
+.PHONY: publish
+publish: test-tags
 	@release_check=`git tag | grep $(release_tag) | wc -l`; \
 	if [ $$release_check -eq 0 ]; then \
 		echo "New tag detected - releasing" \
-		ddit release --dry-run; \
+		make release; \
 	else \
 		echo "Tag $(release_tag) already exists... skipping release"; \
 	fi

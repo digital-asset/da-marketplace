@@ -107,7 +107,7 @@ jobs:
             - ~/.daml
           key: daml-{{ checksum "daml.yaml" }}
 
-  release:
+  publish:
     parameters:
       daml_sdk_version:
         type: string
@@ -123,11 +123,11 @@ jobs:
       - install_python
       - install_yq
       - run:
-          name: Release
+          name: Publish
           command: |
             echo 'export PATH=$HOME/yq:$PATH' >> $BASH_ENV
             source $BASH_ENV
-            make release
+            make publish
 
 workflows:
   version: 2
@@ -145,9 +145,9 @@ workflows:
             branches:
               ignore:
                 - main
-  release:
+  publish:
     jobs:
-      - release:
+      - publish:
           daml_sdk_version: "1.12.0"
           filters:
             branches:
