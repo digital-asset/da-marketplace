@@ -87,7 +87,7 @@ test-daml:
 	daml test --junit da-marketplace-test-report.xml
 
 .PHONY: test-tags
-check-versions:
+test-tags:
 	./scripts/verify-versions.sh
 
 .PHONY: test
