@@ -118,7 +118,7 @@ release: test-daml test-ui package
 publish: test-tags
 	@release_check=`git tag | grep $(release_tag) | wc -l`; \
 	if [ $$release_check -eq 0 ]; then \
-		echo "New tag detected - releasing" \
+		echo "New tag detected - releasing"; \
 		make release; \
 	else \
 		echo "Tag $(release_tag) already exists... skipping release"; \
