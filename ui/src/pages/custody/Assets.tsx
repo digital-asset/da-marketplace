@@ -57,7 +57,8 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             ],
             onClick: () =>
               history.push(
-                paths.app.custody.account + '/' +
+                paths.app.custody.account +
+                  '/' +
                   allAccounts
                     .find(a => a.account.id.label === c.payload.account.id.label)
                     ?.contractId.replace('#', '_')
