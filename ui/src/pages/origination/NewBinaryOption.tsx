@@ -108,7 +108,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       safekeepingAccount,
       observers: [service.payload.provider, party],
     });
-    history.push(paths.app.instrument.requests);
+    history.push(paths.app.instruments.instrument.requests);
   };
 
   return (

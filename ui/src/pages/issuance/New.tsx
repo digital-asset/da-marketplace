@@ -69,7 +69,7 @@ const NewComponent: React.FC<RouteComponentProps & Props> = ({
       assetId: asset.payload.assetId,
       quantity,
     });
-    history.push(paths.app.issuance);
+    history.push(paths.app.issuance.root);
   };
 
   return (

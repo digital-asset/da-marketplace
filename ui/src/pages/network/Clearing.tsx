@@ -136,11 +136,11 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
         otherActions={[
           {
             label: 'Offer Clearing Service',
-            path: paths.app.setup.clearing.offer,
+            path: paths.app.clearing.offer,
           },
           {
             label: 'Offer Market Clearing Service',
-            path: paths.app.setup.clearing.market.offer,
+            path: paths.app.clearing.market.offer,
           },
         ]}
       />

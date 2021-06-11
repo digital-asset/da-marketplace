@@ -82,9 +82,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
       return setContractTitle(biddingId);
     } else if (hasContractId(path, paths.app.trading.order)) {
       return setContractTitle(orderLabel);
-    } else if (hasContractId(path, paths.app.instrument.root)) {
+    } else if (hasContractId(path, paths.app.instruments.instrument.root)) {
       return setContractTitle(instrumentLabel);
-    } else if (hasContractId(path, paths.app.listings)) {
+    } else if (hasContractId(path, paths.app.listings.root)) {
       return setContractTitle(listingLabel);
     }
   }, [

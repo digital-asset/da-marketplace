@@ -60,7 +60,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     <>
       <TitleWithActions
         title="Listings"
-        iconActions={[{ path: paths.app.setup.listing.new, label: ' New Listing' }]}
+        iconActions={[{ path: paths.app.listings.new, label: ' New Listing' }]}
       />
 
       <StripedTable

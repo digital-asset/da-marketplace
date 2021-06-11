@@ -16,7 +16,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="auction">
       <TitleWithActions
         title="Auctions"
-        iconActions={[{ path: paths.app.setup.distribution.new.auction, label: ' New Auction' }]}
+        iconActions={[{ path: paths.app.distribution.new.auction, label: ' New Auction' }]}
       />
 
       <StripedTable

@@ -8,38 +8,36 @@ const paths = {
   app: {
     root: '/app',
     notifications: '/app/notifications',
-    clearingServices: '/app/clearing',
     distributions: '/app/distributions',
-    instruments: '/app/instruments',
-    issuance: '/app/issuance',
-    listings: '/app/listings',
-    setup: {
-      root: '/app/setup',
-      clearing: {
-        offer: '/app/setup/clearing/offer',
-        market: { offer: '/app/setup/clearing/market/offer' },
-      },
-      custody: { offer: '/app/setup/custody/offer' },
-      distribution: {
-        new: { auction: '/app/setup/distribution/new/auction' },
-      },
-      identity: '/app/setup/identity',
+    instruments: {
+      root: '/app/instruments',
       instrument: {
+        root: '/app/instruments/instrument',
+        requests: '/app/instruments/instrument/requests',
         new: {
-          base: '/app/setup/instrument/new/base',
-          convertiblenote: '/app/setup/instrument/new/convertiblenote',
-          binaryoption: '/app/setup/instrument/new/binaryoption',
+          base: '/app/instruments/instrument/new/base',
+          convertiblenote: '/app/instruments/instrument/new/convertiblenote',
+          binaryoption: '/app/instruments/instrumen t/new/binaryoption',
         },
       },
-      issuance: { new: '/app/setup/issuance/new' },
-      listing: { new: '/app/setup/listing/new' },
-      trading: { offer: '/app/setup/trading/offer' },
+    },
+    issuance: { root: '/app/issuance', new: '/app/issuance/new' },
+    listings: { root: '/app/listings', new: '/app/listings/new' },
+    setup: {
+      root: '/app/setup',
+      identity: '/app/setup/identity',
     },
     clearing: {
+      root: '/app/clearing',
       members: '/app/clearing/members',
       member: '/app/clearing/member',
+      offer: '/app/clearing/offer',
+      market: { offer: '/app/clearing/market/offer' },
     },
-    custody: '/app/custody',
+    custody: {
+      root: '/app/custody',
+      offer: '/app/custody/offer',
+    },
     wallet: {
       root: '/app/wallet',
       account: '/app/wallet/account',
@@ -51,17 +49,18 @@ const paths = {
     },
     distribution: {
       auctions: '/app/distribution/auctions',
-      new: '/app/distribution/new',
+      new: {
+        root: '/app/distribution/new',
+        auction: '/app/distribution/new/auction',
+      },
       bidding: '/app/distribution/bidding',
     },
-    instrument: {
-      root: '/app/instrument',
-      requests: '/app/instrument/requests',
-    },
+
     trading: {
       root: '/app/trading',
       markets: '/app/trading/markets',
       order: '/app/trading/order',
+      offer: '/app/trading/offer',
     },
   },
 };

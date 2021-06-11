@@ -157,7 +157,7 @@ const AppComponent = () => {
           <Button
             key="manage-clearing"
             className="ghost"
-            onClick={() => history.push(paths.app.clearingServices)}
+            onClick={() => history.push(paths.app.clearing.root)}
           >
             Manage Clearing Services
           </Button>,
@@ -186,7 +186,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: paths.app.distribution.new,
+        path: paths.app.distribution.new.root,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
             <DistributionNew services={auctionService} />
@@ -238,6 +238,10 @@ const AppComponent = () => {
         path: paths.app.trading.order + '/:contractId',
         render: () => <TradingOrder listings={listings} />,
       },
+      {
+        path: paths.app.trading.offer,
+        render: () => <Offer service={ServiceKind.TRADING} />,
+      },
     ],
   });
 
@@ -246,11 +250,21 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Clearing Services',
-        activeSubroutes: false,
-        path: paths.app.clearingServices,
+        activeSubroutes: true,
+        path: paths.app.clearing.root,
         render: () => <ClearingServiceTable services={clearingService} />,
         icon: <ControlsIcon />,
         children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.clearing.offer,
+        render: () => <Offer service={ServiceKind.CLEARING} />,
+      },
+      {
+        path: paths.app.clearing.market.offer,
+        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
       },
     ],
   });
@@ -260,11 +274,17 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Custody Services',
-        activeSubroutes: false,
-        path: paths.app.custody,
+        activeSubroutes: true,
+        path: paths.app.custody.root,
         render: () => <CustodyServiceTable services={custodyService} />,
         icon: <ControlsIcon />,
         children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.custody.offer,
+        render: () => <Offer service={ServiceKind.CUSTODY} />,
       },
     ],
   });
@@ -273,7 +293,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Distributions',
-        activeSubroutes: false,
+        activeSubroutes: true,
         path: paths.app.distributions,
         render: () => (
           <>
@@ -286,21 +306,58 @@ const AppComponent = () => {
         children: [],
       },
     ],
+    additionalRoutes: [
+      {
+        path: paths.app.distribution.new.auction,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
+            <NewAuction services={auctionService} />
+          </ServiceRequired>
+        ),
+      },
+    ],
   });
   entries.push({
     displayEntry: () => true,
     sidebar: [
       {
         label: 'Instruments',
-        activeSubroutes: false,
-        path: paths.app.instruments,
+        activeSubroutes: true,
+        path: paths.app.instruments.root,
         render: () => <InstrumentsTable />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
-      { path: paths.app.instrument + '/:contractId', component: Instrument },
+      {
+        path: paths.app.instruments.instrument.root + '/:contractId',
+        component: Instrument,
+      },
+      {
+        path: paths.app.instruments.instrument.new.base,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
+            <NewBaseInstrument />
+          </ServiceRequired>
+        ),
+      },
+      {
+        path: paths.app.instruments.instrument.new.convertiblenote,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
+            <NewConvertibleNote />
+          </ServiceRequired>
+        ),
+      },
+      {
+        path: paths.app.instruments.instrument.new.binaryoption,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
+            <NewBinaryOption />
+          </ServiceRequired>
+        ),
+      },
     ],
   });
   entries.push({
@@ -308,11 +365,21 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Issuance',
-        activeSubroutes: false,
-        path: paths.app.issuance,
+        activeSubroutes: true,
+        path: paths.app.issuance.root,
         render: () => <IssuancesTable />,
         icon: <ControlsIcon />,
         children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.issuance.new,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
+            <IssuanceNew services={issuanceService} />
+          </ServiceRequired>
+        ),
       },
     ],
   });
@@ -333,6 +400,14 @@ const AppComponent = () => {
         path: paths.app.listings + '/:contractId?',
         render: () => <ListingsTable services={listingService} listings={listings} />,
       },
+      {
+        path: paths.app.listings.new,
+        render: () => (
+          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
+            <ListingNew services={listingService} />
+          </ServiceRequired>
+        ),
+      },
     ],
   });
 
@@ -350,72 +425,8 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.setup.custody.offer,
-        render: () => <Offer service={ServiceKind.CUSTODY} />,
-      },
-      {
-        path: paths.app.setup.clearing.offer,
-        render: () => <Offer service={ServiceKind.CLEARING} />,
-      },
-      {
-        path: paths.app.setup.clearing.market.offer,
-        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
-      },
-      {
-        path: paths.app.setup.distribution.new.auction,
-        render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
-            <NewAuction services={auctionService} />
-          </ServiceRequired>
-        ),
-      },
-      {
         path: paths.app.setup.identity,
         render: () => <RequestIdentityVerification />,
-      },
-      {
-        path: paths.app.setup.instrument.new.base,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
-            <NewBaseInstrument />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.instrument.new.convertiblenote,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
-            <NewConvertibleNote />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.instrument.new.binaryoption,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
-            <NewBinaryOption />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.issuance.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
-            <IssuanceNew services={issuanceService} />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.listing.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
-            <ListingNew services={listingService} />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.trading.offer,
-        render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
   });
@@ -451,7 +462,7 @@ const AppComponent = () => {
   const path = useLocation().pathname;
 
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
-
+  console.log(currentEntry);
   return (
     <Page
       sideBarItems={entriesToDisplay}

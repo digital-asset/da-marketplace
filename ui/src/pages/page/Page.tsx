@@ -51,7 +51,7 @@ const Page: React.FC<Props> = ({
           exact
           active={
             sideBarItem.activeSubroutes
-              ? history.location.pathname.includes(getBaseSegment(sideBarItem.path))
+              ? history.location.pathname.startsWith(sideBarItem.path)
               : undefined
           }
           key={sideBarItem.label + sideBarItem.path}

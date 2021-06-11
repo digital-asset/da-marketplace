@@ -35,7 +35,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Custody Service',
-          path: paths.app.setup.custody.offer,
+          path: paths.app.custody.offer,
         },
       ]}
     />
@@ -45,11 +45,11 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Clearing Service',
-          path: paths.app.setup.clearing.offer,
+          path: paths.app.clearing.offer,
         },
         {
           label: 'Offer Market Clearing Service',
-          path: paths.app.setup.clearing.market.offer,
+          path: paths.app.clearing.market.offer,
         },
       ]}
     />
@@ -59,7 +59,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Auction',
-          path: paths.app.setup.distribution.new.auction,
+          path: paths.app.distribution.new.auction,
         },
       ]}
     />
@@ -69,15 +69,15 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Create Base Instrument',
-          path: paths.app.setup.instrument.new.base,
+          path: paths.app.instruments.instrument.new.base,
         },
         {
           label: 'Create Binary Option',
-          path: paths.app.setup.instrument.new.binaryoption,
+          path: paths.app.instruments.instrument.new.binaryoption,
         },
         {
           label: 'Create Convertible Note',
-          path: paths.app.setup.instrument.new.convertiblenote,
+          path: paths.app.instruments.instrument.new.convertiblenote,
         },
       ]}
     />
@@ -87,7 +87,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Issuance',
-          path: paths.app.setup.issuance.new,
+          path: paths.app.issuance.new,
         },
       ]}
     />
@@ -97,7 +97,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'New Listing',
-          path: paths.app.setup.listing.new,
+          path: paths.app.listings.new,
         },
       ]}
     />
@@ -107,7 +107,7 @@ const SetUp: React.FC = () => (
       links={[
         {
           label: 'Offer Trading Service',
-          path: paths.app.setup.trading.offer,
+          path: paths.app.trading.offer,
         },
       ]}
     />
