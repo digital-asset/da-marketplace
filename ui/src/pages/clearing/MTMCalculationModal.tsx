@@ -39,6 +39,12 @@ const MTMCalculationModal: React.FC<ServicePageProps<Service> & MTMProps> = ({
     }
   }, [member]);
 
+  useEffect(() => {
+    if (!currencyId && assets.length > 0) {
+      setCurrencyId(assets.find(c => c.payload.assetId.label === "USD")?.payload.assetId);
+    }
+  }, [currencyId, assets]);
+
   const handleCalculation = async () => {
     const service = services.find(
       s => s.payload.customer === customer && s.payload.provider === party
