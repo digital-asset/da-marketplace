@@ -50,7 +50,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
         iconActions={[
           {
             label: 'Manage Clearing Services',
-            path: paths.app.manage.clearing,
+            path: paths.app.clearingServices,
           },
         ]}
       >

@@ -48,7 +48,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.OpenAccount, service.contractId, {
       openAccountRequestCid: c.contractId,
     });
-    history.push(paths.app.custody.accounts.root);
+    history.push(paths.app.wallet.accounts.root);
   };
 
   const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
@@ -61,7 +61,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CloseAccount, service.contractId, {
       closeAccountRequestCid: c.contractId,
     });
-    history.push(paths.app.custody.accounts.root);
+    history.push(paths.app.wallet.accounts.root);
   };
 
   const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
@@ -74,7 +74,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.CreditAccount, service.contractId, {
       creditAccountRequestCid: c.contractId,
     });
-    history.push(paths.app.custody.accounts.root);
+    history.push(paths.app.wallet.accounts.root);
   };
 
   const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
@@ -87,7 +87,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.DebitAccount, service.contractId, {
       debitAccountRequestCid: c.contractId,
     });
-    history.push(paths.app.custody.accounts.root);
+    history.push(paths.app.wallet.accounts.root);
   };
 
   const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
@@ -100,7 +100,7 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     await ledger.exercise(Service.TransferDeposit, service.contractId, {
       transferDepositRequestCid: c.contractId,
     });
-    history.push(paths.app.custody.accounts.root);
+    history.push(paths.app.wallet.accounts.root);
   };
 
   const getDebitDepositDetail = (

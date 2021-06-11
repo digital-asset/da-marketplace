@@ -54,7 +54,6 @@ import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
-import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
@@ -105,7 +104,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Wallet',
-        path: paths.app.custody.assets,
+        path: paths.app.wallet.root,
         activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
@@ -114,11 +113,11 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.custody.account + '/:contractId',
+        path: paths.app.wallet.account + '/:contractId',
         render: () => <Account services={custodyService} />,
       },
       {
-        path: paths.app.custody.requests,
+        path: paths.app.wallet.requests,
         render: () => <CustodyRequests services={custodyService} />,
       },
     ],
@@ -158,7 +157,7 @@ const AppComponent = () => {
           <Button
             key="manage-clearing"
             className="ghost"
-            onClick={() => history.push(paths.app.manage.clearing)}
+            onClick={() => history.push(paths.app.clearingServices)}
           >
             Manage Clearing Services
           </Button>,
@@ -246,73 +245,93 @@ const AppComponent = () => {
     displayEntry: () => true,
     sidebar: [
       {
-        label: 'Manage',
-        path: paths.app.manage.root,
+        label: 'Clearing Services',
+        activeSubroutes: false,
+        path: paths.app.clearingServices,
+        render: () => <ClearingServiceTable services={clearingService} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Custody Services',
+        activeSubroutes: false,
+        path: paths.app.custody,
+        render: () => <CustodyServiceTable services={custodyService} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+  });
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Distributions',
+        activeSubroutes: false,
+        path: paths.app.distributions,
+        render: () => (
+          <>
+            <AuctionRequests services={auctionService} />
+            <Auctions />
+            <DistributionServiceTable />
+          </>
+        ),
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+  });
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Instruments',
+        activeSubroutes: false,
+        path: paths.app.instruments,
+        render: () => <InstrumentsTable />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      { path: paths.app.instrument + '/:contractId', component: Instrument },
+    ],
+  });
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Issuance',
+        activeSubroutes: false,
+        path: paths.app.issuance,
+        render: () => <IssuancesTable />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+  });
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Trading Services',
         activeSubroutes: true,
-        render: () => <Redirect to={paths.app.manage.custody} />,
+        path: paths.app.trading.root,
+        render: () => <TradingServiceTable services={tradingService} />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
       {
-        path: paths.app.manage.clearing,
-        render: () => (
-          <Manage>
-            <ClearingServiceTable services={clearingService} />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.custody,
-        render: () => (
-          <Manage>
-            <CustodyServiceTable services={custodyService} />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.distributions,
-        render: () => (
-          <Manage>
-            <AuctionRequests services={auctionService} />
-            <Auctions />
-            <DistributionServiceTable />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.instruments,
-        render: () => (
-          <Manage>
-            <InstrumentsTable />
-          </Manage>
-        ),
-      },
-      { path: paths.app.manage.instrument + '/:contractId', component: Instrument },
-      {
-        path: paths.app.manage.issuance,
-        render: () => (
-          <Manage>
-            <IssuancesTable />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.trading,
-        render: () => (
-          <Manage>
-            <TradingServiceTable services={tradingService} />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.listings + '/:contractId?',
-        render: () => (
-          <Manage>
-            <ListingsTable services={listingService} listings={listings} />
-          </Manage>
-        ),
+        path: paths.app.listings + '/:contractId?',
+        render: () => <ListingsTable services={listingService} listings={listings} />,
       },
     ],
   });

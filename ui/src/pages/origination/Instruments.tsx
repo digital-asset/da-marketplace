@@ -43,7 +43,7 @@ export const InstrumentsTable: React.FC = () => {
               c.payload.description,
             ],
             onClick: () =>
-              history.push(`${paths.app.manage.instrument}/${c.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.instrument}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

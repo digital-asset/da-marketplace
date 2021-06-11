@@ -207,7 +207,7 @@ const Landing = () => {
               </span>
             </div>
             <div className="link">
-              <NavLink to={paths.app.custody.assets}>View Wallet</NavLink>
+              <NavLink to={paths.app.wallet.root}>View Wallet</NavLink>
             </div>
           </div>
         </Tile>

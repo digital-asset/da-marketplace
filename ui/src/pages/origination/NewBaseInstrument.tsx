@@ -72,7 +72,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
       safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],
     });
-    history.push(paths.app.manage.instruments);
+    history.push(paths.app.instruments);
   };
 
   const FormLabel = (props: { label: string; subLabel?: string }) => (

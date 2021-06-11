@@ -8,17 +8,11 @@ const paths = {
   app: {
     root: '/app',
     notifications: '/app/notifications',
-    manage: {
-      root: '/app/manage',
-      custody: '/app/manage/custody',
-      clearing: '/app/manage/clearing',
-      distributions: '/app/manage/distributions',
-      instrument: '/app/manage/instrument',
-      instruments: '/app/manage/instruments',
-      issuance: '/app/manage/issuance',
-      trading: '/app/manage/trading',
-      listings: '/app/manage/listings',
-    },
+    clearingServices: '/app/clearing',
+    distributions: '/app/distributions',
+    instruments: '/app/instruments',
+    issuance: '/app/issuance',
+    listings: '/app/listings',
     setup: {
       root: '/app/setup',
       clearing: {
@@ -45,14 +39,15 @@ const paths = {
       members: '/app/clearing/members',
       member: '/app/clearing/member',
     },
-    custody: {
-      account: '/app/custody/account',
+    custody: '/app/custody',
+    wallet: {
+      root: '/app/wallet',
+      account: '/app/wallet/account',
       accounts: {
-        root: '/app/custody/accounts',
-        new: '/app/custody/accounts/new',
+        root: '/app/wallet/accounts',
+        new: '/app/wallet/accounts/new',
       },
-      assets: '/app/custody/assets',
-      requests: '/app/custody/requests',
+      requests: '/app/wallet/requests',
     },
     distribution: {
       auctions: '/app/distribution/auctions',
@@ -60,9 +55,11 @@ const paths = {
       bidding: '/app/distribution/bidding',
     },
     instrument: {
+      root: '/app/instrument',
       requests: '/app/instrument/requests',
     },
     trading: {
+      root: '/app/trading',
       markets: '/app/trading/markets',
       order: '/app/trading/order',
     },

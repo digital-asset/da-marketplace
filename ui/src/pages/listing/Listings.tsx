@@ -96,7 +96,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
             ],
             onClick: () =>
-              history.push(`${paths.app.manage.listings}/${c.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.listings}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

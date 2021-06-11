@@ -103,7 +103,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       observers: [publicParty],
     };
     await ledger.exercise(Service.RequestCreateListing, service.contractId, request);
-    history.push(paths.app.manage.listings);
+    history.push(paths.app.listings);
   };
 
   const { step, placeholder } = preciseInputSteps(+tradedAssetPrecision);

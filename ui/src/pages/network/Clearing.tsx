@@ -132,7 +132,7 @@ export const ClearingServiceTable: React.FC<Props> = ({ services }) => {
   return (
     <div>
       <TitleWithActions
-        title="Current Services"
+        title="Clearing Services"
         otherActions={[
           {
             label: 'Offer Clearing Service',

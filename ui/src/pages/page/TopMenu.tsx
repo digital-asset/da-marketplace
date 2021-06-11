@@ -72,7 +72,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
 
   useEffect(() => {
     setContractTitle(undefined);
-    if (hasContractId(path, paths.app.custody.account)) {
+    if (hasContractId(path, paths.app.wallet.account)) {
       return setContractTitle(accountLabel);
     } else if (hasContractId(path, paths.app.clearing.member)) {
       return setContractTitle(customer);
@@ -82,9 +82,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
       return setContractTitle(biddingId);
     } else if (hasContractId(path, paths.app.trading.order)) {
       return setContractTitle(orderLabel);
-    } else if (hasContractId(path, paths.app.manage.instrument)) {
+    } else if (hasContractId(path, paths.app.instrument.root)) {
       return setContractTitle(instrumentLabel);
-    } else if (hasContractId(path, paths.app.manage.listings)) {
+    } else if (hasContractId(path, paths.app.listings)) {
       return setContractTitle(listingLabel);
     }
   }, [

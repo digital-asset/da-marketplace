@@ -57,7 +57,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
             ],
             onClick: () =>
               history.push(
-                paths.app.custody.account +
+                paths.app.wallet.account +
                   '/' +
                   allAccounts
                     .find(a => a.account.id.label === c.payload.account.id.label)
@@ -82,7 +82,7 @@ const AssetsComponent: React.FC<RouteComponentProps & ServicePageProps<Service>>
               getName(a.account.owner),
               party === a.account.provider ? 'Provider' : 'Client',
             ],
-            onClick: () => history.push(`${paths.app.custody.account}/${a.contractId}`),
+            onClick: () => history.push(`${paths.app.wallet.account}/${a.contractId}`),
           };
         })}
       />
