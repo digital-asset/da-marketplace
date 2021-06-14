@@ -18,7 +18,12 @@ import DA.List
 setup : Script ()
 setup = do
   providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
+
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   -- Assets
   let
@@ -26,8 +31,6 @@ setup = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
   aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
 
@@ -99,7 +102,11 @@ partialExecutionsTest : Script ()
 partialExecutionsTest = do
 
   providers@Providers{operator; exchange; matchingServiceCid} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   -- Assets
   let
@@ -107,8 +114,6 @@ partialExecutionsTest = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
   aliceDepositCid <- depositAsset providers alice cashAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob shareAsset bob.mainAccount.id
 
