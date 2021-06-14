@@ -8,18 +8,18 @@ import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import {Button, Form} from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
 import InfoCard from '../../components/Common/InfoCard';
 import Tile from '../../components/Tile/Tile';
-import {ServicePageProps, damlSetValues, createDropdownProp} from '../common';
+import { ServicePageProps, damlSetValues, createDropdownProp } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import paths from '../../paths';
-import FormErrorHandled from "../../components/Form/FormErrorHandled";
+import FormErrorHandled from '../../components/Form/FormErrorHandled';
 
 const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
   history,
@@ -39,8 +39,8 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
   const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
-  const [ creditAsset, setCreditAsset] = useState<string>("");
-  const [ creditQuantity, setCreditQuantity] = useState<string>("");
+  const [creditAsset, setCreditAsset] = useState<string>('');
+  const [creditQuantity, setCreditQuantity] = useState<string>('');
 
   const allAccounts = useMemo(
     () =>
@@ -141,7 +141,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   const onRequestCredit = async () => {
     const asset = assets.find(i => i.payload.description === creditAsset);
-    if (!asset) return
+    if (!asset) return;
 
     if (!service)
       return displayErrorMessage({
@@ -154,9 +154,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       accountId: targetAccount.account.id,
       asset: { id: asset.payload.assetId, quantity: creditQuantity },
     });
-    setCreditAsset("");
-    setCreditQuantity("");
-  }
+    setCreditAsset('');
+    setCreditQuantity('');
+  };
 
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     if (!service)
@@ -229,8 +229,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
           />
           <Tile header="Credit Account Request">
             <br />
-            <FormErrorHandled
-              onSubmit={() => onRequestCredit()}>
+            <FormErrorHandled onSubmit={() => onRequestCredit()}>
               <Form.Select
                 label="Asset"
                 options={assets.map(a => createDropdownProp(a.payload.description))}
@@ -246,9 +245,9 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
               <Button
                 type="submit"
                 className="ghost"
-                disabled={creditAsset === "" || creditQuantity === "" || creditQuantity === "0"}
+                disabled={creditAsset === '' || creditQuantity === '' || creditQuantity === '0'}
                 content="Submit"
-                />
+              />
             </FormErrorHandled>
           </Tile>
         </div>
