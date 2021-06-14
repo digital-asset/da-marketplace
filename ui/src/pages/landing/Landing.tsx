@@ -20,9 +20,6 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import paths from '../../paths';
 import ServiceRequestMenu from './ServiceRequestMenu';
-import RoleRequestMenu from './RoleRequestMenu';
-import { useRolesContext } from '../../context/RolesContext';
-import { useRoleRequestKinds } from '../../context/RequestsContext';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -145,11 +142,6 @@ const Landing = () => {
   const party = useParty();
   const { name } = usePartyName(party);
   const providers = useProviderServices(party);
-  const roles = useRolesContext()
-    .roles.filter(r => r.contract.payload.provider === party)
-    .map(r => r.roleKind);
-
-  const roleRequests = useRoleRequestKinds();
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
 
@@ -166,35 +158,6 @@ const Landing = () => {
           <div className="profile">
             <div className="profile-name">@{name}</div>
             <ProfileSection name={name} />
-          </div>
-        </Tile>
-
-        <Tile>
-          <div className="role-tile">
-            <div>
-              <Header as="h2" className="header">
-                Services Provided
-              </Header>
-              <RoleRequestMenu />
-            </div>
-            <div className="roles">
-              {!roles.length && !roleRequests.size ? (
-                <p className="p2 label no-roles">None</p>
-              ) : (
-                <>
-                  {Array.from(roleRequests).map(rq => (
-                    <p className="p2 label" key={rq}>
-                      {rq} (Pending)
-                    </p>
-                  ))}
-                  {roles.map(s => (
-                    <p className="p2 label" key={s}>
-                      {s}
-                    </p>
-                  ))}
-                </>
-              )}
-            </div>
           </div>
         </Tile>
 

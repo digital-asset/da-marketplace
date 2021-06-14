@@ -20,12 +20,12 @@ export const InstrumentsTable: React.FC = () => {
       <TitleWithActions
         title={'Instruments'}
         iconActions={[
-          { path: paths.app.instruments.instrument.new.base, label: 'New Base Instrument' },
+          { path: paths.app.instruments.new.base, label: 'New Base Instrument' },
           {
-            path: paths.app.instruments.instrument.new.convertiblenote,
+            path: paths.app.instruments.new.convertiblenote,
             label: 'New Convertible Note',
           },
-          { path: paths.app.instruments.instrument.new.binaryoption, label: 'New Binary Option' },
+          { path: paths.app.instruments.new.binaryoption, label: 'New Binary Option' },
         ]}
       />
 
@@ -46,7 +46,9 @@ export const InstrumentsTable: React.FC = () => {
               c.payload.description,
             ],
             onClick: () =>
-              history.push(`${paths.app.instruments.instrument.root}/${c.contractId.replace('#', '_')}`),
+              history.push(
+                `${paths.app.instruments.instrument.root}/${c.contractId.replace('#', '_')}`
+              ),
           };
         })}
       />

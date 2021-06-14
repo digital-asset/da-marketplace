@@ -14,11 +14,11 @@ const paths = {
       instrument: {
         root: '/app/instruments/instrument',
         requests: '/app/instruments/instrument/requests',
-        new: {
-          base: '/app/instruments/instrument/new/base',
-          convertiblenote: '/app/instruments/instrument/new/convertiblenote',
-          binaryoption: '/app/instruments/instrumen t/new/binaryoption',
-        },
+      },
+      new: {
+        base: '/app/instruments/new/base',
+        convertiblenote: '/app/instruments/new/convertiblenote',
+        binaryoption: '/app/instruments/new/binaryoption',
       },
     },
     issuance: { root: '/app/issuance', new: '/app/issuance/new' },

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import OverflowMenu, { OverflowMenuEntry } from '../page/OverflowMenu';
 
 import { Template } from '@daml/types';
+import { Button, Header } from 'semantic-ui-react';
+
 import { Request as CustodianRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Request as ExchangeRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
 import { Request as ClearingRequest } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
@@ -22,6 +23,7 @@ import { useParty, useStreamQueries } from '@daml/react';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RoleRequestDialog } from '../../components/InputDialog/RoleDialog';
 import { useRoleRequestKinds } from '../../context/RequestsContext';
+import { AddPlusIcon } from '../../icons/icons';
 
 interface RequestInterface {
   operator: string;
@@ -129,37 +131,38 @@ const RoleRequestMenu: React.FC = () => {
   const canRequest = (kind: RoleKind) => !requests.has(kind) && !roles.has(kind);
 
   return (
-    <OverflowMenu>
+    <div className="setup-service">
       {canRequest(RoleKind.CUSTODY) && (
-        <OverflowMenuEntry
-          label="Request Custodian Role"
-          onClick={() => requestRole(CustodianRequest, RoleKind.CUSTODY)}
-        />
+        <Button onClick={() => requestRole(CustodianRequest, RoleKind.CUSTODY)} className="ghost">
+          <AddPlusIcon /> Add Custodian Role
+        </Button>
       )}
       {canRequest(RoleKind.TRADING) && (
-        <OverflowMenuEntry
-          label="Request Exchange Role"
-          onClick={() => requestRole(ExchangeRequest, RoleKind.TRADING)}
-        />
+        <Button onClick={() => requestRole(ExchangeRequest, RoleKind.TRADING)} className="ghost">
+          <AddPlusIcon /> Add Exchange Role
+        </Button>
       )}
 
       {canRequest(RoleKind.DISTRIBUTION) && (
-        <OverflowMenuEntry
-          label="Request Distribution Role"
+        <Button
           onClick={() => requestRole(DistributionRequest, RoleKind.DISTRIBUTION)}
-        />
+          className="ghost"
+        >
+          <AddPlusIcon /> Add Distribution Role
+        </Button>
       )}
 
       {canRequest(RoleKind.SETTLEMENT) && (
-        <OverflowMenuEntry
-          label="Request Settlement Role"
+        <Button
           onClick={() => requestRole(SettlementRequest, RoleKind.SETTLEMENT)}
-        />
+          className="ghost"
+        >
+          <AddPlusIcon /> Add Settlement Role
+        </Button>
       )}
 
       {canRequest(RoleKind.CLEARING) && (
-        <OverflowMenuEntry
-          label="Request Clearinghouse Role"
+        <Button
           onClick={() =>
             requestRole(ClearingRequest, RoleKind.CLEARING, {
               ccpAccount: {
@@ -169,9 +172,12 @@ const RoleRequestMenu: React.FC = () => {
               },
             })
           }
-        />
+          className="ghost"
+        >
+          <AddPlusIcon /> Add Clearing Role
+        </Button>
       )}
-    </OverflowMenu>
+    </div>
   );
 };
 

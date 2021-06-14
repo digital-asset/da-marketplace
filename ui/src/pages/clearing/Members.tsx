@@ -45,15 +45,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
 
   return (
     <div>
-      <TitleWithActions
-        title="Clearing"
-        iconActions={[
-          {
-            label: 'Manage Clearing Services',
-            path: paths.app.clearing.root,
-          },
-        ]}
-      >
+      <TitleWithActions title="Clearing">
         <MarginCallModal services={services} />
         <MTMCalculationModal services={services} />
       </TitleWithActions>

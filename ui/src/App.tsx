@@ -19,6 +19,9 @@ import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
 import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
@@ -86,6 +89,8 @@ const AppComponent = () => {
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
   const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
+  const { contracts: clearingRole, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);
+  const { contracts: custodyRole, loading: custodyRoleLoading } = useStreamQueries(CustodyRole);
 
   const servicesLoading: boolean = [
     custodyLoading,
@@ -96,6 +101,8 @@ const AppComponent = () => {
     listingLoading,
     tradingLoading,
     listingsLoading,
+    clearingRoleLoading,
+    custodyRoleLoading,
   ].every(s => s);
 
   const entries: Entry[] = [];
@@ -152,16 +159,7 @@ const AppComponent = () => {
         path: paths.app.clearing.member,
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
-        children: [],
-        topMenuButtons: [
-          <Button
-            key="manage-clearing"
-            className="ghost"
-            onClick={() => history.push(paths.app.clearing.root)}
-          >
-            Manage Clearing Services
-          </Button>,
-        ],
+        children: []
       },
     ],
   });
@@ -246,7 +244,7 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => !!clearingRole.find(c => c.payload.provider == party),
     sidebar: [
       {
         label: 'Clearing Services',
@@ -270,7 +268,7 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => !!custodyRole.find(p => p.payload.provider === party),
     sidebar: [
       {
         label: 'Custody Services',
@@ -288,8 +286,10 @@ const AppComponent = () => {
       },
     ],
   });
+  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
+
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => auctionCustomer.length > 0,
     sidebar: [
       {
         label: 'Distributions',
@@ -335,7 +335,7 @@ const AppComponent = () => {
         component: Instrument,
       },
       {
-        path: paths.app.instruments.instrument.new.base,
+        path: paths.app.instruments.new.base,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
             <NewBaseInstrument />
@@ -343,7 +343,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: paths.app.instruments.instrument.new.convertiblenote,
+        path: paths.app.instruments.new.convertiblenote,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
             <NewConvertibleNote />
@@ -351,7 +351,7 @@ const AppComponent = () => {
         ),
       },
       {
-        path: paths.app.instruments.instrument.new.binaryoption,
+        path: paths.app.instruments.new.binaryoption,
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
             <NewBinaryOption />
@@ -360,8 +360,11 @@ const AppComponent = () => {
       },
     ],
   });
+
+  const issuanceCustomer = issuanceService.filter(cs => cs.payload.customer === party);
+
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => issuanceCustomer.length > 0,
     sidebar: [
       {
         label: 'Issuance',
@@ -462,7 +465,7 @@ const AppComponent = () => {
   const path = useLocation().pathname;
 
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
-  console.log(currentEntry);
+
   return (
     <Page
       sideBarItems={entriesToDisplay}
