@@ -3,7 +3,7 @@ import React from 'react';
 import { useParty } from '@daml/react';
 
 import { NavLink, Link } from 'react-router-dom';
-import { Header, Button } from 'semantic-ui-react';
+import { Header } from 'semantic-ui-react';
 import { SetupAutomation } from './SetupAutomation';
 import RoleRequestMenu from '../landing/RoleRequestMenu';
 

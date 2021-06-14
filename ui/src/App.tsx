@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Redirect,
-  Route,
-  RouteProps,
-  Switch,
-  useLocation,
-  withRouter,
-  useHistory,
-} from 'react-router-dom';
+import { Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { Account } from './pages/custody/Account';
@@ -62,7 +54,7 @@ import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header, Loader, Button } from 'semantic-ui-react';
+import { Header, Loader } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
@@ -77,7 +69,6 @@ type Entry = {
 
 const AppComponent = () => {
   const party = useParty();
-  const history = useHistory();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: clearingService, loading: clearingLoading } =
@@ -244,7 +235,7 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => !!clearingRole.find(c => c.payload.provider == party),
+    displayEntry: () => !!clearingRole.find(c => c.payload.provider === party),
     sidebar: [
       {
         label: 'Clearing Services',

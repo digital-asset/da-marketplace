@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { Template } from '@daml/types';
-import { Button, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 
 import { Request as CustodianRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Request as ExchangeRequest } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
