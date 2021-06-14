@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  Redirect,
-  Route,
-  RouteProps,
-  Switch,
-  useLocation,
-  withRouter,
-  useHistory,
-} from 'react-router-dom';
+import { Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { Account } from './pages/custody/Account';
@@ -19,10 +11,13 @@ import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketpla
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
 import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
+
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
-import { New as DistributionNew, New as NewAuction } from './pages/distribution/auction/New';
+import { New as NewAuction } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { InstrumentsTable } from './pages/origination/Instruments';
 import { IssuancesTable } from './pages/issuance/Issuances';
@@ -54,13 +49,12 @@ import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
-import Manage from './pages/manage/Manage';
 import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
 import { DistributionServiceTable } from './pages/network/Distribution';
-import { Header, Loader, Button } from 'semantic-ui-react';
+import { Header, Loader } from 'semantic-ui-react';
 import RequestIdentityVerification from './pages/identity/Request';
 import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
@@ -75,7 +69,6 @@ type Entry = {
 
 const AppComponent = () => {
   const party = useParty();
-  const history = useHistory();
 
   const { contracts: custodyService, loading: custodyLoading } = useStreamQueries(CustodyService);
   const { contracts: clearingService, loading: clearingLoading } =
@@ -87,6 +80,8 @@ const AppComponent = () => {
   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
   const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
+  const { contracts: clearingRole, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);
+  const { contracts: custodyRole, loading: custodyRoleLoading } = useStreamQueries(CustodyRole);
 
   const servicesLoading: boolean = [
     custodyLoading,
@@ -97,6 +92,8 @@ const AppComponent = () => {
     listingLoading,
     tradingLoading,
     listingsLoading,
+    clearingRoleLoading,
+    custodyRoleLoading,
   ].every(s => s);
 
   const entries: Entry[] = [];
@@ -105,7 +102,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Wallet',
-        path: paths.app.custody.assets,
+        path: paths.app.wallet.root,
         activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
@@ -114,11 +111,11 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.custody.account + '/:contractId',
+        path: paths.app.wallet.account + '/:contractId',
         render: () => <Account services={custodyService} />,
       },
       {
-        path: paths.app.custody.requests,
+        path: paths.app.wallet.requests,
         render: () => <CustodyRequests services={custodyService} />,
       },
     ],
@@ -129,8 +126,9 @@ const AppComponent = () => {
     displayEntry: () => clearingProvider.length > 0,
     sidebar: [
       {
-        label: 'Members',
-        path: paths.app.clearing.members,
+        label: 'Clearing Members',
+        path: paths.app.clearingMembers.root,
+        activeSubroutes: true,
         render: () => <ClearingMembers services={clearingProvider} />,
         icon: <WalletIcon />,
         children: [],
@@ -138,7 +136,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.clearing.member + '/:contractId',
+        path: paths.app.clearingMembers.member + '/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
       },
     ],
@@ -154,90 +152,70 @@ const AppComponent = () => {
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
         children: [],
-        topMenuButtons: [
-          <Button
-            key="manage-clearing"
-            className="ghost"
-            onClick={() => history.push(paths.app.manage.clearing)}
-          >
-            Manage Clearing Services
-          </Button>,
-        ],
       },
     ],
   });
 
   entries.push({
-    displayEntry: () => auctionService.length > 0,
+    displayEntry: () => !!clearingRole.find(c => c.payload.provider === party),
     sidebar: [
       {
-        label: 'Auctions',
-        path: paths.app.distribution.auctions,
-        render: () => <Auctions />,
-        icon: <MegaphoneIcon />,
-        groupBy: 'Primary Market',
+        label: 'Clearing Services',
+        activeSubroutes: true,
+        path: paths.app.clearingServices.root,
+        render: () => <ClearingServiceTable services={clearingService} />,
+        icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
       {
-        path: paths.app.distribution.auctions + '/:contractId',
-        render: (props: any) => (
-          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
-        ),
+        path: paths.app.clearingServices.offer,
+        render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
-        path: paths.app.distribution.new,
+        path: paths.app.clearingServices.market.offer,
+        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => !!custodyRole.find(p => p.payload.provider === party),
+    sidebar: [
+      {
+        label: 'Custody Services',
+        activeSubroutes: true,
+        path: paths.app.custody.root,
+        render: () => <CustodyServiceTable services={custodyService} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.custody.offer,
+        render: () => <Offer service={ServiceKind.CUSTODY} />,
+      },
+    ],
+  });
+
+  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
+  entries.push({
+    displayEntry: () => auctionCustomer.length > 0,
+    sidebar: [
+      {
+        label: 'Distributions',
+        path: paths.app.distributions,
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
-            <DistributionNew services={auctionService} />
-          </ServiceRequired>
+          <>
+            <AuctionRequests services={auctionService} />
+            <Auctions />
+            <DistributionServiceTable />
+          </>
         ),
-      },
-    ],
-  });
-  entries.push({
-    displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
-    sidebar: [
-      {
-        label: 'Bidding Auctions',
-        path: paths.app.distribution.bidding,
-        render: () => <BiddingAuctions />,
-        icon: <MegaphoneIcon />,
-        groupBy: 'Primary Market',
+        icon: <ControlsIcon />,
         children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.distribution.bidding + '/:contractId',
-        render: () => <BiddingAuction services={biddingService} />,
-      },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => tradingService.length > 0,
-    sidebar: [
-      {
-        label: 'Markets',
-        path: paths.app.trading.markets,
-        render: () => <Markets listings={listings} />,
-        icon: <OrdersIcon />,
-        groupBy: 'Secondary Market',
-        children: listings.map(c => ({
-          label: c.payload.listingId.label,
-          path: paths.app.trading.markets + c.contractId.replace('#', '_'),
-          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
-          icon: <ExchangeIcon />,
-          children: [],
-        })),
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.trading.order + '/:contractId',
-        render: () => <TradingOrder listings={listings} />,
       },
     ],
   });
@@ -246,72 +224,107 @@ const AppComponent = () => {
     displayEntry: () => true,
     sidebar: [
       {
-        label: 'Manage',
-        path: paths.app.manage.root,
+        label: 'Instruments',
         activeSubroutes: true,
-        render: () => <Redirect to={paths.app.manage.custody} />,
+        path: paths.app.instruments.root,
+        render: () => <InstrumentsTable />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
     additionalRoutes: [
       {
-        path: paths.app.manage.clearing,
+        path: paths.app.instruments.instrument + '/:contractId',
+        component: Instrument,
+      },
+      {
+        path: paths.app.instruments.new.base,
         render: () => (
-          <Manage>
-            <ClearingServiceTable services={clearingService} />
-          </Manage>
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
+            <NewBaseInstrument />
+          </ServiceRequired>
         ),
       },
       {
-        path: paths.app.manage.custody,
+        path: paths.app.instruments.new.convertiblenote,
         render: () => (
-          <Manage>
-            <CustodyServiceTable services={custodyService} />
-          </Manage>
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
+            <NewConvertibleNote />
+          </ServiceRequired>
         ),
       },
       {
-        path: paths.app.manage.distributions,
+        path: paths.app.instruments.new.binaryoption,
         render: () => (
-          <Manage>
-            <AuctionRequests services={auctionService} />
-            <Auctions />
-            <DistributionServiceTable />
-          </Manage>
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
+            <NewBinaryOption />
+          </ServiceRequired>
         ),
       },
+    ],
+  });
+
+  const issuanceCustomer = issuanceService.filter(cs => cs.payload.customer === party);
+
+  entries.push({
+    displayEntry: () => issuanceCustomer.length > 0,
+    sidebar: [
       {
-        path: paths.app.manage.instruments,
+        label: 'Issuance',
+        activeSubroutes: true,
+        path: paths.app.issuance.root,
+        render: () => <IssuancesTable />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.issuance.new,
         render: () => (
-          <Manage>
-            <InstrumentsTable />
-          </Manage>
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
+            <IssuanceNew services={issuanceService} />
+          </ServiceRequired>
         ),
       },
-      { path: paths.app.manage.instrument + '/:contractId', component: Instrument },
+    ],
+  });
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
       {
-        path: paths.app.manage.issuance,
-        render: () => (
-          <Manage>
-            <IssuancesTable />
-          </Manage>
-        ),
+        label: 'Trading',
+        path: paths.app.trading,
+        render: () => <TradingServiceTable services={tradingService} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Listings',
+        path: paths.app.listings.root,
+        activeSubroutes: true,
+        render: () => <ListingsTable services={listingService} listings={listings} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.listings + '/:contractId?',
+        render: () => <ListingsTable services={listingService} listings={listings} />,
       },
       {
-        path: paths.app.manage.trading,
+        path: paths.app.listings.new,
         render: () => (
-          <Manage>
-            <TradingServiceTable services={tradingService} />
-          </Manage>
-        ),
-      },
-      {
-        path: paths.app.manage.listings + '/:contractId?',
-        render: () => (
-          <Manage>
-            <ListingsTable services={listingService} listings={listings} />
-          </Manage>
+          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
+            <ListingNew services={listingService} />
+          </ServiceRequired>
         ),
       },
     ],
@@ -331,72 +344,8 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.setup.custody.offer,
-        render: () => <Offer service={ServiceKind.CUSTODY} />,
-      },
-      {
-        path: paths.app.setup.clearing.offer,
-        render: () => <Offer service={ServiceKind.CLEARING} />,
-      },
-      {
-        path: paths.app.setup.clearing.market.offer,
-        render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
-      },
-      {
-        path: paths.app.setup.distribution.new.auction,
-        render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
-            <NewAuction services={auctionService} />
-          </ServiceRequired>
-        ),
-      },
-      {
         path: paths.app.setup.identity,
         render: () => <RequestIdentityVerification />,
-      },
-      {
-        path: paths.app.setup.instrument.new.base,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Base Instrument">
-            <NewBaseInstrument />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.instrument.new.convertiblenote,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Convertible Note">
-            <NewConvertibleNote />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.instrument.new.binaryoption,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
-            <NewBinaryOption />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.issuance.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Issuance">
-            <IssuanceNew services={issuanceService} />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.listing.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
-            <ListingNew services={listingService} />
-          </ServiceRequired>
-        ),
-      },
-      {
-        path: paths.app.setup.trading.offer,
-        render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
   });
@@ -411,6 +360,89 @@ const AppComponent = () => {
       {
         path: paths.app.notifications,
         render: () => <Notifications notifications={notifications} />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => tradingService.length > 0,
+    sidebar: [
+      {
+        label: 'Markets',
+        path: paths.app.markets.root,
+        activeSubroutes: true,
+        render: () => <Markets listings={listings} />,
+        icon: <OrdersIcon />,
+        groupBy: 'Secondary Market',
+        children: listings.map(c => ({
+          label: c.payload.listingId.label,
+          path: paths.app.markets + c.contractId.replace('#', '_'),
+          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
+          icon: <ExchangeIcon />,
+          children: [],
+        })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.markets.order + '/:contractId',
+        render: () => <TradingOrder listings={listings} />,
+      },
+      {
+        path: paths.app.markets.offer,
+        render: () => <Offer service={ServiceKind.TRADING} />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => auctionService.length > 0,
+    sidebar: [
+      {
+        label: 'Auctions',
+        path: paths.app.auctions.root,
+        activeSubroutes: true,
+        render: () => <Auctions />,
+        icon: <MegaphoneIcon />,
+        groupBy: 'Primary Market',
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.auctions.root + '/:contractId',
+        render: (props: any) => (
+          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
+        ),
+      },
+      {
+        path: paths.app.auctions.new,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
+            <NewAuction services={auctionService} />
+          </ServiceRequired>
+        ),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
+    sidebar: [
+      {
+        label: 'Bidding Auctions',
+        path: paths.app.biddingAuctions,
+        render: () => <BiddingAuctions />,
+        activeSubroutes: true,
+        icon: <MegaphoneIcon />,
+        groupBy: 'Primary Market',
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.biddingAuctions + '/:contractId',
+        render: () => <BiddingAuction services={biddingService} />,
       },
     ],
   });
@@ -430,7 +462,6 @@ const AppComponent = () => {
   };
 
   const path = useLocation().pathname;
-
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
 
   return (

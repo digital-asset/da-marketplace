@@ -31,8 +31,8 @@ export const CustodyServiceTable: React.FC<Props> = ({ services }) => {
   return (
     <>
       <TitleWithActions
-        title="Current Services"
-        otherActions={[{ label: 'Offer Custody Service', path: paths.app.setup.custody.offer }]}
+        title="Custody Services"
+        otherActions={[{ label: 'Offer Custody Service', path: paths.app.custody.offer }]}
       />
       <StripedTable
         headings={['Service', 'Operator', 'Provider', 'Consumer', 'Role', 'Action']}

@@ -8,63 +8,59 @@ const paths = {
   app: {
     root: '/app',
     notifications: '/app/notifications',
-    manage: {
-      root: '/app/manage',
-      custody: '/app/manage/custody',
-      clearing: '/app/manage/clearing',
-      distributions: '/app/manage/distributions',
-      instrument: '/app/manage/instrument',
-      instruments: '/app/manage/instruments',
-      issuance: '/app/manage/issuance',
-      trading: '/app/manage/trading',
-      listings: '/app/manage/listings',
+    distributions: '/app/distributions',
+    instruments: {
+      root: '/app/instruments',
+      instrument: '/app/instruments/instrument',
+      new: {
+        base: '/app/instruments/new/base',
+        convertiblenote: '/app/instruments/new/convertible-note',
+        binaryoption: '/app/instruments/new/binary-option',
+      },
     },
+    trading: '/app/trading',
+    listings: { root: '/app/listings', new: '/app/listings/new' },
+    issuance: { root: '/app/issuance', new: '/app/issuance/new' },
     setup: {
       root: '/app/setup',
-      clearing: {
-        offer: '/app/setup/clearing/offer',
-        market: { offer: '/app/setup/clearing/market/offer' },
-      },
-      custody: { offer: '/app/setup/custody/offer' },
-      distribution: {
-        new: { auction: '/app/setup/distribution/new/auction' },
-      },
       identity: '/app/setup/identity',
-      instrument: {
-        new: {
-          base: '/app/setup/instrument/new/base',
-          convertiblenote: '/app/setup/instrument/new/convertiblenote',
-          binaryoption: '/app/setup/instrument/new/binaryoption',
-        },
-      },
-      issuance: { new: '/app/setup/issuance/new' },
-      listing: { new: '/app/setup/listing/new' },
-      trading: { offer: '/app/setup/trading/offer' },
     },
     clearing: {
-      members: '/app/clearing/members',
+      root: '/app/clearing',
       member: '/app/clearing/member',
     },
+    clearingServices: {
+      root: '/app/clearing-services',
+      member: '/app/clearing/member',
+      offer: '/app/clearing/offer',
+      market: { offer: '/app/clearing-services/market/offer' },
+    },
+    clearingMembers: {
+      root: '/app/clearing-members',
+      member: '/app/clearing-members/member',
+    },
     custody: {
-      account: '/app/custody/account',
+      root: '/app/custody',
+      offer: '/app/custody/offer',
+    },
+    wallet: {
+      root: '/app/wallet',
+      account: '/app/wallet/account',
       accounts: {
-        root: '/app/custody/accounts',
-        new: '/app/custody/accounts/new',
+        root: '/app/wallet/accounts',
+        new: '/app/wallet/accounts/new',
       },
-      assets: '/app/custody/assets',
-      requests: '/app/custody/requests',
+      requests: '/app/wallet/requests',
     },
-    distribution: {
-      auctions: '/app/distribution/auctions',
-      new: '/app/distribution/new',
-      bidding: '/app/distribution/bidding',
+    auctions: {
+      root: '/app/auctions',
+      new: '/app/auctions/new',
     },
-    instrument: {
-      requests: '/app/instrument/requests',
-    },
-    trading: {
-      markets: '/app/trading/markets',
-      order: '/app/trading/order',
+    biddingAuctions: '/app/bidding-auctions',
+    markets: {
+      root: '/app/markets',
+      order: '/app/markets/order',
+      offer: '/app/markets/offer',
     },
   },
 };

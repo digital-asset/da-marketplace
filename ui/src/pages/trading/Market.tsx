@@ -382,7 +382,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                   ),
                 ],
                 onClick: () =>
-                  history.push(`${paths.app.trading.order}/${c.contractId.replace('#', '_')}`),
+                  history.push(`${paths.app.markets.order}/${c.contractId.replace('#', '_')}`),
               };
             })}
           />

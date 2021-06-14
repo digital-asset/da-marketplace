@@ -32,8 +32,7 @@ const MarketsComponent: React.FC<RouteComponentProps & Props> = ({
             c.payload.tradedAssetId.label,
             c.payload.quotedAssetId.label,
           ],
-          onClick: () =>
-            history.push(`${paths.app.trading.markets}/${c.contractId.replace('#', '_')}`),
+          onClick: () => history.push(`${paths.app.markets}/${c.contractId.replace('#', '_')}`),
         };
       })}
     />
