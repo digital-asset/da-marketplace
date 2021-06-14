@@ -13,7 +13,12 @@ import Common
 traderCannotMoveAllocatedAsset : Script ()
 traderCannotMoveAllocatedAsset = do
   providers@Providers{exchange} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
+
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   -- Assets
   let
@@ -21,8 +26,6 @@ traderCannotMoveAllocatedAsset = do
     cashAsset = usd with quantity = 20000.0
     priceAsset = usd with quantity = 100.0
 
-  alice <- onboardCustomer providers "Alice"
-  bob <- onboardCustomer providers "Bob"
   aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
   let listingId = Id with signatories = fromList [exchange]; label = "TSLAUSD"; version = 0
