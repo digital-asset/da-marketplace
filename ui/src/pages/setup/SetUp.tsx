@@ -102,12 +102,12 @@ const SetUp: React.FC = () => {
           },
           {
             label: 'Offer Clearing Service',
-            path: paths.app.clearing.offer,
+            path: paths.app.clearingServices.offer,
             isDisabled: !clearingRole,
           },
           {
             label: 'Offer Market Clearing Service',
-            path: paths.app.clearing.market.offer,
+            path: paths.app.clearingServices.market.offer,
             isDisabled: !clearingRole,
           },
           {

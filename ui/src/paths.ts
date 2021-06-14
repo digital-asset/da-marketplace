@@ -8,33 +8,37 @@ const paths = {
   app: {
     root: '/app',
     notifications: '/app/notifications',
-    distributions: {
-      root: '/app/distributions',
-    },
+    distributions: '/app/distributions',
     instruments: {
       root: '/app/instruments',
-      instrument: {
-        root: '/app/instruments/instrument',
-        requests: '/app/instruments/instrument/requests',
-      },
+      instrument: '/app/instruments/instrument',
       new: {
         base: '/app/instruments/new/base',
         convertiblenote: '/app/instruments/new/convertiblenote',
         binaryoption: '/app/instruments/new/binaryoption',
       },
     },
-    issuance: { root: '/app/issuance', new: '/app/issuance/new' },
+    trading: '/app/trading',
     listings: { root: '/app/listings', new: '/app/listings/new' },
+    issuance: { root: '/app/issuance', new: '/app/issuance/new' },
     setup: {
       root: '/app/setup',
       identity: '/app/setup/identity',
     },
+    // TODO: nest clearing structure
     clearing: {
       root: '/app/clearing',
-      members: '/app/clearing/members',
+      member: '/app/clearing/member',
+    },
+    clearingServices: {
+      root: '/app/clearingServices',
       member: '/app/clearing/member',
       offer: '/app/clearing/offer',
-      market: { offer: '/app/clearing/market/offer' },
+      market: { offer: '/app/clearingServices/market/offer' },
+    },
+    clearingMembers: {
+      root: '/app/clearingMembers',
+      member: '/app/clearingMembers/member',
     },
     custody: {
       root: '/app/custody',
@@ -51,15 +55,9 @@ const paths = {
     },
     auctions: {
       root: '/app/auctions',
-      bidding: '/app/auctions/bidding',
-      new: {
-        root: '/app/auctions/new',
-        auction: '/app/auctions/new/auction',
-      },
+      new: '/app/auctions/new',
     },
-    trading: {
-      root: '/app/trading',
-    },
+    biddingAuctions: '/app/biddingAuctions',
     markets: {
       root: '/app/markets',
       order: '/app/markets/order',

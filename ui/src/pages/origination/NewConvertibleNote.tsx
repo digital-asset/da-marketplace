@@ -18,7 +18,6 @@ import CalendarInput from '../../components/Form/CalendarInput';
 import { makeDamlSet } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
-import paths from '../../paths';
 
 const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -138,7 +137,6 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
       safekeepingAccount,
       observers: [service.payload.provider, party],
     });
-    history.push(paths.app.instruments.instrument.requests);
   };
 
   return (

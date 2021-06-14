@@ -78,11 +78,11 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
       return setContractTitle(customer);
     } else if (hasContractId(path, paths.app.auctions.root)) {
       return setContractTitle(auctionId);
-    } else if (hasContractId(path, paths.app.auctions.bidding)) {
+    } else if (hasContractId(path, paths.app.biddingAuctions)) {
       return setContractTitle(biddingId);
     } else if (hasContractId(path, paths.app.markets.order)) {
       return setContractTitle(orderLabel);
-    } else if (hasContractId(path, paths.app.instruments.instrument.root)) {
+    } else if (hasContractId(path, paths.app.instruments.instrument)) {
       return setContractTitle(instrumentLabel);
     } else if (hasContractId(path, paths.app.listings.root)) {
       return setContractTitle(listingLabel);

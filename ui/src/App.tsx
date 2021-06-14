@@ -9,7 +9,7 @@ import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketpl
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
-import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
+// import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
@@ -17,13 +17,13 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import { Assets } from './pages/custody/Assets';
-import { New as DistributionNew, New as NewAuction } from './pages/distribution/auction/New';
+import { New as NewAuction } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { InstrumentsTable } from './pages/origination/Instruments';
 import { IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
-import { New as ListingNew } from './pages/listing/New';
-import { ListingsTable } from './pages/listing/Listings';
+// import { New as ListingNew } from './pages/listing/New';
+// import { ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -77,7 +77,7 @@ const AppComponent = () => {
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } =
     useStreamQueries(IssuanceService);
-  const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
+  //   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
   const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
   const { contracts: clearingRole, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);
@@ -89,7 +89,7 @@ const AppComponent = () => {
     auctionLoading,
     biddingLoading,
     issuanceLoading,
-    listingLoading,
+    // listingLoading,
     tradingLoading,
     listingsLoading,
     clearingRoleLoading,
@@ -126,8 +126,8 @@ const AppComponent = () => {
     displayEntry: () => clearingProvider.length > 0,
     sidebar: [
       {
-        label: 'Members',
-        path: paths.app.clearing.members,
+        label: 'Clearing Members',
+        path: paths.app.clearingMembers.root,
         render: () => <ClearingMembers services={clearingProvider} />,
         icon: <WalletIcon />,
         children: [],
@@ -135,7 +135,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.clearing.member + '/:contractId',
+        path: paths.app.clearingMembers.member + '/:contractId',
         render: () => <ClearingMember services={clearingProvider} />,
       },
     ],
@@ -175,21 +175,22 @@ const AppComponent = () => {
         ),
       },
       {
-        path: paths.app.auctions.new.root,
+        path: paths.app.auctions.new,
         render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
-            <DistributionNew services={auctionService} />
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
+            <NewAuction services={auctionService} />
           </ServiceRequired>
         ),
       },
     ],
   });
+
   entries.push({
     displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
     sidebar: [
       {
         label: 'Bidding Auctions',
-        path: paths.app.auctions.bidding,
+        path: paths.app.biddingAuctions,
         render: () => <BiddingAuctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -198,7 +199,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.auctions.bidding + '/:contractId',
+        path: paths.app.biddingAuctions + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
       },
     ],
@@ -240,7 +241,7 @@ const AppComponent = () => {
       {
         label: 'Clearing Services',
         activeSubroutes: true,
-        path: paths.app.clearing.root,
+        path: paths.app.clearingServices.root,
         render: () => <ClearingServiceTable services={clearingService} />,
         icon: <ControlsIcon />,
         children: [],
@@ -248,11 +249,11 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.clearing.offer,
+        path: paths.app.clearingServices.offer,
         render: () => <Offer service={ServiceKind.CLEARING} />,
       },
       {
-        path: paths.app.clearing.market.offer,
+        path: paths.app.clearingServices.market.offer,
         render: () => <Offer service={ServiceKind.MARKET_CLEARING} />,
       },
     ],
@@ -277,15 +278,15 @@ const AppComponent = () => {
       },
     ],
   });
-  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
 
+  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
   entries.push({
     displayEntry: () => auctionCustomer.length > 0,
     sidebar: [
       {
         label: 'Distributions',
         activeSubroutes: true,
-        path: paths.app.distributions.root,
+        path: paths.app.distributions,
         render: () => (
           <>
             <AuctionRequests services={auctionService} />
@@ -297,17 +298,8 @@ const AppComponent = () => {
         children: [],
       },
     ],
-    additionalRoutes: [
-      {
-        path: paths.app.auctions.new.auction,
-        render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
-            <NewAuction services={auctionService} />
-          </ServiceRequired>
-        ),
-      },
-    ],
   });
+
   entries.push({
     displayEntry: () => true,
     sidebar: [
@@ -322,7 +314,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.instruments.instrument.root + '/:contractId',
+        path: paths.app.instruments.instrument + '/:contractId',
         component: Instrument,
       },
       {
@@ -381,29 +373,30 @@ const AppComponent = () => {
     displayEntry: () => true,
     sidebar: [
       {
-        label: 'Trading Services',
+        label: 'Trading',
         activeSubroutes: true,
-        path: paths.app.trading.root,
+        path: paths.app.trading,
         render: () => <TradingServiceTable services={tradingService} />,
         icon: <ControlsIcon />,
         children: [],
       },
     ],
-    additionalRoutes: [
-      {
-        path: paths.app.listings + '/:contractId?',
-        render: () => <ListingsTable services={listingService} listings={listings} />,
-      },
-      {
-        path: paths.app.listings.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
-            <ListingNew services={listingService} />
-          </ServiceRequired>
-        ),
-      },
-    ],
   });
+
+  // additionalRoutes: [
+  //   {
+  //     path: paths.app.listings + '/:contractId?',
+  //     render: () => <ListingsTable services={listingService} listings={listings} />,
+  //   },
+  //   {
+  //     path: paths.app.listings.new,
+  //     render: () => (
+  //       <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
+  //         <ListingNew services={listingService} />
+  //       </ServiceRequired>
+  //     ),
+  //   },
+  // ],
 
   entries.push({
     displayEntry: () => true,
@@ -454,8 +447,8 @@ const AppComponent = () => {
   };
 
   const path = useLocation().pathname;
-
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
+  console.log(currentEntry);
 
   return (
     <Page
