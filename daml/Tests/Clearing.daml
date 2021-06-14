@@ -14,14 +14,15 @@ testClearingTransfers : Script ()
 testClearingTransfers = do
   time <- getTime
   providers@Providers{clearinghouse} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
-
-  -- Assets
-  let
-    cashAsset = usd with quantity = 20000.0
 
   alice <- onboardCustomer providers "Alice"
   bob   <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+  -- Assets
+  let
+    cashAsset = usd with quantity = 20000.0
 
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id
@@ -49,13 +50,15 @@ testMarginCalls : Script ()
 testMarginCalls = do
   time <- getTime
   providers@Providers{clearinghouse; operator} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
-
-  -- Assets
-  let cashAsset = usd with quantity = 20000.0
 
   alice <- onboardCustomer providers "Alice"
   bob   <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+
+  -- Assets
+  let cashAsset = usd with quantity = 20000.0
 
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   calculationCid <- submit clearinghouse $
@@ -95,13 +98,15 @@ testMarkToMarket : Script ()
 testMarkToMarket = do
   time <- getTime
   providers@Providers{clearinghouse} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
-
-  -- Assets
-  let cashAsset = usd with quantity = 20000.0
 
   alice <- onboardCustomer providers "Alice"
   bob   <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+
+  -- Assets
+  let cashAsset = usd with quantity = 20000.0
 
   aliceDepositCid <- depositAsset providers alice cashAsset alice.clearingAccount.id
   bobDepositCid   <- depositAsset providers bob cashAsset bob.clearingAccount.id

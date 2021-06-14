@@ -98,16 +98,15 @@ template RejectedMarginCalculation
     key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller provider can
-      RejectedMarginCalculation_Retry : ContractId MarginCalculation
-        do create calculation
+    choice RejectedMarginCalculation_Retry : ContractId MarginCalculation
+      with
+        ctrl : Party
+      controller ctrl
+      do create calculation
 
+    controller provider can
       RejectedMarginCalculation_Cancel : ()
         do return ()
-
-    controller customer can
-      RejectedMarginCalculation_CustomerRetry : ContractId MarginCalculation
-        do create calculation
 
 template MarkToMarketCalculation
   with
@@ -150,16 +149,15 @@ template RejectedMarkToMarketCalculation
     key (provider, customer, calculation.calculationId) : (Party, Party, Text)
     maintainer key._1
 
-    controller provider can
-      RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
-        do create calculation
+    choice RejectedMarkToMarketCalculation_Retry : ContractId MarkToMarketCalculation
+      with
+        ctrl : Party
+      controller ctrl
+      do create calculation
 
+    controller provider can
       RejectedMarkToMarketCalculation_Cancel : ()
         do return ()
-
-    controller customer can
-      RejectedMarkToMarketCalculation_CustomerRetry : ContractId MarkToMarketCalculation
-        do create calculation
 
 template FulfilledMarkToMarketCalculation
   with

@@ -78,10 +78,8 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
     );
 
     const handleMTMRetry = async (cid: ContractId<RejectedMarkToMarketCalculation>) => {
-      const choice = !!member
-        ? RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_CustomerRetry
-        : RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Retry;
-      await ledger.exercise(choice, cid, {});
+      const choice = RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Retry;
+      await ledger.exercise(choice, cid, { ctrl: party });
     };
     const handleMTMCancel = async (cid: ContractId<RejectedMarkToMarketCalculation>) => {
       const choice = RejectedMarkToMarketCalculation.RejectedMarkToMarketCalculation_Cancel;
@@ -90,7 +88,7 @@ const ClearingMemberComponent: React.FC<RouteComponentProps & ServicePageProps<S
 
     const handleMarginRetry = async (cid: ContractId<RejectedMarginCalculation>) => {
       const choice = RejectedMarginCalculation.RejectedMarginCalculation_Retry;
-      await ledger.exercise(choice, cid, {});
+      await ledger.exercise(choice, cid, { ctrl: party });
     };
     const handleMarginCancel = async (cid: ContractId<RejectedMarginCalculation>) => {
       const choice = RejectedMarginCalculation.RejectedMarginCalculation_Cancel;

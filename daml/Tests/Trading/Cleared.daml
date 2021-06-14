@@ -29,11 +29,13 @@ clearedTradingTest : Script ()
 clearedTradingTest = do
 
   providers@Providers{operator; exchange; matchingServiceCid; clearinghouse, clearingRoleCid, bank, public} <- onboardProviders
-  Assets{usd; tsla} <- onboardAssets providers
 
   alice <- onboardCustomer providers "Alice"
   bob <- onboardCustomer providers "Bob"
   charlie <- onboardCustomer providers "Charlie"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
 
   let
     shareAsset = tsla with quantity = 200.0

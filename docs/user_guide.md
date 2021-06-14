@@ -15,7 +15,7 @@
    - `Bob`
 3. Download `parties.json`
 4. Open deployed UI → Quick Setup
-5. Upload `parties.json`, refresh the page and click Next
+5. Upload `parties.json` and click Next
 6. Wait for all auto-approve triggers for all parties to deploy...
 7. Drag and drop roles to specific parties: (then click Next)
     - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` roles
