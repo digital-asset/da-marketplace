@@ -108,7 +108,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
       depositCid,
     };
     await ledger.exercise(Service.RequestCreateAuction, service.contractId, request);
-    history.push(paths.app.distributions);
+    history.push(paths.app.distributions.root);
   };
 
   return (

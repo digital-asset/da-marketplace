@@ -112,7 +112,7 @@ const SetUp: React.FC = () => {
           },
           {
             label: 'Offer Trading Service',
-            path: paths.app.trading.offer,
+            path: paths.app.markets.offer,
             isDisabled: !tradingRole,
           },
         ]}

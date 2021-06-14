@@ -36,7 +36,7 @@ const BiddingAuctionsComponent: React.FC<RouteComponentProps> = ({
               c.payload.asset.quantity,
             ],
             onClick: () =>
-              history.push(`${paths.app.distribution.bidding}/${c.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.auctions.bidding}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

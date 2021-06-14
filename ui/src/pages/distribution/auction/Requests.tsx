@@ -36,7 +36,7 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
     await ledger.exercise(Service.CreateAuction, service.contractId, {
       createAuctionRequestCid: c.contractId,
     });
-    history.push(paths.app.distribution.auctions);
+    history.push(paths.app.auctions.root);
   };
 
   if (!loading && requests.length === 0) {

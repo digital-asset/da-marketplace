@@ -85,7 +85,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
       auctionProviderService.contractId,
       { auctionCid: auction.contractId, bidCids }
     );
-    history.push(paths.app.distribution.auctions + '/' + result._1.replace('#', '_'));
+    history.push(paths.app.auctions.root + '/' + result._1.replace('#', '_'));
   };
 
   const requestBid = async (biddingService: CreateEvent<BiddingService>) => {

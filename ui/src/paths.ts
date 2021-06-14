@@ -8,7 +8,9 @@ const paths = {
   app: {
     root: '/app',
     notifications: '/app/notifications',
-    distributions: '/app/distributions',
+    distributions: {
+      root: '/app/distributions',
+    },
     instruments: {
       root: '/app/instruments',
       instrument: {
@@ -47,20 +49,21 @@ const paths = {
       },
       requests: '/app/wallet/requests',
     },
-    distribution: {
-      auctions: '/app/distribution/auctions',
+    auctions: {
+      root: '/app/auctions',
+      bidding: '/app/auctions/bidding',
       new: {
-        root: '/app/distribution/new',
-        auction: '/app/distribution/new/auction',
+        root: '/app/auctions/new',
+        auction: '/app/auctions/new/auction',
       },
-      bidding: '/app/distribution/bidding',
     },
-
     trading: {
       root: '/app/trading',
-      markets: '/app/trading/markets',
-      order: '/app/trading/order',
-      offer: '/app/trading/offer',
+    },
+    markets: {
+      root: '/app/markets',
+      order: '/app/markets/order',
+      offer: '/app/markets/offer',
     },
   },
 };

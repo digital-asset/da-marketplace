@@ -159,7 +159,7 @@ const AppComponent = () => {
         path: paths.app.clearing.member,
         render: () => <ClearingMember services={clearingProvider} member />,
         icon: <WalletIcon />,
-        children: []
+        children: [],
       },
     ],
   });
@@ -169,7 +169,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Auctions',
-        path: paths.app.distribution.auctions,
+        path: paths.app.auctions.root,
         render: () => <Auctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -178,13 +178,13 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.distribution.auctions + '/:contractId',
+        path: paths.app.auctions.root + '/:contractId',
         render: (props: any) => (
           <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
         ),
       },
       {
-        path: paths.app.distribution.new.root,
+        path: paths.app.auctions.new.root,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Distribution">
             <DistributionNew services={auctionService} />
@@ -198,7 +198,7 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Bidding Auctions',
-        path: paths.app.distribution.bidding,
+        path: paths.app.auctions.bidding,
         render: () => <BiddingAuctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -207,7 +207,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.distribution.bidding + '/:contractId',
+        path: paths.app.auctions.bidding + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
       },
     ],
@@ -218,13 +218,13 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Markets',
-        path: paths.app.trading.markets,
+        path: paths.app.markets.root,
         render: () => <Markets listings={listings} />,
         icon: <OrdersIcon />,
         groupBy: 'Secondary Market',
         children: listings.map(c => ({
           label: c.payload.listingId.label,
-          path: paths.app.trading.markets + c.contractId.replace('#', '_'),
+          path: paths.app.markets + c.contractId.replace('#', '_'),
           render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
           icon: <ExchangeIcon />,
           children: [],
@@ -233,11 +233,11 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.trading.order + '/:contractId',
+        path: paths.app.markets.order + '/:contractId',
         render: () => <TradingOrder listings={listings} />,
       },
       {
-        path: paths.app.trading.offer,
+        path: paths.app.markets.offer,
         render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
@@ -294,7 +294,7 @@ const AppComponent = () => {
       {
         label: 'Distributions',
         activeSubroutes: true,
-        path: paths.app.distributions,
+        path: paths.app.distributions.root,
         render: () => (
           <>
             <AuctionRequests services={auctionService} />
@@ -308,7 +308,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.distribution.new.auction,
+        path: paths.app.auctions.new.auction,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
             <NewAuction services={auctionService} />
