@@ -9,7 +9,7 @@ import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketpl
 import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
 import { Service as BiddingService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service/';
 import { Service as IssuanceService } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service/';
-// import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
+import { Service as ListingService } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Service/';
 import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/';
 import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
@@ -22,8 +22,8 @@ import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { InstrumentsTable } from './pages/origination/Instruments';
 import { IssuancesTable } from './pages/issuance/Issuances';
 import { New as IssuanceNew } from './pages/issuance/New';
-// import { New as ListingNew } from './pages/listing/New';
-// import { ListingsTable } from './pages/listing/Listings';
+import { New as ListingNew } from './pages/listing/New';
+import { ListingsTable } from './pages/listing/Listings';
 import { Auction } from './pages/distribution/auction/Auction';
 import { Market } from './pages/trading/Market';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
@@ -77,7 +77,7 @@ const AppComponent = () => {
   const { contracts: biddingService, loading: biddingLoading } = useStreamQueries(BiddingService);
   const { contracts: issuanceService, loading: issuanceLoading } =
     useStreamQueries(IssuanceService);
-  //   const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
+  const { contracts: listingService, loading: listingLoading } = useStreamQueries(ListingService);
   const { contracts: tradingService, loading: tradingLoading } = useStreamQueries(TradingService);
   const { contracts: listings, loading: listingsLoading } = useStreamQueries(Listing);
   const { contracts: clearingRole, loading: clearingRoleLoading } = useStreamQueries(ClearingRole);
@@ -89,7 +89,7 @@ const AppComponent = () => {
     auctionLoading,
     biddingLoading,
     issuanceLoading,
-    // listingLoading,
+    listingLoading,
     tradingLoading,
     listingsLoading,
     clearingRoleLoading,
@@ -383,20 +383,33 @@ const AppComponent = () => {
     ],
   });
 
-  // additionalRoutes: [
-  //   {
-  //     path: paths.app.listings + '/:contractId?',
-  //     render: () => <ListingsTable services={listingService} listings={listings} />,
-  //   },
-  //   {
-  //     path: paths.app.listings.new,
-  //     render: () => (
-  //       <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
-  //         <ListingNew services={listingService} />
-  //       </ServiceRequired>
-  //     ),
-  //   },
-  // ],
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Listings',
+        path: paths.app.listings.root,
+        activeSubroutes: true,
+        render: () => <ListingsTable services={listingService} listings={listings} />,
+        icon: <ControlsIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.listings + '/:contractId?',
+        render: () => <ListingsTable services={listingService} listings={listings} />,
+      },
+      {
+        path: paths.app.listings.new,
+        render: () => (
+          <ServiceRequired service={ServiceKind.LISTING} action="New Listing">
+            <ListingNew services={listingService} />
+          </ServiceRequired>
+        ),
+      },
+    ],
+  });
 
   entries.push({
     displayEntry: () => true,
