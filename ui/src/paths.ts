@@ -14,8 +14,8 @@ const paths = {
       instrument: '/app/instruments/instrument',
       new: {
         base: '/app/instruments/new/base',
-        convertiblenote: '/app/instruments/new/convertiblenote',
-        binaryoption: '/app/instruments/new/binaryoption',
+        convertiblenote: '/app/instruments/new/convertible-note',
+        binaryoption: '/app/instruments/new/binary-option',
       },
     },
     trading: '/app/trading',
@@ -25,20 +25,19 @@ const paths = {
       root: '/app/setup',
       identity: '/app/setup/identity',
     },
-    // TODO: nest clearing structure
     clearing: {
       root: '/app/clearing',
       member: '/app/clearing/member',
     },
     clearingServices: {
-      root: '/app/clearingServices',
+      root: '/app/clearing-services',
       member: '/app/clearing/member',
       offer: '/app/clearing/offer',
-      market: { offer: '/app/clearingServices/market/offer' },
+      market: { offer: '/app/clearing-services/market/offer' },
     },
     clearingMembers: {
-      root: '/app/clearingMembers',
-      member: '/app/clearingMembers/member',
+      root: '/app/clearing-members',
+      member: '/app/clearing-members/member',
     },
     custody: {
       root: '/app/custody',
@@ -57,7 +56,7 @@ const paths = {
       root: '/app/auctions',
       new: '/app/auctions/new',
     },
-    biddingAuctions: '/app/biddingAuctions',
+    biddingAuctions: '/app/bidding-auctions',
     markets: {
       root: '/app/markets',
       order: '/app/markets/order',
