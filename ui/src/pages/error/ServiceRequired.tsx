@@ -41,7 +41,6 @@ interface RequestInterface {
 
 export const ServiceRequired: React.FC<ServiceRequiredProps> = ({ service, action, children }) => {
   const party = useParty();
-  console.log('here');
   const identities = useStreamQueries(VerifiedIdentity).contracts;
   const legalNames = useMemo(() => identities.map(c => c.payload.legalName), [identities]);
 

@@ -44,14 +44,14 @@ const Page: React.FC<Props> = ({
   const constructMenu = (sideBarItem: SidebarEntry, level: number): React.ReactElement => {
     const childMenu = sideBarItem.children.map(child => constructMenu(child, level + 1));
     const margin = level * 25;
-    console.log(sideBarItem.activeSubroutes);
+
     return (
       <React.Fragment key={sideBarItem.label + sideBarItem.path}>
         <Menu.Item
           exact
           active={
             sideBarItem.activeSubroutes
-              ? history.location.pathname.startsWith(getBaseSegment(sideBarItem.path))
+              ? history.location.pathname.includes(getBaseSegment(sideBarItem.path))
               : undefined
           }
           key={sideBarItem.label + sideBarItem.path}

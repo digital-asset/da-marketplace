@@ -448,7 +448,6 @@ const AppComponent = () => {
 
   const path = useLocation().pathname;
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
-  console.log(currentEntry);
 
   return (
     <Page
