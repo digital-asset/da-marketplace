@@ -20,7 +20,7 @@
       align-items: flex-start;
       justify-content: space-between;
 
-      :first-child {
+      > :first-child {
         margin-right: $spacing-l;
       }
 
