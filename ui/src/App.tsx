@@ -128,6 +128,7 @@ const AppComponent = () => {
       {
         label: 'Clearing Members',
         path: paths.app.clearingMembers.root,
+        activeSubroutes: true,
         render: () => <ClearingMembers services={clearingProvider} />,
         icon: <WalletIcon />,
         children: [],
@@ -161,6 +162,7 @@ const AppComponent = () => {
       {
         label: 'Auctions',
         path: paths.app.auctions.root,
+        activeSubroutes: true,
         render: () => <Auctions />,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
@@ -176,10 +178,11 @@ const AppComponent = () => {
       },
       {
         path: paths.app.auctions.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
-            <NewAuction services={auctionService} />
-          </ServiceRequired>
+        render: (props: any) => (
+            <p>hi</p>
+        //   <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
+        //     <NewAuction services={auctionService} />
+        //   </ServiceRequired>
         ),
       },
     ],
@@ -192,6 +195,7 @@ const AppComponent = () => {
         label: 'Bidding Auctions',
         path: paths.app.biddingAuctions,
         render: () => <BiddingAuctions />,
+        activeSubroutes: true,
         icon: <MegaphoneIcon />,
         groupBy: 'Primary Market',
         children: [],
@@ -211,6 +215,7 @@ const AppComponent = () => {
       {
         label: 'Markets',
         path: paths.app.markets.root,
+        activeSubroutes: true,
         render: () => <Markets listings={listings} />,
         icon: <OrdersIcon />,
         groupBy: 'Secondary Market',
@@ -285,7 +290,6 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Distributions',
-        activeSubroutes: true,
         path: paths.app.distributions,
         render: () => (
           <>
@@ -374,7 +378,6 @@ const AppComponent = () => {
     sidebar: [
       {
         label: 'Trading',
-        activeSubroutes: true,
         path: paths.app.trading,
         render: () => <TradingServiceTable services={tradingService} />,
         icon: <ControlsIcon />,
