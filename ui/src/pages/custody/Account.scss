@@ -6,48 +6,48 @@
     margin-bottom: $spacing-l;
 
     .account-holding {
-        width: 100%;
-        border: 1px solid var(--cool-grey-90);
-        background-color: white;
-        color: var(--textcolor);
-        padding: $spacing-s;
-        border-radius: 4px;
-        margin-bottom: $spacing-s ;
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+      width: 100%;
+      border: 1px solid var(--cool-grey-90);
+      background-color: white;
+      color: var(--textcolor);
+      padding: $spacing-s;
+      border-radius: 4px;
+      margin-bottom: $spacing-s;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
     }
 
     h4 {
-        margin: 0 $spacing-s 0 0 ;
+      margin: 0 $spacing-s 0 0;
     }
 
     .actions {
-        display: flex;
+      display: flex;
 
-        .ghost {
-            margin-left: $spacing-s;
-        }
+      .ghost {
+        margin-left: $spacing-s;
+      }
     }
 
     .empty {
-        margin:$spacing-s;
+      margin: $spacing-s;
     }
 
     .account-details {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        margin-bottom: $spacing-s;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: $spacing-s;
 
-        .account-data {
-            display: inline;
-        }
+      .account-data {
+        display: inline;
+      }
 
-        p {
-            margin-right: $spacing-s
-        }
+      p {
+        margin-right: $spacing-s;
+      }
     }
   }
 }
