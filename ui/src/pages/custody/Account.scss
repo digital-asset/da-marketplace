@@ -3,19 +3,51 @@
 @mixin account {
   .account {
     animation: fadeIn 0.5s;
+    margin-bottom: $spacing-l;
 
-    h2 {
-      margin-bottom: $spacing-m;
+    .account-holding {
+        width: 100%;
+        border: 1px solid var(--cool-grey-90);
+        background-color: white;
+        color: var(--textcolor);
+        padding: $spacing-s;
+        border-radius: 4px;
+        margin-bottom: $spacing-s ;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .button.ghost {
-      margin-right: $spacing-s;
+    h4 {
+        margin: 0 $spacing-s 0 0 ;
     }
 
-    .action-row {
-      display: flex;
-      flex-direction: row;
-      justify-content: normal;
+    .actions {
+        display: flex;
+
+        .ghost {
+            margin-left: $spacing-s;
+        }
+    }
+
+    .empty {
+        margin:$spacing-s;
+    }
+
+    .account-details {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: $spacing-s;
+
+        .account-data {
+            display: inline;
+        }
+
+        p {
+            margin-right: $spacing-s
+        }
     }
   }
 }

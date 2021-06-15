@@ -104,16 +104,9 @@ const AppComponent = () => {
       {
         label: 'Wallet',
         path: paths.app.wallet.root,
-        activeSubroutes: true,
         render: () => <Assets services={custodyService} />,
         icon: <WalletIcon />,
         children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.wallet.account + '/:contractId',
-        render: () => <Account services={custodyService} />,
       },
     ],
   });
