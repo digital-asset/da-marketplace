@@ -16,6 +16,8 @@ import {
   Request as RegulatorRequest,
   Service as RegulatorService,
 } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service/';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+
 import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import paths from '../../paths';
@@ -144,6 +146,7 @@ const Landing = () => {
   const providers = useProviderServices(party);
 
   const deposits = useStreamQueries(AssetDeposit).contracts;
+  const custodyService = useStreamQueries(CustodyService).contracts;
 
   const portfolio = formatCurrency(
     deposits
@@ -169,9 +172,11 @@ const Landing = () => {
                 <h3>{portfolio}</h3>&nbsp;<span>USD</span>
               </span>
             </div>
-            <div className="link">
-              <NavLink to={paths.app.wallet.root}>View Wallet</NavLink>
-            </div>
+            {custodyService.length > 0 && (
+              <div className="link">
+                <NavLink to={paths.app.wallet.root}>View Wallet</NavLink>
+              </div>
+            )}
           </div>
         </Tile>
       </div>

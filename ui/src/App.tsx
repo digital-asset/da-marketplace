@@ -40,6 +40,7 @@ import {
   OrdersIcon,
   ToolIcon,
   WalletIcon,
+  IconMailLetter,
 } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { ClearingMembers } from './pages/clearing/Members';
@@ -113,10 +114,6 @@ const AppComponent = () => {
       {
         path: paths.app.wallet.account + '/:contractId',
         render: () => <Account services={custodyService} />,
-      },
-      {
-        path: paths.app.wallet.requests,
-        render: () => <CustodyRequests services={custodyService} />,
       },
     ],
   });
@@ -209,7 +206,6 @@ const AppComponent = () => {
         path: paths.app.distributions,
         render: () => (
           <>
-            <AuctionRequests services={auctionService} />
             <Auctions />
             <DistributionServiceTable />
           </>
@@ -290,7 +286,8 @@ const AppComponent = () => {
     ],
   });
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () =>
+      !!tradingService.find(c => c.payload.provider === party || c.payload.customer === party),
     sidebar: [
       {
         label: 'Trading',
@@ -303,7 +300,7 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => true,
+    displayEntry: () => listingService.length > 0,
     sidebar: [
       {
         label: 'Listings',
@@ -326,26 +323,6 @@ const AppComponent = () => {
             <ListingNew services={listingService} />
           </ServiceRequired>
         ),
-      },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Setup',
-        path: paths.app.setup.root,
-        activeSubroutes: true,
-        render: () => <SetUp />,
-        icon: <ToolIcon />,
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.setup.identity,
-        render: () => <RequestIdentityVerification />,
       },
     ],
   });
@@ -443,6 +420,46 @@ const AppComponent = () => {
       {
         path: paths.app.biddingAuctions + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => true,
+    sidebar: [
+      {
+        label: 'Setup',
+        groupBy: 'Manage',
+        path: paths.app.setup.root,
+        activeSubroutes: true,
+        render: () => <SetUp />,
+        icon: <ToolIcon />,
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.setup.identity,
+        render: () => <RequestIdentityVerification />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => custodyService.length > 0 || auctionCustomer.length > 0,
+    sidebar: [
+      {
+        label: 'Requests',
+        groupBy: 'Manage',
+        path: paths.app.requests,
+        render: () => (
+          <>
+            {custodyService.length > 0 && <CustodyRequests services={custodyService} />}
+            {auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}
+          </>
+        ),
+        icon: <IconMailLetter />,
+        children: [],
       },
     ],
   });

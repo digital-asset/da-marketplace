@@ -174,6 +174,7 @@ export function RequestNotification<T extends Fields>({
               className="ghost"
               content="Approve"
               type="submit"
+              disabled={!lookupFields}
               onClick={() => loadAndCatch(onApprove)}
             />
             <Button
