@@ -6,17 +6,17 @@
     margin-bottom: $spacing-l;
 
     .account-holding {
-      width: 100%;
-      border: 1px solid var(--cool-grey-90);
-      background-color: white;
-      color: var(--textcolor);
       padding: $spacing-s;
-      border-radius: 4px;
       margin-bottom: $spacing-s;
       display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      align-items: center;
+
+      .tile-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+      }
     }
 
     h4 {

@@ -2,7 +2,6 @@ import React from 'react';
 import { Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
 import { Requests as CustodyRequests } from './pages/custody/Requests';
-import { Account } from './pages/custody/Account';
 import { useParty } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
@@ -16,7 +15,7 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 
 import { Auctions } from './pages/distribution/auction/Auctions';
 import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
-import { Assets } from './pages/custody/Assets';
+import Assets from './pages/custody/Assets';
 import { New as NewAuction } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
 import { InstrumentsTable } from './pages/origination/Instruments';
