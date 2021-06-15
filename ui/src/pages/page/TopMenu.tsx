@@ -72,19 +72,19 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
 
   useEffect(() => {
     setContractTitle(undefined);
-    if (hasContractId(path, paths.app.custody.account)) {
+    if (hasContractId(path, paths.app.wallet.account)) {
       return setContractTitle(accountLabel);
     } else if (hasContractId(path, paths.app.clearing.member)) {
       return setContractTitle(customer);
-    } else if (hasContractId(path, paths.app.distribution.auctions)) {
+    } else if (hasContractId(path, paths.app.auctions.root)) {
       return setContractTitle(auctionId);
-    } else if (hasContractId(path, paths.app.distribution.bidding)) {
+    } else if (hasContractId(path, paths.app.biddingAuctions)) {
       return setContractTitle(biddingId);
-    } else if (hasContractId(path, paths.app.trading.order)) {
+    } else if (hasContractId(path, paths.app.markets.order)) {
       return setContractTitle(orderLabel);
-    } else if (hasContractId(path, paths.app.manage.instrument)) {
+    } else if (hasContractId(path, paths.app.instruments.instrument)) {
       return setContractTitle(instrumentLabel);
-    } else if (hasContractId(path, paths.app.manage.listings)) {
+    } else if (hasContractId(path, paths.app.listings.root)) {
       return setContractTitle(listingLabel);
     }
   }, [

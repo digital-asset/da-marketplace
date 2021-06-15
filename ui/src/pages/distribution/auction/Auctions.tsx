@@ -16,7 +16,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
     <div className="auction">
       <TitleWithActions
         title="Auctions"
-        iconActions={[{ path: paths.app.setup.distribution.new.auction, label: ' New Auction' }]}
+        iconActions={[{ path: paths.app.auctions.new, label: ' New Auction' }]}
       />
 
       <StripedTable
@@ -33,7 +33,7 @@ const AuctionsComponent: React.FC<RouteComponentProps> = ({ history }: RouteComp
               getAuctionStatus(c.payload.status),
             ],
             onClick: () =>
-              history.push(`${paths.app.distribution.auctions}/${c.contractId.replace('#', '_')}`),
+              history.push(`${paths.app.auctions.root}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

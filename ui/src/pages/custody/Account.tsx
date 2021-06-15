@@ -100,7 +100,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       accountId: c.payload.account.id,
       debit: { depositCid: c.contractId },
     });
-    history.push(paths.app.custody.requests);
+    history.push(paths.app.wallet.requests);
   };
 
   const relatedAccounts = accounts
@@ -166,7 +166,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });
-    history.push(paths.app.custody.requests);
+    history.push(paths.app.wallet.requests);
   };
 
   let accountData = [
@@ -207,7 +207,7 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
 
   return (
     <>
-      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.custody.assets} />
+      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.wallet.root} />
       <InputDialog {...transferDialogProps} isModal />
       <div className="account">
         <div className="page-section-row">

@@ -4,6 +4,8 @@ import Daml.Script
 import DA.Finance.Asset (AssetDeposit)
 import DA.Finance.Types (Id(..), Asset(..), Account(..))
 import DA.Set
+import ContingentClaims.Claim (Claim(Zero), serialize)
+import ContingentClaims.Observation (Observation)
 import qualified DA.Finance.Asset as AssetDeposit
 import qualified Marketplace.Operator.Role as Operator
 import qualified Marketplace.Clearing.Role as Clearinghouse
@@ -20,10 +22,12 @@ import qualified Marketplace.Distribution.Role as Distributor
 import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import qualified Marketplace.Regulator.Service as RegulatorService
 import qualified Marketplace.Regulator.Role as Regulator
+import Marketplace.Issuance.AssetDescription
 
 data Assets = Assets
   with
     usd : Asset
+    eur : Asset
     tsla : Asset
     nflx : Asset
     libor : Asset
@@ -174,23 +178,26 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-onboardAssets : Providers -> Script Assets
-onboardAssets Providers{..} = do
-  let
-    safekeepingAccountId = Id with signatories = fromList [bank]; label = "BankSafekeepingAccount"; version = 0
-    observers = singleton public
-    usdId = Id with signatories = fromList [ bank ]; label = "USD"; version = 0
-    usd = Asset with id = usdId; quantity = 0.0
-    tslaId = Id with signatories = singleton bank; label = "TSLA"; version = 0
-    tsla = Asset with id = tslaId; quantity = 0.0
-    nflxId = Id with signatories = singleton bank; label = "NFLX"; version = 0
-    nflx = Asset with id = nflxId; quantity = 0.0
-    dUnitId = Id with signatories = singleton bank; label = "DAH-D"; version = 0
-    dUnit = Asset with id = nflxId; quantity = 0.0
-    liborId = Id with signatories = singleton bank; label = "LIBOR"; version = 0
-    libor = Asset with id = liborId; quantity = 0.0
-  pure Assets with ..
+originate : Providers -> Customer -> Text -> Text -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
+originate Providers{..} issuer assetLabel description claims = do
+    let observers = [public]
+        safekeepingAccount = issuer.mainAccount
+    createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
+    submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
 
+onboardAssets : Providers -> Customer -> Script Assets
+onboardAssets providers issuer = do
+  let mkAsset name description claims = do
+      (_, AssetDescription{assetId = id}) <- originate providers issuer name description claims
+      pure $ Asset with quantity = 0.0; ..
+
+  usd   <- mkAsset "USD" "United States Dollar" Zero
+  eur   <- mkAsset "EUR" "Euro" Zero
+  tsla  <- mkAsset "TSLA" "Tesla, Inc." Zero
+  nflx  <- mkAsset "NFLX" "Netflix" Zero
+  libor <- mkAsset "LIBOR" "Libor" Zero
+
+  pure Assets with ..
 
 depositAsset : Providers -> Customer -> Asset -> Id -> Script (ContractId AssetDeposit)
 depositAsset Providers{..} Customer{..} asset accountId = do

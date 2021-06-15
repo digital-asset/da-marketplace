@@ -60,7 +60,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
     <>
       <TitleWithActions
         title="Listings"
-        iconActions={[{ path: paths.app.setup.listing.new, label: ' New Listing' }]}
+        iconActions={[{ path: paths.app.listings.new, label: ' New Listing' }]}
       />
 
       <StripedTable
@@ -95,8 +95,7 @@ export const ListingsTable: React.FC<Props> = ({ services, listings }) => {
               c.payload.quotedAssetPrecision,
               fairValues.length > 0 ? fairValues[fairValues.length - 1].payload.price : 'None',
             ],
-            onClick: () =>
-              history.push(`${paths.app.manage.listings}/${c.contractId.replace('#', '_')}`),
+            onClick: () => history.push(`${paths.app.listings}/${c.contractId.replace('#', '_')}`),
           };
         })}
       />

@@ -76,29 +76,6 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-
-        .roles {
-          display: flex;
-          flex-direction: column;
-
-          &:last-child {
-            margin-right: 0;
-          }
-
-          p.p2.label {
-            font-size: 14px;
-            color: var(--cool-grey-20);
-            background-color: var(--blue-100);
-            padding: $spacing-xs $spacing-s;
-            border-radius: 6px;
-            margin: $spacing-xs $spacing-xs $spacing-xs 0;
-            width: fit-content;
-
-            &.no-roles {
-              font-style: italic;
-            }
-          }
-        }
       }
 
       .link-tile {
