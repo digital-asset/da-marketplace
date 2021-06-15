@@ -7,7 +7,7 @@ import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuan
 import Account from './Account';
 import Tile from '../../components/Tile/Tile';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
-import { Button, Form, Header } from 'semantic-ui-react';
+import { Button, Form } from 'semantic-ui-react';
 import { ServicePageProps, createDropdownProp } from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
@@ -77,7 +77,7 @@ const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePagePr
   return (
     <div className="assets">
       <TitleWithActions title="Accounts">
-        <NewAccount party={party} modal addButton/>
+        <NewAccount party={party} modal addButton />
       </TitleWithActions>
       <div className="page-section-row">
         <div>
