@@ -12,6 +12,8 @@ import { ServicePageProps, createDropdownProp } from '../common';
 import { usePartyName } from '../../config';
 import { useLedger, useParty } from '@daml/react';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import TitleWithActions from '../../components/Common/TitleWithActions';
+import { NewAccount } from './New';
 
 const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePageProps<Service>) => {
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
@@ -74,7 +76,9 @@ const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePagePr
 
   return (
     <div className="assets">
-      <Header as="h2">Accounts</Header>
+      <TitleWithActions title="Accounts">
+        <NewAccount party={party} modal addButton/>
+      </TitleWithActions>
       <div className="page-section-row">
         <div>
           {allAccounts.map(a => (
