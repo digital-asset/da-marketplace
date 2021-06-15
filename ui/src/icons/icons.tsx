@@ -360,3 +360,26 @@ export const NotificationIcon: React.FC<IconProps> = ({ size, strokeColor }) => 
     />
   </svg>
 );
+
+export const IconMailLetter = () => {
+  return (
+    <svg className={`icon mail-icon`} fill="none " viewBox="0 0 17 11">
+      <path stroke="#b4f5a3" d="M0.862793 10.3574L5.82595 5.39423" />
+      <path stroke="#b4f5a3" d="M16.1843 10.3574L11.2212 5.39423" />
+      <rect
+        stroke="#b4f5a3"
+        x="0.5"
+        y="0.5"
+        width="15.4"
+        height="9.78948"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        stroke="#b4f5a3"
+        d="M0.647217 0.648926L8.63143 7.55419L15.9683 0.648926"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+};

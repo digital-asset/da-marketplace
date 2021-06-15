@@ -18,7 +18,6 @@ import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service
 import { damlSetValues } from '../common';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import StripedTable from '../../components/Table/StripedTable';
-import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
 
 type Props = {
@@ -123,108 +122,96 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
 
   return (
     <>
-      <BackButton />
-      {openRequests.length > 0 && (
-        <StripedTable
-          title="Open Account Requests"
-          headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
-          rows={openRequests.map((c, i) => {
-            return {
-              elements: [
-                c.payload.accountId.label,
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                party === c.payload.provider ? 'Provider' : 'Client',
-                damlSetValues(c.payload.ctrls).join(', '),
-                party === c.payload.provider && (
-                  <Button onClick={() => openAccount(c)}>Process</Button>
-                ),
-              ],
-            };
-          })}
-        />
-      )}
-      {closeRequests.length > 0 && (
-        <StripedTable
-          title="Close Account Requests"
-          headings={['Account', 'Provider', 'Client', 'Role', 'Action']}
-          rows={closeRequests.map((c, i) => {
-            return {
-              elements: [
-                c.payload.accountId.label,
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                party === c.payload.provider ? 'Provider' : 'Client',
-                party === c.payload.provider && (
-                  <Button onClick={() => closeAccount(c)}>Process</Button>
-                ),
-              ],
-            };
-          })}
-        />
-      )}
-
-      {creditRequests.length > 0 && (
-        <StripedTable
-          title="Credit Account Requests"
-          headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
-          rows={creditRequests.map((c, i) => {
-            return {
-              elements: [
-                c.payload.accountId.label,
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                c.payload.asset.id.label,
-                c.payload.asset.quantity,
-                party === c.payload.provider && (
-                  <Button onClick={() => creditAccount(c)}>Process</Button>
-                ),
-              ],
-            };
-          })}
-        />
-      )}
-      {debitRequests.length > 0 && (
-        <StripedTable
-          title="Withdraw Deposit Requests"
-          headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
-          rows={debitRequests.map((c, i) => {
-            return {
-              elements: [
-                c.payload.accountId.label,
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                getDebitDepositDetail(c, d => d.asset.id.label),
-                getDebitDepositDetail(c, d => d.asset.quantity),
-                party === c.payload.provider && (
-                  <Button onClick={() => debitAccount(c)}>Process</Button>
-                ),
-              ],
-            };
-          })}
-        />
-      )}
-      {transferRequests.length > 0 && (
-        <StripedTable
-          title="Transfer Requests"
-          headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Transfer to', 'Action']}
-          rows={transferRequests.map((c, i) => {
-            return {
-              elements: [
-                c.payload.accountId.label,
-                getName(c.payload.provider),
-                getName(c.payload.customer),
-                getTransferDepositDetail(c, d => d.asset.id.label),
-                getTransferDepositDetail(c, d => d.asset.quantity),
-                c.payload.transfer.receiverAccountId.label,
-                party === c.payload.provider && (
-                  <Button onClick={() => transferDeposit(c)}>Process</Button>
-                ),
-              ],
-            };
-          })}
-        />
-      )}
+      <StripedTable
+        title="Open Account Requests"
+        headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
+        rows={openRequests.map((c, i) => {
+          return {
+            elements: [
+              c.payload.accountId.label,
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Client',
+              damlSetValues(c.payload.ctrls).join(', '),
+              party === c.payload.provider && (
+                <Button onClick={() => openAccount(c)}>Process</Button>
+              ),
+            ],
+          };
+        })}
+      />
+      <StripedTable
+        title="Close Account Requests"
+        headings={['Account', 'Provider', 'Client', 'Role', 'Action']}
+        rows={closeRequests.map((c, i) => {
+          return {
+            elements: [
+              c.payload.accountId.label,
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              party === c.payload.provider ? 'Provider' : 'Client',
+              party === c.payload.provider && (
+                <Button onClick={() => closeAccount(c)}>Process</Button>
+              ),
+            ],
+          };
+        })}
+      />
+      <StripedTable
+        title="Credit Account Requests"
+        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
+        rows={creditRequests.map((c, i) => {
+          return {
+            elements: [
+              c.payload.accountId.label,
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              c.payload.asset.id.label,
+              c.payload.asset.quantity,
+              party === c.payload.provider && (
+                <Button onClick={() => creditAccount(c)}>Process</Button>
+              ),
+            ],
+          };
+        })}
+      />
+      <StripedTable
+        title="Withdraw Deposit Requests"
+        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
+        rows={debitRequests.map((c, i) => {
+          return {
+            elements: [
+              c.payload.accountId.label,
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              getDebitDepositDetail(c, d => d.asset.id.label),
+              getDebitDepositDetail(c, d => d.asset.quantity),
+              party === c.payload.provider && (
+                <Button onClick={() => debitAccount(c)}>Process</Button>
+              ),
+            ],
+          };
+        })}
+      />
+      <StripedTable
+        title="Transfer Requests"
+        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Transfer to', 'Action']}
+        rows={transferRequests.map((c, i) => {
+          return {
+            elements: [
+              c.payload.accountId.label,
+              getName(c.payload.provider),
+              getName(c.payload.customer),
+              getTransferDepositDetail(c, d => d.asset.id.label),
+              getTransferDepositDetail(c, d => d.asset.quantity),
+              c.payload.transfer.receiverAccountId.label,
+              party === c.payload.provider && (
+                <Button onClick={() => transferDeposit(c)}>Process</Button>
+              ),
+            ],
+          };
+        })}
+      />
     </>
   );
 };

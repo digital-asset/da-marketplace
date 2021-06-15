@@ -48,7 +48,7 @@ export const Auction: React.FC<RouteComponentProps & Props> = ({
   const allBiddingAuctions = useStreamQueries(BiddingAuction).contracts;
   const { contracts: allBids, loading: allBidsLoading } = useStreamQueries(Bid);
 
-  if (!auction) return <></>; // TODO: Return 404 not found
+  if (!auction) return <h5>Instrument not found</h5>; // TODO: Return 404 not found
   const auctionProviderService = auctionProviderServices[0];
 
   const biddingAuctions = allBiddingAuctions.filter(

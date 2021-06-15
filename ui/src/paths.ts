@@ -25,6 +25,7 @@ const paths = {
       root: '/app/setup',
       identity: '/app/setup/identity',
     },
+    requests: '/app/requests',
     clearing: {
       root: '/app/clearing',
       member: '/app/clearing/member',
