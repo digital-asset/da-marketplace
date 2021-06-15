@@ -387,17 +387,18 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.auctions.root + '/:contractId',
-        render: (props: any) => (
-          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
-        ),
-      },
-      {
         path: paths.app.auctions.new,
         render: () => (
           <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
             <NewAuction services={auctionService} />
           </ServiceRequired>
+        ),
+      },
+
+      {
+        path: paths.app.auctions.root + '/:contractId',
+        render: (props: any) => (
+          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
         ),
       },
     ],
