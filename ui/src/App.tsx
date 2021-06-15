@@ -313,7 +313,7 @@ const AppComponent = () => {
     ],
     additionalRoutes: [
       {
-        path: paths.app.listings + '/:contractId?',
+        path: paths.app.listings.root + '/:contractId?',
         render: () => <ListingsTable services={listingService} listings={listings} />,
       },
       {
