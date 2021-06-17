@@ -1,0 +1,175 @@
+module UI.Onboarding where
+
+import DA.Set
+
+import qualified Marketplace.Custody.Service as Custody
+import qualified Marketplace.Custody.Service as Trading
+import Marketplace.Utils
+
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+
+data OnboardingInstruction
+  = OnboardCustody with customer : Party, custodian : Party
+  | OnboardTrading with customer : Party, exchange : Party
+  deriving (Show, Eq)
+
+signaturesNeeded : OnboardingInstruction -> [Party]
+signaturesNeeded instruction = case instruction of
+    OnboardCustody _ c -> [c]
+    OnboardTrading _ e -> [e]
+
+-- signaturesNeeded : [OnboardingInstruction] -> [Party]
+-- signaturesNeeded [] = []
+-- signaturesNeeded (OnboardCustody p :: is) = p :: signaturesNeeded is
+-- signaturesNeeded (OnboardTrading p :: is) = p :: signaturesNeeded is
+
+collectSignatures : Party -> [Party] -> ContractId OnboardInvestor -> Update (ContractId OnboardInvestor)
+collectSignatures _        []               cid = return cid
+collectSignatures operator (party::parties) cid
+  = collectSignatures operator parties =<< exerciseByKey @ProviderOnboarding (operator,party) ProviderOnboarding_Sign with requestCid = cid
+
+template InvestorOnboardRequest
+  with
+    customer : Party
+    operator : Party
+    exchange : Party
+    custodian : Party
+  where
+    signatory customer
+    controller operator can
+      ApproveOnboardRequest : ()
+        do
+          onboardCid <- create OnboardInvestor with signed = fromList [operator, customer]; ..
+          -- onboardCid <- exerciseByKey @ProviderOnboarding (operator, custodian) . ProviderOnboarding_Sign $ onboardCid >>= (exerciseByKey @ProviderOnboarding (operator, exchange) . ProviderOnboarding_Sign)
+          -- -- with onboardCid -- with requestCid = onboardCid
+          -- onboardCid <- exerciseByKey @ProviderOnboarding (operator, exchange) ProviderOnboarding_Sign with requestCid = onboardCid
+          onboardCid <- collectSignatures operator [custodian, exchange] onboardCid
+          exercise onboardCid OnboardInvestor_OnboardAll
+          exercise onboardCid OnboardInvestor_Archive with ctrl = operator
+          -- custodyOfferCid <- exerciseByKey @CustodyOnboarding (operator, custodian) Custody_CreateOffer with ..
+          -- custodyServiceCid <- exercise custodyOfferCid Custody.Accept
+
+    -- controller custodian can
+    --   nonconsuming CreateCustodyOnboardInvestor : ContractId CustodyOnboardInvestor
+    --     do
+    --       create CustodyOnboardInvestor with provider = custodian; ..
+
+template OnboardInvestor
+  with
+    operator : Party
+    customer : Party
+    custodian : Party
+    exchange : Party
+    signed : Set Party
+  where
+    signatory signed
+
+    choice OnboardInvestor_Archive : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do return ()
+
+    choice OnboardInvestor_Sign : ContractId OnboardInvestor
+      with
+        ctrl : Party
+      controller ctrl
+      do
+        create this with signed = insert ctrl signed
+
+    controller operator can
+      nonconsuming OnboardInvestor_OnboardAll : ()
+        do
+          -- offerCid   <- create Custody.Offer with provider = custodian; ..
+          -- custodyServiceCid <- exercise offerCid Custody.Accept
+          custodyServiceCid <- createOrLookup Custody.Service with provider = custodian; ..
+
+          let exchangeAccountId = Id with
+                signatories = fromList [customer, custodian]
+                label = show customer <> "-Main-" <> show custodian
+                version = 0
+
+          let exchangeAllocationId = Id with
+                signatories = fromList [customer, custodian]
+                label = show customer <> "-allocation-" <> show custodian <> "-" <> show exchange
+                version = 0
+
+          openAccountRequestCid
+            <- exercise custodyServiceCid Custody.RequestOpenAccount with
+                accountId = exchangeAccountId
+                observers = [exchange]
+                ctrls     = [custodian, customer], ..
+
+          tradingAccount <- fetch <$> exercise custodyServiceCid Custody.OpenAccount with ..
+
+          openAllocationAccountRequestCid
+            <- exercise custodyServiceCid Custody.RequestOpenAllocationAccount with
+                accountId = exchangeAccountId
+                observers = fromList []
+                nominee   = exchange
+
+          allocationAccount <- fetch <$> exercise custodyServiceCid Custody.OpenAllocationAccount with ..
+
+          tradingServiceCid <- createOrLookup Trading.Service with provider = exchange; ..
+
+          return ()
+
+template ProviderOnboarding
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+    key (operator, provider) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      nonconsuming ProviderOnboarding_Sign : ContractId OnboardInvestor
+        with
+          requestCid : ContractId OnboardInvestor
+        do
+          exercise requestCid OnboardInvestor_Sign with ctrl = provider
+          -- -- InvestorOnboardRequest{..} <- fetch requestCid
+          -- create CustodyOnboardInvestor with ..
+
+-- template CustodyOnboarding
+--   with
+--     provider : Party
+--     operator : Party
+--   where
+--     signatory provider
+--     key (operator, provider) : (Party, Party)
+--     maintainer key._2
+--
+--     controller operator can
+--       nonconsuming Custody_CreateOffer : ContractId Custody.Offer
+--         with
+--           customer : Party
+--         do
+--           create Custody.Offer with ..
+--
+--       nonconsuming Custody_SignOnboardInvestor : ContractId OnboardInvestor
+--         with
+--           requestCid : ContractId CustodyOnboardInvestor
+--           -- customer : Party
+--         do
+--           exercise requestCid CustodyOnboardInvestor_Sign with ctrl = provider
+--           -- -- InvestorOnboardRequest{..} <- fetch requestCid
+--           -- create CustodyOnboardInvestor with ..
+--
+template OperatorOnboarding
+  with
+    operator : Party
+  where
+    signatory operator
+
+    -- controller operator can
+    nonconsuming choice OnboardCustodian : ContractId ProviderOnboarding
+      with
+        custodian : Party
+      controller custodian
+      do create ProviderOnboarding with provider = custodian; ..
+
+
+

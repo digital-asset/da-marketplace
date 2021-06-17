@@ -1,0 +1,25 @@
+module UI.Test where
+
+import UI.Onboarding
+
+import Daml.Script
+
+testOnboarding : Script ()
+testOnboarding = do
+  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  bank <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
+  exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+
+  customer <- allocatePartyWithHint "Customer" $ PartyIdHint "Customer"
+  public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
+
+  -- operator `submit` createCmd OperatorOnboarding with ..
+  bank `submit` createCmd ProviderOnboarding with provider = bank; ..
+  exchange `submit` createCmd ProviderOnboarding with provider = exchange; ..
+
+  onboardRequestCid <- customer `submit` createCmd InvestorOnboardRequest with custodian = bank; ..
+
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest --with custodian = bank
+
+  return ()
+
