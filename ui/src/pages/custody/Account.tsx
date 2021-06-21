@@ -1,60 +1,45 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
-import { RouteComponentProps, useParams, withRouter } from 'react-router-dom';
+import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import { Button, Form } from 'semantic-ui-react';
-import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
+import { Button } from 'semantic-ui-react';
 import { usePartyName } from '../../config';
-import StripedTable from '../../components/Table/StripedTable';
-import BackButton from '../../components/Common/BackButton';
-import InfoCard from '../../components/Common/InfoCard';
 import Tile from '../../components/Tile/Tile';
-import { ServicePageProps, damlSetValues, createDropdownProp } from '../common';
+import { ServicePageProps, damlSetValues } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import paths from '../../paths';
-import FormErrorHandled from '../../components/Form/FormErrorHandled';
+import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 
-const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = ({
-  history,
+interface AccountProps {
+  targetAccount: {
+    account: AccountContract;
+    contractId: string;
+  };
+}
+
+const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   services,
-}: RouteComponentProps & ServicePageProps<Service>) => {
+  targetAccount,
+}: ServicePageProps<Service> & AccountProps) => {
   const party = useParty();
   const { getName } = usePartyName(party);
   const ledger = useLedger();
   const displayErrorMessage = useDisplayErrorMessage();
-  const { contractId } = useParams<any>();
 
-  const cid = contractId.replace('_', '#');
+  const cid = targetAccount.contractId.replace('_', '#');
 
   const { contracts: accounts, loading: accountsLoading } = useStreamQueries(AssetSettlementRule);
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
-  const { contracts: assets, loading: assetsLoading } = useStreamQueries(AssetDescription);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
 
-  const [creditAsset, setCreditAsset] = useState<string>('');
-  const [creditQuantity, setCreditQuantity] = useState<string>('');
-
-  const allAccounts = useMemo(
-    () =>
-      accounts
-        .map(a => {
-          return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-        })
-        .concat(
-          allocatedAccounts.map(a => {
-            return { account: a.payload.account, contractId: a.contractId.replace('#', '_') };
-          })
-        ),
-    [accounts, allocatedAccounts]
-  );
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -65,14 +50,14 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     },
     onClose: async function (state: any | null) {},
   };
+
   const [transferDialogProps, setTransferDialogProps] = useState<InputDialogProps<any>>(
     defaultTransferRequestDialogProps
   );
 
   const clientServices = services.filter(s => s.payload.customer === party);
-  const targetAccount = allAccounts.find(a => a.contractId === cid);
 
-  if (accountsLoading || assetsLoading || depositsLoading || allocatedAccountsLoading) {
+  if (accountsLoading || depositsLoading || allocatedAccountsLoading) {
     return <h4>Loading account...</h4>;
   }
 
@@ -100,7 +85,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
       accountId: c.payload.account.id,
       debit: { depositCid: c.contractId },
     });
-    history.push(paths.app.wallet.requests);
   };
 
   const relatedAccounts = accounts
@@ -139,25 +123,6 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     });
   };
 
-  const onRequestCredit = async () => {
-    const asset = assets.find(i => i.payload.description === creditAsset);
-    if (!asset) return;
-
-    if (!service)
-      return displayErrorMessage({
-        message: `${getName(
-          targetAccount.account.provider
-        )} does not offer issuance services to ${getName(party)}`,
-      });
-
-    await ledger.exercise(Service.RequestCreditAccount, service.contractId, {
-      accountId: targetAccount.account.id,
-      asset: { id: asset.payload.assetId, quantity: creditQuantity },
-    });
-    setCreditAsset('');
-    setCreditQuantity('');
-  };
-
   const requestCloseAccount = async (c: CreateEvent<AssetSettlementRule>) => {
     if (!service)
       return displayErrorMessage({
@@ -166,120 +131,80 @@ const AccountComponent: React.FC<RouteComponentProps & ServicePageProps<Service>
     await ledger.exercise(Service.RequestCloseAccount, service.contractId, {
       accountId: c.payload.account.id,
     });
-    history.push(paths.app.wallet.requests);
   };
-
-  let accountData = [
-    {
-      label: 'Name',
-      data: targetAccount.account.id.label,
-    },
-    { label: 'Type', data: normalAccount ? 'Normal' : 'Allocation' },
-    { label: 'Provider', data: getName(targetAccount.account.provider) },
-    { label: 'Owner', data: getName(targetAccount.account.owner) },
-    {
-      label: 'Role',
-      data: party === targetAccount.account.provider ? 'Provider' : 'Client',
-    },
-  ];
-
-  if (normalAccount) {
-    accountData = [
-      ...accountData,
-      {
-        label: 'Controllers',
-        data: damlSetValues(normalAccount.payload.ctrls)
-          .map(ctrl => getName(ctrl))
-          .sort()
-          .join(', '),
-      },
-    ];
-  }
-  if (allocationAccount) {
-    accountData = [
-      ...accountData,
-      {
-        label: 'Nominee',
-        data: allocationAccount.payload.nominee,
-      },
-    ];
-  }
 
   return (
     <>
-      <BackButton prevPageLabel="Wallet" prevPagePath={paths.app.wallet.root} />
       <InputDialog {...transferDialogProps} isModal />
       <div className="account">
-        <div className="page-section-row">
-          <InfoCard
-            title="Account Details"
-            info={accountData}
-            actions={
-              normalAccount && [
-                <Button
-                  key="close-account"
-                  className="ghost warning"
-                  onClick={() => requestCloseAccount(normalAccount)}
-                >
-                  Close Account
-                </Button>,
-              ]
-            }
-          />
-          <Tile header="Credit Account Request">
-            <br />
-            <FormErrorHandled onSubmit={() => onRequestCredit()}>
-              <Form.Select
-                label="Asset"
-                options={assets.map(a => createDropdownProp(a.payload.description))}
-                value={creditAsset}
-                onChange={(_, data) => setCreditAsset(data.value as string)}
-              />
-              <Form.Input
-                label="Quantity"
-                type="number"
-                value={creditQuantity}
-                onChange={(_, data) => setCreditQuantity(data.value as string)}
-              />
-              <Button
-                type="submit"
-                className="ghost"
-                disabled={creditAsset === '' || creditQuantity === '' || creditQuantity === '0'}
-                content="Submit"
-              />
-            </FormErrorHandled>
-          </Tile>
+        <div className="account-details">
+          <h4> {targetAccount.account.id.label} </h4>
+          <Button className="a a2" onClick={() => setShowAccountDetails(!showAccountDetails)}>
+            {showAccountDetails ? <IconChevronUp /> : <IconChevronDown />}
+          </Button>
         </div>
-        <StripedTable
-          title="Holdings"
-          headings={['Holding', 'Asset', '']}
-          loading={depositsLoading}
-          rows={accountDeposits.map(c => {
-            return {
-              elements: [
-                c.payload.asset.quantity,
-                c.payload.asset.id.label,
-                <>
-                  {party === targetAccount.account.owner && normalAccount && (
-                    <div className="action-row">
-                      <Button className="ghost" onClick={() => requestWithdrawDeposit(c)}>
-                        Withdraw
-                      </Button>
-                      {relatedAccounts.length > 0 && (
-                        <Button className="ghost" onClick={() => requestTransfer(c)}>
-                          Transfer
-                        </Button>
-                      )}
-                    </div>
+        {showAccountDetails && (
+          <div className="account-details">
+            <p className="p2">Type: {normalAccount ? 'Normal' : 'Allocation'} </p>
+            <p className="p2">Provider: {getName(targetAccount.account.provider)}</p>
+            <p className="p2">Owner: {getName(targetAccount.account.owner)}</p>
+            <p className="p2">
+              Role: {party === targetAccount.account.provider ? 'Provider' : 'Client'}
+            </p>
+            {allocationAccount && (
+              <p className="p2">Nominee: {allocationAccount.payload.nominee}</p>
+            )}
+            {normalAccount && (
+              <p className="p2">
+                Controllers:{' '}
+                {damlSetValues(normalAccount.payload.ctrls)
+                  .map(ctrl => getName(ctrl))
+                  .sort()
+                  .join(', ')}
+              </p>
+            )}
+            {normalAccount && (
+              <Button
+                className="ghost warning  secondary-smaller"
+                onClick={() => requestCloseAccount(normalAccount)}
+              >
+                Close Account
+              </Button>
+            )}
+          </div>
+        )}
+        {accountDeposits.length > 0 ? (
+          accountDeposits.map(c => (
+            <Tile className="account-holding">
+              <p>
+                <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
+              </p>
+              {party === targetAccount.account.owner && normalAccount && (
+                <div className="actions">
+                  <Button
+                    className="ghost"
+                    content="Withdraw"
+                    onClick={() => requestWithdrawDeposit(c)}
+                  />
+                  {relatedAccounts.length > 0 && (
+                    <Button
+                      className="ghost"
+                      content="Transfer"
+                      onClick={() => requestTransfer(c)}
+                    />
                   )}
-                </>,
-              ],
-            };
-          })}
-        />
+                </div>
+              )}
+            </Tile>
+          ))
+        ) : (
+          <div className="none p2">
+            <i>There are no holdings in this account.</i>
+          </div>
+        )}
       </div>
     </>
   );
 };
 
-export const Account = withRouter(AccountComponent);
+export default Account;

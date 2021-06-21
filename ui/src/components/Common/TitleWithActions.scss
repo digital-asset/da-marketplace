@@ -16,9 +16,9 @@
       flex-direction: row;
       align-items: baseline;
       flex-wrap: wrap;
-
+      margin-left: $spacing-m;
       button {
-        margin-left: $spacing-m;
+        margin-right: $spacing-m;
       }
     }
 
