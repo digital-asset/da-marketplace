@@ -81,6 +81,7 @@ const NewComponent: React.FC<RouteComponentProps & ServicePageProps<Service>> = 
   }, [el2, quotedAsset, showQuotedAsset]);
 
   const service = customerServices[0];
+  console.log('on this page');
   if (!service) return <></>;
 
   const requestListing = async () => {

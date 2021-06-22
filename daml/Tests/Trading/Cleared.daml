@@ -76,6 +76,7 @@ clearedTradingTest = do
         collateral = Order.Cleared clearinghouse
         details = Order.Details with
             id = aliceOrderId
+            optExchangeFee = None
             listingId
             asset = tsla with quantity = 200.0
             side = Order.Sell
@@ -91,6 +92,7 @@ clearedTradingTest = do
             id = bobOrderId
             listingId
             asset = shareAsset
+            optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
@@ -147,6 +149,7 @@ clearedTradingTest = do
             id = bobOrderId2
             listingId
             asset = shareAsset
+            optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
@@ -164,6 +167,7 @@ clearedTradingTest = do
             id = charlieOrderId
             listingId
             asset = shareAsset
+            optExchangeFee = None
             side = Order.Buy
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0

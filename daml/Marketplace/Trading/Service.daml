@@ -39,6 +39,12 @@ template Service
         (Order.Cleared party)         -> return $ Order.Cleared party
         (Order.Collateral depositCid) -> Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
+      withdrawFeesFromAllocationAccount : Optional (ContractId AssetDeposit) -> Update (Optional (ContractId AssetDeposit))
+      withdrawFeesFromAllocationAccount = \case
+        Some depositCid -> Some <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
+        None            -> return None
+
+
     controller customer can
       nonconsuming RequestCreateOrder : Either (ContractId Order.T)
                                                (ContractId Order.T, ContractId CreateOrderRequest, Order.TradeCollateral)
@@ -52,8 +58,16 @@ template Service
             executions = []
             remainingQuantity = details.asset.quantity
 
+          let detailsWithDepositedFees : Update Order.Details
+              detailsWithDepositedFees = case details.optExchangeFee of
+                  Some feeDepositCid -> do
+                    newDepositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with depositCid = feeDepositCid; ..
+                    return details with optExchangeFee = Some newDepositCid
+                  None -> return details
+
           case collateral of
             (Order.Collateral depositCid) -> do
+                details <- detailsWithDepositedFees
                 collateral <- Order.Collateral <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with ..
                 createOrderRequestCid <- create CreateOrderRequest with ..
                 orderCid <- create Order.Order with ..
@@ -69,6 +83,7 @@ template Service
 
                 (Some serviceCid) -> exercise serviceCid Clearing.ApproveTrade >>= \case
                     True -> do
+                        details <- detailsWithDepositedFees
                         createOrderRequestCid <- create CreateOrderRequest with ..
                         orderCid <- create Order.Order with ..
                         return $ Right (orderCid, createOrderRequestCid, collateral)
@@ -117,6 +132,7 @@ template Service
           let reason = Error with code = show errorCode; message = errorMessage
           orderCid <- create order with status = Order.Rejected with reason
           collateral <- withdrawFromAllocationAccount collateral
+          optExchangeFee <- withdrawFeesFromAllocationAccount details.optExchangeFee
 
           return (orderCid, collateral)
 
@@ -152,6 +168,7 @@ template Service
 
           orderCid <- create order with status = Order.Cancelled
           collateral <- withdrawFromAllocationAccount order.collateral
+          optExchangeFee <- withdrawFeesFromAllocationAccount details.optExchangeFee
 
           return (orderCid, collateral)
 

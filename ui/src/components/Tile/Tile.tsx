@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { Header } from 'semantic-ui-react';
+import { Header, Loader } from 'semantic-ui-react';
 import { OpenMarketplaceLogo } from '../../icons/icons';
 
 const logoHeader = (
@@ -17,6 +17,7 @@ type TileProps = {
   thinGap?: boolean;
   subtitle?: string;
   showLogoHeader?: boolean;
+  loading?: boolean;
 };
 
 const Tile: React.FC<TileProps> = ({
@@ -27,6 +28,7 @@ const Tile: React.FC<TileProps> = ({
   subtitle,
   header,
   showLogoHeader,
+  loading,
 }) => {
   return (
     <>
@@ -34,7 +36,13 @@ const Tile: React.FC<TileProps> = ({
         {!!showLogoHeader && <div className="tile-header">{logoHeader}</div>}
         {!!header && <Header as="h3">{header}</Header>}
         {!!subtitle && <p className="subtitle">{subtitle}</p>}
-        <div className="tile-content">{children}</div>
+        {loading ? (
+          <Loader active size="large">
+            <p>Loading...</p>
+          </Loader>
+        ) : (
+          <div className="tile-content">{children}</div>
+        )}
       </div>
     </>
   );

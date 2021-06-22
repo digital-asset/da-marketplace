@@ -25,6 +25,7 @@ class EXBERRY:
 
 class MARKETPLACE:
     CreateOrderRequest = 'Marketplace.Trading.Service:CreateOrderRequest'
+    FeeSchedule = 'Marketplace.Trading.Model:FeeSchedule'
     CancelOrderRequest = 'Marketplace.Trading.Service:CancelOrderRequest'
     Order = 'Marketplace.Trading.Model:Order'
     CreateListingRequest = 'Marketplace.Listing.Service:CreateListingRequest'
@@ -95,9 +96,24 @@ def main():
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
-    def handle_order_request(event):
+    async def handle_order_request(event):
         logging.info(f'Received Create Order Request - {event}')
         order = event.cdata['details']
+
+        opt_fee_contract_id = order['optExchangeFee']
+        fee_amount = 0.0
+        if opt_fee_contract_id != None:
+            fee_deposit = client.find_by_id(opt_fee_contract_id)
+            fee_amount = fee_deposit['asset']['quantity']
+
+
+        _, fee_schedule = await client.find_one(MARKETPLACE.FeeSchedule, {'provider': exchange_party})
+        if fee_schedule['currentFee']['amount'] > fee_amount:
+            return [exercise(event.cid,
+                        'RejectRequest', {
+                            'errorCode': '790',
+                            'errorMessage': 'Fee does not match exchange fee'}
+                    )]
 
         return create(EXBERRY.NewOrderRequest, {
             'order': {
