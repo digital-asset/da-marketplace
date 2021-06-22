@@ -54,3 +54,15 @@ export function damlSetValues<T>(damlSet: DamlSet<T>): T[] {
   }
   return r;
 }
+
+export function partitionArray<T>(isValid: (elem: T) => boolean, array?: T[]): [T[], T[]] {
+  if (!array) {
+    return [[], []];
+  }
+  return array.reduce(
+    ([pass, fail], elem) => {
+      return isValid(elem) ? [[...pass, elem], fail] : [pass, [...fail, elem]];
+    },
+    [[], []] as [T[], T[]]
+  );
+}

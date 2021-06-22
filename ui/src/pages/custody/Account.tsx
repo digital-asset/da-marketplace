@@ -7,6 +7,8 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { CloseAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { Button } from 'semantic-ui-react';
 import { usePartyName } from '../../config';
@@ -38,6 +40,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+  const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
 
   const [showAccountDetails, setShowAccountDetails] = useState(false);
 
@@ -132,6 +135,10 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
       accountId: c.payload.account.id,
     });
   };
+
+  if (closeRequests.find(c => c.payload.accountId.label == targetAccount.account.id.label)) {
+    return null;
+  }
 
   return (
     <>

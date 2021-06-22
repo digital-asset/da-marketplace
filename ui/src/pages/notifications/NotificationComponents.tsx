@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 
+import { CreateEvent } from '@daml/ledger';
+
 import _ from 'lodash';
 
-import { useLedger } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { ContractId } from '@daml/types';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { FieldComponents, Fields, Field } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
+
+import { useStreamQueries } from '../../Main';
 
 import {
   OfferAcceptChoice,
@@ -16,12 +20,27 @@ import {
   OfferAccepts,
   OfferDeclineChoice,
   OfferTemplates,
+  OutboundRequestTemplates,
+  ProcessRequestTemplates,
   RequestApproveChoice,
   RequestApproveFields,
   RequestApproves,
   RequestRejectChoice,
   RequestTemplates,
 } from './NotificationTypes';
+import {
+  CloseAccountRequest,
+  DebitAccountRequest,
+  OpenAccountRequest,
+  TransferDepositRequest,
+  CreditAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+import {
+  Service as CustodyService,
+  CloseAccount,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
@@ -73,9 +92,9 @@ export function OfferNotification<T extends Fields>({
 
   return (
     <Notification>
-      <h3>
+      <p>
         {name} is offering {serviceText}.
-      </h3>
+      </p>
       <FormErrorHandled onSubmit={onAccept}>
         {loadAndCatch => (
           <Form.Group className="inline-form-group">
@@ -188,4 +207,122 @@ export function RequestNotification<T extends Fields>({
       </FormErrorHandled>
     </Notification>
   );
+}
+
+interface OutboundRequestProps {
+  details: string;
+}
+
+export function OutboundRequestNotification({ details }: OutboundRequestProps) {
+  return (
+    <Notification>
+      <p>{details}</p>
+      <p className="pending">pending</p>
+    </Notification>
+  );
+}
+
+interface InboundRequestProps {
+  contract: CreateEvent<ProcessRequestTemplates>;
+  details: string;
+  tag: string;
+}
+
+export function ProcessRequestNotification({ contract, details, tag }: InboundRequestProps) {
+  const ledger = useLedger();
+  const party = useParty();
+
+  const displayErrorMessage = useDisplayErrorMessage();
+  const services = useStreamQueries(CustodyService).contracts;
+
+  const providerServices = services.filter(s => s.payload.provider === party);
+
+  const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
+    if (!service) return;
+    await ledger.exercise(CustodyService.OpenAccount, service.contractId, {
+      openAccountRequestCid: c.contractId,
+    });
+  };
+
+  const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to close account',
+        message: 'Could not find Custody service contract',
+      });
+    await ledger.exercise(CustodyService.CloseAccount, service.contractId, {
+      closeAccountRequestCid: c.contractId,
+    });
+  };
+
+  const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Credit Account',
+        message: 'Could not find Custody service contract',
+      });
+    await ledger.exercise(CustodyService.CreditAccount, service.contractId, {
+      creditAccountRequestCid: c.contractId,
+    });
+  };
+
+  const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Debit Account',
+        message: 'Could not find Custody service contract',
+      });
+    await ledger.exercise(CustodyService.DebitAccount, service.contractId, {
+      debitAccountRequestCid: c.contractId,
+    });
+  };
+
+  const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
+    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Transfer Deposit',
+        message: 'Could not find Custody service contract',
+      });
+    await ledger.exercise(CustodyService.TransferDeposit, service.contractId, {
+      transferDepositRequestCid: c.contractId,
+    });
+  };
+
+  return (
+    <Notification>
+      <p>{details} </p>
+      <FormErrorHandled onSubmit={onProcess}>
+        {loadAndCatch => (
+          <Form.Group className="inline-form-group">
+            <Button
+              className="ghost"
+              content="Process"
+              type="submit"
+              onClick={() => loadAndCatch(onProcess)}
+            />
+          </Form.Group>
+        )}
+      </FormErrorHandled>
+    </Notification>
+  );
+
+  async function onProcess() {
+    switch (tag) {
+      case 'open-account':
+        return openAccount(contract as CreateEvent<OpenAccountRequest>);
+      case 'close-account':
+        return closeAccount(contract as CreateEvent<CloseAccountRequest>);
+      case 'credit-account':
+        return creditAccount(contract as CreateEvent<CreditAccountRequest>);
+      case 'debit-account':
+        return debitAccount(contract as CreateEvent<DebitAccountRequest>);
+      case 'transfer':
+        return transferDeposit(contract as CreateEvent<TransferDepositRequest>);
+    }
+  }
 }

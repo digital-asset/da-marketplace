@@ -10,9 +10,9 @@ import {
   DebitAccountRequest,
   OpenAccountRequest,
   TransferDepositRequest,
+  CreditAccountRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 import { usePartyName } from '../../config';
-import { CreditAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model/module';
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { damlSetValues } from '../common';
@@ -120,100 +120,161 @@ const RequestsComponent: React.FC<RouteComponentProps & Props> = ({
     return extract(deposit.payload);
   };
 
+  const [inboundOpenRequests, outboundOpenRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...openRequests]
+  );
+
+  const [inboundCloseRequests, outboundCloseRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...closeRequests]
+  );
+
+  const [inboundCreditRequests, outboundCreditRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...creditRequests]
+  );
+
+  const [inboundDebitRequests, outboundDebitRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...debitRequests]
+  );
+  const [inboundTransferRequests, outboundTransferRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...transferRequests]
+  );
   return (
     <>
       <StripedTable
-        title="Open Account Requests"
-        headings={['Account', 'Provider', 'Client', 'Role', 'Controllers', 'Action']}
-        rows={openRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              damlSetValues(c.payload.ctrls).join(', '),
-              party === c.payload.provider && (
-                <Button onClick={() => openAccount(c)}>Process</Button>
-              ),
-            ],
-          };
-        })}
+        title="Outbound Requests"
+        headings={['Request', 'Pending party approval']}
+        rows={[
+          ...outboundOpenRequests.map((c, i) => {
+            return {
+              elements: [`Open Account: ${c.payload.accountId.label}`, getName(c.payload.provider)],
+            };
+          }),
+          ...outboundCloseRequests.map((c, i) => {
+            return {
+              elements: [
+                `Close Account: ${c.payload.accountId.label}`,
+                getName(c.payload.provider),
+              ],
+            };
+          }),
+          ...outboundCreditRequests.map((c, i) => {
+            return {
+              elements: [
+                `Credit Account: ${c.payload.accountId.label} - ${c.payload.asset.id.label} ${c.payload.asset.quantity}`,
+                getName(c.payload.provider),
+              ],
+            };
+          }),
+          ...outboundDebitRequests.map((c, i) => {
+            return {
+              elements: [
+                `Debit Account: ${c.payload.accountId.label} -
+                ${getDebitDepositDetail(c, d => d.asset.id.label)}
+                ${getDebitDepositDetail(c, d => d.asset.quantity)}`,
+                getName(c.payload.provider),
+              ],
+            };
+          }),
+          ...outboundTransferRequests.map((c, i) => {
+            return {
+              elements: [
+                `Transfer: ${getTransferDepositDetail(
+                  c,
+                  d => d.asset.quantity
+                )} ${getTransferDepositDetail(c, d => d.asset.id.label)} from ${
+                  c.payload.accountId.label
+                } to ${c.payload.transfer.receiverAccountId.label}
+              `,
+                getName(c.payload.provider),
+              ],
+            };
+          }),
+        ]}
       />
+
       <StripedTable
-        title="Close Account Requests"
-        headings={['Account', 'Provider', 'Client', 'Role', 'Action']}
-        rows={closeRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              party === c.payload.provider ? 'Provider' : 'Client',
-              party === c.payload.provider && (
-                <Button onClick={() => closeAccount(c)}>Process</Button>
-              ),
-            ],
-          };
-        })}
-      />
-      <StripedTable
-        title="Credit Account Requests"
-        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
-        rows={creditRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              c.payload.asset.id.label,
-              c.payload.asset.quantity,
-              party === c.payload.provider && (
-                <Button onClick={() => creditAccount(c)}>Process</Button>
-              ),
-            ],
-          };
-        })}
-      />
-      <StripedTable
-        title="Withdraw Deposit Requests"
-        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Action']}
-        rows={debitRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              getDebitDepositDetail(c, d => d.asset.id.label),
-              getDebitDepositDetail(c, d => d.asset.quantity),
-              party === c.payload.provider && (
-                <Button onClick={() => debitAccount(c)}>Process</Button>
-              ),
-            ],
-          };
-        })}
-      />
-      <StripedTable
-        title="Transfer Requests"
-        headings={['Account', 'Provider', 'Client', 'Asset', 'Quantity', 'Transfer to', 'Action']}
-        rows={transferRequests.map((c, i) => {
-          return {
-            elements: [
-              c.payload.accountId.label,
-              getName(c.payload.provider),
-              getName(c.payload.customer),
-              getTransferDepositDetail(c, d => d.asset.id.label),
-              getTransferDepositDetail(c, d => d.asset.quantity),
-              c.payload.transfer.receiverAccountId.label,
-              party === c.payload.provider && (
-                <Button onClick={() => transferDeposit(c)}>Process</Button>
-              ),
-            ],
-          };
-        })}
+        title="Inbound Requests"
+        headings={['Type', 'Provider', 'Client', 'Action']}
+        rows={[
+          ...inboundOpenRequests.map((c, i) => {
+            return {
+              elements: [
+                `Open Account Requests: ${c.payload.accountId.label}`,
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button onClick={() => openAccount(c)}>Process</Button>,
+              ],
+            };
+          }),
+          ...inboundCloseRequests.map((c, i) => {
+            return {
+              elements: [
+                `Close Account Requests: ${c.payload.accountId.label}`,
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button onClick={() => closeAccount(c)}>Process</Button>,
+              ],
+            };
+          }),
+          ...inboundCreditRequests.map((c, i) => {
+            return {
+              elements: [
+                `Credit Account: ${c.payload.accountId.label} - ${c.payload.asset.id.label} ${c.payload.asset.quantity}`,
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button onClick={() => creditAccount(c)}>Process</Button>,
+              ],
+            };
+          }),
+          ...inboundDebitRequests.map((c, i) => {
+            return {
+              elements: [
+                `Debit Account: ${c.payload.accountId.label} -
+                ${getDebitDepositDetail(c, d => d.asset.id.label)}
+                ${getDebitDepositDetail(c, d => d.asset.quantity)}`,
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button onClick={() => debitAccount(c)}>Process</Button>,
+              ],
+            };
+          }),
+          ...inboundTransferRequests.map((c, i) => {
+            return {
+              elements: [
+                `Transfer: ${getTransferDepositDetail(
+                  c,
+                  d => d.asset.quantity
+                )} ${getTransferDepositDetail(c, d => d.asset.id.label)} from ${
+                  c.payload.accountId.label
+                } to ${c.payload.transfer.receiverAccountId.label}
+              `,
+                getName(c.payload.provider),
+                getName(c.payload.customer),
+                <Button onClick={() => transferDeposit(c)}>Process</Button>,
+              ],
+            };
+          }),
+        ]}
       />
     </>
   );
 };
+
+export function partitionArray<T>(isValid: (elem: T) => boolean, array?: T[]): [T[], T[]] {
+  if (!array) {
+    return [[], []];
+  }
+  return array.reduce(
+    ([pass, fail], elem) => {
+      return isValid(elem) ? [[...pass, elem], fail] : [pass, [...fail, elem]];
+    },
+    [[], []] as [T[], T[]]
+  );
+}
 
 export const Requests = withRouter(RequestsComponent);

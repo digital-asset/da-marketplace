@@ -8,10 +8,18 @@
       border: 1px solid var(--cool-grey-90);
       border-radius: 2px;
       padding: $spacing-s;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
 
-      form {
-        margin-top: $spacing-s;
+      .form-error-handled, p.pending {
+          margin-left: auto;
       }
+
+      p.pending {
+        font-style: italic;
+        color: var(--cool-grey-30);
+        }
     }
 
     .notification-content {

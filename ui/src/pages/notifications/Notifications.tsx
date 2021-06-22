@@ -1,5 +1,8 @@
 import React from 'react';
+import { CreateEvent } from '@daml/ledger';
 
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
 import {
   Offer as CustodyRoleOffer,
   Request as CustodyRoleRequest,
@@ -66,6 +69,21 @@ import {
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
+import {
+  CloseAccountRequest,
+  DebitAccountRequest,
+  OpenAccountRequest,
+  TransferDepositRequest,
+  CreditAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+
+import { useParty } from '@daml/react';
+
+import { Requests as CustodyRequests } from '../../pages/custody/Requests';
+import { Requests as AuctionRequests } from '../../pages/distribution/auction/Requests';
+
 import { ServiceKind } from '../../context/ServicesContext';
 import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
@@ -77,11 +95,16 @@ import {
   RequestApproveChoice,
   RequestRejectChoice,
 } from './NotificationTypes';
-import { OfferNotification, RequestNotification } from './NotificationComponents';
+import {
+  OfferNotification,
+  RequestNotification,
+  OutboundRequestNotification,
+  ProcessRequestNotification,
+} from './NotificationComponents';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { useVerifiedParties } from '../../config';
-import { createDropdownProp } from '../common';
+import { useVerifiedParties, usePartyName } from '../../config';
+import { createDropdownProp, partitionArray } from '../common';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -117,6 +140,54 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const auctionServiceRequests = useStreamQueries(AuctionServiceRequest);
   const biddingServiceOffers = useStreamQueries(BiddingServiceOffer);
   const biddingServiceRequests = useStreamQueries(BiddingServiceRequest);
+
+  const openRequests = useStreamQueries(OpenAccountRequest).contracts;
+  const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
+  const creditRequests = useStreamQueries(CreditAccountRequest).contracts;
+  const debitRequests = useStreamQueries(DebitAccountRequest).contracts;
+  const transferRequests = useStreamQueries(TransferDepositRequest).contracts;
+  const assetDeposits = useStreamQueries(AssetDeposit).contracts;
+
+  const { getName } = usePartyName(party);
+
+  const [inboundOpenRequests, outboundOpenRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...openRequests]
+  );
+  const [inboundCloseRequests, outboundCloseRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...closeRequests]
+  );
+  const [inboundCreditRequests, outboundCreditRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...creditRequests]
+  );
+  const [inboundDebitRequests, outboundDebitRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...debitRequests]
+  );
+  const [inboundTransferRequests, outboundTransferRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...transferRequests]
+  );
+
+  const getDebitDepositDetail = (
+    c: CreateEvent<DebitAccountRequest>,
+    extract: (deposit: AssetDeposit) => string
+  ): string => {
+    const deposit = assetDeposits.find(a => a.contractId === c.payload.debit.depositCid);
+    if (!deposit) return '';
+    return extract(deposit.payload);
+  };
+
+  const getTransferDepositDetail = (
+    c: CreateEvent<TransferDepositRequest>,
+    extract: (deposit: AssetDeposit) => string
+  ): string => {
+    const deposit = assetDeposits.find(a => a.contractId === c.payload.transfer.depositCid);
+    if (!deposit) return '';
+    return extract(deposit.payload);
+  };
 
   const accountRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useStreamQueries(AssetSettlementRule)
@@ -661,6 +732,92 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       lookupFields: fields => fields,
       contracts: biddingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
+    {
+      kind: 'Outbound',
+      tag: 'outbound',
+      details: c =>
+        `Open Account ${c.payload.accountId.label}.
+        Pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundOpenRequests,
+    },
+    {
+      kind: 'Outbound',
+      tag: 'outbound',
+      details: c => `Close Account ${c.payload.accountId.label}.
+      Pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundCloseRequests,
+    },
+    {
+      kind: 'Outbound',
+      tag: 'outbound',
+      details: c =>
+        `Credit Account ${c.payload.accountId.label}: ${c.payload.asset.id.label}
+        ${c.payload.asset.quantity}. Pending approval from ${getName(c.payload.provider)} `,
+      contracts: outboundCreditRequests,
+    },
+    {
+      kind: 'Outbound',
+      tag: 'outbound',
+      details: c => `Debit Account: ${c.payload.accountId.label} -
+      ${getDebitDepositDetail(c, d => d.asset.id.label)}
+      ${getDebitDepositDetail(c, d => d.asset.quantity)}.
+      Pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundDebitRequests,
+    },
+    {
+      kind: 'Outbound',
+      tag: 'outbound',
+      details: c => `Transfer:
+        ${getTransferDepositDetail(c, d => d.asset.quantity)}
+        ${getTransferDepositDetail(c, d => d.asset.id.label)}
+        from
+        ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
+      contracts: outboundTransferRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'open-account',
+      details: c =>
+        `${getName(c.payload.customer)} requesting Open Account: ${c.payload.accountId.label}`,
+      contracts: inboundOpenRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'close-account',
+      details: c =>
+        `Request from ${getName(c.payload.customer)} to close account
+        ${c.payload.accountId.label}.`,
+      contracts: inboundCloseRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'credit-account',
+      details: c =>
+        `Request from ${getName(c.payload.customer)} to credit account ${c.payload.accountId.label}:
+        ${c.payload.asset.quantity} ${c.payload.asset.id.label}.`,
+      contracts: inboundCreditRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'debit-account',
+      details: c =>
+        `Request from ${getName(c.payload.customer)} to debit account ${c.payload.accountId.label}:
+        ${getDebitDepositDetail(c, d => d.asset.quantity)}  ${getDebitDepositDetail(
+          c,
+          d => d.asset.id.label
+        )}`,
+      contracts: inboundDebitRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'transfer',
+      details: c => `Request from  ${getName(c.payload.customer)} to transfer
+          ${getTransferDepositDetail(c, d => d.asset.quantity)}
+          ${getTransferDepositDetail(c, d => d.asset.id.label)}
+          from
+          ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
+      contracts: inboundTransferRequests,
+    },
   ];
 };
 
@@ -669,7 +826,12 @@ type Props = {
 };
 
 const Notifications: React.FC<Props> = ({ notifications }) => {
+  const party = useParty();
+
   const count = notifications.reduce((count, ns) => count + ns.contracts.length, 0);
+  const custodyService = useStreamQueries(CustodyService).contracts;
+  const auctionService = useStreamQueries(AuctionService).contracts;
+  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
 
   return (
     <div className="notifications">
@@ -706,11 +868,29 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       rejectChoice={n.choices.reject}
                     />
                   ));
+                case 'outbound':
+                  return n.contracts.map(c => (
+                    <OutboundRequestNotification key={c.contractId} details={n.details(c)} />
+                  ));
+                case 'open-account':
+                case 'close-account':
+                case 'credit-account':
+                case 'debit-account':
+                case 'transfer':
+                  return n.contracts.map(c => (
+                    <ProcessRequestNotification
+                      key={c.contractId}
+                      details={n.details(c)}
+                      tag={n.tag}
+                      contract={c}
+                    />
+                  ));
                 default:
                   return null;
               }
             })
           : 'No Notifications.'}
+        <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</>
       </div>
     </div>
   );

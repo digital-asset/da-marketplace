@@ -46,6 +46,11 @@ import {
   Offer as CustodyServiceOffer,
   Reject as CustodyServiceReject,
   Request as CustodyServiceRequest,
+  CloseAccount,
+  OpenAccount,
+  CreditAccount,
+  DebitAccount,
+  TransferDeposit,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import {
   Accept as ListingServiceAccept,
@@ -128,6 +133,14 @@ import {
   Reject as BiddingServiceReject,
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+
+import {
+  CloseAccountRequest,
+  DebitAccountRequest,
+  OpenAccountRequest,
+  TransferDepositRequest,
+  CreditAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 
 import { CreateEvent } from '@daml/ledger';
 import { Choice, ContractId } from '@daml/types';
@@ -295,4 +308,47 @@ type RequestNotificationSet = {
   contracts: readonly CreateEvent<RequestTemplates>[];
 } & RequestApproveFields<Record<string, any>>;
 
-export type NotificationSet = OfferNotificationSet | RequestNotificationSet;
+// -------------------------------------------------------------
+
+export type OutboundRequestTemplates =
+  | CloseAccountRequest
+  | DebitAccountRequest
+  | OpenAccountRequest
+  | TransferDepositRequest
+  | CreditAccountRequest;
+
+type OutboundRequestNotificationSet = {
+  kind: 'Outbound';
+  tag: 'outbound';
+  details: (c: any) => string;
+  contracts: readonly CreateEvent<OutboundRequestTemplates>[];
+};
+
+// -------------------------------------------------------------
+
+export type ProcessRequestTemplates =
+  | CloseAccountRequest
+  | DebitAccountRequest
+  | OpenAccountRequest
+  | TransferDepositRequest
+  | CreditAccountRequest;
+
+export type CustodyChoice =
+  | CloseAccount
+  | OpenAccount
+  | CreditAccount
+  | DebitAccount
+  | TransferDeposit;
+
+type ProcessRequestNotificationSet = {
+  kind: 'Process';
+  tag: 'open-account' | 'close-account' | 'credit-account' | 'debit-account' | 'transfer';
+  details: (c: any) => string;
+  contracts: readonly CreateEvent<ProcessRequestTemplates>[];
+};
+
+export type NotificationSet =
+  | OfferNotificationSet
+  | RequestNotificationSet
+  | OutboundRequestNotificationSet
+  | ProcessRequestNotificationSet;
