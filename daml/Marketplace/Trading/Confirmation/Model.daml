@@ -93,30 +93,35 @@ template Confirmation
               getAllocationAccount = getAccount accounts (.allocationAccount)
               getTradingAccount    = getAccount accounts (.tradingAccount)
 
-            -- whenSome order.details.optExchangeFee $ \depositCid -> do
             let transferToFeeAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
                 transferToFeeAccount depositCid = do
                   feeAccount <- (.feeAccount) . snd <$> fetchByKey @Order.FeeSchedule (operator, provider)
-                  exerciseByKey @AllocationAccountRule.T (getAllocationAccount party).id AllocationAccountRule.Transfer with transferTo = feeAccount; ..
+                  exerciseByKey @AllocationAccountRule.T (getAllocationAccount party).id
+                      AllocationAccountRule.Transfer with transferTo = feeAccount; ..
 
             let (Order.Collateral depositCid) = order.collateral
             depositCid <- if isPartialFill
               then do
                 newOptExchangeFee <- case order.details.optExchangeFee of
-                    None               -> return None
-                    Some feeDepositCid -> do
-                        feeQuantity <- (.asset.quantity) <$> fetch feeDepositCid
-                        let feeToTake = feeQuantity * (execution.quantity / order.remainingQuantity)
-                        [feeDepositCid, remainingFeeDepositCid] <- exercise feeDepositCid AssetDeposit_Split with quantities = [feeToTake]
-                        transferToFeeAccount feeDepositCid
-                        return $ Some remainingFeeDepositCid
+                  None               -> return None
+                  Some feeDepositCid -> do
+                    feeQuantity <- (.asset.quantity) <$> fetch feeDepositCid
+                    let feeToTake = roundBankers 2 $ feeQuantity * (execution.quantity / order.remainingQuantity)
+                    [feeDepositCid, remainingFeeDepositCid] <- exercise feeDepositCid AssetDeposit_Split with quantities = [feeToTake]
+                    transferToFeeAccount feeDepositCid
+                    return $ Some remainingFeeDepositCid
 
                 (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
-                create order with executions, remainingQuantity, collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
+                create order with
+                  executions, remainingQuantity
+                  collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
+                  details = order.details with optExchangeFee = newOptExchangeFee
                 pure depositCid
               else do
                 whenSome order.details.optExchangeFee (void . transferToFeeAccount)
-                create order with executions, remainingQuantity, status = Order.FullyExecuted, details = order.details with optExchangeFee = None
+                create order with
+                  executions, remainingQuantity
+                  status = Order.FullyExecuted, details = order.details with optExchangeFee = None
                 pure depositCid
 
             pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty

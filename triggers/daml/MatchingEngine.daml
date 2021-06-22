@@ -49,11 +49,9 @@ handleMatchingRule party = do
   -- Acknowledge all 'Order.Request' and update current ID                                                                        │
   orderRequests <- query @Service.CreateOrderRequest
   deposits <- query @AssetDeposit
-  debug $ show deposits
   forA_ orderRequests \(cid,or) -> do
     exchangeFeeAmount <- case or.details.optExchangeFee of
-        Some depositCid -> do
-          (.asset.quantity) . fromSomeNote "querying exchange fee" <$> queryContractId depositCid
+        Some depositCid -> (.asset.quantity) . fromSomeNote "querying exchange fee" <$> queryContractId depositCid
         None            -> return 0.0
     if exchangeFeeAmount < currentFee
     then void $ emitExerciseCmd cid Service.RejectRequest with errorCode = 790; errorMessage = "Fee requirement not met"

@@ -85,8 +85,6 @@ template Offer
     controller provider can
       Accept : (ContractId Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
         do
-          time <- getTime
-
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
           listingCid    <- createOrLookup Listing.Service with customer = provider, ..
@@ -110,8 +108,6 @@ template Request
         with
           observers : Set Party
         do
-          time <- getTime
-
           matchingCid   <- createOrLookup Matching.Service with ..
           settlementCid <- createOrLookup Settlement.Service with ..
           listingCid    <- createOrLookup Listing.Service with customer = provider, ..

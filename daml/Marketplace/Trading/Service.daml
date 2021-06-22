@@ -41,8 +41,9 @@ template Service
 
       withdrawFeesFromAllocationAccount : Optional (ContractId AssetDeposit) -> Update (Optional (ContractId AssetDeposit))
       withdrawFeesFromAllocationAccount = \case
-        Some depositCid -> Some <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
         None            -> return None
+        Some depositCid -> Some <$> exerciseByKey @AllocationAccountRule.T allocationAccount.id
+                                      AllocationAccountRule.Withdraw with transferTo = tradingAccount, ..
 
 
     controller customer can
@@ -61,7 +62,8 @@ template Service
           let detailsWithDepositedFees : Update Order.Details
               detailsWithDepositedFees = case details.optExchangeFee of
                   Some feeDepositCid -> do
-                    newDepositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id AllocationAccountRule.Deposit with depositCid = feeDepositCid; ..
+                    newDepositCid <- exerciseByKey @AllocationAccountRule.T allocationAccount.id
+                                        AllocationAccountRule.Deposit with depositCid = feeDepositCid; ..
                     return details with optExchangeFee = Some newDepositCid
                   None -> return details
 

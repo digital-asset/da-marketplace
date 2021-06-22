@@ -96,7 +96,7 @@ def main():
 
     # Marketplace --> Exberry
     @client.ledger_created(MARKETPLACE.CreateOrderRequest)
-    async def handle_order_request(event):
+    def handle_order_request(event):
         logging.info(f'Received Create Order Request - {event}')
         order = event.cdata['details']
 
@@ -104,16 +104,16 @@ def main():
         fee_amount = 0.0
         if opt_fee_contract_id != None:
             fee_deposit = client.find_by_id(opt_fee_contract_id)
-            fee_amount = fee_deposit['asset']['quantity']
+            fee_amount = fee_deposit.cdata['asset']['quantity']
 
-
-        _, fee_schedule = await client.find_one(MARKETPLACE.FeeSchedule, {'provider': exchange_party})
-        if fee_schedule['currentFee']['amount'] > fee_amount:
-            return [exercise(event.cid,
-                        'RejectRequest', {
-                            'errorCode': '790',
-                            'errorMessage': 'Fee does not match exchange fee'}
-                    )]
+        fee_schedules = client.find_active(MARKETPLACE.FeeSchedule, {'provider': exchange_party})
+        for (_,schedule) in fee_schedules.items():
+            if schedule['currentFee']['amount'] > fee_amount:
+                return [exercise(event.cid,
+                            'RejectRequest', {
+                                'errorCode': '790',
+                                'errorMessage': 'Fee does not match exchange fee'}
+                        )]
 
         return create(EXBERRY.NewOrderRequest, {
             'order': {

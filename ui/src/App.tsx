@@ -60,7 +60,7 @@ import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
 import { ServiceRequired } from './pages/error/ServiceRequired';
 import paths from './paths';
-import {FeeSchedule} from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
+import { FeeSchedule } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -348,7 +348,14 @@ const AppComponent = () => {
         children: listings.map(c => ({
           label: c.payload.listingId.label,
           path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
-          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} feeSchedules={feeSchedules}/>,
+          render: () => (
+            <Market
+              services={tradingService}
+              cid={c.contractId}
+              listings={listings}
+              feeSchedules={feeSchedules}
+            />
+          ),
           icon: <ExchangeIcon />,
           children: [],
         })),
