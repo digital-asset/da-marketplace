@@ -30,12 +30,15 @@
       &:last-child {
         margin-right: 0;
       }
-
+      .profile-tile {
+        padding: 0px;
+      }
       .profile {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        padding: $spacing-m;
 
         .profile-name {
           display: flex;
@@ -81,9 +84,14 @@
       .link-tile {
         display: flex;
         justify-content: space-between;
-
+        border-top: 1px solid var(--cool-grey-90);
+        padding: $spacing-m;
         .link > a {
           font-size: 14px;
+        }
+
+        .automation-setup {
+          width: 100%;
         }
 
         .balance {
