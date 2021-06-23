@@ -3,13 +3,9 @@
 @mixin set-up {
   .set-up {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
 
     .setup-service {
-      width: 300px;
-
-      margin-right: calc(2 * #{$spacing-xl});
-      margin-bottom: calc(2 * #{$spacing-xl});
       p .icon {
         margin-right: 6px;
       }
@@ -34,7 +30,8 @@
 
       .roles {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
 
         &:last-child {
           margin-right: 0;
@@ -48,15 +45,16 @@
           border-radius: 6px;
           margin: $spacing-xs $spacing-xs $spacing-xs 0;
           width: fit-content;
+          height: fit-content;
 
           &.no-roles {
             font-style: italic;
           }
         }
-        .ghost {
-          margin-bottom: $spacing-s;
-          font-size: 14px;
-        }
+      }
+
+      .ghost.secondary-smaller {
+        margin: $spacing-xs $spacing-xs $spacing-xs 0;
       }
     }
   }

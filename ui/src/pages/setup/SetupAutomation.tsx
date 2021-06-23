@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Divider, DropdownItemProps, Form, Modal } from 'semantic-ui-react';
+import { Button, DropdownItemProps, Form, Modal, Header } from 'semantic-ui-react';
 import { publicParty } from '../../config';
 import {
   deployAutomation,
@@ -10,7 +10,6 @@ import {
 } from '../../automation';
 import { handleSelectMultiple } from '../common';
 import StripedTable from '../../components/Table/StripedTable';
-import Tile from '../../components/Tile/Tile';
 import { useUserState } from '../../context/UserContext';
 import { useAutomations } from '../../context/AutomationContext';
 
@@ -37,10 +36,16 @@ export const makeAutomationOptions = (automations?: PublicAutomation[]): Dropdow
 type SetupAutomationProps = {
   title?: string;
   token?: string;
-  modalTrigger: React.ReactNode;
+  isModal?: boolean;
+  modalTrigger?: React.ReactNode;
 };
 
-export const SetupAutomation: React.FC<SetupAutomationProps> = ({ title, token, modalTrigger }) => {
+export const SetupAutomation: React.FC<SetupAutomationProps> = ({
+  title,
+  token,
+  modalTrigger,
+  isModal,
+}) => {
   const [open, setOpen] = React.useState(false);
   const user = useUserState();
   const userToken = token || user.token;
@@ -88,70 +93,75 @@ export const SetupAutomation: React.FC<SetupAutomationProps> = ({ title, token, 
         .includes(String(to.value))
   );
 
-  return (
-    <Modal
-      onClose={() => setOpen(false)}
-      onOpen={() => setOpen(true)}
-      open={open}
-      trigger={modalTrigger}
-    >
-      <Modal.Header as="h2">{title || 'Setup Automation'}</Modal.Header>
-      <Modal.Content>
-        <StripedTable
-          title="Running Automation"
-          headings={['Automation', 'Action']}
-          rows={deployedAutomations.map(da => {
-            return {
-              elements: [
-                da.config.value.name.split(':')[0],
-                <Button.Group size="mini">
-                  <Button
-                    negative
-                    loading={undeploying.get(da.config.value.name)}
-                    className="ghost"
-                    onClick={() => {
-                      setUndeploying(prev => new Map(prev).set(da.config.value.name, true));
-                      handleUndeploy(da);
-                    }}
-                  >
-                    Undeploy
-                  </Button>
-                </Button.Group>,
-              ],
-            };
-          })}
-        />
-        <Divider horizontal />
-        <Tile header="Deploy New Automation">
-          <br />
-          <Form>
-            <Form.Group inline widths="equal">
-              <Form.Select
-                fluid
-                placeholder="Select..."
-                multiple
-                value={toDeploy}
-                onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
-                options={currentTriggerOptions}
-              />
-              <Button
-                loading={deploying}
-                positive
-                type="submit"
-                className="ghost"
-                onClick={() => handleDeployment(userToken)}
-              >
-                Deploy
-              </Button>
-            </Form.Group>
-          </Form>
-        </Tile>
-      </Modal.Content>
-      <Modal.Actions>
-        <Button color="black" onClick={() => setOpen(false)}>
-          Done
-        </Button>
-      </Modal.Actions>
-    </Modal>
+  const body = (
+    <div className="automation-setup">
+      <Header as="h2">Automation</Header>
+      <Form>
+        <Form.Group inline widths="equal">
+          <Form.Select
+            fluid
+            placeholder="Select..."
+            multiple
+            value={toDeploy}
+            onChange={(_, result) => handleSelectMultiple(result, toDeploy, setToDeploy)}
+            options={currentTriggerOptions}
+          />
+          <Button
+            loading={deploying}
+            positive
+            type="submit"
+            className="ghost"
+            onClick={() => handleDeployment(userToken)}
+          >
+            Deploy
+          </Button>
+        </Form.Group>
+      </Form>
+      <StripedTable
+        title={'Running Automation'}
+        headings={['Automation', 'Action']}
+        rows={deployedAutomations.map(da => {
+          return {
+            elements: [
+              da.config.value.name.split(':')[0],
+              <Button.Group size="mini">
+                <Button
+                  negative
+                  loading={undeploying.get(da.config.value.name)}
+                  className="ghost"
+                  onClick={() => {
+                    setUndeploying(prev => new Map(prev).set(da.config.value.name, true));
+                    handleUndeploy(da);
+                  }}
+                >
+                  Undeploy
+                </Button>
+              </Button.Group>,
+            ],
+          };
+        })}
+      />
+    </div>
   );
+
+  if (isModal) {
+    return (
+      <Modal
+        onClose={() => setOpen(false)}
+        onOpen={() => setOpen(true)}
+        open={open}
+        trigger={modalTrigger}
+      >
+        <Modal.Header as="h2">{title || 'Setup Automation'}</Modal.Header>
+        <Modal.Content>{body}</Modal.Content>
+        <Modal.Actions>
+          <Button color="black" onClick={() => setOpen(false)}>
+            Done
+          </Button>
+        </Modal.Actions>
+      </Modal>
+    );
+  } else {
+    return body;
+  }
 };
