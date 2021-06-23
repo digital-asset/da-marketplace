@@ -13,7 +13,7 @@ import Tile from '../../components/Tile/Tile';
 import { FeeSchedule } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 
 type Props = {
-  role: CreateEvent<ExchangeRole, any, any>;
+  role: CreateEvent<ExchangeRole, unknown, string>;
 };
 
 const ManageFees: React.FC<Props> = ({ role }: Props) => {
@@ -26,7 +26,7 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
   const [assetLabel, setAssetLabel] = useState(feeSchedule?.payload.currentFee.currency.label);
   const [accountLabel, setAccountLabel] = useState('');
   const [quantity, setQuantity] = useState(
-    !!feeSchedule ? feeSchedule.payload.currentFee.amount : ''
+    !!feeSchedule ? feeSchedule.payload.currentFee.amount : '0.0'
   );
 
   useEffect(() => {
@@ -39,7 +39,8 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
   const assets = useStreamQueries(AssetDescription).contracts;
 
   const asset = assets.find(c => c.payload.assetId.label === assetLabel);
-  const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
+  const { contracts: assetSettlementRules, loading: assetSettlementRulesLoading } =
+    useStreamQueries(AssetSettlementRule);
   const accounts = assetSettlementRules
     .map(c => c.payload.account)
     .filter(acc => acc.owner === party);
@@ -53,20 +54,24 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
   if (!role)
     return (
       <div>
-        <h2>Party "{party}" can not setup a Fee Schedule.</h2>
+        <h2>You must have the Exchange Role to create a Fee Schedule</h2>
       </div>
     );
 
   const createFeeSchedule = async () => {
     if (!feeSchedule) {
-      if (!asset || !account) return;
+      if (!asset || !account) {
+        throw Error('Asset or Account not found');
+      }
       await ledger.exercise(ExchangeRole.CreateFeeSchedule, role.contractId, {
         currency: asset.payload.assetId,
         feeAccount: account,
         quantity,
       });
     } else {
-      if (!asset) return;
+      if (!asset) {
+        throw Error('Asset not found');
+      }
       await ledger.exercise(FeeSchedule.UpdateFeeSchedule, feeSchedule.contractId, {
         amount: quantity,
         currency: asset.payload.assetId,
@@ -76,52 +81,50 @@ const ManageFees: React.FC<Props> = ({ role }: Props) => {
 
   return (
     <div className="page-section-row">
-      <Tile className="inline" header="Setup Fees">
+      <Tile className="inline" header="Setup Fees" loading={schedulesLoading}>
         <br />
-        {!schedulesLoading && (
-          <FormErrorHandled onSubmit={createFeeSchedule}>
-            {!feeSchedule && (
-              <>
-                <Form.Select
-                  selection
-                  label="Fee Account"
-                  options={accounts.map(c => ({
-                    text: c.id.label,
-                    value: c.id.label,
-                  }))}
-                  value={accountLabel}
-                  onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
-                />
-              </>
-            )}
-            <Form.Select
-              selection
-              label="Currency"
-              options={assets.map(c => ({
-                text: c.payload.assetId.label,
-                value: c.payload.assetId.label,
-              }))}
-              value={!!feeSchedule ? assetLabel : assetLabel}
-              onChange={(_, d) => setAssetLabel((d.value && (d.value as string)) || '')}
-            />
+        <FormErrorHandled onSubmit={createFeeSchedule}>
+          {!feeSchedule && (
+            <>
+              <Form.Select
+                selection
+                label="Fee Account"
+                options={accounts.map(c => ({
+                  text: c.id.label,
+                  value: c.id.label,
+                }))}
+                value={accountLabel}
+                onChange={(_, d) => setAccountLabel((d.value && (d.value as string)) || '')}
+              />
+            </>
+          )}
+          <Form.Select
+            selection
+            label="Currency"
+            options={assets.map(c => ({
+              text: c.payload.assetId.label,
+              value: c.payload.assetId.label,
+            }))}
+            value={!!feeSchedule ? assetLabel : assetLabel}
+            onChange={(_, d) => setAssetLabel((d.value && (d.value as string)) || '')}
+          />
 
-            <Form.Input
-              placeholder={!!feeSchedule ? feeSchedule.payload.currentFee.amount : quantity}
-              required
-              fluid
-              number
-              label="Fee Amount"
-              value={quantity}
-              onChange={e => setQuantity(e.currentTarget.value)}
-            />
+          <Form.Input
+            placeholder={!!feeSchedule ? feeSchedule.payload.currentFee.amount : quantity}
+            required
+            fluid
+            number
+            label="Fee Amount"
+            value={quantity}
+            onChange={e => setQuantity(e.currentTarget.value)}
+          />
 
-            <Button type="submit" disabled={!canRequest} className="ghost">
-              {!!feeSchedule ? 'Update Fee Schedule' : 'Create Fee Schedule'}
-            </Button>
-          </FormErrorHandled>
-        )}
+          <Button type="submit" disabled={!canRequest} className="ghost">
+            {!!feeSchedule ? 'Update Fee Schedule' : 'Create Fee Schedule'}
+          </Button>
+        </FormErrorHandled>
       </Tile>
-      <Tile className="inline">
+      <Tile className="inline" loading={assetSettlementRulesLoading}>
         <br />
         {!!accountRule && (
           <AccountComponent
