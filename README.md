@@ -36,8 +36,8 @@ To run the marketplace locally, or build it to be deployed on Daml Hub, the foll
 2. `daml-dit-ddit` (0.5.x)
 3. `make` (3.x)
 4. `yq` (3.x)
-5. `python` (3.8)
-6. `poetry` (1.0.x)
+5. `python` (>=3.7)
+6. `pipenv` (>=2020.x)
 7. `node` (14.x)
 8. `yarn` (1.22.x)
 
