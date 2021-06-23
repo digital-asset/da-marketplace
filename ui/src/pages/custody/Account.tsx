@@ -167,10 +167,9 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
             )}
           </div>
         </div>
-
         {accountDeposits.length > 0 ? (
           accountDeposits.map(c => (
-            <Tile className="account-holding">
+            <Tile className="account-holding" key={c.contractId}>
               <p>
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
               </p>
