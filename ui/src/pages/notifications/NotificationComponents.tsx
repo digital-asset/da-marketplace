@@ -20,26 +20,15 @@ import {
   OfferAccepts,
   OfferDeclineChoice,
   OfferTemplates,
-  OutboundRequestTemplate,
   ProcessRequestChoice,
-  ProcessRequestTemplate,
   RequestApproveChoice,
   RequestApproveFields,
   RequestApproves,
   RequestRejectChoice,
   RequestTemplates,
 } from './NotificationTypes';
-import {
-  CloseAccountRequest,
-  DebitAccountRequest,
-  OpenAccountRequest,
-  TransferDepositRequest,
-  CreditAccountRequest,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
-import {
-  Service as CustodyService,
-  CloseAccount,
-} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
@@ -210,11 +199,11 @@ export function RequestNotification<T extends Fields>({
   );
 }
 
-interface OutboundRequestProps {
+interface PendingRequestProps {
   details: string;
 }
 
-export function OutboundRequestNotification({ details }: OutboundRequestProps) {
+export function PendingRequestNotification({ details }: PendingRequestProps) {
   return (
     <Notification>
       <p>{details}</p>
@@ -230,7 +219,7 @@ interface InboundRequestProps {
   tag: string;
 }
 
-export function ProcessRequestNotification({
+export function ProcessCustodyRequestNotification({
   contract,
   processChoice,
   details,
@@ -243,62 +232,9 @@ export function ProcessRequestNotification({
   const services = useStreamQueries(CustodyService).contracts;
 
   const providerServices = services.filter(s => s.payload.provider === party);
-
-  const openAccount = async (c: CreateEvent<OpenAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service) return;
-    await ledger.exercise(CustodyService.OpenAccount, service.contractId, {
-      openAccountRequestCid: c.contractId,
-    });
-  };
-
-  const closeAccount = async (c: CreateEvent<CloseAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to close account',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(CustodyService.CloseAccount, service.contractId, {
-      closeAccountRequestCid: c.contractId,
-    });
-  };
-
-  const creditAccount = async (c: CreateEvent<CreditAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to Credit Account',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(CustodyService.CreditAccount, service.contractId, {
-      creditAccountRequestCid: c.contractId,
-    });
-  };
-
-  const debitAccount = async (c: CreateEvent<DebitAccountRequest>) => {
-    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to Debit Account',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(CustodyService.DebitAccount, service.contractId, {
-      debitAccountRequestCid: c.contractId,
-    });
-  };
-
-  const transferDeposit = async (c: CreateEvent<TransferDepositRequest>) => {
-    const service = providerServices.find(s => s.payload.customer === c.payload.customer);
-    if (!service)
-      return displayErrorMessage({
-        header: 'Failed to Transfer Deposit',
-        message: 'Could not find Custody service contract',
-      });
-    await ledger.exercise(CustodyService.TransferDeposit, service.contractId, {
-      transferDepositRequestCid: c.contractId,
-    });
-  };
+  const custodyService = providerServices.find(
+    s => s.payload.customer === contract.payload.customer
+  );
 
   return (
     <Notification>
@@ -319,36 +255,36 @@ export function ProcessRequestNotification({
   );
 
   async function onProcess() {
-    const service = providerServices.find(s => s.payload.customer === contract.payload.customer);
-    if (!service)
+    if (!custodyService) {
       return displayErrorMessage({
-        header: 'Failed to Process Requst',
+        header: 'Failed to Process Request',
         message: 'Could not find Custody service contract',
       });
-
+    }
     switch (tag) {
       case 'open-account':
-        await ledger.exercise(processChoice, service.contractId, {
+        await ledger.exercise(processChoice, custodyService.contractId, {
           openAccountRequestCid: contract.contractId,
         });
         break;
       case 'close-account':
-        await ledger.exercise(processChoice, service.contractId, {
+        await ledger.exercise(processChoice, custodyService.contractId, {
           closeAccountRequestCid: contract.contractId,
         });
+
         break;
       case 'credit-account':
-        await ledger.exercise(processChoice, service.contractId, {
+        await ledger.exercise(processChoice, custodyService.contractId, {
           creditAccountRequestCid: contract.contractId,
         });
         break;
       case 'debit-account':
-        await ledger.exercise(processChoice, service.contractId, {
+        await ledger.exercise(processChoice, custodyService.contractId, {
           debitAccountRequestCid: contract.contractId,
         });
         break;
       case 'transfer':
-        await ledger.exercise(processChoice, service.contractId, {
+        await ledger.exercise(processChoice, custodyService.contractId, {
           transferDepositRequestCid: contract.contractId,
         });
         break;

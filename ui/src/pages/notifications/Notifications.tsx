@@ -23,7 +23,6 @@ import {
   Offer as DistributionRoleOffer,
   Request as DistributionRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-
 import {
   Offer as CustodyServiceOffer,
   Request as CustodyServiceRequest,
@@ -92,19 +91,18 @@ import {
   RequestApproveChoice,
   RequestRejectChoice,
   ProcessRequestChoice,
-  ProcessRequestTemplate,
 } from './NotificationTypes';
 import {
   OfferNotification,
   RequestNotification,
-  OutboundRequestNotification,
-  ProcessRequestNotification,
+  PendingRequestNotification,
+  ProcessCustodyRequestNotification,
 } from './NotificationComponents';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useVerifiedParties, usePartyName } from '../../config';
 import { createDropdownProp, partitionArray } from '../common';
-import { ContractId } from '@daml/types';
+import { Requests as AuctionRequests } from '../../pages/distribution/auction/Requests';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -733,7 +731,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: biddingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
     {
-      kind: 'Outbound',
+      kind: 'Pending',
       tag: 'outbound',
       details: c =>
         `Request to open account ${c.payload.accountId.label} is pending approval from
@@ -741,7 +739,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: outboundOpenRequests,
     },
     {
-      kind: 'Outbound',
+      kind: 'Pending',
       tag: 'outbound',
       details: c =>
         `Request to close account ${c.payload.accountId.label} is pending approval from
@@ -749,7 +747,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: outboundCloseRequests,
     },
     {
-      kind: 'Outbound',
+      kind: 'Pending',
       tag: 'outbound',
       details: c =>
         `Request to credit account ${c.payload.accountId.label} ${c.payload.asset.quantity}
@@ -758,7 +756,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: outboundCreditRequests,
     },
     {
-      kind: 'Outbound',
+      kind: 'Pending',
       tag: 'outbound',
       details: c => `Request to debit account ${c.payload.accountId.label}
       ${getDebitDepositDetail(c, d => d.asset.quantity)}
@@ -767,7 +765,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: outboundDebitRequests,
     },
     {
-      kind: 'Outbound',
+      kind: 'Pending',
       tag: 'outbound',
       details: c => `Request to transfer
         ${getTransferDepositDetail(c, d => d.asset.quantity)}
@@ -878,7 +876,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                   ));
                 case 'outbound':
                   return n.contracts.map(c => (
-                    <OutboundRequestNotification key={c.contractId} details={n.details(c)} />
+                    <PendingRequestNotification key={c.contractId} details={n.details(c)} />
                   ));
                 case 'open-account':
                 case 'close-account':
@@ -886,7 +884,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                 case 'debit-account':
                 case 'transfer':
                   return n.contracts.map(c => (
-                    <ProcessRequestNotification
+                    <ProcessCustodyRequestNotification
                       key={c.contractId}
                       details={n.details(c)}
                       processChoice={n.choices.process}
@@ -899,7 +897,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
               }
             })
           : 'No Notifications.'}
-        {/* <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</> */}
+        <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</>
       </div>
     </div>
   );

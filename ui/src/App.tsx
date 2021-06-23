@@ -318,7 +318,7 @@ const AppComponent = () => {
 
   const notifications = useAllNotifications(party);
   const notifCount = notifications.reduce((count, { contracts, kind }) => {
-    if (kind === 'Outbound') {
+    if (kind === 'Pending') {
       return count;
     }
     return count + contracts.length;

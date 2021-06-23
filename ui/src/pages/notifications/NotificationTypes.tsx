@@ -120,10 +120,12 @@ import {
 import {
   Accept as AuctionServiceAccept,
   Approve as AuctionServiceApprove,
+  CreateAuctionRequest,
   Decline as AuctionServiceDecline,
   Offer as AuctionServiceOffer,
   Reject as AuctionServiceReject,
   Request as AuctionServiceRequest,
+  CreateAuction,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import {
   Accept as BiddingServiceAccept,
@@ -310,18 +312,19 @@ type RequestNotificationSet = {
 
 // -------------------------------------------------------------
 
-export type OutboundRequestTemplate =
+export type PendingRequestTemplate =
+  | CreateAuctionRequest
   | CloseAccountRequest
   | DebitAccountRequest
   | OpenAccountRequest
   | TransferDepositRequest
   | CreditAccountRequest;
 
-type OutboundRequestNotificationSet = {
-  kind: 'Outbound';
+type PendingRequestNotificationSet = {
+  kind: 'Pending';
   tag: 'outbound';
   details: (c: any) => string;
-  contracts: readonly CreateEvent<OutboundRequestTemplate>[];
+  contracts: readonly CreateEvent<PendingRequestTemplate>[];
 };
 
 // -------------------------------------------------------------
@@ -331,18 +334,20 @@ export type ProcessRequestTemplate =
   | DebitAccountRequest
   | OpenAccountRequest
   | TransferDepositRequest
-  | CreditAccountRequest;
+  | CreditAccountRequest
+  | CreateAuctionRequest;
 
-export type CustodyChoice =
+export type ProcessChoice =
   | CloseAccount
   | OpenAccount
   | CreditAccount
   | DebitAccount
-  | TransferDeposit;
+  | TransferDeposit
+  | CreateAuction;
 
 export type ProcessRequestChoice = Choice<
   ProcessRequestTemplate,
-  CustodyChoice,
+  ProcessChoice,
   unknown,
   undefined
 >;
@@ -360,5 +365,5 @@ type ProcessRequestNotificationSet = {
 export type NotificationSet =
   | OfferNotificationSet
   | RequestNotificationSet
-  | OutboundRequestNotificationSet
+  | PendingRequestNotificationSet
   | ProcessRequestNotificationSet;
