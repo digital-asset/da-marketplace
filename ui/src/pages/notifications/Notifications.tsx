@@ -168,11 +168,14 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     c => party === c.payload.provider,
     [...transferRequests]
   );
-console.log(debitRequests)
+
+  console.log(inboundDebitRequests);
+
   const getDebitDepositDetail = (
     c: CreateEvent<DebitAccountRequest>,
     extract: (deposit: AssetDeposit) => string
   ): string => {
+    console.log(assetDeposits);
     const deposit = assetDeposits.find(a => a.contractId === c.payload.debit.depositCid);
     if (!deposit) return '';
     return extract(deposit.payload);
