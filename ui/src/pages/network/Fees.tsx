@@ -16,7 +16,7 @@ type Props = {
   role: CreateEvent<ExchangeRole, any, any>;
 };
 
-const NewComponent: React.FC<Props> = ({ role }: Props) => {
+const ManageFees: React.FC<Props> = ({ role }: Props) => {
   const ledger = useLedger();
   const party = useParty();
   const custodyServices = useStreamQueries(CustodyService).contracts;
@@ -137,4 +137,4 @@ const NewComponent: React.FC<Props> = ({ role }: Props) => {
   );
 };
 
-export const NewFee = NewComponent;
+export default ManageFees;

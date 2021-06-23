@@ -1,6 +1,7 @@
 module Tests.Trading.Fees where
 
 import Common
+import Tests.Utils
 import Daml.Script
 import DA.Set
 import DA.Set qualified as Set
@@ -117,5 +118,7 @@ setup = do
 
   -- Exchange settles the instructed trade
   submit exchange do exerciseCmd settlementInstructionCid Settlement.Settle
+
+  assert =<< depositsQuantityEquals exchange feeAccount 4.0
 
   pure ()

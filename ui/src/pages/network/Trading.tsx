@@ -7,7 +7,7 @@ import { Role as ExchangeRole } from '@daml.js/da-marketplace/lib/Marketplace/Tr
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service/module';
 import { getTemplateId, usePartyName } from '../../config';
 import StripedTable from '../../components/Table/StripedTable';
-import { NewFee } from './Fees';
+import ManageFees from './Fees';
 
 type Props = {
   services: Readonly<CreateEvent<Service, any, any>[]>;
@@ -26,7 +26,7 @@ export const TradingServiceTable: React.FC<Props> = ({ services }) => {
 
   return (
     <div>
-      {!!role && <NewFee role={role} />}
+      {!!role && <ManageFees role={role} />}
       <StripedTable
         title="Trading"
         headings={[
