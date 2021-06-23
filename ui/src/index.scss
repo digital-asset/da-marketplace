@@ -69,7 +69,7 @@ html {
     }
 
     &.bold {
-      font-family: 'BrownStd-Bold';
+      font-weight: bold;
     }
   }
 
@@ -208,11 +208,18 @@ html {
     .ui.page.modals {
       z-index: 3;
 
-      .ui.small.modal {
+      .modal {
+        border-radius: 4px;
         .header {
           border-radius: 2px 2px 0px 0px;
           border: none;
           font-weight: normal;
+        }
+
+        .field > label {
+          font-family: 'Open sans';
+          line-height: 19px;
+          color: var(--textcolor);
         }
 
         h4.ui.header {

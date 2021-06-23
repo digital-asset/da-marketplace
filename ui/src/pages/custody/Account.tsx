@@ -8,13 +8,12 @@ import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finan
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
-import { Button } from 'semantic-ui-react';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
 import { ServicePageProps, damlSetValues } from '../common';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
-import { IconChevronDown, IconChevronUp } from '../../icons/icons';
+import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
 
 interface AccountProps {
   targetAccount: {
@@ -38,8 +37,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-
-  const [showAccountDetails, setShowAccountDetails] = useState(false);
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -138,13 +135,18 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
       <InputDialog {...transferDialogProps} isModal />
       <div className="account">
         <div className="account-details">
-          <h4> {targetAccount.account.id.label} </h4>
-          <Button className="a a2" onClick={() => setShowAccountDetails(!showAccountDetails)}>
-            {showAccountDetails ? <IconChevronUp /> : <IconChevronDown />}
-          </Button>
-        </div>
-        {showAccountDetails && (
-          <div className="account-details">
+          <div className="account-data">
+            <h4> {targetAccount.account.id.label} </h4>
+            {normalAccount && (
+              <OverflowMenu>
+                <OverflowMenuEntry
+                  label={'Close Account'}
+                  onClick={() => requestCloseAccount(normalAccount)}
+                />
+              </OverflowMenu>
+            )}
+          </div>
+          <div className="account-data body">
             <p className="p2">Type: {normalAccount ? 'Normal' : 'Allocation'} </p>
             <p className="p2">Provider: {getName(targetAccount.account.provider)}</p>
             <p className="p2">Owner: {getName(targetAccount.account.owner)}</p>
@@ -163,16 +165,9 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
                   .join(', ')}
               </p>
             )}
-            {normalAccount && (
-              <Button
-                className="ghost warning  secondary-smaller"
-                onClick={() => requestCloseAccount(normalAccount)}
-              >
-                Close Account
-              </Button>
-            )}
           </div>
-        )}
+        </div>
+
         {accountDeposits.length > 0 ? (
           accountDeposits.map(c => (
             <Tile className="account-holding">
@@ -180,27 +175,17 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
                 <b>{c.payload.asset.id.label}</b> {c.payload.asset.quantity}{' '}
               </p>
               {party === targetAccount.account.owner && normalAccount && (
-                <div className="actions">
-                  <Button
-                    className="ghost"
-                    content="Withdraw"
-                    onClick={() => requestWithdrawDeposit(c)}
-                  />
-                  {relatedAccounts.length > 0 && (
-                    <Button
-                      className="ghost"
-                      content="Transfer"
-                      onClick={() => requestTransfer(c)}
-                    />
-                  )}
-                </div>
+                <OverflowMenu>
+                  <OverflowMenuEntry label={'Withdraw'} onClick={() => requestWithdrawDeposit(c)} />
+                  <OverflowMenuEntry label={'Transfer'} onClick={() => requestTransfer(c)} />
+                </OverflowMenu>
               )}
             </Tile>
           ))
         ) : (
-          <div className="none p2">
+          <Tile className="account-holding">
             <i>There are no holdings in this account.</i>
-          </div>
+          </Tile>
         )}
       </div>
     </>
