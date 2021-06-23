@@ -136,7 +136,7 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     });
   };
 
-  if (closeRequests.find(c => c.payload.accountId.label == targetAccount.account.id.label)) {
+  if (closeRequests.find(c => c.payload.accountId.label === targetAccount.account.id.label)) {
     return null;
   }
 

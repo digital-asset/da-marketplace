@@ -20,8 +20,9 @@ import {
   OfferAccepts,
   OfferDeclineChoice,
   OfferTemplates,
-  OutboundRequestTemplates,
-  ProcessRequestTemplates,
+  OutboundRequestTemplate,
+  ProcessRequestChoice,
+  ProcessRequestTemplate,
   RequestApproveChoice,
   RequestApproveFields,
   RequestApproves,
@@ -223,12 +224,18 @@ export function OutboundRequestNotification({ details }: OutboundRequestProps) {
 }
 
 interface InboundRequestProps {
-  contract: CreateEvent<ProcessRequestTemplates>;
+  contract: CreateEvent<any>;
+  processChoice: ProcessRequestChoice;
   details: string;
   tag: string;
 }
 
-export function ProcessRequestNotification({ contract, details, tag }: InboundRequestProps) {
+export function ProcessRequestNotification({
+  contract,
+  processChoice,
+  details,
+  tag,
+}: InboundRequestProps) {
   const ledger = useLedger();
   const party = useParty();
 
@@ -312,17 +319,39 @@ export function ProcessRequestNotification({ contract, details, tag }: InboundRe
   );
 
   async function onProcess() {
+    const service = providerServices.find(s => s.payload.customer === contract.payload.customer);
+    if (!service)
+      return displayErrorMessage({
+        header: 'Failed to Process Requst',
+        message: 'Could not find Custody service contract',
+      });
+
     switch (tag) {
       case 'open-account':
-        return openAccount(contract as CreateEvent<OpenAccountRequest>);
+        await ledger.exercise(processChoice, service.contractId, {
+          openAccountRequestCid: contract.contractId,
+        });
+        break;
       case 'close-account':
-        return closeAccount(contract as CreateEvent<CloseAccountRequest>);
+        await ledger.exercise(processChoice, service.contractId, {
+          closeAccountRequestCid: contract.contractId,
+        });
+        break;
       case 'credit-account':
-        return creditAccount(contract as CreateEvent<CreditAccountRequest>);
+        await ledger.exercise(processChoice, service.contractId, {
+          creditAccountRequestCid: contract.contractId,
+        });
+        break;
       case 'debit-account':
-        return debitAccount(contract as CreateEvent<DebitAccountRequest>);
+        await ledger.exercise(processChoice, service.contractId, {
+          debitAccountRequestCid: contract.contractId,
+        });
+        break;
       case 'transfer':
-        return transferDeposit(contract as CreateEvent<TransferDepositRequest>);
+        await ledger.exercise(processChoice, service.contractId, {
+          transferDepositRequestCid: contract.contractId,
+        });
+        break;
     }
   }
 }

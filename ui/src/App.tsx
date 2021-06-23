@@ -317,7 +317,12 @@ const AppComponent = () => {
   });
 
   const notifications = useAllNotifications(party);
-  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+  const notifCount = notifications.reduce((count, { contracts, kind }) => {
+    if (kind === 'Outbound') {
+      return count;
+    }
+    return count + contracts.length;
+  }, 0);
 
   entries.push({
     displayEntry: () => true,

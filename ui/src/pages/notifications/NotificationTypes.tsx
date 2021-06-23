@@ -310,7 +310,7 @@ type RequestNotificationSet = {
 
 // -------------------------------------------------------------
 
-export type OutboundRequestTemplates =
+export type OutboundRequestTemplate =
   | CloseAccountRequest
   | DebitAccountRequest
   | OpenAccountRequest
@@ -321,12 +321,12 @@ type OutboundRequestNotificationSet = {
   kind: 'Outbound';
   tag: 'outbound';
   details: (c: any) => string;
-  contracts: readonly CreateEvent<OutboundRequestTemplates>[];
+  contracts: readonly CreateEvent<OutboundRequestTemplate>[];
 };
 
 // -------------------------------------------------------------
 
-export type ProcessRequestTemplates =
+export type ProcessRequestTemplate =
   | CloseAccountRequest
   | DebitAccountRequest
   | OpenAccountRequest
@@ -340,11 +340,21 @@ export type CustodyChoice =
   | DebitAccount
   | TransferDeposit;
 
+export type ProcessRequestChoice = Choice<
+  ProcessRequestTemplate,
+  CustodyChoice,
+  unknown,
+  undefined
+>;
+
 type ProcessRequestNotificationSet = {
   kind: 'Process';
   tag: 'open-account' | 'close-account' | 'credit-account' | 'debit-account' | 'transfer';
   details: (c: any) => string;
-  contracts: readonly CreateEvent<ProcessRequestTemplates>[];
+  choices: {
+    process: ProcessRequestChoice;
+  };
+  contracts: readonly CreateEvent<ProcessRequestTemplate>[];
 };
 
 export type NotificationSet =

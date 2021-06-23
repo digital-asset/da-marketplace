@@ -12,14 +12,15 @@
       flex-direction: row;
       align-items: center;
 
-      .form-error-handled, p.pending {
-          margin-left: auto;
+      .form-error-handled,
+      p.pending {
+        margin-left: auto;
       }
 
       p.pending {
         font-style: italic;
         color: var(--cool-grey-30);
-        }
+      }
     }
 
     .notification-content {

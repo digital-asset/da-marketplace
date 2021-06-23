@@ -81,9 +81,6 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 
 import { useParty } from '@daml/react';
 
-import { Requests as CustodyRequests } from '../../pages/custody/Requests';
-import { Requests as AuctionRequests } from '../../pages/distribution/auction/Requests';
-
 import { ServiceKind } from '../../context/ServicesContext';
 import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
@@ -94,6 +91,8 @@ import {
   OfferDeclineChoice,
   RequestApproveChoice,
   RequestRejectChoice,
+  ProcessRequestChoice,
+  ProcessRequestTemplate,
 } from './NotificationTypes';
 import {
   OfferNotification,
@@ -105,6 +104,7 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useVerifiedParties, usePartyName } from '../../config';
 import { createDropdownProp, partitionArray } from '../common';
+import { ContractId } from '@daml/types';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -736,47 +736,52 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       kind: 'Outbound',
       tag: 'outbound',
       details: c =>
-        `Open Account ${c.payload.accountId.label}.
-        Pending approval from ${getName(c.payload.provider)}.`,
+        `Request to open account ${c.payload.accountId.label} is pending approval from
+        ${getName(c.payload.provider)}.`,
       contracts: outboundOpenRequests,
     },
     {
       kind: 'Outbound',
       tag: 'outbound',
-      details: c => `Close Account ${c.payload.accountId.label}.
-      Pending approval from ${getName(c.payload.provider)}.`,
+      details: c =>
+        `Request to close account ${c.payload.accountId.label} is pending approval from
+        ${getName(c.payload.provider)}.`,
       contracts: outboundCloseRequests,
     },
     {
       kind: 'Outbound',
       tag: 'outbound',
       details: c =>
-        `Credit Account ${c.payload.accountId.label}: ${c.payload.asset.id.label}
-        ${c.payload.asset.quantity}. Pending approval from ${getName(c.payload.provider)} `,
+        `Request to credit account ${c.payload.accountId.label} ${c.payload.asset.quantity}
+        ${c.payload.asset.id.label}
+        is pending approval from ${getName(c.payload.provider)}.`,
       contracts: outboundCreditRequests,
     },
     {
       kind: 'Outbound',
       tag: 'outbound',
-      details: c => `Debit Account: ${c.payload.accountId.label} -
+      details: c => `Request to debit account ${c.payload.accountId.label}
+      ${getDebitDepositDetail(c, d => d.asset.quantity)}
       ${getDebitDepositDetail(c, d => d.asset.id.label)}
-      ${getDebitDepositDetail(c, d => d.asset.quantity)}.
-      Pending approval from ${getName(c.payload.provider)}.`,
+      is pending approval from ${getName(c.payload.provider)}.`,
       contracts: outboundDebitRequests,
     },
     {
       kind: 'Outbound',
       tag: 'outbound',
-      details: c => `Transfer:
+      details: c => `Request to transfer
         ${getTransferDepositDetail(c, d => d.asset.quantity)}
         ${getTransferDepositDetail(c, d => d.asset.id.label)}
         from
-        ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
+        ${c.payload.accountId.label} to
+        ${c.payload.transfer.receiverAccountId.label}
+        is pending approval from ${getName(c.payload.provider)}.`,
       contracts: outboundTransferRequests,
     },
     {
       kind: 'Process',
       tag: 'open-account',
+      choices: { process: CustodyService.OpenAccount as ProcessRequestChoice },
       details: c =>
         `${getName(c.payload.customer)} requesting Open Account: ${c.payload.accountId.label}`,
       contracts: inboundOpenRequests,
@@ -784,6 +789,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Process',
       tag: 'close-account',
+      choices: { process: CustodyService.CloseAccount as ProcessRequestChoice },
       details: c =>
         `Request from ${getName(c.payload.customer)} to close account
         ${c.payload.accountId.label}.`,
@@ -792,6 +798,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Process',
       tag: 'credit-account',
+      choices: { process: CustodyService.CreditAccount as ProcessRequestChoice },
       details: c =>
         `Request from ${getName(c.payload.customer)} to credit account ${c.payload.accountId.label}:
         ${c.payload.asset.quantity} ${c.payload.asset.id.label}.`,
@@ -800,6 +807,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Process',
       tag: 'debit-account',
+      choices: { process: CustodyService.DebitAccount as ProcessRequestChoice },
       details: c =>
         `Request from ${getName(c.payload.customer)} to debit account ${c.payload.accountId.label}:
         ${getDebitDepositDetail(c, d => d.asset.quantity)}  ${getDebitDepositDetail(
@@ -811,6 +819,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     {
       kind: 'Process',
       tag: 'transfer',
+      choices: { process: CustodyService.TransferDeposit as ProcessRequestChoice },
       details: c => `Request from  ${getName(c.payload.customer)} to transfer
           ${getTransferDepositDetail(c, d => d.asset.quantity)}
           ${getTransferDepositDetail(c, d => d.asset.id.label)}
@@ -829,7 +838,6 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
   const party = useParty();
 
   const count = notifications.reduce((count, ns) => count + ns.contracts.length, 0);
-  const custodyService = useStreamQueries(CustodyService).contracts;
   const auctionService = useStreamQueries(AuctionService).contracts;
   const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
 
@@ -881,6 +889,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                     <ProcessRequestNotification
                       key={c.contractId}
                       details={n.details(c)}
+                      processChoice={n.choices.process}
                       tag={n.tag}
                       contract={c}
                     />
@@ -890,7 +899,7 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
               }
             })
           : 'No Notifications.'}
-        <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</>
+        {/* <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</> */}
       </div>
     </div>
   );
