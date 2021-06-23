@@ -32,6 +32,11 @@
         border: none;
       }
 
+      &.secondary-smaller {
+        padding: 6px;
+        font-size: 14px;
+      }
+
       &.back-button {
         padding: 6px;
         background-color: transparent;

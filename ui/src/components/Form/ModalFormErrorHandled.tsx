@@ -1,7 +1,9 @@
+import classNames from 'classnames';
 import React, { useState } from 'react';
 import { Button, Form, Message, Modal } from 'semantic-ui-react';
 
 import { ErrorMessage, parseError } from '../../pages/error/errorTypes';
+import { AddPlusIcon } from '../../icons/icons';
 
 type Renderable = number | string | React.ReactElement | React.ReactNode | Renderable[];
 type Callable = (callback: (fn: () => Promise<void>) => void) => Renderable;
@@ -18,6 +20,7 @@ type Props = {
   onSubmit: () => Promise<void>;
   disabled?: boolean;
   trigger?: JSX.Element;
+  addButton?: boolean;
 };
 
 const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
@@ -26,6 +29,7 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
   onSubmit,
   disabled,
   trigger,
+  addButton,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorMessage>();
@@ -57,7 +61,14 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
       onClose={() => setOpen(false)}
       onOpen={() => setOpen(true)}
       open={open}
-      trigger={trigger || <Button className="ghost">{title}</Button>}
+      trigger={
+        trigger || (
+          <Button className={classNames('ghost', { 'add-button a a2 with-icon': addButton })}>
+            {addButton && <AddPlusIcon />}
+            {title}
+          </Button>
+        )
+      }
     >
       <Modal.Header as="h2">{title}</Modal.Header>
       <Modal.Content>
