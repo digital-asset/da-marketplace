@@ -40,7 +40,9 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
-  const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
+  const existingCloseRequest = !!useStreamQueries(CloseAccountRequest).contracts.find(
+    c => c.payload.accountId.label === targetAccount.account.id.label
+  );
 
   const [showAccountDetails, setShowAccountDetails] = useState(false);
 
@@ -136,10 +138,6 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
     });
   };
 
-  if (closeRequests.find(c => c.payload.accountId.label === targetAccount.account.id.label)) {
-    return null;
-  }
-
   return (
     <>
       <InputDialog {...transferDialogProps} isModal />
@@ -149,6 +147,11 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
           <Button className="a a2" onClick={() => setShowAccountDetails(!showAccountDetails)}>
             {showAccountDetails ? <IconChevronUp /> : <IconChevronDown />}
           </Button>
+          {existingCloseRequest && (
+            <p className='close-request'>
+              <i> close request pending</i>
+            </p>
+          )}
         </div>
         {showAccountDetails && (
           <div className="account-details">

@@ -23,10 +23,17 @@ type Props = {
   title?: React.ReactElement;
   activeMenuTitle?: boolean;
   showNotificationAlert?: boolean;
+  showPendingNotificationAlert?: boolean;
   buttons?: JSX.Element[];
 };
 
-const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotificationAlert }) => {
+const TopMenu: React.FC<Props> = ({
+  title,
+  buttons,
+  activeMenuTitle,
+  showPendingNotificationAlert,
+  showNotificationAlert,
+}) => {
   const history = useHistory();
   const userDispatch = useUserDispatch();
   const { getName } = usePartyName('');
@@ -72,6 +79,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
 
   useEffect(() => {
     setContractTitle(undefined);
+    if (path.includes('notifications')) {
+      return setContractTitle('Notifications');
+    }
     if (hasContractId(path, paths.app.wallet.account)) {
       return setContractTitle(accountLabel);
     } else if (hasContractId(path, paths.app.clearing.member)) {
@@ -111,7 +121,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
             disabled={!activeMenuTitle}
             onClick={history.goBack}
           >
-            <Header as="h1">
+            <Header className="bold" as="h3">
               <Header.Content>{contractTitle || title}</Header.Content>
             </Header>
           </Menu.Item>
@@ -127,7 +137,15 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
               <div>
                 <NotificationIcon />
               </div>
-              <div className={classNames({ 'notifications-active': showNotificationAlert })}></div>
+              <div
+                className={classNames(
+                  { 'notifications-active': showNotificationAlert },
+                  {
+                    'notifications-active pending':
+                      !showNotificationAlert && showPendingNotificationAlert,
+                  }
+                )}
+              ></div>
             </Link>
           </Menu.Item>
           <Menu.Item className="log-out-button">

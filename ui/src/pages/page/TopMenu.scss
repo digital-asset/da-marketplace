@@ -94,13 +94,17 @@
       margin-top: $spacing-gap;
 
       .notifications-active {
-        position: relative;
         background-color: var(--green-50);
+        position: relative;
         border-radius: 100%;
         width: 8px;
         height: 8px;
         top: -29px;
         right: -14px;
+
+        &.pending {
+          background-color: var(--yellow-40);;
+        }
       }
     }
 

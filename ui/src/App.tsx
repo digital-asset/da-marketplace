@@ -57,6 +57,7 @@ import { TradingOrder } from './pages/trading/Order';
 import Notifications, { useAllNotifications } from './pages/notifications/Notifications';
 import { ServiceRequired } from './pages/error/ServiceRequired';
 import paths from './paths';
+import { partitionArray } from './pages/common';
 
 type Entry = {
   displayEntry: () => boolean;
@@ -316,13 +317,18 @@ const AppComponent = () => {
     ],
   });
 
-  const notifications = useAllNotifications(party);
-  const notifCount = notifications.reduce((count, { contracts, kind }) => {
-    if (kind === 'Pending') {
-      return count;
-    }
-    return count + contracts.length;
-  }, 0);
+  const allNotifications = useAllNotifications(party);
+
+  const [notifications, pendingNotifications] = partitionArray(
+    n => n.kind != 'Pending',
+    allNotifications
+  );
+
+  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+  const pendingNotifCount = pendingNotifications.reduce(
+    (count, { contracts }) => count + contracts.length,
+    0
+  );
 
   entries.push({
     displayEntry: () => true,
@@ -330,7 +336,7 @@ const AppComponent = () => {
     additionalRoutes: [
       {
         path: paths.app.notifications,
-        render: () => <Notifications notifications={notifications} />,
+        render: () => <Notifications notifications={allNotifications} />,
       },
     ],
   });
@@ -456,7 +462,6 @@ const AppComponent = () => {
 
   const path = useLocation().pathname;
   const currentEntry = entriesToDisplay.find(entry => path.startsWith(getBaseSegment(entry.path)));
-
   return (
     <Page
       sideBarItems={entriesToDisplay}
@@ -470,6 +475,7 @@ const AppComponent = () => {
       }
       topMenuButtons={currentEntry && currentEntry.topMenuButtons}
       showNotificationAlert={notifCount > 0}
+      showPendingNotificationAlert={pendingNotifCount > 0}
     >
       {servicesLoading ? (
         <div className="page-loading">

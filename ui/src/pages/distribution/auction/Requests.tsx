@@ -61,7 +61,7 @@ const RequestsComponent: React.FC<RouteComponentProps & ServicePageProps<Service
           elements: [
             getName(c.payload.provider),
             getName(c.payload.customer),
-            getName(c.payload.customer),
+            c.payload.auctionId,
             `${c.payload.asset.quantity} ${c.payload.asset.id.label}`,
             c.payload.quotedAssetId.label,
             `${c.payload.floorPrice} ${c.payload.quotedAssetId.label}`,

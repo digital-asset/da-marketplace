@@ -26,11 +26,13 @@ import {
   RequestApproves,
   RequestRejectChoice,
   RequestTemplates,
+  ProcessRequestTemplate,
 } from './NotificationTypes';
 
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { ServiceKind } from '../../context/ServicesContext';
 
 const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
@@ -200,94 +202,65 @@ export function RequestNotification<T extends Fields>({
 }
 
 interface PendingRequestProps {
-  details: string;
+  description: string;
 }
 
-export function PendingRequestNotification({ details }: PendingRequestProps) {
+export function PendingRequestNotification({ description }: PendingRequestProps) {
   return (
     <Notification>
-      <p>{details}</p>
+      <p>{description}</p>
       <p className="pending">pending</p>
     </Notification>
   );
 }
 
 interface InboundRequestProps {
-  contract: CreateEvent<any>;
+  contract: CreateEvent<ProcessRequestTemplate, unknown, string>;
   processChoice: ProcessRequestChoice;
-  details: string;
-  tag: string;
+  description: string;
+  args: any;
+  requiredService: ServiceKind;
 }
 
-export function ProcessCustodyRequestNotification({
+export function ProcessRequestNotification({
   contract,
   processChoice,
-  details,
-  tag,
+  description,
+  args,
+  requiredService,
 }: InboundRequestProps) {
   const ledger = useLedger();
   const party = useParty();
 
   const displayErrorMessage = useDisplayErrorMessage();
-  const services = useStreamQueries(CustodyService).contracts;
+  const custodyServices = useStreamQueries(CustodyService).contracts;
 
-  const providerServices = services.filter(s => s.payload.provider === party);
-  const custodyService = providerServices.find(
-    s => s.payload.customer === contract.payload.customer
-  );
-
+  const custodyService = custodyServices
+    .filter(s => s.payload.provider === party)
+    .find(s => s.payload.customer === contract.payload.customer);
   return (
     <Notification>
-      <p>{details} </p>
+      <p>{description} </p>
       <FormErrorHandled onSubmit={onProcess}>
-        {loadAndCatch => (
-          <Form.Group className="inline-form-group">
-            <Button
-              className="ghost"
-              content="Process"
-              type="submit"
-              onClick={() => loadAndCatch(onProcess)}
-            />
-          </Form.Group>
-        )}
+        <Form.Group className="inline-form-group">
+          <Button className="ghost" content="Process" type="submit" />
+        </Form.Group>
       </FormErrorHandled>
     </Notification>
   );
 
   async function onProcess() {
-    if (!custodyService) {
-      return displayErrorMessage({
-        header: 'Failed to Process Request',
-        message: 'Could not find Custody service contract',
-      });
-    }
-    switch (tag) {
-      case 'open-account':
-        await ledger.exercise(processChoice, custodyService.contractId, {
-          openAccountRequestCid: contract.contractId,
+    if (requiredService === ServiceKind.CUSTODY) {
+      if (!custodyService) {
+        return displayErrorMessage({
+          header: 'Failed to Process Request',
+          message: 'Could not find Custody service contract',
         });
-        break;
-      case 'close-account':
-        await ledger.exercise(processChoice, custodyService.contractId, {
-          closeAccountRequestCid: contract.contractId,
-        });
+      } else {
+        console.log(args);
 
-        break;
-      case 'credit-account':
-        await ledger.exercise(processChoice, custodyService.contractId, {
-          creditAccountRequestCid: contract.contractId,
-        });
-        break;
-      case 'debit-account':
-        await ledger.exercise(processChoice, custodyService.contractId, {
-          debitAccountRequestCid: contract.contractId,
-        });
-        break;
-      case 'transfer':
-        await ledger.exercise(processChoice, custodyService.contractId, {
-          transferDepositRequestCid: contract.contractId,
-        });
-        break;
+        await ledger.exercise(processChoice, custodyService.contractId, args);
+      }
     }
   }
 }
