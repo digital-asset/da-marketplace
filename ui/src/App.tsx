@@ -35,7 +35,6 @@ import {
   ExchangeIcon,
   MegaphoneIcon,
   OrdersIcon,
-  ToolIcon,
   WalletIcon,
 } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
@@ -46,7 +45,6 @@ import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
-import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
@@ -326,36 +324,9 @@ const AppComponent = () => {
         path: paths.app.notifications,
         render: () => <Notifications notifications={allNotifications} />,
       },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => tradingService.length > 0,
-    sidebar: [
       {
-        label: 'Markets',
-        path: paths.app.markets.root,
-        activeSubroutes: true,
-        render: () => <Markets listings={listings} />,
-        icon: <OrdersIcon />,
-        groupBy: 'Secondary Market',
-        children: listings.map(c => ({
-          label: c.payload.listingId.label,
-          path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
-          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
-          icon: <ExchangeIcon />,
-          children: [],
-        })),
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.markets.order + '/:contractId',
-        render: () => <TradingOrder listings={listings} />,
-      },
-      {
-        path: paths.app.markets.offer,
-        render: () => <Offer service={ServiceKind.TRADING} />,
+        path: paths.app.identity,
+        render: () => <RequestIdentityVerification />,
       },
     ],
   });
@@ -393,6 +364,37 @@ const AppComponent = () => {
   });
 
   entries.push({
+    displayEntry: () => tradingService.length > 0,
+    sidebar: [
+      {
+        label: 'Markets',
+        path: paths.app.markets.root,
+        activeSubroutes: true,
+        render: () => <Markets listings={listings} />,
+        icon: <OrdersIcon />,
+        groupBy: 'Secondary Market',
+        children: listings.map(c => ({
+          label: c.payload.listingId.label,
+          path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
+          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
+          icon: <ExchangeIcon />,
+          children: [],
+        })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.markets.order + '/:contractId',
+        render: () => <TradingOrder listings={listings} />,
+      },
+      {
+        path: paths.app.markets.offer,
+        render: () => <Offer service={ServiceKind.TRADING} />,
+      },
+    ],
+  });
+
+  entries.push({
     displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
     sidebar: [
       {
@@ -409,27 +411,6 @@ const AppComponent = () => {
       {
         path: paths.app.biddingAuctions + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
-      },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Setup',
-        groupBy: 'Manage',
-        path: paths.app.setup.root,
-        activeSubroutes: true,
-        render: () => <SetUp />,
-        icon: <ToolIcon />,
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.setup.identity,
-        render: () => <RequestIdentityVerification />,
       },
     ],
   });
