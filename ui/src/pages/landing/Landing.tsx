@@ -130,7 +130,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
     return (
       <div className="link">
         {damlHubParty}
-        <Link to={paths.app.setup.identity}>Request Identity Verification</Link>
+        <Link to={paths.app.identity}>Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {

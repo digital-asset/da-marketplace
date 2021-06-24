@@ -329,7 +329,7 @@ const AppComponent = () => {
         render: () => <Notifications notifications={notifications} />,
       },
       {
-        path: paths.app.setup.identity,
+        path: paths.app.identity,
         render: () => <RequestIdentityVerification />,
       },
     ],
