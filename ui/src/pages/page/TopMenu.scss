@@ -17,10 +17,14 @@
       min-height: 75px;
       display: flex;
       align-items: center;
+      padding: $spacing-s $spacing-l;
 
+      .menu.right.menu,
       .menu.left.menu {
-        animation: fadeIn 0.5s;
-        padding-left: $spacing-s;
+        align-items: center;
+      }
+      .menu.left.menu {
+        margin-top: $spacing-xs;
       }
 
       .overflow-menu-item {
@@ -28,6 +32,7 @@
       }
 
       .menu > .item {
+        padding: 0px;
         &:before {
           display: none;
         }
@@ -75,13 +80,9 @@
       }
 
       .log-out-button {
-        padding: $spacing-m;
-        align-self: flex-start;
-        height: 100%;
-
         .log-out {
           display: flex;
-          align-items: flex-center;
+          align-items: center;
 
           .icon.logout-icon {
             margin-left: $spacing-s;
@@ -91,25 +92,38 @@
     }
 
     .notification-button {
-      margin-top: $spacing-gap;
+      margin: 0 $spacing-l;
+      padding: $spacing-s !important;
+      border-radius: 4px;
 
-      .notifications-active {
-        background-color: var(--green-50);
+      &:hover {
+        background-color: var(--cool-grey-100);
+        cursor: pointer;
+      }
+
+      .ghost.smaller {
+        height: 16px;
+      }
+
+      .notifications-icon {
         position: relative;
         border-radius: 100%;
-        width: 8px;
-        height: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 16px;
         top: -29px;
-        right: -14px;
+        right: -16px;
+        color: white;
+        font-size: 9px;
 
+        &.active {
+          background-color: var(--green-50);
+        }
         &.pending {
-          background-color: var(--yellow-40);;
+          background-color: var(--yellow-40);
         }
       }
-    }
-
-    .notifications {
-      padding: 0px $spacing-m;
     }
 
     @media screen and (max-width: 850px) {

@@ -16,8 +16,6 @@ type Props = {
   className?: string;
   menuTitle?: React.ReactElement;
   activeMenuTitle?: boolean;
-  showNotificationAlert?: boolean;
-  showPendingNotificationAlert?: boolean;
   sideBarItems?: SidebarEntry[];
   topMenuButtons?: JSX.Element[];
 };
@@ -28,8 +26,6 @@ const Page: React.FC<Props> = ({
   menuTitle,
   topMenuButtons,
   activeMenuTitle,
-  showNotificationAlert,
-  showPendingNotificationAlert,
   sideBarItems,
 }) => {
   const user = useParty();
@@ -103,8 +99,6 @@ const Page: React.FC<Props> = ({
           title={!!menuTitle ? menuTitle : <WelcomeHeader />}
           buttons={topMenuButtons}
           activeMenuTitle={activeMenuTitle}
-          showNotificationAlert={showNotificationAlert}
-          showPendingNotificationAlert={showPendingNotificationAlert}
         />
 
         <PageSection className={className}>{children}</PageSection>

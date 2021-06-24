@@ -9,6 +9,9 @@ import classNames from 'classnames';
 import { signOut, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
 import { usePartyName } from '../../config';
+import { partitionArray } from '../../pages/common';
+
+import { useParty } from '@daml/react';
 
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -18,23 +21,18 @@ import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/M
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { useAllNotifications } from '../../pages/notifications/Notifications';
 
 type Props = {
   title?: React.ReactElement;
   activeMenuTitle?: boolean;
-  showNotificationAlert?: boolean;
-  showPendingNotificationAlert?: boolean;
   buttons?: JSX.Element[];
 };
 
-const TopMenu: React.FC<Props> = ({
-  title,
-  buttons,
-  activeMenuTitle,
-  showPendingNotificationAlert,
-  showNotificationAlert,
-}) => {
+const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
   const history = useHistory();
+  const party = useParty();
+
   const userDispatch = useUserDispatch();
   const { getName } = usePartyName('');
   const path = useLocation().pathname;
@@ -76,6 +74,17 @@ const TopMenu: React.FC<Props> = ({
   )?.payload.assetId.label;
   const listingLabel = useStreamQueries(Listing).contracts.find(c => c.contractId === contractId)
     ?.payload.listingId.label;
+
+  const allNotifications = useAllNotifications(party);
+  const [notifications, pendingNotifications] = partitionArray(
+    n => n.kind != 'Pending',
+    allNotifications
+  );
+  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+  const pendingNotifCount = pendingNotifications.reduce(
+    (count, { contracts }) => count + contracts.length,
+    0
+  );
 
   useEffect(() => {
     setContractTitle(undefined);
@@ -121,7 +130,7 @@ const TopMenu: React.FC<Props> = ({
             disabled={!activeMenuTitle}
             onClick={history.goBack}
           >
-            <Header className="bold" as="h3">
+            <Header className="bold icon-header" as="h1">
               <Header.Content>{contractTitle || title}</Header.Content>
             </Header>
           </Menu.Item>
@@ -134,18 +143,17 @@ const TopMenu: React.FC<Props> = ({
         <Menu.Menu position="right">
           <Menu.Item className="notification-button">
             <Link className="ghost smaller" to={paths.app.notifications}>
-              <div>
-                <NotificationIcon />
-              </div>
+              <NotificationIcon />
               <div
                 className={classNames(
-                  { 'notifications-active': showNotificationAlert },
+                  { 'notifications-icon active': notifCount > 0 },
                   {
-                    'notifications-active pending':
-                      !showNotificationAlert && showPendingNotificationAlert,
+                    'notifications-icon pending': notifCount === 0 && pendingNotifCount > 0,
                   }
                 )}
-              ></div>
+              >
+                {notifCount > 0 ? notifCount : pendingNotifCount > 0 ? pendingNotifCount : null}
+              </div>
             </Link>
           </Menu.Item>
           <Menu.Item className="log-out-button">
