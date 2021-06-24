@@ -72,6 +72,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
 
   useEffect(() => {
     setContractTitle(undefined);
+    if (path.includes('notifications')) {
+      return setContractTitle('Notifications');
+    }
     if (hasContractId(path, paths.app.wallet.account)) {
       return setContractTitle(accountLabel);
     } else if (hasContractId(path, paths.app.clearing.member)) {
@@ -111,7 +114,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
             disabled={!activeMenuTitle}
             onClick={history.goBack}
           >
-            <Header as="h1">
+            <Header className="bold" as="h3">
               <Header.Content>{contractTitle || title}</Header.Content>
             </Header>
           </Menu.Item>
