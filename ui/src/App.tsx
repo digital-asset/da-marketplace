@@ -336,37 +336,6 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => tradingService.length > 0,
-    sidebar: [
-      {
-        label: 'Markets',
-        path: paths.app.markets.root,
-        activeSubroutes: true,
-        render: () => <Markets listings={listings} />,
-        icon: <OrdersIcon />,
-        groupBy: 'Secondary Market',
-        children: listings.map(c => ({
-          label: c.payload.listingId.label,
-          path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
-          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
-          icon: <ExchangeIcon />,
-          children: [],
-        })),
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.markets.order + '/:contractId',
-        render: () => <TradingOrder listings={listings} />,
-      },
-      {
-        path: paths.app.markets.offer,
-        render: () => <Offer service={ServiceKind.TRADING} />,
-      },
-    ],
-  });
-
-  entries.push({
     displayEntry: () => auctionService.length > 0,
     sidebar: [
       {
@@ -394,6 +363,37 @@ const AppComponent = () => {
         render: (props: any) => (
           <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
         ),
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => tradingService.length > 0,
+    sidebar: [
+      {
+        label: 'Markets',
+        path: paths.app.markets.root,
+        activeSubroutes: true,
+        render: () => <Markets listings={listings} />,
+        icon: <OrdersIcon />,
+        groupBy: 'Secondary Market',
+        children: listings.map(c => ({
+          label: c.payload.listingId.label,
+          path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
+          render: () => <Market services={tradingService} cid={c.contractId} listings={listings} />,
+          icon: <ExchangeIcon />,
+          children: [],
+        })),
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.markets.order + '/:contractId',
+        render: () => <TradingOrder listings={listings} />,
+      },
+      {
+        path: paths.app.markets.offer,
+        render: () => <Offer service={ServiceKind.TRADING} />,
       },
     ],
   });
