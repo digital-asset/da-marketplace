@@ -120,12 +120,12 @@ import {
 import {
   Accept as AuctionServiceAccept,
   Approve as AuctionServiceApprove,
-  CreateAuctionRequest,
   Decline as AuctionServiceDecline,
   Offer as AuctionServiceOffer,
   Reject as AuctionServiceReject,
   Request as AuctionServiceRequest,
   CreateAuction,
+  CreateAuctionRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import {
   Accept as BiddingServiceAccept,
@@ -323,8 +323,8 @@ export type PendingRequestTemplate =
 type PendingRequestNotificationSet = {
   kind: 'Pending';
   tag: 'pending';
-  getCustomDescription: (c: CreateEvent<any, unknown, string>) => string;
   contracts: readonly CreateEvent<PendingRequestTemplate>[];
+  getCustomDescription: (c: CreateEvent<any>) => string;
 };
 
 // -------------------------------------------------------------
@@ -352,8 +352,8 @@ type ProcessRequestNotificationSet = {
   processChoice: ProcessRequestChoice;
   contracts: readonly CreateEvent<ProcessRequestTemplate>[];
   requiredService: ServiceKind;
-  getCustomDescription: (c: CreateEvent<any, unknown, string>) => string;
-  getCustomArgs: (c: CreateEvent<ProcessRequestTemplate, unknown, string>) => any;
+  getCustomDescription: (c: CreateEvent<any>) => string;
+  getCustomArgs: (c: CreateEvent<any>) => any;
 };
 
 export type NotificationSet =

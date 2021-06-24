@@ -2,7 +2,10 @@ import React from 'react';
 import { CreateEvent } from '@daml/ledger';
 
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
-import { Service as AuctionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
+import {
+  Service as AuctionService,
+  CreateAuctionRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
 import {
   Offer as CustodyRoleOffer,
   Request as CustodyRoleRequest,
@@ -102,7 +105,6 @@ import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asse
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useVerifiedParties, usePartyName } from '../../config';
 import { createDropdownProp, partitionArray } from '../common';
-import { Requests as AuctionRequests } from '../../pages/distribution/auction/Requests';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -145,6 +147,7 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const debitRequests = useStreamQueries(DebitAccountRequest).contracts;
   const transferRequests = useStreamQueries(TransferDepositRequest).contracts;
   const assetDeposits = useStreamQueries(AssetDeposit).contracts;
+  const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
 
   const { getName } = usePartyName(party);
 
@@ -167,6 +170,10 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const [inboundTransferRequests, outboundTransferRequests] = partitionArray(
     c => party === c.payload.provider,
     [...transferRequests]
+  );
+  const [inboundAuctionRequests, outboundAuctionRequests] = partitionArray(
+    c => party === c.payload.provider,
+    [...auctionRequests]
   );
 
   const getDebitDepositDetail = (
@@ -778,6 +785,16 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       contracts: outboundTransferRequests,
     },
     {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to create auction
+        ${c.payload.auctionId}. Auctioned Asset: ${c.payload.asset.quantity}
+        ${c.payload.asset.id.label},
+        Quoted Asset: ${c.payload.quotedAssetId.label}, Floor Price:${c.payload.floorPrice}
+        ${c.payload.quotedAssetId.label}`,
+      contracts: outboundAuctionRequests,
+    },
+    {
       kind: 'Process',
       tag: 'process',
       processChoice: CustodyService.OpenAccount as ProcessRequestChoice,
@@ -842,6 +859,22 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
           ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
       getCustomArgs: c => {
         return { transferDepositRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: AuctionService.CreateAuction as ProcessRequestChoice,
+      contracts: inboundAuctionRequests,
+      requiredService: ServiceKind.AUCTION,
+      getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to create auction
+            ${c.payload.auctionId}. Auctioned Asset: ${c.payload.asset.quantity}
+            ${c.payload.asset.id.label},
+            Quoted Asset: ${c.payload.quotedAssetId.label}, Floor Price:${c.payload.floorPrice}
+            ${c.payload.quotedAssetId.label}
+           `,
+      getCustomArgs: c => {
+        return { createAuctionRequestCid: c.contractId };
       },
     },
   ];
@@ -915,7 +948,6 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
               }
             })
           : 'No Notifications or Pending Requests.'}
-        <>{auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}</>
       </div>
     </div>
   );

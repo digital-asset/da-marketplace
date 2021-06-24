@@ -7,7 +7,7 @@ import { useLedger, useParty } from '@daml/react';
 import { ContractId } from '@daml/types';
 import { CreateEvent } from '@daml/ledger';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-
+import { Service as DistributionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { FieldComponents, Fields, Field } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
@@ -213,7 +213,7 @@ export function PendingRequestNotification({ description }: PendingRequestProps)
 
 interface InboundRequestProps {
   contract: CreateEvent<ProcessRequestTemplate, unknown, string>;
-  processChoice: ProcessRequestChoice;
+  processChoice: any;
   description: string;
   args: any;
   requiredService: ServiceKind;
@@ -231,8 +231,12 @@ export function ProcessRequestNotification({
 
   const displayErrorMessage = useDisplayErrorMessage();
   const custodyServices = useStreamQueries(CustodyService).contracts;
+  const distributionServices = useStreamQueries(DistributionService).contracts;
 
   const custodyService = custodyServices
+    .filter(s => s.payload.provider === party)
+    .find(s => s.payload.customer === contract.payload.customer);
+  const distributionService = distributionServices
     .filter(s => s.payload.provider === party)
     .find(s => s.payload.customer === contract.payload.customer);
   return (
@@ -247,15 +251,26 @@ export function ProcessRequestNotification({
   );
 
   async function onProcess() {
-    if (requiredService === ServiceKind.CUSTODY) {
-      if (!custodyService) {
-        return displayErrorMessage({
-          header: 'Failed to Process Request',
-          message: 'Could not find Custody service contract',
-        });
-      } else {
+    switch (requiredService) {
+      case ServiceKind.CUSTODY:
+        if (!custodyService) {
+          return displayErrorMessage({
+            header: 'Failed to Process Request',
+            message: 'Could not find Custody service contract',
+          });
+        }
         await ledger.exercise(processChoice, custodyService.contractId, args);
-      }
+        break;
+
+      case ServiceKind.AUCTION:
+        if (!distributionService) {
+          return displayErrorMessage({
+            header: 'Failed to Process Request',
+            message: 'Could not find Distribution service contract',
+          });
+        }
+        await ledger.exercise(processChoice, distributionService.contractId, args);
+        break;
     }
   }
 }
