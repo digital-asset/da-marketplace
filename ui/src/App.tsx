@@ -467,7 +467,7 @@ const AppComponent = () => {
       sideBarItems={entriesToDisplay}
       menuTitle={
         currentEntry && (
-          <Header className="bold icon-header" as="h3">
+          <Header className="bold icon-header" as="h1">
             <span className="icon-wrapper">{currentEntry.icon}</span>
             {currentEntry.label}
           </Header>
