@@ -17,14 +17,10 @@
       min-height: 75px;
       display: flex;
       align-items: center;
-      padding: $spacing-s $spacing-l;
 
-      .menu.right.menu,
       .menu.left.menu {
-        align-items: center;
-      }
-      .menu.left.menu {
-        margin-top: $spacing-xs;
+        animation: fadeIn 0.5s;
+        padding-left: $spacing-s;
       }
 
       .overflow-menu-item {
@@ -32,7 +28,6 @@
       }
 
       .menu > .item {
-        padding: 0px;
         &:before {
           display: none;
         }
@@ -80,9 +75,13 @@
       }
 
       .log-out-button {
+        padding: $spacing-m;
+        align-self: flex-start;
+        height: 100%;
+
         .log-out {
           display: flex;
-          align-items: center;
+          align-items: flex-center;
 
           .icon.logout-icon {
             margin-left: $spacing-s;
@@ -92,38 +91,21 @@
     }
 
     .notification-button {
-      margin: 0 $spacing-l;
-      padding: $spacing-s !important;
-      border-radius: 4px;
+      margin-top: $spacing-gap;
 
-      &:hover {
-        background-color: var(--cool-grey-100);
-        cursor: pointer;
-      }
-
-      .ghost.smaller {
-        height: 16px;
-      }
-
-      .notifications-icon {
+      .notifications-active {
         position: relative;
+        background-color: var(--green-50);
         border-radius: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 16px;
+        width: 8px;
+        height: 8px;
         top: -29px;
-        right: -16px;
-        color: white;
-        font-size: 9px;
-
-        &.active {
-          background-color: var(--green-50);
-        }
-        &.pending {
-          background-color: var(--yellow-40);
-        }
+        right: -14px;
       }
+    }
+
+    .notifications {
+      padding: 0px $spacing-m;
     }
 
     @media screen and (max-width: 850px) {
