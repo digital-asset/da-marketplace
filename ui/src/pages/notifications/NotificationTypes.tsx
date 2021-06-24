@@ -323,19 +323,13 @@ export type PendingRequestTemplate =
 type PendingRequestNotificationSet = {
   kind: 'Pending';
   tag: 'pending';
-  getCustomDescription: (c: any) => string;
+  getCustomDescription: (c: CreateEvent<PendingRequestTemplate, unknown, string>) => string;
   contracts: readonly CreateEvent<PendingRequestTemplate>[];
 };
 
 // -------------------------------------------------------------
 
-export type ProcessRequestTemplate =
-  | CloseAccountRequest
-  | DebitAccountRequest
-  | OpenAccountRequest
-  | TransferDepositRequest
-  | CreditAccountRequest
-  | CreateAuctionRequest;
+export type ProcessRequestTemplate = PendingRequestTemplate;
 
 export type ProcessChoice =
   | CloseAccount
@@ -358,8 +352,8 @@ type ProcessRequestNotificationSet = {
   processChoice: ProcessRequestChoice;
   contracts: readonly CreateEvent<ProcessRequestTemplate>[];
   requiredService: ServiceKind;
-  getCustomDescription: (c: CreateEvent<any, unknown, string>) => string;
-  getCustomArgs: (c: CreateEvent<any, unknown, string>) => any;
+  getCustomDescription: (c: CreateEvent<PendingRequestTemplate, unknown, string>) => string;
+  getCustomArgs: (c: CreateEvent<ProcessRequestTemplate, unknown, string>) => any;
 };
 
 export type NotificationSet =

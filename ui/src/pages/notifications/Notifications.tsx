@@ -169,8 +169,6 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
     [...transferRequests]
   );
 
-  console.log(inboundDebitRequests);
-
   const getDebitDepositDetail = (
     c: CreateEvent<DebitAccountRequest>,
     extract: (deposit: AssetDeposit) => string

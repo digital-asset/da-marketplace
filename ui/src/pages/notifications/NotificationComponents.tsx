@@ -254,8 +254,6 @@ export function ProcessRequestNotification({
           message: 'Could not find Custody service contract',
         });
       } else {
-        console.log(args);
-
         await ledger.exercise(processChoice, custodyService.contractId, args);
       }
     }
