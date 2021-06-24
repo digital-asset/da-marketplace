@@ -142,19 +142,20 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
         <div className="account-details">
           <div className="account-data">
             <h4> {targetAccount.account.id.label} </h4>
-            {normalAccount && (
-              <OverflowMenu>
-                <OverflowMenuEntry
-                  label={'Close Account'}
-                  onClick={() => requestCloseAccount(normalAccount)}
-                />
-              </OverflowMenu>
-            )}
-            {existingCloseRequest && (
-              <p className="close-request">
-                <i> close request pending</i>
-              </p>
-            )}
+            {normalAccount &&
+              targetAccount.account.owner === party &&
+              (existingCloseRequest ? (
+                <p className="close-request">
+                  <i> close request pending</i>
+                </p>
+              ) : (
+                <OverflowMenu>
+                  <OverflowMenuEntry
+                    label={'Close Account'}
+                    onClick={() => requestCloseAccount(normalAccount)}
+                  />
+                </OverflowMenu>
+              ))}
           </div>
           <div className="account-data body">
             <p className="p2">Type: {normalAccount ? 'Normal' : 'Allocation'} </p>

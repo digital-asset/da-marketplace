@@ -91,9 +91,14 @@ const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePagePr
           <FormErrorHandled onSubmit={() => onRequestCredit()}>
             <Form.Select
               label="Account"
-              options={allAccounts.map(a => {
-                return { text: a.account.id.label, value: a.contractId };
-              })}
+              options={accounts
+                .filter(a => a.payload.account.owner === party)
+                .map(a => {
+                  return {
+                    text: a.payload.account.id.label,
+                    value: a.contractId.replace('#', '_'),
+                  };
+                })}
               value={selectedAccount}
               onChange={(_, data) => setSelectedAccount(data.value as string)}
             />
