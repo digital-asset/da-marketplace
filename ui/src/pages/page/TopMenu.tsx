@@ -77,7 +77,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
 
   const allNotifications = useAllNotifications(party);
   const [notifications, pendingNotifications] = partitionArray(
-    n => n.kind != 'Pending',
+    n => n.kind !== 'Pending',
     allNotifications
   );
   const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);

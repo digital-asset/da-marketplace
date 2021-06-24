@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
 import { Button, Form } from 'semantic-ui-react';
 
-import { CreateEvent } from '@daml/ledger';
-
 import _ from 'lodash';
 
 import { useLedger, useParty } from '@daml/react';
 import { ContractId } from '@daml/types';
+import { CreateEvent } from '@daml/ledger';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { FieldComponents, Fields, Field } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
-
-import { useStreamQueries } from '../../Main';
 
 import {
   OfferAcceptChoice,
@@ -29,10 +27,9 @@ import {
   ProcessRequestTemplate,
 } from './NotificationTypes';
 
-import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 import { ServiceKind } from '../../context/ServicesContext';
+import { useStreamQueries } from '../../Main';
 
 const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
