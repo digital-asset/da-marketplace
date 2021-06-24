@@ -9,20 +9,62 @@ import Marketplace.Utils
 import DA.Finance.Asset.Settlement
 import DA.Finance.Types
 
+import DA.Map (Map)
+import DA.Map qualified as Map
+
 data OnboardingInstruction
-  = OnboardCustody with customer : Party, custodian : Party
-  | OnboardTrading with customer : Party, exchange : Party
+  = OnboardCustody with custodian : Party
+  | OnboardTrading with exchange : Party, custodian : Party, optTradingAccount : Optional Text
+  | OnboardClearing with ccp : Party, custodian : Party
+  | OnboardIssuance with custodian : Party
+  | OnboardAuction with distributor : Party, custodian : Party, optTradingAccount : Optional Text, optReceivableAccount : Optional Text
+  | OnboardBidding with distributor : Party, custodian : Party, optTradingAccount: Optional Text
   deriving (Show, Eq)
 
-signaturesNeeded : OnboardingInstruction -> [Party]
-signaturesNeeded instruction = case instruction of
-    OnboardCustody _ c -> [c]
-    OnboardTrading _ e -> [e]
+accountsWithObservers : [OnboardingInstruction] -> Map Text [Party]
+accountsWithObservers = undefined
 
+
+-- data OnboardingInstruction
+--   = OnboardCustody with customer : Party, custodian : Party
+--   | OnboardTrading with customer : Party, exchange : Party
+--   deriving (Show, Eq)
+--
+-- signaturesNeeded : OnboardingInstruction -> [Party]
+-- signaturesNeeded instruction = case instruction of
+--     OnboardCustody _ c -> [c]
+--     OnboardTrading _ e -> [e]
+--
 -- signaturesNeeded : [OnboardingInstruction] -> [Party]
 -- signaturesNeeded [] = []
 -- signaturesNeeded (OnboardCustody p :: is) = p :: signaturesNeeded is
 -- signaturesNeeded (OnboardTrading p :: is) = p :: signaturesNeeded is
+
+
+{-
+  Investor:
+
+  - Onboard with Custodian
+  - Create "Main" account
+  - Onboard with Exchange for Trading
+  - Onboard with Bank for Bidding
+  - Deposit cash?
+
+  Issuer:
+    - Onboard custody from Custodian
+    - Onboard issuance from Custodian
+    - Onboard auction from Custodian
+    - Create account
+    -
+    - Request Auction services from Custodian
+    - Request
+
+
+  Bank:
+    - Onboard as Custodian Role
+    - Offer self as Issuer
+    - Create Asset X
+-}
 
 collectSignatures : Party -> [Party] -> ContractId OnboardInvestor -> Update (ContractId OnboardInvestor)
 collectSignatures _        []               cid = return cid

@@ -21,5 +21,10 @@ testOnboarding = do
 
   operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest --with custodian = bank
 
+
+  let testInvestor = [ OnboardCustody with custodian = bank
+                     , OnboardTrading with exchange = exchange, custodian = bank, optTradingAccount = None
+                     , OnboardBidding with distributor = bank, custodian = bank, optTradingAccount = None ]
+
   return ()
 
