@@ -37,7 +37,6 @@ import {
   ExchangeIcon,
   MegaphoneIcon,
   OrdersIcon,
-  ToolIcon,
   WalletIcon,
   IconMailLetter,
 } from './icons/icons';
