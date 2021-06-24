@@ -1,10 +1,13 @@
 module Tests.Utils where
 
+import Daml.Script
+
 import ContingentClaims.Claim (Claim, Claim(Zero), when, scale, cond, give, one, and, or)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
 import ContingentClaims.FinancialClaim (at, fixed, floating, swap, european, bermudan)
-import DA.Finance.Types (Id(..))
+import DA.Finance.Asset
+import DA.Finance.Types (Account, Id(..))
 import Prelude hiding (and, or)
 
 type C = Claim O.Observation Date Id
@@ -65,3 +68,19 @@ convertibleNote underlying ccy principal discount maturity interest cap =
     conversionPayout = scale (O.pure (principal * (1.0 + interest)) O./ (O.observe underlying.label O.* O.pure (1.0 - discount))) (one underlying)
     principalPayout = scale (O.pure (principal * (1.0 + interest))) (one ccy)
   in when (at maturity) $ cond conversionCondition conversionPayout principalPayout
+
+-- |Check if the given account has deposits equaling the given amount
+depositsQuantityEquals : Party -> Account -> Decimal -> Script Bool
+depositsQuantityEquals party account amount = do
+  accountQuantity <- getDepositQuantities party =<< getDepositsForAccount party account
+  return $ amount == accountQuantity
+
+getDepositsForAccount : Party -> Account -> Script [ContractId AssetDeposit]
+getDepositsForAccount party account = map fst . filter (\(_,d) -> d.account == account) <$> query @AssetDeposit party
+
+getDepositQuantities : Party -> [ContractId AssetDeposit] -> Script Decimal
+getDepositQuantities party depositCids = do
+  foldl (+) 0.0 <$> forA depositCids (\dcid -> do
+      Some d <- queryContractId party dcid
+      return d.asset.quantity)
+

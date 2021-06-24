@@ -1,13 +1,12 @@
 module Tests.Clearing where
 
 import Daml.Script
-import DA.Finance.Asset
-import DA.Finance.Types
 import Marketplace.Clearing.Model
 import Marketplace.Clearing.Service (DepositWithRemaining(..),CalculationResult(..))
 import Marketplace.Clearing.Service qualified as Clearing
 
 import Common
+import Tests.Utils
 import DA.Action (void)
 
 testClearingTransfers : Script ()
@@ -131,19 +130,4 @@ testMarkToMarket = do
   assert =<< depositsQuantityEquals bob.customer bob.clearingAccount 25_000.0
 
   return ()
-
--- |Check if the given account has deposits equaling the given amount
-depositsQuantityEquals : Party -> Account -> Decimal -> Script Bool
-depositsQuantityEquals party account amount = do
-  accountQuantity <- getDepositQuantities party =<< getDepositsForAccount party account
-  return $ amount == accountQuantity
-
-getDepositsForAccount : Party -> Account -> Script [ContractId AssetDeposit]
-getDepositsForAccount party account = map fst . filter (\(_,d) -> d.account == account) <$> query @AssetDeposit party
-
-getDepositQuantities : Party -> [ContractId AssetDeposit] -> Script Decimal
-getDepositQuantities party depositCids = do
-  foldl (+) 0.0 <$> forA depositCids (\dcid -> do
-      Some d <- queryContractId party dcid
-      return d.asset.quantity)
 

@@ -108,7 +108,7 @@ template Service
         payment : Settlement.SettlementDetails
       controller provider, issuer
       do
-        create SettlementInstruction with buyer = customer; seller = issuer; ..
+        create SettlementInstruction with details = [delivery, payment]; ..
 
 template Offer
   with
