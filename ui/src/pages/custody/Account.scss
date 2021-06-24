@@ -8,8 +8,14 @@
 
     .account-holding {
       padding: $spacing-s;
-      margin-bottom: $spacing-s;
+      margin-bottom: 0px;
       display: flex;
+      border-top: none;
+      border-radius: 0px;
+
+      &:last-of-type {
+        border-radius: 0px 0px 4px 4px;
+      }
 
       .tile-content {
         display: flex;
@@ -38,16 +44,23 @@
 
     .account-details {
       display: flex;
-      flex-direction: row;
-      align-items: center;
-      margin-bottom: $spacing-s;
+      flex-direction: column;
+      padding: $spacing-s;
+      border: 1px solid var(--cool-grey-90);
+      border-radius: 4px 4px 0px 0px;
 
       .account-data {
-        display: inline;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        &.body {
+          justify-content: unset;
+        }
       }
 
-      p {
-        margin-right: $spacing-s;
+      p.p2 {
+        margin: $spacing-s $spacing-m 0 0;
       }
     }
   }
