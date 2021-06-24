@@ -49,7 +49,6 @@ import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
-import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
@@ -330,6 +329,10 @@ const AppComponent = () => {
         path: paths.app.notifications,
         render: () => <Notifications notifications={notifications} />,
       },
+      {
+        path: paths.app.setup.identity,
+        render: () => <RequestIdentityVerification />,
+      },
     ],
   });
 
@@ -413,27 +416,6 @@ const AppComponent = () => {
       {
         path: paths.app.biddingAuctions + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
-      },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Setup',
-        groupBy: 'Manage',
-        path: paths.app.setup.root,
-        activeSubroutes: true,
-        render: () => <SetUp />,
-        icon: <ToolIcon />,
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.setup.identity,
-        render: () => <RequestIdentityVerification />,
       },
     ],
   });
