@@ -82,7 +82,7 @@ const Assets: React.FC<ServicePageProps<Service>> = ({ services }: ServicePagePr
       <div className="page-section-row">
         <div>
           {allAccounts.map(a => (
-            <Account targetAccount={a} services={services} />
+            <Account targetAccount={a} services={services} key={a.contractId} />
           ))}
         </div>
 

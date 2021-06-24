@@ -37,7 +37,6 @@ import {
   ExchangeIcon,
   MegaphoneIcon,
   OrdersIcon,
-  ToolIcon,
   WalletIcon,
   IconMailLetter,
 } from './icons/icons';
@@ -49,7 +48,6 @@ import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
-import SetUp from './pages/setup/SetUp';
 import Offer from './pages/setup/Offer';
 import { useStreamQueries } from './Main';
 import { ServiceKind } from './context/ServicesContext';
@@ -331,6 +329,42 @@ const AppComponent = () => {
         path: paths.app.notifications,
         render: () => <Notifications notifications={notifications} />,
       },
+      {
+        path: paths.app.identity,
+        render: () => <RequestIdentityVerification />,
+      },
+    ],
+  });
+
+  entries.push({
+    displayEntry: () => auctionService.length > 0,
+    sidebar: [
+      {
+        label: 'Auctions',
+        path: paths.app.auctions.root,
+        activeSubroutes: true,
+        render: () => <Auctions />,
+        icon: <MegaphoneIcon />,
+        groupBy: 'Primary Market',
+        children: [],
+      },
+    ],
+    additionalRoutes: [
+      {
+        path: paths.app.auctions.new,
+        render: () => (
+          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
+            <NewAuction services={auctionService} />
+          </ServiceRequired>
+        ),
+      },
+
+      {
+        path: paths.app.auctions.root + '/:contractId',
+        render: (props: any) => (
+          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
+        ),
+      },
     ],
   });
 
@@ -374,38 +408,6 @@ const AppComponent = () => {
   });
 
   entries.push({
-    displayEntry: () => auctionService.length > 0,
-    sidebar: [
-      {
-        label: 'Auctions',
-        path: paths.app.auctions.root,
-        activeSubroutes: true,
-        render: () => <Auctions />,
-        icon: <MegaphoneIcon />,
-        groupBy: 'Primary Market',
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.auctions.new,
-        render: () => (
-          <ServiceRequired service={ServiceKind.AUCTION} action="New Auction">
-            <NewAuction services={auctionService} />
-          </ServiceRequired>
-        ),
-      },
-
-      {
-        path: paths.app.auctions.root + '/:contractId',
-        render: (props: any) => (
-          <Auction auctionServices={auctionService} biddingServices={biddingService} {...props} />
-        ),
-      },
-    ],
-  });
-
-  entries.push({
     displayEntry: () => biddingService.filter(b => b.payload.customer === party).length > 0,
     sidebar: [
       {
@@ -422,27 +424,6 @@ const AppComponent = () => {
       {
         path: paths.app.biddingAuctions + '/:contractId',
         render: () => <BiddingAuction services={biddingService} />,
-      },
-    ],
-  });
-
-  entries.push({
-    displayEntry: () => true,
-    sidebar: [
-      {
-        label: 'Setup',
-        groupBy: 'Manage',
-        path: paths.app.setup.root,
-        activeSubroutes: true,
-        render: () => <SetUp />,
-        icon: <ToolIcon />,
-        children: [],
-      },
-    ],
-    additionalRoutes: [
-      {
-        path: paths.app.setup.identity,
-        render: () => <RequestIdentityVerification />,
       },
     ],
   });
