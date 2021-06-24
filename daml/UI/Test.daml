@@ -1,6 +1,8 @@
 module UI.Test where
 
 import UI.Onboarding
+import qualified Marketplace.Operator.Role as Operator
+import DA.Set qualified as Set
 
 import Daml.Script
 
@@ -8,23 +10,29 @@ testOnboarding : Script ()
 testOnboarding = do
   operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
   bank <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
+  distribution <- allocatePartyWithHint "AuctionHouse" $ PartyIdHint "AuctionHouse"
   exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
 
-  customer <- allocatePartyWithHint "Customer" $ PartyIdHint "Customer"
+  alice  <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice"
+  bob    <- allocatePartyWithHint "Bob" $ PartyIdHint "Bob"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
-  -- operator `submit` createCmd OperatorOnboarding with ..
+  operatorRoleCId <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
   bank `submit` createCmd ProviderOnboarding with provider = bank; ..
+  distribution `submit` createCmd ProviderOnboarding with provider = distribution; ..
   exchange `submit` createCmd ProviderOnboarding with provider = exchange; ..
 
-  onboardRequestCid <- customer `submit` createCmd InvestorOnboardRequest with custodian = bank; ..
+  let testInvestor = [ OnboardExchange
+                     , OnboardCustody with provider = bank
+                     , OnboardTrading with provider = exchange,     custodian = bank, optTradingAccount = Some "Main"
+                     , OnboardBidding with provider = distribution, custodian = bank, optTradingAccount = Some "Main"
+                     , OnboardAuction with provider = distribution, custodian = bank, optTradingAccount = None, optReceivableAccount = None ]
 
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest --with custodian = bank
+  onboardRequestCid <- alice `submit` createCmd OnboardRequest with instructions = testInvestor; customer = alice; ..
+  onboardRequestCid <- bob `submit` createCmd OnboardRequest with instructions = testInvestor;   customer = bob; ..
 
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
 
-  let testInvestor = [ OnboardCustody with custodian = bank
-                     , OnboardTrading with exchange = exchange, custodian = bank, optTradingAccount = None
-                     , OnboardBidding with distributor = bank, custodian = bank, optTradingAccount = None ]
-
+  -- assert $ accountsWithObservers testInvestor == Map.fromList [("Main", [exchange, bank])]
   return ()
 
