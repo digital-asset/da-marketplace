@@ -8,31 +8,66 @@ import Daml.Script
 
 testOnboarding : Script ()
 testOnboarding = do
-  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
-  bank <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
-  distribution <- allocatePartyWithHint "AuctionHouse" $ PartyIdHint "AuctionHouse"
-  exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+  operator     <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  bank         <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
+  auctionhouse <- allocatePartyWithHint "AuctionHouse" $ PartyIdHint "AuctionHouse"
+  exchange     <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+  issuer       <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
+  ccp          <- allocatePartyWithHint "Ccp" $ PartyIdHint "Ccp"
 
   alice  <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice"
   bob    <- allocatePartyWithHint "Bob" $ PartyIdHint "Bob"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
 
-  operatorRoleCId <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
-  bank `submit` createCmd ProviderOnboarding with provider = bank; ..
-  distribution `submit` createCmd ProviderOnboarding with provider = distribution; ..
-  exchange `submit` createCmd ProviderOnboarding with provider = exchange; ..
+  operatorRoleCId
+    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
 
-  let testInvestor = [ OnboardExchange
-                     , OnboardCustody with provider = bank
-                     , OnboardTrading with provider = exchange,     custodian = bank, optTradingAccount = Some "Main"
-                     , OnboardBidding with provider = distribution, custodian = bank, optTradingAccount = Some "Main"
-                     , OnboardAuction with provider = distribution, custodian = bank, optTradingAccount = None, optReceivableAccount = None ]
+  bank         `submit` createCmd ProviderOnboarding with provider = bank; ..
+  auctionhouse `submit` createCmd ProviderOnboarding with provider = auctionhouse; ..
+  exchange     `submit` createCmd ProviderOnboarding with provider = exchange; ..
+  ccp          `submit` createCmd ProviderOnboarding with provider = ccp; ..
 
-  onboardRequestCid <- alice `submit` createCmd OnboardRequest with instructions = testInvestor; customer = alice; ..
-  onboardRequestCid <- bob `submit` createCmd OnboardRequest with instructions = testInvestor;   customer = bob; ..
-
+  -- Onboard Custodian
+  let instructions = [ OnboardCustodian ]
+  onboardRequestCid <- bank `submit` createCmd OnboardRequest with customer = bank; ..
   operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
 
-  -- assert $ accountsWithObservers testInvestor == Map.fromList [("Main", [exchange, bank])]
+  -- Onboard Distributor
+  let instructions = [ OnboardDistributor ]
+  onboardRequestCid <- auctionhouse `submit` createCmd OnboardRequest with customer = auctionhouse; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
+  -- Onboard Clearinghouse
+  let instructions = [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
+  onboardRequestCid <- ccp `submit` createCmd OnboardRequest with customer = ccp; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
+  -- Onboard Exchange
+  let instructions = [ OnboardExchange
+                     , OnboardMarketClearing with provider = ccp
+                     ]
+  onboardRequestCid <- exchange `submit` createCmd OnboardRequest with customer = exchange; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
+  -- Onboard Investors
+  let instructions = [ OnboardCustody  with provider = bank
+                     , OnboardTrading  with provider = exchange,     custodian = bank, optTradingAccount  = Some "MainAccount"
+                     , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
+                     , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
+                     ]
+  onboardRequestCid <- alice `submit` createCmd OnboardRequest with customer = alice; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
+  onboardRequestCid <- bob `submit` createCmd OnboardRequest with customer = bob; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
+  -- Onboard Investor
+  let instructions = [ OnboardCustody  with provider = bank
+                     , OnboardIssuance with provider = bank,         custodian = bank, optSafekeepingAccount = Some "MainAccount"
+                     , OnboardAuction  with provider = auctionhouse, custodian = bank, optTradingAccount     = Some "MainAccount", optReceivableAccount = None ]
+
+  onboardRequestCid <- issuer `submit` createCmd OnboardRequest with customer = issuer; ..
+  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+
   return ()
 
