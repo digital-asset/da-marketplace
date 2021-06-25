@@ -22,10 +22,15 @@
 
       > :first-child {
         margin-right: $spacing-l;
+        width: 100%;
       }
 
       @media screen and (max-width: 1000px) {
         flex-direction: column;
+
+        .tile .inline {
+          width: 100%;
+        }
       }
     }
   }

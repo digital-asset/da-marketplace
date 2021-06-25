@@ -32,6 +32,11 @@
         border: none;
       }
 
+      &.secondary-smaller {
+        padding: 6px;
+        font-size: 14px;
+      }
+
       &.back-button {
         padding: 6px;
         background-color: transparent;
@@ -54,10 +59,6 @@
       &.secondary {
         background-color: transparent;
         border-color: var(--cool-grey-70);
-      }
-
-      &.warning {
-        border-color: var(--red-50);
       }
 
       &.darken {

@@ -1,9 +1,12 @@
 import React from 'react';
 import { Button, Header } from 'semantic-ui-react';
+import { useHistory } from 'react-router-dom';
 
 import { useLedger, useParty } from '@daml/react';
 import { useStreamQueries } from '../../Main';
-
+import { Role as TradingRole } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Role';
+import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Role';
+import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 import { ServiceKind, useProviderServices } from '../../context/ServicesContext';
 import Tile from '../../components/Tile/Tile';
 import { getAbbreviation } from '../page/utils';
@@ -22,6 +25,8 @@ import { useWellKnownParties } from '@daml/hub-react/lib';
 import { formatCurrency } from '../../util';
 import paths from '../../paths';
 import ServiceRequestMenu from './ServiceRequestMenu';
+import RoleSetUp, { AutomationSetup } from '../../pages/setup/SetUp';
+import OverflowMenu, { OverflowMenuEntry } from '../../pages/page/OverflowMenu';
 
 type DamlHubParty = string;
 function isDamlHubParty(party: string): party is DamlHubParty {
@@ -125,7 +130,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
     return (
       <div className="link">
         {damlHubParty}
-        <Link to={paths.app.setup.identity}>Request Identity Verification</Link>
+        <Link to={paths.app.identity}>Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {
@@ -142,6 +147,8 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
 
 const Landing = () => {
   const party = useParty();
+  const history = useHistory();
+
   const { name } = usePartyName(party);
   const providers = useProviderServices(party);
 
@@ -153,18 +160,26 @@ const Landing = () => {
       .filter(d => d.payload.asset.id.label === 'USD')
       .reduce((sum, deposit) => sum + +deposit.payload.asset.quantity, 0)
   );
+  const tradingRole = useStreamQueries(TradingRole).contracts.find(
+    r => r.payload.provider === party
+  );
+
+  const clearingRole = useStreamQueries(ClearingRole).contracts.find(
+    r => r.payload.provider === party
+  );
+
+  const custodyRole = useStreamQueries(CustodyRole).contracts.find(
+    r => r.payload.provider === party
+  );
 
   return (
     <div className="landing">
       <div className="col col-1">
-        <Tile>
+        <Tile className="profile-tile">
           <div className="profile">
             <div className="profile-name">@{name}</div>
             <ProfileSection name={name} />
           </div>
-        </Tile>
-
-        <Tile>
           <div className="link-tile">
             <div>
               <Header as="h2">Portfolio</Header>
@@ -178,6 +193,41 @@ const Landing = () => {
               </div>
             )}
           </div>
+          <div className="link-tile">
+            <div>
+              <Header as="h2">Market Roles</Header>
+              {(!!custodyRole || !!clearingRole || !!tradingRole) && (
+                <OverflowMenu>
+                  {!!custodyRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Custody Service'}
+                      onClick={() => history.push(paths.app.custody.offer)}
+                    />
+                  )}
+                  {!!clearingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Clearing Service'}
+                      onClick={() => history.push(paths.app.clearingServices.offer)}
+                    />
+                  )}
+                  {!!clearingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Market Clearing Service'}
+                      onClick={() => history.push(paths.app.clearingServices.market.offer)}
+                    />
+                  )}
+                  {!!tradingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Trading Service'}
+                      onClick={() => history.push(paths.app.markets.offer)}
+                    />
+                  )}
+                </OverflowMenu>
+              )}
+              <RoleSetUp />
+            </div>
+          </div>
+          <AutomationSetup />
         </Tile>
       </div>
 

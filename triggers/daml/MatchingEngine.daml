@@ -4,6 +4,7 @@
 module MatchingEngine where
 
 import DA.Action
+import DA.Optional
 import DA.Foldable hiding (elem, null, length)
 import DA.List
 import Daml.Trigger
@@ -15,6 +16,7 @@ import qualified Marketplace.Clearing.Market.Service as MarketClearingService
 import qualified Marketplace.Trading.Matching.Service as Matching
 
 import Utils
+import DA.Finance.Asset (AssetDeposit)
 
 type CurrentOrderId = Int
 
@@ -24,10 +26,12 @@ handleMatching = Trigger
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @ListingService.Service
+                                              , registeredTemplate @AssetDeposit
                                               , registeredTemplate @ListingService.CreateListingRequest
                                               , registeredTemplate @MarketClearingService.Service
                                               , registeredTemplate @Service.CreateOrderRequest
                                               , registeredTemplate @Service.CancelOrderRequest
+                                              , registeredTemplate @Order.FeeSchedule
                                               , registeredTemplate @Order.T ]
   , heartbeat = None
   }
@@ -36,13 +40,26 @@ handleMatchingRule : Party -> TriggerA CurrentOrderId ()
 handleMatchingRule party = do
   debug "Running matching rule..."
 
-  -- Acknowledge all 'Order.Request' and update current ID
+  fees <- query @Order.FeeSchedule
+
+  let currentFee = case fees of
+        [(_, feeSchedule):xs] -> feeSchedule.currentFee.amount
+        _                     -> 0.0
+
+  -- Acknowledge all 'Order.Request' and update current ID                                                                        │
   orderRequests <- query @Service.CreateOrderRequest
-  forA_ orderRequests \(cid,_) -> do
-    currentOrderId <- get
-    emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show currentOrderId
-    debug "Acknowledging order"
-    modify (+1)
+  deposits <- query @AssetDeposit
+  forA_ orderRequests \(cid,or) -> do
+    exchangeFeeAmount <- case or.details.optExchangeFee of
+        Some depositCid -> (.asset.quantity) . fromSomeNote "querying exchange fee" <$> queryContractId depositCid
+        None            -> return 0.0
+    if exchangeFeeAmount < currentFee
+    then void $ emitExerciseCmd cid Service.RejectRequest with errorCode = 790; errorMessage = "Fee requirement not met"
+    else do
+      currentOrderId <- get
+      emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show currentOrderId
+      debug "Acknowledging order"
+      modify (+1)
 
   time <- getTime
   -- Acknowledge all 'Order.CancelRequest'

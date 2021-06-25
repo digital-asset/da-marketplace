@@ -28,9 +28,10 @@ type Props = {
   party: Party;
   custodyServices?: Readonly<CreateEvent<CustodyService>[]> | undefined;
   modal?: boolean;
+  addButton?: boolean;
 };
 
-const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
+const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButton }) => {
   const { getName } = usePartyName(party);
   const ledger = useLedger();
 
@@ -199,6 +200,7 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal }) => {
       onSubmit={() => requestAccount()}
       title="New Account"
       disabled={!canRequest}
+      addButton={addButton}
     >
       {fields}
     </ModalFormErrorHandled>

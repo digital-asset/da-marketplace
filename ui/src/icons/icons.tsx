@@ -383,3 +383,15 @@ export const IconMailLetter = () => {
     </svg>
   );
 };
+
+export const IconChevronDown = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 6.66663L8 10.6666L12 6.66663" stroke="#577FF1" strokeLinecap="round" />
+  </svg>
+);
+
+export const IconChevronUp = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 9.33337L8 5.33337L4 9.33337" stroke="#577FF1" strokeLinecap="round" />
+  </svg>
+);

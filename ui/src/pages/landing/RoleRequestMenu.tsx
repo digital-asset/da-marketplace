@@ -131,14 +131,20 @@ const RoleRequestMenu: React.FC = () => {
   const canRequest = (kind: RoleKind) => !requests.has(kind) && !roles.has(kind);
 
   return (
-    <div className="setup-service">
+    <>
       {canRequest(RoleKind.CUSTODY) && (
-        <Button onClick={() => requestRole(CustodianRequest, RoleKind.CUSTODY)} className="ghost">
+        <Button
+          onClick={() => requestRole(CustodianRequest, RoleKind.CUSTODY)}
+          className="ghost secondary-smaller"
+        >
           <AddPlusIcon /> Add Custodian Role
         </Button>
       )}
       {canRequest(RoleKind.TRADING) && (
-        <Button onClick={() => requestRole(ExchangeRequest, RoleKind.TRADING)} className="ghost">
+        <Button
+          onClick={() => requestRole(ExchangeRequest, RoleKind.TRADING)}
+          className="ghost secondary-smaller"
+        >
           <AddPlusIcon /> Add Exchange Role
         </Button>
       )}
@@ -146,7 +152,7 @@ const RoleRequestMenu: React.FC = () => {
       {canRequest(RoleKind.DISTRIBUTION) && (
         <Button
           onClick={() => requestRole(DistributionRequest, RoleKind.DISTRIBUTION)}
-          className="ghost"
+          className="ghost secondary-smaller"
         >
           <AddPlusIcon /> Add Distribution Role
         </Button>
@@ -155,7 +161,7 @@ const RoleRequestMenu: React.FC = () => {
       {canRequest(RoleKind.SETTLEMENT) && (
         <Button
           onClick={() => requestRole(SettlementRequest, RoleKind.SETTLEMENT)}
-          className="ghost"
+          className="ghost secondary-smaller "
         >
           <AddPlusIcon /> Add Settlement Role
         </Button>
@@ -163,6 +169,7 @@ const RoleRequestMenu: React.FC = () => {
 
       {canRequest(RoleKind.CLEARING) && (
         <Button
+          className="ghost secondary-smaller"
           onClick={() =>
             requestRole(ClearingRequest, RoleKind.CLEARING, {
               ccpAccount: {
@@ -172,12 +179,11 @@ const RoleRequestMenu: React.FC = () => {
               },
             })
           }
-          className="ghost"
         >
           <AddPlusIcon /> Add Clearing Role
         </Button>
       )}
-    </div>
+    </>
   );
 };
 
