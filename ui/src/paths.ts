@@ -21,10 +21,7 @@ const paths = {
     trading: '/app/trading',
     listings: { root: '/app/listings', new: '/app/listings/new' },
     issuance: { root: '/app/issuance', new: '/app/issuance/new' },
-    setup: {
-      root: '/app/setup',
-      identity: '/app/setup/identity',
-    },
+    identity: '/app/identity',
     requests: '/app/requests',
     clearing: {
       root: '/app/clearing',

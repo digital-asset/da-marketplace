@@ -7,6 +7,7 @@ import {
   Order,
   OrderType,
   Side,
+  FeeSchedule,
 } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
 import { CreateEvent } from '@daml/ledger';
@@ -36,16 +37,19 @@ import StripedTable from '../../components/Table/StripedTable';
 import { useHistory } from 'react-router-dom';
 import { usePartyName } from '../../config';
 import paths from '../../paths';
+import { formatCurrency } from '../../util';
 
 type Props = {
   cid: string;
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
+  feeSchedules: Readonly<CreateEvent<FeeSchedule, any, any>[]>;
 };
 
 export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   services,
   cid,
   listings,
+  feeSchedules,
 }: ServicePageProps<Service> & Props) => {
   const history = useHistory();
 
@@ -118,6 +122,8 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const ledger = useLedger();
   const clientServices = services.filter(s => s.payload.customer === party);
   const listing = listings.find(c => c.contractId === cid);
+  const feeSchedule = feeSchedules.find(fs => fs.payload.provider === listing?.payload.provider);
+  const feeAmount = Number(feeSchedule?.payload.currentFee.amount) || 0.0;
   const { getName } = usePartyName(party);
 
   const assets = useStreamQueries(AssetDeposit).contracts;
@@ -161,6 +167,10 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const quotedAssets = available.filter(
     c => c.payload.asset.id.label === listing.payload.quotedAssetId.label
   );
+
+  const feeCurrency = feeSchedule?.payload.currentFee.currency.label || 'USD';
+  const feeAssets = available.filter(c => c.payload.asset.id.label === feeCurrency);
+
   const tradedAssetsTotal = tradedAssets.reduce(
     (acc, c) => acc + parseFloat(c.payload.asset.quantity),
     0
@@ -245,22 +255,38 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
         timeInForce === 'GTD'
           ? { tag: 'GTD', value: { expiryDate: expiryDate.toString() } }
           : { tag: timeInForce, value: {} },
+      optExchangeFee: null,
     };
     clearOrderForm();
     if (listing.payload.listingType.tag === 'Collateralized') {
       const depositCid = isBuy
         ? await getAsset(quotedAssets, price * quantity)
         : await getAsset(tradedAssets, quantity);
-
       if (!depositCid) return;
+      let optExchangeFee = null;
+      if (feeAmount > 0) {
+        const feeAssets = await ledger
+          .query(AssetDeposit)
+          .then(ds =>
+            ds.filter(
+              ad =>
+                ad.contractId !== depositCid &&
+                ad.payload.asset.id.label === feeCurrency &&
+                ad.payload.account.id.label === service.payload.tradingAccount.id.label
+            )
+          );
+        optExchangeFee = await getAsset(feeAssets, feeAmount);
+      }
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
-        details,
+        details: { ...details, optExchangeFee },
         collateral: { tag: 'Collateral', value: depositCid },
       });
     } else {
       const clearinghouse = listing.payload.listingType.value.clearinghouse;
+      const optExchangeFee = feeAmount > 0 ? await getAsset(feeAssets, feeAmount) : null;
+
       await ledger.exercise(Service.RequestCreateOrder, service.contractId, {
-        details,
+        details: { ...details, optExchangeFee },
         collateral: { tag: 'Cleared', value: { clearinghouse } },
       });
     }
@@ -473,6 +499,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
                 <input />
                 <Label>{listing.payload.quotedAssetId.label}</Label>
               </Form.Input>
+              <Form.Input label="Fee" disabled={true} value={formatCurrency(feeAmount)} />
               <Button className="ghost" type="submit" disabled={(isLimit && !price) || !quantity}>
                 {isBuy ? 'Buy' : 'Sell'} {listing.payload.tradedAssetId.label}
               </Button>

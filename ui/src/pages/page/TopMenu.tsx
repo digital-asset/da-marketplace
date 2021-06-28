@@ -130,7 +130,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
             disabled={!activeMenuTitle}
             onClick={history.goBack}
           >
-            <Header className="bold icon-header" as="h1">
+            <Header className="bold" as="h3">
               <Header.Content>{contractTitle || title}</Header.Content>
             </Header>
           </Menu.Item>

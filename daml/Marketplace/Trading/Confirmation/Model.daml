@@ -2,13 +2,13 @@ module Marketplace.Trading.Confirmation.Model where
 
 import DA.List (head)
 import DA.Foldable (forA_)
-import DA.Finance.Asset (AssetDeposit_Split(..))
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
 import DA.Finance.Types (Account(..))
 import DA.Finance.Utils (fetchAndArchive)
 import DA.Set (Set, insert)
 import Marketplace.Settlement.Model qualified as Settlement
--- import Marketplace.Trading.Listing (Listing)
 import Marketplace.Trading.Model qualified as Order
+import DA.Optional.Total (optionalToList)
 
 -- TODO: Try to turn this into a service
 
@@ -80,7 +80,7 @@ template Confirmation
           -- TODO: Check that price matches limit order price, quantity is less than order qty, rounding, etc
           -- paymentCurrencyId <- (.quotedAssetId) . snd <$> fetchByKey @Listing (operator, provider, buyOrder.details.symbol)
 
-          [payment, delivery] <- forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
+          details <- concat <$> forA [(buyOrder, buyer, seller), (sellOrder, seller, buyer)] (\(order, party, counterparty) -> do
             let
               isPartialFill = execution.quantity < order.remainingQuantity
               executions = execution :: order.executions
@@ -91,17 +91,40 @@ template Confirmation
               getAllocationAccount = getAccount accounts (.allocationAccount)
               getTradingAccount    = getAccount accounts (.tradingAccount)
 
-            let (Order.Collateral depositCid) = order.collateral
-            depositCid <- if isPartialFill
-              then do
-                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
-                create order with executions, remainingQuantity, collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
-                pure depositCid
-              else do
-                create order with executions, remainingQuantity, status = Order.FullyExecuted
-                pure depositCid
+            let createFeeDetails : ContractId AssetDeposit -> Update Settlement.SettlementDetails
+                createFeeDetails depositCid = do
+                  feeAccount <- (.feeAccount) . snd <$> fetchByKey @Order.FeeSchedule (operator, provider)
+                  pure $ Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = feeAccount
 
-            pure Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
+            let (Order.Collateral depositCid) = order.collateral
+            (depositCid, optFeeDetails) <- if isPartialFill
+              then do
+                (newOptExchangeFee, feeDetails) <- case order.details.optExchangeFee of
+                  None               -> return (None, None)
+                  Some feeDepositCid -> do
+                    feeQuantity <- (.asset.quantity) <$> fetch feeDepositCid
+                    let feeToTake = roundBankers 2 $ feeQuantity * (execution.quantity / order.remainingQuantity)
+                    [feeDepositCid, remainingFeeDepositCid] <- exercise feeDepositCid AssetDeposit_Split with quantities = [feeToTake]
+                    feeDetails <- createFeeDetails feeDepositCid
+                    return $ (Some remainingFeeDepositCid, Some feeDetails)
+
+                (depositCid :: depositRemainingCid :: _) <- exercise depositCid AssetDeposit_Split with ..
+                create order with
+                  executions, remainingQuantity
+                  collateral = Order.Collateral depositRemainingCid, status = Order.PartiallyExecuted
+                  details = order.details with optExchangeFee = newOptExchangeFee
+                pure (depositCid, feeDetails)
+              else do
+                optFeeDetails <- case order.details.optExchangeFee of
+                  Some feeCid -> Some <$> createFeeDetails feeCid
+                  _           -> return None
+                create order with
+                  executions, remainingQuantity
+                  status = Order.FullyExecuted, details = order.details with optExchangeFee = None
+                pure (depositCid, optFeeDetails)
+
+            let tradeDetails = Settlement.SettlementDetails with depositCid; senderAccount = getAllocationAccount party; receiverAccount = getTradingAccount counterparty
+            pure $ optionalToList optFeeDetails <> [tradeDetails]
             )
 
           create Settlement.SettlementInstruction with ..

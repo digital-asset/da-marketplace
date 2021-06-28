@@ -130,7 +130,7 @@ const ProfileSection: React.FC<{ name: string }> = ({ name }) => {
     return (
       <div className="link">
         {damlHubParty}
-        <Link to={paths.app.setup.identity}>Request Identity Verification</Link>
+        <Link to={paths.app.identity}>Request Identity Verification</Link>
       </div>
     );
   } else if (partyIdentity) {
@@ -196,32 +196,34 @@ const Landing = () => {
           <div className="link-tile">
             <div>
               <Header as="h2">Market Roles</Header>
-              <OverflowMenu>
-                {!!custodyRole && (
-                  <OverflowMenuEntry
-                    label={'Offer Custody Service'}
-                    onClick={() => history.push(paths.app.custody.offer)}
-                  />
-                )}
-                {!!clearingRole && (
-                  <OverflowMenuEntry
-                    label={'Offer Clearing Service'}
-                    onClick={() => history.push(paths.app.clearingServices.offer)}
-                  />
-                )}
-                {!!clearingRole && (
-                  <OverflowMenuEntry
-                    label={'Offer Market Clearing Service'}
-                    onClick={() => history.push(paths.app.clearingServices.market.offer)}
-                  />
-                )}
-                {!!tradingRole && (
-                  <OverflowMenuEntry
-                    label={'Offer Trading Service'}
-                    onClick={() => history.push(paths.app.markets.offer)}
-                  />
-                )}
-              </OverflowMenu>
+              {(!!custodyRole || !!clearingRole || !!tradingRole) && (
+                <OverflowMenu>
+                  {!!custodyRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Custody Service'}
+                      onClick={() => history.push(paths.app.custody.offer)}
+                    />
+                  )}
+                  {!!clearingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Clearing Service'}
+                      onClick={() => history.push(paths.app.clearingServices.offer)}
+                    />
+                  )}
+                  {!!clearingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Market Clearing Service'}
+                      onClick={() => history.push(paths.app.clearingServices.market.offer)}
+                    />
+                  )}
+                  {!!tradingRole && (
+                    <OverflowMenuEntry
+                      label={'Offer Trading Service'}
+                      onClick={() => history.push(paths.app.markets.offer)}
+                    />
+                  )}
+                </OverflowMenu>
+              )}
               <RoleSetUp />
             </div>
           </div>
