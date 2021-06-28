@@ -67,6 +67,7 @@ tradingEndToEndTest = do
             asset = tsla with quantity = 200.0
             side = Order.Sell
             timeInForce = Order.GTC
+            optExchangeFee = None
             orderType = Order.Limit with price = 100.0
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
@@ -79,6 +80,7 @@ tradingEndToEndTest = do
             listingId
             asset = shareAsset
             side = Order.Buy
+            optExchangeFee = None
             timeInForce = Order.GTC
             orderType = Order.Limit with price = 100.0
   checkOrderStatusMatches bobOrderCid bob.customer Order.New

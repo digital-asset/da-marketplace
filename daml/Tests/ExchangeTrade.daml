@@ -61,6 +61,7 @@ setup = do
           id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
           listingId
           asset = shareAsset
+          optExchangeFee = None
           orderType = Order.Limit with
             price = 100.0
           side = Order.Buy
@@ -75,6 +76,7 @@ setup = do
           id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
           listingId
           asset = shareAsset
+          optExchangeFee = None
           orderType = Order.Limit with
             price = 100.0
           side = Order.Sell
@@ -147,6 +149,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Buy
           timeInForce = Order.GTC
+          optExchangeFee = None
         collateral = Order.Collateral aliceDepositCid
 
   -- > Bob places 4 offers for his shares
@@ -161,6 +164,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
+          optExchangeFee = None
         collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
@@ -174,6 +178,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
+          optExchangeFee = None
         collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: bobRemainingDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
@@ -187,6 +192,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
+          optExchangeFee = None
         collateral = Order.Collateral bobDepositCid
 
   ( bobDepositCid :: _ ) <- bob.customer `submit` do exerciseCmd bobRemainingDepositCid AssetDeposit_Split with quantities = [50.0]
@@ -200,6 +206,7 @@ partialExecutionsTest = do
           orderType = Order.Limit with price = 100.0
           side = Order.Sell
           timeInForce = Order.GTC
+          optExchangeFee = None
         collateral = Order.Collateral bobDepositCid
 
   -- Exchange matches the the buy order to the 4 sell orders

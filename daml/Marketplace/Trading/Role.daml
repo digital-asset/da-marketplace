@@ -1,9 +1,12 @@
 module Marketplace.Trading.Role where
 
+import DA.Finance.Types
+
 import Marketplace.Settlement.Service qualified as Settlement
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Model qualified as Model
 import Marketplace.Utils
 import DA.Set (Set)
 
@@ -57,6 +60,15 @@ template Role
         do
           archive listingServiceCid
 
+      nonconsuming CreateFeeSchedule : ContractId Model.FeeSchedule
+        with
+          currency : Id
+          feeAccount : Account
+          quantity : Decimal
+        do
+          time <- getTime
+          create Model.FeeSchedule with currentFee = Model.Fee quantity currency time; pastFees = []; ..
+
     controller operator can
       TerminateRole : ()
         do
@@ -77,6 +89,7 @@ template Offer
           settlementCid <- createOrLookup Settlement.Service with ..
           listingCid    <- createOrLookup Listing.Service with customer = provider, ..
           roleCid       <- createOrLookup Role with ..
+
           return (roleCid, matchingCid, listingCid, settlementCid)
 
       Decline : ()
