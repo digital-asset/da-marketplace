@@ -1,7 +1,6 @@
 import React from 'react';
 import { Route, RouteProps, Switch, useLocation, withRouter } from 'react-router-dom';
 import { SidebarEntry } from './components/Sidebar/SidebarEntry';
-import { Requests as CustodyRequests } from './pages/custody/Requests';
 import { useParty } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 import { Service as ClearingService } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service/';
@@ -14,7 +13,6 @@ import { Role as CustodyRole } from '@daml.js/da-marketplace/lib/Marketplace/Cus
 import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Role';
 
 import { Auctions } from './pages/distribution/auction/Auctions';
-import { Requests as AuctionRequests } from './pages/distribution/auction/Requests';
 import Assets from './pages/custody/Assets';
 import { New as NewAuction } from './pages/distribution/auction/New';
 import { BiddingAuction } from './pages/distribution/bidding/Auction';
@@ -38,7 +36,6 @@ import {
   MegaphoneIcon,
   OrdersIcon,
   WalletIcon,
-  IconMailLetter,
 } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { ClearingMembers } from './pages/clearing/Members';
@@ -318,8 +315,7 @@ const AppComponent = () => {
     ],
   });
 
-  const notifications = useAllNotifications(party);
-  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+  const allNotifications = useAllNotifications(party);
 
   entries.push({
     displayEntry: () => true,
@@ -327,7 +323,7 @@ const AppComponent = () => {
     additionalRoutes: [
       {
         path: paths.app.notifications,
-        render: () => <Notifications notifications={notifications} />,
+        render: () => <Notifications notifications={allNotifications} />,
       },
       {
         path: paths.app.identity,
@@ -428,25 +424,6 @@ const AppComponent = () => {
     ],
   });
 
-  entries.push({
-    displayEntry: () => custodyService.length > 0 || auctionCustomer.length > 0,
-    sidebar: [
-      {
-        label: 'Requests',
-        groupBy: 'Manage',
-        path: paths.app.requests,
-        render: () => (
-          <>
-            {custodyService.length > 0 && <CustodyRequests services={custodyService} />}
-            {auctionCustomer.length > 0 && <AuctionRequests services={auctionService} />}
-          </>
-        ),
-        icon: <IconMailLetter />,
-        children: [],
-      },
-    ],
-  });
-
   const entriesToDisplay = entries.filter(e => e.displayEntry()).flatMap(e => e.sidebar);
   const additionRouting: RouteProps[] = _.compact(
     entries.filter(e => e.displayEntry()).flatMap(e => e.additionalRoutes)
@@ -476,7 +453,6 @@ const AppComponent = () => {
         )
       }
       topMenuButtons={currentEntry && currentEntry.topMenuButtons}
-      showNotificationAlert={notifCount > 0}
     >
       {servicesLoading ? (
         <div className="page-loading">

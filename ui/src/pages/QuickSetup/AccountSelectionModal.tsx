@@ -157,6 +157,14 @@ const AccountSelectionModal: React.FC<Props> = ({
       </Modal.Content>
       <Modal.Actions>
         <Button
+          disabled={disabled}
+          content="Submit"
+          labelPosition="right"
+          icon="checkmark"
+          type="submit"
+          positive
+        />
+        <Button
           className="ghost warning"
           color="black"
           onClick={() => {
@@ -166,14 +174,6 @@ const AccountSelectionModal: React.FC<Props> = ({
         >
           Cancel
         </Button>
-        <Button
-          disabled={disabled}
-          content="Submit"
-          labelPosition="right"
-          icon="checkmark"
-          type="submit"
-          positive
-        />
       </Modal.Actions>
     </Modal>
   );
