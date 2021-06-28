@@ -20,7 +20,7 @@ import DA.Finance.Types
 import DA.Text qualified as T
 import DA.Set (Set)
 import DA.Set qualified as Set
-import DA.Foldable (mapA_)
+import DA.Foldable (mapA_, forA_)
 
 import DA.Map (Map)
 import DA.Map qualified as Map
@@ -52,17 +52,13 @@ import DA.Functor (void)
     - Offer self as Issuer
     - Create Asset X
 -}
--- -- |List of accounts needed for this 'OnboardingInstruction', 'None' will create an
--- -- account with a default name.
--- accounts : OnboardingInstruction -> [OnboardingAccount]
--- accounts (OnboardTrading c _ ta)    = map (OnboardingAccount c) $ catOptionals [ta]
--- accounts (OnboardAuction c _ ta ra) = [ta, ra]
--- accounts (OnboardBidding c _ ta)    = [ta]
--- accounts _                          = []
---
+
+requestFor : Party -> [OnboardingInstruction] -> (Party, [OnboardingInstruction])
+requestFor party is = (party, is)
 
 handleOnboardingInstruction : Party -> Party -> Map OnboardingAccount Account -> OnboardingInstruction -> Update ()
 handleOnboardingInstruction operator customer mp ins = case ins of
+
     OnboardExchange    -> do
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferExchangeRole with provider = customer
       exercise offerCid Exchange.Accept
@@ -191,14 +187,16 @@ data OnboardingInstruction
   | OnboardDistributor
   | OnboardCustodian
   | OnboardClearinghouse with custodian : Party, optClearingAccount : Optional Text
-  | OnboardCustody with provider : Party
-  | OnboardTrading with provider : Party, custodian : Party, optTradingAccount : Optional Text
   | OnboardMarketClearing with provider : Party
-  | OnboardClearing with provider : Party, custodian : Party, optClearingAccount : Optional Text
+
+  | OnboardCustody  with provider : Party
+  | OnboardTrading  with provider : Party, custodian : Party, optTradingAccount     : Optional Text
+  | OnboardClearing with provider : Party, custodian : Party, optClearingAccount    : Optional Text
   | OnboardIssuance with provider : Party, custodian : Party, optSafekeepingAccount : Optional Text
-  | OnboardAuction with provider : Party, custodian : Party, optTradingAccount : Optional Text, optReceivableAccount : Optional Text
-  | OnboardBidding with provider : Party, custodian : Party, optTradingAccount: Optional Text
-  deriving (Show, Eq)
+  | OnboardAuction  with provider : Party, custodian : Party, optTradingAccount     : Optional Text, optReceivableAccount : Optional Text
+  | OnboardBidding  with provider : Party, custodian : Party, optTradingAccount     : Optional Text
+
+  deriving (Show, Eq, Ord)
 
 -- |List of observers necessary to be on accounts created for this 'OnboardingInstruction'
 accountObservers : OnboardingInstruction -> [Party]
@@ -212,11 +210,6 @@ accountObservers _                        = []
 -- |List of accounts needed for this 'OnboardingInstruction', 'None' will create an
 -- account with a default name.
 accounts : OnboardingInstruction -> [OnboardingAccount]
--- accounts (OnboardTrading c _ ta)    = map (OnboardingAccount c) $ [fromOptional "Exchange-TradingAccount" ta]
--- accounts (OnboardAuction c _ ta ra) = map (OnboardingAccount c) $ [fromOptional "Auction-TradingAccount" ta
---                                                                   ,fromOptional "Auction-ReceivableAccount" ra]
--- accounts (OnboardBidding c _ ta)    = map (OnboardingAccount c) $ [fromOptional "Bidding-TradingAccount" ta]
--- accounts _                          = []
 
 accounts (OnboardClearinghouse c ca) = map (OnboardingAccount c) $ catOptionals [ca]
 accounts (OnboardClearing _ c ca)    = map (OnboardingAccount c) $ catOptionals [ca]
@@ -258,6 +251,13 @@ collectSignatures operator (party::parties) cid
   = exerciseByKey @ProviderOnboarding (operator,party) ProviderOnboarding_SignCustomer with requestCid = cid
       >>= collectSignatures operator parties
 
+collectPartySignatures : Party -> [Party] -> ContractId OnboardCustomer -> Update (ContractId OnboardCustomer)
+collectPartySignatures _        []               cid = return cid
+collectPartySignatures operator (party::parties) cid
+  = exerciseByKey @PartyOnboarding (operator,party) PartyOnboarding_Sign with requestCid = cid
+      >>= collectSignatures operator parties
+
+
 template OnboardRequest
   with
     customer : Party
@@ -290,7 +290,6 @@ template OnboardCustomer
         do
           -- Create all necessary accounts
           let neededAccounts = accountsWithObservers instructions
-          debug neededAccounts
           accs <- Map.fromList <$> forA (Map.toList neededAccounts) (\(oa@(OnboardingAccount c nm),obs) -> do
               custodyServiceCid <- createOrLookup Custody.Service with provider = c; ..
               let accountId = Id with
@@ -318,6 +317,23 @@ template OnboardCustomer
       do
         create this with signed = Set.insert ctrl signed
 
+template PartyOnboarding
+  with
+    party : Party
+    operator : Party
+  where
+    signatory party
+    key (operator, party) : (Party, Party)
+    maintainer key._2
+
+    controller operator can
+      nonconsuming PartyOnboarding_Sign : ContractId OnboardCustomer
+        with
+          requestCid : ContractId OnboardCustomer
+        do
+          exercise requestCid OnboardCustomer_Sign with ctrl = party
+
+
 template ProviderOnboarding
   with
     provider : Party
@@ -340,12 +356,22 @@ template OperatorOnboarding
   where
     signatory operator
 
-    -- -- controller operator can
-    -- nonconsuming choice OnboardCustodian : ContractId ProviderOnboarding
-    --   with
-    --     custodian : Party
-    --   controller custodian
-    --   do create ProviderOnboarding with provider = custodian; ..
-    --
+    controller operator can
+      nonconsuming OperatorOnboard_OnboardAll : ()
+        with
+          instructions : [(Party, [OnboardingInstruction])]
+        do
+          forA_ instructions (\(p, is) -> exercise self OperatorOnboard_Onboard with party = p; instructions = is)
 
+      nonconsuming OperatorOnboard_Onboard : ()
+        with
+          party : Party
+          instructions : [OnboardingInstruction]
+        do
+          let signaturesNeeded = party :: dedup (concatMap getSignaturesNeeded instructions)
+          onboardCid <- create OnboardCustomer with signed = Set.fromList [operator]; customer = party; ..
+          onboardCid <- collectPartySignatures operator signaturesNeeded onboardCid
+          exercise onboardCid OnboardCustomer_Finish
+          exercise onboardCid OnboardCustomer_Archive with ctrl = operator
 
+          return ()

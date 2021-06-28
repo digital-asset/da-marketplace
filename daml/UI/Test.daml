@@ -6,48 +6,118 @@ import DA.Set qualified as Set
 
 import Daml.Script
 
-testOnboarding : Script ()
-testOnboarding = do
-  operator     <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
-  bank         <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
+data Parties = Parties with
+    operator : Party
+    public : Party
+    bank : Party
+    auctionhouse : Party
+    exchange : Party
+    issuer :  Party
+    ccp : Party
+    alice : Party
+    bob : Party
+  deriving (Show, Eq)
+
+setupParties : Script Parties
+setupParties = do
+  operator     <- allocatePartyWithHint "Operator"     $ PartyIdHint "Operator"
+  bank         <- allocatePartyWithHint "Bank"         $ PartyIdHint "Bank"
   auctionhouse <- allocatePartyWithHint "AuctionHouse" $ PartyIdHint "AuctionHouse"
-  exchange     <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
-  issuer       <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
-  ccp          <- allocatePartyWithHint "Ccp" $ PartyIdHint "Ccp"
+  exchange     <- allocatePartyWithHint "Exchange"     $ PartyIdHint "Exchange"
+  issuer       <- allocatePartyWithHint "Issuer"       $ PartyIdHint "Issuer"
+  ccp          <- allocatePartyWithHint "Ccp"          $ PartyIdHint "Ccp"
 
-  alice  <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice"
-  bob    <- allocatePartyWithHint "Bob" $ PartyIdHint "Bob"
+  alice  <- allocatePartyWithHint "Alice"  $ PartyIdHint "Alice"
+  bob    <- allocatePartyWithHint "Bob"    $ PartyIdHint "Bob"
   public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
-
-  operatorRoleCId
-    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
 
   bank         `submit` createCmd ProviderOnboarding with provider = bank; ..
   auctionhouse `submit` createCmd ProviderOnboarding with provider = auctionhouse; ..
   exchange     `submit` createCmd ProviderOnboarding with provider = exchange; ..
   ccp          `submit` createCmd ProviderOnboarding with provider = ccp; ..
 
+  bank         `submit` createCmd PartyOnboarding with party = bank; ..
+  auctionhouse `submit` createCmd PartyOnboarding with party = auctionhouse; ..
+  exchange     `submit` createCmd PartyOnboarding with party = exchange; ..
+  ccp          `submit` createCmd PartyOnboarding with party = ccp; ..
+
+  alice        `submit` createCmd PartyOnboarding with party = alice; ..
+  bob          `submit` createCmd PartyOnboarding with party = bob; ..
+  issuer       `submit` createCmd PartyOnboarding with party = issuer; ..
+
+  return Parties with ..
+
+testListOnboarding : Script ()
+testListOnboarding = do
+
+  Parties{..} <- setupParties
+
+  operatorRoleCId
+    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
+
+  ooCid <- operator `submit` createCmd OperatorOnboarding with ..
+
+  let investorInstructions =
+        [ OnboardCustody  with provider = bank
+        , OnboardTrading  with provider = exchange,     custodian = bank, optTradingAccount  = Some "MainAccount"
+        , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
+        , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
+        ]
+
+  let issuerInstructions =
+        [ OnboardCustody  with provider = bank
+        , OnboardIssuance with provider = bank,         custodian = bank, optSafekeepingAccount = Some "MainAccount"
+        , OnboardAuction  with provider = auctionhouse, custodian = bank, optTradingAccount     = Some "MainAccount", optReceivableAccount = None
+        ]
+
+  let exchangeInstructions =
+        [ OnboardExchange
+        , OnboardMarketClearing with provider = ccp
+        ]
+
+  let partyInstructions =
+        [
+          requestFor bank         [ OnboardCustodian ]
+        , requestFor auctionhouse [ OnboardDistributor ]
+        , requestFor ccp          [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
+        , requestFor exchange     [ OnboardExchange, OnboardMarketClearing with provider = ccp ]
+
+        , requestFor alice investorInstructions
+        , requestFor bob investorInstructions
+
+        , requestFor issuer issuerInstructions
+        ]
+
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardAll with instructions = partyInstructions
+  return ()
+
+
+testOnboarding : Script ()
+testOnboarding = do
+  Parties{..} <- setupParties
+
+  operatorRoleCId
+    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
+
+  ooCid <- operator `submit` createCmd OperatorOnboarding with ..
+
   -- Onboard Custodian
   let instructions = [ OnboardCustodian ]
-  onboardRequestCid <- bank `submit` createCmd OnboardRequest with customer = bank; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bank; ..
 
   -- Onboard Distributor
   let instructions = [ OnboardDistributor ]
-  onboardRequestCid <- auctionhouse `submit` createCmd OnboardRequest with customer = auctionhouse; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = auctionhouse; ..
 
   -- Onboard Clearinghouse
   let instructions = [ OnboardClearinghouse with custodian = bank, optClearingAccount = None ]
-  onboardRequestCid <- ccp `submit` createCmd OnboardRequest with customer = ccp; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = ccp; ..
 
   -- Onboard Exchange
   let instructions = [ OnboardExchange
                      , OnboardMarketClearing with provider = ccp
                      ]
-  onboardRequestCid <- exchange `submit` createCmd OnboardRequest with customer = exchange; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = exchange; ..
 
   -- Onboard Investors
   let instructions = [ OnboardCustody  with provider = bank
@@ -55,19 +125,20 @@ testOnboarding = do
                      , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
                      , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
                      ]
-  onboardRequestCid <- alice `submit` createCmd OnboardRequest with customer = alice; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bob; ..
 
-  onboardRequestCid <- bob `submit` createCmd OnboardRequest with customer = bob; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
-
-  -- Onboard Investor
+  -- Onboard Issuer
   let instructions = [ OnboardCustody  with provider = bank
                      , OnboardIssuance with provider = bank,         custodian = bank, optSafekeepingAccount = Some "MainAccount"
                      , OnboardAuction  with provider = auctionhouse, custodian = bank, optTradingAccount     = Some "MainAccount", optReceivableAccount = None ]
-
-  onboardRequestCid <- issuer `submit` createCmd OnboardRequest with customer = issuer; ..
-  operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = issuer; ..
 
   return ()
 
+  -- let instructions = [ OnboardExchange
+  --                    , OnboardMarketClearing with provider = ccp
+  --                    ]
+  -- onboardRequestCid <- exchange `submit` createCmd OnboardRequest with customer = exchange; ..
+  -- operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
+  --
