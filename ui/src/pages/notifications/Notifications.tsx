@@ -81,8 +81,6 @@ import {
 
 import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 
-import { useParty } from '@daml/react';
-
 import { ServiceKind } from '../../context/ServicesContext';
 import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
@@ -104,7 +102,8 @@ import {
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { useVerifiedParties, usePartyName } from '../../config';
-import { createDropdownProp, partitionArray } from '../common';
+import { createDropdownProp } from '../common';
+import _ from 'lodash';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -151,29 +150,29 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
 
   const { getName } = usePartyName(party);
 
-  const [inboundOpenRequests, outboundOpenRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...openRequests]
+  const [inboundOpenRequests, outboundOpenRequests] = _.partition(
+    [...openRequests],
+    c => party === c.payload.provider
   );
-  const [inboundCloseRequests, outboundCloseRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...closeRequests]
+  const [inboundCloseRequests, outboundCloseRequests] = _.partition(
+    [...closeRequests],
+    c => party === c.payload.provider
   );
-  const [inboundCreditRequests, outboundCreditRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...creditRequests]
+  const [inboundCreditRequests, outboundCreditRequests] = _.partition(
+    [...creditRequests],
+    c => party === c.payload.provider
   );
-  const [inboundDebitRequests, outboundDebitRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...debitRequests]
+  const [inboundDebitRequests, outboundDebitRequests] = _.partition(
+    [...debitRequests],
+    c => party === c.payload.provider
   );
-  const [inboundTransferRequests, outboundTransferRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...transferRequests]
+  const [inboundTransferRequests, outboundTransferRequests] = _.partition(
+    [...transferRequests],
+    c => party === c.payload.provider
   );
-  const [inboundAuctionRequests, outboundAuctionRequests] = partitionArray(
-    c => party === c.payload.provider,
-    [...auctionRequests]
+  const [inboundAuctionRequests, outboundAuctionRequests] = _.partition(
+    [...auctionRequests],
+    c => party === c.payload.provider
   );
 
   const getDebitDepositDetail = (
@@ -885,10 +884,7 @@ type Props = {
 };
 
 const Notifications: React.FC<Props> = ({ notifications }) => {
-  const party = useParty();
   const count = notifications.reduce((count, ns) => count + ns.contracts.length, 0);
-  const auctionService = useStreamQueries(AuctionService).contracts;
-  const auctionCustomer = auctionService.filter(cs => cs.payload.customer === party);
 
   return (
     <div className="notifications">

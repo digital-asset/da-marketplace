@@ -18,7 +18,6 @@ import {
   OfferAccepts,
   OfferDeclineChoice,
   OfferTemplates,
-  ProcessRequestChoice,
   RequestApproveChoice,
   RequestApproveFields,
   RequestApproves,

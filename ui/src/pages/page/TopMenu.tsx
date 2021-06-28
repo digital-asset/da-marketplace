@@ -9,7 +9,6 @@ import classNames from 'classnames';
 import { signOut, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
 import { usePartyName } from '../../config';
-import { partitionArray } from '../../pages/common';
 
 import { useParty } from '@daml/react';
 
@@ -22,6 +21,7 @@ import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { useAllNotifications } from '../../pages/notifications/Notifications';
+import _ from 'lodash';
 
 type Props = {
   title?: React.ReactElement;
@@ -76,9 +76,9 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     ?.payload.listingId.label;
 
   const allNotifications = useAllNotifications(party);
-  const [notifications, pendingNotifications] = partitionArray(
-    n => n.kind !== 'Pending',
-    allNotifications
+  const [notifications, pendingNotifications] = _.partition(
+    allNotifications,
+    n => n.kind !== 'Pending'
   );
   const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
   const pendingNotifCount = pendingNotifications.reduce(
