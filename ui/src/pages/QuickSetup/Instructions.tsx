@@ -36,7 +36,6 @@ import Widget from '../../components/Widget/Widget';
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
   SELECT_ROLES = 'select-roles',
-  TEST_INSTRUCTIONS = 'test-instructions',
   REQUEST_SERVICES = 'request-services',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',

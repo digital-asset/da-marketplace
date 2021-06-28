@@ -1,5 +1,8 @@
 module UI.Test where
 
+import qualified Marketplace.Regulator.Service as RegulatorService
+import qualified Marketplace.Regulator.Role as Regulator
+
 import UI.Onboarding
 import qualified Marketplace.Operator.Role as Operator
 import DA.Set qualified as Set
@@ -18,32 +21,59 @@ data Parties = Parties with
     bob : Party
   deriving (Show, Eq)
 
+setupTest : Script ()
+setupTest = do
+  Parties{..} <- setupParties
+  ooCid <- operator `submit` createCmd OperatorOnboarding with ..
+
+  return ()
+
+setupParty : Party -> Party -> Text -> Script Party
+setupParty operator public name = do
+
+  party <- allocatePartyWithHint name $ PartyIdHint name
+  party `submit` createCmd PartyOnboarding with ..
+
+  (Some (regulatorRoleCid,_))     <- queryContractKey @Regulator.Role operator (operator, operator)
+  regulatorServiceOfferCid        <- submit operator  do exerciseCmd regulatorRoleCid Regulator.OfferRegulatorService with customer = party
+  regulatorServiceCid             <- submit party  do exerciseCmd regulatorServiceOfferCid RegulatorService.Accept
+  identityVerificationRequestCid  <- submit party  do exerciseCmd regulatorServiceCid RegulatorService.RequestIdentityVerification with legalName = show party; location = show party <> " Location"; observers = [public]
+  verifiedIdentity                <- submit operator  do exerciseCmd regulatorServiceCid RegulatorService.VerifyIdentity with ..
+  return party
+
 setupParties : Script Parties
 setupParties = do
-  operator     <- allocatePartyWithHint "Operator"     $ PartyIdHint "Operator"
-  bank         <- allocatePartyWithHint "Bank"         $ PartyIdHint "Bank"
-  auctionhouse <- allocatePartyWithHint "AuctionHouse" $ PartyIdHint "AuctionHouse"
-  exchange     <- allocatePartyWithHint "Exchange"     $ PartyIdHint "Exchange"
-  issuer       <- allocatePartyWithHint "Issuer"       $ PartyIdHint "Issuer"
-  ccp          <- allocatePartyWithHint "Ccp"          $ PartyIdHint "Ccp"
+  operator     <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  public     <- allocatePartyWithHint "Public"     $ PartyIdHint "Public"
 
-  alice  <- allocatePartyWithHint "Alice"  $ PartyIdHint "Alice"
-  bob    <- allocatePartyWithHint "Bob"    $ PartyIdHint "Bob"
-  public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
+  operatorRoleCid
+    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
 
-  bank         `submit` createCmd ProviderOnboarding with provider = bank; ..
-  auctionhouse `submit` createCmd ProviderOnboarding with provider = auctionhouse; ..
-  exchange     `submit` createCmd ProviderOnboarding with provider = exchange; ..
-  ccp          `submit` createCmd ProviderOnboarding with provider = ccp; ..
+  regulatorRoleOfferCid     <- submit operator  do exerciseCmd operatorRoleCid Operator.OfferRegulatorRole with provider = operator
+  regulatorRoleCid          <- submit operator  do exerciseCmd regulatorRoleOfferCid Regulator.Accept
 
-  bank         `submit` createCmd PartyOnboarding with party = bank; ..
-  auctionhouse `submit` createCmd PartyOnboarding with party = auctionhouse; ..
-  exchange     `submit` createCmd PartyOnboarding with party = exchange; ..
-  ccp          `submit` createCmd PartyOnboarding with party = ccp; ..
+  bank         <- setupParty operator public "Bank"
+  auctionhouse <- setupParty operator public "AuctionHouse"
+  exchange     <- setupParty operator public "Exchange"
+  issuer       <- setupParty operator public "Issuer"
+  ccp          <- setupParty operator public "Ccp"
 
-  alice        `submit` createCmd PartyOnboarding with party = alice; ..
-  bob          `submit` createCmd PartyOnboarding with party = bob; ..
-  issuer       `submit` createCmd PartyOnboarding with party = issuer; ..
+  alice  <- setupParty operator public "Alice"
+  bob    <- setupParty operator public "Bob"
+  --
+  -- bank         `submit` createCmd ProviderOnboarding with provider = bank; ..
+  -- auctionhouse `submit` createCmd ProviderOnboarding with provider = auctionhouse; ..
+  -- exchange     `submit` createCmd ProviderOnboarding with provider = exchange; ..
+  -- ccp          `submit` createCmd ProviderOnboarding with provider = ccp; ..
+  --
+  -- bank         `submit` createCmd PartyOnboarding with party = bank; ..
+  -- auctionhouse `submit` createCmd PartyOnboarding with party = auctionhouse; ..
+  -- exchange     `submit` createCmd PartyOnboarding with party = exchange; ..
+  -- ccp          `submit` createCmd PartyOnboarding with party = ccp; ..
+  --
+  -- alice        `submit` createCmd PartyOnboarding with party = alice; ..
+  -- bob          `submit` createCmd PartyOnboarding with party = bob; ..
+  -- issuer       `submit` createCmd PartyOnboarding with party = issuer; ..
 
   return Parties with ..
 
@@ -51,9 +81,6 @@ testListOnboarding : Script ()
 testListOnboarding = do
 
   Parties{..} <- setupParties
-
-  operatorRoleCId
-    <- operator `submit` createCmd Operator.Role with observers = Set.fromList [public]; ..
 
   ooCid <- operator `submit` createCmd OperatorOnboarding with ..
 
