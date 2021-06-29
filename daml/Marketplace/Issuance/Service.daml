@@ -7,7 +7,7 @@ import DA.Finance.Types
 import DA.Map qualified as Map
 import DA.Set (Set, fromList, union)
 import Marketplace.Issuance.Model (Issuance(..))
-import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
+import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims, CFI)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Utils
 
@@ -26,6 +26,7 @@ template Service
       nonconsuming RequestOrigination: ContractId OriginationRequest
         with
           assetLabel : Text
+          cfi : CFI
           description : Text
           claims : Claims
           safekeepingAccount : Account
@@ -55,7 +56,7 @@ template Service
         with
           createOriginationCid: ContractId OriginationRequest
         do
-          OriginationRequest{assetLabel; description; claims; safekeepingAccount; observers} <- fetch createOriginationCid
+          OriginationRequest{assetLabel; cfi; description; claims; safekeepingAccount; observers} <- fetch createOriginationCid
           -- assertMsg "issued must be 0" $ description.issued == 0.0
           -- assertMsg "authorized must be > 0" $ description.authorized > 0.0
           archive createOriginationCid
@@ -70,6 +71,7 @@ template Service
           let ad = AssetDescription
                    with
                      assetId
+                     cfi
                      description
                      issuer
                      safekeepingAccount
@@ -180,6 +182,7 @@ template OriginationRequest
     provider : Party
     customer : Party
     assetLabel : Text
+    cfi : CFI
     description : Text
     claims : Claims
     safekeepingAccount : Account

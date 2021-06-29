@@ -5,8 +5,10 @@ import DA.Finance.Types (Account, Id)
 import DA.Set (Set)
 import DA.Map (Map, size)
 import DA.Map qualified as Map
+import ContingentClaims.Claim (deserialize)
 import ContingentClaims.Claim.Serializable (Claim(..))
 import ContingentClaims.Observation (Observation(..))
+import ContingentClaims.Observation qualified as O
 
 type T = AssetDescription
 type Claims = Claim Date Id
@@ -15,12 +17,28 @@ type Version = Int
 deriving instance Ord a => Ord (Observation Date a)
 deriving instance Ord (Claim Date Id)
 
+newtype CFI = CFI Text deriving (Show, Eq)
+
+equity : CFI
+equity = CFI "EXXXXX"
+
+currency : CFI
+currency = CFI "TCXXXX"
+
+future : CFI
+future = CFI "FXXXXX"
+
+unknown : CFI
+unknown = CFI "XXXXXX"
+
 template AssetDescription
   with
     assetId: Id
     -- ^ This is the master record for the asset, and has embedded it's unique identifier
     description: Text
     -- ^ Short description of the asset, mainly for display purposes
+    cfi: CFI
+    -- ^ Type of asset
     issuer: Party
     -- ^ The counterparty for any @claims@
     claims: Claims
@@ -43,6 +61,17 @@ template AssetDescription
     key assetId : Id
     maintainer key.signatories
 
+    nonconsuming choice GetMaturity : Date
+      with
+        party : Party
+      controller party
+      do
+        let cs = deserialize claims
+        case deserialize claims of
+          (When (O.DateEqu (O.DateIdentity),O.DateConst t) _) -> t
+          _ -> error "Product does not have a maturity date"
+
+
 -- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
 template Index
   with
@@ -63,3 +92,4 @@ template Index
                let nextVersion = size versions
                cid <- create this with versions = Map.insert claims nextVersion versions
                return (cid, nextVersion)
+

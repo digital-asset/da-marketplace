@@ -178,8 +178,8 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-originate : Providers -> Customer -> Text -> Text -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
-originate Providers{..} issuer assetLabel description claims = do
+originate : Providers -> Customer -> Text -> CFI -> Text -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
+originate Providers{..} issuer assetLabel assetType description claims = do
     let observers = [public]
         safekeepingAccount = issuer.mainAccount
     createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
@@ -188,7 +188,7 @@ originate Providers{..} issuer assetLabel description claims = do
 onboardAssets : Providers -> Customer -> Script Assets
 onboardAssets providers issuer = do
   let mkAsset name description claims = do
-      (_, AssetDescription{assetId = id}) <- originate providers issuer name description claims
+      (_, AssetDescription{assetId = id}) <- originate providers issuer name BaseInstrument description claims
       pure $ Asset with quantity = 0.0; ..
 
   usd   <- mkAsset "USD" "United States Dollar" Zero

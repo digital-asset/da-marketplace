@@ -11,6 +11,7 @@ import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Issuance.AssetDescription qualified as Asset
 import Tests.Utils
 
 demo : Script ()
