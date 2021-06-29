@@ -178,8 +178,8 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-originate : Providers -> Customer -> Text -> CFI -> Text -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
-originate Providers{..} issuer assetLabel assetType description claims = do
+originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
+originate Providers{..} issuer assetLabel description cfi claims = do
     let observers = [public]
         safekeepingAccount = issuer.mainAccount
     createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
@@ -187,15 +187,15 @@ originate Providers{..} issuer assetLabel assetType description claims = do
 
 onboardAssets : Providers -> Customer -> Script Assets
 onboardAssets providers issuer = do
-  let mkAsset name description claims = do
-      (_, AssetDescription{assetId = id}) <- originate providers issuer name BaseInstrument description claims
+  let mkAsset name description cfi claims = do
+      (_, AssetDescription{assetId = id}) <- originate providers issuer name description cfi claims
       pure $ Asset with quantity = 0.0; ..
 
-  usd   <- mkAsset "USD" "United States Dollar" Zero
-  eur   <- mkAsset "EUR" "Euro" Zero
-  tsla  <- mkAsset "TSLA" "Tesla, Inc." Zero
-  nflx  <- mkAsset "NFLX" "Netflix" Zero
-  libor <- mkAsset "LIBOR" "Libor" Zero
+  usd   <- mkAsset "USD" "United States Dollar" currency Zero
+  eur   <- mkAsset "EUR" "Euro" currency Zero
+  tsla  <- mkAsset "TSLA" "Tesla, Inc." equity Zero
+  nflx  <- mkAsset "NFLX" "Netflix" equity Zero
+  libor <- mkAsset "LIBOR" "Libor" equity Zero
 
   pure Assets with ..
 

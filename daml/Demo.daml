@@ -11,7 +11,7 @@ import Marketplace.Custody.Service qualified as Custody
 import Marketplace.Distribution.Role qualified as Distributor
 import Marketplace.Distribution.Auction.Service qualified as Auction
 import Marketplace.Issuance.Service qualified as Issuance
-import Marketplace.Issuance.AssetDescription qualified as Asset
+import Marketplace.Issuance.AssetDescription qualified as AD
 import Tests.Utils
 
 demo : Script ()
@@ -48,7 +48,7 @@ examples Providers{..} Assets{..} issuer = do
     accountId = issuer.mainAccount.id
     observers = [public]
 
-    originate assetLabel description claims = do
+    originate assetLabel description cfi claims = do
       createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
       submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
 
@@ -74,16 +74,16 @@ examples Providers{..} Assets{..} issuer = do
         pure (transferredDepositCid, None)
 
   -- Origination
-  (_, dax)    <- originate "DAX" "DAX Index" Zero
-  (_, pmt)    <- originate "PMT-USD" "Payment Example" $ payment usd.id 10_000.0
-  (_, del)    <- originate "DEL-TSLA" "Delivery Example" $ delivery tsla.id 20.0
-  (_, dvp)    <- originate "DVP-TSLA-USD" "DvP Example" $ dvp tsla.id 20.0 usd.id 10_000.0
-  (_, fwd)    <- originate "FWD-TSLA-USD-20221022" "Forward Example" $ futureDvp tsla.id 20.0 usd.id 10_000.0 (date 2022 Oct 22)
-  (_, bnd)    <- originate "BOND-USD-4.875" "Bond Example" $ bond usd.id 1000000.0 0.04875 $ unrollDates 2021 2023 [Jan,Jul] 15
-  (_, opt)    <- originate "OPT-TSLA-USD-20221022" "Call Option Example" $ callOptionPhysical tsla.id 20.0 usd.id 10_000.0 (date 2022 Oct 22)
-  (_, bopt)   <- originate "BIN-TSLA-USD-20221022" "Binary Option Example" $ binaryCallOption tsla.id usd.id 700.0 (date 2022 Oct 22)
-  (_, wrnt)   <- originate "WRNT-KO-PUT-DAX" "Open-end Knock-out Put Warrant Example" $ koPutWarrant 10110.0 10110.0 dax.assetId eur.id
-  (_, swpt)   <- originate "SWPT-BERMUDAN-LIBOR" "Bermudan Swaption Example" $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 (unrollDates 2021 2022 [Jan, Jul] 15) (date 2021 <$> [Feb,Mar,Apr] <*> [1])
-  (_, conv)   <- originate "CONV-TSLA-20221022" "Convertible Note Example" $ convertibleNote nflx.id usd.id 100_000.0 0.20 (date 2021 Jun 06) 0.04 550.0
+  (_, dax)    <- originate "DAX" "DAX Index" AD.equity Zero
+  (_, pmt)    <- originate "PMT-USD" "Payment Example" AD.unknown $ payment usd.id 10_000.0
+  (_, del)    <- originate "DEL-TSLA" "Delivery Example" AD.unknown $ delivery tsla.id 20.0
+  (_, dvp)    <- originate "DVP-TSLA-USD" "DvP Example" AD.unknown $ dvp tsla.id 20.0 usd.id 10_000.0
+  (_, fwd)    <- originate "FWD-TSLA-USD-20221022" "Forward Example" AD.forward $ futureDvp tsla.id 20.0 usd.id 10_000.0 (date 2022 Oct 22)
+  (_, bnd)    <- originate "BOND-USD-4.875" "Bond Example" AD.bond $ bond usd.id 1000000.0 0.04875 $ unrollDates 2021 2023 [Jan,Jul] 15
+  (_, opt)    <- originate "OPT-TSLA-USD-20221022" "Call Option Example" AD.europeanCall $ callOptionPhysical tsla.id 20.0 usd.id 10_000.0 (date 2022 Oct 22)
+  (_, bopt)   <- originate "BIN-TSLA-USD-20221022" "Binary Option Example" AD.unknown $ binaryCallOption tsla.id usd.id 700.0 (date 2022 Oct 22)
+  (_, wrnt)   <- originate "WRNT-KO-PUT-DAX" "Open-end Knock-out Put Warrant Example" AD.putWarrant $ koPutWarrant 10110.0 10110.0 dax.assetId eur.id
+  (_, swpt)   <- originate "SWPT-BERMUDAN-LIBOR" "Bermudan Swaption Example" AD.unknown $ bermudanSwaption libor.id 0.015 usd.id 500_000.0 (unrollDates 2021 2022 [Jan, Jul] 15) (date 2021 <$> [Feb,Mar,Apr] <*> [1])
+  (_, conv)   <- originate "CONV-TSLA-20221022" "Convertible Note Example" AD.convertibleShare $ convertibleNote nflx.id usd.id 100_000.0 0.20 (date 2021 Jun 06) 0.04 550.0
 
   pure ()

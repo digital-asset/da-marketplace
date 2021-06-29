@@ -2,12 +2,10 @@ module Tests.Utils where
 
 import Daml.Script
 
-import Marketplace.Issuance.AssetDescription qualified as Asset
-
 import ContingentClaims.Claim (Claim, Claim(Zero), when, scale, cond, give, one, and, or)
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (at, fixed, floating, swap, european, bermudan, forward)
+import ContingentClaims.FinancialClaim (at, fixed, floating, swap, european, bermudan)
 import DA.Finance.Asset
 import DA.Finance.Types (Account, Id(..))
 import Prelude hiding (and, or)
