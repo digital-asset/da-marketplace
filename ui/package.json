@@ -1,6 +1,6 @@
 {
   "name": "da-marketplace-ui",
-  "version": "0.2.0-rc.1",
+  "version": "0.2.0-rc.2",
   "private": true,
   "dependencies": {
     "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.2.0",
