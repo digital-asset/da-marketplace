@@ -50,7 +50,8 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
 
   const menuItems = Object.values(MenuItems)
     .filter(item => (isHubDeployment ? true : item !== MenuItems.ADD_PARTIES))
-    .filter(item => item !== MenuItems.LOG_IN);
+    .filter(item => item !== MenuItems.LOG_IN)
+    .filter(item => item !== MenuItems.REVIEW);
 
   const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
   const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
@@ -108,7 +109,13 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   return (
     <WellKnownPartiesProvider>
       <Widget
-        subtitle={activeMenuItem === MenuItems.LOG_IN ? 'Log In' : 'Market Set-Up'}
+        subtitle={
+          activeMenuItem === MenuItems.LOG_IN
+            ? 'Log In'
+            : activeMenuItem === MenuItems.REVIEW
+            ? 'Review'
+            : 'Market Set-Up'
+        }
         pageControls={{
           left: (
             <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
@@ -128,7 +135,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
         }}
       >
         <div className="quick-setup">
-          {activeMenuItem !== MenuItems.LOG_IN && (
+          {activeMenuItem !== MenuItems.LOG_IN && activeMenuItem !== MenuItems.REVIEW && (
             <Menu pointing secondary className="quick-setup-menu page-row">
               {menuItems.map(item => (
                 <>
@@ -211,10 +218,10 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   }
 });
 
-export const LoadingWheel = (props: { label?: string }) => {
+export const LoadingWheel = (props: { label?: string; inverted?: boolean }) => {
   return (
-    <Loader active indeterminate size="small">
-      <p>{props.label || 'Loading...'}</p>
+    <Loader active indeterminate size="small" inverted={!!props.inverted}>
+      <p className={classNames({ dark: props.inverted })}>{props.label || 'Loading...'}</p>
     </Loader>
   );
 };

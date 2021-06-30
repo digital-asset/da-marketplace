@@ -30,13 +30,7 @@ import { CustodyServiceTable } from './pages/network/Custody';
 import { TradingServiceTable } from './pages/network/Trading';
 import { BiddingAuctions } from './pages/distribution/bidding/Auctions';
 import Page from './pages/page/Page';
-import {
-  ControlsIcon,
-  ExchangeIcon,
-  MegaphoneIcon,
-  OrdersIcon,
-  WalletIcon,
-} from './icons/icons';
+import { ControlsIcon, ExchangeIcon, MegaphoneIcon, OrdersIcon, WalletIcon } from './icons/icons';
 import { Instrument } from './pages/origination/Instrument';
 import { ClearingMembers } from './pages/clearing/Members';
 import { ClearingMember } from './pages/clearing/Member';

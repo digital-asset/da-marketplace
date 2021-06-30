@@ -2,7 +2,61 @@
 
 @mixin quick-setup {
   .quick-setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
     height: 100%;
+    width: 100%;
+
+    .review {
+      height: 100%;
+      width: 100%;
+      .react-flow {
+        height: 100%;
+        width: 100%;
+
+        .role-node {
+          display: flex;
+          flex-direction: column;
+          width: 172px;
+          background-color: var(--blue-100);
+          justify-content: center;
+          align-items: center;
+          border-radius: 4px;
+          border: 1px solid var(--cool-grey-80);
+
+          p.p2 {
+            text-align: center;
+            padding: $spacing-xs 0;
+          }
+
+          h4 {
+            margin: $spacing-xs 0;
+          }
+        }
+        .react-flow__node-special.selected {
+            border-color: var(--green-50);
+        }
+        .react-flow__edge-text {
+          &:hover {
+            cursor: pointer;
+          }
+        }
+        #react-flow__arrow {
+            height: 20px;
+            
+        }
+        .react-flow__edge.selected {
+          .react-flow__edge-textbg {
+            fill: var(--green-50);
+          }
+          .react-flow__edge-path {
+            stroke: var(--green-50);
+          }
+        }
+      }
+    }
 
     .quick-setup-menu.menu {
       justify-content: space-between;
@@ -13,6 +67,7 @@
       padding: 0 $spacing-m;
       margin-bottom: 0px;
       background-color: var(--cool-grey-100);
+      width: 800px;
 
       &::after {
         content: unset;
@@ -54,7 +109,8 @@
       justify-content: space-between;
       background-color: var(--white);
       border-radius: 0px 0px 4px 4px;
-      height: 500px;
+      width: 800px;
+      height: 550px;
 
       button.ghost.next,
       a.ghost.next {
