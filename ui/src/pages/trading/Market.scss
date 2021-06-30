@@ -19,6 +19,12 @@
       width: 66%;
     }
 
+    .order-actions {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+
     .new-order {
       display: flex;
       flex-direction: column;

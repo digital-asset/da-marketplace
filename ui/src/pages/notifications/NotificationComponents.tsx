@@ -3,9 +3,11 @@ import { Button, Form } from 'semantic-ui-react';
 
 import _ from 'lodash';
 
-import { useLedger } from '@daml/react';
+import { useLedger, useParty } from '@daml/react';
 import { ContractId } from '@daml/types';
-
+import { CreateEvent } from '@daml/ledger';
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { Service as DistributionService } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import FormErrorHandled from '../../components/Form/FormErrorHandled';
 import { FieldComponents, Fields, Field } from '../../components/InputDialog/Fields';
 import { usePartyName } from '../../config';
@@ -21,7 +23,12 @@ import {
   RequestApproves,
   RequestRejectChoice,
   RequestTemplates,
+  ProcessRequestTemplate,
 } from './NotificationTypes';
+
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
+import { ServiceKind } from '../../context/ServicesContext';
+import { useStreamQueries } from '../../Main';
 
 const Notification: React.FC = ({ children }) => {
   return <div className="notification">{children}</div>;
@@ -73,9 +80,9 @@ export function OfferNotification<T extends Fields>({
 
   return (
     <Notification>
-      <h3>
+      <p>
         {name} is offering {serviceText}.
-      </h3>
+      </p>
       <FormErrorHandled onSubmit={onAccept}>
         {loadAndCatch => (
           <Form.Group className="inline-form-group">
@@ -188,4 +195,81 @@ export function RequestNotification<T extends Fields>({
       </FormErrorHandled>
     </Notification>
   );
+}
+
+interface PendingRequestProps {
+  description: string;
+}
+
+export function PendingRequestNotification({ description }: PendingRequestProps) {
+  return (
+    <Notification>
+      <p>{description}</p>
+      <p className="pending">pending</p>
+    </Notification>
+  );
+}
+
+interface InboundRequestProps {
+  contract: CreateEvent<ProcessRequestTemplate, unknown, string>;
+  processChoice: any;
+  description: string;
+  args: any;
+  requiredService: ServiceKind;
+}
+
+export function ProcessRequestNotification({
+  contract,
+  processChoice,
+  description,
+  args,
+  requiredService,
+}: InboundRequestProps) {
+  const ledger = useLedger();
+  const party = useParty();
+
+  const displayErrorMessage = useDisplayErrorMessage();
+  const custodyServices = useStreamQueries(CustodyService).contracts;
+  const distributionServices = useStreamQueries(DistributionService).contracts;
+
+  const custodyService = custodyServices
+    .filter(s => s.payload.provider === party)
+    .find(s => s.payload.customer === contract.payload.customer);
+  const distributionService = distributionServices
+    .filter(s => s.payload.provider === party)
+    .find(s => s.payload.customer === contract.payload.customer);
+  return (
+    <Notification>
+      <p>{description} </p>
+      <FormErrorHandled onSubmit={onProcess}>
+        <Form.Group className="inline-form-group">
+          <Button className="ghost" content="Process" type="submit" />
+        </Form.Group>
+      </FormErrorHandled>
+    </Notification>
+  );
+
+  async function onProcess() {
+    switch (requiredService) {
+      case ServiceKind.CUSTODY:
+        if (!custodyService) {
+          return displayErrorMessage({
+            header: 'Failed to Process Request',
+            message: 'Could not find Custody service contract',
+          });
+        }
+        await ledger.exercise(processChoice, custodyService.contractId, args);
+        break;
+
+      case ServiceKind.AUCTION:
+        if (!distributionService) {
+          return displayErrorMessage({
+            header: 'Failed to Process Request',
+            message: 'Could not find Distribution service contract',
+          });
+        }
+        await ledger.exercise(processChoice, distributionService.contractId, args);
+        break;
+    }
+  }
 }

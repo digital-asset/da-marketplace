@@ -3,7 +3,7 @@ import { useStreamQueries } from '../../Main';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { CreateEvent } from '@daml/ledger';
-import { Table } from 'semantic-ui-react';
+import { Table, Button, Header } from 'semantic-ui-react';
 import Tile from '../../components/Tile/Tile';
 import { DateTime } from 'luxon';
 import {
@@ -17,16 +17,21 @@ import {
   getTimeInForceText,
   getVolume,
 } from './Utils';
-import { useParams } from 'react-router-dom';
+import { Service as TradingService } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Service';
+import { useParams, useHistory } from 'react-router-dom';
 import StripedTable from '../../components/Table/StripedTable';
 import BackButton from '../../components/Common/BackButton';
+import { useLedger } from '@daml/react';
 
 type Props = {
   listings: Readonly<CreateEvent<Listing, any, any>[]>;
+  services: Readonly<CreateEvent<TradingService, any, any>[]>;
 };
 
-export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
+export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => {
   const { contractId } = useParams<any>();
+  const history = useHistory();
+  const ledger = useLedger();
   const allOrders = useStreamQueries(Order);
   const order = allOrders.contracts.find(o => o.contractId === contractId);
   if (!order) return <></>; // TODO: Return 404 not found
@@ -36,12 +41,31 @@ export const TradingOrder: React.FC<Props> = ({ listings }: Props) => {
   );
   if (!listing) return <></>; // TODO: Return 404 not found
 
+  const service = services.find(s => s.payload.provider === order.payload.provider);
+
+  const cancelOrder = () => {
+    if (!service) return;
+    ledger.exercise(TradingService.RequestCancelOrder, service.contractId, {
+      orderCid: order.contractId,
+    });
+    history.goBack();
+  };
+
   return (
     <div>
       <BackButton />
       <div className="market">
         <div className="orders">
-          <Tile header="Order">
+          <Tile>
+            <div className="order-actions">
+              <Header as="h1">Order</Header>
+              {order.payload.status.tag !== 'Cancelled' &&
+                order.payload.status.tag !== 'PendingCancellation' && (
+                  <Button className="ghost warning" onClick={() => cancelOrder()}>
+                    Cancel Order
+                  </Button>
+                )}
+            </div>
             <Table basic="very">
               <Table.Body>
                 <Table.Row key={0}>

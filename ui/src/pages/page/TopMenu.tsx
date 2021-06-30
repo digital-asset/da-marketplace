@@ -10,6 +10,8 @@ import { signOut, useUserDispatch } from '../../context/UserContext';
 import paths from '../../paths';
 import { usePartyName } from '../../config';
 
+import { useParty } from '@daml/react';
+
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Clearing/Service';
@@ -18,16 +20,19 @@ import { Auction as BiddingAuctionContract } from '@daml.js/da-marketplace/lib/M
 import { Order } from '@daml.js/da-marketplace/lib/Marketplace/Trading/Model';
 import { AssetDescription } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/AssetDescription';
 import { Listing } from '@daml.js/da-marketplace/lib/Marketplace/Listing/Model';
+import { useAllNotifications } from '../../pages/notifications/Notifications';
+import _ from 'lodash';
 
 type Props = {
   title?: React.ReactElement;
   activeMenuTitle?: boolean;
-  showNotificationAlert?: boolean;
   buttons?: JSX.Element[];
 };
 
-const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotificationAlert }) => {
+const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
   const history = useHistory();
+  const party = useParty();
+
   const userDispatch = useUserDispatch();
   const { getName } = usePartyName('');
   const path = useLocation().pathname;
@@ -69,6 +74,17 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
   )?.payload.assetId.label;
   const listingLabel = useStreamQueries(Listing).contracts.find(c => c.contractId === contractId)
     ?.payload.listingId.label;
+
+  const allNotifications = useAllNotifications(party);
+  const [notifications, pendingNotifications] = _.partition(
+    allNotifications,
+    n => n.kind !== 'Pending'
+  );
+  const notifCount = notifications.reduce((count, { contracts }) => count + contracts.length, 0);
+  const pendingNotifCount = pendingNotifications.reduce(
+    (count, { contracts }) => count + contracts.length,
+    0
+  );
 
   useEffect(() => {
     setContractTitle(undefined);
@@ -127,10 +143,17 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle, showNotific
         <Menu.Menu position="right">
           <Menu.Item className="notification-button">
             <Link className="ghost smaller" to={paths.app.notifications}>
-              <div>
-                <NotificationIcon />
+              <NotificationIcon />
+              <div
+                className={classNames(
+                  { 'notifications-icon active': notifCount > 0 },
+                  {
+                    'notifications-icon pending': notifCount === 0 && pendingNotifCount > 0,
+                  }
+                )}
+              >
+                {notifCount > 0 ? notifCount : pendingNotifCount > 0 ? pendingNotifCount : null}
               </div>
-              <div className={classNames({ 'notifications-active': showNotificationAlert })}></div>
             </Link>
           </Menu.Item>
           <Menu.Item className="log-out-button">

@@ -46,6 +46,11 @@ import {
   Offer as CustodyServiceOffer,
   Reject as CustodyServiceReject,
   Request as CustodyServiceRequest,
+  CloseAccount,
+  OpenAccount,
+  CreditAccount,
+  DebitAccount,
+  TransferDeposit,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
 import {
   Accept as ListingServiceAccept,
@@ -119,6 +124,8 @@ import {
   Offer as AuctionServiceOffer,
   Reject as AuctionServiceReject,
   Request as AuctionServiceRequest,
+  CreateAuction,
+  CreateAuctionRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service';
 import {
   Accept as BiddingServiceAccept,
@@ -128,6 +135,14 @@ import {
   Reject as BiddingServiceReject,
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
+
+import {
+  CloseAccountRequest,
+  DebitAccountRequest,
+  OpenAccountRequest,
+  TransferDepositRequest,
+  CreditAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
 
 import { CreateEvent } from '@daml/ledger';
 import { Choice, ContractId } from '@daml/types';
@@ -295,4 +310,54 @@ type RequestNotificationSet = {
   contracts: readonly CreateEvent<RequestTemplates>[];
 } & RequestApproveFields<Record<string, any>>;
 
-export type NotificationSet = OfferNotificationSet | RequestNotificationSet;
+// -------------------------------------------------------------
+
+export type PendingRequestTemplate =
+  | CreateAuctionRequest
+  | CloseAccountRequest
+  | DebitAccountRequest
+  | OpenAccountRequest
+  | TransferDepositRequest
+  | CreditAccountRequest;
+
+type PendingRequestNotificationSet = {
+  kind: 'Pending';
+  tag: 'pending';
+  contracts: readonly CreateEvent<PendingRequestTemplate>[];
+  getCustomDescription: (c: CreateEvent<any>) => string;
+};
+
+// -------------------------------------------------------------
+
+export type ProcessRequestTemplate = PendingRequestTemplate;
+
+export type ProcessChoice =
+  | CloseAccount
+  | OpenAccount
+  | CreditAccount
+  | DebitAccount
+  | TransferDeposit
+  | CreateAuction;
+
+export type ProcessRequestChoice = Choice<
+  ProcessRequestTemplate,
+  ProcessChoice,
+  unknown,
+  undefined
+>;
+
+type ProcessRequestNotificationSet = {
+  kind: 'Process';
+  tag: 'process';
+  processChoice: ProcessRequestChoice;
+  contracts: readonly CreateEvent<ProcessRequestTemplate>[];
+  requiredService: ServiceKind;
+  getCustomDescription: (c: CreateEvent<any>) => string;
+  getCustomArgs: (c: CreateEvent<any>) => any;
+};
+
+export type NotificationSet =
+  | OfferNotificationSet
+  | RequestNotificationSet
+  | PendingRequestNotificationSet
+  | ProcessRequestNotificationSet;
