@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import DamlLedger from '@daml/react';
 
 import { LoadingWheel } from './QuickSetup';
 
 import { PublishedInstance, getAutomationInstances } from '../../automation';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  useVerifiedParties,
-  usePartyName,
-  isHubDeployment,
-} from '../../config';
+import { httpBaseUrl, wsBaseUrl, useVerifiedParties, isHubDeployment } from '../../config';
 import QueryStreamProvider from '../../websocket/queryStream';
 import Credentials from '../../Credentials';
 
@@ -21,21 +15,21 @@ import { retrieveParties } from '../../Parties';
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
 
 import { formatTriggerName } from './SelectRolesPage';
-import QuickSetupPage from './QuickSetupPage';
-import { MenuItems } from './QuickSetup';
+
 import ReactFlow, {
   FlowElement,
   addEdge,
   removeElements,
   isNode,
-  Position,
   Elements,
   Handle,
   ArrowHeadType,
 } from 'react-flow-renderer';
 import dagre from 'dagre';
-import { halfSecondPromise } from '../page/utils';
 import { useWellKnownParties } from '@daml/hub-react/lib';
+
+const NODE_WIDTH = 172;
+const NODE_HEIGHT = 36;
 
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -65,21 +59,25 @@ const ReviewItems = () => {
 
   const { roles, loading: rolesLoading } = useRolesContext();
   const { services, loading: servicesLoading } = useServiceContext();
-  const { parties, loading: operatorLoading } = useWellKnownParties();
 
+  const { parties, loading: operatorLoading } = useWellKnownParties();
   const operator = parties?.userAdminParty || 'Operator';
 
   const [creatingNetwork, setCreatingNetwork] = useState(false);
   const [layoutedElements, setLayoutedElements] = useState<FlowElement<any>[]>([]);
 
   const dagreGraph = new dagre.graphlib.Graph();
+
   dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: 'TB' });
 
   useEffect(() => {
     if (idsLoading || rolesLoading || servicesLoading || operatorLoading) {
       return;
     }
+
     setCreatingNetwork(true);
+
     const position = { x: 0, y: 0 };
     const identityNodes = [
       ...identities.map(i => {
@@ -90,12 +88,12 @@ const ReviewItems = () => {
           position,
         };
       }),
-    //   {
-    //     id: operator,
-    //     type: 'special',
-    //     data: { label: 'Operator', partyId: operator },
-    //     position,
-    //   },
+      {
+        id: operator,
+        type: 'special',
+        data: { label: 'Operator', partyId: operator },
+        position,
+      },
     ];
 
     const serviceEdges = services.map(s => {
@@ -109,12 +107,42 @@ const ReviewItems = () => {
       };
     });
 
-    const initialElements = [...identityNodes, ...serviceEdges];
+    const initialElements: Elements = [...identityNodes, ...serviceEdges];
 
-    const le = getLayoutedElements(initialElements, dagreGraph);
+    initialElements.forEach(el => {
+      if (isNode(el)) {
+        dagreGraph.setNode(el.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+      } else {
+        dagreGraph.setEdge(el.source, el.target);
+      }
+    });
 
-    setLayoutedElements(le);
-  }, [identities, roles, idsLoading, rolesLoading, services]);
+    dagre.layout(dagreGraph);
+
+    const elements = initialElements.map(el => {
+      if (isNode(el)) {
+        const nodeWithPosition = dagreGraph.node(el.id);
+
+        el.position = {
+          x: nodeWithPosition.x - NODE_WIDTH / 2 + Math.random() / 1000,
+          y: nodeWithPosition.y - NODE_HEIGHT / 2,
+        };
+      }
+
+      return el;
+    });
+
+    setLayoutedElements(elements);
+  }, [
+    identities,
+    roles,
+    idsLoading,
+    rolesLoading,
+    services,
+    servicesLoading,
+    operator,
+    operatorLoading,
+  ]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -141,36 +169,6 @@ const ReviewItems = () => {
   );
 };
 
-const getLayoutedElements = (elements: Elements, dagreGraph: dagre.graphlib.Graph<{}>) => {
-  const nodeWidth = 172;
-  const nodeHeight = 36;
-
-  dagreGraph.setGraph({ rankdir: 'TB' });
-
-  elements.forEach(el => {
-    if (isNode(el)) {
-      dagreGraph.setNode(el.id, { width: nodeWidth, height: nodeHeight });
-    } else {
-      dagreGraph.setEdge(el.source, el.target);
-    }
-  });
-
-  dagre.layout(dagreGraph);
-
-  return elements.map(el => {
-    if (isNode(el)) {
-      const nodeWithPosition = dagreGraph.node(el.id);
-
-      el.position = {
-        x: nodeWithPosition.x - nodeWidth / 2 + Math.random() / 1000,
-        y: nodeWithPosition.y - nodeHeight / 2,
-      };
-    }
-
-    return el;
-  });
-};
-
 const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { roles, loading: rolesLoading } = useRolesContext();
   const { parties: wkparties, loading: operatorLoading } = useWellKnownParties();
@@ -181,7 +179,7 @@ const RoleNode = (props: { data: { label: string; partyId: string } }) => {
   const { label, partyId } = props.data;
 
   const operator = wkparties?.userAdminParty || 'Operator';
-  const roleList = roles.filter(r => r.contract.payload.provider == partyId).map(r => r.roleKind);
+  const roleList = roles.filter(r => r.contract.payload.provider === partyId).map(r => r.roleKind);
   const token = parties.find(p => p.party === partyId)?.token;
 
   useEffect(() => {
@@ -235,9 +233,7 @@ const Flow = (props: { layoutedElements: FlowElement<any>[] }) => {
       onConnect={onConnect}
       onElementsRemove={onElementsRemove}
       connectionLineType="smoothstep"
-      snapToGrid={true}
       nodeTypes={nodeTypes}
-      paneMoveable={false}
     />
   );
 };
