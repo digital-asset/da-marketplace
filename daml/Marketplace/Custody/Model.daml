@@ -10,9 +10,8 @@ module Marketplace.Custody.Model (
   , Process(..)
 ) where
 
-import ContingentClaims.Claim (Claim, deserialize, serialize)
+import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
 import ContingentClaims.Lifecycle qualified as Lifecycle
-import ContingentClaims.Observation (Observation)
 import DA.Date (toDateUTC)
 import DA.Finance.Asset
 import DA.Finance.Asset.Settlement
@@ -124,9 +123,11 @@ template LifecycleRequest
               spot label dt = pure $ fromSomeNote
                 ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
                 (Map.lookup label fixings >>= Map.lookup dt)
-              election : Claim Observation Date Id -> Claim Observation Date Id -> Claim Observation Date Id
-              election _ _ = deserialize choice -- will throw if the claims don't match
-          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot election (deserialize description.claims) t
+              election = (True, deserialize choice)
+          remaining <- if election._2 /= Zero
+            then Lifecycle.exercise spot election (deserialize description.claims) t
+            else pure (deserialize description.claims)
+          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot remaining t
           let serializedRemaining = serialize remaining
           (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
           when (postAssetVersion /= assetDeposit.asset.id.version) $
