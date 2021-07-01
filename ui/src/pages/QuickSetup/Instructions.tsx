@@ -1,222 +1,237 @@
 import React, { useEffect, useState } from 'react';
 
-import { Button, Loader, Menu } from 'semantic-ui-react';
-
-import {
-  useHistory,
-  Switch,
-  Route,
-  RouteComponentProps,
-  withRouter,
-  NavLink,
-  Redirect,
-} from 'react-router-dom';
-
 import classNames from 'classnames';
 
-import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
+import DamlLedger, { useLedger } from '@daml/react';
+import { CreateEvent } from '@daml/ledger';
+import { Choice, ContractId, Party, Optional } from '@daml/types';
+import _ from 'lodash';
 
-import { ledgerId, publicParty, isHubDeployment } from '../../config';
+import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
+import {
+  OperatorOnboarding,
+  OnboardingInstruction,
+} from '@daml.js/da-marketplace/lib/UI/Onboarding';
+import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import Credentials, { computeCredentials } from '../../Credentials';
+import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { OffersProvider } from '../../context/OffersContext';
+import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
+
+import QueryStreamProvider from '../../websocket/queryStream';
+import { useStreamQueries } from '../../Main';
 import { retrieveParties } from '../../Parties';
+import Credentials, { computeToken } from '../../Credentials';
+import {
+  httpBaseUrl,
+  wsBaseUrl,
+  publicParty,
+  isHubDeployment,
+  useVerifiedParties,
+} from '../../config';
+import QuickSetupPage from './QuickSetupPage';
+import { LoadingWheel, MenuItems } from './QuickSetup';
+import { Label, Form, Button } from 'semantic-ui-react';
+import { createDropdownProp } from '../common';
 
-import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
-
-import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
-
-import AddPartiesPage from './AddPartiesPage';
-import SelectRolesPage from './SelectRolesPage';
-import RequestServicesPage from './RequestServicesPage';
-import ReviewPage from './ReviewPage';
-import FinishPage from './FinishPage';
-import paths from '../../paths';
-import Widget from '../../components/Widget/Widget';
-
-export enum MenuItems {
-  ADD_PARTIES = 'add-parties',
-  SELECT_ROLES = 'select-roles',
-  REQUEST_SERVICES = 'request-services',
-  REVIEW = 'review',
-  LOG_IN = 'log-in-parties',
-}
-
-const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
-  const localCreds = computeCredentials('Operator');
-  const history = useHistory();
-
-  const matchPath = props.match.path;
-  const matchUrl = props.match.url;
-
-  const menuItems = Object.values(MenuItems)
-    .filter(item => (isHubDeployment ? true : item !== MenuItems.ADD_PARTIES))
-    .filter(item => item !== MenuItems.LOG_IN);
-
-  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
-  const [activeMenuItem, setActiveMenuItem] = useState<MenuItems>();
-
-  useEffect(() => {
-    const parties = retrieveParties() || [];
-    const newSegment = history.location?.pathname.split('/quick-setup')[1].replace('/', '');
-    const activeMenuItem = Object.values(MenuItems).find(s => s === newSegment);
-
-    if (activeMenuItem) {
-      setActiveMenuItem(activeMenuItem);
-    }
-
-    if (isHubDeployment) {
-      const adminParty = parties.find(p => p.partyName === 'UserAdmin');
-      if (adminParty) {
-        setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
-      }
-    }
-  }, [history.location]);
-
-  useEffect(() => {
-    const parties = retrieveParties() || [];
-
-    // deploy auto-trigger for all parties
-    async function deployAllTriggers() {
-      if (isHubDeployment && parties.length > 0) {
-        const artifactHash = TRIGGER_HASH;
-
-        if (!artifactHash || !adminCredentials) {
-          return;
-        }
-
-        Promise.all(
-          [
-            ...parties.filter(p => p.party !== publicParty),
-            {
-              ...adminCredentials,
-            },
-          ].map(p => {
-            return deployAutomation(
-              artifactHash,
-              MarketplaceTrigger.AutoApproveTrigger,
-              p.token,
-              publicParty
-            );
-          })
-        );
-      }
-    }
-
-    deployAllTriggers();
-  }, [adminCredentials]);
+const InstructionsPage = (props: { adminCredentials: Credentials }) => {
+  const { adminCredentials } = props;
 
   return (
-    <WellKnownPartiesProvider>
-      <Widget
-        subtitle={activeMenuItem === MenuItems.LOG_IN ? 'Log In' : 'Market Set-Up'}
-        pageControls={{
-          left: (
-            <Button className="ghost dark control-button" onClick={() => history.push(paths.login)}>
-              <ArrowLeftIcon color={'white'} />
-              Back
-            </Button>
-          ),
-          right:
-            activeMenuItem !== MenuItems.LOG_IN ? (
-              <NavLink to={`${matchUrl}/${MenuItems.LOG_IN}`}>
-                <Button className="button ghost dark control-button">
-                  Skip to Log In
-                  <ArrowRightIcon color={'white'} />
-                </Button>
-              </NavLink>
-            ) : undefined,
-        }}
-      >
-        <div className="quick-setup">
-          {activeMenuItem !== MenuItems.LOG_IN && (
-            <Menu pointing secondary className="quick-setup-menu page-row">
-              {menuItems.map(item => (
-                <>
-                  {menuItems.indexOf(item) !== menuItems.length &&
-                    menuItems.indexOf(item) !== 0 && (
-                      <ArrowRightIcon color={checkIsDisabled(item) ? 'grey' : 'blue'} />
-                    )}
-
-                  {activeMenuItem === MenuItems.ADD_PARTIES || activeMenuItem === item ? (
-                    <Menu.Item disabled={activeMenuItem === MenuItems.ADD_PARTIES} key={item}>
-                      <p className={classNames({ visited: !checkIsDisabled(item) })}>
-                        {formatMenuItem(item)}
-                      </p>
-                    </Menu.Item>
-                  ) : (
-                    <NavLink to={`${matchUrl}/${item}`}>
-                      <Menu.Item key={item}>
-                        <p className={classNames({ visited: !checkIsDisabled(item) })}>
-                          {formatMenuItem(item)}
-                        </p>
-                      </Menu.Item>
-                    </NavLink>
-                  )}
-                </>
-              ))}
-            </Menu>
-          )}
-
-          <Switch>
-            <Route
-              path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
-              component={() => <AddPartiesPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.SELECT_ROLES}`}
-              component={() => <SelectRolesPage adminCredentials={adminCredentials} />}
-            />
-
-            <Route
-              path={`${matchPath}/${MenuItems.REQUEST_SERVICES}`}
-              component={() => <RequestServicesPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.REVIEW}`}
-              component={() => <ReviewPage adminCredentials={adminCredentials} />}
-            />
-            <Route
-              path={`${matchPath}/${MenuItems.LOG_IN}`}
-              component={() => <FinishPage adminCredentials={adminCredentials} />}
-            />
-            <Redirect
-              to={`${matchPath}/${
-                isHubDeployment ? MenuItems.ADD_PARTIES : MenuItems.SELECT_ROLES
-              }`}
-            />
-          </Switch>
-        </div>
-      </Widget>
-    </WellKnownPartiesProvider>
-  );
-
-  function checkIsDisabled(item: MenuItems) {
-    if (!activeMenuItem) {
-      return false;
-    }
-
-    const clickedItemIndex = Object.values(MenuItems).indexOf(item);
-    const activeItemIndex = Object.values(MenuItems).indexOf(activeMenuItem);
-    if (clickedItemIndex > activeItemIndex) {
-      return true;
-    }
-    return false;
-  }
-
-  function formatMenuItem(item: MenuItems) {
-    return item
-      .split('-')
-      .map(i => `${i.substring(0, 1).toUpperCase()}${i.substring(1)}`)
-      .join(' ');
-  }
-});
-
-export const LoadingWheel = (props: { label?: string }) => {
-  return (
-    <Loader active indeterminate size="small">
-      <p>{props.label || 'Loading...'}</p>
-    </Loader>
+    <DamlLedger
+      token={adminCredentials.token}
+      party={adminCredentials.party}
+      httpBaseUrl={httpBaseUrl}
+      wsBaseUrl={wsBaseUrl}
+    >
+      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
+        <AutomationProvider publicParty={publicParty}>
+          <RolesProvider>
+            <OffersProvider>
+              <TestInstructions />
+            </OffersProvider>
+          </RolesProvider>
+        </AutomationProvider>
+      </QueryStreamProvider>
+    </DamlLedger>
   );
 };
 
-export default QuickSetup;
+const makeCustodyInstruction = (provider: Party): OnboardingInstruction => {
+  return { tag: 'OnboardCustody', value: { provider } };
+};
+
+const makeTradingInstruction = (
+  custodian: Party,
+  provider: Party,
+  optTradingAccount: Optional<string>
+): OnboardingInstruction => {
+  return { tag: 'OnboardTrading', value: { custodian, provider, optTradingAccount } };
+};
+
+type EmptyIntstruction = EmptyCustodyInstruction | EmptyTradingInstruction;
+
+type EmptyCustodyInstruction = {
+  provider?: string;
+};
+
+type EmptyTradingInstruction = {
+  custodian?: string;
+  provider?: string;
+  tradingAccount?: string;
+};
+
+enum FieldType {
+  PARTIES = 'PARTIES',
+  TEXT = 'TEXT',
+}
+
+enum InstructionType {
+  TRADING = 'Trading Instruction',
+  CUSTODY = 'Custody Instruction',
+}
+
+type InstFieldsWithType = {
+  instructionType: InstructionType;
+  empty: EmptyIntstruction;
+};
+
+const getFields = (inst: InstFieldsWithType) => {
+  switch (inst.instructionType) {
+    case InstructionType.TRADING: {
+      return {
+        custodian: FieldType.PARTIES,
+        provider: FieldType.PARTIES,
+        tradingAccount: FieldType.TEXT,
+      };
+    }
+    case InstructionType.CUSTODY: {
+      return {
+        provider: FieldType.PARTIES,
+      };
+    }
+    default: {
+      return;
+      {
+      }
+    }
+  }
+};
+
+const TestInstructions = () => {
+  const ledger = useLedger();
+  const automations = useAutomations();
+
+  const { identities, loading: identitiesLoading } = useVerifiedParties();
+
+  const [onboardParty, setOnboardParty] = useState('');
+  const [instructions, setInstructions] = useState<OnboardingInstruction[]>([]);
+  // const [emptyInstructions, setEmptyInstructions] = useState<EmptyIntstruction[]>([]);
+  const [instructionTypes, setInstructionTypes] = useState<InstFieldsWithType[]>([]);
+
+  const [currentAddInstruction, setCurrentAddInstruction] = useState<InstructionType | undefined>();
+
+  const { contracts: onboardingContracts, loading: onboardingLoading } =
+    useStreamQueries(OperatorOnboarding);
+
+  if (!onboardingContracts.length) return <></>;
+  const onboardingContract = onboardingContracts[0];
+  const newEmptyInstruction = (it: InstructionType) => {
+    switch (it) {
+      case InstructionType.TRADING: {
+        return {} as EmptyTradingInstruction;
+      }
+      case InstructionType.CUSTODY: {
+        return {} as EmptyCustodyInstruction;
+      }
+    }
+  };
+  // _.toPairs(getFields(ei)).map(([k, fieldType]) => {
+  // switch(fieldType) {
+  //   case FieldType.PARTIES: {
+  //     return <div>parties</div>
+  //   };
+  //   case FieldType.TEXT: {
+  //     return <div>text</div>
+  //   }
+  //
+  // }
+
+  return (
+    <QuickSetupPage
+      className="test-instructions"
+      title="Create Instructions List"
+      nextItem={MenuItems.REQUEST_SERVICES}
+    >
+      <div className="page-row">
+        <div>
+          <p className="bold">Parties</p>
+          <div className="party-names">
+            {instructionTypes.map(ei => (
+              <>
+                <div>{ei.instructionType}</div>
+                <div>
+                  {_.toPairs(getFields(ei)).map(([k, field]) => {
+                    if (field === FieldType.PARTIES) {
+                      return <div>{k}: Parties!</div>
+                    } else {
+                      return <div>{k}: Text!</div>
+                    }
+                  })}
+                </div>
+              </>
+            ))}
+          </div>
+          <Form>
+            <Form.Select
+              options={[
+                createDropdownProp('Trading', InstructionType.TRADING),
+                createDropdownProp('Custody', InstructionType.CUSTODY),
+              ]}
+              onChange={(_, data) => {
+                setCurrentAddInstruction(data.value as InstructionType);
+                console.log(data);
+              }}
+            />
+            <Button
+              disabled={!currentAddInstruction}
+              onClick={() => {
+                if (!currentAddInstruction) return;
+                setInstructionTypes([
+                  ...instructionTypes,
+                  {
+                    instructionType: currentAddInstruction,
+                    empty: newEmptyInstruction(currentAddInstruction),
+                  },
+                ]);
+              }}
+            >
+              Add
+            </Button>
+          </Form>
+        </div>
+      </div>
+    </QuickSetupPage>
+  );
+
+  async function doRunOnboarding() {
+    return await ledger.exercise(
+      OperatorOnboarding.OperatorOnboard_Onboard,
+      onboardingContract.contractId,
+      {
+        instructions,
+        party: onboardParty,
+      }
+    );
+  }
+};
+
+export function formatTriggerName(name: string) {
+  return name
+    .split('#')[0]
+    .split(':')[0]
+    .replace(/([A-Z])/g, ' $1')
+    .trim();
+}
+
+export default InstructionsPage;

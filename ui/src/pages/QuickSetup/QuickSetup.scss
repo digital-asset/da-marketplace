@@ -290,6 +290,38 @@
       }
     }
 
+    .test-instructions {
+      .page-row {
+        justify-content: space-between;
+      }
+      .message {
+        margin-top: $spacing-m;
+        max-width: 300px;
+        display: flex;
+        .icon {
+          margin-right: $spacing-xs;
+        }
+      }
+      .request-select {
+        margin-bottom: $spacing-s;
+        width: 300px;
+
+        a.ui.label {
+          background-color: var(--cool-grey-100);
+          color: var(--cool-grey-10);
+          .delete.icon {
+            height: unset;
+            color: var(--blue-50);
+            font-weight: 100;
+            stroke-width: 40%;
+          }
+        }
+      }
+      button.ghost.request {
+        align-self: flex-start;
+      }
+    }
+
     .request-services {
       .page-row {
         justify-content: space-between;
