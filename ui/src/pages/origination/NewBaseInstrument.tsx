@@ -35,7 +35,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 
-  const zero: Claim<DamlDate, Id> = { tag: 'Zero', value: {} };
+  const zero: Claim<DamlDate, String, Id> = { tag: 'Zero', value: {} };
 
   useEffect(() => {
     if (isPublic) {

@@ -6,7 +6,7 @@ import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
-import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
+import { Claim, Inequality } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -55,29 +55,27 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
     '';
 
-  const obsToday: Observation<DamlDate, Id> = { tag: 'DateIdentity', value: {} };
-  const obsExpiry: Observation<DamlDate, Id> = { tag: 'DateConst', value: parseDate(expiry) };
-  const obsEuropean: Observation<DamlDate, Id> = {
-    tag: 'DateEqu',
-    value: { _1: obsToday, _2: obsExpiry },
+  const ineqEuropean: Inequality<DamlDate, Id> = {
+    tag: 'TimeGte',
+    value: parseDate(expiry),
   };
-  const obsStrike: Observation<DamlDate, Id> = { tag: 'DecimalConst', value: strike };
-  const obsSpot: Observation<DamlDate, Id> = { tag: 'DecimalObs', value: underlying };
-  const obsPayoff: Observation<DamlDate, Id> = {
-    tag: 'DecimalLte',
+  const obsStrike: Observation<DamlDate, string> = { tag: 'Const', value: { value: strike } };
+  const obsSpot: Observation<DamlDate, string> = { tag: 'Observe', value: { key: underlying } };
+  const ineqPayoff: Inequality<DamlDate, string> = {
+    tag: 'Lte',
     value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike },
   };
 
-  const zero: Claim<DamlDate, Id> = { tag: 'Zero', value: {} };
-  const oneUsd: Claim<DamlDate, Id> = { tag: 'One', value: ccyId };
-  const cond: Claim<DamlDate, Id> = {
+  const zero: Claim<DamlDate, string, Id> = { tag: 'Zero', value: {} };
+  const oneUsd: Claim<DamlDate, string, Id> = { tag: 'One', value: ccyId };
+  const cond: Claim<DamlDate, string, Id> = {
     tag: 'Cond',
-    value: { predicate: obsPayoff, success: oneUsd, failure: zero },
+    value: { predicate: ineqPayoff, success: oneUsd, failure: zero },
   };
-  const choice: Claim<DamlDate, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
-  const claims: Claim<DamlDate, Id> = {
+  const choice: Claim<DamlDate, string, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
+  const claims: Claim<DamlDate, string, Id> = {
     tag: 'When',
-    value: { predicate: obsEuropean, claim: choice },
+    value: { predicate: ineqEuropean, claim: choice },
   };
 
   useEffect(() => {

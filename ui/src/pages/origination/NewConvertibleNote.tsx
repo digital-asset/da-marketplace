@@ -6,7 +6,7 @@ import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
-import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
+import { Claim, Inequality } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
 import { Date as DamlDate } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -62,52 +62,52 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
       new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
     '';
 
-  const obsToday: Observation<DamlDate, Id> = { tag: 'DateIdentity', value: {} };
-  const obsExpiry: Observation<DamlDate, Id> = { tag: 'DateConst', value: parseDate(maturity) };
-  const obsEuropean: Observation<DamlDate, Id> = {
-    tag: 'DateEqu',
-    value: { _1: obsToday, _2: obsExpiry },
+  const ineqEuropean: Inequality<DamlDate, string> = {
+    tag: 'TimeGte',
+    value: parseDate(maturity),
   };
-  const obsPrincipal: Observation<DamlDate, Id> = {
-    tag: 'DecimalConst',
-    value: (parseFloat(principal || '0') * (1.0 + parseFloat(interest || '0'))).toString(),
+  const obsPrincipal: Observation<DamlDate, string> = {
+    tag: 'Const',
+    value: {
+      value: (parseFloat(principal || '0') * (1.0 + parseFloat(interest || '0'))).toString(),
+    },
   };
-  const obsCap: Observation<DamlDate, Id> = { tag: 'DecimalConst', value: cap };
-  const obsDiscount: Observation<DamlDate, Id> = {
-    tag: 'DecimalConst',
-    value: (1.0 - parseFloat(discount || '0')).toFixed(2),
+  const obsCap: Observation<DamlDate, string> = { tag: 'Const', value: { value: cap } };
+  const obsDiscount: Observation<DamlDate, string> = {
+    tag: 'Const',
+    value: { value: (1.0 - parseFloat(discount || '0')).toFixed(2) },
   };
-  const obsSpot: Observation<DamlDate, Id> = { tag: 'DecimalObs', value: underlying };
-  const obsPayoff: Observation<DamlDate, Id> = {
-    tag: 'DecimalLte',
+  const obsSpot: Observation<DamlDate, string> = { tag: 'Observe', value: { key: underlying } };
+  const ineqPayoff: Inequality<DamlDate, string> = {
+    tag: 'Lte',
     value: { _1: obsSpot, _2: obsCap },
   };
-  const obsDiscounted: Observation<DamlDate, Id> = {
-    tag: 'DecimalMul',
+  const obsDiscounted: Observation<DamlDate, string> = {
+    tag: 'Mul',
     value: { _1: obsSpot, _2: obsDiscount },
   };
-  const obsConversion: Observation<DamlDate, Id> = {
-    tag: 'DecimalDiv',
+  const obsConversion: Observation<DamlDate, string> = {
+    tag: 'Div',
     value: { _1: obsPrincipal, _2: obsDiscounted },
   };
 
-  const oneUsd: Claim<DamlDate, Id> = { tag: 'One', value: ccyId };
-  const oneAsset: Claim<DamlDate, Id> = { tag: 'One', value: assetId };
-  const notional: Claim<DamlDate, Id> = {
+  const oneUsd: Claim<DamlDate, string, Id> = { tag: 'One', value: ccyId };
+  const oneAsset: Claim<DamlDate, string, Id> = { tag: 'One', value: assetId };
+  const notional: Claim<DamlDate, string, Id> = {
     tag: 'Scale',
     value: { k: obsPrincipal, claim: oneUsd },
   };
-  const conversion: Claim<DamlDate, Id> = {
+  const conversion: Claim<DamlDate, string, Id> = {
     tag: 'Scale',
     value: { k: obsConversion, claim: oneAsset },
   };
-  const cond: Claim<DamlDate, Id> = {
+  const cond: Claim<DamlDate, string, Id> = {
     tag: 'Cond',
-    value: { predicate: obsPayoff, success: conversion, failure: notional },
+    value: { predicate: ineqPayoff, success: conversion, failure: notional },
   };
-  const claims: Claim<DamlDate, Id> = {
+  const claims: Claim<DamlDate, string, Id> = {
     tag: 'When',
-    value: { predicate: obsEuropean, claim: cond },
+    value: { predicate: ineqEuropean, claim: cond },
   };
 
   useEffect(() => {
