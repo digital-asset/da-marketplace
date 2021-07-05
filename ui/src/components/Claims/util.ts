@@ -4,9 +4,9 @@ import {
 } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable/module';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation/module';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
-import { Date } from '@daml/types';
+import { Date, Decimal } from '@daml/types';
 
-const transformObservation = (obs: Observation<Date, string>, linkText: string): any => {
+const transformObservation = (obs: Observation<Date, Decimal>, linkText: string): any => {
   switch (obs.tag) {
     case 'Add': //TODO: collapse a + (-b) into a - b
       const left4 = transformObservation(obs.value._1, 'left');
@@ -59,7 +59,7 @@ const transformObservation = (obs: Observation<Date, string>, linkText: string):
 };
 
 export const transformInequality = (
-  inequality: Inequality<Date, string>,
+  inequality: Inequality<Date, Decimal>,
   linkText: string
 ): any => {
   switch (inequality.tag) {
@@ -84,7 +84,7 @@ export const transformInequality = (
   }
 };
 
-export const transformClaim = (claim: Claim<Date, string, Id>, linkText: string): any => {
+export const transformClaim = (claim: Claim<Date, Decimal, Id>, linkText: string): any => {
   switch (claim.tag) {
     case 'When':
       return {

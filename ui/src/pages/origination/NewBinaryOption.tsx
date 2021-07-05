@@ -7,7 +7,7 @@ import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Observation } from '@daml.js/da-marketplace/lib/ContingentClaims/Observation';
 import { Claim, Inequality } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import { Date as DamlDate } from '@daml/types';
+import { Date as DamlDate, Decimal } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -59,21 +59,21 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
     tag: 'TimeGte',
     value: parseDate(expiry),
   };
-  const obsStrike: Observation<DamlDate, string> = { tag: 'Const', value: { value: strike } };
-  const obsSpot: Observation<DamlDate, string> = { tag: 'Observe', value: { key: underlying } };
-  const ineqPayoff: Inequality<DamlDate, string> = {
+  const obsStrike: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: strike } };
+  const obsSpot: Observation<DamlDate, Decimal> = { tag: 'Observe', value: { key: underlying } };
+  const ineqPayoff: Inequality<DamlDate, Decimal> = {
     tag: 'Lte',
     value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike },
   };
 
-  const zero: Claim<DamlDate, string, Id> = { tag: 'Zero', value: {} };
-  const oneUsd: Claim<DamlDate, string, Id> = { tag: 'One', value: ccyId };
-  const cond: Claim<DamlDate, string, Id> = {
+  const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
+  const oneUsd: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: ccyId };
+  const cond: Claim<DamlDate, Decimal, Id> = {
     tag: 'Cond',
     value: { predicate: ineqPayoff, success: oneUsd, failure: zero },
   };
-  const choice: Claim<DamlDate, string, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
-  const claims: Claim<DamlDate, string, Id> = {
+  const choice: Claim<DamlDate, Decimal, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
+  const claims: Claim<DamlDate, Decimal, Id> = {
     tag: 'When',
     value: { predicate: ineqEuropean, claim: choice },
   };
