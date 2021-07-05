@@ -68,7 +68,9 @@ export const transformInequality = (
         ...inequality,
         linkText,
         type: 'Observation',
-        children: [], // todo
+        text: 'time >=',
+        collapsedText: `time >= ${inequality.value}`,
+        children: null,
       };
     case 'Lte':
       const left2 = transformObservation(inequality.value._1, 'left');
