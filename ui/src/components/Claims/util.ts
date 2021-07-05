@@ -55,7 +55,13 @@ const transformObservation = (obs: Observation<Date, Decimal>, linkText: string)
     case 'Const':
       return { ...obs, linkText, type: 'Observation', text: obs.value.value, children: null };
     case 'Observe':
-      return { ...obs, linkText, type: 'Observation', text: `Price(${obs.value.key})`, children: null };
+      return {
+        ...obs,
+        linkText,
+        type: 'Observation',
+        text: `Price(${obs.value.key})`,
+        children: null,
+      };
   }
 };
 
