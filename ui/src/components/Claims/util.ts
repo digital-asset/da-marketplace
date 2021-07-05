@@ -7,6 +7,7 @@ import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types/module';
 import { Date, Decimal } from '@daml/types';
 
 const transformObservation = (obs: Observation<Date, Decimal>, linkText: string): any => {
+  console.log(obs);
   switch (obs.tag) {
     case 'Add': //TODO: collapse a + (-b) into a - b
       const left4 = transformObservation(obs.value._1, 'left');
@@ -52,9 +53,9 @@ const transformObservation = (obs: Observation<Date, Decimal>, linkText: string)
         children: [left7, right7],
       };
     case 'Const':
-      return { ...obs, linkText, type: 'Observation', text: obs.value, children: null };
+      return { ...obs, linkText, type: 'Observation', text: obs.value.value, children: null };
     case 'Observe':
-      return { ...obs, linkText, type: 'Observation', text: `Price(${obs.value})`, children: null };
+      return { ...obs, linkText, type: 'Observation', text: `Price(${obs.value.key})`, children: null };
   }
 };
 
@@ -68,8 +69,8 @@ export const transformInequality = (
         ...inequality,
         linkText,
         type: 'Observation',
-        text: 'time >=',
-        collapsedText: `time >= ${inequality.value}`,
+        text: `t >= ${inequality.value}`,
+        collapsedText: `t >= ${inequality.value}`,
         children: null,
       };
     case 'Lte':
