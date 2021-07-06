@@ -36,8 +36,6 @@ import { retrieveUserParties } from '../../Parties';
 import { IconCheck, InformationIcon } from '../../icons/icons';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
-import QuickSetupPage from './QuickSetupPage';
-import { MenuItems, LoadingWheel } from './QuickSetup';
 import { NewAccount } from '../custody/New';
 import { CreateEvent } from '@daml/ledger';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
@@ -74,9 +72,7 @@ const SUPPORTED_REQUESTS = [
   ServiceKind.BIDDING,
 ];
 
-const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
-  const { adminCredentials } = props;
-
+const RequestServicesPage = () => {
   const userParties = retrieveUserParties() || [];
 
   const [requestInfo, setRequestInfo] = useState<IRequestServiceInfo>();
@@ -108,26 +104,15 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
   };
 
   return (
-    <>
-      <DamlLedger
-        party={adminCredentials.party}
-        token={adminCredentials.token}
-        httpBaseUrl={httpBaseUrl}
-        wsBaseUrl={wsBaseUrl}
-      >
-        <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-          <ServicesProvider>
-            <RequestForm
-              requestInfo={requestInfo}
-              setRequestInfo={setRequestInfo}
-              createRequest={() => setCreatingRequest(true)}
-              creatingRequest={creatingRequest}
-              addedSuccessfully={addedSuccessfully}
-              token={token}
-            />
-          </ServicesProvider>
-        </QueryStreamProvider>
-      </DamlLedger>
+    <div className="request-services">
+      <RequestForm
+        requestInfo={requestInfo}
+        setRequestInfo={setRequestInfo}
+        createRequest={() => setCreatingRequest(true)}
+        creatingRequest={creatingRequest}
+        addedSuccessfully={addedSuccessfully}
+        token={token}
+      />
       {creatingRequest && requestInfo && requestInfo.provider && requestInfo.customer && token && (
         <DamlLedger
           token={token}
@@ -148,7 +133,7 @@ const RequestServicesPage = (props: { adminCredentials: Credentials }) => {
           </QueryStreamProvider>
         </DamlLedger>
       )}
-    </>
+    </div>
   );
 };
 
@@ -329,132 +314,114 @@ const RequestForm = (props: {
   }, [requestInfo, services, setModalAccountInfos, setShowAccountModal, selectAccounts]);
 
   if (identitiesLoading) {
-    return (
-      <QuickSetupPage className="loading">
-        <LoadingWheel label="Loading parties..." />
-      </QuickSetupPage>
-    );
+    return null;
   }
 
   return (
-    <QuickSetupPage
-      className="request-services"
-      nextItem={MenuItems.REVIEW}
-      title="Request Services"
-    >
-      <div className="page-row">
-        <Form>
-          <Form.Select
-            disabled={creatingRequest}
-            className="request-select"
-            label={<p className="input-label">As:</p>}
-            value={requestInfo?.customer || ''}
-            placeholder="Select..."
-            onChange={(_, data: any) =>
-              setRequestInfo({
-                ...requestInfo,
-                customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-              })
-            }
-            options={partyOptions}
-          />
-          <Form.Select
-            disabled={creatingRequest}
-            className="request-select"
-            label={<p className="input-label">Request Service:</p>}
-            placeholder="Select..."
-            value={requestInfo?.services || []}
-            multiple
-            onChange={(_, data: any) =>
-              setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
-            }
-            options={serviceOptions}
-          />
-          <Form.Select
-            disabled={creatingRequest}
-            className="request-select"
-            label={<p className="input-label">From:</p>}
-            placeholder="Select..."
-            value={requestInfo?.provider || ''}
-            onChange={(_, data: any) =>
-              setRequestInfo({
-                ...requestInfo,
-                provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
-              })
-            }
-            options={partyOptions}
-          />
-          <Button
-            className="ghost request"
-            disabled={
-              !requestInfo ||
-              !requestInfo.provider ||
-              !requestInfo.customer ||
-              !requestInfo.services ||
-              creatingRequest ||
-              existingServices.length > 0
-            }
-            onClick={() => createRequest()}
-          >
-            {creatingRequest ? 'Creating Request...' : 'Request'}
-          </Button>
-          {addedSuccessfully ? (
-            <p className="p2 message">
-              <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
-            </p>
-          ) : (
-            existingServices.length > 0 &&
-            requestInfo?.provider &&
-            requestInfo?.customer && (
-              <p className="p2 message">
-                <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
-                {itemListAsText(existingServices || [])} services to{' '}
-                {getName(requestInfo?.customer)}
-              </p>
-            )
-          )}
-        </Form>
-        <div className="party-names">
-          {services.map((s, i) => (
-            <div className="party-name" key={i}>
-              <p>
-                {getName(s.contract.payload.provider)} provides {s.service} service to{' '}
-                {getName(s.contract.payload.customer)}{' '}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-      {requestInfo && requestInfo.customer && token && (
-        <DamlLedger
-          token={token}
-          party={requestInfo.customer}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
+    <>
+      <Form>
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">As:</p>}
+          value={requestInfo?.customer || ''}
+          placeholder="Select..."
+          onChange={(_, data: any) =>
+            setRequestInfo({
+              ...requestInfo,
+              customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            })
+          }
+          options={partyOptions}
+        />
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">Request Service:</p>}
+          placeholder="Select..."
+          value={requestInfo?.services || []}
+          multiple
+          onChange={(_, data: any) =>
+            setRequestInfo({ ...requestInfo, services: data.value as ServiceKind[] })
+          }
+          options={serviceOptions}
+        />
+        <Form.Select
+          disabled={creatingRequest}
+          className="request-select"
+          label={<p className="input-label">From:</p>}
+          placeholder="Select..."
+          value={requestInfo?.provider || ''}
+          onChange={(_, data: any) =>
+            setRequestInfo({
+              ...requestInfo,
+              provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+            })
+          }
+          options={partyOptions}
+        />
+      </Form>
+      <div className="submit-actions">
+        <Button
+          className="ghost request"
+          disabled={
+            !requestInfo ||
+            !requestInfo.provider ||
+            !requestInfo.customer ||
+            !requestInfo.services ||
+            creatingRequest ||
+            existingServices.length > 0
+          }
+          onClick={() => createRequest()}
         >
-          <AccountsForParty
+          {creatingRequest ? 'Creating Request...' : 'Request'}
+        </Button>
+        {requestInfo && requestInfo.customer && token && (
+          <DamlLedger
+            token={token}
             party={requestInfo.customer}
-            setAccountsForParty={setAccountsForParty}
-          />
-          <AccountSelectionModal
-            accountInfos={modalAccountInfos}
-            open={showAccountModal}
-            serviceProvider={requestInfo?.provider}
-            setOpen={setShowAccountModal}
-            party={requestInfo.customer}
-            accountsForParty={accountsForParty}
-            onCancel={modalOnCancelFunction}
-            onFinish={(accts: { [k: string]: Account | undefined }) => {
-              setRequestInfo({
-                ...requestInfo,
-                accounts: { ...requestInfo?.accounts, ...accts },
-              });
-            }}
-          />
-          <NewAccount party={requestInfo.customer} modal />
-        </DamlLedger>
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <AccountsForParty
+              party={requestInfo.customer}
+              setAccountsForParty={setAccountsForParty}
+            />
+            <AccountSelectionModal
+              accountInfos={modalAccountInfos}
+              open={showAccountModal}
+              serviceProvider={requestInfo?.provider}
+              setOpen={setShowAccountModal}
+              party={requestInfo.customer}
+              accountsForParty={accountsForParty}
+              onCancel={modalOnCancelFunction}
+              onFinish={(accts: { [k: string]: Account | undefined }) => {
+                setRequestInfo({
+                  ...requestInfo,
+                  accounts: { ...requestInfo?.accounts, ...accts },
+                });
+              }}
+            />
+            <NewAccount party={requestInfo.customer} modal />
+          </DamlLedger>
+        )}
+      </div>
+
+      {addedSuccessfully ? (
+        <p className="p2 message">
+          <IconCheck /> {itemListAsText(requestInfo?.services || [])} Successfully Requested
+        </p>
+      ) : (
+        existingServices.length > 0 &&
+        requestInfo?.provider &&
+        requestInfo?.customer && (
+          <p className="p2 message">
+            <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
+            {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
+          </p>
+        )
       )}
-    </QuickSetupPage>
+    </>
   );
 };
 

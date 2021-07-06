@@ -58,8 +58,10 @@
       align-self: center;
       flex-direction: column;
       border-radius: 6px;
-      width: 800px;
-      height: 550px;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
     }
   }
 }

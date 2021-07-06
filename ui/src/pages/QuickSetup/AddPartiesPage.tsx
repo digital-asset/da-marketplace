@@ -96,7 +96,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
               <QueryStreamProvider defaultPartyToken={p.token}>
                 <CreateVerifiedIdentity
                   party={p}
-                  onComplete={() => history.push(MenuItems.SELECT_ROLES)}
+                  onComplete={() => history.push(MenuItems.REVIEW)}
                 />
               </QueryStreamProvider>
             </PublicDamlProvider>
@@ -109,19 +109,28 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
   return (
     <QuickSetupPage className="add-parties">
       {parties.length > 0 ? (
-        <div className="page-row">
-          <div>
-            <p className="bold">Parties</p>
-            <div className="party-names uploaded">
-              {parties.map(p => (
-                <p className="party-name" key={p.party}>
-                  {p.partyName}
-                </p>
-              ))}
+        <>
+          <div className="page-row">
+            <div>
+              <p className="bold">Parties</p>
+              <div className="party-names uploaded">
+                {parties.map(p => (
+                  <p className="party-name" key={p.party}>
+                    {p.partyName}
+                  </p>
+                ))}
+              </div>
             </div>
+            <div className="upload-parties uploaded">{uploadButton}</div>
           </div>
-          <div className="upload-parties uploaded">{uploadButton}</div>
-        </div>
+          <Button
+            className="ghost next"
+            disabled={parties.length === 0}
+            onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
+          >
+            Next
+          </Button>
+        </>
       ) : (
         <div className="upload-parties">
           <p className="details">
@@ -131,14 +140,6 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
           <span className="login-details dark">{error}</span>
         </div>
       )}
-
-      <Button
-        className="ghost next"
-        disabled={parties.length === 0}
-        onClick={() => setLoadingStatus(LoadingStatus.CREATING_ADMIN_CONTRACTS)}
-      >
-        Next
-      </Button>
     </QuickSetupPage>
   );
 };
