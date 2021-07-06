@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import DamlLedger from '@daml/react';
+import { useWellKnownParties } from '@daml/hub-react/lib';
 
 import _ from 'lodash';
 
@@ -81,14 +82,14 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
 };
 
 const dagreGraph = new dagre.graphlib.Graph();
-
 dagreGraph.setDefaultEdgeLabel(() => ({}));
 dagreGraph.setGraph({ rankdir: 'TB' });
 
 const ReviewItems = () => {
   const { identities, loading: idsLoading } = useVerifiedParties();
   const { services, loading: servicesLoading } = useServiceContext();
-  const [elements, setElements] = useState<FlowElement<any>[]>([]);
+
+  const [loading, setLoading] = useState(true);
 
   type GroupedCustomerServices = {
     provider: string;
@@ -110,8 +111,10 @@ const ReviewItems = () => {
     return [...acc.filter(i => i !== providerDetails), { provider, services, customer }];
   }, [] as GroupedCustomerServices);
 
+  const operator = useWellKnownParties().parties?.userAdminParty || 'Operator';
+
   const serviceEdges = groupedServices
-    .filter(s => s.provider !== s.customer)
+    .filter(s => s.provider !== s.customer && s.provider !== operator)
     .map(s => {
       return {
         id: `edge_${s.provider}_to_${s.customer}`,
@@ -158,8 +161,29 @@ const ReviewItems = () => {
   dagre.layout(dagreGraph);
 
   useEffect(() => {
+    const timer = setInterval(() => {
+      setLoading(false);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (idsLoading || servicesLoading || loading) {
+    return (
+      <div className="review loading">
+        <LoadingWheel label={'Loading review data...'} />
+      </div>
+    );
+  }
+
+  return <Testing passedElements={initialElements} />;
+};
+
+const Testing = (props: { passedElements: any[] }) => {
+  const [elements, setElements] = useState<FlowElement<any>[]>(props.passedElements);
+
+  useEffect(() => {
     setElements(
-      initialElements.map(el => {
+      props.passedElements.map(el => {
         if (isNode(el)) {
           const nodeWithPosition = dagreGraph.node(el.id);
 
@@ -172,15 +196,7 @@ const ReviewItems = () => {
         return el;
       })
     );
-  }, [services, identities]);
-
-  if (idsLoading || servicesLoading) {
-    return (
-      <div className="review loading">
-        <LoadingWheel label={'Loading review data...'} />
-      </div>
-    );
-  }
+  }, [props.passedElements]);
 
   const onElementClick = (_: any, element: FlowElement) => {
     const heightlightColor = '#FFCC00';
@@ -225,7 +241,7 @@ const ReviewItems = () => {
     });
     setElements(newElements);
   };
-
+  const graphStyles = { width: '100%', height: '100%' };
   const onConnect = (params: any) =>
     setElements(els => addEdge({ ...params, type: 'smoothstep', animated: true }, els));
 
@@ -236,8 +252,6 @@ const ReviewItems = () => {
     special: RoleNode,
   };
 
-  const graphStyles = { width: '100%', height: '100%' };
-
   return (
     <ReactFlow
       style={graphStyles}
@@ -246,7 +260,6 @@ const ReviewItems = () => {
       onElementsRemove={onElementsRemove}
       onElementClick={onElementClick}
       nodeTypes={nodeTypes}
-      fitView={true}
     >
       <Controls />
       <Background />
