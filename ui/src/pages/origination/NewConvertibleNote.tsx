@@ -133,6 +133,7 @@ const NewConvertibleNoteComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
+      cfi: { unpack: 'ECXXXX' },
       claims,
       safekeepingAccount,
       observers: [service.payload.provider, party],

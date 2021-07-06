@@ -101,6 +101,7 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
+      cfi: { unpack: 'XXXXXX' },
       claims,
       safekeepingAccount,
       observers: [service.payload.provider, party],

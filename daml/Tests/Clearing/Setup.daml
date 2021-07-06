@@ -4,6 +4,8 @@ import Daml.Script
 import Common
 import ContingentClaims.Claim (Claim(Zero))
 import DA.Assert ((===))
+import DA.Finance.Types
+import DA.Date (date, Month(..))
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Role qualified as Clearing
@@ -14,9 +16,9 @@ import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Issuance.AssetDescription (AssetDescription(..))
-import Marketplace.Issuance.AssetDescription qualified as AD
+import Marketplace.Issuance.CFI qualified as CFI
+import Tests.Utils (future)
 
-import DA.Finance.Types
 import DA.Set qualified as Set
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
@@ -61,16 +63,16 @@ clearedTradingTest = do
   marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = exchange; ..
   marketServiceCid <- submit exchange do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
 
-  (_, AssetDescription{assetId = h2oId}) <- originate providers issuer "H2O" "H2O Spot" AD.equity Zero
+  (_, AssetDescription{assetId = h2oId}) <- originate providers issuer "H2O" "H2O Spot" CFI.equity Zero
 
-  let mkSimpleH2OFuture name description = do
-      (_, AssetDescription{assetId}) <- originate providers issuer name description AD.future Zero
+  let mkSimpleH2OFuture name description expiry = do
+      (_, AssetDescription{assetId}) <- originate providers issuer name description CFI.future $ future h2oId 1.0 expiry
       return assetId
 
-  h2oQ121DerId <- mkSimpleH2OFuture "H2OQ121" "H2O Q1 21"
-  h2oQ221DerId <- mkSimpleH2OFuture "H2OQ221" "H2O Q2 21"
-  h2oQ321DerId <- mkSimpleH2OFuture "H2OQ321" "H2O Q3 21"
-  h2oQ421DerId <- mkSimpleH2OFuture "H2OQ421" "H2O Q4 21"
+  h2oQ122DerId <- mkSimpleH2OFuture "H2OQ122" "H2O Q1 22" $ date 2022 Jan 1
+  h2oQ222DerId <- mkSimpleH2OFuture "H2OQ222" "H2O Q2 22" $ date 2022 Apr 1
+  h2oQ322DerId <- mkSimpleH2OFuture "H2OQ322" "H2O Q3 22" $ date 2022 Jul 1
+  h2oQ422DerId <- mkSimpleH2OFuture "H2OQ422" "H2O Q4 22" $ date 2022 Oct 1
 
   -- List a Security to trade
   Some (listingServiceCid, _) <- queryContractKey @Listing.Service exchange (operator, exchange, exchange)
@@ -95,16 +97,16 @@ clearedTradingTest = do
         (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
         return listingId
 
-  h2oQ121Id <- mkMarket usd.id h2oQ121DerId
-  h2oQ221Id <- mkMarket usd.id h2oQ221DerId
-  h2oQ321Id <- mkMarket usd.id h2oQ321DerId
-  h2oQ421Id <- mkMarket usd.id h2oQ421DerId
+  h2oQ122Id <- mkMarket usd.id h2oQ122DerId
+  h2oQ222Id <- mkMarket usd.id h2oQ222DerId
+  h2oQ322Id <- mkMarket usd.id h2oQ322DerId
+  h2oQ422Id <- mkMarket usd.id h2oQ422DerId
 
-  makeTrade providers h2oQ121Id alice bob 50.0 1000.0 1
-  makeTrade providers h2oQ221Id alice charlie 10.0 3000.0 3
-  makeTrade providers h2oQ321Id bob dana 200.0 5000.0 5
-  makeTrade providers h2oQ421Id dana alice 15.0 2500.0 7
-  makeTrade providers h2oQ121Id bob charlie 500.0 1000.0 9
+  makeTrade providers h2oQ122Id alice bob 50.0 1000.0 1
+  makeTrade providers h2oQ222Id alice charlie 10.0 3000.0 3
+  makeTrade providers h2oQ322Id bob dana 200.0 5000.0 5
+  makeTrade providers h2oQ422Id dana alice 15.0 2500.0 7
+  makeTrade providers h2oQ122Id bob charlie 500.0 1000.0 9
 
   return ()
 

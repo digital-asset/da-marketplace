@@ -16,6 +16,13 @@ import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/i
 import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
+import { createDropdownProp } from '../common';
+
+enum AssetType {
+  CURRENCY = 'TCXXXX',
+  EQUITY = 'EXXXXX',
+  OTHER = 'XXXXXX',
+}
 
 const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -25,6 +32,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
   const [account, setAccount] = useState('');
+  const [cfi, setCfi] = useState('');
 
   const canRequest = !!label && !!description && !!account;
 
@@ -68,6 +76,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
+      cfi: { unpack: cfi },
       claims: zero,
       safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],
@@ -116,6 +125,20 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
           }}
         />
 
+        <Form.Select
+          label="Asset Type"
+          className="issue-asset-form-field"
+          placeholder="Select Asset Type..."
+          options={[
+            createDropdownProp('Currency', AssetType.CURRENCY),
+            createDropdownProp('Equity', AssetType.EQUITY),
+            createDropdownProp('Other', AssetType.OTHER),
+          ]}
+          value={cfi}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setCfi(result.value);
+          }}
+        />
         <FormLabel label="Observers" />
         <div className="form-select">
           <Button

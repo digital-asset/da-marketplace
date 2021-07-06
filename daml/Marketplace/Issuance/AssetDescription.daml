@@ -1,6 +1,8 @@
 module Marketplace.Issuance.AssetDescription where
 -- Consider merging into DA.Finance.Types.Asset
 
+import Marketplace.Issuance.CFI
+
 import DA.Finance.Types (Account, Id)
 import DA.Set (Set)
 import DA.Map (Map, size)
@@ -8,7 +10,7 @@ import DA.Map qualified as Map
 import ContingentClaims.Claim qualified as C
 import ContingentClaims.Claim.Serializable (Claim(..), Inequality(..))
 import ContingentClaims.Observation (Observation(..))
-import ContingentClaims.Observation qualified as O
+import ContingentClaims.Util (expiry, payoffs)
 
 type T = AssetDescription
 type Claims = Claim Date Decimal Id
@@ -17,35 +19,6 @@ type Version = Int
 deriving instance Ord x => Ord (Observation Date x)
 deriving instance Ord (Inequality Date Decimal)
 deriving instance Ord (Claim Date Decimal Id)
-
-newtype CFI = CFI Text deriving (Show, Eq)
-
-equity : CFI
-equity = CFI "EXXXXX"
-
-currency : CFI
-currency = CFI "TCXXXX"
-
-future : CFI
-future = CFI "FXXXXX"
-
-forward : CFI
-forward = CFI "JXXXXX"
-
-bond : CFI
-bond = CFI "DBXXXX"
-
-europeanCall : CFI
-europeanCall = CFI "OCEXXX"
-
-putWarrant : CFI
-putWarrant = CFI "RWXXPX"
-
-convertibleShare : CFI
-convertibleShare = CFI "ECXXXX"
-
-unknown : CFI
-unknown = CFI "XXXXXX"
 
 template AssetDescription
   with
@@ -77,16 +50,30 @@ template AssetDescription
     key assetId : Id
     maintainer key.signatories
 
-    nonconsuming choice GetMaturity : Date
+    nonconsuming choice GetExpiry : Optional Date
       with
         party : Party
       controller party
       do
-        let cs = C.deserialize claims
-        case C.deserialize claims of
-          (C.When (O.DateEqu (O.DateIdentity, O.DateConst t)) _) -> return t
-          _ -> error "Product does not have a maturity date"
+        return $ expiry $ C.deserialize claims
 
+    nonconsuming choice GetUnderlying : Optional Id
+      with
+        party : Party
+      controller party
+        do
+          case payoffs (C.deserialize claims) of
+            []                  -> return None
+            ((_,underlying)::_) -> return $ Just underlying
+
+    nonconsuming choice GetMultiplier : Optional Decimal
+      with
+        party : Party
+      controller party
+        do
+          case payoffs (C.deserialize claims) of
+            (((Const x),_)::_)  -> return $ Just x
+            _                   -> return None
 
 -- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
 template Index

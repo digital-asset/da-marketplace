@@ -7,7 +7,8 @@ import DA.Finance.Types
 import DA.Map qualified as Map
 import DA.Set (Set, fromList, union)
 import Marketplace.Issuance.Model (Issuance(..))
-import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims, CFI)
+import Marketplace.Issuance.CFI
+import Marketplace.Issuance.AssetDescription (AssetDescription(..), Claims)
 import Marketplace.Issuance.AssetDescription qualified as AssetDescription
 import Marketplace.Utils
 
