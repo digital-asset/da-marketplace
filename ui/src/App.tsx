@@ -388,7 +388,7 @@ const AppComponent = () => {
     additionalRoutes: [
       {
         path: paths.app.markets.order + '/:contractId',
-        render: () => <TradingOrder listings={listings} />,
+        render: () => <TradingOrder listings={listings} services={tradingService} />,
       },
       {
         path: paths.app.markets.offer,

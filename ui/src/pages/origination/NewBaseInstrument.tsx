@@ -5,7 +5,7 @@ import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import { Date as DamlDate } from '@daml/types';
+import { Date as DamlDate, Decimal } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -35,7 +35,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 
-  const zero: Claim<DamlDate, Id> = { tag: 'Zero', value: {} };
+  const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
   useEffect(() => {
     if (isPublic) {
