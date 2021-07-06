@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "dagre": "^0.8.5"
+    "@types/dagre": "^0.7.44",
+    "dagre": "^0.8.5",
+    "react-flow-renderer": "^9.6.3"
   }
 }
