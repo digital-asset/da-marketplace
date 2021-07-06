@@ -1,76 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
-import classNames from 'classnames';
-
-import DamlLedger, { useLedger } from '@daml/react';
-import { CreateEvent } from '@daml/ledger';
+import { useLedger } from '@daml/react';
 import { Choice, ContractId } from '@daml/types';
 
 import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import {
-  terminateRole,
-  RolesProvider,
-  useRolesContext,
-  RoleKind,
-  Role,
-} from '../../context/RolesContext';
-import { OffersProvider, useOffers, RoleOffer } from '../../context/OffersContext';
-import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
+import { useRolesContext, RoleKind, terminateRole } from '../../context/RolesContext';
+import { useOffers } from '../../context/OffersContext';
+import { useAutomations } from '../../context/AutomationContext';
 
-import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
-import { ArrowLeftIcon, IconClose } from '../../icons/icons';
-import {
-  PublishedInstance,
-  getAutomationInstances,
-  MarketplaceTrigger,
-  deployAutomation,
-} from '../../automation';
+import { MarketplaceTrigger, deployAutomation } from '../../automation';
 import { retrieveParties } from '../../Parties';
-import Credentials, { computeToken } from '../../Credentials';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  publicParty,
-  isHubDeployment,
-  useVerifiedParties,
-} from '../../config';
-import QuickSetupPage from './QuickSetupPage';
-import { LoadingWheel, MenuItems } from './QuickSetup';
-import { Label } from 'semantic-ui-react';
+import { computeToken } from '../../Credentials';
+import { publicParty, isHubDeployment, useVerifiedParties } from '../../config';
+import { Form, Button } from 'semantic-ui-react';
 
-const SelectRolesPage = (props: { adminCredentials: Credentials }) => {
-  const { adminCredentials } = props;
-
-  return (
-    <DamlLedger
-      token={adminCredentials.token}
-      party={adminCredentials.party}
-      httpBaseUrl={httpBaseUrl}
-      wsBaseUrl={wsBaseUrl}
-    >
-      <QueryStreamProvider defaultPartyToken={adminCredentials.token}>
-        <AutomationProvider publicParty={publicParty}>
-          <RolesProvider>
-            <OffersProvider>
-              <DragAndDropRoles />
-            </OffersProvider>
-          </RolesProvider>
-        </AutomationProvider>
-      </QueryStreamProvider>
-    </DamlLedger>
-  );
-};
-
-const DragAndDropRoles = () => {
+const SelectRolesPage = () => {
   const ledger = useLedger();
   const automations = useAutomations();
 
   const { identities, loading: identitiesLoading } = useVerifiedParties();
   const { roles: allRoles, loading: rolesLoading } = useRolesContext();
   const { roleOffers, loading: offersLoading } = useOffers();
+
+  const [selectedParty, setSelectedParty] = useState<string>();
+  const [selectedRole, setSelectedRole] = useState<RoleKind>();
 
   const { contracts: operatorService, loading: operatorLoading } =
     useStreamQueries(OperatorService);
@@ -91,52 +46,92 @@ const DragAndDropRoles = () => {
       s => s !== RoleKind.REGULATOR && s !== RoleKind.MATCHING && s !== RoleKind.CLEARING_PENDING
     )
     .map(i => {
-      return { name: i, value: i };
+      return { text: i, value: i };
     });
 
   if (rolesLoading || offersLoading || operatorLoading || identitiesLoading) {
-    return (
-      <QuickSetupPage className="loading">
-        <LoadingWheel label="Loading parties and roles..." />
-      </QuickSetupPage>
-    );
+    return null;
   }
 
-  return (
-    <QuickSetupPage
-      className="select-roles"
-      title="Drag and Drop Roles to Parties"
-      nextItem={MenuItems.REQUEST_SERVICES}
-    >
-      <div className="page-row">
-        <div>
-          <p className="bold">Parties</p>
-          <div className="party-names">
-            {identities.map((p, i) => (
-              <PartyRowDropZone key={i} party={p} handleAddItem={createRoleContract} />
-            ))}
-          </div>
-        </div>
-        <div className="arrow">
-          <ArrowLeftIcon color="grey" />
-        </div>
-        <div>
-          <p className="bold">Roles</p>
-          <div className="drag-tiles page-row ">
-            {roleOptions.map((item, i) => (
-              <DraggableItemTile key={i} item={item} />
-            ))}
-          </div>
-        </div>
-      </div>
-    </QuickSetupPage>
+  const partyOptions = identities.map(p => {
+    return { text: p.payload.legalName, value: p.payload.customer };
+  });
+
+  const parties = retrieveParties() || [];
+
+  const hasRole = !!allRoles.find(
+    role => role.roleKind === selectedRole && role.contract.payload.provider === selectedParty
   );
 
-  async function createRoleContract(partyId: string, token: string, role: RoleKind) {
+  return (
+    <div className="assign-roles">
+      <h4>Assign Roles:</h4>
+      <Form>
+        <Form.Select
+          className="request-select"
+          label={<p className="input-label">Party:</p>}
+          placeholder="Select..."
+          value={selectedParty || ''}
+          onChange={(_, data: any) => setSelectedParty(data.value)}
+          options={partyOptions}
+        />
+        <Form.Select
+          className="request-select"
+          label={<p className="input-label">Role:</p>}
+          placeholder="Select..."
+          value={selectedRole || ''}
+          onChange={(_, data: any) => setSelectedRole(data.value)}
+          options={roleOptions}
+        />
+        <div className="submit-actions">
+          <Button
+            disabled={!selectedRole || !selectedRole || hasRole}
+            className="ghost"
+            onClick={() => {
+              if (!!selectedParty && !!selectedRole) {
+                createRoleContract(selectedParty, selectedRole);
+              }
+            }}
+          >
+            Assign
+          </Button>
+          <Button
+            disabled={!selectedRole || !selectedRole || !hasRole}
+            className="ghost"
+            onClick={() => {
+              if (!!selectedParty && !!selectedRole) {
+                handleTerminateRole();
+              }
+            }}
+          >
+            Remove
+          </Button>
+        </div>
+      </Form>
+    </div>
+  );
+
+  function handleTerminateRole() {
+    const role = allRoles.find(
+      role => role.roleKind === selectedRole && role.contract.payload.provider === selectedParty
+    );
+    if (role) {
+      terminateRole(role, ledger);
+    }
+  }
+
+  async function createRoleContract(partyId: string, role: RoleKind) {
+    const token = isHubDeployment
+      ? parties.find(p => p.party === partyId)?.token
+      : computeToken(partyId);
+
     if (
       findExistingRoleOffer(partyId, role as RoleKind) ||
-      findExistingRole(partyId, role as RoleKind)
+      findExistingRole(partyId, role as RoleKind) ||
+      !token
     ) {
+      setSelectedParty(undefined);
+      setSelectedRole(undefined);
       return;
     }
 
@@ -171,7 +166,10 @@ const DragAndDropRoles = () => {
     provider: { provider: string }
   ) {
     const operatorServiceContract = operatorService[0];
-    return await ledger.exercise(choice, operatorServiceContract.contractId, provider);
+    return await ledger.exercise(choice, operatorServiceContract.contractId, provider).then(_ => {
+      setSelectedParty(undefined);
+      setSelectedRole(undefined);
+    });
   }
 
   async function handleDeployment(token: string, autoName: string) {
@@ -196,118 +194,6 @@ const DragAndDropRoles = () => {
   function findExistingRole(provider: string, role: RoleKind) {
     return !!allRoles.find(c => c.roleKind === role && c.contract.payload.provider === provider);
   }
-};
-
-const ServiceLabel: React.FC<{ role: Role }> = ({ role }) => {
-  const [hovering, setHovering] = useState(false);
-
-  const ledger = useLedger();
-
-  return (
-    <div
-      className="service-label"
-      onMouseOver={() => setHovering(true)}
-      onMouseEnter={() => setHovering(true)}
-      onMouseOut={() => setHovering(false)}
-      onMouseLeave={() => setHovering(false)}
-    >
-      {hovering ? (
-        <Label basic onClick={() => terminateRole(role, ledger)}>
-          {role.roleKind} <IconClose />
-        </Label>
-      ) : (
-        <p>{role.roleKind}</p>
-      )}
-    </div>
-  );
-};
-
-const PartyRowDropZone = (props: {
-  party: CreateEvent<VerifiedIdentity>;
-  handleAddItem: (party: string, token: string, item: RoleKind) => void;
-}) => {
-  const { party, handleAddItem } = props;
-  const { roleOffers } = useOffers();
-  const { roles: allRoles } = useRolesContext();
-  const parties = retrieveParties() || [];
-
-  const [deployedAutomations, setDeployedAutomations] = useState<PublishedInstance[]>([]);
-  const [dragCount, setDragCount] = useState(0);
-  const token = isHubDeployment
-    ? parties.find(p => p.party === party.payload.customer)?.token
-    : computeToken(party.payload.customer);
-
-  const roles = allRoles.filter(r => r.contract.payload.provider === party.payload.customer);
-
-  const clearingOffer = findClearingOffer(party.payload.customer);
-
-  useEffect(() => {
-    if (isHubDeployment && token) {
-      const timer = setInterval(() => {
-        getAutomationInstances(token).then(pd => {
-          setDeployedAutomations(pd || []);
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [token]);
-
-  if (clearingOffer) {
-    roles.push({ contract: clearingOffer.contract, roleKind: RoleKind.CLEARING_PENDING });
-  }
-
-  return (
-    <div
-      className={classNames('party-name page-row', { 'drag-over': dragCount > 0 })}
-      onDrop={evt => handleDrop(evt.dataTransfer.getData('text') as RoleKind)}
-      onDragEnter={_ => setDragCount(dragCount + 1)}
-      onDragLeave={_ => setDragCount(dragCount - 1)}
-      onDragOver={evt => evt.preventDefault()}
-    >
-      {roles && (
-        <div className="party-details">
-          <p>{party.payload.legalName}</p>
-          <div className="dropped-items">
-            {roles.map((r, i) => [
-              i > 0 && ', ',
-              <ServiceLabel key={r.contract.contractId} role={r} />,
-            ])}
-          </div>
-        </div>
-      )}
-
-      <p className="dropped-items">
-        {deployedAutomations.map(da => formatTriggerName(da.config.value.name)).join(', ')}
-      </p>
-    </div>
-  );
-
-  function findClearingOffer(partyId: string): RoleOffer | undefined {
-    return roleOffers.find(
-      r => r.contract.payload.provider === partyId && r.role === RoleKind.CLEARING
-    );
-  }
-
-  function handleDrop(item: RoleKind) {
-    setDragCount(dragCount - 1);
-    if (token) {
-      handleAddItem(party.payload.customer, token, item);
-    }
-  }
-};
-
-const DraggableItemTile = (props: { item: { name: string; value: string } }) => {
-  const { item } = props;
-
-  function handleDragStart(evt: any) {
-    evt.dataTransfer.setData('text', item.value);
-  }
-
-  return (
-    <div className="drag-tile" draggable={true} onDragStart={e => handleDragStart(e)}>
-      <p>{item.name}</p>
-    </div>
-  );
 };
 
 export function formatTriggerName(name: string) {
