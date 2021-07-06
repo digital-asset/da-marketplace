@@ -1215,10 +1215,10 @@
 "@daml.js/da-marketplace@file:../daml.js/da-marketplace-0.2.0":
   version "1.12.0"
   dependencies:
-    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-9f3325cc-7e19-4928-bc45-a71b50c77f5b-1625586736114/node_modules/@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
-    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-9f3325cc-7e19-4928-bc45-a71b50c77f5b-1625586736114/node_modules/@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
-    "@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-9f3325cc-7e19-4928-bc45-a71b50c77f5b-1625586736114/node_modules/@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f"
-    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-9f3325cc-7e19-4928-bc45-a71b50c77f5b-1625586736114/node_modules/@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
+    "@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-70fb949c-9cdc-4af4-8d6d-87f3d47af6fe-1625589541582/node_modules/@daml.js/40f452260bef3f29dede136108fc08a88d5a5250310281067087da6f0baddff7"
+    "@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-70fb949c-9cdc-4af4-8d6d-87f3d47af6fe-1625589541582/node_modules/@daml.js/97b883cd8a2b7f49f90d5d39c981cf6e110cf1f1c64427a28a6d58ec88c43657"
+    "@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-70fb949c-9cdc-4af4-8d6d-87f3d47af6fe-1625589541582/node_modules/@daml.js/bfcd37bd6b84768e86e432f5f6c33e25d9e7724a9d42e33875ff74f6348e733f"
+    "@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662" "file:../../Library/Caches/Yarn/v6/npm-@daml-js-da-marketplace-1.12.0-70fb949c-9cdc-4af4-8d6d-87f3d47af6fe-1625589541582/node_modules/@daml.js/d14e08374fc7197d6a0de468c968ae8ba3aadbf9315476fd39071831f5923662"
     "@mojotech/json-type-validation" "^3.1.0"
 
 "@daml/hub-react@^0.2.1":
@@ -2176,6 +2176,11 @@
     "@types/d3-timer" "*"
     "@types/d3-transition" "*"
     "@types/d3-zoom" "*"
+
+"@types/dagre@^0.7.44":
+  version "0.7.44"
+  resolved "https://registry.yarnpkg.com/@types/dagre/-/dagre-0.7.44.tgz#8f4b796b118ca29c132da7068fbc0d0351ee5851"
+  integrity sha512-N6HD+79w77ZVAaVO7JJDW5yJ9LAxM62FpgNGO9xEde+KVYjDRyhIMzfiErXpr1g0JPon9kwlBzoBK6s4fOww9Q==
 
 "@types/eslint-visitor-keys@^1.0.0":
   version "1.0.0"
