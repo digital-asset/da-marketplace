@@ -25,7 +25,7 @@ const SelectRolesPage = () => {
   const { roleOffers, loading: offersLoading } = useOffers();
 
   const [selectedParty, setSelectedParty] = useState<string>();
-  const [selectedRole, setSelectedRole] = useState<RoleKind>();
+  const [selectedRoles, setSelectedRoles] = useState<RoleKind[]>([]);
 
   const { contracts: operatorService, loading: operatorLoading } =
     useStreamQueries(OperatorService);
@@ -60,7 +60,8 @@ const SelectRolesPage = () => {
   const parties = retrieveParties() || [];
 
   const hasRole = !!allRoles.find(
-    role => role.roleKind === selectedRole && role.contract.payload.provider === selectedParty
+    role =>
+      selectedRoles.includes(role.roleKind) && role.contract.payload.provider === selectedParty
   );
 
   return (
@@ -78,27 +79,28 @@ const SelectRolesPage = () => {
           className="request-select"
           label={<p className="input-label">Role:</p>}
           placeholder="Select..."
-          value={selectedRole || ''}
-          onChange={(_, data: any) => setSelectedRole(data.value)}
+          multiple
+          value={selectedRoles || []}
+          onChange={(_, data: any) => setSelectedRoles(data.value)}
           options={roleOptions}
         />
         <div className="submit-actions">
           <Button
-            disabled={!selectedRole || !selectedRole || hasRole}
+            disabled={selectedRoles.length === 0 || !selectedParty || hasRole}
             className="ghost"
             onClick={() => {
-              if (!!selectedParty && !!selectedRole) {
-                createRoleContract(selectedParty, selectedRole);
+              if (!!selectedParty && selectedRoles.length > 0) {
+                createRoleContract(selectedParty, selectedRoles);
               }
             }}
           >
             Assign
           </Button>
           <Button
-            disabled={!selectedRole || !selectedRole || !hasRole}
+            disabled={selectedRoles.length === 0 || !selectedParty || !hasRole}
             className="ghost"
             onClick={() => {
-              if (!!selectedParty && !!selectedRole) {
+              if (!!selectedParty && selectedRoles.length > 0) {
                 handleTerminateRole();
               }
             }}
@@ -110,54 +112,59 @@ const SelectRolesPage = () => {
     </div>
   );
 
-  function handleTerminateRole() {
-    const role = allRoles.find(
-      role => role.roleKind === selectedRole && role.contract.payload.provider === selectedParty
+  async function handleTerminateRole() {
+    const roles = allRoles.filter(
+      role =>
+        selectedRoles.includes(role.roleKind) && role.contract.payload.provider === selectedParty
     );
-    if (role) {
-      terminateRole(role, ledger);
+    if (roles.length > 0) {
+      await Promise.all(roles.map(async role => terminateRole(role, ledger)));
+      setSelectedRoles([]);
     }
   }
 
-  async function createRoleContract(partyId: string, role: RoleKind) {
+  async function createRoleContract(partyId: string, roles: RoleKind[]) {
+    const provider = { provider: partyId };
     const token = isHubDeployment
       ? parties.find(p => p.party === partyId)?.token
       : computeToken(partyId);
-
-    if (
-      findExistingRoleOffer(partyId, role as RoleKind) ||
-      findExistingRole(partyId, role as RoleKind) ||
-      !token
-    ) {
+    if (!token) {
       setSelectedParty(undefined);
-      setSelectedRole(undefined);
+      setSelectedRoles([]);
       return;
     }
-
-    const provider = { provider: partyId };
-
-    switch (role) {
-      case RoleKind.CUSTODY:
-        doCreate(OperatorService.OfferCustodianRole, provider);
-        return;
-      case RoleKind.CLEARING:
-        doCreate(OperatorService.OfferClearingRole, provider);
-        handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
-        return;
-      case RoleKind.TRADING:
-        doCreate(OperatorService.OfferExchangeRole, provider);
-        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
-        return;
-      case RoleKind.SETTLEMENT:
-        doCreate(OperatorService.OfferSettlementService, provider);
-        handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
-        return;
-      case RoleKind.DISTRIBUTION:
-        doCreate(OperatorService.OfferDistributorRole, provider);
-        return;
-      default:
-        throw new Error(`Unsupported role: ${role}`);
-    }
+    await Promise.all(
+      roles.map(async role => {
+        if (
+          findExistingRoleOffer(partyId, role as RoleKind) ||
+          findExistingRole(partyId, role as RoleKind)
+        ) {
+          return;
+        }
+        switch (role) {
+          case RoleKind.CUSTODY:
+            doCreate(OperatorService.OfferCustodianRole, provider);
+            return;
+          case RoleKind.CLEARING:
+            doCreate(OperatorService.OfferClearingRole, provider);
+            handleDeployment(token, MarketplaceTrigger.ClearingTrigger);
+            return;
+          case RoleKind.TRADING:
+            doCreate(OperatorService.OfferExchangeRole, provider);
+            handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
+            return;
+          case RoleKind.SETTLEMENT:
+            doCreate(OperatorService.OfferSettlementService, provider);
+            handleDeployment(token, MarketplaceTrigger.SettlementInstructionTrigger);
+            return;
+          case RoleKind.DISTRIBUTION:
+            doCreate(OperatorService.OfferDistributorRole, provider);
+            return;
+          default:
+            throw new Error(`Unsupported role: ${role}`);
+        }
+      })
+    );
   }
 
   async function doCreate(
@@ -167,7 +174,7 @@ const SelectRolesPage = () => {
     const operatorServiceContract = operatorService[0];
     return await ledger.exercise(choice, operatorServiceContract.contractId, provider).then(_ => {
       setSelectedParty(undefined);
-      setSelectedRole(undefined);
+      setSelectedRoles([]);
     });
   }
 
