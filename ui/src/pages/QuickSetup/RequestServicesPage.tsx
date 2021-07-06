@@ -110,7 +110,10 @@ const RequestServicesPage = () => {
             <RequestsProvider>
               <CreateServiceRequests
                 requestInfo={requestInfo}
-                onFinish={() => setCreatingRequest(false)}
+                onFinish={() => {
+                  setCreatingRequest(false);
+                  setRequestInfo(undefined);
+                }}
               />
             </RequestsProvider>
           </QueryStreamProvider>
@@ -229,7 +232,7 @@ const RequestForm = (props: {
           break;
       }
     },
-    [requestInfo, setRequestInfo]
+    [requestInfo]
   );
 
   useEffect(() => {
@@ -297,7 +300,7 @@ const RequestForm = (props: {
   if (identitiesLoading) {
     return null;
   }
-
+  console.log(modalAccountInfos);
   return (
     <>
       <Form>

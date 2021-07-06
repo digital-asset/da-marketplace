@@ -51,7 +51,7 @@
           display: flex;
           flex-direction: row;
           align-items: center;
-    }
+        }
       }
 
       .request-services {
@@ -64,7 +64,8 @@
             width: 16px;
           }
         }
-        .request-select {
+        .request-select,
+        .required.request-select {
           margin-bottom: $spacing-s;
           a.ui.label {
             background-color: var(--cool-grey-100);
