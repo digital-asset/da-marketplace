@@ -175,10 +175,10 @@ const ReviewItems = () => {
     );
   }
 
-  return <Testing passedElements={initialElements} />;
+  return <Network passedElements={initialElements} />;
 };
 
-const Testing = (props: { passedElements: any[] }) => {
+const Network = (props: { passedElements: any[] }) => {
   const [elements, setElements] = useState<FlowElement<any>[]>(props.passedElements);
 
   useEffect(() => {
@@ -260,6 +260,8 @@ const Testing = (props: { passedElements: any[] }) => {
       onElementsRemove={onElementsRemove}
       onElementClick={onElementClick}
       nodeTypes={nodeTypes}
+      zoomOnScroll={false}
+      zoomOnPinch={false}
     >
       <Controls />
       <Background />
