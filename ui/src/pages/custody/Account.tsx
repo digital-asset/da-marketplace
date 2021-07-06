@@ -7,6 +7,8 @@ import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
 import { Account as AccountContract } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
+import { CloseAccountRequest } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+
 import { InputDialog, InputDialogProps } from '../../components/InputDialog/InputDialog';
 import { usePartyName } from '../../config';
 import Tile from '../../components/Tile/Tile';
@@ -37,6 +39,9 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
   const { contracts: allocatedAccounts, loading: allocatedAccountsLoading } =
     useStreamQueries(AllocationAccountRule);
   const { contracts: deposits, loading: depositsLoading } = useStreamQueries(AssetDeposit);
+  const existingCloseRequest = !!useStreamQueries(CloseAccountRequest).contracts.find(
+    c => c.payload.accountId.label === targetAccount.account.id.label
+  );
 
   const defaultTransferRequestDialogProps: InputDialogProps<any> = {
     open: false,
@@ -137,14 +142,20 @@ const Account: React.FC<ServicePageProps<Service> & AccountProps> = ({
         <div className="account-details">
           <div className="account-data">
             <h4> {targetAccount.account.id.label} </h4>
-            {normalAccount && (
-              <OverflowMenu>
-                <OverflowMenuEntry
-                  label={'Close Account'}
-                  onClick={() => requestCloseAccount(normalAccount)}
-                />
-              </OverflowMenu>
-            )}
+            {normalAccount &&
+              targetAccount.account.owner === party &&
+              (existingCloseRequest ? (
+                <p className="close-request">
+                  <i> close request pending</i>
+                </p>
+              ) : (
+                <OverflowMenu>
+                  <OverflowMenuEntry
+                    label={'Close Account'}
+                    onClick={() => requestCloseAccount(normalAccount)}
+                  />
+                </OverflowMenu>
+              ))}
           </div>
           <div className="account-data body">
             <p className="p2">Type: {normalAccount ? 'Normal' : 'Allocation'} </p>

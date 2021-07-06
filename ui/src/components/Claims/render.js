@@ -86,9 +86,9 @@ export const render = (el, data) => {
 
     nodeEnter
       .append('rect')
-      .attr('x', -50)
+      .attr('x', -55)
       .attr('y', -10)
-      .attr('width', 100)
+      .attr('width', 110)
       .attr('height', 20)
       .attr('rx', 6)
       .attr('ry', 6)

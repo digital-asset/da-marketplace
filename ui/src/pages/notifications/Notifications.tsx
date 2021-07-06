@@ -1,5 +1,11 @@
 import React from 'react';
+import { CreateEvent } from '@daml/ledger';
 
+import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
+import {
+  Service as AuctionService,
+  CreateAuctionRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Auction/Service/';
 import {
   Offer as CustodyRoleOffer,
   Request as CustodyRoleRequest,
@@ -20,7 +26,6 @@ import {
   Offer as DistributionRoleOffer,
   Request as DistributionRoleRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Role';
-
 import {
   Offer as CustodyServiceOffer,
   Request as CustodyServiceRequest,
@@ -66,6 +71,16 @@ import {
   Request as BiddingServiceRequest,
 } from '@daml.js/da-marketplace/lib/Marketplace/Distribution/Bidding/Service';
 
+import {
+  CloseAccountRequest,
+  DebitAccountRequest,
+  OpenAccountRequest,
+  TransferDepositRequest,
+  CreditAccountRequest,
+} from '@daml.js/da-marketplace/lib/Marketplace/Custody/Model';
+
+import { AssetDeposit } from '@daml.js/da-marketplace/lib/DA/Finance/Asset';
+
 import { ServiceKind } from '../../context/ServicesContext';
 import BackButton from '../../components/Common/BackButton';
 import { useStreamQueries } from '../../Main';
@@ -76,12 +91,19 @@ import {
   OfferDeclineChoice,
   RequestApproveChoice,
   RequestRejectChoice,
+  ProcessRequestChoice,
 } from './NotificationTypes';
-import { OfferNotification, RequestNotification } from './NotificationComponents';
+import {
+  OfferNotification,
+  RequestNotification,
+  PendingRequestNotification,
+  ProcessRequestNotification,
+} from './NotificationComponents';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import { useVerifiedParties } from '../../config';
+import { useVerifiedParties, usePartyName } from '../../config';
 import { createDropdownProp } from '../common';
+import _ from 'lodash';
 
 export const useAllNotifications = (party: string): NotificationSet[] => {
   const custodianRoleOffers = useStreamQueries(CustodyRoleOffer);
@@ -117,6 +139,60 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
   const auctionServiceRequests = useStreamQueries(AuctionServiceRequest);
   const biddingServiceOffers = useStreamQueries(BiddingServiceOffer);
   const biddingServiceRequests = useStreamQueries(BiddingServiceRequest);
+
+  const openRequests = useStreamQueries(OpenAccountRequest).contracts;
+  const closeRequests = useStreamQueries(CloseAccountRequest).contracts;
+  const creditRequests = useStreamQueries(CreditAccountRequest).contracts;
+  const debitRequests = useStreamQueries(DebitAccountRequest).contracts;
+  const transferRequests = useStreamQueries(TransferDepositRequest).contracts;
+  const assetDeposits = useStreamQueries(AssetDeposit).contracts;
+  const auctionRequests = useStreamQueries(CreateAuctionRequest).contracts;
+
+  const { getName } = usePartyName(party);
+
+  const [inboundOpenRequests, outboundOpenRequests] = _.partition(
+    [...openRequests],
+    c => party === c.payload.provider
+  );
+  const [inboundCloseRequests, outboundCloseRequests] = _.partition(
+    [...closeRequests],
+    c => party === c.payload.provider
+  );
+  const [inboundCreditRequests, outboundCreditRequests] = _.partition(
+    [...creditRequests],
+    c => party === c.payload.provider
+  );
+  const [inboundDebitRequests, outboundDebitRequests] = _.partition(
+    [...debitRequests],
+    c => party === c.payload.provider
+  );
+  const [inboundTransferRequests, outboundTransferRequests] = _.partition(
+    [...transferRequests],
+    c => party === c.payload.provider
+  );
+  const [inboundAuctionRequests, outboundAuctionRequests] = _.partition(
+    [...auctionRequests],
+    c => party === c.payload.provider
+  );
+
+  const getDebitDepositDetail = (
+    c: CreateEvent<DebitAccountRequest>,
+    extract: (deposit: AssetDeposit) => string
+  ): string => {
+    console.log(assetDeposits);
+    const deposit = assetDeposits.find(a => a.contractId === c.payload.debit.depositCid);
+    if (!deposit) return '';
+    return extract(deposit.payload);
+  };
+
+  const getTransferDepositDetail = (
+    c: CreateEvent<TransferDepositRequest>,
+    extract: (deposit: AssetDeposit) => string
+  ): string => {
+    const deposit = assetDeposits.find(a => a.contractId === c.payload.transfer.depositCid);
+    if (!deposit) return '';
+    return extract(deposit.payload);
+  };
 
   const accountRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = useStreamQueries(AssetSettlementRule)
@@ -661,6 +737,145 @@ export const useAllNotifications = (party: string): NotificationSet[] => {
       lookupFields: fields => fields,
       contracts: biddingServiceRequests.contracts.filter(c => c.payload.provider === party),
     },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c =>
+        `Request to open account ${c.payload.accountId.label} is pending approval from
+        ${getName(c.payload.provider)}.`,
+      contracts: outboundOpenRequests,
+    },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c =>
+        `Request to close account ${c.payload.accountId.label} is pending approval from
+        ${getName(c.payload.provider)}.`,
+      contracts: outboundCloseRequests,
+    },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c =>
+        `Request to credit account ${c.payload.accountId.label} ${c.payload.asset.quantity}
+        ${c.payload.asset.id.label}
+        is pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundCreditRequests,
+    },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c => `Request to debit account ${c.payload.accountId.label}
+      ${getDebitDepositDetail(c, d => d.asset.quantity)}
+      ${getDebitDepositDetail(c, d => d.asset.id.label)}
+      is pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundDebitRequests,
+    },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c => `Request to transfer
+        ${getTransferDepositDetail(c, d => d.asset.quantity)}
+        ${getTransferDepositDetail(c, d => d.asset.id.label)}
+        from
+        ${c.payload.accountId.label} to
+        ${c.payload.transfer.receiverAccountId.label}
+        is pending approval from ${getName(c.payload.provider)}.`,
+      contracts: outboundTransferRequests,
+    },
+    {
+      kind: 'Pending',
+      tag: 'pending',
+      getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to create auction
+        ${c.payload.auctionId}. Auctioned Asset: ${c.payload.asset.quantity}
+        ${c.payload.asset.id.label},
+        Quoted Asset: ${c.payload.quotedAssetId.label}, Floor Price:${c.payload.floorPrice}
+        ${c.payload.quotedAssetId.label}`,
+      contracts: outboundAuctionRequests,
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.OpenAccount as ProcessRequestChoice,
+      contracts: inboundOpenRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `${getName(c.payload.customer)} requesting Open Account: ${c.payload.accountId.label}`,
+      getCustomArgs: c => {
+        return { openAccountRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.CloseAccount as ProcessRequestChoice,
+      contracts: inboundCloseRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `Request from ${getName(c.payload.customer)} to close account
+        ${c.payload.accountId.label}.`,
+      getCustomArgs: c => {
+        return { closeAccountRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.CreditAccount as ProcessRequestChoice,
+      contracts: inboundCreditRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `Request from ${getName(c.payload.customer)} to credit account ${c.payload.accountId.label}:
+        ${c.payload.asset.quantity} ${c.payload.asset.id.label}.`,
+      getCustomArgs: c => {
+        return { creditAccountRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.DebitAccount as ProcessRequestChoice,
+      contracts: inboundDebitRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c =>
+        `Request from ${getName(c.payload.customer)} to debit account ${c.payload.accountId.label}:
+        ${getDebitDepositDetail(c, d => d.asset.quantity)}
+        ${getDebitDepositDetail(c, d => d.asset.id.label)}`,
+      getCustomArgs: c => {
+        return { debitAccountRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: CustodyService.TransferDeposit as ProcessRequestChoice,
+      contracts: inboundTransferRequests,
+      requiredService: ServiceKind.CUSTODY,
+      getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to transfer
+          ${getTransferDepositDetail(c, d => d.asset.quantity)}
+          ${getTransferDepositDetail(c, d => d.asset.id.label)}
+          from
+          ${c.payload.accountId.label} to ${c.payload.transfer.receiverAccountId.label}`,
+      getCustomArgs: c => {
+        return { transferDepositRequestCid: c.contractId };
+      },
+    },
+    {
+      kind: 'Process',
+      tag: 'process',
+      processChoice: AuctionService.CreateAuction as ProcessRequestChoice,
+      contracts: inboundAuctionRequests,
+      requiredService: ServiceKind.AUCTION,
+      getCustomDescription: c => `Request from  ${getName(c.payload.customer)} to create auction
+            ${c.payload.auctionId}. Auctioned Asset: ${c.payload.asset.quantity}
+            ${c.payload.asset.id.label},
+            Quoted Asset: ${c.payload.quotedAssetId.label}, Floor Price:${c.payload.floorPrice}
+            ${c.payload.quotedAssetId.label}
+           `,
+      getCustomArgs: c => {
+        return { createAuctionRequestCid: c.contractId };
+      },
+    },
   ];
 };
 
@@ -706,11 +921,29 @@ const Notifications: React.FC<Props> = ({ notifications }) => {
                       rejectChoice={n.choices.reject}
                     />
                   ));
+                case 'pending':
+                  return n.contracts.map(c => (
+                    <PendingRequestNotification
+                      key={c.contractId}
+                      description={n.getCustomDescription(c)}
+                    />
+                  ));
+                case 'process':
+                  return n.contracts.map(c => (
+                    <ProcessRequestNotification
+                      key={c.contractId}
+                      description={n.getCustomDescription(c)}
+                      processChoice={n.processChoice}
+                      args={n.getCustomArgs(c)}
+                      requiredService={n.requiredService}
+                      contract={c}
+                    />
+                  ));
                 default:
                   return null;
               }
             })
-          : 'No Notifications.'}
+          : 'No Notifications or Pending Requests.'}
       </div>
     </div>
   );

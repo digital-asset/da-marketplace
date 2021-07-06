@@ -178,7 +178,7 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
+originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
 originate Providers{..} issuer assetLabel description cfi claims = do
     let observers = [public]
         safekeepingAccount = issuer.mainAccount

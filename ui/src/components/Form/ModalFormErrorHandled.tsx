@@ -79,10 +79,10 @@ const ModalFormErrorHandled: (props: Props) => React.ReactElement = ({
         )}
       </Modal.Content>
       <Modal.Actions>
+        <Button className="ghost" disabled={disabled} content="Submit" loading={loading} />
         <Button className="ghost warning" onClick={() => setOpen(false)}>
           Cancel
         </Button>
-        <Button className="ghost" disabled={disabled} content="Submit" loading={loading} />
       </Modal.Actions>
     </Modal>
   );

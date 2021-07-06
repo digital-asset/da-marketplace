@@ -6,16 +6,17 @@ import DA.Set (Set)
 import DA.Map (Map, size)
 import DA.Map qualified as Map
 import ContingentClaims.Claim qualified as C
-import ContingentClaims.Claim.Serializable (Claim(..))
+import ContingentClaims.Claim.Serializable (Claim(..), Inequality(..))
 import ContingentClaims.Observation (Observation(..))
 import ContingentClaims.Observation qualified as O
 
 type T = AssetDescription
-type Claims = Claim Date Id
+type Claims = Claim Date Decimal Id
 type Version = Int
 
-deriving instance Ord a => Ord (Observation Date a)
-deriving instance Ord (Claim Date Id)
+deriving instance Ord x => Ord (Observation Date x)
+deriving instance Ord (Inequality Date Decimal)
+deriving instance Ord (Claim Date Decimal Id)
 
 newtype CFI = CFI Text deriving (Show, Eq)
 
