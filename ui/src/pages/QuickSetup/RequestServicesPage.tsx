@@ -35,7 +35,7 @@ import { retrieveUserParties } from '../../Parties';
 import { InformationIcon } from '../../icons/icons';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
-// import { NewAccount } from '../custody/New';
+import { NewAccount } from '../custody/New';
 import { CreateEvent } from '@daml/ledger';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
@@ -163,7 +163,6 @@ const RequestForm = (props: {
   const { services } = useServiceContext();
   const { getName } = usePartyName('');
   const [accountsForParty, setAccountsForParty] = useState<IPartyAccounts>();
-  const [requestDisabled, setRequestDisabled] = useState(false);
 
   const serviceOptions = SUPPORTED_REQUESTS.map(i => {
     return { text: i, value: i };
@@ -172,9 +171,11 @@ const RequestForm = (props: {
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
-
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [modalAccountInfos, setModalAccountInfos] = useState<AccountInfos>({});
-
+  const [modalOnCancelFunction, setModalOnCancelFunction] = useState<() => void>(() => {
+    return;
+  });
   const selectAccounts = useCallback(
     (serviceType: ServiceKind) => {
       switch (serviceType) {
@@ -231,20 +232,17 @@ const RequestForm = (props: {
           });
           break;
       }
+      setModalOnCancelFunction(
+        () => () =>
+          setRequestInfo({
+            ...requestInfo,
+            services: requestInfo?.services?.filter(s => s !== serviceType),
+          })
+      );
+      setShowAccountModal(true);
     },
-    [requestInfo]
+    [requestInfo, setRequestInfo]
   );
-
-  useEffect(() => {
-    setRequestDisabled(
-      !requestInfo ||
-        !requestInfo.provider ||
-        !requestInfo.customer ||
-        !requestInfo.services ||
-        creatingRequest ||
-        existingServices.length > 0
-    );
-  }, [requestInfo, creatingRequest, existingServices.length]);
 
   useEffect(() => {
     if (!requestInfo) {
@@ -295,12 +293,12 @@ const RequestForm = (props: {
     } else {
       setExistingServices([]);
     }
-  }, [requestInfo, services, setModalAccountInfos, selectAccounts]);
+  }, [requestInfo, services, setModalAccountInfos, setShowAccountModal, selectAccounts]);
 
   if (identitiesLoading) {
     return null;
   }
-  console.log(modalAccountInfos);
+
   return (
     <>
       <Form>
@@ -345,33 +343,6 @@ const RequestForm = (props: {
           options={partyOptions}
         />
       </Form>
-      {requestInfo && requestInfo.customer && token && (
-        <DamlLedger
-          token={token}
-          party={requestInfo.customer}
-          httpBaseUrl={httpBaseUrl}
-          wsBaseUrl={wsBaseUrl}
-        >
-          <AccountsForParty
-            party={requestInfo.customer}
-            setAccountsForParty={setAccountsForParty}
-          />
-          <AccountSelectionModal
-            accountInfos={modalAccountInfos}
-            serviceProvider={requestInfo?.provider}
-            party={requestInfo.customer}
-            accountsForParty={accountsForParty}
-            onFinish={(accts: { [k: string]: Account | undefined }) => {
-              setRequestInfo({
-                ...requestInfo,
-                accounts: { ...requestInfo?.accounts, ...accts },
-              });
-            }}
-            setRequestDisabled={setRequestDisabled}
-          />
-          {/* <NewAccount party={requestInfo.customer} modal /> */}
-        </DamlLedger>
-      )}
 
       {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
         <p className="p2 message">
@@ -382,11 +353,47 @@ const RequestForm = (props: {
       <div className="submit-actions">
         <Button
           className="ghost request"
-          disabled={requestDisabled}
+          disabled={
+            !requestInfo ||
+            !requestInfo.provider ||
+            !requestInfo.customer ||
+            !requestInfo.services ||
+            creatingRequest ||
+            existingServices.length > 0
+          }
           onClick={() => createRequest()}
         >
           {creatingRequest ? 'Creating Request...' : 'Request'}
         </Button>
+        {requestInfo && requestInfo.customer && token && (
+          <DamlLedger
+            token={token}
+            party={requestInfo.customer}
+            httpBaseUrl={httpBaseUrl}
+            wsBaseUrl={wsBaseUrl}
+          >
+            <AccountsForParty
+              party={requestInfo.customer}
+              setAccountsForParty={setAccountsForParty}
+            />
+            <AccountSelectionModal
+              accountInfos={modalAccountInfos}
+              open={showAccountModal}
+              serviceProvider={requestInfo?.provider}
+              setOpen={setShowAccountModal}
+              party={requestInfo.customer}
+              accountsForParty={accountsForParty}
+              onCancel={modalOnCancelFunction}
+              onFinish={(accts: { [k: string]: Account | undefined }) => {
+                setRequestInfo({
+                  ...requestInfo,
+                  accounts: { ...requestInfo?.accounts, ...accts },
+                });
+              }}
+            />
+            <NewAccount party={requestInfo.customer} modal />
+          </DamlLedger>
+        )}
       </div>
     </>
   );
