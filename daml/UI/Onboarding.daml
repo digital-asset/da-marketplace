@@ -244,37 +244,11 @@ getSignaturesNeeded OnboardExchange    = []
 getSignaturesNeeded OnboardDistributor = []
 getSignaturesNeeded OnboardCustodian   = []
 
-
-collectSignatures : Party -> [Party] -> ContractId OnboardCustomer -> Update (ContractId OnboardCustomer)
-collectSignatures _        []               cid = return cid
-collectSignatures operator (party::parties) cid
-  = exerciseByKey @ProviderOnboarding (operator,party) ProviderOnboarding_SignCustomer with requestCid = cid
-      >>= collectSignatures operator parties
-
 collectPartySignatures : Party -> [Party] -> ContractId OnboardCustomer -> Update (ContractId OnboardCustomer)
 collectPartySignatures _        []               cid = return cid
 collectPartySignatures operator (party::parties) cid
   = exerciseByKey @PartyOnboarding (operator,party) PartyOnboarding_Sign with requestCid = cid
-      >>= collectSignatures operator parties
-
-
-template OnboardRequest
-  with
-    customer : Party
-    operator : Party
-    instructions : [OnboardingInstruction]
-  where
-    signatory customer
-    controller operator can
-      ApproveOnboardRequest : ()
-        do
-          let signaturesNeeded = dedup $ concatMap getSignaturesNeeded instructions
-          onboardCid <- create OnboardCustomer with signed = Set.fromList [operator, customer]; ..
-          onboardCid <- collectSignatures operator signaturesNeeded onboardCid
-          exercise onboardCid OnboardCustomer_Finish
-          exercise onboardCid OnboardCustomer_Archive with ctrl = operator
-
-          pure ()
+      >>= collectPartySignatures operator parties
 
 template OnboardCustomer
   with
@@ -332,23 +306,6 @@ template PartyOnboarding
           requestCid : ContractId OnboardCustomer
         do
           exercise requestCid OnboardCustomer_Sign with ctrl = party
-
-
-template ProviderOnboarding
-  with
-    provider : Party
-    operator : Party
-  where
-    signatory provider
-    key (operator, provider) : (Party, Party)
-    maintainer key._2
-
-    controller operator can
-      nonconsuming ProviderOnboarding_SignCustomer : ContractId OnboardCustomer
-        with
-          requestCid : ContractId OnboardCustomer
-        do
-          exercise requestCid OnboardCustomer_Sign with ctrl = provider
 
 template OperatorOnboarding
   with

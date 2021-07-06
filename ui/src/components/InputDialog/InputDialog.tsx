@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Header, Button, Form, Modal } from 'semantic-ui-react';
 
 import { Field, FieldComponents } from './Fields';
-import { IconClose, InformationIcon } from '../../icons/icons';
+import { IconClose, InformationIcon, ArrowLeftIcon } from '../../icons/icons';
 
 import BackButton from '../../components/Common/BackButton';
 import classNames from 'classnames';
@@ -56,7 +56,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
         </Modal.Content>
         <Modal.Actions>
           <Button className="ghost" onClick={() => props.onClose(state)} disabled={props.disabled}>
-            Confirm
+            <ArrowLeftIcon/>
           </Button>
           <Button className="ghost warning" onClick={() => props.onClose(null)}>
             Cancel

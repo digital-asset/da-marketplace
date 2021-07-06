@@ -3,8 +3,10 @@
 @mixin quick-setup {
   .quick-setup {
     height: 100%;
+      width: 825px;
 
     .quick-setup-menu.menu {
+      width: 825px;
       justify-content: space-between;
       align-items: center;
       border-color: transparent;
@@ -54,7 +56,8 @@
       justify-content: space-between;
       background-color: var(--white);
       border-radius: 0px 0px 4px 4px;
-      height: 500px;
+      height: 800px;
+      width: 825px;
 
       button.ghost.next,
       a.ghost.next {
@@ -292,34 +295,26 @@
 
     .test-instructions {
       .page-row {
-        justify-content: space-between;
-      }
-      .message {
-        margin-top: $spacing-m;
-        max-width: 300px;
         display: flex;
-        .icon {
-          margin-right: $spacing-xs;
+        flex-direction: column;
+        width: 100px;
+        .test: {
+          margin-bottom: 100px;
         }
-      }
-      .request-select {
-        margin-bottom: $spacing-s;
-        width: 300px;
 
-        a.ui.label {
-          background-color: var(--cool-grey-100);
-          color: var(--cool-grey-10);
-          .delete.icon {
-            height: unset;
-            color: var(--blue-50);
-            font-weight: 100;
-            stroke-width: 40%;
+        .instruction-fields: {
+          .instruction-header: {
+            display: flex;
+            flex-direction: row;
           }
+          display: flex;
+          flex-direction: row;
         }
+
       }
-      button.ghost.request {
-        align-self: flex-start;
-      }
+        .add-clear: {
+          margin-top: 100px;
+        }
     }
 
     .request-services {
