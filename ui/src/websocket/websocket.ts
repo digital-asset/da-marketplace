@@ -80,10 +80,12 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<StreamErrors>();
-  const [timer, setTimer] = useState<ReturnType<typeof setInterval>>(
-    setInterval(() => clearInterval(timer), 1000)
-  );
+  const [timer, setTimer] = useState<any>();
   const [retries, setRetries] = useState(0);
+
+  useEffect(() => {
+    setTimer(setInterval(() => clearInterval(timer), 1000));
+  }, []);
 
   const messageHandlerScoped = useCallback(
     (templateMap: Map<string, Template<T, K, I>>) => {
