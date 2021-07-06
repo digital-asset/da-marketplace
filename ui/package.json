@@ -24,6 +24,7 @@
     "prop-types": "15.6.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
+    "react-flow-renderer": "^9.6.3",
     "react-router-dom": "^5.0.1",
     "react-swipeable-views": "^0.13.9",
     "recharts": "^2.0.9",

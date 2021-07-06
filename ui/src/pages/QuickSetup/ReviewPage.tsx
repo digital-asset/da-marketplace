@@ -245,7 +245,6 @@ const Network = (props: { passedElements: any[] }) => {
 
   const onElementClick = (_: any, element: FlowElement) => {
     const heightlightColor = '#FFCC00';
-    const dimmerStyle = { opacity: 0.5, zIndex: 1 };
     const hasCustomers = !!elements.find(e => !isNode(e) && e.source === element.id);
 
     if (!hasCustomers) {
@@ -267,21 +266,21 @@ const Network = (props: { passedElements: any[] }) => {
         }
         return {
           ...el,
-          style: { border: 'unset', ...dimmerStyle },
+          style: { border: 'unset', opacity: 0.5 },
         };
       } else if (el.source === element.id) {
         return {
           ...el,
-          style: { stroke: heightlightColor, strokeWidth: 2 },
+          style: { stroke: heightlightColor, strokeWidth: 2, opacity: 1 },
           labelStyle: { ...el.labelStyle, display: 'flex' },
           labelBgStyle: { ...el.labelBgStyle, fill: heightlightColor },
         };
       }
       return {
         ...el,
-        style: { strokeWidth: 1, stroke: 'grey', ...dimmerStyle },
+        style: { stroke: 'grey', strokeWidth: 1, opacity: 0.5 },
         labelStyle: { ...el.labelStyle, display: 'none' },
-        labelBgStyle: { ...el.labelBgStyle, fill: 'transparent' },
+        labelBgStyle: { ...el.labelBgStyle, fill: 'none' },
       };
     });
     setElements(newElements);

@@ -7,7 +7,7 @@ import {
   RequestOpenAccount,
   RequestOpenAllocationAccount,
 } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service';
-import { DropdownItemProps, Form, Modal, Button, DropdownProps } from 'semantic-ui-react';
+import { DropdownItemProps, Form, DropdownProps } from 'semantic-ui-react';
 import { useLedger } from '@daml/react';
 import { Service as CustodyService } from '@daml.js/da-marketplace/lib/Marketplace/Custody/Service/';
 import { usePartyName } from '../../config';
@@ -20,6 +20,7 @@ import { Party } from '@daml/types';
 import _ from 'lodash';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
+import { InformationIcon } from '../../icons/icons';
 
 export enum AccountType {
   REGULAR = 'Regular',
@@ -38,26 +39,20 @@ type NameMap = { [k: string]: string | undefined };
 type Props = {
   party: Party;
   serviceProvider?: Party;
-  open: boolean;
-  setOpen: (bool: boolean) => void;
   accountsForParty?: IPartyAccounts;
   accountInfos: AccountInfos;
-  onCancel: () => void;
   onFinish: SetFunction;
+  setRequestDisabled: (bool: boolean) => void;
 };
 
 const AccountSelectionModal: React.FC<Props> = ({
   party,
   serviceProvider,
-  open,
-  setOpen,
   accountsForParty,
   accountInfos,
   onFinish,
-  onCancel,
+  setRequestDisabled,
 }) => {
-  const { getName } = usePartyName(party);
-
   const hasRegularAccount = _.values(accountInfos).reduce(
     (acc, info) => acc || info.accountType === AccountType.REGULAR,
     false
@@ -79,8 +74,6 @@ const AccountSelectionModal: React.FC<Props> = ({
       })
     );
   }, [accountInfos]);
-
-  const disabled = _.values(accountNamesState).reduce((acc, name) => acc || !name, false);
 
   const allocationAccountRules = accountsForParty?.allocAccounts || [];
   const allocationAccounts = allocationAccountRules
@@ -110,72 +103,59 @@ const AccountSelectionModal: React.FC<Props> = ({
     hasAllocationAccount && !allocationAccounts.length && !openAllocationAccountRequests.length;
   const accountNeeded = hasRegularAccount && !accountNames.length && !openAccountRequests.length;
 
+  function handleSetAccountNameState(setter: (prevState: NameMap) => NameMap) {
+    setAccountNamesState(setter);
+    const accts = _.mapValues(accountInfos, (accountInfo, k) => {
+      const account =
+        accountInfo.accountType === AccountType.REGULAR
+          ? accounts.find(a => a.id.label === accountNamesState[k])
+          : allocationAccounts.find(a => a.id.label === accountNamesState[k]);
+      return account;
+    });
+    onFinish(accts);
+  }
+
+  useEffect(() => {
+    const disabled = _.values(accountNamesState).reduce((acc, name) => acc || !name, false);
+
+    setRequestDisabled(
+      (!custodyServices.length && (allocationAccountNeeded || accountNeeded)) || disabled
+    );
+  }, [
+    custodyServices,
+    accountNamesState,
+    accountNeeded,
+    allocationAccountNeeded,
+    setRequestDisabled,
+  ]);
+
   return (
-    <Modal
-      as={Form}
-      open={open}
-      onSubmit={() => {
-        const accts = _.mapValues(accountInfos, (accountInfo, k) => {
-          const account =
-            accountInfo.accountType === AccountType.REGULAR
-              ? accounts.find(a => a.id.label === accountNamesState[k])
-              : allocationAccounts.find(a => a.id.label === accountNamesState[k]);
-          return account;
-        });
-        onFinish(accts);
-        setAccountNamesState(emptyNamesState);
-        setOpen(false);
-      }}
-    >
-      <Modal.Header as="h2">{`Select Accounts for ${getName(party)} requesting from ${getName(
-        serviceProvider || ''
-      )}`}</Modal.Header>
-      <Modal.Content>
-        {!custodyServices.length && (allocationAccountNeeded || accountNeeded) ? (
-          <>This party must have at least one Custody service</>
-        ) : (
-          !!serviceProvider && (
-            <div>
-              {_.toPairs(accountInfos).map(([k, accountInfo]) => (
-                <ProviderOption
-                  accountInfo={accountInfo}
-                  accountKey={k}
-                  accounts={accounts}
-                  allocationAccounts={allocationAccounts}
-                  openAllocationAccountRequests={openAllocationAccountRequests}
-                  openAccountRequests={openAccountRequests}
-                  custodyServices={custodyServices}
-                  accountNamesState={accountNamesState}
-                  setAccountNamesState={setAccountNamesState}
-                  party={party}
-                  serviceProvider={serviceProvider}
-                />
-              ))}
-            </div>
-          )
-        )}
-      </Modal.Content>
-      <Modal.Actions>
-        <Button
-          disabled={disabled}
-          content="Submit"
-          labelPosition="right"
-          icon="checkmark"
-          type="submit"
-          positive
-        />
-        <Button
-          className="ghost warning"
-          color="black"
-          onClick={() => {
-            onCancel();
-            setOpen(false);
-          }}
-        >
-          Cancel
-        </Button>
-      </Modal.Actions>
-    </Modal>
+    <>
+      {!custodyServices.length && (allocationAccountNeeded || accountNeeded) ? (
+        <p className="p2 message">
+          <InformationIcon /> This party must have at least one Custody service to make this
+          request.
+        </p>
+      ) : (
+        !!serviceProvider &&
+        _.toPairs(accountInfos).map(([k, accountInfo]) => (
+          <ProviderOption
+            key={k}
+            accountInfo={accountInfo}
+            accountKey={k}
+            accounts={accounts}
+            allocationAccounts={allocationAccounts}
+            openAllocationAccountRequests={openAllocationAccountRequests}
+            openAccountRequests={openAccountRequests}
+            custodyServices={custodyServices}
+            accountNamesState={accountNamesState}
+            setAccountNamesState={handleSetAccountNameState}
+            party={party}
+            serviceProvider={serviceProvider}
+          />
+        ))
+      )}
+    </>
   );
 };
 
@@ -293,14 +273,15 @@ const ProviderOption = (props: {
   return (
     <>
       <Form.Select
-        label={accountInfo.accountLabel}
-        placeholder="Select..."
+        label={<p className="input-label">{accountInfo.accountLabel}:</p>}
+        placeholder={'Select..'}
+        className="request-select"
         required
         options={[...accountOptions, ...providerOptions]}
         value={accountNamesState[accountKey]}
         onChange={(_, change) => selectOrCreate(change)}
       />
-      {accountRequestExists(accountInfo) && <p>Account request pending...</p>}
+      {accountRequestExists(accountInfo) && <p className="p2">Account request pending...</p>}
     </>
   );
 };

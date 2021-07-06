@@ -56,11 +56,12 @@
 
       .request-services {
         .message {
-          margin-top: $spacing-m;
+          margin: $spacing-s 0;
           max-width: 300px;
           display: flex;
           .icon {
             margin-right: $spacing-xs;
+            width: 16px;
           }
         }
         .request-select {
