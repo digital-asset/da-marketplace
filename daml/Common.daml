@@ -23,7 +23,8 @@ import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import qualified Marketplace.Regulator.Service as RegulatorService
 import qualified Marketplace.Regulator.Role as Regulator
 import Marketplace.Issuance.AssetDescription
-import Marketplace.Issuance.CFI
+import Marketplace.Issuance.CFI (CFI)
+import Marketplace.Issuance.CFI qualified as CFI
 
 data Assets = Assets
   with
@@ -192,11 +193,11 @@ onboardAssets providers issuer = do
       (_, AssetDescription{assetId = id}) <- originate providers issuer name description cfi claims
       pure $ Asset with quantity = 0.0; ..
 
-  usd   <- mkAsset "USD" "United States Dollar" currency Zero
-  eur   <- mkAsset "EUR" "Euro" currency Zero
-  tsla  <- mkAsset "TSLA" "Tesla, Inc." equity Zero
-  nflx  <- mkAsset "NFLX" "Netflix" equity Zero
-  libor <- mkAsset "LIBOR" "Libor" equity Zero
+  usd   <- mkAsset "USD" "United States Dollar" CFI.currency Zero
+  eur   <- mkAsset "EUR" "Euro" CFI.currency Zero
+  tsla  <- mkAsset "TSLA" "Tesla, Inc." CFI.equity Zero
+  nflx  <- mkAsset "NFLX" "Netflix" CFI.equity Zero
+  libor <- mkAsset "LIBOR" "Libor" CFI.equity Zero
 
   pure Assets with ..
 

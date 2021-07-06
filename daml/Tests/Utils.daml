@@ -42,7 +42,6 @@ bond ccy notional coupon dates =
 
 future : Id -> Decimal -> Date -> C
 future underlying mult expiry = forward expiry (O.pure mult) (One underlying)
--- future underlying mult expiry = when (at expiry) $ scale (O.observe underlying.label O.* O.pure mult) (one underlying)
 
 callOptionPhysical : Id -> Decimal -> Id -> Decimal -> Date -> C
 callOptionPhysical asset assetQty ccy ccyQty d =

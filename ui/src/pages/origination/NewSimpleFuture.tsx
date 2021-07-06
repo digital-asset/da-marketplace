@@ -34,9 +34,6 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
-  // const currencies = allAssets.filter(
-  //   c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
-  // );
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 
@@ -46,7 +43,8 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
       new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
     '';
 
-  const underlyingId: Id = allAssets.find(c => c.payload.assetId.label === underlying)?.payload.assetId || {
+  const underlyingId: Id = allAssets.find(c => c.payload.assetId.label === underlying)?.payload
+    .assetId || {
     signatories: makeDamlSet<string>([]),
     label: '',
     version: '0',
@@ -59,7 +57,10 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   const obsMult: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: multiplier } };
 
   const oneUnderlying: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: underlyingId };
-  const scale: Claim<DamlDate, Decimal, Id> = { tag: "Scale", value: { k: obsMult, claim: oneUnderlying }};
+  const scale: Claim<DamlDate, Decimal, Id> = {
+    tag: 'Scale',
+    value: { k: obsMult, claim: oneUnderlying },
+  };
 
   const claims: Claim<DamlDate, Decimal, Id> = {
     tag: 'When',
@@ -89,7 +90,7 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
-      cfi: { unpack: 'XXXXXX' },
+      cfi: { unpack: 'FXXXXX' },
       claims,
       safekeepingAccount,
       observers: [service.payload.provider, party],
@@ -99,9 +100,8 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   return (
     <div className="input-dialog">
       <BackButton />
-      <Header as="h2">New Binary Option</Header>{' '}
+      <Header as="h2">New Simple Future</Header>{' '}
       <FormErrorHandled onSubmit={requestOrigination}>
-
         <Form.Select
           className="issue-asset-form-field select-account"
           placeholder="Underlying"

@@ -16,6 +16,7 @@ import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
 import Marketplace.Issuance.AssetDescription (AssetDescription(..))
+import Marketplace.Issuance.AssetDescription as AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Tests.Utils (future)
 
@@ -66,13 +67,21 @@ clearedTradingTest = do
   (_, AssetDescription{assetId = h2oId}) <- originate providers issuer "H2O" "H2O Spot" CFI.equity Zero
 
   let mkSimpleH2OFuture name description expiry = do
-      (_, AssetDescription{assetId}) <- originate providers issuer name description CFI.future $ future h2oId 1.0 expiry
-      return assetId
+      (descCid, AssetDescription{assetId}) <- originate providers issuer name description CFI.future $ future h2oId 1.0 expiry
+      return (descCid, assetId)
 
-  h2oQ122DerId <- mkSimpleH2OFuture "H2OQ122" "H2O Q1 22" $ date 2022 Jan 1
-  h2oQ222DerId <- mkSimpleH2OFuture "H2OQ222" "H2O Q2 22" $ date 2022 Apr 1
-  h2oQ322DerId <- mkSimpleH2OFuture "H2OQ322" "H2O Q3 22" $ date 2022 Jul 1
-  h2oQ422DerId <- mkSimpleH2OFuture "H2OQ422" "H2O Q4 22" $ date 2022 Oct 1
+  (q122Cid,h2oQ122DerId) <- mkSimpleH2OFuture "H2OQ122" "H2O Q1 22" $ date 2022 Jan 1
+  (_,h2oQ222DerId)       <- mkSimpleH2OFuture "H2OQ222" "H2O Q2 22" $ date 2022 Apr 1
+  (_,h2oQ322DerId)       <- mkSimpleH2OFuture "H2OQ322" "H2O Q3 22" $ date 2022 Jul 1
+  (_,h2oQ422DerId)       <- mkSimpleH2OFuture "H2OQ422" "H2O Q4 22" $ date 2022 Oct 1
+
+  (Some expiry)     <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetExpiry with party = issuer.customer
+  (Some underlying) <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetUnderlying with party = issuer.customer
+  (Some mult)       <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetMultiplier with party = issuer.customer
+
+  expiry     === (date 2022 Jan 1)
+  underlying === h2oId
+  mult       === 1.0
 
   -- List a Security to trade
   Some (listingServiceCid, _) <- queryContractKey @Listing.Service exchange (operator, exchange, exchange)

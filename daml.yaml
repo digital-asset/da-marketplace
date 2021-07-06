@@ -1,7 +1,7 @@
 sdk-version: 1.12.0
 name: da-marketplace
 source: daml
-init-script: Tests.Clearing.Setup:clearedTradingTest
+init-script: Demo:demo
 parties:
   - Alice
   - Bob
