@@ -24,9 +24,15 @@ const AddAccountPage = () => {
       }
     }
   }, [userParties, selectedCustomer]);
+
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
+
+  if (identitiesLoading) {
+    return null;
+  }
+
   return (
     <Form className="add-account">
       <Form.Select

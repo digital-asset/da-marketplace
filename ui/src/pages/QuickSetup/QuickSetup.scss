@@ -14,8 +14,8 @@
     }
 
     .review {
-        height: 550px;
-        width: 100%;
+      height: 550px;
+      width: 100%;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -44,7 +44,8 @@
       }
 
       .request-services,
-      .assign-roles, .add-account {
+      .assign-roles,
+      .add-account {
         padding: $spacing-s;
         border-bottom: 1px solid var(--cool-grey-80);
 
@@ -56,12 +57,12 @@
       }
 
       .add-account {
-          height: 400px;
-          overflow:auto;
+        height: 400px;
+        overflow: auto;
 
         .add-account-form {
-            margin-top: $spacing-s;
-         }
+          margin-top: $spacing-s;
+        }
       }
 
       .request-services {

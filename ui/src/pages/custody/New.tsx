@@ -209,7 +209,9 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
       {fields}
     </ModalFormErrorHandled>
   ) : (
-    <FormErrorHandled withSubmit onSubmit={() => requestAccount()}>{fields}</FormErrorHandled>
+    <FormErrorHandled withSubmit onSubmit={() => requestAccount()}>
+      {fields}
+    </FormErrorHandled>
   );
 };
 
