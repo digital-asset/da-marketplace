@@ -13,14 +13,7 @@ import { storeParties, retrieveUserParties } from '../../Parties';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { PublicDamlProvider, useStreamQueries } from '../../Main';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  ledgerId,
-  publicParty,
-  isHubDeployment,
-  usePartyName,
-} from '../../config';
+import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 
@@ -40,6 +33,7 @@ import { makeDamlSet } from '../common';
 import { retrieveParties } from '../../Parties';
 
 import QuickSetupPage from './QuickSetupPage';
+import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
@@ -58,7 +52,7 @@ const AddPartiesPage = () => {
   useEffect(() => {
     const parties = retrieveParties() || [];
     const storedParties = retrieveUserParties();
-    console.log('parties', parties);
+
     if (storedParties) {
       setParties(storedParties);
     }
@@ -167,20 +161,16 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
   const { onComplete, party } = props;
   const ledger = useLedger();
   const userParties = retrieveUserParties() || [];
-  console.log('party:', party);
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
-
   const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
     useStreamQueries(VerifiedIdentity);
-
   const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
     useStreamQueries(IdentityVerificationRequest);
 
   useEffect(() => {
     if (regulatorServicesLoading || verifiedIdentitiesLoading || verifiedIdentityRequestsLoading) {
-      console.log('loading services');
       return;
     }
 
@@ -188,7 +178,6 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
       let retries = 0;
 
       const currentServices = regulatorServices.filter(s => s.payload.customer === party.party);
-      console.log('handling v id for:', party.partyName, currentServices);
 
       while (retries < 3) {
         if (currentServices.length > 0) {
@@ -243,16 +232,13 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
   const { adminCredentials, onComplete } = props;
 
   const userParties = retrieveUserParties() || [];
-  const { getName } = usePartyName('');
-
+  const parties = retrieveParties() || [];
   const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
     useStreamQueries(RegulatorOffer);
 
@@ -273,7 +259,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     };
 
     const offerRegulatorService = async (party: string) => {
-      console.log('offering reg service to ', getName(party));
       const regulatorRoleId = regulatorRoles.find(
         r => r.payload.operator === r.payload.operator
       )?.contractId;
@@ -288,40 +273,51 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     const offerRegulatorServices = async () => {
       await Promise.all(
         userParties.map(async party => {
-          if (
-            !regulatorServices.find(c => c.payload.customer === party.party) &&
-            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-          ) {
-            return await offerRegulatorService(party.party);
+          if (!regulatorServiceOffers.find(c => c.payload.customer === party.party)) {
+            await offerRegulatorService(party.party);
           }
         })
       );
     };
 
-    if (
-      operatorServiceLoading ||
-      regulatorRolesLoading ||
-      regulatorServicesLoading ||
-      regulatorServiceOffersLoading
-    ) {
+    if (operatorServiceLoading || regulatorRolesLoading || regulatorServiceOffersLoading) {
       return;
     }
 
-    if (
-      userParties.every(
-        p =>
-          !!regulatorServiceOffers.find(c => c.payload.customer === p.party) ||
-          !!regulatorServices.find(contract => contract.payload.customer === p.party)
-      )
-    ) {
-      return onComplete();
+    async function deployAllTriggers() {
+      if (isHubDeployment && parties.length > 0) {
+        const artifactHash = TRIGGER_HASH;
+
+        if (!artifactHash || !adminCredentials) {
+          return;
+        }
+
+        Promise.all(
+          [
+            ...parties.filter(p => p.party !== publicParty),
+            {
+              ...adminCredentials,
+            },
+          ].map(p => {
+            return deployAutomation(
+              artifactHash,
+              MarketplaceTrigger.AutoApproveTrigger,
+              p.token,
+              publicParty
+            );
+          })
+        );
+      }
     }
+
     if (operatorService.length === 0) {
       createOperatorService();
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
     } else {
       offerRegulatorServices();
+      deployAllTriggers();
+      return onComplete();
     }
   }, [
     ledger,
@@ -330,9 +326,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     onComplete,
     regulatorRolesLoading,
     operatorServiceLoading,
-    regulatorServicesLoading,
     regulatorServiceOffersLoading,
-    regulatorServices,
     regulatorRoles,
     operatorService,
     regulatorServiceOffers,

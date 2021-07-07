@@ -14,12 +14,10 @@ import {
 
 import { WellKnownPartiesProvider } from '@daml/hub-react/lib';
 
-import { ledgerId, publicParty, isHubDeployment } from '../../config';
+import { ledgerId, isHubDeployment } from '../../config';
 
 import Credentials, { computeCredentials } from '../../Credentials';
 import { retrieveParties } from '../../Parties';
-
-import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
 import { ArrowLeftIcon, ArrowRightIcon } from '../../icons/icons';
 
@@ -62,39 +60,6 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
     }
   }, [history.location]);
 
-  useEffect(() => {
-    const parties = retrieveParties() || [];
-
-    // deploy auto-trigger for all parties
-    async function deployAllTriggers() {
-      if (isHubDeployment && parties.length > 0) {
-        const artifactHash = TRIGGER_HASH;
-
-        if (!artifactHash || !adminCredentials) {
-          return;
-        }
-
-        Promise.all(
-          [
-            ...parties.filter(p => p.party !== publicParty),
-            {
-              ...adminCredentials,
-            },
-          ].map(p => {
-            return deployAutomation(
-              artifactHash,
-              MarketplaceTrigger.AutoApproveTrigger,
-              p.token,
-              publicParty
-            );
-          })
-        );
-      }
-    }
-
-    deployAllTriggers();
-  }, [adminCredentials]);
-
   return (
     <WellKnownPartiesProvider>
       <Widget
@@ -127,7 +92,7 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
           <Switch>
             <Route
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
-              component={() => <AddPartiesPage adminCredentials={adminCredentials} />}
+              component={() => <AddPartiesPage />}
             />
             <Route
               path={`${matchPath}/${MenuItems.REVIEW}`}
