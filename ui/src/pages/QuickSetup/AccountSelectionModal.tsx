@@ -156,14 +156,7 @@ const AccountSelectionModal: React.FC<Props> = ({
         )}
       </Modal.Content>
       <Modal.Actions>
-        <Button
-          disabled={disabled}
-          content="Submit"
-          labelPosition="right"
-          icon="checkmark"
-          type="submit"
-          positive
-        />
+        <Button disabled={disabled} content="Continue" type="submit" />
         <Button
           className="ghost warning"
           color="black"
