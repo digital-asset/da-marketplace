@@ -2,46 +2,106 @@
 
 @mixin quick-setup {
   .quick-setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
     height: 100%;
+    width: 100%;
 
-    .quick-setup-menu.menu {
-      justify-content: space-between;
+    .info {
+      padding-bottom: $spacing-s;
+    }
+
+    .review {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: row;
       align-items: center;
-      border-color: transparent;
-      border-radius: 6px 6px 0px 0px;
-      height: 50px;
-      padding: 0 $spacing-m;
-      margin-bottom: 0px;
       background-color: var(--cool-grey-100);
+      border-radius: 4px;
+      z-index: 2;
 
-      &::after {
-        content: unset;
-      }
+      .side-bar {
+        justify-self: flex-start;
+        height: 100%;
+        border-right: 1px solid var(--cool-grey-80);
+        width: 320px;
 
-      p {
-        color: var(--cool-grey-40);
-        &.visited {
-          color: var(--blue-60);
+        .side-bar-item {
+          padding: $spacing-s;
+          border-bottom: 1px solid var(--cool-grey-80);
+
+          &.is-open {
+            border-bottom: none;
+          }
+          &:hover {
+            background-color: var(--blue-100);
+            cursor: pointer;
+          }
         }
       }
 
-      .item {
-        margin: unset;
+      .request-services,
+      .assign-roles {
+        margin: $spacing-s;
 
+        .submit-actions {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+
+      .request-services {
+        .message {
+          margin: $spacing-s 0;
+          max-width: 300px;
+          display: flex;
+          .icon {
+            margin-right: $spacing-xs;
+            width: 16px;
+          }
+        }
+        .request-select,
+        .required.request-select {
+          margin-bottom: $spacing-s;
+          a.ui.label {
+            background-color: var(--cool-grey-100);
+            color: var(--cool-grey-10);
+            .delete.icon {
+              height: unset;
+              color: var(--blue-50);
+              font-weight: 100;
+              stroke-width: 40%;
+            }
+          }
+        }
+        button.ghost.request {
+          align-self: flex-start;
+        }
+      }
+
+      .react-flow {
         height: 100%;
-        border-bottom: 3px solid var(--cool-grey-100);
-      }
+        width: 100%;
 
-      .disabled.item p {
-        color: var(--cool-grey-50);
-      }
+        .role-node {
+          display: flex;
+          padding: $spacing-xs;
+          flex-direction: column;
+          width: 172px;
+          background-color: var(--blue-100);
+          justify-content: center;
+          align-items: center;
+          text-align: center;
+          border-radius: 4px;
+          border: 1px solid var(--cool-grey-80);
 
-      a.active,
-      .item:hover {
-        border-bottom: 3px solid var(--blue-60);
-        cursor: pointer;
-        p {
-          color: var(--blue-60);
+          h4 {
+            margin: $spacing-xs 0;
+          }
         }
       }
     }
@@ -53,8 +113,9 @@
       padding: $spacing-m;
       justify-content: space-between;
       background-color: var(--white);
-      border-radius: 0px 0px 4px 4px;
-      height: 500px;
+      border-radius: 4px 4px;
+      width: 800px;
+      height: 550px;
 
       button.ghost.next,
       a.ghost.next {
@@ -181,6 +242,7 @@
         display: flex;
         align-items: center;
         flex-direction: column;
+        width: 100%;
 
         .details {
           margin-bottom: $spacing-xl;
@@ -207,118 +269,6 @@
           background-color: var(--blue-100);
           cursor: pointer;
         }
-      }
-    }
-
-    .select-roles {
-      .party-name {
-        &.drag-over {
-          background-color: var(--blue-100);
-
-          p.dropped-items,
-          div.dropped-items {
-            font-weight: 600;
-            color: var(--cool-grey-10);
-          }
-        }
-
-        .service-label {
-          display: inline-block;
-
-          .ui.basic.label {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 $spacing-xs;
-            margin: 0;
-            line-height: inherit;
-            background: none;
-            border-radius: 0;
-            box-shadow: none;
-            font-size: 12px;
-            font-family: 'Open sans';
-            font-weight: normal;
-            color: var(--cool-grey-50);
-
-            .icon {
-              opacity: unset;
-            }
-          }
-
-          p {
-            border: 1px solid rgba(0, 0, 0, 0);
-          }
-
-          p,
-          .ui.basic.label {
-            font-size: 12px;
-          }
-
-          p:hover,
-          .ui.basic.label:hover {
-            cursor: pointer;
-          }
-        }
-
-        p.dropped-items,
-        div.dropped-items {
-          padding-right: $spacing-s;
-          width: 190px;
-          font-size: 12px;
-          color: var(--cool-grey-30);
-        }
-      }
-      .drag-tiles {
-        flex-wrap: wrap;
-
-        .drag-tile {
-          padding: $spacing-s $spacing-m;
-          border: 1px solid var(--cool-grey-80);
-          border-radius: 4px;
-          background-color: var(--white);
-          margin: $spacing-xs $spacing-xs $spacing-xs 0;
-
-          p {
-            font-weight: 600;
-          }
-
-          &:hover {
-            background-color: var(--blue-100);
-            cursor: pointer;
-          }
-        }
-      }
-    }
-
-    .request-services {
-      .page-row {
-        justify-content: space-between;
-      }
-      .message {
-        margin-top: $spacing-m;
-        max-width: 300px;
-        display: flex;
-        .icon {
-          margin-right: $spacing-xs;
-        }
-      }
-      .request-select {
-        margin-bottom: $spacing-s;
-        width: 300px;
-
-        a.ui.label {
-          background-color: var(--cool-grey-100);
-          color: var(--cool-grey-10);
-          .delete.icon {
-            height: unset;
-            color: var(--blue-50);
-            font-weight: 100;
-            stroke-width: 40%;
-          }
-        }
-      }
-      button.ghost.request {
-        align-self: flex-start;
       }
     }
   }
