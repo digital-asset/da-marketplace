@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form } from 'semantic-ui-react';
+import { Form, Button } from 'semantic-ui-react';
 import classNames from 'classnames';
 import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
@@ -17,6 +17,7 @@ type Props = {
   className?: string;
   children: Callable | Renderable;
   onSubmit: () => Promise<void>;
+  withSubmit?: boolean;
 };
 
 const FormErrorHandled: (props: Props) => React.ReactElement = ({
@@ -24,6 +25,7 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
   className,
   children,
   onSubmit,
+  withSubmit,
 }) => {
   const [loading, setLoading] = useState(false);
   const displayErrorMessage = useDisplayErrorMessage();
@@ -57,6 +59,7 @@ const FormErrorHandled: (props: Props) => React.ReactElement = ({
       onSubmit={() => loadAndCatch(onSubmit)}
     >
       {isCallable(children) ? children(callback => loadAndCatch(callback)) : children}
+      {withSubmit && <Button className="ghost" content="Submit" loading={loading} />}
     </Form>
   );
 };

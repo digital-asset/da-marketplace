@@ -26,6 +26,7 @@ import { AutomationProvider } from '../../context/AutomationContext';
 import { formatTriggerName } from './SelectRolesPage';
 import RequestServicesPage from './RequestServicesPage';
 import SelectRolesPage from './SelectRolesPage';
+import AddAccountPage from './AddAccountPage';
 
 import ReactFlow, {
   FlowElement,
@@ -50,6 +51,7 @@ const NODE_HEIGHT = 36;
 enum ReviewForms {
   ASSIGN_ROLES = 'Assign Roles',
   REQUEST_SERVICES = 'Request Services',
+  NEW_ACCOUNT = 'New Account',
 }
 
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
@@ -87,6 +89,13 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
                       setIsOpen={() => setOpenForm(ReviewForms.REQUEST_SERVICES)}
                     >
                       <RequestServicesPage />
+                    </SideBarItem>
+                    <SideBarItem
+                      reviewFormType={ReviewForms.NEW_ACCOUNT}
+                      isOpen={openForm === ReviewForms.NEW_ACCOUNT}
+                      setIsOpen={() => setOpenForm(ReviewForms.NEW_ACCOUNT)}
+                    >
+                      <AddAccountPage />
                     </SideBarItem>
                   </div>
                   <ReviewItems />

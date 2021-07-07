@@ -14,8 +14,8 @@
     }
 
     .review {
-      height: 100%;
-      width: 100%;
+        height: 550px;
+        width: 100%;
       display: flex;
       flex-direction: row;
       align-items: center;
@@ -44,14 +44,24 @@
       }
 
       .request-services,
-      .assign-roles {
-        margin: $spacing-s;
+      .assign-roles, .add-account {
+        padding: $spacing-s;
+        border-bottom: 1px solid var(--cool-grey-80);
 
         .submit-actions {
           display: flex;
           flex-direction: row;
           align-items: center;
         }
+      }
+
+      .add-account {
+          height: 400px;
+          overflow:auto;
+
+        .add-account-form {
+            margin-top: $spacing-s;
+         }
       }
 
       .request-services {
@@ -84,7 +94,7 @@
       }
 
       .react-flow {
-        height: 100%;
+        height: 500px;
         width: 100%;
 
         .role-node {
