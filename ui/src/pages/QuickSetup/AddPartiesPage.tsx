@@ -259,9 +259,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     };
 
     const offerRegulatorService = async (party: string) => {
-      const regulatorRoleId = regulatorRoles.find(
-        r => r.payload.operator === r.payload.operator
-      )?.contractId;
+      const regulatorRoleId = regulatorRoles[0]?.contractId;
 
       if (regulatorRoleId) {
         return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
@@ -284,6 +282,28 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       return;
     }
 
+    if (operatorService.length === 0) {
+      createOperatorService();
+    } else if (regulatorRoles.length === 0) {
+      createRegulatorRole();
+    } else {
+      offerRegulatorServices();
+      return handleComplete();
+    }
+  }, [
+    ledger,
+    adminCredentials.party,
+    userParties,
+    onComplete,
+    regulatorRolesLoading,
+    operatorServiceLoading,
+    regulatorServiceOffersLoading,
+    regulatorRoles,
+    operatorService,
+    regulatorServiceOffers,
+  ]);
+
+  function handleComplete() {
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
         const artifactHash = TRIGGER_HASH;
@@ -309,28 +329,9 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
         );
       }
     }
-
-    if (operatorService.length === 0) {
-      createOperatorService();
-    } else if (regulatorRoles.length === 0) {
-      createRegulatorRole();
-    } else {
-      offerRegulatorServices();
-      deployAllTriggers();
-      return onComplete();
-    }
-  }, [
-    ledger,
-    adminCredentials.party,
-    userParties,
-    onComplete,
-    regulatorRolesLoading,
-    operatorServiceLoading,
-    regulatorServiceOffersLoading,
-    regulatorRoles,
-    operatorService,
-    regulatorServiceOffers,
-  ]);
+    deployAllTriggers();
+    return onComplete();
+  }
 
   return null;
 };
