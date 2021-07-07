@@ -70,6 +70,8 @@ A log file is written out to `.dev/sandbox.log` - any errors at the ledger level
 
 Stop the sandbox by running `make stop-daml-server`.
 
+You can also start the Navigator with `make start-navigator`, and stop with `make stop-navigator`.
+
 ### Start the Triggers
 
 A Daml trigger is a piece of off-ledger automation that runs

@@ -143,6 +143,20 @@ start-daml-server: $(sandbox_pid)
 stop-daml-server:
 	pkill -F $(sandbox_pid); rm -f $(sandbox_pid) $(sandbox_log)
 
+# Navigator
+navigator_pid := $(STATE_DIR)/navigator.pid
+navigator_log := $(STATE_DIR)/navigator.log
+
+$(navigator_pid): |$(STATE_DIR) $(dar_src)
+	daml navigator server localhost 6865 --port 7500 > $(navigator_log) & echo "$$!" > $(navigator_pid)
+
+.PHONY: start-navigator
+start-navigator: $(navigator_pid)
+
+.PHONY: stop-navigator
+stop-navigator:
+	pkill -F $(navigator_pid); rm -f $(navigator_pid) $(navigator_log)
+
 # Exberry Adapter
 party ?= Exchange
 adapter_pid := $(STATE_DIR)/adapter_$(party).pid
