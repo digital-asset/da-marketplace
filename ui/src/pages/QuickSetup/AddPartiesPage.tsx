@@ -13,9 +13,9 @@ import { storeParties, retrieveUserParties } from '../../Parties';
 import QueryStreamProvider from '../../websocket/queryStream';
 
 import { PublicDamlProvider, useStreamQueries } from '../../Main';
-import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty } from '../../config';
+import { httpBaseUrl, wsBaseUrl, ledgerId, publicParty, isHubDeployment } from '../../config';
 
-import Credentials from '../../Credentials';
+import Credentials, { computeCredentials } from '../../Credentials';
 
 import { halfSecondPromise } from '../page/utils';
 
@@ -30,28 +30,40 @@ import {
 import { Offer as RegulatorOffer } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Service';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 import { makeDamlSet } from '../common';
+import { retrieveParties } from '../../Parties';
 
 import QuickSetupPage from './QuickSetupPage';
+import { deployAutomation, MarketplaceTrigger, TRIGGER_HASH } from '../../automation';
 
 enum LoadingStatus {
   CREATING_ADMIN_CONTRACTS = 'Confirming Admin role....',
   WAITING_FOR_TRIGGERS = 'Waiting for auto-approve triggers to deploy. This may take up to 5 minutes....',
 }
 
-const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
-  const { adminCredentials } = props;
+const AddPartiesPage = () => {
   const history = useHistory();
+  const localCreds = computeCredentials('Operator');
 
   const [error, setError] = useState<string>();
   const [parties, setParties] = useState<PartyDetails[]>([]);
   const [loadingStatus, setLoadingStatus] = useState<LoadingStatus>();
+  const [adminCredentials, setAdminCredentials] = useState<Credentials>(localCreds);
 
   useEffect(() => {
+    const parties = retrieveParties() || [];
     const storedParties = retrieveUserParties();
+
     if (storedParties) {
       setParties(storedParties);
     }
-  }, []);
+
+    if (isHubDeployment) {
+      const adminParty = parties.find(p => p.partyName === 'UserAdmin');
+      if (adminParty) {
+        setAdminCredentials({ token: adminParty.token, party: adminParty.party, ledgerId });
+      }
+    }
+  }, [loadingStatus]);
 
   const uploadButton = (
     <label className="custom-file-upload button ui">
@@ -85,7 +97,8 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
               />
             </QueryStreamProvider>
           </DamlLedger>
-        ) : loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS ? (
+        ) : (
+          loadingStatus === LoadingStatus.WAITING_FOR_TRIGGERS &&
           parties.map(p => (
             <PublicDamlProvider
               party={p.party}
@@ -101,7 +114,7 @@ const AddPartiesPage = (props: { adminCredentials: Credentials }) => {
               </QueryStreamProvider>
             </PublicDamlProvider>
           ))
-        ) : null}
+        )}
       </QuickSetupPage>
     );
   }
@@ -151,10 +164,8 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 
   const { contracts: regulatorServices, loading: regulatorServicesLoading } =
     useStreamQueries(RegulatorService);
-
   const { contracts: verifiedIdentities, loading: verifiedIdentitiesLoading } =
     useStreamQueries(VerifiedIdentity);
-
   const { contracts: verifiedIdentityRequests, loading: verifiedIdentityRequestsLoading } =
     useStreamQueries(IdentityVerificationRequest);
 
@@ -219,16 +230,15 @@ const CreateVerifiedIdentity = (props: { onComplete: () => void; party: PartyDet
 
 const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => void }) => {
   const { adminCredentials, onComplete } = props;
-  const userParties = retrieveUserParties() || [];
 
+  const userParties = retrieveUserParties() || [];
+  const parties = retrieveParties() || [];
   const ledger = useLedger();
 
   const { contracts: operatorService, loading: operatorServiceLoading } =
     useStreamQueries(OperatorService);
   const { contracts: regulatorRoles, loading: regulatorRolesLoading } =
     useStreamQueries(RegulatorRole);
-  const { contracts: regulatorServices, loading: regulatorServicesLoading } =
-    useStreamQueries(RegulatorService);
   const { contracts: regulatorServiceOffers, loading: regulatorServiceOffersLoading } =
     useStreamQueries(RegulatorOffer);
 
@@ -250,6 +260,7 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
 
     const offerRegulatorService = async (party: string) => {
       const regulatorRoleId = regulatorRoles[0]?.contractId;
+
       if (regulatorRoleId) {
         return await ledger.exercise(RegulatorRole.OfferRegulatorService, regulatorRoleId, {
           customer: party,
@@ -260,40 +271,51 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     const offerRegulatorServices = async () => {
       await Promise.all(
         userParties.map(async party => {
-          if (
-            !regulatorServices.find(c => c.payload.customer === party.party) &&
-            !regulatorServiceOffers.find(c => c.payload.customer === party.party)
-          ) {
-            return await offerRegulatorService(party.party);
+          if (!regulatorServiceOffers.find(c => c.payload.customer === party.party)) {
+            await offerRegulatorService(party.party);
           }
         })
       );
     };
 
-    if (
-      operatorServiceLoading ||
-      regulatorRolesLoading ||
-      regulatorServicesLoading ||
-      regulatorServiceOffersLoading
-    ) {
+    if (operatorServiceLoading || regulatorRolesLoading || regulatorServiceOffersLoading) {
       return;
     }
 
-    if (
-      userParties.every(
-        p =>
-          !!regulatorServiceOffers.find(c => c.payload.customer === p.party) ||
-          !!regulatorServices.find(contract => contract.payload.customer === p.party)
-      )
-    ) {
-      return onComplete();
+    async function deployAllTriggers() {
+      if (isHubDeployment && parties.length > 0) {
+        const artifactHash = TRIGGER_HASH;
+
+        if (!artifactHash || !adminCredentials) {
+          return;
+        }
+
+        Promise.all(
+          [
+            ...parties.filter(p => p.party !== publicParty),
+            {
+              ...adminCredentials,
+            },
+          ].map(p => {
+            return deployAutomation(
+              artifactHash,
+              MarketplaceTrigger.AutoApproveTrigger,
+              p.token,
+              publicParty
+            );
+          })
+        );
+      }
     }
+
     if (operatorService.length === 0) {
       createOperatorService();
     } else if (regulatorRoles.length === 0) {
       createRegulatorRole();
     } else {
       offerRegulatorServices();
+      deployAllTriggers();
+      return onComplete();
     }
   }, [
     ledger,
@@ -302,12 +324,12 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
     onComplete,
     regulatorRolesLoading,
     operatorServiceLoading,
-    regulatorServicesLoading,
     regulatorServiceOffersLoading,
-    regulatorServices,
     regulatorRoles,
     operatorService,
     regulatorServiceOffers,
+    adminCredentials,
+    parties,
   ]);
 
   return null;
