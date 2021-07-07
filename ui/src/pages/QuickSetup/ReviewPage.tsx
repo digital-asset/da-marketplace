@@ -45,8 +45,8 @@ import dagre from 'dagre';
 import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { Loader } from 'semantic-ui-react';
 
-const NODE_WIDTH = 172;
-const NODE_HEIGHT = 36;
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 130;
 
 enum ReviewForms {
   ASSIGN_ROLES = 'Assign Roles',
@@ -196,6 +196,7 @@ const ReviewItems = () => {
         position: { x: 0, y: 0 },
         targetPosition: Position.Top,
         sourcePosition: Position.Bottom,
+        style: { border: 'unset', opacity: 1 },
       };
     }),
   ];
@@ -234,6 +235,7 @@ const ReviewItems = () => {
 
 const Network = (props: { passedElements: any[] }) => {
   const [elements, setElements] = useState<FlowElement<any>[]>(props.passedElements);
+  const [showTip, setShowTip] = useState(true);
 
   useEffect(() => {
     setElements(
@@ -259,7 +261,6 @@ const Network = (props: { passedElements: any[] }) => {
     if (!hasCustomers) {
       return;
     }
-
     let newElements = elements.map(el => {
       if (isNode(el)) {
         if (el.id === element.id) {
@@ -287,7 +288,7 @@ const Network = (props: { passedElements: any[] }) => {
       }
       return {
         ...el,
-        style: { stroke: 'grey', strokeWidth: 1, opacity: 0.5 },
+        style: { stroke: 'lightgrey', strokeWidth: 1, opacity: 0.5 },
         labelStyle: { ...el.labelStyle, display: 'none' },
         labelBgStyle: { ...el.labelBgStyle, fill: 'none' },
       };
@@ -316,7 +317,11 @@ const Network = (props: { passedElements: any[] }) => {
       zoomOnScroll={false}
       zoomOnPinch={false}
     >
-      <Controls />
+      <div onClick={() => setShowTip(false)}>
+        <Controls>
+          {showTip && <div className="tool-tip">Click here to fit to screen</div>}
+        </Controls>
+      </div>
       <Background />
       <MiniMap />
     </ReactFlow>
