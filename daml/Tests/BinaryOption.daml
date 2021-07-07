@@ -92,7 +92,7 @@ requestExercise underlyingPrice observationDate = script do
   origReqCid <- submit alice.customer $ exerciseCmd alice.issuanceServiceCid RequestOrigination with
       assetLabel = optionAssetLabel
       description = "Tesla Binary Option"
-      cfi = CFI.unknown
+      cfi = CFI.other
       safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
       observers = []

@@ -67,7 +67,6 @@ const QueryStreamProvider = (props: PropsWithChildren<any> & { defaultPartyToken
   const [publicToken, setPublicToken] = useState<string>();
 
   const [streamErrors, setStreamErrors] = useState<StreamErrors[]>();
-
   useEffect(() => {
     if (defaultPartyToken) {
       setPartyToken(defaultPartyToken);

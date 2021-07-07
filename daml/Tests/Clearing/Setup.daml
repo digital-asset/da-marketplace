@@ -16,7 +16,6 @@ import Marketplace.Clearing.Market.Service qualified as ClearedMarket
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
-import Marketplace.Issuance.AssetDescription (AssetDescription(..))
 import Marketplace.Issuance.AssetDescription as AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Tests.Utils (future)
