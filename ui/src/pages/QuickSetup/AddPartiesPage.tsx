@@ -282,28 +282,6 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
       return;
     }
 
-    if (operatorService.length === 0) {
-      createOperatorService();
-    } else if (regulatorRoles.length === 0) {
-      createRegulatorRole();
-    } else {
-      offerRegulatorServices();
-      return handleComplete();
-    }
-  }, [
-    ledger,
-    adminCredentials.party,
-    userParties,
-    onComplete,
-    regulatorRolesLoading,
-    operatorServiceLoading,
-    regulatorServiceOffersLoading,
-    regulatorRoles,
-    operatorService,
-    regulatorServiceOffers,
-  ]);
-
-  function handleComplete() {
     async function deployAllTriggers() {
       if (isHubDeployment && parties.length > 0) {
         const artifactHash = TRIGGER_HASH;
@@ -329,9 +307,30 @@ const AdminLedger = (props: { adminCredentials: Credentials; onComplete: () => v
         );
       }
     }
-    deployAllTriggers();
-    return onComplete();
-  }
+
+    if (operatorService.length === 0) {
+      createOperatorService();
+    } else if (regulatorRoles.length === 0) {
+      createRegulatorRole();
+    } else {
+      offerRegulatorServices();
+      deployAllTriggers();
+      return onComplete();
+    }
+  }, [
+    ledger,
+    adminCredentials.party,
+    userParties,
+    onComplete,
+    regulatorRolesLoading,
+    operatorServiceLoading,
+    regulatorServiceOffersLoading,
+    regulatorRoles,
+    operatorService,
+    regulatorServiceOffers,
+    adminCredentials,
+    parties,
+  ]);
 
   return null;
 };
