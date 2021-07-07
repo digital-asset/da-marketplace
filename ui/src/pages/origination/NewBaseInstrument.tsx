@@ -76,7 +76,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
-      cfi: { unpack: cfi },
+      cfi: { code: cfi },
       claims: zero,
       safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],

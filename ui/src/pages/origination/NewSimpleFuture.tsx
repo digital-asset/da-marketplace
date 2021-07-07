@@ -18,10 +18,12 @@ import CalendarInput from '../../components/Form/CalendarInput';
 import { makeDamlSet } from '../common';
 import BackButton from '../../components/Common/BackButton';
 import { IconClose } from '../../icons/icons';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
 const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
 
+  const displayErrorMessage = useDisplayErrorMessage();
   const [underlying, setUnderlying] = useState('');
   const [expiry, setExpiry] = useState<Date | null>(null);
   const [multiplier, setMultiplier] = useState('');
@@ -54,9 +56,11 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
     tag: 'TimeGte',
     value: parseDate(expiry),
   };
+
   const obsMult: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: multiplier } };
 
   const oneUnderlying: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: underlyingId };
+
   const scale: Claim<DamlDate, Decimal, Id> = {
     tag: 'Scale',
     value: { k: obsMult, claim: oneUnderlying },
@@ -75,22 +79,22 @@ const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   }, [el, claims]);
 
   const service = customerServices[0];
-  if (!service) return <></>;
+  if (!service) return <>No issuance service found</>;
 
   const requestOrigination = async () => {
     const safekeepingAccount = accounts.find(
       a => a.provider === service.payload.provider && a.id.label === account
     );
     if (!safekeepingAccount) {
-      console.log(
-        `Couldn't find account from provider ${service.payload.provider} with label ${account}`
-      );
-      return;
+      return displayErrorMessage({
+        header: 'Failed to Create Instrument',
+        message: `Couldn't find account from provider ${service.payload.provider} with label ${account}`,
+      });
     }
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
-      cfi: { unpack: 'FXXXXX' },
+      cfi: { code: 'FXXXXX' },
       claims,
       safekeepingAccount,
       observers: [service.payload.provider, party],

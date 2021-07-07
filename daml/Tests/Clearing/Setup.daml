@@ -3,6 +3,7 @@ module Tests.Clearing.Setup where
 import Daml.Script
 import Common
 import ContingentClaims.Claim (Claim(Zero))
+import ContingentClaims.Observation (Observation(Const))
 import DA.Assert ((===))
 import DA.Finance.Types
 import DA.Date (date, Month(..))
@@ -75,9 +76,9 @@ clearedTradingTest = do
   (_,h2oQ322DerId)       <- mkSimpleH2OFuture "H2OQ322" "H2O Q3 22" $ date 2022 Jul 1
   (_,h2oQ422DerId)       <- mkSimpleH2OFuture "H2OQ422" "H2O Q4 22" $ date 2022 Oct 1
 
-  (Some expiry)     <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetExpiry with party = issuer.customer
-  (Some underlying) <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetUnderlying with party = issuer.customer
-  (Some mult)       <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.GetMultiplier with party = issuer.customer
+  (Some expiry)     <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.Expiry with party = issuer.customer
+  (underlying::_)   <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.Underlying with party = issuer.customer
+  ((Const mult)::_) <- submit issuer.customer $ exerciseCmd q122Cid AssetDescription.Multipliers with party = issuer.customer
 
   expiry     === (date 2022 Jan 1)
   underlying === h2oId

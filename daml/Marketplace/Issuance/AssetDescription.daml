@@ -50,30 +50,26 @@ template AssetDescription
     key assetId : Id
     maintainer key.signatories
 
-    nonconsuming choice GetExpiry : Optional Date
+    nonconsuming choice Expiry : Optional Date
       with
         party : Party
       controller party
       do
-        return $ expiry $ C.deserialize claims
+        return $ expiry (C.deserialize claims)
 
-    nonconsuming choice GetUnderlying : Optional Id
+    nonconsuming choice Underlying : [Id]
       with
         party : Party
       controller party
         do
-          case payoffs (C.deserialize claims) of
-            []                  -> return None
-            ((_,underlying)::_) -> return $ Just underlying
+          return $ snd <$> payoffs (C.deserialize claims)
 
-    nonconsuming choice GetMultiplier : Optional Decimal
+    nonconsuming choice Multipliers : [Observation Date Decimal]
       with
         party : Party
       controller party
         do
-          case payoffs (C.deserialize claims) of
-            (((Const x),_)::_)  -> return $ Just x
-            _                   -> return None
+          return $ fst <$> payoffs (C.deserialize claims)
 
 -- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
 template Index

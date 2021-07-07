@@ -73,7 +73,7 @@ export const Instrument: React.FC<RouteComponentProps> = () => {
                 .join(', '),
             },
             { label: 'Label', data: instrument.payload.assetId.label },
-            { label: 'CFI', data: instrument.payload.cfi.unpack },
+            { label: 'CFI', data: instrument.payload.cfi.code },
 
             { label: 'Version', data: instrument.payload.assetId.version },
             { label: 'Description', data: instrument.payload.description },
