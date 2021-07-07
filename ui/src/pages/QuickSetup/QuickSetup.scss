@@ -14,20 +14,19 @@
     }
 
     .review {
-      height: 100%;
       width: 100%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
+      height: fit-content(20em);
       background-color: var(--cool-grey-100);
       border-radius: 4px;
       z-index: 2;
+      display: flex;
+      flex: 1;
 
       .side-bar {
-        justify-self: flex-start;
         height: 100%;
         border-right: 1px solid var(--cool-grey-80);
         width: 320px;
+        align-self: flex-start;
 
         .side-bar-item {
           padding: $spacing-s;
@@ -44,13 +43,24 @@
       }
 
       .request-services,
-      .assign-roles {
-        margin: $spacing-s;
+      .assign-roles,
+      .add-account {
+        padding: $spacing-s;
+        border-bottom: 1px solid var(--cool-grey-80);
 
         .submit-actions {
           display: flex;
           flex-direction: row;
           align-items: center;
+        }
+      }
+
+      .add-account {
+        height: 450px;
+        overflow: auto;
+
+        .add-account-form {
+          margin-top: $spacing-s;
         }
       }
 
@@ -84,8 +94,34 @@
       }
 
       .react-flow {
-        height: 100%;
-        width: 100%;
+        .tool-tip {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          position: absolute;
+          bottom: 16px;
+          left: 43px;
+          background-color: var(--blue-100);
+          height: fit-content;
+          width: 100px;
+          padding: $spacing-xs;
+          border-radius: 4px;
+          border: 1px solid var(--cool-grey-80);
+        }
+        .tool-tip:after {
+          border: 15px solid transparent;
+          border-right-color: var(--blue-90);
+          content: '';
+          margin-left: -1em;
+          position: absolute;
+          top: 11px;
+          left: -16px;
+          z-index: 5;
+
+          width: 0;
+          height: 0;
+        }
 
         .role-node {
           display: flex;

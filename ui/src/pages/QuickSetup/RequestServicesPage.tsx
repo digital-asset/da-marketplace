@@ -35,7 +35,6 @@ import { retrieveUserParties } from '../../Parties';
 import { InformationIcon } from '../../icons/icons';
 import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 
-import { NewAccount } from '../custody/New';
 import { CreateEvent } from '@daml/ledger';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
@@ -391,7 +390,6 @@ const RequestForm = (props: {
                 });
               }}
             />
-            <NewAccount party={requestInfo.customer} modal />
           </DamlLedger>
         )}
       </div>
