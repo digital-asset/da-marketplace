@@ -14,8 +14,8 @@ instance Show CFI where
   show (CFI "OCEXXX") = "European Call"
   show (CFI "RWXXPX") = "Put Warrant"
   show (CFI "ECXXXX") = "Convertible Share"
-  show (CFI "XXXXXX") = "Unknown"
-  show _              = "Other"
+  show (CFI "MMMXXX") = "Misc/Other"
+  show _              = "Unknown"
 
 equity : CFI
 equity = CFI "EXXXXX"
@@ -41,5 +41,5 @@ putWarrant = CFI "RWXXPX"
 convertibleShare : CFI
 convertibleShare = CFI "ECXXXX"
 
-unknown : CFI
-unknown = CFI "XXXXXX"
+other : CFI
+other = CFI "MMMXXX"
