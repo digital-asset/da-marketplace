@@ -79,21 +79,21 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
                     <SideBarItem
                       reviewFormType={ReviewForms.ASSIGN_ROLES}
                       isOpen={openForm === ReviewForms.ASSIGN_ROLES}
-                      setIsOpen={() => setOpenForm(ReviewForms.ASSIGN_ROLES)}
+                      setIsOpen={setOpenForm}
                     >
                       <SelectRolesPage />
                     </SideBarItem>
                     <SideBarItem
                       reviewFormType={ReviewForms.REQUEST_SERVICES}
                       isOpen={openForm === ReviewForms.REQUEST_SERVICES}
-                      setIsOpen={() => setOpenForm(ReviewForms.REQUEST_SERVICES)}
+                      setIsOpen={setOpenForm}
                     >
                       <RequestServicesPage />
                     </SideBarItem>
                     <SideBarItem
                       reviewFormType={ReviewForms.NEW_ACCOUNT}
                       isOpen={openForm === ReviewForms.NEW_ACCOUNT}
-                      setIsOpen={() => setOpenForm(ReviewForms.NEW_ACCOUNT)}
+                      setIsOpen={setOpenForm}
                     >
                       <AddAccountPage />
                     </SideBarItem>
@@ -112,7 +112,7 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
 type TilePageProps = {
   reviewFormType: ReviewForms;
   isOpen: boolean;
-  setIsOpen: () => void;
+  setIsOpen: (form?: ReviewForms) => void;
 };
 
 const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children, setIsOpen }) => {
@@ -122,7 +122,7 @@ const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children
         className={classNames('side-bar-item', {
           'is-open': isOpen,
         })}
-        onClick={setIsOpen}
+        onClick={() => setIsOpen(isOpen ? undefined : reviewFormType)}
       >
         <h4>
           {reviewFormType} {isOpen ? <IconChevronUp /> : <IconChevronDown />}
