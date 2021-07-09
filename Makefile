@@ -149,9 +149,9 @@ navigator_log := $(STATE_DIR)/navigator.log
 
 $(navigator_pid): |$(STATE_DIR) $(dar_src)
 	@if [[ `lsof -i:6865 | grep -E 'localhost.*LISTEN'` ]]; \
-	then
+	then \
 	    daml navigator server localhost 6865 --port 7500 > $(navigator_log) & echo "$$!" > $(navigator_pid); \
-	else
+	else \
 	    echo "Sandbox must be running on port 6865 to start the navigator."; fi
 
 .PHONY: start-navigator
