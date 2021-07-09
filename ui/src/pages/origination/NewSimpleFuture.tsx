@@ -17,17 +17,16 @@ import { Button, Form, Header } from 'semantic-ui-react';
 import CalendarInput from '../../components/Form/CalendarInput';
 import { makeDamlSet } from '../common';
 import BackButton from '../../components/Common/BackButton';
-import { IconCircledCheck, IconClose } from '../../icons/icons';
-import classNames from 'classnames';
+import { IconClose } from '../../icons/icons';
+import { useDisplayErrorMessage } from '../../context/MessagesContext';
 
-const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
+const NewSimpleFutureComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
 
-  const [isCall, setIsCall] = useState(true);
+  const displayErrorMessage = useDisplayErrorMessage();
   const [underlying, setUnderlying] = useState('');
-  const [strike, setStrike] = useState('');
   const [expiry, setExpiry] = useState<Date | null>(null);
-  const [currency, setCurrency] = useState('');
+  const [multiplier, setMultiplier] = useState('');
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
   const [account, setAccount] = useState('');
@@ -37,17 +36,8 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   const services = useStreamQueries(Service).contracts;
   const customerServices = services.filter(s => s.payload.customer === party);
   const allAssets = useStreamQueries(AssetDescription).contracts;
-  const assets = allAssets.filter(
-    c => c.payload.claims.tag === 'Zero' && c.payload.assetId.version === '0'
-  );
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
-  const ccy = assets.find(c => c.payload.assetId.label === currency);
-  const ccyId: Id = ccy?.payload.assetId || {
-    signatories: makeDamlSet<string>([]),
-    label: '',
-    version: '0',
-  };
 
   const parseDate = (d: Date | null) =>
     (!!d &&
@@ -55,27 +45,30 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
       new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)) ||
     '';
 
-  const ineqEuropean: Inequality<DamlDate, Id> = {
+  const underlyingId: Id = allAssets.find(c => c.payload.assetId.label === underlying)?.payload
+    .assetId || {
+    signatories: makeDamlSet<string>([]),
+    label: '',
+    version: '0',
+  };
+
+  const ineqExpiry: Inequality<DamlDate, Id> = {
     tag: 'TimeGte',
     value: parseDate(expiry),
   };
-  const obsStrike: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: strike } };
-  const obsSpot: Observation<DamlDate, Decimal> = { tag: 'Observe', value: { key: underlying } };
-  const ineqPayoff: Inequality<DamlDate, Decimal> = {
-    tag: 'Lte',
-    value: isCall ? { _1: obsStrike, _2: obsSpot } : { _1: obsSpot, _2: obsStrike },
+
+  const obsMult: Observation<DamlDate, Decimal> = { tag: 'Const', value: { value: multiplier } };
+
+  const oneUnderlying: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: underlyingId };
+
+  const scale: Claim<DamlDate, Decimal, Id> = {
+    tag: 'Scale',
+    value: { k: obsMult, claim: oneUnderlying },
   };
 
-  const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
-  const oneUsd: Claim<DamlDate, Decimal, Id> = { tag: 'One', value: ccyId };
-  const cond: Claim<DamlDate, Decimal, Id> = {
-    tag: 'Cond',
-    value: { predicate: ineqPayoff, success: oneUsd, failure: zero },
-  };
-  const choice: Claim<DamlDate, Decimal, Id> = { tag: 'Or', value: { lhs: cond, rhs: zero } };
   const claims: Claim<DamlDate, Decimal, Id> = {
     tag: 'When',
-    value: { predicate: ineqEuropean, claim: choice },
+    value: { predicate: ineqExpiry, claim: scale },
   };
 
   useEffect(() => {
@@ -86,22 +79,22 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   }, [el, claims]);
 
   const service = customerServices[0];
-  if (!service) return <></>;
+  if (!service) return <>No issuance service found</>;
 
   const requestOrigination = async () => {
     const safekeepingAccount = accounts.find(
       a => a.provider === service.payload.provider && a.id.label === account
     );
     if (!safekeepingAccount) {
-      console.log(
-        `Couldn't find account from provider ${service.payload.provider} with label ${account}`
-      );
-      return;
+      return displayErrorMessage({
+        header: 'Failed to Create Instrument',
+        message: `Couldn't find account from provider ${service.payload.provider} with label ${account}`,
+      });
     }
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
-      cfi: { code: 'MMMXXX' },
+      cfi: { code: 'FXXXXX' },
       claims,
       safekeepingAccount,
       observers: [service.payload.provider, party],
@@ -111,33 +104,14 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   return (
     <div className="input-dialog">
       <BackButton />
-      <Header as="h2">New Binary Option</Header>{' '}
+      <Header as="h2">New Simple Future</Header>{' '}
       <FormErrorHandled onSubmit={requestOrigination}>
-        <div className="form-select">
-          <Button
-            type="button"
-            className={classNames('ghost checked', { darken: !isCall })}
-            onClick={() => setIsCall(true)}
-          >
-            {isCall && <IconCircledCheck />}
-            <p>Call</p>
-          </Button>
-          <Button
-            type="button"
-            className={classNames('ghost checked', { darken: isCall })}
-            onClick={() => setIsCall(false)}
-          >
-            {!isCall && <IconCircledCheck />}
-            <p>Put</p>
-          </Button>
-        </div>
-
         <Form.Select
           className="issue-asset-form-field select-account"
           placeholder="Underlying"
           label="Underlying"
           value={underlying}
-          options={assets.map(c => ({
+          options={allAssets.map(c => ({
             text: c.payload.assetId.label,
             value: c.payload.assetId.label,
           }))}
@@ -148,11 +122,12 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
 
         <Form.Input
           fluid
-          label="Strike"
-          placeholder="Strike"
-          value={strike}
+          number
+          label="Multiplier"
+          placeholder="Multiplier"
+          value={multiplier}
           className="issue-asset-form-field"
-          onChange={e => setStrike(e.currentTarget.value)}
+          onChange={e => setMultiplier(e.currentTarget.value)}
         />
 
         <CalendarInput
@@ -160,20 +135,6 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
           placeholder="Expiry Date"
           value={expiry}
           onChange={e => setExpiry(e)}
-        />
-
-        <Form.Select
-          className="issue-asset-form-field select-account"
-          placeholder="Payout Currency"
-          label="Payout Currency"
-          value={currency}
-          options={assets.map(c => ({
-            text: c.payload.assetId.label,
-            value: c.payload.assetId.label,
-          }))}
-          onChange={(event: React.SyntheticEvent, result: any) => {
-            setCurrency(result.value);
-          }}
         />
 
         <Form.Input
@@ -215,4 +176,4 @@ const NewBinaryOptionComponent = ({ history }: RouteComponentProps) => {
   );
 };
 
-export const NewBinaryOption = withRouter(NewBinaryOptionComponent);
+export const NewSimpleFuture = withRouter(NewSimpleFutureComponent);

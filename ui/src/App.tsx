@@ -37,6 +37,7 @@ import { ClearingMember } from './pages/clearing/Member';
 import _ from 'lodash';
 import { NewConvertibleNote } from './pages/origination/NewConvertibleNote';
 import { NewBinaryOption } from './pages/origination/NewBinaryOption';
+import { NewSimpleFuture } from './pages/origination/NewSimpleFuture';
 import { NewBaseInstrument } from './pages/origination/NewBaseInstrument';
 import Landing from './pages/landing/Landing';
 import Offer from './pages/setup/Offer';
@@ -236,6 +237,14 @@ const AppComponent = () => {
         render: () => (
           <ServiceRequired service={ServiceKind.ISSUANCE} action="New Binary Option">
             <NewBinaryOption />
+          </ServiceRequired>
+        ),
+      },
+      {
+        path: paths.app.instruments.new.simplefuture,
+        render: () => (
+          <ServiceRequired service={ServiceKind.ISSUANCE} action="New Simple Future">
+            <NewSimpleFuture />
           </ServiceRequired>
         ),
       },

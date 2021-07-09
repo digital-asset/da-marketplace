@@ -16,6 +16,7 @@ const paths = {
         base: '/app/instruments/new/base',
         convertiblenote: '/app/instruments/new/convertible-note',
         binaryoption: '/app/instruments/new/binary-option',
+        simplefuture: '/app/instruments/new/simple-future',
       },
     },
     trading: '/app/trading',

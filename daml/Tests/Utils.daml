@@ -6,7 +6,7 @@ import ContingentClaims.Claim
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
 import ContingentClaims.Observable (at)
-import ContingentClaims.FinancialClaim (fixed, floating, swap, european, bermudan)
+import ContingentClaims.FinancialClaim (fixed, floating, swap, european, bermudan, forward)
 import DA.Finance.Asset
 import DA.Finance.Types (Account, Id(..))
 
@@ -39,6 +39,9 @@ futureDvp asset assetQty ccy ccyQty d =
 bond : Id -> Decimal -> Decimal -> [Date] -> C
 bond ccy notional coupon dates =
   fixed notional (notional * coupon) ccy dates
+
+future : Id -> Decimal -> Date -> C
+future underlying mult expiry = forward expiry (O.pure mult) (One underlying)
 
 callOptionPhysical : Id -> Decimal -> Id -> Decimal -> Date -> C
 callOptionPhysical asset assetQty ccy ccyQty d =

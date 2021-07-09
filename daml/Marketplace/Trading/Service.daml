@@ -110,7 +110,7 @@ template Service
           createOrderRequestCid : ContractId CreateOrderRequest
           providerOrderId : Text
         do
-          CreateOrderRequest{..} <- fetch createOrderRequestCid
+          CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
           (orderCid, order) <- fetchByKey (provider, details.id.label)
 
           -- TODO: Confirm what to do with this business ACK when received out of the expected order.
