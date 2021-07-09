@@ -62,7 +62,7 @@ setup = do
   let originalDeposits = [ aliceDeposit, bobDeposit, charlieDeposit, daveDeposit ]
 
   -- Create our Issuer with their new asset to distribute
-  (_, auctionAssetDesc) <- originate providers issuer "AuctionAsset" "Example Auction Asset" CFI.equity Zero
+  (_, auctionAssetDesc) <- originate providers issuer "AuctionAsset" "Example Auction Asset" CFI.equity Zero []
   let
     auctionAssetId = auctionAssetDesc.assetId
     auctionAsset = Asset with id = auctionAssetId; quantity = 1000.0

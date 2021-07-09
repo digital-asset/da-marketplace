@@ -180,9 +180,9 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation  Date Decimal Id -> Script (ContractId AssetDescription, AssetDescription)
-originate Providers{..} issuer assetLabel description cfi claims = do
-    let observers = [public]
+originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation  Date Decimal Id -> [Party] -> Script (ContractId AssetDescription, AssetDescription)
+originate Providers{..} issuer assetLabel description cfi claims extraObs = do
+    let observers = public :: extraObs
         safekeepingAccount = issuer.mainAccount
     createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
     submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
@@ -190,7 +190,7 @@ originate Providers{..} issuer assetLabel description cfi claims = do
 onboardAssets : Providers -> Customer -> Script Assets
 onboardAssets providers issuer = do
   let mkAsset name description cfi claims = do
-      (_, AssetDescription{assetId = id}) <- originate providers issuer name description cfi claims
+      (_, AssetDescription{assetId = id}) <- originate providers issuer name description cfi claims []
       pure $ Asset with quantity = 0.0; ..
 
   usd   <- mkAsset "USD" "United States Dollar" CFI.currency Zero

@@ -64,10 +64,10 @@ clearedTradingTest = do
   marketServiceOfferCid <- submit clearinghouse do exerciseCmd clearingRoleCid Clearing.OfferMarketService with customer = exchange; ..
   marketServiceCid <- submit exchange do exerciseCmd marketServiceOfferCid ClearedMarket.Accept
 
-  (_, AssetDescription{assetId = h2oId}) <- originate providers issuer "H2O" "H2O Spot" CFI.equity Zero
+  (_, AssetDescription{assetId = h2oId}) <- originate providers issuer "H2O" "H2O Spot" CFI.equity Zero [clearinghouse]
 
   let mkSimpleH2OFuture name description expiry = do
-      (descCid, AssetDescription{assetId}) <- originate providers issuer name description CFI.future $ future h2oId 1.0 expiry
+      (descCid, AssetDescription{assetId}) <- originate providers issuer name description CFI.future (future h2oId 1.0 expiry) [clearinghouse]
       return (descCid, assetId)
 
   (q122Cid,h2oQ122DerId) <- mkSimpleH2OFuture "H2OQ122" "H2O Q1 22" $ date 2022 Jan 1
