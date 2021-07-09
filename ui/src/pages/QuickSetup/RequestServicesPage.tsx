@@ -38,15 +38,16 @@ import { Account } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { CreateEvent } from '@daml/ledger';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { AllocationAccountRule } from '@daml.js/da-marketplace/lib/Marketplace/Rule/AllocationAccount';
-import AccountSelectionModal, { AccountType, AccountInfos } from './AccountSelectionModal';
+import AccountSelection, { AccountType, AccountInfos } from './AccountSelection';
 
-type AccountsForServices = {
+export type AccountsForServices = {
   clearingAccount?: Account;
   marginAccount?: Account;
   tradingAccount?: Account;
   tradingAllocAccount?: Account;
   biddingAccount?: Account;
   biddingAllocAccount?: Account;
+  issuanceAccount?: Account;
   auctionAccount?: Account;
   auctionAllocAccount?: Account;
   receivableAccount?: Account;
@@ -170,77 +171,82 @@ const RequestForm = (props: {
   const partyOptions = identities.map(p => {
     return { text: p.payload.legalName, value: p.payload.customer };
   });
-  const [showAccountModal, setShowAccountModal] = useState(false);
-  const [modalAccountInfos, setModalAccountInfos] = useState<AccountInfos>({});
-  const [modalOnCancelFunction, setModalOnCancelFunction] = useState<() => void>(() => {
-    return;
-  });
-  const selectAccounts = useCallback(
-    (serviceType: ServiceKind) => {
-      switch (serviceType) {
-        case ServiceKind.CLEARING:
-          setModalAccountInfos({
-            clearingAccount: {
-              accountType: AccountType.REGULAR,
-              accountLabel: 'Clearing Account',
-            },
-            marginAccount: {
-              accountType: AccountType.ALLOCATION,
-              accountLabel: 'Margin Account',
-            },
-          });
-          break;
-        case ServiceKind.TRADING:
-          setModalAccountInfos({
-            tradingAccount: {
-              accountType: AccountType.REGULAR,
-              accountLabel: 'Exchange Trading Account',
-            },
-            tradingAllocAccount: {
-              accountType: AccountType.ALLOCATION,
-              accountLabel: 'Locked Account',
-            },
-          });
-          break;
-        case ServiceKind.BIDDING:
-          setModalAccountInfos({
-            biddingAccount: {
-              accountType: AccountType.REGULAR,
-              accountLabel: 'Bidding Account',
-            },
-            biddingAllocAccount: {
-              accountType: AccountType.ALLOCATION,
-              accountLabel: 'Bidding Locked Account',
-            },
-          });
-          break;
-        case ServiceKind.AUCTION:
-          setModalAccountInfos({
-            auctionAccount: {
-              accountType: AccountType.REGULAR,
-              accountLabel: 'Main Auction Account',
-            },
-            auctionAllocAccount: {
-              accountType: AccountType.ALLOCATION,
-              accountLabel: 'Locked Auction Account',
-            },
-            receivableAccount: {
-              accountType: AccountType.REGULAR,
-              accountLabel: 'Receivables Account',
-            },
-          });
-          break;
-      }
-      setModalOnCancelFunction(
-        () => () =>
-          setRequestInfo({
-            ...requestInfo,
-            services: requestInfo?.services?.filter(s => s !== serviceType),
-          })
-      );
-      setShowAccountModal(true);
+  const [accountSelectInfos, setAccountSelectInfos] = useState<AccountInfos>({});
+
+  const handleSetAccountInfos = useCallback(
+    (existing: ServiceKind[]) => {
+      const newAccountInfos =
+        requestInfo?.services?.reduce<AccountInfos>((acc, svc) => {
+          if (existing.includes(svc)) return acc;
+
+          switch (svc) {
+            case ServiceKind.CLEARING:
+              return {
+                ...acc,
+                clearingAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Clearing Account',
+                },
+                marginAccount: {
+                  accountType: AccountType.ALLOCATION,
+                  accountLabel: 'Margin Account',
+                },
+              };
+            case ServiceKind.ISSUANCE:
+              return {
+                ...acc,
+                issuanceAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Issuance Account',
+                },
+              };
+            case ServiceKind.TRADING:
+              return {
+                ...acc,
+                tradingAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Exchange Trading Account',
+                },
+                tradingAllocAccount: {
+                  accountType: AccountType.ALLOCATION,
+                  accountLabel: 'Exchange Locked Account',
+                },
+              };
+            case ServiceKind.BIDDING:
+              return {
+                ...acc,
+                biddingAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Bidding Account',
+                },
+                biddingAllocAccount: {
+                  accountType: AccountType.ALLOCATION,
+                  accountLabel: 'Bidding Locked Account',
+                },
+              };
+            case ServiceKind.AUCTION:
+              return {
+                ...acc,
+                auctionAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Main Auction Account',
+                },
+                auctionAllocAccount: {
+                  accountType: AccountType.ALLOCATION,
+                  accountLabel: 'Locked Auction Account',
+                },
+                receivableAccount: {
+                  accountType: AccountType.REGULAR,
+                  accountLabel: 'Receivables Account',
+                },
+              };
+            default:
+              return acc;
+          }
+        }, {}) || {};
+      setAccountSelectInfos(newAccountInfos);
     },
-    [requestInfo, setRequestInfo]
+    [requestInfo]
   );
 
   useEffect(() => {
@@ -252,31 +258,6 @@ const RequestForm = (props: {
 
     if (!customer || !provider || !requestServices) {
       return;
-    }
-
-    const accounts = requestInfo?.accounts;
-    if (requestServices.includes(ServiceKind.CLEARING)) {
-      if (!accounts?.clearingAccount || !accounts?.marginAccount)
-        selectAccounts(ServiceKind.CLEARING);
-    }
-
-    if (requestServices.includes(ServiceKind.TRADING)) {
-      if (!accounts?.tradingAccount || !accounts?.tradingAllocAccount)
-        selectAccounts(ServiceKind.TRADING);
-    }
-
-    if (requestServices.includes(ServiceKind.BIDDING)) {
-      if (!accounts?.biddingAccount || !accounts?.biddingAllocAccount)
-        selectAccounts(ServiceKind.BIDDING);
-    }
-
-    if (requestServices.includes(ServiceKind.AUCTION)) {
-      if (
-        !accounts?.auctionAccount ||
-        !accounts?.auctionAllocAccount ||
-        !accounts?.receivableAccount
-      )
-        selectAccounts(ServiceKind.AUCTION);
     }
 
     const matchingContracts = services.filter(
@@ -292,11 +273,37 @@ const RequestForm = (props: {
     } else {
       setExistingServices([]);
     }
-  }, [requestInfo, services, setModalAccountInfos, setShowAccountModal, selectAccounts]);
+
+    handleSetAccountInfos(existingServices);
+  }, [requestInfo, services, setAccountSelectInfos, handleSetAccountInfos]);
 
   if (identitiesLoading) {
     return null;
   }
+
+  const hasAccountsForServices = requestInfo?.services?.reduce((acc, svc) => {
+    if (existingServices.includes(svc)) return acc;
+    const accounts = requestInfo?.accounts;
+    switch (svc) {
+      case ServiceKind.CLEARING:
+        return acc && !!accounts?.clearingAccount && !!accounts?.marginAccount;
+      case ServiceKind.ISSUANCE:
+        return acc && !!accounts?.issuanceAccount;
+      case ServiceKind.TRADING:
+        return acc && !!accounts?.tradingAccount && !!accounts?.tradingAllocAccount;
+      case ServiceKind.BIDDING:
+        return acc && !!accounts?.biddingAccount && !!accounts?.biddingAllocAccount;
+      case ServiceKind.AUCTION:
+        return (
+          acc &&
+          !!accounts?.auctionAccount &&
+          !!accounts?.auctionAllocAccount &&
+          !!accounts?.receivableAccount
+        );
+      default:
+        return acc;
+    }
+  }, true);
 
   return (
     <>
@@ -311,6 +318,7 @@ const RequestForm = (props: {
             setRequestInfo({
               ...requestInfo,
               customer: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              accounts: {},
             })
           }
           options={partyOptions}
@@ -337,33 +345,19 @@ const RequestForm = (props: {
             setRequestInfo({
               ...requestInfo,
               provider: identities.find(p => p.payload.customer === data.value)?.payload.customer,
+              accounts: {},
             })
           }
           options={partyOptions}
         />
-      </Form>
 
-      {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
-        <p className="p2 message">
-          <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
-          {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
-        </p>
-      )}
-      <div className="submit-actions">
-        <Button
-          className="ghost request"
-          disabled={
-            !requestInfo ||
-            !requestInfo.provider ||
-            !requestInfo.customer ||
-            !requestInfo.services ||
-            creatingRequest ||
-            existingServices.length > 0
-          }
-          onClick={() => createRequest()}
-        >
-          {creatingRequest ? 'Creating Request...' : 'Request'}
-        </Button>
+        {existingServices.length > 0 && requestInfo?.provider && requestInfo?.customer && (
+          <p className="p2 message">
+            <InformationIcon /> {getName(requestInfo?.provider)} already provides{' '}
+            {itemListAsText(existingServices || [])} services to {getName(requestInfo?.customer)}
+          </p>
+        )}
+
         {requestInfo && requestInfo.customer && token && (
           <DamlLedger
             token={token}
@@ -375,23 +369,42 @@ const RequestForm = (props: {
               party={requestInfo.customer}
               setAccountsForParty={setAccountsForParty}
             />
-            <AccountSelectionModal
-              accountInfos={modalAccountInfos}
-              open={showAccountModal}
+            {!!Object.keys(accountSelectInfos).length && <h4>Accounts:</h4>}
+            <AccountSelection
+              accountInfos={accountSelectInfos}
               serviceProvider={requestInfo?.provider}
-              setOpen={setShowAccountModal}
+              accountsForServices={requestInfo?.accounts || {}}
               party={requestInfo.customer}
               accountsForParty={accountsForParty}
-              onCancel={modalOnCancelFunction}
-              onFinish={(accts: { [k: string]: Account | undefined }) => {
+              onChangeAccount={(k: string, acct: Account | undefined) => {
+                let acctsCopy: { [k: string]: Account | undefined } =
+                  { ...requestInfo?.accounts } || {};
+                acctsCopy[k] = acct;
                 setRequestInfo({
                   ...requestInfo,
-                  accounts: { ...requestInfo?.accounts, ...accts },
+                  accounts: acctsCopy,
                 });
               }}
             />
           </DamlLedger>
         )}
+      </Form>
+      <div className="submit-actions">
+        <Button
+          className="ghost request"
+          disabled={
+            !requestInfo ||
+            !requestInfo.provider ||
+            !requestInfo.customer ||
+            !requestInfo.services ||
+            !hasAccountsForServices ||
+            creatingRequest ||
+            existingServices.length > 0
+          }
+          onClick={() => createRequest()}
+        >
+          {creatingRequest ? 'Creating Request...' : 'Request'}
+        </Button>
       </div>
     </>
   );
