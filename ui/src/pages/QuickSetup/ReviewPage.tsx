@@ -26,6 +26,7 @@ import { AutomationProvider } from '../../context/AutomationContext';
 import { formatTriggerName } from './SelectRolesPage';
 import RequestServicesPage from './RequestServicesPage';
 import SelectRolesPage from './SelectRolesPage';
+import AddAccountPage from './AddAccountPage';
 
 import ReactFlow, {
   FlowElement,
@@ -44,12 +45,13 @@ import dagre from 'dagre';
 import { IconChevronDown, IconChevronUp } from '../../icons/icons';
 import { Loader } from 'semantic-ui-react';
 
-const NODE_WIDTH = 172;
-const NODE_HEIGHT = 36;
+const NODE_WIDTH = 200;
+const NODE_HEIGHT = 130;
 
 enum ReviewForms {
   ASSIGN_ROLES = 'Assign Roles',
   REQUEST_SERVICES = 'Request Services',
+  NEW_ACCOUNT = 'New Account',
 }
 
 const ReviewPage = (props: { adminCredentials: Credentials }) => {
@@ -77,16 +79,23 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
                     <SideBarItem
                       reviewFormType={ReviewForms.ASSIGN_ROLES}
                       isOpen={openForm === ReviewForms.ASSIGN_ROLES}
-                      setIsOpen={() => setOpenForm(ReviewForms.ASSIGN_ROLES)}
+                      setIsOpen={setOpenForm}
                     >
                       <SelectRolesPage />
                     </SideBarItem>
                     <SideBarItem
                       reviewFormType={ReviewForms.REQUEST_SERVICES}
                       isOpen={openForm === ReviewForms.REQUEST_SERVICES}
-                      setIsOpen={() => setOpenForm(ReviewForms.REQUEST_SERVICES)}
+                      setIsOpen={setOpenForm}
                     >
                       <RequestServicesPage />
+                    </SideBarItem>
+                    <SideBarItem
+                      reviewFormType={ReviewForms.NEW_ACCOUNT}
+                      isOpen={openForm === ReviewForms.NEW_ACCOUNT}
+                      setIsOpen={setOpenForm}
+                    >
+                      <AddAccountPage />
                     </SideBarItem>
                   </div>
                   <ReviewItems />
@@ -103,7 +112,7 @@ const ReviewPage = (props: { adminCredentials: Credentials }) => {
 type TilePageProps = {
   reviewFormType: ReviewForms;
   isOpen: boolean;
-  setIsOpen: () => void;
+  setIsOpen: (form?: ReviewForms) => void;
 };
 
 const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children, setIsOpen }) => {
@@ -113,7 +122,7 @@ const SideBarItem: React.FC<TilePageProps> = ({ reviewFormType, isOpen, children
         className={classNames('side-bar-item', {
           'is-open': isOpen,
         })}
-        onClick={setIsOpen}
+        onClick={() => setIsOpen(isOpen ? undefined : reviewFormType)}
       >
         <h4>
           {reviewFormType} {isOpen ? <IconChevronUp /> : <IconChevronDown />}
@@ -187,6 +196,7 @@ const ReviewItems = () => {
         position: { x: 0, y: 0 },
         targetPosition: Position.Top,
         sourcePosition: Position.Bottom,
+        style: { border: 'unset', opacity: 1 },
       };
     }),
   ];
@@ -225,6 +235,7 @@ const ReviewItems = () => {
 
 const Network = (props: { passedElements: any[] }) => {
   const [elements, setElements] = useState<FlowElement<any>[]>(props.passedElements);
+  const [showTip, setShowTip] = useState(true);
 
   useEffect(() => {
     setElements(
@@ -250,7 +261,6 @@ const Network = (props: { passedElements: any[] }) => {
     if (!hasCustomers) {
       return;
     }
-
     let newElements = elements.map(el => {
       if (isNode(el)) {
         if (el.id === element.id) {
@@ -278,7 +288,7 @@ const Network = (props: { passedElements: any[] }) => {
       }
       return {
         ...el,
-        style: { stroke: 'grey', strokeWidth: 1, opacity: 0.5 },
+        style: { stroke: 'lightgrey', strokeWidth: 1, opacity: 0.5 },
         labelStyle: { ...el.labelStyle, display: 'none' },
         labelBgStyle: { ...el.labelBgStyle, fill: 'none' },
       };
@@ -307,7 +317,11 @@ const Network = (props: { passedElements: any[] }) => {
       zoomOnScroll={false}
       zoomOnPinch={false}
     >
-      <Controls />
+      <div onClick={() => setShowTip(false)}>
+        <Controls>
+          {showTip && <div className="tool-tip">Click here to fit to screen</div>}
+        </Controls>
+      </div>
       <Background />
       <MiniMap />
     </ReactFlow>

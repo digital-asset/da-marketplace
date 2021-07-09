@@ -17,22 +17,27 @@
 4. Open deployed UI → Quick Setup
 5. Upload `parties.json` and click Next
 6. Wait for all auto-approve triggers for all parties to deploy...
-7. Drag and drop roles to specific parties: (then click Next)
-    - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` roles
+7. Assign roles to specific parties:
+    - Assign `Bank` the `Custody`, `Distribution`, and `Settlement` role
     - Assign `Exchange` the `Exchange` role
     - Assign `Ccp` the `Clearing` role
-8. Request services from specific parties: (then click Next)
+8. Request services from specific parties:
     - As `Issuer` request `Custody`, `Issuance` services from `Bank`
-    - as `Issuer` `Auction` services from `Bank`
-        - Auction Trading Account: Request from Bank
-        - Locked Auction Account: Request from Bank
-        - Receivable Account: Request from Bank
+    - As `Issuer` request `Auction` services from `Bank`
+        - Auction Trading Account: Request from Bank (then select the resulting account)
+        - Locked Auction Account: Request from Bank (then select the resulting account)
+        - Receivable Account: Request from Bank (then select the resulting account)
     - As `Alice` request `Custody` services from `Bank`
-    - As `Alice`, request `Trading` services from `Exchange` `Clearing` services from `Ccp`, and `Bidding` service from `Bank`, use "Request Account" results for all accounts.
+    - As `Alice`, request `Trading` services from `Exchange`, `Clearing` services from `Ccp`, and `Bidding` service from `Bank`, use "Request Account" results for all accounts.
     - As `Bob` request `Custody` services from `Bank`
     - As `Bob`, request `Trading` services from `Exchange` and `Clearing` services from `Ccp`, use "Request Account" results for all accounts.
     - As `Ccp` request `Custody` services from `Bank`
     - As `Exchange` request `MarketClearing` services from `Ccp`
+9. Create Accounts:
+    - As `Ccp`, create a regular account
+        - **Provider**: `Bank`
+        - **Account Name** : `Clearing-Bank`
+        - **Account Type** : `Regular`
 
 ## Issuing new assets
 
@@ -111,16 +116,12 @@ Setting up tradeable, collateralized markets
 
 ## Setup Clearinghouse
 1. Login as `Ccp`
-2. `Ccp`: Go to Wallet, create a regular account
-    - **Provider**: `Bank`
-    - **Account Name** : `Clearing-Bank`
-    - **Account Type** : `Regular`
-3. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
+2. `Ccp`: Go to Manage/Clearing and "Accept" Clearing Role
     - **Clearing Account**: `Clearing-Bank`
-4. Login as `Alice`
-5. `Alice`: Go to Wallet, click on row for `Alice-Ccp-ClearingAccount`, Deposit 10,000 USD
-6. Login as `Bob`
-7. `Bob`: Go to Wallet, click on row for `Bob-Ccp-ClearingAccount`, Deposit 10,000 USD
+3. Login as `Alice`
+4. `Alice`: Go to Wallet, click on row for `Alice-Ccp-ClearingAccount`, Deposit 10,000 USD
+5. Login as `Bob`
+6. `Bob`: Go to Wallet, click on row for `Bob-Ccp-ClearingAccount`, Deposit 10,000 USD
 
 ### Test Margin Calls
 Perform successful margin call for Alice
