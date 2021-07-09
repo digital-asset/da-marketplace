@@ -64,12 +64,15 @@ template AssetDescription
         do
           return $ snd <$> payoffs (C.deserialize claims)
 
-    nonconsuming choice Multipliers : [Observation Date Decimal]
+    nonconsuming choice Multipliers : [Decimal]
       with
         party : Party
       controller party
         do
-          return $ fst <$> payoffs (C.deserialize claims)
+          let getConst : (Observation Date Decimal, b) -> [Decimal]
+              getConst (Const x, _) = [x]
+              getConst _            = []
+          return $ concatMap getConst $ payoffs (C.deserialize claims)
 
 -- Used to do a reverse lookup of the version # given the claims (passed-in from the API)
 template Index
