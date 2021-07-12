@@ -2,43 +2,46 @@ module Tests.Utils where
 
 import Daml.Script
 
-import ContingentClaims.Claim (Claim, Claim(Zero), when, scale, cond, give, one, and, or)
+import ContingentClaims.Claim
 import ContingentClaims.Observable qualified as O
 import ContingentClaims.Observation qualified as O
-import ContingentClaims.FinancialClaim (at, fixed, floating, swap, european, bermudan)
+import ContingentClaims.Observable (at)
+import ContingentClaims.FinancialClaim (fixed, floating, swap, european, bermudan, forward)
 import DA.Finance.Asset
 import DA.Finance.Types (Account, Id(..))
-import Prelude hiding (and, or)
 
-type C = Claim O.Observation Date Id
+type C = Claim O.Observation Date Decimal Id
 
 payment : Id -> Decimal -> C
 payment ccy qty =
-  scale (O.pure qty) (one ccy)
+  Scale (O.pure qty) (One ccy)
 
 delivery : Id -> Decimal -> C
 delivery asset qty =
-  give $ scale (O.pure qty) (one asset)
+  Give $ Scale (O.pure qty) (One asset)
 
 futurePayment : Id -> Decimal -> Date -> C
 futurePayment ccy qty d =
-  when (at d) $ payment ccy qty
+  When (at d) $ payment ccy qty
 
 futureDelivery : Id -> Decimal -> Date -> C
 futureDelivery asset qty d =
-  when (at d) $ delivery asset qty
+  When (at d) $ delivery asset qty
 
 dvp : Id -> Decimal -> Id -> Decimal -> C
 dvp asset assetQty ccy ccyQty =
-  and (delivery asset assetQty) (payment ccy ccyQty)
+  And (delivery asset assetQty) (payment ccy ccyQty)
 
 futureDvp : Id -> Decimal -> Id -> Decimal -> Date -> C
 futureDvp asset assetQty ccy ccyQty d =
-  when (at d) $ dvp asset assetQty ccy ccyQty
+  When (at d) $ dvp asset assetQty ccy ccyQty
 
 bond : Id -> Decimal -> Decimal -> [Date] -> C
 bond ccy notional coupon dates =
   fixed notional (notional * coupon) ccy dates
+
+future : Id -> Decimal -> Date -> C
+future underlying mult expiry = forward expiry (O.pure mult) (One underlying)
 
 callOptionPhysical : Id -> Decimal -> Id -> Decimal -> Date -> C
 callOptionPhysical asset assetQty ccy ccyQty d =
@@ -46,17 +49,17 @@ callOptionPhysical asset assetQty ccy ccyQty d =
 
 binaryCallOption : Id -> Id -> Decimal -> Date -> C
 binaryCallOption underlying ccy strike expiry =
-  when (at expiry) $ or (cond (O.pure strike O.<= O.observe underlying.label) (one ccy) Zero) Zero
+  When (at expiry) $ Or (Cond (O.pure strike O.<= O.observe underlying.label) (One ccy) Zero) Zero
 
 koPutWarrant : Decimal -> Decimal -> Id -> Id -> C
 koPutWarrant barrier strike underlying ccy  =
-  cond (O.observe underlying.label O.<= O.pure barrier) (or (scale (O.pure strike O.+ (O.observe underlying.label)) (one ccy)) (Zero)) Zero
+  Cond (O.observe underlying.label O.<= O.pure barrier) (Or (Scale (O.pure strike + (O.observe underlying.label)) (One ccy)) (Zero)) Zero
 
 bermudanSwaption : Id -> Decimal -> Id -> Decimal -> [Date] -> [Date] -> C
 bermudanSwaption floatingRateId fixedRate fixedCcyId principal fixingDates exerciseDates =
   let
     floatObs = O.observe floatingRateId.label
-    floatingLeg = floating (O.pure 0.0) floatObs floatingRateId 
+    floatingLeg = floating (O.pure 0.0) floatObs floatingRateId
     fixedLeg = fixed principal fixedRate fixedCcyId
   in bermudan (swap floatingLeg fixedLeg fixingDates) exerciseDates
 
@@ -65,9 +68,9 @@ convertibleNote : Id -> Id -> Decimal -> Decimal -> Date -> Decimal -> Decimal -
 convertibleNote underlying ccy principal discount maturity interest cap =
   let
     conversionCondition = O.observe underlying.label O.<= O.pure cap
-    conversionPayout = scale (O.pure (principal * (1.0 + interest)) O./ (O.observe underlying.label O.* O.pure (1.0 - discount))) (one underlying)
-    principalPayout = scale (O.pure (principal * (1.0 + interest))) (one ccy)
-  in when (at maturity) $ cond conversionCondition conversionPayout principalPayout
+    conversionPayout = Scale (O.pure (principal * (1.0 + interest)) / (O.observe underlying.label * O.pure (1.0 - discount))) (One underlying)
+    principalPayout = Scale (O.pure (principal * (1.0 + interest))) (One ccy)
+  in When (at maturity) $ Cond conversionCondition conversionPayout principalPayout
 
 -- |Check if the given account has deposits equaling the given amount
 depositsQuantityEquals : Party -> Account -> Decimal -> Script Bool

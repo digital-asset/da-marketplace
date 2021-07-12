@@ -26,6 +26,7 @@ export const InstrumentsTable: React.FC = () => {
             label: 'New Convertible Note',
           },
           { path: paths.app.instruments.new.binaryoption, label: 'New Binary Option' },
+          { path: paths.app.instruments.new.simplefuture, label: 'New Simple Future' },
         ]}
       />
 

@@ -139,29 +139,33 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
   const fields = (
     <>
       <Form.Select
-        label="Operator"
+        label={<p className="input-label">Operator</p>}
         placeholder="Select..."
         required
         options={operators}
         onChange={(_, change) => setOperator(change.value as Party)}
       />
       <Form.Select
-        label="Provider"
+        label={<p className="input-label">Provider</p>}
         placeholder="Select..."
         disabled={!operator}
         required
         options={operator ? providerByOperator(operator) : []}
         onChange={(_, change) => setProvider(change.value as Party)}
       />
-      <Form.Input label="Customer" placeholder={getName(party)} readOnly />
       <Form.Input
-        label="Account Name"
+        label={<p className="input-label">Customer</p>}
+        placeholder={getName(party)}
+        readOnly
+      />
+      <Form.Input
+        label={<p className="input-label">Account Name</p>}
         placeholder="Provide an Account Name"
         required
         onChange={(_, change) => setAccountName(change.value as string)}
       />
       <Form.Select
-        label="Account Type"
+        label={<p className="input-label">Account Type</p>}
         placeholder="Account Type..."
         value={accountType}
         options={Object.values(AccountType).map(at => createDropdownProp(at))}
@@ -170,7 +174,7 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
       />
       {accountType === AccountType.ALLOCATION && (
         <Form.Select
-          label="Nominee"
+          label={<p className="input-label">Nominee</p>}
           placeholder="Select..."
           required
           options={identityOptions}
@@ -178,13 +182,13 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
         />
       )}
       <Form.Input
-        label="Version"
+        label={<p className="input-label">Version</p>}
         placeholder="0"
         readOnly
         onChange={(_, change) => setAccountName(change.value as string)}
       />
       <Form.Select
-        label="Observers"
+        label={<p className="input-label">Observers</p>}
         multiple
         placeholder="Select..."
         options={identityOptions}
@@ -205,7 +209,9 @@ const NewComponent: React.FC<Props> = ({ party, custodyServices, modal, addButto
       {fields}
     </ModalFormErrorHandled>
   ) : (
-    <FormErrorHandled onSubmit={() => requestAccount()}>{fields}</FormErrorHandled>
+    <FormErrorHandled withSubmit onSubmit={() => requestAccount()}>
+      {fields}
+    </FormErrorHandled>
   );
 };
 

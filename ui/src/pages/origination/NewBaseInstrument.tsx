@@ -5,7 +5,7 @@ import { render } from '../../components/Claims/render';
 import { transformClaim } from '../../components/Claims/util';
 import { Id } from '@daml.js/da-marketplace/lib/DA/Finance/Types';
 import { Claim } from '@daml.js/da-marketplace/lib/ContingentClaims/Claim/Serializable';
-import { Date as DamlDate } from '@daml/types';
+import { Date as DamlDate, Decimal } from '@daml/types';
 import { Service } from '@daml.js/da-marketplace/lib/Marketplace/Issuance/Service';
 import { AssetSettlementRule } from '@daml.js/da-marketplace/lib/DA/Finance/Asset/Settlement';
 import { RouteComponentProps, withRouter } from 'react-router-dom';
@@ -16,6 +16,13 @@ import { IconCircledCheck, LockIcon, PublicIcon, IconClose } from '../../icons/i
 import { publicParty } from '../../config';
 import BackButton from '../../components/Common/BackButton';
 import paths from '../../paths';
+import { createDropdownProp } from '../common';
+
+enum AssetType {
+  CURRENCY = 'TCXXXX',
+  EQUITY = 'EXXXXX',
+  OTHER = 'XXXXXX',
+}
 
 const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const el = useRef<HTMLDivElement>(null);
@@ -25,6 +32,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const [label, setLabel] = useState('');
   const [description, setDescription] = useState('');
   const [account, setAccount] = useState('');
+  const [cfi, setCfi] = useState('');
 
   const canRequest = !!label && !!description && !!account;
 
@@ -35,7 +43,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
   const assetSettlementRules = useStreamQueries(AssetSettlementRule).contracts;
   const accounts = assetSettlementRules.map(c => c.payload.account);
 
-  const zero: Claim<DamlDate, Id> = { tag: 'Zero', value: {} };
+  const zero: Claim<DamlDate, Decimal, Id> = { tag: 'Zero', value: {} };
 
   useEffect(() => {
     if (isPublic) {
@@ -68,6 +76,7 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
     await ledger.exercise(Service.RequestOrigination, service.contractId, {
       assetLabel: label,
       description,
+      cfi: { code: cfi },
       claims: zero,
       safekeepingAccount,
       observers: [service.payload.provider, party, ...observers],
@@ -116,6 +125,20 @@ const NewBaseInstrumentComponent = ({ history }: RouteComponentProps) => {
           }}
         />
 
+        <Form.Select
+          label="Asset Type"
+          className="issue-asset-form-field"
+          placeholder="Select Asset Type..."
+          options={[
+            createDropdownProp('Currency', AssetType.CURRENCY),
+            createDropdownProp('Equity', AssetType.EQUITY),
+            createDropdownProp('Other', AssetType.OTHER),
+          ]}
+          value={cfi}
+          onChange={(event: React.SyntheticEvent, result: any) => {
+            setCfi(result.value);
+          }}
+        />
         <FormLabel label="Observers" />
         <div className="form-select">
           <Button

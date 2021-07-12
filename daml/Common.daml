@@ -23,6 +23,8 @@ import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import qualified Marketplace.Regulator.Service as RegulatorService
 import qualified Marketplace.Regulator.Role as Regulator
 import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI (CFI)
+import Marketplace.Issuance.CFI qualified as CFI
 
 data Assets = Assets
   with
@@ -178,24 +180,24 @@ onboardCustomer Providers{..} party = do
 
   pure $ Customer with ..
 
-originate : Providers -> Customer -> Text -> Text -> Claim Observation Date Id -> Script (ContractId AssetDescription, AssetDescription)
-originate Providers{..} issuer assetLabel description claims = do
-    let observers = [public]
+originate : Providers -> Customer -> Text ->  Text -> CFI -> Claim Observation  Date Decimal Id -> [Party] -> Script (ContractId AssetDescription, AssetDescription)
+originate Providers{..} issuer assetLabel description cfi claims extraObs = do
+    let observers = public :: extraObs
         safekeepingAccount = issuer.mainAccount
     createOriginationCid <- submit issuer.customer do exerciseCmd issuer.issuanceServiceCid Issuance.RequestOrigination with claims = serialize claims; ..
     submit bank do exerciseCmd (issuer.issuanceServiceCid) Issuance.Originate with ..
 
 onboardAssets : Providers -> Customer -> Script Assets
 onboardAssets providers issuer = do
-  let mkAsset name description claims = do
-      (_, AssetDescription{assetId = id}) <- originate providers issuer name description claims
+  let mkAsset name description cfi claims = do
+      (_, AssetDescription{assetId = id}) <- originate providers issuer name description cfi claims []
       pure $ Asset with quantity = 0.0; ..
 
-  usd   <- mkAsset "USD" "United States Dollar" Zero
-  eur   <- mkAsset "EUR" "Euro" Zero
-  tsla  <- mkAsset "TSLA" "Tesla, Inc." Zero
-  nflx  <- mkAsset "NFLX" "Netflix" Zero
-  libor <- mkAsset "LIBOR" "Libor" Zero
+  usd   <- mkAsset "USD" "United States Dollar" CFI.currency Zero
+  eur   <- mkAsset "EUR" "Euro" CFI.currency Zero
+  tsla  <- mkAsset "TSLA" "Tesla, Inc." CFI.equity Zero
+  nflx  <- mkAsset "NFLX" "Netflix" CFI.equity Zero
+  libor <- mkAsset "LIBOR" "Libor" CFI.equity Zero
 
   pure Assets with ..
 

@@ -12,7 +12,8 @@ import DA.Set qualified as Set
 import DA.Map qualified as Map
 import Marketplace.Issuance.Service (RequestOrigination(..), Originate(..), RequestCreateIssuance(..), CreateIssuance(..))
 import Marketplace.Custody.Service (Service, RequestTransferDeposit(..), TransferDeposit(..), RequestLifecycle(..), Lifecycle(..), RequestCreditAccount(..), CreditAccount(..))
-import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI qualified as CFI
+import Marketplace.Issuance.AssetDescription (AssetDescription)
 import DA.Finance.Trade.SettlementInstruction
 import Tests.Utils (bond)
 import DA.Time (time)
@@ -100,6 +101,7 @@ requestExerciseBond usdAmount notional coupon dates = script do
       description = "TestBond"
       safekeepingAccount = alice.mainAccount
       claims = serialize boClaims
+      cfi = CFI.bond
       observers = []
   (optionDescCid, optionDesc) <- submit providers.bank $ exerciseCmd alice.issuanceServiceCid $ Originate origReqCid
 

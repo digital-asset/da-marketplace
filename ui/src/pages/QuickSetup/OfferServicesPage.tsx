@@ -11,7 +11,6 @@ import { Role as ClearingRole } from '@daml.js/da-marketplace/lib/Marketplace/Cl
 import { httpBaseUrl, wsBaseUrl, useVerifiedParties, usePartyName } from '../../config';
 import Credentials, { computeToken } from '../../Credentials';
 import QueryStreamProvider from '../../websocket/queryStream';
-import { LoadingWheel } from './QuickSetup';
 import { useStreamQueries } from '../../Main';
 import { itemListAsText } from '../../pages/page/utils';
 
@@ -399,11 +398,7 @@ export const OffersTable = () => {
   const createdServices = services.filter(s => !defaultServices.includes(s.service));
 
   if (loading) {
-    return (
-      <div className="setup-page loading">
-        <LoadingWheel label="Loading Services..." />
-      </div>
-    );
+    return null;
   }
 
   const serviceOffersByProvider = sortByProvider(serviceOffers);
