@@ -13,7 +13,6 @@ import qualified Marketplace.Trading.Service as Trading
 import qualified Marketplace.Distribution.Auction.Service as Auction
 import qualified Marketplace.Distribution.Bidding.Service as Bidding
 import DA.Record (HasField)
-import Marketplace.Utils
 
 import DA.Finance.Types
 
@@ -53,6 +52,11 @@ import DA.Functor (void)
     - Create Asset X
 -}
 
+createOrLookup : forall t k. (Template t, TemplateKey t k) => t -> Update (ContractId t)
+createOrLookup t = lookupByKey @t (key t) >>= \case
+    (Some cid) -> return cid
+    None       -> create t
+
 requestFor : Party -> [OnboardingInstruction] -> (Party, [OnboardingInstruction])
 requestFor party is = (party, is)
 
@@ -81,7 +85,7 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         (Some an) -> return $ fromSomeNote "account lookup" $ Map.lookup (OnboardingAccount custodian an) mp
         None      -> createAccount custodyCid custodian customer "Clearinghouse" []
 
-      -- createOrLookupAccount    o custodyCid optClearingAccount "Clearinghouse-CCPAccount"
+      createOrLookupAccount    o custodyCid optClearingAccount "Clearinghouse-CCPAccount"
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferClearingRole with provider = customer
       exercise offerCid Clearinghouse.Accept with ..
       return ()
@@ -181,7 +185,7 @@ createAccount custodyServiceCid provider customer name observers = do
 
 
 data OnboardingAccount = OnboardingAccount with custodian: Party, name: Text deriving (Show, Eq, Ord)
-
+--
 data OnboardingInstruction
   = OnboardExchange
   | OnboardDistributor
@@ -197,7 +201,6 @@ data OnboardingInstruction
   | OnboardBidding  with provider : Party, custodian : Party, optTradingAccount     : Optional Text
 
   deriving (Show, Eq, Ord)
-
 -- |List of observers necessary to be on accounts created for this 'OnboardingInstruction'
 accountObservers : OnboardingInstruction -> [Party]
 accountObservers (OnboardTrading p _ _)   = [p]
@@ -228,8 +231,8 @@ accountsWithObservers = foldl go mempty
         obs  = accountObservers oi
         accs = accounts oi
         lst  = [ (a, obs) | a <- accs ]
-
-
+--
+--
 getSignaturesNeeded : OnboardingInstruction -> [Party]
 getSignaturesNeeded (OnboardClearinghouse c _)  = [c]
 getSignaturesNeeded (OnboardCustody c)          = [c]
@@ -249,7 +252,7 @@ collectPartySignatures _        []               cid = return cid
 collectPartySignatures operator (party::parties) cid
   = exerciseByKey @PartyOnboarding (operator,party) PartyOnboarding_Sign with requestCid = cid
       >>= collectPartySignatures operator parties
-
+--
 template OnboardCustomer
   with
     operator : Party

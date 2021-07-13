@@ -26,9 +26,11 @@ import ReviewPage from './ReviewPage';
 import FinishPage from './FinishPage';
 import paths from '../../paths';
 import Widget from '../../components/Widget/Widget';
+import InstructionsPage from './Instructions';
 
 export enum MenuItems {
   ADD_PARTIES = 'add-parties',
+  INSTRUCTIONS = 'instructions',
   REVIEW = 'review',
   LOG_IN = 'log-in-parties',
 }
@@ -93,6 +95,10 @@ const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
             <Route
               path={`${matchPath}/${MenuItems.ADD_PARTIES}`}
               component={() => <AddPartiesPage />}
+            />
+            <Route
+              path={`${matchPath}/${MenuItems.INSTRUCTIONS}`}
+              component={() => <InstructionsPage adminCredentials={adminCredentials} />}
             />
             <Route
               path={`${matchPath}/${MenuItems.REVIEW}`}

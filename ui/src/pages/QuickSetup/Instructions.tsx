@@ -11,7 +11,7 @@ import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace
 import {
   OperatorOnboarding,
   OnboardingInstruction,
-} from '@daml.js/da-marketplace/lib/UI/Onboarding';
+} from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
 import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
 import { RolesProvider, useRolesContext } from '../../context/RolesContext';
@@ -324,7 +324,7 @@ const TestInstructions = () => {
     <QuickSetupPage
       className="test-instructions"
       title="Create Instructions List"
-      nextItem={MenuItems.REQUEST_SERVICES}
+      nextItem={MenuItems.REVIEW}
     >
       <div className="page-row">
         <div className="add-clear">
