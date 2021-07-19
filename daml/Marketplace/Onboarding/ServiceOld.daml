@@ -1,0 +1,91 @@
+module Marketplace.Onboarding.ServiceOld where
+
+import DA.Finance.Types (Id(..))
+import DA.Set (Set, empty, fromList)
+import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Trading.Service qualified as Trading
+
+template SingleOperator
+  with
+    operator : Party
+    provider : Party
+    public : Party
+    observers : Set Party
+  where
+    signatory operator
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+
+      nonconsuming OnboardProvider : (ContractId Matching.Service, ContractId Settlement.Service)
+        do
+          msCid <- create Matching.Service with ..
+          ssCid <- create Settlement.Service with ..
+          pure (msCid, ssCid)
+
+      nonconsuming OnboardInvestor : ()
+        with
+          investor : Party
+          legalName : Text
+          location : Text
+          uniqueKey : Text
+        do
+          -- Regulator service and verified identity
+          offerCid <- create Regulator.Offer with operator; provider; customer = investor
+          rsCid <- exercise offerCid Regulator.Accept
+          let observers = [ public ]
+          identityVerificationRequestCid <- exercise rsCid Regulator.RequestIdentityVerification with legalName; location; observers
+          viCid <- exercise rsCid Regulator.VerifyIdentity with identityVerificationRequestCid
+
+          -- Custody service and accounts
+          offerCid <- create Custody.Offer with operator; provider; customer = investor
+          csCid <- exercise offerCid Custody.Accept
+          let
+            mainAccountId = Id with signatories = fromList [provider]; label = "MainAccount-" <> uniqueKey; version = 0
+            allocationAccountId = Id with signatories = fromList [provider]; label = "AllocationAccount-" <> uniqueKey; version = 0
+            observers = []
+            ctrls = []
+            nominee = provider
+          openAccountRequestCid <- exercise csCid Custody.RequestOpenAccount with accountId = mainAccountId; observers; ctrls
+          asCid <- exercise csCid Custody.OpenAccount with openAccountRequestCid
+          openAllocationAccountRequestCid <- exercise csCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee
+          aaCid <- exercise csCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid
+
+          -- Trading service
+          as <- fetch asCid
+          aa <- fetch aaCid
+          offerCid <- create Trading.Offer with operator; provider; customer = investor
+          exercise offerCid Trading.Accept with tradingAccount = as.account; allocationAccount = aa.account
+          pure ()
+
+      nonconsuming OnboardIssuer : ()
+        with
+          issuer : Party
+          legalName : Text
+          location : Text
+          uniqueKey : Text
+        do
+          -- Investor functionality
+          exercise self OnboardInvestor with investor = issuer; legalName; location; uniqueKey
+
+          -- Issuance service
+          offerCid <- create Issuance.Offer with operator; provider; customer = issuer
+          isCid <- exercise offerCid Issuance.Accept
+
+          -- Listing service
+          offerCid <- create Listing.Offer with operator; provider; customer = issuer
+          lsCid <- exercise offerCid Listing.Accept
+          pure ()
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do pure ()

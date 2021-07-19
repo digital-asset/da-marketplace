@@ -1,0 +1,112 @@
+module Marketplace.Role.Issuer where
+
+import ContingentClaims.Claim (Claim(Zero), serialize)
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Types (Id(..), Account)
+import DA.Set (fromList)
+import Marketplace.Issuance.AssetDescription (AssetDescription)
+import Marketplace.Issuance.CFI (CFI(..))
+import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
+import Marketplace.Role.Trader qualified as Trader
+
+template Invite
+  with
+    operator : Party
+    provider : Party
+    issuer : Party
+    public : Party
+    uniqueKey : Text
+  where
+    signatory operator
+
+    controller issuer can
+
+      nonconsuming Accept : (ContractId Role, ContractId Trader.Role)
+        with
+          legalName : Text
+          location : Text
+        do
+          -- Trader role
+          inviteCid <- create Trader.Invite with operator; provider; trader = issuer; public; uniqueKey
+          traderRoleCid <- exercise inviteCid Trader.Accept with legalName; location
+          traderRole <- fetch traderRoleCid
+
+          -- Issuance service
+          offerCid <- create Issuance.Offer with operator; provider; customer = issuer
+          exercise offerCid Issuance.Accept
+
+          -- Listing service
+          offerCid <- create Listing.Offer with operator; provider; customer = issuer
+          exercise offerCid Listing.Accept
+
+          -- Issuer role
+          issuerRoleCid <- create Role with operator; provider; issuer; public; account = traderRole.account
+
+          pure (issuerRoleCid, traderRoleCid)
+
+template Role
+  with
+    operator : Party
+    provider : Party
+    issuer : Party
+    public : Party
+    account : Account
+  where
+    signatory operator, provider, issuer
+
+    controller issuer can
+
+      nonconsuming CreateAsset : (ContractId AssetDescription, ContractId AssetDeposit)
+        with
+          assetLabel : Text
+          quantity : Decimal
+        do
+          -- Origination
+          (isCid, _) <- fetchByKey @Issuance.Service (operator, provider, issuer)
+          let
+            assetId = Id with signatories = fromList [ provider, issuer ]; label = assetLabel; version = 0
+          createOriginationCid <- exercise isCid Issuance.RequestOrigination
+            with
+              assetLabel
+              cfi = CFI with code = ""
+              description = assetLabel
+              claims = serialize Zero
+              safekeepingAccount = account
+              observers = [public]
+          (assetDescriptionCid, _) <- exercise isCid Issuance.Originate with createOriginationCid
+
+          -- Issuance
+          createIssuanceRequestCid <- exercise isCid Issuance.RequestCreateIssuance
+            with
+              issuanceId = "Issuance-" <> assetLabel
+              accountId = account.id
+              assetId
+              quantity
+          (_, assetDepositCid) <- exercise isCid Issuance.CreateIssuance with ..
+          pure (assetDescriptionCid, assetDepositCid)
+
+      nonconsuming CreateListing : ContractId Listing.T
+        with
+          tradedAssetId : Id
+          quotedAssetId : Id
+        do
+          -- Listing
+          let providerId = tradedAssetId.label <> "-" <> quotedAssetId.label
+          (lsCid, _) <- fetchByKey @Listing.Service (operator, provider, issuer)
+          createListingRequestCid <- exercise lsCid Listing.RequestCreateListing
+            with
+              listingType = Listing.CollateralizedRequest
+              symbol = providerId
+              calendarId = ""
+              description = providerId
+              tradedAssetId
+              quotedAssetId
+              tradedAssetPrecision = 2
+              quotedAssetPrecision = 2
+              minimumTradableQuantity = 0.01
+              maximumTradableQuantity = 1_000_000_000.0
+              observers = [ public ]
+          exercise lsCid Listing.CreateListing with providerId; createListingRequestCid
+

@@ -1,0 +1,67 @@
+module SimplifiedApi where
+
+import Daml.Script
+import DA.Finance.Types (Asset(..))
+import Marketplace.Onboarding.Service qualified as Onboarding
+import Marketplace.Role.Issuer qualified as Issuer
+import Marketplace.Role.Trader qualified as Trader
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Trading.Model qualified as Order
+
+demo : Script ()
+demo = do
+
+  op      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  trader1 <- allocatePartyWithHint "Trader1" $ PartyIdHint "Trader1"
+  trader2 <- allocatePartyWithHint "Trader2" $ PartyIdHint "Trader2"
+  trader3 <- allocatePartyWithHint "Trader3" $ PartyIdHint "Trader3"
+  issuer1 <- allocatePartyWithHint "Issuer1" $ PartyIdHint "Issuer1"
+  issuer2 <- allocatePartyWithHint "Issuer2" $ PartyIdHint "Issuer2"
+  issuer3 <- allocatePartyWithHint "Issuer3" $ PartyIdHint "Issuer3"
+  public  <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
+
+  osCid <- submit op do createCmd Onboarding.Service with operator = op; provider = op; public
+  (msCid, ssCid) <- submit op do exerciseCmd osCid Onboarding.OnboardProvider
+
+  -- Trader onboarding
+  inviteCid <- submit op      do exerciseCmd osCid Onboarding.InviteTrader with trader = trader1; uniqueKey = "T1"
+  roleCidA  <- submit trader1 do exerciseCmd inviteCid Trader.Accept with legalName = "Trader1 Legal Name"; location = "Trader1 Location"
+  inviteCid <- submit op      do exerciseCmd osCid Onboarding.InviteTrader with trader = trader2; uniqueKey = "T2"
+  roleCidB  <- submit trader2 do exerciseCmd inviteCid Trader.Accept with legalName = "Trader2 Legal Name"; location = "Trader2 Location"
+  inviteCid <- submit op      do exerciseCmd osCid Onboarding.InviteTrader with trader = trader3; uniqueKey = "T3"
+  roleCidC  <- submit trader3 do exerciseCmd inviteCid Trader.Accept with legalName = "Trader3 Legal Name"; location = "Trader3 Location"
+
+  -- Issuer onboarding
+  inviteCid         <- submit op      do exerciseCmd osCid Onboarding.InviteIssuer with issuer = issuer1; uniqueKey = "I1"
+  (irCid1, trCid1)  <- submit issuer1 do exerciseCmd inviteCid Issuer.Accept with legalName = "Issuer1 Legal Name"; location = "Issuer1 Location"
+  inviteCid         <- submit op      do exerciseCmd osCid Onboarding.InviteIssuer with issuer = issuer2; uniqueKey = "I2"
+  (irCid2, trCid2)  <- submit issuer2 do exerciseCmd inviteCid Issuer.Accept with legalName = "Issuer2 Legal Name"; location = "Issuer2 Location"
+  inviteCid         <- submit op      do exerciseCmd osCid Onboarding.InviteIssuer with issuer = issuer3; uniqueKey = "I3"
+  (irCid3, trCid3)  <- submit issuer3 do exerciseCmd inviteCid Issuer.Accept with legalName = "Issuer3 Legal Name"; location = "Issuer3 Location"
+
+  -- Assets
+  (assetCid1, depositCid1) <- submit issuer1 do exerciseCmd irCid1 Issuer.CreateAsset with assetLabel = "USD"; quantity = 1_000_000.0
+  (assetCid2, depositCid2) <- submit issuer2 do exerciseCmd irCid2 Issuer.CreateAsset with assetLabel = "Issuer2 Token"; quantity = 1_000_000.0
+  (assetCid3, depositCid3) <- submit issuer3 do exerciseCmd irCid3 Issuer.CreateAsset with assetLabel = "Issuer3 Token"; quantity = 1_000_000.0
+
+  -- Listings
+  Some asset1 <- queryContractId issuer1 assetCid1
+  Some asset2 <- queryContractId issuer2 assetCid2
+  Some asset3 <- queryContractId issuer3 assetCid3
+  listingCid2 <- submit issuer2 do exerciseCmd irCid2 Issuer.CreateListing with tradedAssetId = asset2.assetId; quotedAssetId = asset1.assetId
+  listingCid3 <- submit issuer3 do exerciseCmd irCid3 Issuer.CreateListing with tradedAssetId = asset3.assetId; quotedAssetId = asset1.assetId
+
+  -- Trading
+  Some listing2 <- queryContractId issuer2 listingCid2
+  Some listing3 <- queryContractId issuer3 listingCid3
+  (orderCid1, corCid1) <- submit issuer1 do exerciseCmd trCid1 Trader.CreateOrder with depositCids = [depositCid1]; orderId = "O1"; listingId = listing2.listingId; asset = (Asset with id = asset2.assetId; quantity = 1_000.0); price = 1.0; side = Order.Buy
+  (orderCid2, corCid2) <- submit issuer2 do exerciseCmd trCid2 Trader.CreateOrder with depositCids = [depositCid2]; orderId = "O2"; listingId = listing3.listingId; asset = (Asset with id = asset2.assetId; quantity = 1_000.0); price = 1.0; side = Order.Sell
+
+  -- Matching and Settlement (triggered via bot)
+  let execution = Order.Execution with matchId = "1"; makerOrderId = "O1"; takerOrderId = "O2"; quantity = 1000.0; price = 1.0; timestamp = "123456"
+  Matching.Collateralized settlementInstructionCid <- submit op do exerciseCmd msCid Matching.MatchOrders with execution
+  submit op do exerciseCmd ssCid Settlement.SettleInstruction with settlementInstructionCid
+
+  pure ()
+

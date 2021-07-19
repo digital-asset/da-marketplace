@@ -1,0 +1,112 @@
+module Marketplace.Role.Trader where
+
+import DA.Action (foldlA)
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Merge(..), AssetDeposit_Split(..))
+import DA.Finance.Asset.Settlement (AssetSettlementRule)
+import DA.Finance.Types (Id(..), Asset, Account)
+import DA.Set (empty, fromList)
+import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Regulator.Service qualified as Regulator
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Service qualified as Trading
+
+template Invite
+  with
+    operator : Party
+    provider : Party
+    trader : Party
+    public : Party
+    uniqueKey : Text
+  where
+    signatory operator
+
+    controller trader can
+
+      nonconsuming Accept : ContractId Role
+        with
+          legalName : Text
+          location : Text
+        do
+          -- Regulator service and verified identity
+          offerCid <- create Regulator.Offer with operator; provider; customer = trader
+          rsCid <- exercise offerCid Regulator.Accept
+          identityVerificationRequestCid <- exercise rsCid Regulator.RequestIdentityVerification with legalName; location; observers = [ public ]
+          viCid <- exercise rsCid Regulator.VerifyIdentity with identityVerificationRequestCid
+
+          -- Custody service and accounts
+          offerCid <- create Custody.Offer with operator; provider; customer = trader
+          csCid <- exercise offerCid Custody.Accept
+          let
+            mainAccountId = Id with signatories = fromList [provider]; label = "MainAccount-" <> uniqueKey; version = 0
+            allocationAccountId = Id with signatories = fromList [provider]; label = "AllocationAccount-" <> uniqueKey; version = 0
+            observers = []
+            ctrls = [provider]
+            nominee = provider
+          openAccountRequestCid <- exercise csCid Custody.RequestOpenAccount with accountId = mainAccountId; observers; ctrls
+          asCid <- exercise csCid Custody.OpenAccount with openAccountRequestCid
+          openAllocationAccountRequestCid <- exercise csCid Custody.RequestOpenAllocationAccount with accountId = allocationAccountId; observers = empty; nominee
+          aaCid <- exercise csCid Custody.OpenAllocationAccount with openAllocationAccountRequestCid
+
+          -- Trading service
+          as <- fetch asCid
+          aa <- fetch aaCid
+          offerCid <- create Trading.Offer with operator; provider; customer = trader
+          exercise offerCid Trading.Accept with tradingAccount = as.account; allocationAccount = aa.account
+
+          create Role with operator; provider; trader; account = as.account
+
+accumulateRequired : Decimal -> ([ContractId AssetDeposit], Decimal) -> ContractId AssetDeposit -> Update ([ContractId AssetDeposit], Decimal)
+accumulateRequired required (resultingCids, accumulated) depositCid = do
+  if accumulated >= required
+  then do
+    pure (resultingCids, accumulated)
+  else do
+    deposit <- fetch depositCid
+    pure (depositCid :: resultingCids, accumulated + deposit.asset.quantity)
+
+rightSize : Decimal -> [ContractId AssetDeposit] -> Update (ContractId AssetDeposit)
+rightSize required depositCids = do
+  (h :: t, accumulated) <- foldlA (accumulateRequired required) ([], 0.0) depositCids
+  if accumulated == required then do
+    exercise h AssetDeposit_Merge with depositCids = t
+  else if accumulated > required then do
+    depositCid <- exercise h AssetDeposit_Merge with depositCids = t
+    [ exactCid, _ ] <- exercise depositCid AssetDeposit_Split with quantities = [ required ]
+    pure exactCid
+  else do
+    fail "Insufficient assets provided"
+
+template Role
+  with
+    operator : Party
+    provider : Party
+    trader : Party
+    account : Account
+  where
+    signatory operator, provider, trader
+
+    controller trader can
+
+      nonconsuming CreateOrder : (ContractId Order.T, ContractId Trading.CreateOrderRequest)
+        with
+          depositCids : [ContractId AssetDeposit]
+          orderId : Text
+          listingId : Id
+          asset : Asset
+          price : Decimal
+          side : Order.Side
+        do
+          (svcCid, _) <- fetchByKey @Trading.Service (operator, provider, trader)
+          (asCid, _) <- fetchByKey @AssetSettlementRule account.id
+          collateralCid <- rightSize (asset.quantity * price) depositCids
+          let
+            collateral = Order.Collateral collateralCid
+            details = Order.Details with
+              id = Id with signatories = empty; label = orderId; version = 0
+              listingId
+              orderType = Order.Limit with price
+              timeInForce = Order.GTC
+              optExchangeFee = None
+              ..
+          Right (oCid, corCid, _) <- exercise svcCid Trading.RequestCreateOrder with ..
+          pure (oCid, corCid)

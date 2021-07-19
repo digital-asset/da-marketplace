@@ -1,0 +1,39 @@
+module Marketplace.Onboarding.Service where
+
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Role.Trader qualified as Trader
+import Marketplace.Role.Issuer qualified as Issuer
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    public : Party
+  where
+    signatory operator
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+
+      nonconsuming OnboardProvider : (ContractId Matching.Service, ContractId Settlement.Service)
+        do
+          msCid <- create Matching.Service with ..
+          ssCid <- create Settlement.Service with ..
+          pure (msCid, ssCid)
+
+      nonconsuming InviteTrader : ContractId Trader.Invite
+        with
+          trader : Party
+          uniqueKey : Text
+        do
+          create Trader.Invite with operator; provider; trader; public; uniqueKey
+
+      nonconsuming InviteIssuer : ContractId Issuer.Invite
+        with
+          issuer : Party
+          uniqueKey : Text
+        do
+          create Issuer.Invite with operator; provider; issuer; public; uniqueKey
