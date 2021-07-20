@@ -3,10 +3,8 @@ module Tests.Trading.E2E where
 import Daml.Script
 import Common
 import DA.Assert ((===))
-import DA.Set
 import DA.List
 import DA.Foldable
-import DA.Finance.Types (Id(..))
 import DA.Finance.Asset (AssetDeposit)
 import Marketplace.Settlement.Model qualified as Settlement
 import Marketplace.Trading.Service qualified as Trading
@@ -57,7 +55,7 @@ tradingEndToEndTest = do
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- Create orders
-  let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
+  let aliceOrderId = "1"
   Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Collateral aliceDepositCid
@@ -71,7 +69,7 @@ tradingEndToEndTest = do
             orderType = Order.Limit with price = 100.0
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
-  let bobOrderId = Id with signatories = fromList [ bob.customer ], label = "2", version = 0
+  let bobOrderId = "2"
   Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Collateral bobDepositCid
@@ -101,8 +99,8 @@ tradingEndToEndTest = do
   -- Confirm order matches
   let execution = Order.Execution with
         matchId = "1"
-        makerOrderId = aliceOrderId.label
-        takerOrderId = bobOrderId.label
+        makerOrderId = aliceOrderId
+        takerOrderId = bobOrderId
         quantity = 200.0
         price = 100.0
         timestamp = "123456"

@@ -191,7 +191,7 @@ handleCalculationRequests party (requestCid, rq@Clearing.FairValueCalculationReq
 -- fairvalues will be ignored.
 handleFairValueCalculation : Party -> ContractPair MarketClearing.Service -> Id -> Time -> ContractPair Listing.T -> TriggerA ClearingState ()
 handleFairValueCalculation party (serviceCid,_) currency upTo (marketPairCid,l@(Listing.Listing{..})) = do
-  debug ("calculating FVR: " <> l.listingId.label)
+  debug ("calculating FVR: " <> l.listingId)
 
   fairValues <- sortOn ((.upTo) . snd)
               . filter (\(_,fv) -> fv.listingId == l.listingId) <$> query @Clearing.FairValue

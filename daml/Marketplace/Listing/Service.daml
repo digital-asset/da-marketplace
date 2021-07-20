@@ -55,8 +55,7 @@ template Service
         do
           CreateListingRequest{..} <- fetch createListingRequestCid
           archive createListingRequestCid
-          let id = Id with signatories = fromList [provider, customer]; label = symbol; version = 0
-          create Listing with listingId = id; ..
+          create Listing with listingId = symbol; ..
 
       nonconsuming ListingFailure : ContractId FailedListingCreation
         with

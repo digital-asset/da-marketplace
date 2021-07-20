@@ -32,8 +32,8 @@ data TimeInForce
   deriving (Eq, Show)
 
 data Details = Details with
-    id : Id
-    listingId : Id
+    id : Text
+    listingId : Text
     asset : Asset
     side : Side
     orderType : OrderType
@@ -92,7 +92,7 @@ template Order
       (Cleared ch) -> [ch]
       _            -> []
 
-    key (provider, details.id.label) : (Party, Text)
+    key (provider, details.id) : (Party, Text)
     maintainer key._1
 
 data Fee = Fee with

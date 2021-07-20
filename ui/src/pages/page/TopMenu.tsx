@@ -68,12 +68,12 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     c => c.contractId === contractId
   )?.payload.auctionId;
   const orderLabel = useStreamQueries(Order).contracts.find(c => c.contractId === contractId)
-    ?.payload.details.id.label;
+    ?.payload.details.id;
   const instrumentLabel = useStreamQueries(AssetDescription).contracts.find(
     c => c.contractId === contractId
   )?.payload.assetId.label;
   const listingLabel = useStreamQueries(Listing).contracts.find(c => c.contractId === contractId)
-    ?.payload.listingId.label;
+    ?.payload.listingId;
 
   const allNotifications = useAllNotifications(party);
   const [notifications, pendingNotifications] = _.partition(

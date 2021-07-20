@@ -132,15 +132,15 @@ handleOrder party orders op@(orderCid, order) = do
 
     fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA CurrentOrderId ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
-      debug $ "Matching order: " <> show aggressive.details.id.label <> " to : " <> show passive.details.id.label
+      debug $ "Matching order: " <> show aggressive.details.id <> " to : " <> show passive.details.id
 
       let price = case (aggressive.details.orderType, passive.details.orderType) of
             (Order.Limit price, Order.Market) -> price
             (Order.Market, Order.Limit price) -> price
             (Order.Limit aggressivePrice, Order.Limit passivePrice) -> if aggressive.details.side == Order.Buy then aggressivePrice else passivePrice
             (_, _) -> error "Shouldn't be here - can't match two market orders together"
-          makerOrderId = passive.details.id.label
-          takerOrderId = aggressive.details.id.label
+          makerOrderId = passive.details.id
+          takerOrderId = aggressive.details.id
           quantity = min passive.remainingQuantity aggressive.remainingQuantity
 
       time <- getTime
