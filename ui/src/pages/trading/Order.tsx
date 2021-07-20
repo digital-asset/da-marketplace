@@ -36,9 +36,7 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
   const order = allOrders.contracts.find(o => o.contractId === contractId);
   if (!order) return <></>; // TODO: Return 404 not found
 
-  const listing = listings.find(
-    c => c.payload.listingId === order.payload.details.listingId
-  );
+  const listing = listings.find(c => c.payload.listingId === order.payload.details.listingId);
   if (!listing) return <></>; // TODO: Return 404 not found
 
   const service = services.find(s => s.payload.provider === order.payload.provider);
