@@ -124,7 +124,7 @@ def main():
                 'side': order['side'],
                 'timeInForce': list(order['timeInForce'])[0],
                 'expiryDate': int(-1) if not list(order['timeInForce'])[0] == 'GTD' else int(order['timeInForce']['GTD']['expiryDate']),
-                'mpOrderId': int(order['id']['label']), # This will be the SID for now
+                'mpOrderId': int(order['id']), # This will be the SID for now
                 'userId': make_user_user_id(event.cdata['provider']),
             },
             'integrationParty': client.party
@@ -216,7 +216,7 @@ def main():
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
             'instrument': cancel_request['details']['listingId'],
-            'mpOrderId': cancel_request['details']['id']['label'],
+            'mpOrderId': cancel_request['details']['id'],
             'userId': make_user_user_id(cancel_request['provider'])
         })
 

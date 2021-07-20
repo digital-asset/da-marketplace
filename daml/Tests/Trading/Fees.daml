@@ -3,7 +3,6 @@ module Tests.Trading.Fees where
 import Common
 import Tests.Utils
 import Daml.Script
-import DA.Set
 import DA.Set qualified as Set
 import DA.Finance.Types
 import Marketplace.Custody.Role qualified as Custodian
@@ -79,7 +78,7 @@ setup = do
     exerciseByKeyCmd @TradingService.T (operator, exchange, alice.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
-          id = Id with signatories = fromList [ alice.customer ]; label = "123"; version = 0
+          id = "123"
           listingId
           asset = shareAsset
           optExchangeFee = Some aliceFeeDepositCid
@@ -94,7 +93,7 @@ setup = do
     exerciseByKeyCmd @TradingService.T (operator, exchange, bob.customer) TradingService.RequestCreateOrder
       with
         details = Order.Details with
-          id = Id with signatories = fromList [ bob.customer ]; label = "456"; version = 0
+          id = "456"
           listingId
           asset = shareAsset
           optExchangeFee = Some bobFeeDepositCid

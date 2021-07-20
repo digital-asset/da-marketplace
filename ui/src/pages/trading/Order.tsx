@@ -72,7 +72,7 @@ export const TradingOrder: React.FC<Props> = ({ listings, services }: Props) => 
                   <Table.Cell key={0}>
                     <b>Order ID</b>
                   </Table.Cell>
-                  <Table.Cell key={1}>{order.payload.details.id.label}</Table.Cell>
+                  <Table.Cell key={1}>{order.payload.details.id}</Table.Cell>
                 </Table.Row>
                 {order.payload.providerOrderId && (
                   <>

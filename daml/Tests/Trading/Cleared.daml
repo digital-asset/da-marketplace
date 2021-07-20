@@ -4,6 +4,7 @@ import Daml.Script
 import Common
 import DA.Assert ((===))
 import DA.Either
+import DA.List (head)
 import Marketplace.Trading.Service qualified as Trading
 import Marketplace.Trading.Model qualified as Order
 import Marketplace.Clearing.Role qualified as Clearing
@@ -13,10 +14,6 @@ import Marketplace.Clearing.Market.Service qualified as ClearedMarket
 import Marketplace.Trading.Matching.Service qualified as Matching
 import Marketplace.Listing.Service qualified as Listing
 import Marketplace.Listing.Model qualified as Listing
-
-import DA.Finance.Types
-import DA.Set qualified as Set
-import DA.List (head)
 
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches orderCid party status = do
@@ -70,7 +67,7 @@ clearedTradingTest = do
   (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
 
   -- Create orders
-  let aliceOrderId = Id with signatories = Set.fromList [ alice.customer ], label = "1", version = 0
+  let aliceOrderId = "1"
   Right (aliceOrderCid, aliceCreateOrderRequestCid, _) <- alice.customer `submit` do
     exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
@@ -84,7 +81,7 @@ clearedTradingTest = do
             orderType = Order.Limit with price = 100.0
   checkOrderStatusMatches aliceOrderCid alice.customer Order.New
 
-  let bobOrderId = Id with signatories = Set.fromList [ bob.customer ], label = "2", version = 0
+  let bobOrderId = "2"
   Right (bobOrderCid, bobCreateOrderRequestCid, _) <- submitMulti [bob.customer] [public] $ do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
@@ -114,8 +111,8 @@ clearedTradingTest = do
   -- Confirm order matches
   let execution = Order.Execution with
         matchId = "1"
-        makerOrderId = aliceOrderId.label
-        takerOrderId = bobOrderId.label
+        makerOrderId = aliceOrderId
+        takerOrderId = bobOrderId
         quantity = 200.0
         price = 100.0
         timestamp = "123456"
@@ -141,7 +138,7 @@ clearedTradingTest = do
       with depositCids = []; marginDepositCids = []; ..
 
   -- !! Bob is in bad standing, so the new order should fail
-  let bobOrderId2 = Id with signatories = Set.fromList [ bob.customer ], label = "3", version = 0
+  let bobOrderId2 = "3"
   bobOrderResult <- bob.customer `submit` do
     exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
@@ -159,7 +156,7 @@ clearedTradingTest = do
   submit charlie.customer $ exerciseCmd charlie.clearingServiceCid Clearing.Terminate with ctrl = charlie.customer
 
   -- !! Charlie is not a member of the clearinghouse, so Charlie should not be able to place an order
-  let charlieOrderId = Id with signatories = Set.fromList [ charlie.customer ], label = "4", version = 0
+  let charlieOrderId = "4"
   charlieOrderResult <- charlie.customer `submit` do
     exerciseCmd charlie.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse

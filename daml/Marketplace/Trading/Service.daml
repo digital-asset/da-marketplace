@@ -111,7 +111,7 @@ template Service
           providerOrderId : Text
         do
           CreateOrderRequest{..} <- fetchAndArchive createOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, details.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id)
 
           -- TODO: Confirm what to do with this business ACK when received out of the expected order.
           --  Should we set the providerOrderId but leave the status as is ? Should we check if this value is already set ? What to do if it's already set ? etc.
@@ -128,7 +128,7 @@ template Service
           errorMessage : Text
         do
           CreateOrderRequest{details, collateral} <- fetch createOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, details.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id)
           archive orderCid
 
           let reason = Error with code = show errorCode; message = errorMessage
@@ -145,7 +145,7 @@ template Service
           cancelledQuantity : Decimal
         do
           CreateOrderRequest{details} <- fetch createOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, details.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id)
 
           let isFullCancellation = cancelledQuantity >= order.details.asset.quantity
               isWaitingExecution = order.status `elem` [Order.New, Order.PendingExecution]
@@ -165,7 +165,7 @@ template Service
           cancelOrderRequestCid : ContractId CancelOrderRequest
         do
           CancelOrderRequest{..} <- fetchAndArchive cancelOrderRequestCid
-          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id.label)
+          (orderCid, order@Order.Order{..}) <- fetchByKey (provider, details.id)
           archive orderCid
 
           orderCid <- create order with status = Order.Cancelled
@@ -181,7 +181,7 @@ template Service
           errorMessage : Text
         do
           CancelOrderRequest{..} <- fetchAndArchive cancelOrderRequestCid
-          (orderCid, order) <- fetchByKey (provider, details.id.label)
+          (orderCid, order) <- fetchByKey (provider, details.id)
           archive orderCid
 
           let reason = Error with code = show errorCode; message = errorMessage
@@ -271,7 +271,7 @@ template CreateOrderRequest
   where
     signatory provider, customer
 
-    key (provider, details.id.label) : (Party, Text)
+    key (provider, details.id) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)
@@ -306,7 +306,7 @@ template CancelOrderRequest
   where
     signatory provider, customer
 
-    key (provider, details.id.label) : (Party, Text)
+    key (provider, details.id) : (Party, Text)
     maintainer key._1
 
     let serviceKey = (operator, provider, customer)
