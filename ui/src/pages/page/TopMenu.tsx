@@ -73,7 +73,7 @@ const TopMenu: React.FC<Props> = ({ title, buttons, activeMenuTitle }) => {
     c => c.contractId === contractId
   )?.payload.assetId.label;
   const listingLabel = useStreamQueries(Listing).contracts.find(c => c.contractId === contractId)
-    ?.payload.listingId.label;
+    ?.payload.listingId;
 
   const allNotifications = useAllNotifications(party);
   const [notifications, pendingNotifications] = _.partition(

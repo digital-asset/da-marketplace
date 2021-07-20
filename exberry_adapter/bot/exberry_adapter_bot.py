@@ -118,7 +118,7 @@ def main():
         return create(EXBERRY.NewOrderRequest, {
             'order': {
                 'orderType': list(order['orderType'])[0],
-                'instrument': order['listingId']['label'],
+                'instrument': order['listingId'],
                 'quantity': float(order['asset']['quantity']),
                 'price': float(-1) if list(order['orderType'])[0] == 'Market' else float(order['orderType']['Limit']['price']),
                 'side': order['side'],
@@ -215,7 +215,7 @@ def main():
         cancel_request = event.cdata
         return create(EXBERRY.CancelOrderRequest, {
             'integrationParty': client.party,
-            'instrument': cancel_request['details']['listingId']['label'],
+            'instrument': cancel_request['details']['listingId'],
             'mpOrderId': cancel_request['details']['id']['label'],
             'userId': make_user_user_id(cancel_request['provider'])
         })

@@ -85,7 +85,7 @@ clearedTradingTest = do
   -- List a Security to trade
   Some (listingServiceCid, _) <- queryContractKey @Listing.Service exchange (operator, exchange, exchange)
 
-  let mkMarket : Id -> Id -> Script Id
+  let mkMarket : Id -> Id -> Script Text
       mkMarket quoteId tradedId = do
         let
           symbol = quoteId.label <> tradedId.label
@@ -118,9 +118,9 @@ clearedTradingTest = do
 
   return ()
 
-makeTrade : Providers -> Id -> Customer -> Customer -> Decimal -> Decimal -> Int -> Script ()
+makeTrade : Providers -> Text -> Customer -> Customer -> Decimal -> Decimal -> Int -> Script ()
 makeTrade Providers{..} listingId buyer seller price qty currentId = do
-  (Some (_,listing)) <- queryContractKey @Listing.T exchange listingId
+  (Some (_,listing)) <- queryContractKey @Listing.T exchange (operator, exchange, listingId)
   -- Create orders
   let sellerOrderId = Id with signatories = Set.fromList [ seller.customer ], label = show currentId, version = 0
   Right (sellerOrderCid, sellerCreateOrderRequestCid, _) <- seller.customer `submit` do

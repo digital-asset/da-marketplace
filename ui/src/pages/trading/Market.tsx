@@ -138,7 +138,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
   const isCollateralized = listing.payload.listingType.tag === 'Collateralized';
 
   const orders = allOrders.contracts.filter(
-    o => o.payload.details.listingId.label === listing.payload.listingId.label
+    o => o.payload.details.listingId === listing.payload.listingId
   );
   const limits = orders.filter(c => c.payload.details.orderType.tag === 'Limit');
   const bids = limits
@@ -296,7 +296,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
     <div>
       <Header as="h2" textAlign="center">
         <b>
-          {listing.payload.listingId.label} ({getName(clearinghouse)})
+          {listing.payload.listingId} ({getName(clearinghouse)})
         </b>
       </Header>
       <div className="market">
@@ -374,7 +374,7 @@ export const Market: React.FC<ServicePageProps<Service> & Props> = ({
             rows={orders.map(c => {
               return {
                 elements: [
-                  c.payload.details.listingId.label,
+                  c.payload.details.listingId,
                   c.payload.details.id.label,
                   c.payload.details.orderType.tag,
                   <div style={{ color: getColor(c) }}>{c.payload.details.side}</div>,

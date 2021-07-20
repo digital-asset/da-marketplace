@@ -28,7 +28,7 @@ traderCannotMoveAllocatedAsset = do
 
   aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
   bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
-  let listingId = Id with signatories = fromList [exchange]; label = "TSLAUSD"; version = 0
+  let listingId = "TSLAUSD"
 
   -- Create orders
   let aliceOrderId = Id with signatories = fromList [ alice.customer ], label = "1", version = 0
