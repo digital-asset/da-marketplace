@@ -67,6 +67,8 @@ template Service
                     return details with optExchangeFee = Some newDepositCid
                   None -> return details
 
+          createdAt <- getTime
+
           case collateral of
             (Order.Collateral depositCid) -> do
                 details <- detailsWithDepositedFees

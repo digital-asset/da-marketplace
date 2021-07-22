@@ -8,6 +8,8 @@ import DA.Optional
 import DA.Foldable hiding (elem, null, length)
 import DA.List
 import Daml.Trigger
+import DA.Map (Map)
+import DA.Map qualified as Map
 
 import qualified Marketplace.Trading.Model as Order
 import qualified Marketplace.Trading.Service as Service
@@ -18,11 +20,16 @@ import qualified Marketplace.Trading.Matching.Service as Matching
 import Utils
 import DA.Finance.Asset (AssetDeposit)
 
-type CurrentOrderId = Int
+type OrderMap = Map (Party, Text) (ContractPair Order.T)
 
-handleMatching : Trigger CurrentOrderId
+data MatchingState = MatchingState with
+    currentOrderId : Int
+    remainingOrders : OrderMap
+  deriving (Show, Eq)
+
+handleMatching : Trigger MatchingState
 handleMatching = Trigger
-  { initialize = return 0
+  { initialize = return $ MatchingState with currentOrderId = 0; remainingOrders = mempty
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @ListingService.Service
@@ -36,7 +43,12 @@ handleMatching = Trigger
   , heartbeat = None
   }
 
-handleMatchingRule : Party -> TriggerA CurrentOrderId ()
+modifyRemainingOrders : (OrderMap -> OrderMap) -> TriggerA MatchingState ()
+modifyRemainingOrders fn = do
+  state <- get
+  put $ state with remainingOrders = fn state.remainingOrders
+
+handleMatchingRule : Party -> TriggerA MatchingState ()
 handleMatchingRule party = do
   debug "Running matching rule..."
 
@@ -46,7 +58,7 @@ handleMatchingRule party = do
         [(_, feeSchedule):xs] -> feeSchedule.currentFee.amount
         _                     -> 0.0
 
-  -- Acknowledge all 'Order.Request' and update current ID                                                                        │
+  -- Acknowledge all 'Order.Request' and update current ID
   orderRequests <- query @Service.CreateOrderRequest
   deposits <- query @AssetDeposit
   forA_ orderRequests \(cid,or) -> do
@@ -56,10 +68,10 @@ handleMatchingRule party = do
     if exchangeFeeAmount < currentFee
     then void $ emitExerciseCmd cid Service.RejectRequest with errorCode = 790; errorMessage = "Fee requirement not met"
     else do
-      currentOrderId <- get
-      emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show currentOrderId
+      state <- get
+      emitExerciseCmd cid Service.AcknowledgeRequest with providerOrderId = show $ state.currentOrderId
       debug "Acknowledging order"
-      modify (+1)
+      put $ state with currentOrderId = state.currentOrderId + 1
 
   time <- getTime
   -- Acknowledge all 'Order.CancelRequest'
@@ -78,20 +90,34 @@ handleMatchingRule party = do
 
   -- Check for matches on all 'Order'
   orders <- query @Order.T
-  forA_ orders (handleOrder party orders)
+
+  state <- get
+  let remainingOrders = Map.fromList $ map (\op -> (key op._2, op))
+                                     $ filter (\(_,o) -> shouldProcess o) orders
+  put $ state with remainingOrders
+  matchOrders party $ sortOn (\(_,o) -> o.createdAt) $ Map.values remainingOrders
+
+-- |Match all orders removing orders that are matched or do not have any match
+matchOrders : Party -> [ContractPair Order.T] -> TriggerA MatchingState ()
+matchOrders party []              = return ()
+matchOrders party (order::orders) = do
+  matchOrder party orders order
+  newOrders <- sortOn (\(_,o) -> o.createdAt) . Map.values . remainingOrders <$> get
+  matchOrders party newOrders
+
+-- |Order can be matched
+shouldProcess : Order.T -> Bool
+shouldProcess o = o.status `elem` [Order.PendingExecution, Order.PartiallyExecuted]
 
 -- |Check for crossing orders. If found, fill both orders. Matches by price.
-handleOrder : Party -> [ContractPair Order.T] -> ContractPair Order.T -> TriggerA CurrentOrderId ()
-handleOrder party orders op@(orderCid, order) = do
+matchOrder : Party -> [ContractPair Order.T] -> ContractPair Order.T -> TriggerA MatchingState ()
+matchOrder party orders op@(orderCid, order) = do
   debug $ "Handling order: " <> show order
-
-  case order.status of
-    Order.PendingExecution -> processOrder op
-    Order.PartiallyExecuted -> processOrder op
-    _ ->  debug $ "Ignoring order in status: " <> show order.status
+  processOrder op
+  modifyRemainingOrders (Map.delete $ key order)
 
   where
-    processOrder : ContractPair Order.T -> TriggerA CurrentOrderId ()
+    processOrder : ContractPair Order.T -> TriggerA MatchingState ()
     processOrder (orderCid, order) = do
       let oppositelimitOrders = sortOn (\(_,x) -> case x.details.orderType of
             Order.Limit price -> price
@@ -130,7 +156,7 @@ handleOrder party orders op@(orderCid, order) = do
       Order.Limit _ -> True
       _ -> False
 
-    fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA CurrentOrderId ()
+    fill : ContractPair Order.T -> ContractPair Order.T -> TriggerA MatchingState ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
       debug $ "Matching order: " <> show aggressive.details.id <> " to : " <> show passive.details.id
 
@@ -148,5 +174,7 @@ handleOrder party orders op@(orderCid, order) = do
       let execution = Order.Execution with matchId = "matchId"; makerOrderId; takerOrderId; quantity; price; timestamp = show time
 
       emitCommands [exerciseByKeyCmd @Matching.Service aggressive.provider Matching.MatchOrders with execution] [toAnyContractId aggressiveCid, toAnyContractId passiveCid]
+
+      modifyRemainingOrders (Map.delete $ key passive)
 
       return ()

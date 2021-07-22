@@ -86,6 +86,7 @@ template Order
     executions : [Execution]
     remainingQuantity : Decimal
     collateral : TradeCollateral
+    createdAt : Time
   where
     signatory operator, provider, customer
     observer case collateral of
