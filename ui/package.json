@@ -23,7 +23,7 @@
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",
-        "test": "react-scripts test --testURL='http://localhost:7575'",
+        "test": "react-scripts test",
         "eject": "react-scripts eject",
         "lint": "eslint --ext .js,.jsx,.ts,.tsx src/"
     },
@@ -53,7 +53,8 @@
         "@types/react-dom": "^16.9.4",
         "@types/react-router-dom": "^5.1.5",
         "http-proxy-middleware": "^1.0.4",
-        "react-scripts": "^3.3.0",
+        "jest": "^24.9.0",
+        "react-scripts": "^3.4.1",
         "sass": "^1.32.2",
         "typescript": "~3.8.3"
     }
