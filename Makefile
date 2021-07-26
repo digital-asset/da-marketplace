@@ -202,7 +202,7 @@ $(ccp_bot): $(target_dir) $(ccp_bot_dir)
 $(exberry_adapter): $(target_dir) $(exberry_adapter_dir)
 	cp exberry_adapter/dist/marketplace-exchange-adapter-$(exberry_adapter_version).tar.gz $@
 
-$(ui): $(exberry_adapter)
+$(ui): $(dar) $(exberry_adapter)
 	daml codegen js .daml/dist/da-marketplace-$(dar_version).dar -o daml.js
 	cd ui && yarn install
 	cd ui && REACT_APP_TRIGGER_HASH=$(shell sha256sum $(trigger_build) | awk '{print $$1}') REACT_APP_EXBERRY_HASH=$(shell sha256sum $(exberry_adapter) | awk '{print $$1}')  yarn build
@@ -222,3 +222,12 @@ verify-artifacts:
 		test -f $(target_dir)/$$filename || (echo could not find $$filename; exit 1;) \
 	done
 	test -f $(dabl_meta) || (echo could not find $(dabl_meta); exit 1;) \
+
+.PHONY: test_ui
+test_ui: $(ui)
+	cd ui && yarn install
+	cd ui && yarn test --watchAll=false
+
+.PHONY: test_daml
+test_daml:
+	daml test --junit da-marketplace-test-report.xml

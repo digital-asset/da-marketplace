@@ -1,4 +1,4 @@
-sdk-version: 1.10.0
+sdk-version: 1.12.0
 name: da-marketplace
 source: daml
 init-script: Setup:setup
@@ -22,3 +22,5 @@ dependencies:
 sandbox-options:
   - --wall-clock-time
   - --ledgerid=da-marketplace-sandbox
+build-options:
+  - --ghc-option=-Wno-deprecations

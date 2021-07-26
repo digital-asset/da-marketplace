@@ -9,6 +9,8 @@ import DA.Action
 import DA.Foldable hiding (elem, null)
 import DA.Next.Set (fromList)
 import DA.List
+import DA.Map (Map)
+import DA.Map qualified as Map
 import Daml.Trigger
 
 import Marketplace.Exchange
@@ -17,10 +19,17 @@ import Marketplace.Trading
 import Utils
 
 type CurrentOrderId = Int
+type OrderMap a = Map (Party, Int) (ContractPair a)
 
-handleMatching : Trigger CurrentOrderId
+data MatchingState = MatchingState with
+    currentOrderId : Int
+    remainingOrders : OrderMap Order
+    remainingClearedOrders : OrderMap ClearedOrder
+  deriving (Eq)
+
+handleMatching : Trigger MatchingState
 handleMatching = Trigger
-  { initialize = return 0
+  { initialize = return $ MatchingState 0 Map.empty Map.empty
   , updateState = \_ -> pure ()
   , rule = handleMatchingRule
   , registeredTemplates = RegisteredTemplates [ registeredTemplate @OrderRequest
@@ -33,7 +42,17 @@ handleMatching = Trigger
   , heartbeat = None
   }
 
-handleMatchingRule : Party -> TriggerA CurrentOrderId ()
+modifyRemainingOrders : (OrderMap Order -> OrderMap Order) -> TriggerA MatchingState ()
+modifyRemainingOrders fn = do
+  state <- get
+  put $ state with remainingOrders = fn state.remainingOrders
+
+modifyRemainingClearedOrders : (OrderMap ClearedOrder -> OrderMap ClearedOrder) -> TriggerA MatchingState ()
+modifyRemainingClearedOrders fn = do
+  state <- get
+  put $ state with remainingClearedOrders = fn state.remainingClearedOrders
+
+handleMatchingRule : Party -> TriggerA MatchingState ()
 handleMatchingRule party = do
   debug "Running matching rule..."
   handleClearedOrders party
@@ -41,10 +60,10 @@ handleMatchingRule party = do
   -- Acknowledge all 'OrderRequest' and update current ID
   orderRequests <- query @OrderRequest
   forA_ orderRequests \(cid,_) -> do
-    currentOrderId <- get
-    emitExerciseCmd cid OrderRequest_Ack with orderId = currentOrderId
+    state <- get
+    emitExerciseCmd cid OrderRequest_Ack with orderId = state.currentOrderId
     debug "Acknowledging order"
-    modify (+ 1)
+    put $ state with currentOrderId = state.currentOrderId + 1
 
   -- Acknowledge all 'OrderCancelRequest'
   orderCancelRequests <- query @OrderCancelRequest
@@ -53,13 +72,24 @@ handleMatchingRule party = do
 
   -- Check for matches on all 'Order'
   orders <- query @Order
-  forA_ orders (handleOrder party orders)
+  state <- get
+  let remainingOrders = Map.fromList $ map (\op -> (key op._2, op)) orders
+  put $ state with remainingOrders
+  matchOrders party $ sortOn (\(_,o) -> o.createdAt) $ Map.values remainingOrders
 
   -- Handle all Clear Market Requests
   resetMarketRequests <- query @ResetMarketRequest
   forA_ resetMarketRequests (handleResetMarketRequest party)
 
-handleResetMarketRequest : Party -> ContractPair ResetMarketRequest -> TriggerA CurrentOrderId ()
+-- |Handle all orders, requery after each order is handled to filter out previously matched orders
+matchOrders : Party -> [ContractPair Order] -> TriggerA MatchingState ()
+matchOrders party []              = return ()
+matchOrders party (order::orders) = do
+  handleOrder party orders order
+  newOrders <- sortOn (\(_,o) -> o.createdAt) . Map.values . remainingOrders <$> get
+  matchOrders party newOrders
+
+handleResetMarketRequest : Party -> ContractPair ResetMarketRequest -> TriggerA MatchingState ()
 handleResetMarketRequest party (requestCid,ResetMarketRequest{..}) = do
   if clearedMarket
   then do
@@ -96,7 +126,7 @@ handleResetMarketRequest party (requestCid,ResetMarketRequest{..}) = do
 
 
 -- |Check for crossing orders. If found, fill both orders. Matches by price.
-handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA CurrentOrderId ()
+handleOrder : Party -> [ContractPair Order] -> ContractPair Order -> TriggerA MatchingState ()
 handleOrder party orders (orderCid, order) = do
   debug $ "Handling order: " <> show order
   let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeOrder orders
@@ -106,6 +136,7 @@ handleOrder party orders (orderCid, order) = do
       crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
 
   unless (null crossing) $ fill (orderCid, order) (head crossing)
+  modifyRemainingOrders (Map.delete $ key order)
 
   where
     isOppositeOrder : ContractPair Order -> Bool
@@ -119,7 +150,7 @@ handleOrder party orders (orderCid, order) = do
       | aggressive.isBid = passive.price <= aggressive.price
       | otherwise        = passive.price >= aggressive.price
 
-    fill : ContractPair Order -> ContractPair Order -> TriggerA CurrentOrderId ()
+    fill : ContractPair Order -> ContractPair Order -> TriggerA MatchingState ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
 
       let fillQty   = min passive.qty aggressive.qty
@@ -139,19 +170,21 @@ handleOrder party orders (orderCid, order) = do
           counterParty = aggressive.exchParticipant
           timeMatched = show nanoTimestamp
 
+      modifyRemainingOrders (Map.delete $ key passive)
+
       return ()
 
-handleClearedOrders : Party -> TriggerA CurrentOrderId ()
+handleClearedOrders : Party -> TriggerA MatchingState ()
 handleClearedOrders party = do
   debug "Running matching rule..."
 
   -- Acknowledge all 'ClearedOrderRequest' and update current ID
   orderRequests <- query @ClearedOrderRequest
   forA_ orderRequests \(cid,_) -> do
-    currentClearedOrderId <- get
-    emitExerciseCmd cid ClearedOrderRequest_Ack with orderId = currentClearedOrderId
+    state <- get
+    emitExerciseCmd cid ClearedOrderRequest_Ack with orderId = state.currentOrderId
     debug "Acknowledging order"
-    modify (+ 1)
+    put $ state with currentOrderId = state.currentOrderId + 1
 
   -- Acknowledge all 'ClearedOrderCancelRequest'
   orderCancelRequests <- query @ClearedOrderCancelRequest
@@ -160,10 +193,21 @@ handleClearedOrders party = do
 
   -- Check for matches on all 'ClearedOrder'
   orders <- query @ClearedOrder
-  forA_ orders (handleClearedOrder party orders)
+  state <- get
+  let remainingClearedOrders = Map.fromList $ map (\op -> (key op._2, op)) orders
+  put $ state with remainingClearedOrders
+  matchClearedOrders party $ sortOn (\(_,o) -> o.createdAt) $ Map.values remainingClearedOrders
+
+-- |Handle all orders, requery after each order is handled to filter out previously matched orders
+matchClearedOrders : Party -> [ContractPair ClearedOrder] -> TriggerA MatchingState ()
+matchClearedOrders party []          = return ()
+matchClearedOrders party (order::orders) = do
+  handleClearedOrder party orders order
+  newOrders <- sortOn (\(_,o) -> o.createdAt) . Map.values . remainingClearedOrders <$> get
+  matchClearedOrders party newOrders
 
 -- |Check for crossing orders. If found, fill both orders. Matches by price.
-handleClearedOrder : Party -> [ContractPair ClearedOrder] -> ContractPair ClearedOrder -> TriggerA CurrentOrderId ()
+handleClearedOrder : Party -> [ContractPair ClearedOrder] -> ContractPair ClearedOrder -> TriggerA MatchingState ()
 handleClearedOrder party orders (orderCid, order) = do
   debug $ "Handling order: " <> show order
   let oppositeBook  = sortOn (\(_,x) -> x.price) $ filter isOppositeClearedOrder orders
@@ -173,6 +217,7 @@ handleClearedOrder party orders (orderCid, order) = do
       crossing      = takeWhile (isCrossing (orderCid,order)) oppositeBook'
 
   unless (null crossing) $ fill (orderCid, order) (head crossing)
+  modifyRemainingClearedOrders (Map.delete $ key order)
 
   where
     isOppositeClearedOrder : ContractPair ClearedOrder -> Bool
@@ -186,7 +231,7 @@ handleClearedOrder party orders (orderCid, order) = do
       | aggressive.isBid = passive.price <= aggressive.price
       | otherwise        = passive.price >= aggressive.price
 
-    fill : ContractPair ClearedOrder -> ContractPair ClearedOrder -> TriggerA CurrentOrderId ()
+    fill : ContractPair ClearedOrder -> ContractPair ClearedOrder -> TriggerA MatchingState ()
     fill (aggressiveCid, aggressive) (passiveCid, passive) = do
 
       let fillQty   = min passive.qty aggressive.qty
@@ -220,6 +265,8 @@ handleClearedOrder party orders (orderCid, order) = do
           matchId = -1
           executedQuantity = fillQty
           executedPrice = fillPrice
+
+      modifyRemainingClearedOrders (Map.delete $ key passive)
 
       return ()
 
