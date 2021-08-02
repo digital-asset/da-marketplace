@@ -43,11 +43,6 @@ yq w -i $daml_yaml_triggers 'version' "$short_version"
 yq w -i $daml_yaml_triggers 'data-dependencies' ""
 yq w -i $daml_yaml_triggers 'data-dependencies[+]' "../.daml/dist/da-marketplace-$short_version.dar"
 
-echo "  Tagging integrationTesting daml.yaml"
-yq w -i $daml_yaml_it 'version' "$short_version"
-yq w -i $daml_yaml_it 'data-dependencies' ""
-yq w -i $daml_yaml_it 'data-dependencies[+]' "../.daml/dist/da-marketplace-$short_version.dar"
-
 echo "  Tagging exberry_adapter setup.py"
 sed -ri "s/version='$vregex/version='$short_version/" $exberry_setup
 
