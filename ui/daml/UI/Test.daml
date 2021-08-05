@@ -124,6 +124,18 @@ testListOnboarding = do
   operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardAll with instructions = partyInstructions
   return ()
 
+testSimpleOnboarding : Script ()
+testSimpleOnboarding = do
+  Parties{..} <- setupParties
+
+  ooCid <- operator `submit` createCmd OperatorOnboarding with ..
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardCustodian with party = bank
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardExchange with party = exchange
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardIssuer with party = issuer, custodian = bank
+
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardInvestor with party = alice, exchange, custodian = bank, optClearinghouse = Some ccp
+  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardInvestor with party = bob, exchange, custodian = bank, optClearinghouse = Some ccp
+  return ()
 
 testOnboarding : Script ()
 testOnboarding = do
@@ -156,6 +168,7 @@ testOnboarding = do
                      , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
                      ]
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
+  operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bob; ..
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bob; ..
 
   -- Onboard Issuer

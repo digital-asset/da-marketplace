@@ -83,14 +83,17 @@ handleOnboardingInstruction operator customer mp ins = case ins of
 
       ccpAccount <- case optClearingAccount of
         (Some an) -> return $ fromSomeNote "account lookup" $ Map.lookup (OnboardingAccount custodian an) mp
-        None      -> createAccount custodyCid custodian customer "Clearinghouse" []
+        None      -> createAccount custodyCid operator custodian customer "Clearinghouse" []
 
-      createOrLookupAccount    o custodyCid optClearingAccount "Clearinghouse-CCPAccount"
+      -- createOrLookupAccount    o custodyCid optClearingAccount "Clearinghouse-CCPAccount"
       offerCid <- exerciseByKey @Operator.Role operator Operator.OfferClearingRole with provider = customer
       exercise offerCid Clearinghouse.Accept with ..
       return ()
 
-    (OnboardCustody c) -> void $ createOrLookup Custody.Service with provider = c; ..
+    o@OnboardCustody{..} -> do
+      offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferCustodyService with ..
+      exercise offerCid Custody.Accept
+      return ()
 
     ot@OnboardTrading{..} -> do
         custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
@@ -98,7 +101,8 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         tradingAccount    <- createOrLookupAccount    ot custodyCid optTradingAccount "Exchange-TradingAccount"
         allocationAccount <- createAllocationAccount' ot custodyCid "allocation"
 
-        create Trading.Service with ..
+        offerCid <- exerciseByKey @Exchange.Role (operator, provider) Exchange.OfferTradingService with ..
+        exercise offerCid Trading.Accept with ..
         return ()
 
     ot@OnboardIssuance{..} -> do
@@ -107,7 +111,8 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         createOrLookupAccount    ot custodyCid optSafekeepingAccount "Issuance-optSafekeepingAccount"
         allocationAccount <- createAllocationAccount' ot custodyCid "allocation"
 
-        create Issuance.Service with ..
+        offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
+        exercise offerCid Issuance.Accept
         return ()
 
     ot@OnboardClearing{..} -> do
@@ -135,7 +140,8 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         receivableAccount <- createOrLookupAccount    ot custodyCid optReceivableAccount "Auction-ReceivableAccount"
         allocationAccount <- createAllocationAccount' ot custodyCid "allocation"
 
-        create Auction.Service with ..
+        offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferAuctionService with ..
+        exercise offerCid Auction.Accept with ..
         return ()
 
     ot@OnboardBidding{..} -> do
@@ -144,7 +150,8 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         tradingAccount    <- createOrLookupAccount    ot custodyCid optTradingAccount "Bidding-TradingAccount"
         allocationAccount <- createAllocationAccount' ot custodyCid "bidding-allocation"
 
-        create Bidding.Service with  ..
+        offerCid <- exerciseByKey @Distributor.Role (operator, provider) Distributor.OfferBiddingService with ..
+        exercise offerCid Bidding.Accept with ..
         return ()
 
   where
@@ -152,16 +159,16 @@ handleOnboardingInstruction operator customer mp ins = case ins of
       : (HasField "provider" t Party, HasField "custodian" t Party) => t -> ContractId Custody.Service -> (Optional Text) -> Text -> Update Account
     createOrLookupAccount inst serviceCid optAccountName defaultName = case optAccountName of
         (Some an) -> return $ fromSomeNote "account lookup" $ Map.lookup (OnboardingAccount inst.custodian an) mp
-        None      -> createAccount serviceCid inst.custodian customer defaultName [inst.provider]
+        None      -> createAccount serviceCid operator inst.custodian customer defaultName [inst.provider]
 
     createAllocationAccount'
       : forall t. (HasField "provider" t Party, HasField "custodian" t Party) => t -> ContractId Custody.Service -> Text -> Update Account
-    createAllocationAccount' inst cid name = createAllocationAccount cid inst.custodian customer inst.provider name
+    createAllocationAccount' inst cid name = createAllocationAccount cid operator inst.custodian customer inst.provider name
 
-createAllocationAccount : ContractId Custody.Service -> Party -> Party ->  Party -> Text -> Update Account
-createAllocationAccount custodyServiceCid provider customer nominee name = do
+createAllocationAccount : ContractId Custody.Service -> Party -> Party -> Party ->  Party -> Text -> Update Account
+createAllocationAccount custodyServiceCid operator provider customer nominee name = do
   let accountId = Id with
-        signatories = Set.fromList [customer, provider]
+        signatories = Set.fromList [operator, customer, provider]
         label       = T.intercalate "-" [show customer, name, show provider, show nominee]
         version     = 0
 
@@ -172,10 +179,10 @@ createAllocationAccount custodyServiceCid provider customer nominee name = do
   allocRule <- fetch =<< exercise custodyServiceCid Custody.OpenAllocationAccount with ..
   return allocRule.account
 
-createAccount : ContractId Custody.Service -> Party -> Party -> Text -> [Party] -> Update Account
-createAccount custodyServiceCid provider customer name observers = do
+createAccount : ContractId Custody.Service -> Party -> Party -> Party -> Text -> [Party] -> Update Account
+createAccount custodyServiceCid operator provider customer name observers = do
   let accountId = Id with
-        signatories = Set.fromList [customer, provider]
+        signatories = Set.fromList [operator, customer, provider]
         label       = T.intercalate "-" [show customer, show name, show provider]
         version     = 0
 
@@ -270,7 +277,7 @@ template OnboardCustomer
           accs <- Map.fromList <$> forA (Map.toList neededAccounts) (\(oa@(OnboardingAccount c nm),obs) -> do
               custodyServiceCid <- createOrLookup Custody.Service with provider = c; ..
               let accountId = Id with
-                    signatories = Set.fromList [customer, c]
+                    signatories = Set.fromList [operator, customer, c]
                     label       = T.intercalate "-" [show customer, nm, show c]
                     version     = 0
 
@@ -322,6 +329,56 @@ template OperatorOnboarding
           instructions : [(Party, [OnboardingInstruction])]
         do
           forA_ instructions (\(p, is) -> exercise self OperatorOnboard_Onboard with party = p; instructions = is)
+
+      nonconsuming OperatorOnboard_OnboardInvestor : ()
+        with
+          party : Party
+          custodian : Party
+          exchange : Party
+          optClearinghouse : Optional Party
+        do
+          exercise self OperatorOnboard_Onboard with party = custodian, instructions = [OnboardCustodian]
+          exercise self OperatorOnboard_Onboard with party = exchange,  instructions = [OnboardExchange]
+          exercise self OperatorOnboard_Onboard with
+              party
+              instructions = [ OnboardCustody with provider = custodian
+                             , OnboardTrading with provider = exchange, optTradingAccount = None, .. ]
+
+          whenSome optClearinghouse $ \clearinghouse -> do
+            exercise self OperatorOnboard_Onboard with party = clearinghouse,  instructions = [OnboardClearinghouse with custodian, optClearingAccount = None]
+            exercise self OperatorOnboard_Onboard with
+                party
+                instructions = [ OnboardClearing with provider = clearinghouse, optClearingAccount = None, ..]
+
+      nonconsuming OperatorOnboard_OnboardClearinghouse : ()
+        with
+          party : Party
+          custodian : Party
+        do
+          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardClearinghouse with custodian, optClearingAccount = None]
+
+      nonconsuming OperatorOnboard_OnboardExchange : ()
+        with
+          party : Party
+        do
+          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardExchange]
+
+      nonconsuming OperatorOnboard_OnboardCustodian : ()
+        with
+          party : Party
+        do
+          exercise self OperatorOnboard_Onboard with party, instructions = [OnboardDistributor, OnboardCustodian]
+
+      nonconsuming OperatorOnboard_OnboardIssuer : ()
+        with
+          party : Party
+          custodian : Party
+        do
+          exercise self OperatorOnboard_Onboard with party = custodian, instructions = [OnboardCustodian, OnboardDistributor]
+          let instructions = [ OnboardCustody  with provider = custodian
+                             , OnboardIssuance with provider = custodian, custodian, optSafekeepingAccount = None
+                             , OnboardAuction  with provider = custodian, custodian, optTradingAccount     = None, optReceivableAccount = None ]
+          exercise self OperatorOnboard_Onboard with ..
 
       nonconsuming OperatorOnboard_Onboard : ()
         with
