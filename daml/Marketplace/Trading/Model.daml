@@ -32,8 +32,8 @@ data TimeInForce
   deriving (Eq, Show)
 
 data Details = Details with
-    id : Id
-    listingId : Id
+    id : Text
+    listingId : Text
     asset : Asset
     side : Side
     orderType : OrderType
@@ -86,13 +86,14 @@ template Order
     executions : [Execution]
     remainingQuantity : Decimal
     collateral : TradeCollateral
+    createdAt : Time
   where
     signatory operator, provider, customer
     observer case collateral of
       (Cleared ch) -> [ch]
       _            -> []
 
-    key (provider, details.id.label) : (Party, Text)
+    key (provider, details.id) : (Party, Text)
     maintainer key._1
 
 data Fee = Fee with

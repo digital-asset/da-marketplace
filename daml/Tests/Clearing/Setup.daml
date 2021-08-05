@@ -19,8 +19,6 @@ import Marketplace.Issuance.AssetDescription as AssetDescription
 import Marketplace.Issuance.CFI qualified as CFI
 import Tests.Utils (future)
 
-import DA.Set qualified as Set
-
 checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
 checkOrderStatusMatches orderCid party status = do
   Some order <- queryContractId @Order.T party orderCid
@@ -85,7 +83,7 @@ clearedTradingTest = do
   -- List a Security to trade
   Some (listingServiceCid, _) <- queryContractKey @Listing.Service exchange (operator, exchange, exchange)
 
-  let mkMarket : Id -> Id -> Script Id
+  let mkMarket : Id -> Id -> Script Text
       mkMarket quoteId tradedId = do
         let
           symbol = quoteId.label <> tradedId.label
@@ -118,11 +116,11 @@ clearedTradingTest = do
 
   return ()
 
-makeTrade : Providers -> Id -> Customer -> Customer -> Decimal -> Decimal -> Int -> Script ()
+makeTrade : Providers -> Text -> Customer -> Customer -> Decimal -> Decimal -> Int -> Script ()
 makeTrade Providers{..} listingId buyer seller price qty currentId = do
-  (Some (_,listing)) <- queryContractKey @Listing.T exchange listingId
+  (Some (_,listing)) <- queryContractKey @Listing.T exchange (operator, exchange, listingId)
   -- Create orders
-  let sellerOrderId = Id with signatories = Set.fromList [ seller.customer ], label = show currentId, version = 0
+  let sellerOrderId = show currentId
   Right (sellerOrderCid, sellerCreateOrderRequestCid, _) <- seller.customer `submit` do
     exerciseCmd seller.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
@@ -135,7 +133,7 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
             timeInForce = Order.GTC
             orderType = Order.Limit with price
 
-  let buyerOrderId = Id with signatories = Set.fromList [ buyer.customer ], label = show (currentId + 1), version = 0
+  let buyerOrderId = show (currentId + 1)
   Right (buyerOrderCid, buyerCreateOrderRequestCid, _) <- submitMulti [buyer.customer] [public] $ do
     exerciseCmd buyer.tradingServiceCid Trading.RequestCreateOrder with
         collateral = Order.Cleared clearinghouse
@@ -164,8 +162,8 @@ makeTrade Providers{..} listingId buyer seller price qty currentId = do
   -- Confirm order matches
   let execution = Order.Execution with
         matchId = show currentId
-        makerOrderId = sellerOrderId.label
-        takerOrderId = buyerOrderId.label
+        makerOrderId = sellerOrderId
+        takerOrderId = buyerOrderId
         quantity = 200.0
         price = 100.0
         timestamp = "123456"

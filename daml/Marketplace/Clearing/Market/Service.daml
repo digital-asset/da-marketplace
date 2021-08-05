@@ -33,7 +33,7 @@ template Service
     nonconsuming choice RequestFairValues : ContractId FairValueCalculationRequest
       with
         party : Party
-        listingIds : [Id]
+        listingIds : [Text]
         currency : Id
       controller party
       do
@@ -44,7 +44,7 @@ template Service
     controller provider can
       nonconsuming CreateFairValue : ContractId FairValue
         with
-          listingId : Id
+          listingId : Text
           price : Decimal
           currency : Id
           timestamp : Time
@@ -55,7 +55,7 @@ template Service
 
       nonconsuming CreateManualFairValueRequest : ContractId ManualFairValueCalculation
         with
-          listingId : Id
+          listingId : Text
           currency : Id
           upTo : Time
           observers : Set Party

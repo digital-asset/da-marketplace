@@ -379,7 +379,7 @@ const AppComponent = () => {
         icon: <OrdersIcon />,
         groupBy: 'Secondary Market',
         children: listings.map(c => ({
-          label: c.payload.listingId.label,
+          label: c.payload.listingId,
           path: paths.app.markets.root + '/' + c.contractId.replace('#', '_'),
           render: () => (
             <Market

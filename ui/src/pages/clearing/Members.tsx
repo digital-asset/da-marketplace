@@ -150,7 +150,7 @@ const ClearingMembersComponent: React.FC<RouteComponentProps & ServicePageProps<
             elements: [
               getName(c.payload.exchange),
               getName(c.payload.order.customer),
-              c.payload.order.details.listingId.label,
+              c.payload.order.details.listingId,
               c.payload.execution.quantity,
               c.payload.execution.price,
               c.payload.execution.timestamp,

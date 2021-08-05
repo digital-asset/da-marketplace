@@ -117,7 +117,6 @@ tag:
 		dabl-meta.yaml \
 		daml.yaml \
 		triggers/daml.yaml \
-		integrationTesting/daml.yaml\
 		exberry_adapter/setup.py \
 		$(UI_DIR)/package.json \
 		docs/local_development.md \

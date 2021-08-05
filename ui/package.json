@@ -1,6 +1,6 @@
 {
   "name": "da-marketplace-ui",
-  "version": "0.2.0-rc.2",
+  "version": "0.2.0-rc.3",
   "private": true,
   "dependencies": {
     "@daml.js/da-marketplace": "file:../daml.js/da-marketplace-0.2.0",
@@ -53,7 +53,8 @@
   "prettier": {
     "printWidth": 100,
     "singleQuote": true,
-    "arrowParens": "avoid"
+    "arrowParens": "avoid",
+    "endOfLine": "auto"
   },
   "browserslist": {
     "production": [
