@@ -133,8 +133,10 @@ testSimpleOnboarding = do
   operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardExchange with party = exchange
   operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardIssuer with party = issuer, custodian = bank
 
-  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardInvestor with party = alice, exchange, custodian = bank, optClearinghouse = Some ccp
-  operator `submit` exerciseCmd ooCid OperatorOnboard_OnboardInvestor with party = bob, exchange, custodian = bank, optClearinghouse = Some ccp
+  let mkInvestorOnboard party = OperatorOnboard_OnboardInvestor with party, exchanges = [exchange], custodian = bank, auctionhouse = bank, optClearinghouse = Some ccp
+
+  operator `submit` exerciseCmd ooCid $ mkInvestorOnboard alice
+  operator `submit` exerciseCmd ooCid $ mkInvestorOnboard bob
   return ()
 
 testOnboarding : Script ()
@@ -167,6 +169,7 @@ testOnboarding = do
                      , OnboardBidding  with provider = auctionhouse, custodian = bank, optTradingAccount  = Some "MainAccount"
                      , OnboardClearing with provider = ccp,          custodian = bank, optClearingAccount = Some "ClearingAccount"
                      ]
+
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = alice; ..
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bob; ..
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = bob; ..
@@ -178,10 +181,3 @@ testOnboarding = do
   operator `submit` exerciseCmd ooCid OperatorOnboard_Onboard with party = issuer; ..
 
   return ()
-
-  -- let instructions = [ OnboardExchange
-  --                    , OnboardMarketClearing with provider = ccp
-  --                    ]
-  -- onboardRequestCid <- exchange `submit` createCmd OnboardRequest with customer = exchange; ..
-  -- operator `submit` exerciseCmd onboardRequestCid ApproveOnboardRequest
-  --

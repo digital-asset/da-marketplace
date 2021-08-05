@@ -334,15 +334,19 @@ template OperatorOnboarding
         with
           party : Party
           custodian : Party
-          exchange : Party
+          auctionhouse : Party
+          exchanges : [Party]
           optClearinghouse : Optional Party
         do
           exercise self OperatorOnboard_Onboard with party = custodian, instructions = [OnboardCustodian]
-          exercise self OperatorOnboard_Onboard with party = exchange,  instructions = [OnboardExchange]
+          forA_ exchanges $ \e -> exercise self OperatorOnboard_Onboard with party = e,  instructions = [OnboardExchange]
+          exercise self OperatorOnboard_Onboard with party = auctionhouse,  instructions = [OnboardDistributor]
+
+          let exchangeInstructions = map (\e -> OnboardTrading with provider = e, optTradingAccount = Some "TradingAccount", ..) exchanges
           exercise self OperatorOnboard_Onboard with
               party
               instructions = [ OnboardCustody with provider = custodian
-                             , OnboardTrading with provider = exchange, optTradingAccount = None, .. ]
+                             , OnboardBidding with provider = auctionhouse, custodian, optTradingAccount = Some "TradingAccount" ] ++ exchangeInstructions
 
           whenSome optClearinghouse $ \clearinghouse -> do
             exercise self OperatorOnboard_Onboard with party = clearinghouse,  instructions = [OnboardClearinghouse with custodian, optClearingAccount = None]
