@@ -1,39 +1,35 @@
-import React, { useEffect, useState } from 'react';
-
-import classNames from 'classnames';
+import React, { useState } from 'react';
 
 import DamlLedger, { useLedger } from '@daml/react';
-import { CreateEvent } from '@daml/ledger';
-import { Choice, ContractId, Party, Optional } from '@daml/types';
+import { Party, Optional } from '@daml/types';
 import _ from 'lodash';
 
-import { Role as OperatorService } from '@daml.js/da-marketplace/lib/Marketplace/Operator/Role';
 import {
   OperatorOnboarding,
   OnboardingInstruction,
 } from '@daml-ui.js/da-marketplace-ui/lib/UI/Onboarding';
-import { VerifiedIdentity } from '@daml.js/da-marketplace/lib/Marketplace/Regulator/Model';
 
-import { RolesProvider, useRolesContext } from '../../context/RolesContext';
+import { RolesProvider } from '../../context/RolesContext';
 import { OffersProvider } from '../../context/OffersContext';
-import { AutomationProvider, useAutomations } from '../../context/AutomationContext';
+import { AutomationProvider } from '../../context/AutomationContext';
 
 import QueryStreamProvider from '../../websocket/queryStream';
 import { useStreamQueries } from '../../Main';
-import { retrieveParties } from '../../Parties';
-import Credentials, { computeToken } from '../../Credentials';
-import {
-  httpBaseUrl,
-  wsBaseUrl,
-  publicParty,
-  isHubDeployment,
-  useVerifiedParties,
-} from '../../config';
+import Credentials from '../../Credentials';
+import { httpBaseUrl, wsBaseUrl, publicParty, useVerifiedParties } from '../../config';
 import QuickSetupPage from './QuickSetupPage';
-import { LoadingWheel, MenuItems } from './QuickSetup';
-import { Label, Form, Button, Header, Divider, Segment } from 'semantic-ui-react';
+import { MenuItems } from './QuickSetup';
+import {
+  Form,
+  Button,
+  Header,
+  Divider,
+  Segment,
+  DropdownProps,
+  InputOnChangeData,
+  DropdownItemProps,
+} from 'semantic-ui-react';
 import { createDropdownProp } from '../common';
-import { ArrowLeftIcon } from '../../icons/icons';
 
 const InstructionsPage = (props: { adminCredentials: Credentials }) => {
   const { adminCredentials } = props;
@@ -57,6 +53,20 @@ const InstructionsPage = (props: { adminCredentials: Credentials }) => {
     </DamlLedger>
   );
 };
+
+enum FieldType {
+  PARTIES = 'PARTIES',
+  TEXT = 'TEXT',
+}
+
+enum InstructionType {
+  TRADING = 'Trading',
+  CUSTODY = 'Custody',
+  CLEARING = 'Clearing',
+  BIDDING = 'Bidding',
+  ISSUANCE = 'Issuance',
+  AUCTION = 'Auction',
+}
 
 const makeCustodyInstruction = (provider: Party): OnboardingInstruction => {
   return { tag: 'OnboardCustody', value: { provider } };
@@ -110,42 +120,42 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
   switch (inst.instructionType) {
     case InstructionType.TRADING: {
       return makeTradingInstruction(
-        inst.empty.provider || '',
-        inst.empty.custodian || '',
-        inst.empty.tradingAccount || null
+        inst.fields.provider || '',
+        inst.fields.custodian || '',
+        inst.fields.tradingAccount || null
       );
     }
     case InstructionType.BIDDING: {
       return makeBiddingInstruction(
-        inst.empty.provider || '',
-        inst.empty.custodian || '',
-        inst.empty.tradingAccount || null
+        inst.fields.provider || '',
+        inst.fields.custodian || '',
+        inst.fields.tradingAccount || null
       );
     }
     case InstructionType.CLEARING: {
       return makeClearingInstruction(
-        inst.empty.provider || '',
-        inst.empty.custodian || '',
-        inst.empty.clearingAccount || null
+        inst.fields.provider || '',
+        inst.fields.custodian || '',
+        inst.fields.clearingAccount || null
       );
     }
     case InstructionType.AUCTION: {
       return makeAuctionInstruction(
-        inst.empty.provider || '',
-        inst.empty.custodian || '',
-        inst.empty.tradingAccount || null,
-        inst.empty.receivableAccount || null
+        inst.fields.provider || '',
+        inst.fields.custodian || '',
+        inst.fields.tradingAccount || null,
+        inst.fields.receivableAccount || null
       );
     }
     case InstructionType.ISSUANCE: {
       return makeIssuanceInstruction(
-        inst.empty.provider || '',
-        inst.empty.custodian || '',
-        inst.empty.safekeepingAccount || null
+        inst.fields.provider || '',
+        inst.fields.custodian || '',
+        inst.fields.safekeepingAccount || null
       );
     }
     case InstructionType.CUSTODY: {
-      return makeCustodyInstruction(inst.empty.provider || '');
+      return makeCustodyInstruction(inst.fields.provider || '');
     }
     default: {
       return makeCustodyInstruction('');
@@ -153,60 +163,46 @@ const makeInstruction = (inst: InstFieldsWithType): OnboardingInstruction => {
   }
 };
 
-type EmptyIntstruction = { [k: string]: string | undefined };
+type InstructionFields = { [k: string]: string | undefined };
 
-type EmptyCustodyInstruction = {
+type CustodyInstructionFields = {
   provider?: string;
 };
 
-type EmptyTradingInstruction = {
+type TradingInstructionFields = {
   provider?: string;
   custodian?: string;
   tradingAccount?: string;
 };
 
-type EmptyClearingInstruction = {
+type ClearingInstructionFields = {
   provider?: string;
   custodian?: string;
   clearingAccount?: string;
 };
 
-type EmptyBiddingInstruction = {
+type BiddingInstructionFields = {
   provider?: string;
   custodian?: string;
   tradingAccount?: string;
 };
 
-type EmptyIssuanceInstruction = {
+type IssuanceInstructionFields = {
   provider?: string;
   custodian?: string;
   safekeepingAccount?: string;
 };
 
-type EmptyAuctionInstruction = {
+type AuctionInstructionFields = {
   provider?: string;
   custodian?: string;
   tradingAccount?: string;
   receivableAccount?: string;
 };
 
-enum FieldType {
-  PARTIES = 'PARTIES',
-  TEXT = 'TEXT',
-}
-
-enum InstructionType {
-  TRADING = 'Trading',
-  CUSTODY = 'Custody',
-  CLEARING = 'Clearing',
-  BIDDING = 'Bidding',
-  ISSUANCE = 'Issuance',
-  AUCTION = 'Auction',
-}
-
 type InstFieldsWithType = {
   instructionType: InstructionType;
-  empty: EmptyIntstruction;
+  fields: InstructionFields;
 };
 
 const getFields = (inst: InstFieldsWithType) => {
@@ -253,72 +249,77 @@ const getFields = (inst: InstFieldsWithType) => {
       };
     }
     default: {
-      return;
-      {
+      return {
       }
     }
   }
 };
 
-const newEmptyInstruction = (it: InstructionType) => {
+const newInstructionFields = (it: InstructionType) => {
   switch (it) {
     case InstructionType.TRADING: {
-      return {} as EmptyTradingInstruction;
+      return {} as TradingInstructionFields;
     }
     case InstructionType.CUSTODY: {
-      return {} as EmptyCustodyInstruction;
+      return {} as CustodyInstructionFields;
     }
     case InstructionType.CLEARING: {
-      return {} as EmptyClearingInstruction;
+      return {} as ClearingInstructionFields;
     }
     case InstructionType.AUCTION: {
-      return {} as EmptyAuctionInstruction;
+      return {} as AuctionInstructionFields;
     }
     case InstructionType.BIDDING: {
-      return {} as EmptyBiddingInstruction;
+      return {} as BiddingInstructionFields;
     }
     case InstructionType.ISSUANCE: {
-      return {} as EmptyIssuanceInstruction;
+      return {} as IssuanceInstructionFields;
     }
   }
 };
 
-const investorInstructions = [
-  InstructionType.CUSTODY,
-  InstructionType.TRADING,
-  InstructionType.BIDDING,
-].map(it => {
-  return { instructionType: it, empty: newEmptyInstruction(it) };
-});
+const investorInstructions = () => {
+  return [InstructionType.CUSTODY, InstructionType.TRADING, InstructionType.BIDDING].map(it => {
+    return { instructionType: it, fields: newInstructionFields(it) };
+  });
+};
 
-const issuerInstructions = [
-  InstructionType.ISSUANCE,
-  InstructionType.AUCTION,
-].map(it => {
-  return { instructionType: it, empty: newEmptyInstruction(it) };
-});
+const issuerInstructions = () => {
+  return [InstructionType.ISSUANCE, InstructionType.AUCTION].map(it => {
+    return { instructionType: it, fields: newInstructionFields(it) };
+  });
+};
 
 const TestInstructions = () => {
   const ledger = useLedger();
-  const automations = useAutomations();
 
-  const { identities, loading: identitiesLoading } = useVerifiedParties();
+  const { identities } = useVerifiedParties();
 
   const [onboardParty, setOnboardParty] = useState('');
-  const [instructions, setInstructions] = useState<OnboardingInstruction[]>([]);
-  const [instructionTypes, setInstructionTypes] = useState<InstFieldsWithType[]>([]);
+  const [instructionFields, setInstructionFields] = useState<InstFieldsWithType[]>([]);
+  const [currentAddInstruction, setCurrentAddInstruction] = useState<string>('');
 
-  const [currentAddInstruction, setCurrentAddInstruction] = useState<InstructionType | undefined>();
-
-  const { contracts: onboardingContracts, loading: onboardingLoading } =
-    useStreamQueries(OperatorOnboarding);
+  const { contracts: onboardingContracts } = useStreamQueries(OperatorOnboarding);
 
   const partyOptions = identities.map(p => {
-    return { text: p.payload.legalName, value: p.payload.customer };
+    return createDropdownProp(p.payload.legalName, p.payload.customer);
   });
 
-  if (!onboardingContracts.length) return <></>;
+  if (!onboardingContracts.length) return <>Operator is missing onboarding contract!</>;
   const onboardingContract = onboardingContracts[0];
+
+  async function doRunOnboarding() {
+    const instructions = instructionFields.map(inst => makeInstruction(inst));
+    await ledger.exercise(
+      OperatorOnboarding.OperatorOnboard_Onboard,
+      onboardingContract.contractId,
+      {
+        instructions,
+        party: onboardParty,
+      }
+    );
+    setOnboardParty('');
+  }
 
   return (
     <QuickSetupPage
@@ -340,18 +341,18 @@ const TestInstructions = () => {
                   createDropdownProp('Auction', InstructionType.AUCTION),
                   createDropdownProp('Investor (template)', 'INVESTOR_TEMPLATE'),
                   createDropdownProp('Issuer (template)', 'ISSUER_TEMPLATE'),
-                ].filter(dtp => !instructionTypes.find(et => et.instructionType === dtp.value))}
+                ].filter(dtp => !instructionFields.find(et => et.instructionType === dtp.value))}
                 onChange={(_, data) => {
                   if ((data.value as string) === 'INVESTOR_TEMPLATE') {
-                    setInstructionTypes(investorInstructions);
+                    setInstructionFields(investorInstructions());
                   } else if ((data.value as string) === 'ISSUER_TEMPLATE') {
-                    setInstructionTypes(issuerInstructions);
+                    setInstructionFields(issuerInstructions());
                   } else {
-                    setInstructionTypes([
-                      ...instructionTypes,
+                    setInstructionFields([
+                      ...instructionFields,
                       {
                         instructionType: data.value as InstructionType,
-                        empty: newEmptyInstruction(data.value as InstructionType),
+                        fields: newInstructionFields(data.value as InstructionType),
                       },
                     ]);
                   }
@@ -360,7 +361,8 @@ const TestInstructions = () => {
               />
               <Button
                 onClick={() => {
-                  setInstructionTypes([]);
+                  setInstructionFields([]);
+                  setCurrentAddInstruction('');
                 }}
               >
                 Clear
@@ -371,105 +373,95 @@ const TestInstructions = () => {
         <div className="test">
           <Segment basic>
             <Form>
-              {instructionTypes.map((ei, idx) => (
-                <div className="instruction-fields">
-                  <div className="instruction-header">
-                    <Header as="h2">{ei.instructionType}</Header>
-                  </div>
-                  <Form.Group>
-                    {_.toPairs(getFields(ei)).map(([k, field]) => {
-                      if (field === FieldType.PARTIES) {
-                        return (
-                          <Form.Select
-                            disabled={false}
-                            className="request-select"
-                            label={<p className="input-label">{k}</p>}
-                            placeholder="Select..."
-                            onChange={(_, data: any) => {
-                              setInstructionTypes(old => {
-                                let listCopy = [...old];
-                                let instCopy = { ...ei };
-                                instCopy.empty[k] = data.value as string;
-                                listCopy[idx] = instCopy;
-                                return listCopy;
-                              });
-                            }}
-                            options={partyOptions}
-                            value={instructionTypes[idx].empty[k]}
-                          />
-                        );
-                      } else {
-                        return (
-                          <Form.Input
-                            disabled={false}
-                            className="request-select"
-                            label={<p className="input-label">{k}</p>}
-                            placeholder="Select..."
-                            onChange={(_, data: any) => {
-                              setInstructionTypes(old => {
-                                let listCopy = [...old];
-                                let instCopy = { ...ei };
-                                instCopy.empty[k] = data.value as string;
-                                listCopy[idx] = instCopy;
-                                return listCopy;
-                              });
-                            }}
-                            value={instructionTypes[idx].empty[k]}
-                          />
-                        );
-                      }
-                    })}
-                  </Form.Group>
-                  <Divider horizontal> </Divider>
-                </div>
-              ))}
-                <Form.Select
-                  disabled={false}
-                  className="request-select"
-                  label={<p className="input-label">Party</p>}
-                  placeholder="Select..."
-                  onChange={(_, data: any) => {
-                    setOnboardParty(data.value as string);
-                  }}
-                  options={partyOptions}
-                  value={onboardParty}
+              {instructionFields.map((fields, idx) => (
+                <InstructionFieldInputs
+                  currentFields={fields}
+                  idx={idx}
+                  instructionFields={instructionFields}
+                  setInstructionFields={setInstructionFields}
+                  partyOptions={partyOptions}
                 />
-                <Button
-                  onClick={() => {
-                    const instructions = instructionTypes.map(inst => makeInstruction(inst));
-                    console.log(instructionTypes);
-                    doRunOnboarding(instructions);
-                  }}
-                >
-                  {' '}
-                  Go!
-                </Button>
+              ))}
+              <Form.Select
+                disabled={false}
+                className="request-select"
+                label={<p className="input-label">Party</p>}
+                placeholder="Select..."
+                onChange={(_, data: any) => {
+                  setOnboardParty(data.value as string);
+                }}
+                options={partyOptions}
+                value={onboardParty}
+              />
+              <Button onClick={doRunOnboarding}>Go!</Button>
             </Form>
           </Segment>
         </div>
       </div>
     </QuickSetupPage>
   );
-
-  async function doRunOnboarding(instructions: OnboardingInstruction[]) {
-    await ledger.exercise(
-      OperatorOnboarding.OperatorOnboard_Onboard,
-      onboardingContract.contractId,
-      {
-        instructions,
-        party: onboardParty,
-      }
-    );
-    setOnboardParty('');
-  }
 };
 
-export function formatTriggerName(name: string) {
-  return name
-    .split('#')[0]
-    .split(':')[0]
-    .replace(/([A-Z])/g, ' $1')
-    .trim();
-}
+type InstructionFieldsProps = {
+  currentFields: InstFieldsWithType;
+  idx: number;
+  instructionFields: InstFieldsWithType[];
+  setInstructionFields: React.Dispatch<React.SetStateAction<InstFieldsWithType[]>>;
+  partyOptions: DropdownItemProps[];
+};
+
+const InstructionFieldInputs: React.FC<InstructionFieldsProps> = ({
+  currentFields,
+  idx,
+  instructionFields,
+  setInstructionFields,
+  partyOptions,
+}) => {
+  return (
+    <div className="instruction-fields">
+      <div className="instruction-header">
+        <Header as="h2">{currentFields.instructionType}</Header>
+      </div>
+      <Form.Group>
+        {_.toPairs(getFields(currentFields)).map(([k, field]) => {
+          const updateInstructionTypes = (_: any, data: DropdownProps | InputOnChangeData) => {
+            setInstructionFields(old => {
+              let listCopy = [...old];
+              let instCopy = { ...currentFields };
+              instCopy.fields[k] = data.value as string;
+              listCopy[idx] = instCopy;
+              return listCopy;
+            });
+          };
+          if (field === FieldType.PARTIES) {
+            return (
+              <Form.Select
+                disabled={false}
+                className="request-select"
+                label={<p className="input-label">{k}</p>}
+                placeholder="Select..."
+                onChange={updateInstructionTypes}
+                options={partyOptions}
+                value={instructionFields[idx].fields[k] || ''}
+              />
+            );
+          } else {
+            return (
+              <Form.Input
+                disabled={false}
+                className="request-select"
+                label={<p className="input-label">{k}</p>}
+                placeholder="Select..."
+                onChange={updateInstructionTypes}
+                value={instructionFields[idx].fields[k]}
+              />
+            );
+          }
+        })}
+      </Form.Group>
+      <Divider horizontal> </Divider>
+    </div>
+  );
+};
 
 export default InstructionsPage;

@@ -37,6 +37,7 @@ export enum MenuItems {
 
 const QuickSetup = withRouter((props: RouteComponentProps<{}>) => {
   const localCreds = computeCredentials('Operator');
+  console.log(localCreds);
   const history = useHistory();
 
   const matchPath = props.match.path;

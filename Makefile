@@ -147,8 +147,8 @@ $(STATE_DIR):
 sandbox_pid := $(STATE_DIR)/sandbox.pid
 sandbox_log := $(STATE_DIR)/sandbox.log
 
-$(sandbox_pid): |$(STATE_DIR) $(dar_src)
-	daml start > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
+$(sandbox_pid): |$(STATE_DIR) $(dar_src) $(ui_dar_src)
+	daml start --sandbox-option $(ui_dar_src) > $(sandbox_log) & echo "$$!" > $(sandbox_pid)
 
 .PHONY: start-daml-server
 start-daml-server: $(sandbox_pid)

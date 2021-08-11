@@ -25,7 +25,6 @@ import DA.Map (Map)
 import DA.Map qualified as Map
 import DA.Optional
 import DA.List.Total (dedup)
-import DA.Functor (void)
 
 {-
   Investor:
@@ -109,7 +108,7 @@ handleOnboardingInstruction operator customer mp ins = case ins of
         custodyCid <- createOrLookup Custody.Service with provider = custodian; ..
 
         createOrLookupAccount    ot custodyCid optSafekeepingAccount "Issuance-optSafekeepingAccount"
-        allocationAccount <- createAllocationAccount' ot custodyCid "allocation"
+        -- allocationAccount <- createAllocationAccount' ot custodyCid "allocation"
 
         offerCid <- exerciseByKey @Custodian.Role (operator, provider) Custodian.OfferIssuanceService with ..
         exercise offerCid Issuance.Accept
@@ -206,8 +205,18 @@ data OnboardingInstruction
   | OnboardIssuance with provider : Party, custodian : Party, optSafekeepingAccount : Optional Text
   | OnboardAuction  with provider : Party, custodian : Party, optTradingAccount     : Optional Text, optReceivableAccount : Optional Text
   | OnboardBidding  with provider : Party, custodian : Party, optTradingAccount     : Optional Text
-
   deriving (Show, Eq, Ord)
+
+-- |List of provider roles needed for this instruction
+roleDependencies : OnboardingInstruction -> [(Party, OnboardingInstruction)]
+roleDependencies (OnboardCustody c)        = [(c, OnboardCustodian)]
+roleDependencies (OnboardIssuance p c _)   = [(p, OnboardCustodian), (c, OnboardCustodian)]
+roleDependencies (OnboardTrading e c _)    = [(e, OnboardExchange), (c, OnboardCustodian)]
+roleDependencies (OnboardClearing ch c _)  = [(c, OnboardCustodian), (ch, OnboardClearinghouse c None)]
+roleDependencies (OnboardAuction ah c _ _) = [(ah, OnboardDistributor), (c, OnboardCustodian)]
+roleDependencies (OnboardBidding ah c _)   = [(ah, OnboardDistributor), (c, OnboardCustodian)]
+roleDependencies _                         = []
+
 -- |List of observers necessary to be on accounts created for this 'OnboardingInstruction'
 accountObservers : OnboardingInstruction -> [Party]
 accountObservers (OnboardTrading p _ _)   = [p]
@@ -220,7 +229,6 @@ accountObservers _                        = []
 -- |List of accounts needed for this 'OnboardingInstruction', 'None' will create an
 -- account with a default name.
 accounts : OnboardingInstruction -> [OnboardingAccount]
-
 accounts (OnboardClearinghouse c ca) = map (OnboardingAccount c) $ catOptionals [ca]
 accounts (OnboardClearing _ c ca)    = map (OnboardingAccount c) $ catOptionals [ca]
 accounts (OnboardTrading _ c ta)     = map (OnboardingAccount c) $ catOptionals [ta]
@@ -330,6 +338,23 @@ template OperatorOnboarding
         do
           forA_ instructions (\(p, is) -> exercise self OperatorOnboard_Onboard with party = p; instructions = is)
 
+      nonconsuming OperatorOnboard_Onboard : ()
+        with
+          party : Party
+          instructions : [OnboardingInstruction]
+        do
+
+          let roleDeps = concatMap roleDependencies instructions
+          forA_ roleDeps (\(p, inst) -> exercise self OperatorOnboard_Onboard with party = p; instructions = [inst])
+
+          let signaturesNeeded = party :: dedup (concatMap getSignaturesNeeded instructions)
+          onboardCid <- create OnboardCustomer with signed = Set.fromList [operator]; customer = party; ..
+          onboardCid <- collectPartySignatures operator signaturesNeeded onboardCid
+          exercise onboardCid OnboardCustomer_Finish
+          exercise onboardCid OnboardCustomer_Archive with ctrl = operator
+
+          return ()
+
       nonconsuming OperatorOnboard_OnboardInvestor : ()
         with
           party : Party
@@ -383,16 +408,3 @@ template OperatorOnboarding
                              , OnboardIssuance with provider = custodian, custodian, optSafekeepingAccount = None
                              , OnboardAuction  with provider = custodian, custodian, optTradingAccount     = None, optReceivableAccount = None ]
           exercise self OperatorOnboard_Onboard with ..
-
-      nonconsuming OperatorOnboard_Onboard : ()
-        with
-          party : Party
-          instructions : [OnboardingInstruction]
-        do
-          let signaturesNeeded = party :: dedup (concatMap getSignaturesNeeded instructions)
-          onboardCid <- create OnboardCustomer with signed = Set.fromList [operator]; customer = party; ..
-          onboardCid <- collectPartySignatures operator signaturesNeeded onboardCid
-          exercise onboardCid OnboardCustomer_Finish
-          exercise onboardCid OnboardCustomer_Archive with ctrl = operator
-
-          return ()
