@@ -26,6 +26,33 @@ import Marketplace.Issuance.AssetDescription
 import Marketplace.Issuance.CFI (CFI)
 import Marketplace.Issuance.CFI qualified as CFI
 
+data Parties = Parties
+  with
+    userAdmin : Party
+    bank : Party
+    exchange : Party
+    clearinghouse : Party
+    issuer : Party
+    alice : Party
+    bob : Party
+    charlie : Party
+    dana : Party
+    public : Party
+
+allocateParties : Script Parties
+allocateParties = do
+  operator      <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
+  bank          <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
+  exchange      <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
+  clearinghouse <- allocatePartyWithHint "Ccp" $ PartyIdHint "Ccp"
+  issuer        <- allocatePartyWithHint "Issuer" $ PartyIdHint "Issuer"
+  alice         <- allocatePartyWithHint "Alice" $ PartyIdHint "Alice"
+  bob           <- allocatePartyWithHint "Bob" $ PartyIdHint "Bob"
+  charlie       <- allocatePartyWithHint "Charlie" $ PartyIdHint "Charlie"
+  dana          <- allocatePartyWithHint "Dana" $ PartyIdHint "Dana"
+  public        <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
+  pure $ Parties with userAdmin = operator; ..
+
 data Assets = Assets
   with
     usd : Asset
@@ -64,14 +91,8 @@ data Customer = Customer
     clearingAccount : Account
     marginAccount : Account
 
-onboardProviders : Script Providers
-onboardProviders = do
-  -- Parties
-  operator <- allocatePartyWithHint "Operator" $ PartyIdHint "Operator"
-  bank <- allocatePartyWithHint "Bank" $ PartyIdHint "Bank"
-  exchange <- allocatePartyWithHint "Exchange" $ PartyIdHint "Exchange"
-  clearinghouse <- allocatePartyWithHint "Ccp" $ PartyIdHint "Ccp"
-  public <- allocatePartyWithHint "Public" $ PartyIdHint "Public"
+onboardProviders : Parties -> Script Providers
+onboardProviders Parties{userAdmin = operator; ..} = do
 
   -- Roles
   operatorRoleCid <- submit operator  do createCmd Operator.Role with observers = fromList [public]; ..
@@ -122,9 +143,8 @@ onboardProviders = do
   (clearingRoleCid, marketServiceCid)       <- submit clearinghouse do exerciseCmd clearingRoleOfferCid Clearinghouse.Accept with ccpAccount = clearinghouseAccount; ..
   pure Providers with ..
 
-onboardCustomer : Providers -> Text -> Script Customer
-onboardCustomer Providers{..} party = do
-  customer <- allocatePartyWithHint party $ PartyIdHint party
+onboardCustomer : Providers -> Text -> Party -> Script Customer
+onboardCustomer Providers{..} party customer = do
   let
     mainAccountId           = Id with signatories = fromList [ bank, customer ]; label = "MainAccount-" <> party; version = 0
     exchangeLockedAccountId = Id with signatories = fromList [ bank, customer ]; label = "ExchangeLockedAccount-" <> party; version = 0
