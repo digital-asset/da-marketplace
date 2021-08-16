@@ -56,7 +56,7 @@ export function InputDialog<T extends { [key: string]: any }>(props: InputDialog
         </Modal.Content>
         <Modal.Actions>
           <Button className="ghost" onClick={() => props.onClose(state)} disabled={props.disabled}>
-            <ArrowLeftIcon/>
+            <ArrowLeftIcon />
           </Button>
           <Button className="ghost warning" onClick={() => props.onClose(null)}>
             Cancel
