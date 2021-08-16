@@ -1,0 +1,98 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module ContingentClaims.Observable (
+        module ContingentClaims.Observable
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Daml.Control.Arrow
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import CurrentSdk.GHC.Types
+class Interpret (f :: (* -> (* -> *))) where
+  eval ::
+    (forall x.
+     (forall (m :: (* -> *)).
+      (forall t.
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number x) =>
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible x) =>
+       (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+       ((CurrentSdk.GHC.Types.Text -> (t -> (m x)))
+        -> (((f t) x) -> (((Daml.Control.Arrow.Kleisli m) t) x))))))
+  compare ::
+    (forall t.
+     (forall x.
+      (forall (m :: (* -> *)).
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Ord t) =>
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Ord x) =>
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number x) =>
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible x) =>
+       (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+       ((CurrentSdk.GHC.Types.Text -> (t -> (m x)))
+        -> ((((ContingentClaims.Observable.Inequality f) t) x)
+            -> (((Daml.Control.Arrow.Kleisli m) t) CurrentSdk.GHC.Types.Bool))))))
+  mapParams ::
+    (forall t.
+     (forall i.
+      ((t -> i)
+       -> ((CurrentSdk.GHC.Types.Text -> CurrentSdk.GHC.Types.Text)
+           -> ((CurrentSdk.GHC.Types.Text
+                -> (CurrentSdk.GHC.Types.Numeric 10))
+               -> (((f i) CurrentSdk.GHC.Types.Text)
+                   -> ((f t) (CurrentSdk.GHC.Types.Numeric 10))))))))
+class Point (f :: (* -> (* -> *))) t x where
+  pure :: (x -> ((f t) x))
+  observe :: (CurrentSdk.GHC.Types.Text -> ((f t) x))
+class Observable (f :: (* -> (* -> *))) t x
+type Param = CurrentSdk.GHC.Types.Text
+type Key = CurrentSdk.GHC.Types.Text
+data Inequality (f :: (* -> (* -> *))) t x
+  = TimeGte t | Lte (((,) ((f t) x)) ((f t) x))
+at ::
+  (forall t.
+   (forall (f :: (* -> (* -> *))).
+    (forall x.
+     (t -> (((ContingentClaims.Observable.Inequality f) t) x)))))
+at _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(<=) ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (((f t) x)
+      -> (((f t) x)
+          -> (((ContingentClaims.Observable.Inequality f) t) x))))))
+(<=) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t (f :: (* -> (* -> *))) x.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show ((f t) x))) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show (((ContingentClaims.Observable.Inequality f) t) x)) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t (f :: (* -> (* -> *))) x.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq ((f t) x))) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq (((ContingentClaims.Observable.Inequality f) t) x)) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

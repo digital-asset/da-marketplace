@@ -1,0 +1,74 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Marketplace.Issuance.CFI (
+        module Marketplace.Issuance.CFI
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import CurrentSdk.GHC.Types
+data CFI = CFI {code :: CurrentSdk.GHC.Types.Text}
+putWarrant :: Marketplace.Issuance.CFI.CFI
+putWarrant
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+other :: Marketplace.Issuance.CFI.CFI
+other
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+future :: Marketplace.Issuance.CFI.CFI
+future
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+forward :: Marketplace.Issuance.CFI.CFI
+forward
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+europeanCall :: Marketplace.Issuance.CFI.CFI
+europeanCall
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+equity :: Marketplace.Issuance.CFI.CFI
+equity
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+currency :: Marketplace.Issuance.CFI.CFI
+currency
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+convertibleShare :: Marketplace.Issuance.CFI.CFI
+convertibleShare
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+bond :: Marketplace.Issuance.CFI.CFI
+bond
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Issuance.CFI.CFI) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "code" Marketplace.Issuance.CFI.CFI CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Issuance.CFI.CFI) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

@@ -1,0 +1,50 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Tests.Clearing.Setup (
+        module Tests.Clearing.Setup
+    ) where
+import Common
+import CurrentSdk.DA.Internal.LF
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+import Marketplace.Trading.Model
+checkOrderStatusMatches ::
+  ((CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Model.Order)
+   -> (CurrentSdk.DA.Internal.LF.Party
+       -> (Marketplace.Trading.Model.Status
+           -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ()))))
+checkOrderStatusMatches _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+setupClearingCustomer ::
+  (Common.Providers
+   -> (Common.Assets
+       -> (CurrentSdk.GHC.Types.Text
+           -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script Common.Customer))))
+setupClearingCustomer _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+makeTrade ::
+  (Common.Providers
+   -> (CurrentSdk.GHC.Types.Text
+       -> (Common.Customer
+           -> (Common.Customer
+               -> ((CurrentSdk.GHC.Types.Numeric 10)
+                   -> ((CurrentSdk.GHC.Types.Numeric 10)
+                       -> (CurrentSdk.GHC.Types.Int
+                           -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ()))))))))
+makeTrade _ _ _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+clearedTradingTest ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+clearedTradingTest
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

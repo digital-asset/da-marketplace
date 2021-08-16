@@ -1,0 +1,28 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Tests.Clearing (
+        module Tests.Clearing
+    ) where
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+testMarginCalls ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testMarginCalls
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+testClearingTransfers ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testClearingTransfers
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+testMarkToMarket ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testMarkToMarket
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

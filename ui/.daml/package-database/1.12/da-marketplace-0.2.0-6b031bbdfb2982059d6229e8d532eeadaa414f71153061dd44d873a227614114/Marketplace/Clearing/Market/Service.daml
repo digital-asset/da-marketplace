@@ -1,0 +1,809 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Marketplace.Clearing.Market.Service (
+        module Marketplace.Clearing.Market.Service
+    ) where
+import DA.Finance.Types
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.DA.Internal.Template
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions
+import CurrentSdk.DA.Set.Types
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import CurrentSdk.GHC.Types
+import Marketplace.Clearing.Market.Model
+import Marketplace.Listing.Model
+data Approve
+  = Approve {operator :: CurrentSdk.DA.Internal.LF.Party}
+data Reject = Reject {}
+data Cancel = Cancel {}
+data Request
+  = Request {customer :: CurrentSdk.DA.Internal.LF.Party,
+             provider :: CurrentSdk.DA.Internal.LF.Party}
+data Withdraw = Withdraw {}
+data Decline = Decline {}
+data Accept = Accept {}
+data Offer
+  = Offer {operator :: CurrentSdk.DA.Internal.LF.Party,
+           provider :: CurrentSdk.DA.Internal.LF.Party,
+           customer :: CurrentSdk.DA.Internal.LF.Party}
+data Terminate
+  = Terminate {ctrl :: CurrentSdk.DA.Internal.LF.Party}
+data RequestFairValues
+  = RequestFairValues {party :: CurrentSdk.DA.Internal.LF.Party,
+                       listingIds :: ([] CurrentSdk.GHC.Types.Text),
+                       currency :: DA.Finance.Types.Id}
+data RequestAllFairValues
+  = RequestAllFairValues {party :: CurrentSdk.DA.Internal.LF.Party,
+                          currency :: DA.Finance.Types.Id}
+data ApproveClearedListing
+  = ApproveClearedListing {symbol :: CurrentSdk.GHC.Types.Text,
+                           observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+data CreateManualFairValueRequest
+  = CreateManualFairValueRequest {listingId :: CurrentSdk.GHC.Types.Text,
+                                  currency :: DA.Finance.Types.Id,
+                                  upTo :: CurrentSdk.DA.Internal.LF.Time,
+                                  observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+data CreateFairValue
+  = CreateFairValue {listingId :: CurrentSdk.GHC.Types.Text,
+                     price :: (CurrentSdk.GHC.Types.Numeric 10),
+                     currency :: DA.Finance.Types.Id,
+                     timestamp :: CurrentSdk.DA.Internal.LF.Time,
+                     upTo :: CurrentSdk.DA.Internal.LF.Time,
+                     observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+data Service
+  = Service {operator :: CurrentSdk.DA.Internal.LF.Party,
+             provider :: CurrentSdk.DA.Internal.LF.Party,
+             customer :: CurrentSdk.DA.Internal.LF.Party}
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Withdraw) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Terminate) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Service) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.RequestFairValues) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.RequestAllFairValues) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Request) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Reject) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Offer) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Decline) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.CreateManualFairValueRequest) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.CreateFairValue) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Cancel) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.ApproveClearedListing) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Approve) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Clearing.Market.Service.Accept) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Clearing.Market.Service.Service) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Clearing.Market.Service.Request) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Clearing.Market.Service.Offer) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyContractKey Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _toAnyContractKey _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.Terminate ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestAllFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateManualFairValueRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.ManualFairValueCalculation)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateFairValue (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValue)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.ApproveClearedListing (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Listing.Model.ClearedListingApproval)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Reject ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Cancel ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Withdraw ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Decline ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Clearing.Market.Service.Service) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Clearing.Market.Service.Request) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Clearing.Market.Service.Offer) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Clearing.Market.Service.Service) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Clearing.Market.Service.Request) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Clearing.Market.Service.Offer) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Clearing.Market.Service.Service) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Clearing.Market.Service.Request) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Clearing.Market.Service.Offer) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasMaintainer Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _maintainer _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasLookupByKey Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  lookupByKey _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasKey Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  key _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Clearing.Market.Service.Service) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Clearing.Market.Service.Request) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Clearing.Market.Service.Offer) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyContractKey Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _fromAnyContractKey _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.Terminate ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestAllFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateManualFairValueRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.ManualFairValueCalculation)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateFairValue (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValue)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.ApproveClearedListing (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Listing.Model.ClearedListingApproval)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Reject ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Cancel ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Withdraw ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Decline ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "upTo" Marketplace.Clearing.Market.Service.CreateManualFairValueRequest CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "upTo" Marketplace.Clearing.Market.Service.CreateFairValue CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "timestamp" Marketplace.Clearing.Market.Service.CreateFairValue CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "symbol" Marketplace.Clearing.Market.Service.ApproveClearedListing CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Clearing.Market.Service.Request CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "price" Marketplace.Clearing.Market.Service.CreateFairValue (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "party" Marketplace.Clearing.Market.Service.RequestFairValues CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "party" Marketplace.Clearing.Market.Service.RequestAllFairValues CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Clearing.Market.Service.Approve CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Clearing.Market.Service.CreateManualFairValueRequest (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Clearing.Market.Service.CreateFairValue (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Clearing.Market.Service.ApproveClearedListing (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "listingIds" Marketplace.Clearing.Market.Service.RequestFairValues ([] CurrentSdk.GHC.Types.Text))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "listingId" Marketplace.Clearing.Market.Service.CreateManualFairValueRequest CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "listingId" Marketplace.Clearing.Market.Service.CreateFairValue CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "customer" Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "customer" Marketplace.Clearing.Market.Service.Request CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "customer" Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "currency" Marketplace.Clearing.Market.Service.RequestFairValues DA.Finance.Types.Id)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "currency" Marketplace.Clearing.Market.Service.RequestAllFairValues DA.Finance.Types.Id)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "currency" Marketplace.Clearing.Market.Service.CreateManualFairValueRequest DA.Finance.Types.Id)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "currency" Marketplace.Clearing.Market.Service.CreateFairValue DA.Finance.Types.Id)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "ctrl" Marketplace.Clearing.Market.Service.Terminate CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Clearing.Market.Service.Service) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Clearing.Market.Service.Request) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Clearing.Market.Service.Offer) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetchByKey Marketplace.Clearing.Market.Service.Service ((((,,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  fetchByKey _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.Terminate ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.RequestAllFairValues (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValueCalculationRequest)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateManualFairValueRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.ManualFairValueCalculation)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.CreateFairValue (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Model.FairValue)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Service Marketplace.Clearing.Market.Service.ApproveClearedListing (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Listing.Model.ClearedListingApproval)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Reject ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Cancel ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Request Marketplace.Clearing.Market.Service.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Withdraw ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Decline ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Clearing.Market.Service.Offer Marketplace.Clearing.Market.Service.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Market.Service.Service)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Clearing.Market.Service.Service) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Clearing.Market.Service.Request) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Clearing.Market.Service.Offer) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Clearing.Market.Service.Service) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Clearing.Market.Service.Request) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Clearing.Market.Service.Offer) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Clearing.Market.Service.Service) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Clearing.Market.Service.Request) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Clearing.Market.Service.Offer) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Clearing.Market.Service.Service) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Clearing.Market.Service.Request) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Clearing.Market.Service.Offer) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Withdraw) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Terminate) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Service) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.RequestFairValues) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.RequestAllFairValues) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Request) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Reject) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Offer) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Decline) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.CreateManualFairValueRequest) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.CreateFairValue) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Cancel) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.ApproveClearedListing) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Approve) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Clearing.Market.Service.Accept) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

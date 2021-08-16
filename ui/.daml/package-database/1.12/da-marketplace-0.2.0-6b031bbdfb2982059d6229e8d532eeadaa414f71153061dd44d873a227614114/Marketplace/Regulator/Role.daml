@@ -1,0 +1,621 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Marketplace.Regulator.Role (
+        module Marketplace.Regulator.Role
+    ) where
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.DA.Internal.Template
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions
+import CurrentSdk.DA.Set.Types
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import Marketplace.Regulator.Service
+data Reject = Reject {}
+data Approve
+  = Approve {observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+data Request
+  = Request {provider :: CurrentSdk.DA.Internal.LF.Party,
+             operator :: CurrentSdk.DA.Internal.LF.Party}
+data Decline = Decline {}
+data Accept = Accept {}
+data Offer
+  = Offer {operator :: CurrentSdk.DA.Internal.LF.Party,
+           provider :: CurrentSdk.DA.Internal.LF.Party,
+           observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+data TerminateRole = TerminateRole {}
+data TerminateRegulatorService
+  = TerminateRegulatorService {regulatorServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Service)}
+data ApproveRegulatorRequest
+  = ApproveRegulatorRequest {regulatorRequestCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Request)}
+data OfferRegulatorService
+  = OfferRegulatorService {customer :: CurrentSdk.DA.Internal.LF.Party}
+data Role
+  = Role {operator :: CurrentSdk.DA.Internal.LF.Party,
+          provider :: CurrentSdk.DA.Internal.LF.Party,
+          observers :: (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party)}
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.TerminateRole) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.TerminateRegulatorService) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Role) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Request) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Reject) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.OfferRegulatorService) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Offer) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Decline) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.ApproveRegulatorRequest) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Approve) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show Marketplace.Regulator.Role.Accept) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Regulator.Role.Role) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Regulator.Role.Request) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyTemplate Marketplace.Regulator.Role.Offer) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyContractKey Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _toAnyContractKey _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRole ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRegulatorService ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.OfferRegulatorService (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Offer)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Role CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.ApproveRegulatorRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Service)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Reject ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Decline ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasToAnyChoice Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Regulator.Role.Role) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Regulator.Role.Request) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasTemplateTypeRep Marketplace.Regulator.Role.Offer) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Regulator.Role.Role) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Regulator.Role.Request) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasSignatory Marketplace.Regulator.Role.Offer) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Regulator.Role.Role) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Regulator.Role.Request) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasObserver Marketplace.Regulator.Role.Offer) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasMaintainer Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _maintainer _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasLookupByKey Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  lookupByKey _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasKey Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  key _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Regulator.Role.Role) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Regulator.Role.Request) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyTemplate Marketplace.Regulator.Role.Offer) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyContractKey Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  _fromAnyContractKey _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRole ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRegulatorService ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.OfferRegulatorService (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Offer)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Role CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.ApproveRegulatorRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Service)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Reject ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Decline ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFromAnyChoice Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "regulatorServiceCid" Marketplace.Regulator.Role.TerminateRegulatorService (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "regulatorRequestCid" Marketplace.Regulator.Role.ApproveRegulatorRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Request))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Regulator.Role.Role CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Regulator.Role.Request CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "provider" Marketplace.Regulator.Role.Offer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Regulator.Role.Role CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Regulator.Role.Request CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Marketplace.Regulator.Role.Offer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Regulator.Role.Role (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Regulator.Role.Offer (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "observers" Marketplace.Regulator.Role.Approve (CurrentSdk.DA.Set.Types.Set CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "customer" Marketplace.Regulator.Role.OfferRegulatorService CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Regulator.Role.Role) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Regulator.Role.Request) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetch Marketplace.Regulator.Role.Offer) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasFetchByKey Marketplace.Regulator.Role.Role (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party)) where
+  fetchByKey _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRole ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.TerminateRegulatorService ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.OfferRegulatorService (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Offer)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Role CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Role Marketplace.Regulator.Role.ApproveRegulatorRequest (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Service.Service)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Reject ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Request CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Request Marketplace.Regulator.Role.Approve (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Decline ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Offer CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasExercise Marketplace.Regulator.Role.Offer Marketplace.Regulator.Role.Accept (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Regulator.Role.Role)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Regulator.Role.Role) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Regulator.Role.Request) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasEnsure Marketplace.Regulator.Role.Offer) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Regulator.Role.Role) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Regulator.Role.Request) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasCreate Marketplace.Regulator.Role.Offer) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Regulator.Role.Role) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Regulator.Role.Request) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasArchive Marketplace.Regulator.Role.Offer) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Regulator.Role.Role) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Regulator.Role.Request) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.HasAgreement Marketplace.Regulator.Role.Offer) where
+  agreement _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.TerminateRole) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.TerminateRegulatorService) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Role) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Request) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Reject) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.OfferRegulatorService) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Offer) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Decline) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.ApproveRegulatorRequest) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Approve) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq Marketplace.Regulator.Role.Accept) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

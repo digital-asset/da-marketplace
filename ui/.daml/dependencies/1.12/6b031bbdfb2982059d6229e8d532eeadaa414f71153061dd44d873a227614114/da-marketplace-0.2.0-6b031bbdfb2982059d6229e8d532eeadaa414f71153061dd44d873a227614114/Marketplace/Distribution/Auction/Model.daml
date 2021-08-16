@@ -1,0 +1,48 @@
+module Marketplace.Distribution.Auction.Model where
+
+import DA.Finance.Types (Account, Asset, Id)
+import DA.Finance.Asset (AssetDeposit)
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
+
+type T = Auction
+
+data Allocation = Allocation with
+    bid : Bidding.Bid
+    quantity : Decimal
+  deriving (Eq, Show)
+
+data SettleAllocation = SettleAllocation with
+    allocation : Allocation
+    price : Decimal
+    issuer : Party
+    issuerReceivableAccount : Account
+  deriving (Eq, Show)
+
+data Status
+    = Open
+    | PartiallyAllocated with
+        finalPrice : Decimal
+        remaining : Decimal
+    | FullyAllocated with
+        finalPrice : Decimal
+    | NoValidBids
+  deriving (Eq, Show)
+
+template Auction
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    auctionId : Text
+    asset : Asset
+    quotedAssetId : Id
+    depositCid : ContractId AssetDeposit
+    receivableAccount : Account
+    floorPrice : Decimal
+    status : Status
+  where
+    signatory operator, provider, customer
+    ensure asset.quantity > 0.0
+
+    key (provider, auctionId) : (Party, Text)
+    maintainer key._1

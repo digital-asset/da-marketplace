@@ -1,0 +1,15 @@
+--
+-- Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: BSD-3-Clause
+--
+
+module Daml.Data.Functor.Const where
+
+newtype Const a b = Const { run : a } deriving (Eq, Show)
+
+instance Functor (Const a) where
+  fmap _ (Const a) = Const a
+
+instance Monoid m => Applicative (Const m) where
+  pure _ = Const mempty
+  liftA2 _ (Const x) (Const y) = Const (x <> y)

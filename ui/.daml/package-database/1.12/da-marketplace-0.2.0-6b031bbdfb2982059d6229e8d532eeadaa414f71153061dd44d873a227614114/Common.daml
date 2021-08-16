@@ -1,0 +1,161 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Common (
+        module Common
+    ) where
+import ContingentClaims.Claim
+import ContingentClaims.Observation
+import DA.Finance.Asset
+import DA.Finance.Types
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+import Marketplace.Clearing.Role
+import Marketplace.Clearing.Service
+import Marketplace.Custody.Role
+import Marketplace.Custody.Service
+import Marketplace.Distribution.Bidding.Service
+import Marketplace.Distribution.Role
+import Marketplace.Issuance.AssetDescription
+import Marketplace.Issuance.CFI
+import Marketplace.Issuance.Service
+import Marketplace.Listing.Service
+import Marketplace.Operator.Role
+import Marketplace.Trading.Matching.Service
+import Marketplace.Trading.Role
+import Marketplace.Trading.Service
+data Customer
+  = Customer {customer :: CurrentSdk.DA.Internal.LF.Party,
+              tradingServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Service.Service),
+              listingServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Listing.Service.Service),
+              issuanceServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Issuance.Service.Service),
+              clearingServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Service.Service),
+              custodyServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Custody.Service.Service),
+              biddingServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Service.Service),
+              mainAccount :: DA.Finance.Types.Account,
+              exchangeLockedAccount :: DA.Finance.Types.Account,
+              auctionLockedAccount :: DA.Finance.Types.Account,
+              clearingAccount :: DA.Finance.Types.Account,
+              marginAccount :: DA.Finance.Types.Account}
+data Providers
+  = Providers {operator :: CurrentSdk.DA.Internal.LF.Party,
+               bank :: CurrentSdk.DA.Internal.LF.Party,
+               exchange :: CurrentSdk.DA.Internal.LF.Party,
+               clearinghouse :: CurrentSdk.DA.Internal.LF.Party,
+               public :: CurrentSdk.DA.Internal.LF.Party,
+               operatorRoleCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Operator.Role.Role),
+               clearingRoleCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Role.Role),
+               custodianRoleCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Custody.Role.Role),
+               exchangeRoleCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Role.Role),
+               matchingServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Matching.Service.Service),
+               distributorRoleCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Role.Role)}
+data Assets
+  = Assets {usd :: DA.Finance.Types.Asset,
+            eur :: DA.Finance.Types.Asset,
+            tsla :: DA.Finance.Types.Asset,
+            nflx :: DA.Finance.Types.Asset,
+            libor :: DA.Finance.Types.Asset}
+depositAsset ::
+  (Common.Providers
+   -> (Common.Customer
+       -> (DA.Finance.Types.Asset
+           -> (DA.Finance.Types.Id
+               -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))))))
+depositAsset _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+originate ::
+  (Common.Providers
+   -> (Common.Customer
+       -> (CurrentSdk.GHC.Types.Text
+           -> (CurrentSdk.GHC.Types.Text
+               -> (Marketplace.Issuance.CFI.CFI
+                   -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)
+                       -> (([] CurrentSdk.DA.Internal.LF.Party)
+                           -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (((,) (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Issuance.AssetDescription.AssetDescription)) Marketplace.Issuance.AssetDescription.AssetDescription)))))))))
+originate _ _ _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+onboardAssets ::
+  (Common.Providers
+   -> (Common.Customer
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script Common.Assets)))
+onboardAssets _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+onboardCustomer ::
+  (Common.Providers
+   -> (CurrentSdk.GHC.Types.Text
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script Common.Customer)))
+onboardCustomer _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+onboardProviders ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script Common.Providers)
+onboardProviders
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "usd" Common.Assets DA.Finance.Types.Asset)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "tsla" Common.Assets DA.Finance.Types.Asset)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "tradingServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "public" Common.Providers CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operatorRoleCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Operator.Role.Role))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "operator" Common.Providers CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "nflx" Common.Assets DA.Finance.Types.Asset)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "matchingServiceCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Matching.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "marginAccount" Common.Customer DA.Finance.Types.Account)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "mainAccount" Common.Customer DA.Finance.Types.Account)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "listingServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Listing.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "libor" Common.Assets DA.Finance.Types.Asset)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "issuanceServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Issuance.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "exchangeRoleCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Trading.Role.Role))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "exchangeLockedAccount" Common.Customer DA.Finance.Types.Account)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "exchange" Common.Providers CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "eur" Common.Assets DA.Finance.Types.Asset)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "distributorRoleCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Role.Role))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "customer" Common.Customer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "custodyServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Custody.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "custodianRoleCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Custody.Role.Role))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "clearinghouse" Common.Providers CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "clearingServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "clearingRoleCid" Common.Providers (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Clearing.Role.Role))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "clearingAccount" Common.Customer DA.Finance.Types.Account)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "biddingServiceCid" Common.Customer (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "bank" Common.Providers CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "auctionLockedAccount" Common.Customer DA.Finance.Types.Account)

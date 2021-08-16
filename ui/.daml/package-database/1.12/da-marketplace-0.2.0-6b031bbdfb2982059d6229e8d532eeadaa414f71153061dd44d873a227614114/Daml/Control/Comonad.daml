@@ -1,0 +1,34 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Comonad (
+        module Daml.Control.Comonad
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+class (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) => Comonad (f :: (*
+                                                                                                                  -> *)) where
+  extract :: (forall a. ((f a) -> a))
+  duplicate :: (forall a. ((f a) -> (f (f a))))
+  extend :: (forall a. (((f a) -> a) -> ((f a) -> (f a))))
+  default extend :: (forall a. (((f a) -> a) -> ((f a) -> (f a))))
+  extend _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a.
+          () => Daml.Control.Comonad.Comonad ((,) a)) where
+  extract _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  duplicate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  extend _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

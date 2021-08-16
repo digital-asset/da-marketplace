@@ -1,0 +1,213 @@
+{-# OPTIONS -Wno-deprecations #-} -- To supress 'Monad' warnings
+{-
+This module is adapted from Haskell's recursion-schemes. I've included the 
+copyright to give credit where it's due.
+
+This module differs from it in these ways:
+  1. This is meant to be a pedagogic package, so we've used arrow operators
+     to emphasize symmetry between (co)recursive functions, instead of using
+     (.). This adds a dependency on `Control.Arrow`.
+  2. daml doesn't support the type family extension. Instead, we've used
+     functional deps, and this approach works quite well, especially for
+     type inference.
+  3. daml doesn't support recursion inside top-level functions. I've created
+     several helper functions that shouldn't be exported. They're prefixed with _.
+
+-----------------------------------------------------------------------------
+-- |
+-- Copyright   :  (C) 2008-2015 Edward Kmett
+-- License     :  BSD-style (see the file LICENSE)
+--
+-- Maintainer  : "Samuel Gélineau" <gelisam@gmail.com>,
+--               "Oleg Grenrus" <oleg.grenrus@iki.fi>,
+--               "Ryan Scott" <ryan.gl.scott@gmail.com>
+-- Stability   :  experimental
+-- Portability :  non-portable
+--
+----------------------------------------------------------------------------
+
+-}
+
+module Daml.Control.Recursion (
+    Fix(..)
+  , Free(..)
+  , FreeF(..)
+  , Cofree(..)
+  , CofreeF(..)
+  , Recursive(..)
+  , Corecursive(..)
+  , ListF(..)
+  , hylo
+  , ghylo
+  , distCata
+  , distPara
+  , distHisto
+  , distAna
+  , distApo
+  , distFutu
+) where
+
+import Daml.Control.Category ((>>>),(<<<))
+import Daml.Control.Arrow ((&&&),(|||))
+import Daml.Control.Comonad
+import Daml.Data.Functor.Identity
+
+class Functor f => Recursive b f | b -> f b where
+  project: b -> f b
+
+  -- | Fold right, i.e. from the leaves to the root.
+  cata : (f a -> a) -> b -> a
+  cata f b = (project >>> fmap (cata f) >>> f) b
+
+  -- | Fold right, accumulating the result in an `a` while allowing you to inspect the original value, `b`.
+  para : (f (b, a) -> a) -> b -> a
+  para f b = (project >>> fmap (identity &&& para f) >>> f) b
+
+  -- | Fold right with ability to depend on previous results.
+  histo : (f (Cofree f a) -> a) -> b -> a
+  histo = gcata distHisto
+
+  -- | Generalised fold right. Allows interleaving effects in a fold.
+  -- Note in Daml we can't use `Update`, as it's not a `Comonad`.
+  gcata : Comonad w => (forall z . f (w z) -> w (f z)) -> (f (w a) -> a) -> b -> a
+  gcata sequence f b = (_gcata sequence f >>> extract >>> f) b
+
+distCata : Functor f => f (Identity a) -> Identity (f a)
+distCata = Identity . fmap runIdentity
+
+distPara : Corecursive b f => f (b, a) -> (b, f a)
+distPara f = (embed (fmap fst f), fmap snd f)
+
+distHisto : Functor f => f (Cofree f a) -> Cofree f (f a)
+distHisto f = Cofree (fmap extract f) (fmap (distHisto . unwrap) f)
+
+-- | HIDE use to work around lack of local recursion
+_gcata
+  : (Recursive b f , Comonad w)
+  => (forall z . f (w z) -> w (f z))
+  -> (f (w a) -> a)
+  -> b
+  -> w (f (w a))
+_gcata sequence f b = (project >>> fmap (_gcata sequence f >>> fmap f >>> duplicate) >>> sequence) b
+
+class Functor f => Corecursive b f | f -> b where
+  embed: f b -> b
+
+  -- | Unfold.
+  ana : (a -> f a) -> a -> b
+  ana f a = (embed <<< fmap (ana f) <<< f) a
+
+  -- | Lazy unfold. A `Left b` will short-circuit recursion of the respective subtree.
+  apo : (a -> f (Either b a)) -> a -> b
+  apo f a = (embed <<< fmap (identity ||| apo f) <<< f) a
+
+  -- | Manually unfold multiple levels at a time. i.e. determine the order of unfold.
+  -- `Pure` signifies continuing the unfold depth-first, as with `ana`.
+  -- `Impure` allows you to deterministically unfold a subtree (the type system will enforce safety).
+  futu : (a -> f (Free f a)) -> a -> b
+  futu = gana distFutu
+
+  -- | Generalised unfold. Allows interleaving an effect `m` in the unfold.
+  -- Note, in Daml we can't use `Update` as it's not `Traversable`.
+  gana : Monad m => (forall z . m (f z) -> f (m z)) -> (a -> f (m a)) -> a -> b
+  gana cosequence f a = (_gana cosequence f <<< pure <<< f) a
+
+-- | HIDE use to work around lack of local recursion
+_gana
+  : (Corecursive b f, Monad m)
+  => (forall z . m (f z) -> f (m z))
+  -> (a -> f (m a))
+  -> m (f (m a))
+  -> b
+_gana cosequence f mfma = (embed <<< fmap (_gana cosequence f <<< fmap f <<< join) <<< cosequence) mfma
+
+distAna : Functor f => Identity (f a) -> f (Identity a)
+distAna = fmap Identity . runIdentity
+
+distApo : (Recursive b f, Functor f) => Either b (f a) -> f (Either b a)
+distApo = either (fmap Left . project) (fmap Right)
+
+distFutu : (Functor f) => Free f (f a) -> f (Free f a)
+distFutu (Impure fa) = Impure . distFutu <$> fa
+distFutu (Pure fa) = Pure <$> fa
+
+-- | An `ana`morphism followed by a `cata`morphism, fused into a single O(n) op.
+hylo : Functor f => (f b -> b) -> (a -> f a) -> a -> b
+hylo f g a = (f . fmap (hylo f g) . g) a
+
+-- | A generalized hylomorphism: an unfold followed by a fold; the operations are fused together.
+ghylo : (Comonad w, Functor f, Monad m)
+  => (forall c. f (w c) -> w (f c))
+  -> (forall d. m (f d) -> f (m d))
+  -> (f (w b) -> b)
+  -> (a -> f (m a))
+  -> a
+  -> b
+ghylo w m f g a = (f . fmap (hylo alg coalg) . g) a where
+  coalg = fmap join . m . fmap g
+  alg   = fmap f . w . fmap duplicate
+
+-- Standard Base Functors
+
+-- | The fixed-point of list i.e. `[]`.
+data ListF a x = Nil | Cons with value: a, pattern: x deriving Functor
+
+instance Recursive [a] (ListF a) where
+  project [] = Nil
+  project (a :: as) = Cons a as
+
+instance Corecursive [a] (ListF a) where
+  embed Nil = []
+  embed (Cons a as) = a :: as
+
+newtype Fix f = Fix { unfix : f (Fix f) }
+
+-- | The free monad
+data Free f a
+  = Pure a
+  | Impure (f (Free f a))
+  deriving Functor
+
+instance Functor f => Applicative (Free f) where
+  pure = Pure
+  Pure f <*> freea = f <$> freea
+  Impure g <*> f = Impure ((<*> f) <$> g)
+
+instance Functor f => Action (Free f) where
+  Pure a >>= f = f a
+  Impure m >>= f = Impure ((>>= f) <$> m)
+
+data FreeF f a x
+  = PureF a
+  | ImpureF (f x)
+  deriving Functor
+
+instance Functor f => Recursive (Free f a) (FreeF f a) where
+  project (Pure a) = PureF a
+  project (Impure fx) = ImpureF fx
+
+instance Functor f => Corecursive (Free f a) (FreeF f a) where
+  embed _ = error "Undefined: Corecursive FreeF"
+
+-- | The cofree co-monad
+data Cofree f a
+  = Cofree {
+    attribute : a,
+    unwrap : f (Cofree f a)
+  } deriving Functor
+
+data CofreeF f a x
+  = CofreeF {
+    attribute: a,
+    unwrapf: f x
+  } deriving Functor
+
+instance Functor f => Comonad (Cofree f) where
+  extract (Cofree a _) = a
+  duplicate f = Cofree f $ fmap duplicate f.unwrap
+
+instance Functor f => Recursive (Cofree f a) (CofreeF f a) where
+  project (Cofree a f) = CofreeF a f
+
+instance Functor f => Corecursive (Cofree f a) (CofreeF f a) where
+  embed (CofreeF a f) = Cofree a f

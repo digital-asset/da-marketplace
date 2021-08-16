@@ -1,0 +1,136 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Monad.MonadWriter (
+        module Daml.Control.Monad.MonadWriter
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Daml.Control.Monad.Reader
+import Daml.Control.Monad.State
+import Daml.Control.Monad.Writer
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+class ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+       (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m)) => MonadWriter w (m :: (*
+                                                                                                                                    -> *)) | m -> w where
+  writer :: (forall a. ((((,) a) w) -> (m a)))
+  tell :: (w -> (m ()))
+  listen :: (forall a. ((m a) -> (m (((,) a) w))))
+  pass :: (forall a. ((m (((,) a) (w -> w))) -> (m a)))
+  default writer :: (forall a. ((((,) a) w) -> (m a)))
+  default tell :: (w -> (m ()))
+  {-# MINIMAL (writer | tell), listen, pass #-}
+  writer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  tell _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+censor ::
+  (forall w.
+   (forall (m :: (* -> *)).
+    (forall a.
+     (Daml.Control.Monad.MonadWriter.MonadWriter w m) =>
+     ((w -> w) -> ((m a) -> (m a))))))
+censor _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+listens ::
+  (forall w.
+   (forall (m :: (* -> *)).
+    (forall b.
+     (forall a.
+      (Daml.Control.Monad.MonadWriter.MonadWriter w m) =>
+      ((w -> b) -> ((m a) -> (m (((,) a) b))))))))
+listens _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)).
+          ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+           (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m)) =>
+          Daml.Control.Monad.MonadWriter.MonadWriter w ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  writer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  tell _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  listen _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  pass _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)) s.
+          (Daml.Control.Monad.MonadWriter.MonadWriter w m) =>
+          Daml.Control.Monad.MonadWriter.MonadWriter w ((Daml.Control.Monad.State.StateT s) m)) where
+  writer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  tell _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  listen _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  pass _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)) r.
+          (Daml.Control.Monad.MonadWriter.MonadWriter w m) =>
+          Daml.Control.Monad.MonadWriter.MonadWriter w ((Daml.Control.Monad.Reader.ReaderT r) m)) where
+  writer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  tell _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  listen _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  pass _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w) =>
+          Daml.Control.Monad.MonadWriter.MonadWriter w ((,) w)) where
+  writer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  tell _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  listen _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  pass _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative ((,) w)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action ((,) w)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

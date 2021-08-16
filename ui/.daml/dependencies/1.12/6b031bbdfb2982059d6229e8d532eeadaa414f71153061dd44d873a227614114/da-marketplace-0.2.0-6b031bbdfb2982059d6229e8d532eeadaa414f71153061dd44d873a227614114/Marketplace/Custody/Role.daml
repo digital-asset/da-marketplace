@@ -1,0 +1,102 @@
+module Marketplace.Custody.Role where
+
+import Marketplace.Custody.Service qualified as Custody
+import Marketplace.Issuance.Service qualified as Issuance
+import Marketplace.Utils
+import DA.Set (Set)
+
+template Role
+  with
+    operator : Party
+    provider : Party
+    observers : Set Party
+  where
+    signatory operator, provider
+    observer observers
+
+    key (operator, provider) :  (Party, Party)
+    maintainer key._1
+
+    controller provider can
+
+      nonconsuming OfferCustodyService : ContractId Custody.Offer
+        with
+          customer : Party
+        do
+          create Custody.Offer with ..
+
+      nonconsuming ApproveCustodyRequest : ContractId Custody.Service
+        with
+          custodyRequestCid : ContractId Custody.Request
+        do
+          exercise custodyRequestCid Custody.Approve with ..
+
+      nonconsuming TerminateCustodyService : ()
+        with
+          custodyServiceCid : ContractId Custody.Service
+        do
+          archive custodyServiceCid
+
+      nonconsuming OfferIssuanceService : ContractId Issuance.Offer
+        with
+          customer : Party
+        do
+          create Issuance.Offer with ..
+
+      nonconsuming ApproveIssuanceRequest : ContractId Issuance.Service
+        with
+          issuanceServiceRequestCid : ContractId Issuance.Request
+        do
+          exercise issuanceServiceRequestCid Issuance.Approve with ..
+
+      nonconsuming TerminateIssuanceService : ()
+        with
+          issuanceServiceCid : ContractId Issuance.Service
+        do
+          archive issuanceServiceCid
+
+    controller operator can
+      TerminateRole: ()
+        do
+          return ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    observers : Set Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
+        do
+          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid     <- createOrLookup Role with ..
+          return (roleCid, issuanceCid, custodyCid)
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : (ContractId Role, ContractId Issuance.Service, ContractId Custody.Service)
+        with
+          observers : Set Party
+        do
+          custodyCid  <- createOrLookup Custody.Service with customer = provider, ..
+          issuanceCid <- createOrLookup Issuance.Service with customer = provider, ..
+          roleCid     <- createOrLookup Role with ..
+          return (roleCid, issuanceCid, custodyCid)
+
+      Reject : ()
+        do
+          return ()

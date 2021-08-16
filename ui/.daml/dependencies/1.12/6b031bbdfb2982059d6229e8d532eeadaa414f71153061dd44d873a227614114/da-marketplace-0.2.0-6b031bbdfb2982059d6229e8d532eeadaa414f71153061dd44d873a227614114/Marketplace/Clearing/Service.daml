@@ -1,0 +1,248 @@
+{-# LANGUAGE MultiWayIf #-}
+
+module Marketplace.Clearing.Service where
+
+import DA.Set qualified as Set
+
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+
+import qualified Marketplace.Rule.AllocationAccount as AllocationAccountRule (T, Deposit(..), Withdraw(..))
+import Marketplace.Clearing.Model
+import Marketplace.Clearing.Utils
+
+import Marketplace.Utils
+
+data DepositWithRemaining = DepositWithRemaining {
+   deposit   : ContractId AssetDeposit
+  ,remaining : [ContractId AssetDeposit]
+} deriving (Show,Eq)
+
+data CalculationResult a b
+  = CalculationSuccess { successCid : ContractId a, deposits: Optional DepositWithRemaining}
+  | CalculationFailure { failureCid : (ContractId b)}
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    ccpAccount : Account
+    clearingAccount : Account
+    marginAccount : Account
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    let
+      transferToMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      transferToMarginAccount = exerciseByKey @AllocationAccountRule.T marginAccount.id . AllocationAccountRule.Deposit
+
+      transferFromMarginAccount : ContractId AssetDeposit -> Update (ContractId AssetDeposit)
+      transferFromMarginAccount = \depositCid -> exerciseByKey @AllocationAccountRule.T marginAccount.id
+          AllocationAccountRule.Withdraw with transferTo = clearingAccount; ..
+
+      failMarginCalculation : ContractId MarginCalculation -> Update (ContractId RejectedMarginCalculation)
+      failMarginCalculation = \calculationCid -> do
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
+            newMarginSatisfied = False; ..
+        exercise calculationCid MarginCalculation_Reject with note = ""; ..
+
+      fulfillMarginCalculation : ContractId MarginCalculation -> Update (ContractId FulfilledMarginCalculation)
+      fulfillMarginCalculation = \calculationCid -> do
+        exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMargin with
+            newMarginSatisfied = True; ..
+        exercise calculationCid MarginCalculation_Resolve with note = ""; ..
+
+    controller customer can
+      nonconsuming ApproveTrade : Bool
+        do
+          (_,memberStanding) <- fetchByKey @MemberStanding (provider,customer)
+          return $ memberStanding.marginSatisfied && memberStanding.mtmSatisfied
+
+    controller provider can
+      nonconsuming CreateMarginCalculation : ContractId MarginCalculation
+        with
+          targetAmount : Decimal
+          currency : Id -- TODO: make different currencies work
+          calculationId : Text
+        do
+          calculationTime <- getTime
+          create MarginCalculation with accountId = clearingAccount.id; ..
+
+      nonconsuming CreateMarkToMarket : ContractId MarkToMarketCalculation
+        with
+          mtmAmount : Decimal
+          currency : Id -- TODO: make different currencies work
+          calculationId : Text
+        do
+          calculationTime <- getTime
+          create MarkToMarketCalculation with accountId = clearingAccount.id; ..
+
+      nonconsuming PerformMarginFill : CalculationResult FulfilledMarginCalculation
+                                                         RejectedMarginCalculation
+        with
+          depositCids : [ContractId AssetDeposit]
+          marginDepositCids : [ContractId AssetDeposit]
+          calculationCid : ContractId MarginCalculation
+        do
+          targetAmount  <- (.targetAmount) <$> fetch calculationCid
+          depositAmount <- getDepositQuantities depositCids
+          marginAmount  <- getDepositQuantities marginDepositCids
+
+          let diff = targetAmount - marginAmount
+          if diff > 0.0 && depositAmount < diff
+          then CalculationFailure <$> failMarginCalculation calculationCid
+          else do
+            cCid <- fulfillMarginCalculation calculationCid
+            optDepositRemaing <-
+              if | diff == 0.0 -> return None
+                 | diff > 0.0  -> Some <$> exercise self TransferToMargin with amount = diff; ..
+                 | otherwise   -> Some <$> exercise self TransferFromMargin with amount = abs diff; ..
+            return $ CalculationSuccess cCid optDepositRemaing
+
+      nonconsuming PerformMarkToMarket : CalculationResult FulfilledMarkToMarketCalculation
+                                                           RejectedMarkToMarketCalculation
+        with
+          providerDepositCids : [ContractId AssetDeposit]
+          customerDepositCids : [ContractId AssetDeposit]
+          calculationCid : ContractId MarkToMarketCalculation
+        do
+          mtmAmount      <- (.mtmAmount) <$> fetch calculationCid
+          providerAmount <- getDepositQuantities providerDepositCids
+          customerAmount <- getDepositQuantities customerDepositCids
+
+          let reject = do
+                exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with
+                    newMtmSatisied = False; ..
+                CalculationFailure <$> exercise calculationCid MarkToMarketCalculation_Reject with note = ""; ..
+
+          let succeed depositFn = do
+                exerciseByKey @MemberStanding (provider, customer) MemberStanding_UpdateMTM with
+                    newMtmSatisied = False; ..
+                resolvedCalcCid <- exercise calculationCid MarkToMarketCalculation_Resolve with note = ""; ..
+                CalculationSuccess resolvedCalcCid <$> depositFn
+
+          if
+            | mtmAmount == 0.0 -> succeed $ return None
+            | mtmAmount > 0.0  ->
+              if providerAmount < mtmAmount
+              then reject
+              else succeed $ Some <$> exercise self TransferFromProvider with amount = mtmAmount; depositCids = providerDepositCids
+            | otherwise ->
+              if customerAmount < abs mtmAmount
+              then reject
+              else succeed $ Some <$> exercise self TransferToProvider with amount = abs mtmAmount; depositCids = customerDepositCids
+
+      nonconsuming TransferFromProvider : DepositWithRemaining
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+        do
+          assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          DepositWithRemaining <$> transferWithController depositCid clearingAccount <*> pure remainingCids
+
+      -- TODO: check that the deposit cid matches the clearing account?
+      nonconsuming TransferToProvider : DepositWithRemaining
+        with
+          amount : Decimal
+          depositCids : [ContractId AssetDeposit]
+        do
+          assertMsg "deposits are not enough to transfer to provider" =<< (amount <=) <$> getDepositQuantities depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          DepositWithRemaining <$> transferWithController depositCid ccpAccount <*> pure remainingCids
+
+      nonconsuming TransferFromMargin : DepositWithRemaining
+        with
+          marginDepositCids : [ContractId AssetDeposit]
+          amount : Decimal
+        do
+          assertMsg "deposits are not enough to transfer from margin" =<< (amount <=) <$> getDepositQuantities marginDepositCids
+          (depositCid::remainingCids) <- mergeAndSplit marginDepositCids amount
+          DepositWithRemaining <$> transferFromMarginAccount depositCid <*> pure remainingCids
+
+      nonconsuming TransferToMargin : DepositWithRemaining
+        with
+          depositCids : [ContractId AssetDeposit]
+          amount : Decimal
+        do
+          assertMsg "deposits are not enough to transfer from provider" =<< (amount <=) <$> getDepositQuantities depositCids
+          (depositCid::remainingCids) <- mergeAndSplit depositCids amount
+          DepositWithRemaining <$> transferToMarginAccount depositCid <*> pure remainingCids
+
+    choice Terminate : ()
+      with
+        ctrl : Party
+      controller ctrl
+      do
+        (standingCid,_) <- fetchByKey @MemberStanding (provider,customer)
+        archive standingCid
+
+assertAccounts : Party -> Account -> Account -> Update ()
+assertAccounts provider clearingAccount marginAccount = do
+  (_,marginAccountRule) <- fetchByKey @AllocationAccountRule.T marginAccount.id
+  assertMsg "provider must be nominee on margin account" $ marginAccountRule.nominee == provider
+
+  (_,clearingAccountRule) <- fetchByKey @AssetSettlementRule clearingAccount.id
+  assertMsg "provider must be an observer, ctrl, or the provider on the clearing account"
+    $ Set.member provider clearingAccountRule.observers
+   || Set.member provider clearingAccountRule.ctrls
+   || clearingAccount.provider == provider
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    ccpAccount : Account
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+          clearingAccount : Account
+          marginAccount : Account
+        do
+          assertAccounts provider clearingAccount marginAccount
+          createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
+          createOrLookup Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    customer : Party
+    provider : Party
+    clearingAccount : Account
+    marginAccount : Account
+  where
+    signatory customer
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+        ccpAccount : Account
+      controller operator, provider
+      do
+        assertAccounts provider clearingAccount marginAccount
+        createOrLookup MemberStanding with marginSatisfied = True, mtmSatisfied = True, observers = mempty; ..
+        createOrLookup Service with ..

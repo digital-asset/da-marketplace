@@ -1,0 +1,132 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module ContingentClaims.Lifecycle (
+        module ContingentClaims.Lifecycle
+    ) where
+import ContingentClaims.Claim
+import ContingentClaims.Observation
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.DA.Types
+import Daml.Control.Arrow
+import Daml.Control.Monad.Writer
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+type C a =
+    ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+data Result a
+  = Result {pending :: ([] (((,) (CurrentSdk.GHC.Types.Numeric 10)) a)),
+            remaining :: ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)}
+lifecycle' ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> ((((,) (CurrentSdk.GHC.Types.Numeric 10)) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))
+         -> (((Daml.Control.Monad.Writer.WriterT ([] (((,) (CurrentSdk.GHC.Types.Numeric 10)) a))) ((Daml.Control.Arrow.Kleisli m) CurrentSdk.DA.Internal.LF.Date)) (((((ContingentClaims.Claim.ClaimF ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a) ((CurrentSdk.DA.Types.Either ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)) (((,) (CurrentSdk.GHC.Types.Numeric 10)) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)))))))))
+lifecycle' _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+expire' ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+         -> (((Daml.Control.Arrow.Kleisli m) CurrentSdk.DA.Internal.LF.Date) (((((ContingentClaims.Claim.ClaimF ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)))))))
+expire' _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+acquire' ::
+  (forall a.
+   (forall (m :: (* -> *)).
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+         -> (((Daml.Control.Arrow.Kleisli m) CurrentSdk.DA.Internal.LF.Date) (((((ContingentClaims.Claim.ClaimF ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a) ((CurrentSdk.DA.Types.Either ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))))))))
+acquire' _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+expire ::
+  (forall a.
+   (forall (m :: (* -> *)).
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+         -> (CurrentSdk.DA.Internal.LF.Date
+             -> (m ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)))))))
+expire _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+exercise' ::
+  (forall a.
+   (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+   ((((,) CurrentSdk.GHC.Types.Bool) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))
+    -> ((((,) CurrentSdk.GHC.Types.Bool) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))
+        -> (((((ContingentClaims.Claim.ClaimF ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a) ((CurrentSdk.DA.Types.Either ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)) (((,) CurrentSdk.GHC.Types.Bool) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)))))))
+exercise' _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+exercise ::
+  (forall a.
+   (forall (m :: (* -> *)).
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> ((((,) CurrentSdk.GHC.Types.Bool) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))
+         -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+             -> (CurrentSdk.DA.Internal.LF.Date
+                 -> (m ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))))))))
+exercise _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+lifecycle ::
+  (forall a.
+   (forall (m :: (* -> *)).
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort m) =>
+    ((CurrentSdk.GHC.Types.Text
+      -> (CurrentSdk.DA.Internal.LF.Date
+          -> (m (CurrentSdk.GHC.Types.Numeric 10))))
+     -> (((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)
+         -> (CurrentSdk.DA.Internal.LF.Date
+             -> (m (ContingentClaims.Lifecycle.Result a)))))))
+lifecycle _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "remaining" (ContingentClaims.Lifecycle.Result a) ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a))
+instance (forall a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "pending" (ContingentClaims.Lifecycle.Result a) ([] (((,) (CurrentSdk.GHC.Types.Numeric 10)) a)))
+instance (forall a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) a)) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

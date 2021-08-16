@@ -1,0 +1,82 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Data.Functor.Contravariant (
+        module Daml.Data.Functor.Contravariant
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Daml.Control.Category
+import Daml.Data.Functor.Const
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+class Contravariant (f :: (* -> *)) where
+  contramap :: (forall a. (forall b. ((a -> b) -> ((f b) -> (f a)))))
+  (>$) :: (forall b. (forall a. (b -> ((f b) -> (f a)))))
+  default (>$) :: (forall b. (forall a. (b -> ((f b) -> (f a)))))
+  (>$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+data Op a b = Op {getOp :: (b -> a)}
+(>$<) ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (forall b.
+     (Daml.Data.Functor.Contravariant.Contravariant f) =>
+     ((a -> b) -> ((f b) -> (f a))))))
+(>$<) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(>$$<) ::
+  (forall (f :: (* -> *)).
+   (forall b.
+    (forall a.
+     (Daml.Data.Functor.Contravariant.Contravariant f) =>
+     ((f b) -> ((a -> b) -> (f a))))))
+(>$$<) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+phantom ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (forall b.
+     (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+     (Daml.Data.Functor.Contravariant.Contravariant f) =>
+     ((f a) -> (f b)))))
+phantom _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "getOp" ((Daml.Data.Functor.Contravariant.Op a) b) (b
+                                                                                                                                                               -> a))
+instance (forall a.
+          () =>
+          Daml.Data.Functor.Contravariant.Contravariant (Daml.Data.Functor.Contravariant.Op a)) where
+  contramap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (>$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a.
+          () =>
+          Daml.Data.Functor.Contravariant.Contravariant (Daml.Data.Functor.Const.Const a)) where
+  contramap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (>$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Daml.Control.Category.Category Daml.Data.Functor.Contravariant.Op) where
+  id
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (.) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

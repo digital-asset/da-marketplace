@@ -1,0 +1,119 @@
+module Marketplace.Trading.Role where
+
+import DA.Finance.Types
+
+import Marketplace.Settlement.Service qualified as Settlement
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Model qualified as Model
+import Marketplace.Utils
+import DA.Set (Set)
+
+template Role
+  with
+    operator : Party
+    provider : Party
+    observers : Set Party
+  where
+    signatory operator, provider
+    observer observers
+
+    key (operator, provider) : (Party, Party)
+    maintainer key._1
+
+    controller provider can
+
+      nonconsuming OfferTradingService : ContractId Trading.Offer
+        with
+          customer : Party
+        do
+          create Trading.Offer with ..
+
+      nonconsuming ApproveTradingServiceRequest : ContractId Trading.T
+        with
+          tradingRequestCid : ContractId Trading.Request
+        do
+          exercise tradingRequestCid Trading.Approve with ..
+
+      nonconsuming TerminateTradingService : ()
+        with
+          tradingServiceCid : ContractId Trading.T
+        do
+          archive tradingServiceCid
+
+      nonconsuming OfferListingService : ContractId Listing.Offer
+        with
+          customer : Party
+        do
+          create Listing.Offer with ..
+
+      nonconsuming ApproveListingServiceRequest : ContractId Listing.Service
+        with
+          listingRequestCid : ContractId Listing.Request
+        do
+          exercise listingRequestCid Listing.Approve with ..
+
+      nonconsuming TerminateListingService : ()
+        with
+          listingServiceCid : ContractId Listing.Service
+        do
+          archive listingServiceCid
+
+      nonconsuming CreateFeeSchedule : ContractId Model.FeeSchedule
+        with
+          currency : Id
+          feeAccount : Account
+          quantity : Decimal
+        do
+          time <- getTime
+          create Model.FeeSchedule with currentFee = Model.Fee quantity currency time; pastFees = []; ..
+
+    controller operator can
+      TerminateRole : ()
+        do
+          return ()
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    observers : Set Party
+  where
+    signatory operator
+
+    controller provider can
+      Accept : (ContractId Role, ContractId Matching.Service, ContractId Listing.Service, ContractId Settlement.Service)
+        do
+          matchingCid   <- createOrLookup Matching.Service with ..
+          settlementCid <- createOrLookup Settlement.Service with ..
+          listingCid    <- createOrLookup Listing.Service with customer = provider, ..
+          roleCid       <- createOrLookup Role with ..
+
+          return (roleCid, matchingCid, listingCid, settlementCid)
+
+      Decline : ()
+        do
+          return ()
+
+template Request
+  with
+    provider : Party
+    operator : Party
+  where
+    signatory provider
+
+    controller operator can
+      Approve : (ContractId Role, ContractId Matching.Service,ContractId Listing.Service,  ContractId Settlement.Service)
+        with
+          observers : Set Party
+        do
+          matchingCid   <- createOrLookup Matching.Service with ..
+          settlementCid <- createOrLookup Settlement.Service with ..
+          listingCid    <- createOrLookup Listing.Service with customer = provider, ..
+          roleCid       <- createOrLookup Role with ..
+          return (roleCid, matchingCid, listingCid, settlementCid)
+
+      Reject : ()
+        do
+          return ()

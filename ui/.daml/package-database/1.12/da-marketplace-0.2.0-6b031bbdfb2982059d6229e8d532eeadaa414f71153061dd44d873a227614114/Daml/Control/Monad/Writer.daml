@@ -1,0 +1,236 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Monad.Writer (
+        module Daml.Control.Monad.Writer
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Foldable
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Traversable
+import Daml.Control.Monad.Trans
+import Daml.Data.Functor.Identity
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+data WriterT w (m :: (* -> *)) a
+  = WriterT {runWriterT :: (m (((,) a) w))}
+writer ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (forall w.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((((,) a) w) -> (((Daml.Control.Monad.Writer.WriterT w) m) a)))))
+writer _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+tell ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    (w -> (((Daml.Control.Monad.Writer.WriterT w) m) ()))))
+tell _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+censor ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((w -> w)
+      -> ((((Daml.Control.Monad.Writer.WriterT w) m) a)
+          -> (((Daml.Control.Monad.Writer.WriterT w) m) a))))))
+censor _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+execWriterT ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((((Daml.Control.Monad.Writer.WriterT w) m) a) -> (m w)))))
+execWriterT _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+listen ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((((Daml.Control.Monad.Writer.WriterT w) m) a)
+      -> (((Daml.Control.Monad.Writer.WriterT w) m) (((,) a) w))))))
+listen _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+listens ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (forall b.
+     (forall a.
+      (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+      ((w -> b)
+       -> ((((Daml.Control.Monad.Writer.WriterT w) m) a)
+           -> (((Daml.Control.Monad.Writer.WriterT w) m) (((,) a) b))))))))
+listens _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+mapWriterT ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (forall w.
+     (forall (n :: (* -> *)).
+      (forall b.
+       (forall w'.
+        (((m (((,) a) w)) -> (n (((,) b) w')))
+         -> ((((Daml.Control.Monad.Writer.WriterT w) m) a)
+             -> (((Daml.Control.Monad.Writer.WriterT w') n) b)))))))))
+mapWriterT _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+mapWriter ::
+  (forall a.
+   (forall w.
+    (forall b.
+     (forall w'.
+      (((((,) a) w) -> (((,) b) w'))
+       -> ((((Daml.Control.Monad.Writer.WriterT w) Daml.Data.Functor.Identity.Identity) a)
+           -> (((Daml.Control.Monad.Writer.WriterT w') Daml.Data.Functor.Identity.Identity) b)))))))
+mapWriter _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+pass ::
+  (forall (m :: (* -> *)).
+   (forall w.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((((Daml.Control.Monad.Writer.WriterT w) m) (((,) a) (w -> w)))
+      -> (((Daml.Control.Monad.Writer.WriterT w) m) a)))))
+pass _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+runWriter ::
+  (forall w.
+   (forall a.
+    ((((Daml.Control.Monad.Writer.WriterT w) Daml.Data.Functor.Identity.Identity) a)
+     -> (((,) a) w))))
+runWriter _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+execWriter ::
+  (forall w.
+   (forall a.
+    ((((Daml.Control.Monad.Writer.WriterT w) Daml.Data.Functor.Identity.Identity) a)
+     -> w)))
+execWriter _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Traversable.Traversable f) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Traversable.Traversable ((Daml.Control.Monad.Writer.WriterT w) f)) where
+  mapA _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  sequence _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w) =>
+          Daml.Control.Monad.Trans.MonadTrans (Daml.Control.Monad.Writer.WriterT w)) where
+  lift _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)) a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "runWriterT" (((Daml.Control.Monad.Writer.WriterT w) m) a) (m (((,) a) w)))
+instance (forall (m :: (* -> *)) w.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor m) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) w.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Foldable.Foldable f) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Foldable.Foldable ((Daml.Control.Monad.Writer.WriterT w) f)) where
+  fold _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  foldMap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  foldr _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  foldl _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  foldr1 _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  foldl1 _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  toList _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  null _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  length _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  elem _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  sum _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  product _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  minimum _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  maximum _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)).
+          ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+           (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort m)) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  abort _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)).
+          ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+           (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative m)) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w (m :: (* -> *)).
+          ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+           (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m)) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

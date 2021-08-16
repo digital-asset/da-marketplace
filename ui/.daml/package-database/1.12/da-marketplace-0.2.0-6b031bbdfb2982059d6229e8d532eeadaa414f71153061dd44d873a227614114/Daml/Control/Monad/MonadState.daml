@@ -1,0 +1,75 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Monad.MonadState (
+        module Daml.Control.Monad.MonadState
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Daml.Control.Monad.State
+import Daml.Control.Monad.Writer
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+class (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) => MonadState s (m :: (*
+                                                                                                                                 -> *)) | m -> s where
+  get :: (m s)
+  put :: (s -> (m ()))
+  state :: (forall a. ((s -> (((,) a) s)) -> (m a)))
+  default get :: (m s)
+  default put :: (s -> (m ()))
+  default state :: (forall a. ((s -> (((,) a) s)) -> (m a)))
+  {-# MINIMAL state | get, put #-}
+  get
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  put _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  state _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+modify ::
+  (forall s.
+   (forall (m :: (* -> *)).
+    (Daml.Control.Monad.MonadState.MonadState s m) =>
+    ((s -> s) -> (m ()))))
+modify _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+gets ::
+  (forall s.
+   (forall (m :: (* -> *)).
+    (forall a.
+     (Daml.Control.Monad.MonadState.MonadState s m) =>
+     ((s -> a) -> (m a)))))
+gets _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall w s (m :: (* -> *)).
+          ((Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Monoid w),
+           (Daml.Control.Monad.MonadState.MonadState s m)) =>
+          Daml.Control.Monad.MonadState.MonadState s ((Daml.Control.Monad.Writer.WriterT w) m)) where
+  get
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  put _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  state _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) s.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Control.Monad.MonadState.MonadState s ((Daml.Control.Monad.State.StateT s) m)) where
+  get
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  put _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  state _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

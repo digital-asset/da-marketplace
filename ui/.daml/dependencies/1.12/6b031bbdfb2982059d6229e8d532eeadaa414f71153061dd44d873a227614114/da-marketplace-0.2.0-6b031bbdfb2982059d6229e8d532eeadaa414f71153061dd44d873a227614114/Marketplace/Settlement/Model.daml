@@ -1,0 +1,47 @@
+module Marketplace.Settlement.Model where
+
+import DA.Finance.Types (Account)
+import DA.Finance.Asset (AssetDeposit)
+import DA.Finance.Asset.Settlement (AssetSettlementRule, AssetSettlement_AddController(..), AssetSettlement_RemoveController(..))
+import Marketplace.Rule.AllocationAccount (AllocationAccountRule, Transfer(..))
+import DA.Action (void, unless)
+import DA.Set (member, fromList)
+
+type T = SettlementInstruction
+
+data SettlementDetails = SettlementDetails
+  with
+    senderAccount : Account
+    depositCid : ContractId AssetDeposit
+    receiverAccount : Account
+  deriving (Eq, Show)
+
+template SettlementInstruction
+  with
+    operator : Party
+    provider : Party
+    details : [SettlementDetails]
+  where
+    let senders   = map (.senderAccount.owner) details
+        receivers = map (.receiverAccount.owner) details
+    signatory fromList $ [operator, provider] <> senders <> receivers
+
+    controller provider can
+      Settle : [ContractId AssetDeposit]
+        do
+          forA details (\settlementDetails -> do
+            let
+              transferTo = settlementDetails.receiverAccount
+              depositCid = settlementDetails.depositCid
+
+            (_,rule) <- fetchByKey @AssetSettlementRule transferTo.id
+
+            let
+              isCtrl         = member provider rule.ctrls
+              addProvider    = unless isCtrl . void $ exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_AddController with ctrl = provider
+              removeProvider = unless isCtrl . void $ exerciseByKey @AssetSettlementRule transferTo.id AssetSettlement_RemoveController with ctrl = provider
+              settle         = exerciseByKey @AllocationAccountRule settlementDetails.senderAccount.id Transfer with ..
+
+            -- Sequence the transaction, ignoring the output of the add and remove provider transactions but return the output of the settle transaction
+            addProvider *> settle <* removeProvider
+            )

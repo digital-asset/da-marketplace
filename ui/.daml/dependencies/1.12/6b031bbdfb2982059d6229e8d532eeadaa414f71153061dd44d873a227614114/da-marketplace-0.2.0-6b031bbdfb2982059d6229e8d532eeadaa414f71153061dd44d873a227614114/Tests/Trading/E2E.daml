@@ -1,0 +1,122 @@
+module Tests.Trading.E2E where
+
+import Daml.Script
+import Common
+import DA.Assert ((===))
+import DA.List
+import DA.Foldable
+import DA.Finance.Asset (AssetDeposit)
+import Marketplace.Settlement.Model qualified as Settlement
+import Marketplace.Trading.Service qualified as Trading
+import Marketplace.Trading.Model qualified as Order
+import Marketplace.Trading.Matching.Service qualified as Matching
+import Marketplace.Listing.Service qualified as Listing
+import Marketplace.Listing.Model qualified as Listing
+
+checkOrderStatusMatches : ContractId Order.T -> Party -> Order.Status -> Script ()
+checkOrderStatusMatches orderCid party status = do
+  Some order <- queryContractId @Order.T party orderCid
+  order.status === status
+  pure ()
+
+tradingEndToEndTest : Script ()
+tradingEndToEndTest = do
+  providers@Providers{exchange; matchingServiceCid; bank} <- onboardProviders
+
+  alice <- onboardCustomer providers "Alice"
+  bob <- onboardCustomer providers "Bob"
+  issuer <- onboardCustomer providers "Issuer"
+
+  Assets{usd; tsla} <- onboardAssets providers issuer
+  let
+    shareAsset = tsla with quantity = 200.0
+    cashAsset = usd with quantity = 20000.0
+  aliceDepositCid <- depositAsset providers alice shareAsset alice.mainAccount.id
+  bobDepositCid <- depositAsset providers bob cashAsset bob.mainAccount.id
+
+  -- List a Security to trade
+  (listingServiceCid, _) <- head <$> query @Listing.Service alice.customer
+  let
+    symbol = "TSLAUSD"
+    listingType = Listing.CollateralizedRequest
+    calendarId = "1261007448"
+    description = "Tesla Inc."
+    tradedAssetId = tsla.id
+    quotedAssetId = usd.id
+    tradedAssetPrecision = 2
+    quotedAssetPrecision = 2
+    minimumTradableQuantity = 1.0
+    maximumTradableQuantity = 1000000.0
+    providerId = "123"
+    observers = []
+  createListingRequestCid <- alice.customer `submit` do exerciseCmd listingServiceCid Listing.RequestCreateListing with ..
+  listingCid <- exchange `submit` do exerciseCmd listingServiceCid Listing.CreateListing with ..
+
+  (Some Listing.Listing{listingId}) <- queryContractId @Listing.Listing exchange listingCid
+
+  -- Create orders
+  let aliceOrderId = "1"
+  Right (aliceOrderCid, aliceCreateOrderRequestCid, aliceAssetDepositCid) <- alice.customer `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral aliceDepositCid
+        details = Order.Details with
+            id = aliceOrderId
+            listingId
+            asset = tsla with quantity = 200.0
+            side = Order.Sell
+            timeInForce = Order.GTC
+            optExchangeFee = None
+            orderType = Order.Limit with price = 100.0
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.New
+
+  let bobOrderId = "2"
+  Right (bobOrderCid, bobCreateOrderRequestCid, bobAssetDepositCid) <- bob.customer `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.RequestCreateOrder with
+        collateral = Order.Collateral bobDepositCid
+        details = Order.Details with
+            id = bobOrderId
+            listingId
+            asset = shareAsset
+            side = Order.Buy
+            optExchangeFee = None
+            timeInForce = Order.GTC
+            orderType = Order.Limit with price = 100.0
+  checkOrderStatusMatches bobOrderCid bob.customer Order.New
+
+  -- Acknowledge Orders
+  aliceOrderCid <- exchange `submit` do
+    exerciseCmd alice.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = aliceCreateOrderRequestCid
+        providerOrderId = "alice's exchange order id"
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.PendingExecution
+
+  bobOrderCid <- exchange `submit` do
+    exerciseCmd bob.tradingServiceCid Trading.AcknowledgeOrderRequest with
+        createOrderRequestCid = bobCreateOrderRequestCid
+        providerOrderId = "bob's exchange order id"
+  checkOrderStatusMatches bobOrderCid bob.customer Order.PendingExecution
+
+  -- Confirm order matches
+  let execution = Order.Execution with
+        matchId = "1"
+        makerOrderId = aliceOrderId
+        takerOrderId = bobOrderId
+        quantity = 200.0
+        price = 100.0
+        timestamp = "123456"
+
+  Matching.Collateralized settlementInstructionCid <- exchange `submit` exerciseCmd matchingServiceCid Matching.MatchOrders with execution
+
+  aliceOrderCid <- fst . head <$> query @Order.T alice.customer
+  checkOrderStatusMatches aliceOrderCid alice.customer Order.FullyExecuted
+  bobOrderCid <- fst . head <$> query @Order.T bob.customer
+  checkOrderStatusMatches bobOrderCid bob.customer Order.FullyExecuted
+
+  -- Settle orders
+  assetDepositCids <- exchange `submit` exerciseCmd settlementInstructionCid Settlement.Settle
+
+  forA_ assetDepositCids \depositCid -> do
+    Some deposit <- queryContractId @AssetDeposit bank depositCid
+    deposit.asset === if deposit.account.owner == alice.customer
+      then cashAsset
+      else shareAsset

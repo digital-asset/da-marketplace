@@ -1,0 +1,8 @@
+module Marketplace.Trading.Error where
+
+type T = Error
+
+data Error = Error with
+    code : Text
+    message : Text
+  deriving (Eq, Show)

@@ -1,0 +1,170 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module DA.Finance.Base.HolidayCalendar (
+        module DA.Finance.Base.HolidayCalendar
+    ) where
+import CurrentSdk.DA.Date.Types
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import CurrentSdk.GHC.Types
+data BusinessDayAdjustment
+  = BusinessDayAdjustment {calendarIds :: ([] CurrentSdk.GHC.Types.Text),
+                           convention :: DA.Finance.Base.HolidayCalendar.BusinessDayConventionEnum}
+data BusinessDayConventionEnum
+  = FOLLOWING | MODFOLLOWING | MODPRECEDING | NONE | PRECEDING
+data HolidayCalendarData
+  = HolidayCalendarData {id :: CurrentSdk.GHC.Types.Text,
+                         weekend :: ([] CurrentSdk.DA.Date.Types.DayOfWeek),
+                         holidays :: ([] CurrentSdk.DA.Internal.LF.Date)}
+merge ::
+  (([] DA.Finance.Base.HolidayCalendar.HolidayCalendarData)
+   -> DA.Finance.Base.HolidayCalendar.HolidayCalendarData)
+merge _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+isHoliday ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date -> CurrentSdk.GHC.Types.Bool))
+isHoliday _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+nextBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+nextBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+nextOrSameBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+nextOrSameBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+previousBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+previousBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+nextSameOrLastInMonthBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+nextSameOrLastInMonthBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+previousOrSameBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+previousOrSameBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+previousSameOrFirstInMonthBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> CurrentSdk.DA.Internal.LF.Date))
+previousSameOrFirstInMonthBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+isBusinessDay ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.DA.Internal.LF.Date -> CurrentSdk.GHC.Types.Bool))
+isBusinessDay _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+adjustDate ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (DA.Finance.Base.HolidayCalendar.BusinessDayConventionEnum
+       -> (CurrentSdk.DA.Internal.LF.Date
+           -> CurrentSdk.DA.Internal.LF.Date)))
+adjustDate _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+addBusinessDays ::
+  (DA.Finance.Base.HolidayCalendar.HolidayCalendarData
+   -> (CurrentSdk.GHC.Types.Int
+       -> (CurrentSdk.DA.Internal.LF.Date
+           -> CurrentSdk.DA.Internal.LF.Date)))
+addBusinessDays _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.HolidayCalendar.HolidayCalendarData) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.HolidayCalendar.BusinessDayConventionEnum) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "weekend" DA.Finance.Base.HolidayCalendar.HolidayCalendarData ([] CurrentSdk.DA.Date.Types.DayOfWeek))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "id" DA.Finance.Base.HolidayCalendar.HolidayCalendarData CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "holidays" DA.Finance.Base.HolidayCalendar.HolidayCalendarData ([] CurrentSdk.DA.Internal.LF.Date))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "convention" DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment DA.Finance.Base.HolidayCalendar.BusinessDayConventionEnum)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "calendarIds" DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment ([] CurrentSdk.GHC.Types.Text))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.HolidayCalendar.HolidayCalendarData) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.HolidayCalendar.BusinessDayConventionEnum) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

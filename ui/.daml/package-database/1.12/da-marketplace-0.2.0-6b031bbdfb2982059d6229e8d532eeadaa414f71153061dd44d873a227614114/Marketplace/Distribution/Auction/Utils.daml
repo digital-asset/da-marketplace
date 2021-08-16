@@ -1,0 +1,61 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Marketplace.Distribution.Auction.Utils (
+        module Marketplace.Distribution.Auction.Utils
+    ) where
+import DA.Finance.Asset
+import CurrentSdk.DA.Internal.LF
+import CurrentSdk.DA.Internal.Prelude
+import CurrentSdk.DA.Types
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+import Marketplace.Distribution.Auction.Model
+import Marketplace.Distribution.Bidding.Model
+import Marketplace.Settlement.Model
+withdrawAllocation ::
+  (Marketplace.Distribution.Bidding.Model.Bid
+   -> (CurrentSdk.DA.Internal.LF.Update (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)))
+withdrawAllocation _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+updateBidStatus ::
+  (Marketplace.Distribution.Bidding.Model.Status
+   -> (Marketplace.Distribution.Bidding.Model.Bid
+       -> (CurrentSdk.DA.Internal.LF.Update (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Bid))))
+updateBidStatus _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+splitList ::
+  (forall a.
+   ((a -> CurrentSdk.GHC.Types.Bool)
+    -> (([] a) -> ([] ((CurrentSdk.DA.Types.Either a) a)))))
+splitList _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+rejectBid ::
+  (Marketplace.Distribution.Bidding.Model.Status
+   -> (Marketplace.Distribution.Bidding.Model.Bid
+       -> (CurrentSdk.DA.Internal.LF.Update (((,) (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Bid)) (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)))))
+rejectBid _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+generateSettlementInstruction ::
+  ((((,) (CurrentSdk.DA.Internal.Prelude.Optional (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))) ([] (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Settlement.Model.SettlementInstruction)))
+   -> (Marketplace.Distribution.Auction.Model.SettleAllocation
+       -> (CurrentSdk.DA.Internal.LF.Update (((,) (CurrentSdk.DA.Internal.Prelude.Optional (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))) ([] (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Settlement.Model.SettlementInstruction))))))
+generateSettlementInstruction _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+dutchAuction ::
+  ((((,) (CurrentSdk.GHC.Types.Numeric 10)) (CurrentSdk.GHC.Types.Numeric 10))
+   -> (Marketplace.Distribution.Bidding.Model.Bid
+       -> (((,) (((,) (CurrentSdk.GHC.Types.Numeric 10)) (CurrentSdk.GHC.Types.Numeric 10))) Marketplace.Distribution.Auction.Model.Allocation)))
+dutchAuction _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

@@ -1,0 +1,422 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Recursion (
+        module Daml.Control.Recursion
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.DA.Types
+import Daml.Control.Comonad
+import Daml.Data.Functor.Identity
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+class (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) => Corecursive b (f :: (*
+                                                                                                                        -> *)) | f -> b where
+  embed :: ((f b) -> b)
+  ana :: (forall a. ((a -> (f a)) -> (a -> b)))
+  apo ::
+    (forall a.
+     ((a -> (f ((CurrentSdk.DA.Types.Either b) a))) -> (a -> b)))
+  futu ::
+    (forall a.
+     ((a -> (f ((Daml.Control.Recursion.Free f) a))) -> (a -> b)))
+  gana ::
+    (forall (m :: (* -> *)).
+     (forall a.
+      (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+      ((forall z. ((m (f z)) -> (f (m z))))
+       -> ((a -> (f (m a))) -> (a -> b)))))
+  default ana :: (forall a. ((a -> (f a)) -> (a -> b)))
+  default apo ::
+            (forall a.
+             ((a -> (f ((CurrentSdk.DA.Types.Either b) a))) -> (a -> b)))
+  default futu ::
+            (forall a.
+             ((a -> (f ((Daml.Control.Recursion.Free f) a))) -> (a -> b)))
+  default gana ::
+            (forall (m :: (* -> *)).
+             (forall a.
+              (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+              ((forall z. ((m (f z)) -> (f (m z))))
+               -> ((a -> (f (m a))) -> (a -> b)))))
+  ana _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  apo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  futu _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gana _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+class (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) => Recursive b (f :: (*
+                                                                                                                      -> *)) | b -> f
+                                                                                                                                    b where
+  project :: (b -> (f b))
+  cata :: (forall a. (((f a) -> a) -> (b -> a)))
+  para :: (forall a. (((f (((,) b) a)) -> a) -> (b -> a)))
+  histo ::
+    (forall a.
+     (((f ((Daml.Control.Recursion.Cofree f) a)) -> a) -> (b -> a)))
+  gcata ::
+    (forall (w :: (* -> *)).
+     (forall a.
+      (Daml.Control.Comonad.Comonad w) =>
+      ((forall z. ((f (w z)) -> (w (f z))))
+       -> (((f (w a)) -> a) -> (b -> a)))))
+  default cata :: (forall a. (((f a) -> a) -> (b -> a)))
+  default para :: (forall a. (((f (((,) b) a)) -> a) -> (b -> a)))
+  default histo ::
+            (forall a.
+             (((f ((Daml.Control.Recursion.Cofree f) a)) -> a) -> (b -> a)))
+  default gcata ::
+            (forall (w :: (* -> *)).
+             (forall a.
+              (Daml.Control.Comonad.Comonad w) =>
+              ((forall z. ((f (w z)) -> (w (f z))))
+               -> (((f (w a)) -> a) -> (b -> a)))))
+  cata _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  para _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  histo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gcata _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+data CofreeF (f :: (* -> *)) a x
+  = CofreeF {attribute :: a, unwrapf :: (f x)}
+data Cofree (f :: (* -> *)) a
+  = Cofree {attribute :: a,
+            unwrap :: (f ((Daml.Control.Recursion.Cofree f) a))}
+data FreeF (f :: (* -> *)) a x = PureF a | ImpureF (f x)
+data Free (f :: (* -> *)) a
+  = Pure a | Impure (f ((Daml.Control.Recursion.Free f) a))
+data Fix (f :: (* -> *))
+  = Fix {unfix :: (f (Daml.Control.Recursion.Fix f))}
+data ListF a x = Nil | Cons {value :: a, pattern :: x}
+hylo ::
+  (forall (f :: (* -> *)).
+   (forall b.
+    (forall a.
+     (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+     (((f b) -> b) -> ((a -> (f a)) -> (a -> b))))))
+hylo _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+ghylo ::
+  (forall (w :: (* -> *)).
+   (forall (f :: (* -> *)).
+    (forall (m :: (* -> *)).
+     (forall b.
+      (forall a.
+       (Daml.Control.Comonad.Comonad w) =>
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+       (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+       ((forall c. ((f (w c)) -> (w (f c))))
+        -> ((forall d. ((m (f d)) -> (f (m d))))
+            -> (((f (w b)) -> b) -> ((a -> (f (m a))) -> (a -> b))))))))))
+ghylo _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distCata ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+    ((f (Daml.Data.Functor.Identity.Identity a))
+     -> (Daml.Data.Functor.Identity.Identity (f a)))))
+distCata _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distAna ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+    ((Daml.Data.Functor.Identity.Identity (f a))
+     -> (f (Daml.Data.Functor.Identity.Identity a)))))
+distAna _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+_gcata ::
+  (forall b.
+   (forall (f :: (* -> *)).
+    (forall (w :: (* -> *)).
+     (forall a.
+      (Daml.Control.Recursion.Recursive b f) =>
+      (Daml.Control.Comonad.Comonad w) =>
+      ((forall z. ((f (w z)) -> (w (f z))))
+       -> (((f (w a)) -> a) -> (b -> (w (f (w a))))))))))
+_gcata _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distApo ::
+  (forall b.
+   (forall (f :: (* -> *)).
+    (forall a.
+     (Daml.Control.Recursion.Recursive b f) =>
+     (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+     (((CurrentSdk.DA.Types.Either b) (f a))
+      -> (f ((CurrentSdk.DA.Types.Either b) a))))))
+distApo _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+_gana ::
+  (forall b.
+   (forall (f :: (* -> *)).
+    (forall (m :: (* -> *)).
+     (forall a.
+      (Daml.Control.Recursion.Corecursive b f) =>
+      (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+      ((forall z. ((m (f z)) -> (f (m z))))
+       -> ((a -> (f (m a))) -> ((m (f (m a))) -> b)))))))
+_gana _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distPara ::
+  (forall b.
+   (forall (f :: (* -> *)).
+    (forall a.
+     (Daml.Control.Recursion.Corecursive b f) =>
+     ((f (((,) b) a)) -> (((,) b) (f a))))))
+distPara _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distHisto ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+    ((f ((Daml.Control.Recursion.Cofree f) a))
+     -> ((Daml.Control.Recursion.Cofree f) (f a)))))
+distHisto _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+distFutu ::
+  (forall (f :: (* -> *)).
+   (forall a.
+    (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+    (((Daml.Control.Recursion.Free f) (f a))
+     -> (f ((Daml.Control.Recursion.Free f) a)))))
+distFutu _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a.
+          () =>
+          Daml.Control.Recursion.Recursive ([] a) (Daml.Control.Recursion.ListF a)) where
+  project _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  cata _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  para _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  histo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gcata _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Daml.Control.Recursion.Recursive ((Daml.Control.Recursion.Free f) a) ((Daml.Control.Recursion.FreeF f) a)) where
+  project _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  cata _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  para _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  histo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gcata _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Daml.Control.Recursion.Recursive ((Daml.Control.Recursion.Cofree f) a) ((Daml.Control.Recursion.CofreeF f) a)) where
+  project _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  cata _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  para _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  histo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gcata _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a x.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "value" ((Daml.Control.Recursion.ListF a) x) a)
+instance (forall (f :: (* -> *)) a x.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "unwrapf" (((Daml.Control.Recursion.CofreeF f) a) x) (f x))
+instance (forall (f :: (* -> *)) a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "unwrap" ((Daml.Control.Recursion.Cofree f) a) (f ((Daml.Control.Recursion.Cofree f) a)))
+instance (forall (f :: (* -> *)).
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "unfix" (Daml.Control.Recursion.Fix f) (f (Daml.Control.Recursion.Fix f)))
+instance (forall a x.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "pattern" ((Daml.Control.Recursion.ListF a) x) x)
+instance (forall (f :: (* -> *)) a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "attribute" ((Daml.Control.Recursion.Cofree f) a) a)
+instance (forall (f :: (* -> *)) a x.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "attribute" (((Daml.Control.Recursion.CofreeF f) a) x) a)
+instance (forall a.
+          () =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor (Daml.Control.Recursion.ListF a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((Daml.Control.Recursion.FreeF f) a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)).
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor (Daml.Control.Recursion.Free f)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((Daml.Control.Recursion.CofreeF f) a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)).
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor (Daml.Control.Recursion.Cofree f)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall a.
+          () =>
+          Daml.Control.Recursion.Corecursive ([] a) (Daml.Control.Recursion.ListF a)) where
+  embed _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  ana _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  apo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  futu _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gana _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Daml.Control.Recursion.Corecursive ((Daml.Control.Recursion.Free f) a) ((Daml.Control.Recursion.FreeF f) a)) where
+  embed _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  ana _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  apo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  futu _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gana _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Daml.Control.Recursion.Corecursive ((Daml.Control.Recursion.Cofree f) a) ((Daml.Control.Recursion.CofreeF f) a)) where
+  embed _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  ana _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  apo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  futu _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gana _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)).
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Daml.Control.Comonad.Comonad (Daml.Control.Recursion.Cofree f)) where
+  extract _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  duplicate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  extend _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)).
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative (Daml.Control.Recursion.Free f)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (f :: (* -> *)).
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor f) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action (Daml.Control.Recursion.Free f)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

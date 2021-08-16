@@ -1,0 +1,78 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Data.Profunctor (
+        module Daml.Data.Profunctor
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Daml.Control.Arrow
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+class Profunctor (p :: (* -> (* -> *))) where
+  dimap ::
+    (forall a.
+     (forall b.
+      (forall c.
+       (forall d. ((a -> b) -> ((c -> d) -> (((p b) c) -> ((p a) d))))))))
+  lmap ::
+    (forall a.
+     (forall b. (forall c. ((a -> b) -> (((p b) c) -> ((p a) c))))))
+  rmap ::
+    (forall b.
+     (forall c. (forall a. ((b -> c) -> (((p a) b) -> ((p a) c))))))
+  default dimap ::
+            (forall a.
+             (forall b.
+              (forall c.
+               (forall d. ((a -> b) -> ((c -> d) -> (((p b) c) -> ((p a) d))))))))
+  default lmap ::
+            (forall a.
+             (forall b. (forall c. ((a -> b) -> (((p b) c) -> ((p a) c))))))
+  default rmap ::
+            (forall b.
+             (forall c. (forall a. ((b -> c) -> (((p a) b) -> ((p a) c))))))
+  {-# MINIMAL dimap | (lmap, rmap) #-}
+  dimap _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  lmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  rmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+liftM ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (forall b.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((a -> b) -> ((m a) -> (m b))))))
+liftM _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)).
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Data.Profunctor.Profunctor (Daml.Control.Arrow.Kleisli m)) where
+  dimap _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  lmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  rmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() => Daml.Data.Profunctor.Profunctor (->)) where
+  dimap _ _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  lmap _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  rmap _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

@@ -1,0 +1,36 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Marketplace.Clearing.Utils (
+        module Marketplace.Clearing.Utils
+    ) where
+import DA.Finance.Asset
+import DA.Finance.Types
+import CurrentSdk.DA.Internal.LF
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+transferWithController ::
+  ((CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)
+   -> (DA.Finance.Types.Account
+       -> (CurrentSdk.DA.Internal.LF.Update (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))))
+transferWithController _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+mergeAndSplit ::
+  (([] (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (CurrentSdk.DA.Internal.LF.Update ([] (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)))))
+mergeAndSplit _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+getDepositQuantities ::
+  (([] (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+   -> (CurrentSdk.DA.Internal.LF.Update (CurrentSdk.GHC.Types.Numeric 10)))
+getDepositQuantities _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

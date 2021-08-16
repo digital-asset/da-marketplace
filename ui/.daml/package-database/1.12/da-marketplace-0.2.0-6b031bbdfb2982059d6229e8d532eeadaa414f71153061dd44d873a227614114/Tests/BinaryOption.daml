@@ -1,0 +1,80 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Tests.BinaryOption (
+        module Tests.BinaryOption
+    ) where
+import DA.Finance.Asset
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+usd :: CurrentSdk.GHC.Types.Text
+usd
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+strike :: (CurrentSdk.GHC.Types.Numeric 10)
+strike
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+optionAssetLabel :: CurrentSdk.GHC.Types.Text
+optionAssetLabel
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+notExpiry :: CurrentSdk.DA.Internal.LF.Date
+notExpiry
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+getMoneyAssetsFor ::
+  (forall p.
+   (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Template.Functions.IsParties p) =>
+   (p
+    -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ([] (((,) (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)) DA.Finance.Asset.AssetDeposit)))))
+getMoneyAssetsFor _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+expiry :: CurrentSdk.DA.Internal.LF.Date
+expiry
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+belowStrike :: (CurrentSdk.GHC.Types.Numeric 10)
+belowStrike
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+aboveStrike :: (CurrentSdk.GHC.Types.Numeric 10)
+aboveStrike
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+requestExercise ::
+  ((CurrentSdk.GHC.Types.Numeric 10)
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party))))
+requestExercise _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+endToEnd ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (((,) CurrentSdk.DA.Internal.LF.Party) CurrentSdk.DA.Internal.LF.Party))
+endToEnd
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+testExercisedOnExpiry ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testExercisedOnExpiry
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+testNotExercisedWhenFixingDateIsNotExpiry ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testNotExercisedWhenFixingDateIsNotExpiry
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+testNotExercisedWhenPriceIsBelowStrikeAtExpiry ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+testNotExercisedWhenPriceIsBelowStrikeAtExpiry
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

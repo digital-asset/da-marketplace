@@ -1,0 +1,288 @@
+module Tests.Distribution.Auction where
+
+import DA.Assert
+import DA.Foldable qualified as F
+import DA.List
+import DA.Date
+import DA.Finance.Asset
+import DA.Finance.Types
+import DA.Optional
+import Daml.Script
+import Common
+import Marketplace.Distribution.Role qualified as Distributor
+import Marketplace.Distribution.Auction.Model qualified as Auction
+import Marketplace.Distribution.Auction.Service qualified as Auction
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
+import Marketplace.Distribution.Bidding.Service qualified as Bidding
+import Marketplace.Settlement.Model qualified as Settle
+import Marketplace.Issuance.CFI qualified as CFI
+import ContingentClaims.Claim (Claim(Zero))
+
+data Fixture = Fixture with
+  bank : Party
+  issuer : Customer
+  alice : Customer
+  bob : Customer
+  charlie : Customer
+  dave : Customer
+  aliceDepositCid : ContractId AssetDeposit
+  bobDepositCid : ContractId AssetDeposit
+  charlieDepositCid : ContractId AssetDeposit
+  daveDepositCid : ContractId AssetDeposit
+  aliceAuctionCid : ContractId Bidding.A
+  bobAuctionCid : ContractId Bidding.A
+  charlieAuctionCid : ContractId Bidding.A
+  daveAuctionCid : ContractId Bidding.A
+  auctionServiceCid : ContractId Auction.Service
+  auctionCid : ContractId Auction.T
+  originalDeposits : [AssetDeposit]
+
+setup : Script Fixture
+setup = do
+  providers@Providers{bank; distributorRoleCid} <- onboardProviders
+
+  alice       <- onboardCustomer providers "Alice"
+  bob         <- onboardCustomer providers "Bob"
+  charlie     <- onboardCustomer providers "Charlie"
+  dave        <- onboardCustomer providers "Dave"
+  issuer      <- onboardCustomer providers "Issuer"
+
+  Assets{usd} <- onboardAssets providers issuer
+
+  -- Create our Investors/Bidders
+  aliceDepositCid    <- depositAsset providers alice     (usd with quantity = 10000.0) alice.mainAccount.id
+  bobDepositCid      <- depositAsset providers bob       (usd with quantity = 5000.0) bob.mainAccount.id
+  charlieDepositCid  <- depositAsset providers charlie   (usd with quantity = 2000.0) charlie.mainAccount.id
+  daveDepositCid     <- depositAsset providers dave      (usd with quantity = 1000.0) dave.mainAccount.id
+
+  Some aliceDeposit   <- queryContractId alice.customer aliceDepositCid
+  Some bobDeposit     <- queryContractId bob.customer bobDepositCid
+  Some charlieDeposit <- queryContractId charlie.customer charlieDepositCid
+  Some daveDeposit    <- queryContractId dave.customer daveDepositCid
+  let originalDeposits = [ aliceDeposit, bobDeposit, charlieDeposit, daveDeposit ]
+
+  -- Create our Issuer with their new asset to distribute
+  (_, auctionAssetDesc) <- originate providers issuer "AuctionAsset" "Example Auction Asset" CFI.equity Zero []
+  let
+    auctionAssetId = auctionAssetDesc.assetId
+    auctionAsset = Asset with id = auctionAssetId; quantity = 1000.0
+  issuerAsset <- depositAsset providers issuer auctionAsset issuer.mainAccount.id
+  auctionOfferCid <- bank `submit` exerciseCmd distributorRoleCid Distributor.OfferAuctionService with customer = issuer.customer; ..
+  auctionServiceCid <- issuer.customer `submit` exerciseCmd auctionOfferCid Auction.Accept with tradingAccount = issuer.mainAccount; allocationAccount = issuer.auctionLockedAccount; receivableAccount = issuer.mainAccount
+
+  -- Create an Auction request and approve it
+  let
+    auctionId = "MyAuction"
+    quotedAssetId = usd.id
+
+  createAuctionRequestCid <- issuer.customer `submit` exerciseCmd auctionServiceCid Auction.RequestCreateAuction with
+      asset = auctionAsset
+      depositCid = issuerAsset
+      floorPrice = 5.0
+      ..
+  auctionCid <- bank `submit` exerciseCmd auctionServiceCid Auction.CreateAuction with ..
+
+  -- Add our parties as bidders
+  aliceAuctionCid    <- submit bank do exerciseCmd alice.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  bobAuctionCid      <- submit bank do exerciseCmd bob.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  charlieAuctionCid  <- submit bank do exerciseCmd charlie.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+  daveAuctionCid     <- submit bank do exerciseCmd dave.biddingServiceCid Bidding.RequestBid with issuer = issuer.customer; asset = auctionAsset; auctionId; quotedAssetId; publishedBidCids = []
+
+  pure Fixture with ..
+
+submitBid : Customer -> ContractId Bidding.A -> ContractId AssetDeposit -> Decimal -> Decimal -> Script (ContractId Bidding.Bid)
+submitBid party auctionCid depositCid price quantity = do
+  let allowPublishing = False
+  time <- getTime
+  submit party.customer do exerciseCmd party.biddingServiceCid Bidding.SubmitBid with ..
+
+auctionAndBidsFullyAllocated : Script ()
+auctionAndBidsFullyAllocated = do
+  Fixture{..} <- setup
+
+  -- Create our bids
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 11.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 12.0 150.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 13.0 50.0
+
+  -- Kick off the auction
+  let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
+  (auctionCid, siCids) <- bank `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
+
+  -- Assertions
+  length siCids === 4
+  auction <- fromSome <$> queryContractId bank auctionCid
+  auction.status === Auction.FullyAllocated with finalPrice = 10.0
+  bids <- query @Bidding.Bid bank
+  all ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids === True
+
+  -- Settle
+  depositCids <- forA siCids \siCid -> bank `submit` exerciseCmd siCid Settle.Settle
+
+  -- Settlement Assertions
+  auction <- snd . head <$> query @Auction.Auction bank
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
+  assertAuctionMatchesPayments auction issuerPayments
+  F.forA_ bids \(_, bid) -> do
+    case bid.status of
+      Bidding.FullAllocation price -> do
+        assertAssetDeposits auction issuer originalDeposits price bid.details.quantity bid
+      _ -> pure ()
+    pure ()
+
+
+auctionParticallyAllocatedOneBidFullyAllocated : Script ()
+auctionParticallyAllocatedOneBidFullyAllocated = do
+  Fixture{..} <- setup
+
+  -- Create our bids
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 1.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 2.0 200.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 3.0 100.0
+
+  -- Kick off the auction
+  let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
+  (auctionCid, siCids) <- bank `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
+
+  -- Assertions
+  length siCids === 1
+  auction <- fromSome <$> queryContractId bank auctionCid
+  auction.status === Auction.PartiallyAllocated with finalPrice = 10.0; remaining = 500.0
+  bids <- query @Bidding.Bid bank
+  length (filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids) === 1
+  let fullAllocationParty = (.customer) . snd . head $ filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids
+  fullAllocationParty === alice.customer
+  length (filter ((\bid -> bid.status == Bidding.Invalid) . snd) bids) === 3
+
+  -- Settle
+  depositCids <- forA siCids \siCid -> bank `submit` exerciseCmd siCid Settle.Settle
+
+  -- Settlement Assertions
+  auction <- snd . head <$> query @Auction.Auction bank
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
+  assertAuctionMatchesPayments auction issuerPayments
+  F.forA_ bids \(_, bid) -> do
+    case bid.status of
+      Bidding.FullAllocation price -> do
+        assertAssetDeposits auction issuer originalDeposits price bid.details.quantity bid
+      _ -> pure ()
+    pure ()
+
+auctionFullyAllocatedBidsParticallyAllocated : Script ()
+auctionFullyAllocatedBidsParticallyAllocated = do
+  Fixture{..} <- setup
+
+  -- Create our bids
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 10.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 11.0 400.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 12.0 150.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 11.0 50.0
+
+  -- Kick off the auction
+  let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
+  (auctionCid, siCids) <- bank `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
+
+  -- Assertions
+  length siCids === 4
+  auction <- fromSome <$> queryContractId bank auctionCid
+  auction.status === Auction.FullyAllocated with finalPrice = 10.0
+  bids <- query @Bidding.Bid bank
+  length (filter ((\bid -> bid.status == Bidding.FullAllocation with price = 10.0) . snd) bids) === 3
+  length (filter ((\bid -> bid.status == Bidding.PartialAllocation with price = 10.0; quantity = 400.0) . snd) bids) === 1
+
+  -- Settle
+  depositCids <- forA siCids \siCid -> bank `submit` exerciseCmd siCid Settle.Settle
+
+  -- Settlement Assertions
+  auction <- snd . head <$> query @Auction.Auction bank
+  issuerPayments <- queryFilter @AssetDeposit issuer.customer (\deposit -> deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label) >>= \deposits -> pure $ map snd deposits
+  assertAuctionMatchesPayments auction issuerPayments
+  F.forA_ bids \(_, bid) -> do
+    case bid.status of
+      Bidding.FullAllocation price -> do
+        assertAssetDeposits auction issuer originalDeposits price bid.details.quantity bid
+      Bidding.PartialAllocation price quantity -> do
+        assertAssetDeposits auction issuer originalDeposits price quantity bid
+      _ -> pure ()
+    pure ()
+
+auctionNoBidsAboveFloorPrice : Script ()
+auctionNoBidsAboveFloorPrice = do
+  Fixture{..} <- setup
+
+  -- Create our bids
+  aliceBidCid   <- submitBid alice aliceAuctionCid aliceDepositCid 1.0 500.0
+  bobBidCid     <- submitBid bob bobAuctionCid bobDepositCid 2.0 300.0
+  charlieBidCid <- submitBid charlie charlieAuctionCid charlieDepositCid 3.0 100.0
+  daveBidCid    <- submitBid dave daveAuctionCid daveDepositCid 4.0 100.0
+
+  -- Kick off the auction
+  let bidCids = [ aliceBidCid, bobBidCid, charlieBidCid, daveBidCid ]
+  (auctionCid, siCids) <- bank `submit` exerciseCmd auctionServiceCid Auction.ProcessAuction with ..
+
+  -- Assertions
+  siCids === []
+  auction <- fromSome <$> queryContractId bank auctionCid
+  auction.status === Auction.NoValidBids
+  bids <- query @Bidding.Bid bank
+  all ((\bid -> bid.status == Bidding.Invalid) . snd) bids === True
+  F.forA_ [alice, bob, charlie, dave] (\party -> do
+    let ((_, bid) :: _) = filter (\(_, bid) -> bid.customer == party.customer) bids
+    deposit <- queryFilter @AssetDeposit party.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id.label == bid.quotedAssetId.label)
+    assertMsg ("Deposit not returned to Investor: " <> show party.customer) (not $ null deposit)
+    pure ()
+    )
+
+depositsDontCoverBids : Script ()
+depositsDontCoverBids = do
+  Fixture{..} <- setup
+
+  let allowPublishing = False
+  time <- getTime
+  submitMustFail alice.customer   do exerciseCmd alice.biddingServiceCid Bidding.SubmitBid with auctionCid = aliceAuctionCid; depositCid = aliceDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail bob.customer     do exerciseCmd bob.biddingServiceCid Bidding.SubmitBid with auctionCid = bobAuctionCid; depositCid = bobDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail charlie.customer do exerciseCmd charlie.biddingServiceCid Bidding.SubmitBid with auctionCid = charlieAuctionCid; depositCid = charlieDepositCid; price = 10000.0; quantity = 500.0; ..
+  submitMustFail dave.customer    do exerciseCmd dave.biddingServiceCid Bidding.SubmitBid with auctionCid = daveAuctionCid; depositCid = daveDepositCid; price = 10000.0; quantity = 500.0; ..
+
+  pure ()
+
+assertAssetDeposits : Auction.Auction -> Customer -> [AssetDeposit] -> Decimal -> Decimal -> Bidding.Bid -> Script ()
+assertAssetDeposits auction issuer originalDeposits price quantity bid = do
+  -- Correct Distribution of new asset check
+  deposit <- snd . head <$> queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == bid.assetId)
+  assertMsg "Distribution quantity incorrect" (deposit.asset.quantity == quantity)
+  -- Correct Payment to issuer check
+  issuerPayment <- queryFilter @AssetDeposit issuer.customer (\deposit ->
+    deposit.account == issuer.mainAccount && deposit.asset.id.label == auction.quotedAssetId.label && deposit.asset.quantity == quantity * price)
+  assertMsg "No valid payment to issuer" (not $ null issuerPayment)
+  -- If Investor/Bidder original deposit is split -> Check deposit contains the correct remaining amount
+  quotedDeposit <- queryFilter @AssetDeposit bid.customer (\deposit -> deposit.account == bid.tradingAccount && deposit.asset.id == auction.quotedAssetId)
+  case quotedDeposit of
+    ([(_, x)]) -> do
+      let originalDeposit = head $ filter (\deposit -> deposit.account.owner == x.account.owner) originalDeposits
+      let newQuantity = case bid.status of
+            (Bidding.PartialAllocation _ quantity) -> quantity
+            _                                      -> bid.details.quantity
+      assertMsg "Investor/Bidder split deposit contains incorrect quantity" (x.asset.quantity == (originalDeposit.asset.quantity - (newQuantity * price)))
+    _ -> pure ()
+
+assertAuctionMatchesPayments : Auction.Auction -> [AssetDeposit] -> Script ()
+assertAuctionMatchesPayments auction issuerPayments = do
+  case auction.status of
+    Auction.FullyAllocated price               -> auction.asset.quantity * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
+    Auction.PartiallyAllocated price remaining -> (auction.asset.quantity - remaining) * price === foldr (\payment acc -> payment.asset.quantity + acc) 0.0 issuerPayments
+    _ -> pure ()
+
+bidSortingTest : Script ()
+bidSortingTest = do
+
+  let
+    bid1 = Bidding.Details with price = 2.0; quantity = 1.0; time = datetime 2021 Jan 1 0 0 0
+    bid2 = Bidding.Details with price = 1.0; quantity = 2.0; time = datetime 2021 Jan 1 1 0 0
+    bid3 = Bidding.Details with price = 1.0; quantity = 1.0; time = datetime 2021 Jan 1 1 1 0
+    bid4 = Bidding.Details with price = 1.0; quantity = 1.0; time = datetime 2021 Jan 1 1 1 1
+    bids = [bid3, bid2, bid1, bid4]
+
+  sortOn Down bids === [bid1, bid2, bid3, bid4]

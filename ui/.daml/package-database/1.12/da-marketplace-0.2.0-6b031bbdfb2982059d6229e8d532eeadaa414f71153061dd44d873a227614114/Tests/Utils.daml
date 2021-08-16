@@ -1,0 +1,160 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Tests.Utils (
+        module Tests.Utils
+    ) where
+import ContingentClaims.Claim
+import ContingentClaims.Observation
+import DA.Finance.Asset
+import DA.Finance.Types
+import CurrentSdk.DA.Internal.LF
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+type C =
+    ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)
+payment ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))
+payment _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+futurePayment ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (CurrentSdk.DA.Internal.LF.Date
+           -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))
+futurePayment _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+delivery ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))
+delivery _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+dvp ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (DA.Finance.Types.Id
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))))
+dvp _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+futureDvp ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (DA.Finance.Types.Id
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> (CurrentSdk.DA.Internal.LF.Date
+                   -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))))
+futureDvp _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+futureDelivery ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (CurrentSdk.DA.Internal.LF.Date
+           -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))
+futureDelivery _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+callOptionPhysical ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (DA.Finance.Types.Id
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> (CurrentSdk.DA.Internal.LF.Date
+                   -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))))
+callOptionPhysical _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+binaryCallOption ::
+  (DA.Finance.Types.Id
+   -> (DA.Finance.Types.Id
+       -> ((CurrentSdk.GHC.Types.Numeric 10)
+           -> (CurrentSdk.DA.Internal.LF.Date
+               -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))))
+binaryCallOption _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+convertibleNote ::
+  (DA.Finance.Types.Id
+   -> (DA.Finance.Types.Id
+       -> ((CurrentSdk.GHC.Types.Numeric 10)
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> (CurrentSdk.DA.Internal.LF.Date
+                   -> ((CurrentSdk.GHC.Types.Numeric 10)
+                       -> ((CurrentSdk.GHC.Types.Numeric 10)
+                           -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))))))
+convertibleNote _ _ _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+koPutWarrant ::
+  ((CurrentSdk.GHC.Types.Numeric 10)
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (DA.Finance.Types.Id
+           -> (DA.Finance.Types.Id
+               -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))))
+koPutWarrant _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+getDepositQuantities ::
+  (CurrentSdk.DA.Internal.LF.Party
+   -> (([] (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (CurrentSdk.GHC.Types.Numeric 10))))
+getDepositQuantities _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+getDepositsForAccount ::
+  (CurrentSdk.DA.Internal.LF.Party
+   -> (DA.Finance.Types.Account
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ([] (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)))))
+getDepositsForAccount _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+depositsQuantityEquals ::
+  (CurrentSdk.DA.Internal.LF.Party
+   -> (DA.Finance.Types.Account
+       -> ((CurrentSdk.GHC.Types.Numeric 10)
+           -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script CurrentSdk.GHC.Types.Bool))))
+depositsQuantityEquals _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+bermudanSwaption ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (DA.Finance.Types.Id
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> (([] CurrentSdk.DA.Internal.LF.Date)
+                   -> (([] CurrentSdk.DA.Internal.LF.Date)
+                       -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))))))
+bermudanSwaption _ _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+bond ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> ((CurrentSdk.GHC.Types.Numeric 10)
+           -> (([] CurrentSdk.DA.Internal.LF.Date)
+               -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id)))))
+bond _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+future ::
+  (DA.Finance.Types.Id
+   -> ((CurrentSdk.GHC.Types.Numeric 10)
+       -> (CurrentSdk.DA.Internal.LF.Date
+           -> ((((ContingentClaims.Claim.Claim ContingentClaims.Observation.Observation) CurrentSdk.DA.Internal.LF.Date) (CurrentSdk.GHC.Types.Numeric 10)) DA.Finance.Types.Id))))
+future _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

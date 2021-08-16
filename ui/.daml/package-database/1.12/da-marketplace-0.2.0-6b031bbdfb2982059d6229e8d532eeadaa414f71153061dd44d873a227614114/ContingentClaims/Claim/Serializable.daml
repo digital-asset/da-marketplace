@@ -1,0 +1,206 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module ContingentClaims.Claim.Serializable (
+        module ContingentClaims.Claim.Serializable
+    ) where
+import ContingentClaims.Observation
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Daml.Control.Recursion
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+data ClaimF t x a b
+  = ZeroF |
+    OneF a |
+    GiveF b |
+    AndF {claims :: ([] b)} |
+    OrF {lhs :: b, rhs :: b} |
+    CondF {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+           success :: b,
+           failure :: b} |
+    ScaleF {k :: ((ContingentClaims.Observation.Observation t) x),
+            claim :: b} |
+    WhenF {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+           claim :: b} |
+    AnytimeF {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+              claim :: b} |
+    UntilF {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+            claim :: b}
+data Inequality t x
+  = TimeGte t |
+    Lte (((,) ((ContingentClaims.Observation.Observation t) x)) ((ContingentClaims.Observation.Observation t) x))
+data Claim t x a
+  = Zero |
+    One a |
+    Give (((ContingentClaims.Claim.Serializable.Claim t) x) a) |
+    And {claims :: ([] (((ContingentClaims.Claim.Serializable.Claim t) x) a))} |
+    Or {lhs :: (((ContingentClaims.Claim.Serializable.Claim t) x) a),
+        rhs :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)} |
+    Cond {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+          success :: (((ContingentClaims.Claim.Serializable.Claim t) x) a),
+          failure :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)} |
+    Scale {k :: ((ContingentClaims.Observation.Observation t) x),
+           claim :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)} |
+    When {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+          claim :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)} |
+    Anytime {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+             claim :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)} |
+    Until {predicate :: ((ContingentClaims.Claim.Serializable.Inequality t) x),
+           claim :: (((ContingentClaims.Claim.Serializable.Claim t) x) a)}
+instance (forall t x.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show x)) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show ((ContingentClaims.Claim.Serializable.Inequality t) x)) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x a.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show a),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show x)) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show (((ContingentClaims.Claim.Serializable.Claim t) x) a)) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x a.
+          () =>
+          Daml.Control.Recursion.Recursive (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.ClaimF t) x) a)) where
+  project _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  cata _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  para _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  histo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gcata _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "success" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) b)
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "success" (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.Claim t) x) a))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "rhs" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) b)
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "rhs" (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.Claim t) x) a))
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "predicate" (((ContingentClaims.Claim.Serializable.Claim t) x) a) ((ContingentClaims.Claim.Serializable.Inequality t) x))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "predicate" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) ((ContingentClaims.Claim.Serializable.Inequality t) x))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "lhs" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) b)
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "lhs" (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.Claim t) x) a))
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "k" (((ContingentClaims.Claim.Serializable.Claim t) x) a) ((ContingentClaims.Observation.Observation t) x))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "k" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) ((ContingentClaims.Observation.Observation t) x))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "failure" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) b)
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "failure" (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.Claim t) x) a))
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "claims" (((ContingentClaims.Claim.Serializable.Claim t) x) a) ([] (((ContingentClaims.Claim.Serializable.Claim t) x) a)))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "claims" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) ([] b))
+instance (forall t x a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "claim" ((((ContingentClaims.Claim.Serializable.ClaimF t) x) a) b) b)
+instance (forall t x a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "claim" (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.Claim t) x) a))
+instance (forall t x a.
+          () =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor (((ContingentClaims.Claim.Serializable.ClaimF t) x) a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x.
+          () =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((ContingentClaims.Claim.Serializable.Claim t) x)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq x)) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq ((ContingentClaims.Claim.Serializable.Inequality t) x)) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x a.
+          ((Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq a),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq t),
+           (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq x)) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq (((ContingentClaims.Claim.Serializable.Claim t) x) a)) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall t x a.
+          () =>
+          Daml.Control.Recursion.Corecursive (((ContingentClaims.Claim.Serializable.Claim t) x) a) (((ContingentClaims.Claim.Serializable.ClaimF t) x) a)) where
+  embed _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  ana _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  apo _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  futu _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  gana _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

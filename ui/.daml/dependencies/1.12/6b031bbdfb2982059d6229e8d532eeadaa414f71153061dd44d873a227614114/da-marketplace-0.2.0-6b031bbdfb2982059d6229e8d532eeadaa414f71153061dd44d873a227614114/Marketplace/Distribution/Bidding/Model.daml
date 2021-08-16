@@ -1,0 +1,76 @@
+module Marketplace.Distribution.Bidding.Model where
+
+import DA.Finance.Types (Account, Asset, Id)
+import DA.Finance.Asset (AssetDeposit)
+
+type A = Auction
+type T = Bid
+
+data Details = Details with
+    price : Decimal
+    quantity : Decimal
+    time : Time
+  deriving (Eq, Show)
+
+data PublishedBid = PublishedBid
+  with
+    investor : Party
+    auctionId : Text
+    quantity : Decimal
+  deriving (Eq, Show)
+
+instance Ord Details where
+  compare x y = (x.price, x.quantity, Down x.time) `compare` (y.price, y.quantity, Down y.time)
+
+template Auction
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    issuer : Party
+    auctionId : Text
+    asset : Asset
+    quotedAssetId : Id
+    publishedBids: [PublishedBid]
+  where
+    signatory operator, provider, customer
+
+data Status
+    = Pending
+    | FullAllocation with
+        price : Decimal
+    | PartialAllocation with
+        price : Decimal
+        quantity : Decimal
+    | NoAllocation
+    | Invalid
+  deriving (Eq, Show)
+
+template Bid
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    issuer : Party
+    auctionId : Text
+    assetId : Id
+    details : Details
+    quotedAssetId : Id
+    tradingAccount : Account
+    allocationAccount : Account
+    depositCid : ContractId AssetDeposit
+    allowPublishing : Bool
+    status : Status
+  where
+    signatory operator, provider, customer
+    ensure details.quantity > 0.0
+
+    key (customer, auctionId) : (Party, Text)
+    maintainer key._1
+
+    controller provider can
+      UpdateStatus : ContractId Bid
+        with
+          newStatus : Status
+        do
+          create this with status = newStatus

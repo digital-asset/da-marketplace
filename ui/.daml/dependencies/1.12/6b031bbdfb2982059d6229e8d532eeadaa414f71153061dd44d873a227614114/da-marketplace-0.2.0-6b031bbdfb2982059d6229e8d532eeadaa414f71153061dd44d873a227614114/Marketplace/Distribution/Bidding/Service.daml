@@ -1,0 +1,160 @@
+module Marketplace.Distribution.Bidding.Service where
+
+import DA.Finance.Asset (AssetDeposit, AssetDeposit_Split(..))
+import DA.Finance.Types (Asset, Account, Id)
+import DA.List (head, last)
+import Marketplace.Distribution.Bidding.Model qualified as Bidding
+import Marketplace.Settlement.Model as Settlement (SettlementDetails, SettlementInstruction(..))
+import Marketplace.Rule.AllocationAccount qualified as Allocation
+import Marketplace.Rule.AllocationAccount (AllocationAccountRule(..))
+import Marketplace.Utils
+
+type S = Service
+
+template Service
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory operator, provider, customer
+
+    key (operator, provider, customer) : (Party, Party, Party)
+    maintainer key._1
+
+    controller customer can
+      nonconsuming SubmitBid : ContractId Bidding.Bid
+        with
+          auctionCid : ContractId Bidding.Auction
+          price : Decimal
+          quantity : Decimal
+          depositCid : ContractId AssetDeposit
+          allowPublishing : Bool
+        do
+          -- TODO: Check for parallism of this choice
+          Bidding.Auction{asset; issuer; auctionId; quotedAssetId} <- fetch auctionCid
+          hasBid <- visibleByKey @Bidding.Bid (customer, auctionId)
+          assertMsg ("Bid already exists") (not hasBid)
+
+          deposit <- fetch depositCid
+          assertMsg ("Deposit does not cover submitted bid") (deposit.asset.quantity >= price * quantity)
+          assertMsg ("Deposited asset does not match the auction's quoted asset") (deposit.asset.id.label == quotedAssetId.label)
+
+          depositCid <- exerciseByKey @AllocationAccountRule allocationAccount.id Allocation.Deposit with ..
+          time <- getTime
+          create Bidding.Bid with
+              details = Bidding.Details with ..
+              status = Bidding.Pending
+              assetId = asset.id
+              ..
+
+    controller provider can
+      nonconsuming RequestBid : ContractId Bidding.Auction
+        with
+          issuer : Party
+          auctionId : Text
+          asset : Asset
+          quotedAssetId : Id
+          publishedBidCids : [ContractId Bidding.Bid]
+        do
+          publishedBids <- mapA (\bidCid -> do
+            bid <- fetch bidCid
+            assert $ bid.auctionId == auctionId
+            assert bid.allowPublishing
+            pure Bidding.PublishedBid with investor = bid.customer; auctionId = bid.auctionId; quantity = bid.details.quantity) publishedBidCids
+          create Bidding.Auction with ..
+
+      nonconsuming ProcessAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.Bid
+          quantity : Decimal
+          amount : Decimal
+          price : Decimal
+        do
+          -- Fetch Bid -> Extract their deposit -> Split and return unused allocation (if necessary) to the investor -> Update Bid Status
+          bid <- fetch bidCid
+          bidDeposit <- fetch bid.depositCid
+          bidDepositCid <- if bidDeposit.asset.quantity > amount
+                              then do
+                                splitDepositCids <- exercise bid.depositCid AssetDeposit_Split with quantities = [amount]
+                                exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = last splitDepositCids
+                                pure $ head splitDepositCids
+                              else pure bid.depositCid
+
+          let newStatus = if bid.details.quantity == quantity
+                            then Bidding.FullAllocation with price
+                            else Bidding.PartialAllocation with price; quantity
+
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
+          pure (newBidCid, bidDepositCid)
+
+      nonconsuming RejectAllocation : (ContractId Bidding.Bid, ContractId AssetDeposit)
+        with
+          bidCid : ContractId Bidding.Bid
+          newStatus : Bidding.Status
+        do
+          bid <- fetch bidCid
+
+          returnedDeposit <- exerciseByKey @AllocationAccountRule bid.allocationAccount.id Allocation.Withdraw with transferTo = bid.tradingAccount; depositCid = bid.depositCid
+          newBidCid <- exercise bidCid Bidding.UpdateStatus with newStatus
+          pure (newBidCid, returnedDeposit)
+
+    nonconsuming choice GenerateSettlementInstruction : ContractId Settlement.SettlementInstruction
+      with
+        issuer : Party
+        delivery : Settlement.SettlementDetails
+        payment : Settlement.SettlementDetails
+      controller provider, issuer
+      do
+        create SettlementInstruction with details = [delivery, payment]; ..
+
+template Offer
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+  where
+    signatory operator, provider
+
+    controller customer can
+      Accept : ContractId Service
+        with
+          tradingAccount : Account
+          allocationAccount : Account
+        do
+          createOrLookup Service with ..
+
+      Decline : ()
+        do
+          return ()
+
+    controller provider can
+      Withdraw : ()
+        do pure ()
+
+template Request
+  with
+    provider : Party
+    customer : Party
+    tradingAccount : Account
+    allocationAccount : Account
+  where
+    signatory customer
+    observer provider
+
+    controller customer can
+      Cancel : ()
+        do pure ()
+
+    controller provider can
+      Reject : ()
+        do pure ()
+
+    choice Approve : ContractId Service
+      with
+        operator : Party
+      controller operator, provider
+      do
+        createOrLookup Service with ..

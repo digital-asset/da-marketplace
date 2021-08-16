@@ -1,0 +1,371 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Arrow (
+        module Daml.Control.Arrow
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.DA.Types
+import Daml.Control.Category
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+class (Daml.Control.Arrow.Arrow a) => ArrowLoop (a :: (*
+                                                       -> (* -> *))) where
+  loop ::
+    (forall b.
+     (forall d.
+      (forall c. (((a (((,) b) d)) (((,) c) d)) -> ((a b) c)))))
+class (Daml.Control.Arrow.Arrow a) => ArrowApply (a :: (*
+                                                        -> (* -> *))) where
+  app :: (forall b. (forall c. ((a (((,) ((a b) c)) b)) c)))
+class (Daml.Control.Arrow.Arrow a) => ArrowChoice (a :: (*
+                                                         -> (* -> *))) where
+  left ::
+    (forall b.
+     (forall c.
+      (forall d.
+       (((a b) c)
+        -> ((a ((CurrentSdk.DA.Types.Either b) d)) ((CurrentSdk.DA.Types.Either c) d))))))
+  right ::
+    (forall b.
+     (forall c.
+      (forall d.
+       (((a b) c)
+        -> ((a ((CurrentSdk.DA.Types.Either d) b)) ((CurrentSdk.DA.Types.Either d) c))))))
+  (+++) ::
+    (forall b.
+     (forall c.
+      (forall b'.
+       (forall c'.
+        (((a b) c)
+         -> (((a b') c')
+             -> ((a ((CurrentSdk.DA.Types.Either b) b')) ((CurrentSdk.DA.Types.Either c) c'))))))))
+  (|||) ::
+    (forall b.
+     (forall d.
+      (forall c.
+       (((a b) d)
+        -> (((a c) d) -> ((a ((CurrentSdk.DA.Types.Either b) c)) d))))))
+  default left ::
+            (forall b.
+             (forall c.
+              (forall d.
+               (((a b) c)
+                -> ((a ((CurrentSdk.DA.Types.Either b) d)) ((CurrentSdk.DA.Types.Either c) d))))))
+  default right ::
+            (forall b.
+             (forall c.
+              (forall d.
+               (((a b) c)
+                -> ((a ((CurrentSdk.DA.Types.Either d) b)) ((CurrentSdk.DA.Types.Either d) c))))))
+  default (+++) ::
+            (forall b.
+             (forall c.
+              (forall b'.
+               (forall c'.
+                (((a b) c)
+                 -> (((a b') c')
+                     -> ((a ((CurrentSdk.DA.Types.Either b) b')) ((CurrentSdk.DA.Types.Either c) c'))))))))
+  default (|||) ::
+            (forall b.
+             (forall d.
+              (forall c.
+               (((a b) d)
+                -> (((a c) d) -> ((a ((CurrentSdk.DA.Types.Either b) c)) d))))))
+  {-# MINIMAL (left | (+++)) #-}
+  left _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  right _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (+++) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (|||) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+class (Daml.Control.Arrow.ArrowZero a) => ArrowPlus (a :: (*
+                                                           -> (* -> *))) where
+  (<+>) ::
+    (forall b. (forall c. (((a b) c) -> (((a b) c) -> ((a b) c)))))
+class (Daml.Control.Arrow.Arrow a) => ArrowZero (a :: (*
+                                                       -> (* -> *))) where
+  zeroArrow :: (forall b. (forall c. ((a b) c)))
+class (Daml.Control.Category.Category a) => Arrow (a :: (*
+                                                         -> (* -> *))) where
+  arr :: (forall b. (forall c. ((b -> c) -> ((a b) c))))
+  first ::
+    (forall b.
+     (forall c.
+      (forall d. (((a b) c) -> ((a (((,) b) d)) (((,) c) d))))))
+  second ::
+    (forall b.
+     (forall c.
+      (forall d. (((a b) c) -> ((a (((,) d) b)) (((,) d) c))))))
+  (***) ::
+    (forall b.
+     (forall c.
+      (forall b'.
+       (forall c'.
+        (((a b) c) -> (((a b') c') -> ((a (((,) b) b')) (((,) c) c'))))))))
+  (&&&) ::
+    (forall b.
+     (forall c.
+      (forall c'. (((a b) c) -> (((a b) c') -> ((a b) (((,) c) c')))))))
+  default first ::
+            (forall b.
+             (forall c.
+              (forall d. (((a b) c) -> ((a (((,) b) d)) (((,) c) d))))))
+  default second ::
+            (forall b.
+             (forall c.
+              (forall d. (((a b) c) -> ((a (((,) d) b)) (((,) d) c))))))
+  default (***) ::
+            (forall b.
+             (forall c.
+              (forall b'.
+               (forall c'.
+                (((a b) c) -> (((a b') c') -> ((a (((,) b) b')) (((,) c) c'))))))))
+  default (&&&) ::
+            (forall b.
+             (forall c.
+              (forall c'. (((a b) c) -> (((a b) c') -> ((a b) (((,) c) c')))))))
+  {-# MINIMAL arr, (first | (***)) #-}
+  first _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  second _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (***) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (&&&) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+data ArrowMonad (a :: (* -> (* -> *))) b
+  = ArrowMonad {unpack :: ((a ()) b)}
+data Kleisli (m :: (* -> *)) a b
+  = Kleisli {runKleisli :: (a -> (m b))}
+returnA ::
+  (forall (a :: (* -> (* -> *))).
+   (forall b. (Daml.Control.Arrow.Arrow a) => ((a b) b)))
+returnA
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(<<^) ::
+  (forall (a :: (* -> (* -> *))).
+   (forall c.
+    (forall d.
+     (forall b.
+      (Daml.Control.Arrow.Arrow a) =>
+      (((a c) d) -> ((b -> c) -> ((a b) d)))))))
+(<<^) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(>>^) ::
+  (forall (a :: (* -> (* -> *))).
+   (forall b.
+    (forall c.
+     (forall d.
+      (Daml.Control.Arrow.Arrow a) =>
+      (((a b) c) -> ((c -> d) -> ((a b) d)))))))
+(>>^) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(^<<) ::
+  (forall (a :: (* -> (* -> *))).
+   (forall c.
+    (forall d.
+     (forall b.
+      (Daml.Control.Arrow.Arrow a) =>
+      ((c -> d) -> (((a b) c) -> ((a b) d)))))))
+(^<<) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(^>>) ::
+  (forall (a :: (* -> (* -> *))).
+   (forall b.
+    (forall c.
+     (forall d.
+      (Daml.Control.Arrow.Arrow a) =>
+      ((b -> c) -> (((a c) d) -> ((a b) d)))))))
+(^>>) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+leftApp ::
+  (forall (a :: (* -> (* -> *))).
+   (forall b.
+    (forall c.
+     (forall d.
+      (Daml.Control.Arrow.ArrowApply a) =>
+      (((a b) c)
+       -> ((a ((CurrentSdk.DA.Types.Either b) d)) ((CurrentSdk.DA.Types.Either c) d)))))))
+leftApp _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) a b.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "runKleisli" (((Daml.Control.Arrow.Kleisli m) a) b) (a
+                                                                                                                                                                -> (m b)))
+instance (forall (m :: (* -> *)) a.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor m) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((Daml.Control.Arrow.Kleisli m) a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (a :: (* -> (* -> *))).
+          (Daml.Control.Arrow.Arrow a) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor (Daml.Control.Arrow.ArrowMonad a)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)).
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Control.Category.Category (Daml.Control.Arrow.Kleisli m)) where
+  id
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (.) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) a.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort ((Daml.Control.Arrow.Kleisli m) a)) where
+  abort _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)).
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Control.Arrow.Arrow (Daml.Control.Arrow.Kleisli m)) where
+  arr _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  first _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  second _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (***) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (&&&) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)).
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Control.Arrow.ArrowChoice (Daml.Control.Arrow.Kleisli m)) where
+  left _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  right _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (+++) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (|||) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() => Daml.Control.Arrow.ArrowChoice (->)) where
+  left _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  right _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (+++) _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (|||) _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)).
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Daml.Control.Arrow.ArrowApply (Daml.Control.Arrow.Kleisli m)) where
+  app
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() => Daml.Control.Arrow.ArrowApply (->)) where
+  app _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() => Daml.Control.Arrow.Arrow (->)) where
+  arr _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  first _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  second _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (***) _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (&&&) _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) a.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative ((Daml.Control.Arrow.Kleisli m) a)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (a :: (* -> (* -> *))).
+          (Daml.Control.Arrow.Arrow a) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative (Daml.Control.Arrow.ArrowMonad a)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) a.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action ((Daml.Control.Arrow.Kleisli m) a)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (a :: (* -> (* -> *))).
+          (Daml.Control.Arrow.ArrowApply a) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action (Daml.Control.Arrow.ArrowMonad a)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

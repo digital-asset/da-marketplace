@@ -1,0 +1,19 @@
+--
+-- Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: BSD-3-Clause
+--
+
+module Daml.Data.IOr where
+
+import Prelude hiding (Left, Right)
+import DA.Bifunctor
+
+data IOr a b
+  = Left a
+  | Right b
+  | Both with left : a ; right : b
+
+instance Bifunctor IOr where
+  bimap f g (Left a) = Left (f a)
+  bimap f g (Right b) = Right (g b)
+  bimap f g (Both a b) = Both (f a) (g b)

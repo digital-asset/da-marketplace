@@ -1,0 +1,55 @@
+-- Copyright (c) 2019, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+module DA.Finance.Utils where
+
+import DA.Date
+import DA.List as List
+import DA.Finance.Types
+
+instance Semigroup Decimal where
+  (<>) = (+)
+
+instance Monoid Decimal where
+  mempty = 0.0
+
+
+-- | Fetches a contract, archives it and returns its value.
+fetchAndArchive : Template a => ContractId a -> Update a
+fetchAndArchive cid = do
+  c <- fetch cid
+  archive cid
+  return c
+
+-- | Checks that the ledger time is on or after the provided date.
+assertOnOrAfterDateMsg : (CanAbort m, HasTime m) => Text -> Date -> m ()
+assertOnOrAfterDateMsg msg date = do
+  now <- getTime
+  assertMsg msg $ date <= toDateUTC now
+
+-- | Checks that the ledger time is on or after the provided date.
+assertOnOrAfterMsg : (CanAbort m, HasTime m) => Text -> Time -> m ()
+assertOnOrAfterMsg msg time = do
+  now <- getTime
+  assertMsg msg $ time <= now
+
+-- | Like zip but fails if the list lengths don't match
+zipChecked : [a] -> [b] -> [(a, b)]
+zipChecked xs ys
+    | List.length xs /= List.length ys  = error "zipChecked: length mismatch"
+    | otherwise               = zip xs ys
+
+-- | Checks if array is not empty.
+notNull : [a] -> Bool
+notNull = not . List.null
+
+-- | Update n-th element in a list
+updateListElement : Int -> (a -> a) -> [a] -> [a]
+updateListElement n f xs = zipWith impl xs [0..(List.length xs - 1)]
+  where
+    impl x i | i == n = f x
+    impl x _ = x
+
+-- | Increase id version.
+increaseVersion : Id -> Id
+increaseVersion id@Id{..} = id with version = version + 1

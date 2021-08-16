@@ -1,0 +1,136 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Tests.Distribution.Auction (
+        module Tests.Distribution.Auction
+    ) where
+import Common
+import DA.Finance.Asset
+import CurrentSdk.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+import CurrentSdk.GHC.Types
+import Marketplace.Distribution.Auction.Model
+import Marketplace.Distribution.Auction.Service
+import Marketplace.Distribution.Bidding.Model
+data Fixture
+  = Fixture {bank :: CurrentSdk.DA.Internal.LF.Party,
+             issuer :: Common.Customer,
+             alice :: Common.Customer,
+             bob :: Common.Customer,
+             charlie :: Common.Customer,
+             dave :: Common.Customer,
+             aliceDepositCid :: (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit),
+             bobDepositCid :: (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit),
+             charlieDepositCid :: (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit),
+             daveDepositCid :: (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit),
+             aliceAuctionCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction),
+             bobAuctionCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction),
+             charlieAuctionCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction),
+             daveAuctionCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction),
+             auctionServiceCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Auction.Service.Service),
+             auctionCid :: (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Auction.Model.Auction),
+             originalDeposits :: ([] DA.Finance.Asset.AssetDeposit)}
+bidSortingTest ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+bidSortingTest
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+assertAuctionMatchesPayments ::
+  (Marketplace.Distribution.Auction.Model.Auction
+   -> (([] DA.Finance.Asset.AssetDeposit)
+       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())))
+assertAuctionMatchesPayments _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+assertAssetDeposits ::
+  (Marketplace.Distribution.Auction.Model.Auction
+   -> (Common.Customer
+       -> (([] DA.Finance.Asset.AssetDeposit)
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> ((CurrentSdk.GHC.Types.Numeric 10)
+                   -> (Marketplace.Distribution.Bidding.Model.Bid
+                       -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())))))))
+assertAssetDeposits _ _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+submitBid ::
+  (Common.Customer
+   -> ((CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction)
+       -> ((CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit)
+           -> ((CurrentSdk.GHC.Types.Numeric 10)
+               -> ((CurrentSdk.GHC.Types.Numeric 10)
+                   -> (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Bid)))))))
+submitBid _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+setup ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script Tests.Distribution.Auction.Fixture)
+setup
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+auctionAndBidsFullyAllocated ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+auctionAndBidsFullyAllocated
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+auctionNoBidsAboveFloorPrice ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+auctionNoBidsAboveFloorPrice
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+depositsDontCoverBids ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+depositsDontCoverBids
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+auctionFullyAllocatedBidsParticallyAllocated ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+auctionFullyAllocatedBidsParticallyAllocated
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+auctionParticallyAllocatedOneBidFullyAllocated ::
+  (Pkg_1178b10733de7db22ce054f348635db86bae6a0ecbdfdc830c7071e9a9ed1fb7.Daml.Script.Script ())
+auctionParticallyAllocatedOneBidFullyAllocated
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "originalDeposits" Tests.Distribution.Auction.Fixture ([] DA.Finance.Asset.AssetDeposit))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "issuer" Tests.Distribution.Auction.Fixture Common.Customer)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "daveDepositCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "daveAuctionCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "dave" Tests.Distribution.Auction.Fixture Common.Customer)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "charlieDepositCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "charlieAuctionCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "charlie" Tests.Distribution.Auction.Fixture Common.Customer)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "bobDepositCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "bobAuctionCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "bob" Tests.Distribution.Auction.Fixture Common.Customer)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "bank" Tests.Distribution.Auction.Fixture CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "auctionServiceCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Auction.Service.Service))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "auctionCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Auction.Model.Auction))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "aliceDepositCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId DA.Finance.Asset.AssetDeposit))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "aliceAuctionCid" Tests.Distribution.Auction.Fixture (CurrentSdk.DA.Internal.LF.ContractId Marketplace.Distribution.Bidding.Model.Auction))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "alice" Tests.Distribution.Auction.Fixture Common.Customer)

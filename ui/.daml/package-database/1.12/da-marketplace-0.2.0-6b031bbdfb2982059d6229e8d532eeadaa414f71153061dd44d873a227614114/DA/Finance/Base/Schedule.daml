@@ -1,0 +1,230 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module DA.Finance.Base.Schedule (
+        module DA.Finance.Base.Schedule
+    ) where
+import DA.Finance.Base.HolidayCalendar
+import DA.Finance.Base.RollConvention
+import CurrentSdk.DA.Internal.LF
+import CurrentSdk.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show
+import CurrentSdk.GHC.Types
+type Schedule = ([] DA.Finance.Base.Schedule.SchedulePeriod)
+data SchedulePeriod
+  = SchedulePeriod {adjustedEndDate :: CurrentSdk.DA.Internal.LF.Date,
+                    adjustedStartDate :: CurrentSdk.DA.Internal.LF.Date,
+                    unadjustedEndDate :: CurrentSdk.DA.Internal.LF.Date,
+                    unadjustedStartDate :: CurrentSdk.DA.Internal.LF.Date}
+data PeriodicSchedule
+  = PeriodicSchedule {effectiveDate :: CurrentSdk.DA.Internal.LF.Date,
+                      terminationDate :: CurrentSdk.DA.Internal.LF.Date,
+                      firstRegularPeriodStartDate :: (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Date),
+                      lastRegularPeriodEndDate :: (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Date),
+                      frequency :: DA.Finance.Base.Schedule.Frequency,
+                      businessDayAdjustment :: DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment,
+                      effectiveDateBusinessDayAdjustment :: (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment),
+                      terminationDateBusinessDayAdjustment :: (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment),
+                      stubPeriodType :: (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.Schedule.StubPeriodTypeEnum)}
+data Frequency
+  = Frequency {period :: DA.Finance.Base.RollConvention.PeriodEnum,
+               periodMultiplier :: CurrentSdk.GHC.Types.Int,
+               rollConvention :: DA.Finance.Base.RollConvention.RollConventionEnum}
+data StubPeriodTypeEnum
+  = LONG_FINAL | LONG_INITIAL | SHORT_FINAL | SHORT_INITIAL
+validDates ::
+  (DA.Finance.Base.Schedule.PeriodicSchedule
+   -> (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.GHC.Types.Text))
+validDates _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+toSchedule ::
+  (([] CurrentSdk.DA.Internal.LF.Date)
+   -> (([] CurrentSdk.DA.Internal.LF.Date)
+       -> ([] DA.Finance.Base.Schedule.SchedulePeriod)))
+toSchedule _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+rollForwardImpl ::
+  (CurrentSdk.DA.Internal.LF.Date
+   -> (DA.Finance.Base.RollConvention.Period
+       -> (DA.Finance.Base.RollConvention.RollConventionEnum
+           -> (([] CurrentSdk.DA.Internal.LF.Date)
+               -> ([] CurrentSdk.DA.Internal.LF.Date)))))
+rollForwardImpl _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+rollForward ::
+  (CurrentSdk.DA.Internal.LF.Date
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> (DA.Finance.Base.RollConvention.Period
+           -> (DA.Finance.Base.RollConvention.RollConventionEnum
+               -> ([] CurrentSdk.DA.Internal.LF.Date)))))
+rollForward _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+rollBackwardsImpl ::
+  (CurrentSdk.DA.Internal.LF.Date
+   -> (DA.Finance.Base.RollConvention.Period
+       -> (DA.Finance.Base.RollConvention.RollConventionEnum
+           -> (([] CurrentSdk.DA.Internal.LF.Date)
+               -> ([] CurrentSdk.DA.Internal.LF.Date)))))
+rollBackwardsImpl _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+rollBackwards ::
+  (CurrentSdk.DA.Internal.LF.Date
+   -> (CurrentSdk.DA.Internal.LF.Date
+       -> (DA.Finance.Base.RollConvention.Period
+           -> (DA.Finance.Base.RollConvention.RollConventionEnum
+               -> ([] CurrentSdk.DA.Internal.LF.Date)))))
+rollBackwards _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+getImplicitStubType ::
+  ((CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.Schedule.StubPeriodTypeEnum)
+   -> (CurrentSdk.GHC.Types.Bool
+       -> (CurrentSdk.GHC.Types.Bool
+           -> (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.Schedule.StubPeriodTypeEnum))))
+getImplicitStubType _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+adjust ::
+  (([] DA.Finance.Base.HolidayCalendar.HolidayCalendarData)
+   -> (DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment
+       -> ((CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment)
+           -> ((CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment)
+               -> (([] CurrentSdk.DA.Internal.LF.Date)
+                   -> ([] CurrentSdk.DA.Internal.LF.Date))))))
+adjust _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+generateUnadjustedDates ::
+  (DA.Finance.Base.Schedule.PeriodicSchedule
+   -> ([] CurrentSdk.DA.Internal.LF.Date))
+generateUnadjustedDates _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+createSchedule ::
+  (([] DA.Finance.Base.HolidayCalendar.HolidayCalendarData)
+   -> (DA.Finance.Base.Schedule.PeriodicSchedule
+       -> ([] DA.Finance.Base.Schedule.SchedulePeriod)))
+createSchedule _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.Schedule.StubPeriodTypeEnum) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.Schedule.SchedulePeriod) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.Schedule.PeriodicSchedule) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Show.Show DA.Finance.Base.Schedule.Frequency) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "unadjustedStartDate" DA.Finance.Base.Schedule.SchedulePeriod CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "unadjustedEndDate" DA.Finance.Base.Schedule.SchedulePeriod CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "terminationDateBusinessDayAdjustment" DA.Finance.Base.Schedule.PeriodicSchedule (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "terminationDate" DA.Finance.Base.Schedule.PeriodicSchedule CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "stubPeriodType" DA.Finance.Base.Schedule.PeriodicSchedule (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.Schedule.StubPeriodTypeEnum))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "rollConvention" DA.Finance.Base.Schedule.Frequency DA.Finance.Base.RollConvention.RollConventionEnum)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "periodMultiplier" DA.Finance.Base.Schedule.Frequency CurrentSdk.GHC.Types.Int)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "period" DA.Finance.Base.Schedule.Frequency DA.Finance.Base.RollConvention.PeriodEnum)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "lastRegularPeriodEndDate" DA.Finance.Base.Schedule.PeriodicSchedule (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Date))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "frequency" DA.Finance.Base.Schedule.PeriodicSchedule DA.Finance.Base.Schedule.Frequency)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "firstRegularPeriodStartDate" DA.Finance.Base.Schedule.PeriodicSchedule (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Date))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "effectiveDateBusinessDayAdjustment" DA.Finance.Base.Schedule.PeriodicSchedule (CurrentSdk.DA.Internal.Prelude.Optional DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment))
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "effectiveDate" DA.Finance.Base.Schedule.PeriodicSchedule CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "businessDayAdjustment" DA.Finance.Base.Schedule.PeriodicSchedule DA.Finance.Base.HolidayCalendar.BusinessDayAdjustment)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "adjustedStartDate" DA.Finance.Base.Schedule.SchedulePeriod CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "adjustedEndDate" DA.Finance.Base.Schedule.SchedulePeriod CurrentSdk.DA.Internal.LF.Date)
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.Schedule.StubPeriodTypeEnum) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.Schedule.SchedulePeriod) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.Schedule.PeriodicSchedule) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Classes.Eq DA.Finance.Base.Schedule.Frequency) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

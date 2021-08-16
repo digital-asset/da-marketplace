@@ -1,0 +1,45 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Category (
+        module Daml.Control.Category
+    ) where
+import CurrentSdk.Data.String
+import CurrentSdk.GHC.Err
+class Category (cat :: (* -> (* -> *))) where
+  id :: (forall a. ((cat a) a))
+  (.) ::
+    (forall b.
+     (forall c.
+      (forall a. (((cat b) c) -> (((cat a) b) -> ((cat a) c))))))
+(<<<) ::
+  (forall (cat :: (* -> (* -> *))).
+   (forall b.
+    (forall c.
+     (forall a.
+      (Daml.Control.Category.Category cat) =>
+      (((cat b) c) -> (((cat a) b) -> ((cat a) c)))))))
+(<<<) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+(>>>) ::
+  (forall (cat :: (* -> (* -> *))).
+   (forall a.
+    (forall b.
+     (forall c.
+      (Daml.Control.Category.Category cat) =>
+      (((cat a) b) -> (((cat b) c) -> ((cat a) c)))))))
+(>>>) _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() => Daml.Control.Category.Category (->)) where
+  id _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (.) _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

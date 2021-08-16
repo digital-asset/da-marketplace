@@ -1,0 +1,151 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module ContingentClaims.FinancialClaim (
+        module ContingentClaims.FinancialClaim
+    ) where
+import ContingentClaims.Claim
+import ContingentClaims.Observable
+import CurrentSdk.DA.Date.Types
+import CurrentSdk.DA.Internal.LF
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Enum
+import CurrentSdk.GHC.Err
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num
+import CurrentSdk.GHC.Types
+unrollDates ::
+  (CurrentSdk.GHC.Types.Int
+   -> (CurrentSdk.GHC.Types.Int
+       -> (([] CurrentSdk.DA.Date.Types.Month)
+           -> (CurrentSdk.GHC.Types.Int
+               -> ([] CurrentSdk.DA.Internal.LF.Date)))))
+unrollDates _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+swap ::
+  (forall t.
+   (forall (f :: (* -> (* -> *))).
+    (forall x.
+     (forall a.
+      ((([] t) -> ((((ContingentClaims.Claim.Claim f) t) x) a))
+       -> ((([] t) -> ((((ContingentClaims.Claim.Claim f) t) x) a))
+           -> (([] t) -> ((((ContingentClaims.Claim.Claim f) t) x) a))))))))
+swap _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+forward ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall a.
+      ((ContingentClaims.Observable.Point f t x),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number ((f t) x)),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible ((f t) x))) =>
+      (t
+       -> (((f t) x)
+           -> (((((ContingentClaims.Claim.Claim f) t) x) a)
+               -> ((((ContingentClaims.Claim.Claim f) t) x) a))))))))
+forward _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+fra ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall a.
+      ((ContingentClaims.Observable.Point f t x),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number ((f t) x)),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible ((f t) x))) =>
+      (t
+       -> (t
+           -> (((f t) x)
+               -> (((f t) x)
+                   -> (((((ContingentClaims.Claim.Claim f) t) x) a)
+                       -> ((((ContingentClaims.Claim.Claim f) t) x) a))))))))))
+fra _ _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+zcb ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall ccy.
+      ((ContingentClaims.Observable.Point f t x),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number ((f t) x)),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible ((f t) x))) =>
+      (t
+       -> (x
+           -> (ccy -> ((((ContingentClaims.Claim.Claim f) t) x) ccy))))))))
+zcb _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+floating ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall ccy.
+      ((ContingentClaims.Observable.Point f t x),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number ((f t) x)),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible ((f t) x))) =>
+      (((f t) x)
+       -> (((f t) x)
+           -> (ccy
+               -> (([] t)
+                   -> ((((ContingentClaims.Claim.Claim f) t) x) ccy)))))))))
+floating _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+fixed ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall ccy.
+      ((ContingentClaims.Observable.Point f t x),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Number ((f t) x)),
+       (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Num.Divisible ((f t) x))) =>
+      (x
+       -> (x
+           -> (ccy
+               -> (([] t)
+                   -> ((((ContingentClaims.Claim.Claim f) t) x) ccy)))))))))
+fixed _ _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+european ::
+  (forall t.
+   (forall (f :: (* -> (* -> *))).
+    (forall x.
+     (forall a.
+      (t
+       -> (((((ContingentClaims.Claim.Claim f) t) x) a)
+           -> ((((ContingentClaims.Claim.Claim f) t) x) a)))))))
+european _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+bermudan ::
+  (forall (f :: (* -> (* -> *))).
+   (forall t.
+    (forall x.
+     (forall a.
+      (((((ContingentClaims.Claim.Claim f) t) x) a)
+       -> (([] t) -> ((((ContingentClaims.Claim.Claim f) t) x) a)))))))
+bermudan _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+american ::
+  (forall t.
+   (forall (f :: (* -> (* -> *))).
+    (forall x.
+     (forall a.
+      (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Enum.Enum t) =>
+      (t
+       -> (t
+           -> (((((ContingentClaims.Claim.Claim f) t) x) a)
+               -> ((((ContingentClaims.Claim.Claim f) t) x) a))))))))
+american _ _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))

@@ -1,0 +1,170 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods #-}
+module Daml.Control.Monad.Reader (
+        module Daml.Control.Monad.Reader
+    ) where
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude
+import Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record
+import Daml.Control.Monad.Trans
+import Daml.Data.Functor.Identity
+import CurrentSdk.Data.String
+import Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base
+import CurrentSdk.GHC.Err
+data ReaderT r (m :: (* -> *)) a
+  = ReaderT {runReaderT :: (r -> (m a))}
+reader ::
+  (forall (m :: (* -> *)).
+   (forall r.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((r -> a) -> (((Daml.Control.Monad.Reader.ReaderT r) m) a)))))
+reader _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+liftReaderT ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (forall r.
+     ((m a) -> (((Daml.Control.Monad.Reader.ReaderT r) m) a)))))
+liftReaderT _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+asks ::
+  (forall (m :: (* -> *)).
+   (forall r.
+    (forall a.
+     (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+     ((r -> a) -> (((Daml.Control.Monad.Reader.ReaderT r) m) a)))))
+asks _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+ask ::
+  (forall (m :: (* -> *)).
+   (forall r.
+    (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+    (((Daml.Control.Monad.Reader.ReaderT r) m) r)))
+ask
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+mapReaderT ::
+  (forall (m :: (* -> *)).
+   (forall a.
+    (forall (n :: (* -> *)).
+     (forall b.
+      (forall r.
+       (((m a) -> (n b))
+        -> ((((Daml.Control.Monad.Reader.ReaderT r) m) a)
+            -> (((Daml.Control.Monad.Reader.ReaderT r) n) b))))))))
+mapReaderT _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+mapReader ::
+  (forall a.
+   (forall b.
+    (forall r.
+     ((a -> b)
+      -> ((((Daml.Control.Monad.Reader.ReaderT r) Daml.Data.Functor.Identity.Identity) a)
+          -> (((Daml.Control.Monad.Reader.ReaderT r) Daml.Data.Functor.Identity.Identity) b))))))
+mapReader _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+runReader ::
+  (forall r.
+   (forall a.
+    ((((Daml.Control.Monad.Reader.ReaderT r) Daml.Data.Functor.Identity.Identity) a)
+     -> (r -> a))))
+runReader _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+withReaderT ::
+  (forall r'.
+   (forall r.
+    (forall (m :: (* -> *)).
+     (forall a.
+      ((r' -> r)
+       -> ((((Daml.Control.Monad.Reader.ReaderT r) m) a)
+           -> (((Daml.Control.Monad.Reader.ReaderT r') m) a)))))))
+withReaderT _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+local ::
+  (forall r.
+   (forall (m :: (* -> *)).
+    (forall a.
+     ((r -> r)
+      -> ((((Daml.Control.Monad.Reader.ReaderT r) m) a)
+          -> (((Daml.Control.Monad.Reader.ReaderT r) m) a))))))
+local _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+withReader ::
+  (forall r'.
+   (forall r.
+    (forall a.
+     ((r' -> r)
+      -> ((((Daml.Control.Monad.Reader.ReaderT r) Daml.Data.Functor.Identity.Identity) a)
+          -> (((Daml.Control.Monad.Reader.ReaderT r') Daml.Data.Functor.Identity.Identity) a))))))
+withReader _ _
+  = (CurrentSdk.GHC.Err.error
+       (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall r.
+          () =>
+          Daml.Control.Monad.Trans.MonadTrans (Daml.Control.Monad.Reader.ReaderT r)) where
+  lift _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall r (m :: (* -> *)) a.
+          () =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Record.HasField "runReaderT" (((Daml.Control.Monad.Reader.ReaderT r) m) a) (r
+                                                                                                                                                                       -> (m a)))
+instance (forall (m :: (* -> *)) r.
+          (Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor m) =>
+          Pkg_b5f4956f34e1287e61d010cebb9a183fd4b3f18118fd0eed41f691954d41063a.GHC.Base.Functor ((Daml.Control.Monad.Reader.ReaderT r) m)) where
+  fmap _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<$) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) s.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.LF.CanAbort ((Daml.Control.Monad.Reader.ReaderT s) m)) where
+  abort _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) r.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Applicative ((Daml.Control.Monad.Reader.ReaderT r) m)) where
+  pure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  liftA2 _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (*>) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (<*) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) r.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.Action ((Daml.Control.Monad.Reader.ReaderT r) m)) where
+  (>>=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (forall (m :: (* -> *)) r.
+          (Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.ActionFail m) =>
+          Pkg_046a0de1374de97a9881df1e91c837cbc8b6a64d3522ecd297ab1b7ee95b9de4.DA.Internal.Prelude.ActionFail ((Daml.Control.Monad.Reader.ReaderT r) m)) where
+  fail _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

@@ -1,0 +1,16 @@
+--
+-- Copyright (c) 2021, Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: BSD-3-Clause
+--
+
+module Daml.Control.Comonad where
+
+class Functor f => Comonad f where
+  extract : f a -> a
+  duplicate : f a -> f (f a)
+  extend : (f a -> a) -> f a -> f a
+  extend f = fmap f . duplicate
+
+instance Comonad ((,) a) where
+  extract (_, x) = x
+  duplicate w@(a, _) = (a, w)

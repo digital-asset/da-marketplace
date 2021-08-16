@@ -1,0 +1,184 @@
+module Marketplace.Custody.Model (
+    OpenAccountRequest(..)
+  , OpenAllocationAccountRequest(..)
+  , CloseAccountRequest(..)
+  , CloseAllocationAccountRequest(..)
+  , CreditAccountRequest(..)
+  , DebitAccountRequest(..)
+  , TransferDepositRequest(..)
+  , LifecycleRequest(..)
+  , Process(..)
+) where
+
+import ContingentClaims.Claim (Claim(Zero), deserialize, serialize)
+import ContingentClaims.Lifecycle qualified as Lifecycle
+import DA.Date (toDateUTC)
+import DA.Finance.Asset
+import DA.Finance.Asset.Settlement
+import DA.Finance.Types
+import DA.Map (Map)
+import DA.Map qualified as Map
+import DA.Set
+import DA.Optional (fromSomeNote)
+import Marketplace.Issuance.AssetDescription (AssetDescription, Claims)
+import Marketplace.Issuance.AssetDescription qualified as AssetDescription
+import DA.Finance.Trade.SettlementInstruction
+import DA.List (init)
+import DA.Action (void, when, foldlA)
+
+template OpenAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    observers : Set Party
+    ctrls : Set Party
+  where
+    signatory operator, provider, customer
+
+template OpenAllocationAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    nominee : Party
+    accountId : Id
+    observers : Set Party
+  where
+    signatory operator, provider, customer
+
+template CloseAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+  where
+    signatory operator, provider, customer
+
+template CloseAllocationAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+  where
+    signatory operator, provider, customer
+
+template CreditAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    asset : Asset
+  where
+    signatory operator, provider, customer
+
+template DebitAccountRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    debit : AssetSettlement_Debit
+  where
+    signatory operator, provider, customer
+
+template TransferDepositRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    accountId : Id
+    transfer : AssetSettlement_Transfer
+  where
+    signatory operator, provider, customer
+
+template LifecycleRequest
+  with
+    operator : Party
+    provider : Party
+    customer : Party
+    assetDepositCid: ContractId AssetDeposit
+    choice: Claims
+  where
+    signatory operator, provider, customer
+
+    -- TODO: this shouldn't be exported; it's only called from CustodyService.Lifecycle
+    choice Process : (ContractId AssetDeposit, [ContractId SettlementInstruction])
+      with
+          investor: Party
+          safekeepingDepositCid: ContractId AssetDeposit
+          fixings: Map Text (Map Date Decimal) --TODO these should be looked up from a contract on-ledger, not provided by the custodian!
+          uniquePayoutId: Text
+      controller investor
+        do
+          t <- toDateUTC <$> getTime
+          assetDeposit <- fetch assetDepositCid
+          (_, description) <- fetchByKey @AssetDescription assetDeposit.asset.id
+          (versionsCid, versions) <- fetchByKey @AssetDescription.Index (fromList . signatory $ description, assetDeposit.asset.id.label)
+          let spot : Text -> Date -> Update Decimal
+              spot label dt = pure $ fromSomeNote
+                ("Lifecycle: Underlying data '" <> label <> "' missing on " <> show dt)
+                (Map.lookup label fixings >>= Map.lookup dt)
+              election = (True, deserialize choice)
+          remaining <- if election._2 /= Zero
+            then Lifecycle.exercise spot election (deserialize description.claims) t
+            else pure (deserialize description.claims)
+          Lifecycle.Result{remaining, pending} <- Lifecycle.lifecycle spot remaining t
+          let serializedRemaining = serialize remaining
+          (_, postAssetVersion) <- exercise versionsCid AssetDescription.LookupOrInsert with claims = serializedRemaining
+          when (postAssetVersion /= assetDeposit.asset.id.version) $
+            createNewVersionOfDescription description postAssetVersion serializedRemaining
+          let payoutSplitQuantities = (\(qty, _) -> qty * assetDeposit.asset.quantity) <$> pending
+          splitResultDeposits <- exercise safekeepingDepositCid AssetDeposit_Split with quantities = payoutSplitQuantities
+          let payoutCids = init splitResultDeposits
+              masterAgreementSignatories = [provider, customer, investor]
+          payoutInstructions <- createPayoutInstructions payoutCids uniquePayoutId description assetDeposit operator masterAgreementSignatories
+          assetDepositCid' <- create assetDeposit with asset = (assetDeposit.asset with id = (assetDeposit.asset.id with version = postAssetVersion))
+          archive assetDepositCid
+          return (assetDepositCid', payoutInstructions)
+
+createPayoutInstructions : [ContractId AssetDeposit] -> Text -> AssetDescription -> AssetDeposit -> Party -> [Party] -> Update [ContractId SettlementInstruction]
+createPayoutInstructions payoutCids uniqueId assetDescription assetDeposit operator masterAgreementSignatories =
+    snd <$> foldlA createSI (1, []) payoutCids
+  where
+    masterAgreement = createMasterAgreement assetDescription assetDeposit masterAgreementSignatories
+    createSettlementDetails payoutDepositCid =
+      SettlementDetails with
+        senderAccount = assetDescription.safekeepingAccount
+        receiverAccount = assetDeposit.account
+        depositCid = Some payoutDepositCid
+    createSI (index, accumulator) payoutDepositCid = do
+      siCid <- create SettlementInstruction with
+        asset = assetDeposit.asset
+        steps = [createSettlementDetails payoutDepositCid]
+        masterAgreement = masterAgreement
+        tradeId = createTradeId assetDeposit.asset.id index uniqueId
+        observers = fromList $ operator :: masterAgreementSignatories
+      pure (index + 1, siCid :: accumulator)
+
+createMasterAgreement : AssetDescription -> AssetDeposit -> [Party] -> MasterAgreement
+createMasterAgreement assetDescription assetDeposit masterAgreementSignatories =
+  MasterAgreement with
+    id = assetDeposit.asset.id with
+      signatories = fromList masterAgreementSignatories
+    party1 = assetDescription.safekeepingAccount.owner
+    party2 = assetDeposit.account.owner
+
+createNewVersionOfDescription : AssetDescription -> AssetDescription.Version -> Claims -> Update ()
+createNewVersionOfDescription description postAssetVersion serializedRemainingClaims =
+  void $ create description with
+    assetId = adjustedId
+    claims = serializedRemainingClaims
+ where
+  adjustedId = description.assetId with version = postAssetVersion
+
+createTradeId : Id -> Int -> Text -> Id
+createTradeId assetId transferNumber uniqueId =
+  Id with
+    signatories = assetId.signatories
+    label = assetId.label <> " " <> show transferNumber <> "th transfer, ID: " <> uniqueId
+    version = assetId.version
