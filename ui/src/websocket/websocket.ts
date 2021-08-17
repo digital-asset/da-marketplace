@@ -80,23 +80,25 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
   const [active, setActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<StreamErrors>();
-  // const [timer, setTimer]: [unknown, any] = useState<unknown>(
-  //   setInterval(() => clearInterval(timer as any), 1000)
-  // );
+  const [timer, setTimer] = useState<ReturnType<typeof setInterval>>(
+    setInterval(() => {
+      clearInterval(timer);
+    }, 1000)
+  );
   const [retries, setRetries] = useState(0);
 
   const messageHandlerScoped = useCallback(
     (templateMap: Map<string, Template<T, K, I>>) => {
       return (message: { data: string }) => {
-        // if (timer !== null) {
-        //   clearInterval(timer);
-        //   setTimer(
-        //     setInterval(() => {
-        //       setActive(false);
-        //       clearInterval(timer);
-        //     }, TIME_UNTIL_INACTIVE)
-        //   );
-        // }
+        if (timer !== null) {
+          clearInterval(timer);
+          setTimer(
+            setInterval(() => {
+              setActive(false);
+              clearInterval(timer);
+            }, TIME_UNTIL_INACTIVE)
+          );
+        }
         setActive(true);
         setLoading(false);
 
@@ -139,7 +141,7 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
         }
       };
     },
-    [contracts]//, timer]
+    [contracts, timer]
   );
 
   const openWebsocket = useCallback(async (token: string, templateIds: string[]) => {
@@ -187,11 +189,11 @@ function useDamlStreamQuery<T extends object, K, I extends string>(
     };
   }, [errors, token, templateIds, templateMap, websocket, setWebsocket, openWebsocket]);
 
-  // useEffect(() => {
-  //   if (websocket === null) {
-  //     // clearInterval(timer);
-  //   }
-  // }, [websocket]);, //timer]);
+  useEffect(() => {
+    if (websocket === null) {
+      clearInterval(timer);
+    }
+  }, [websocket, timer]);
 
   useEffect(() => {
     if (websocket && token) {
