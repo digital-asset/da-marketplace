@@ -1,5 +1,6 @@
 import logging
 import os
+import inspect
 from datetime import datetime
 
 import dazl
@@ -84,23 +85,23 @@ def main():
         return current_highest
 
 
-    def find_and_run(template_name, fn):
+    async def find_and_run(template_name, fn):
         commands = []
         templates = client.find_active(template_name)
 
         for (cid,item) in templates.items():
             event = FakeContractEvent(cid, item)
-            result = fn(event)
+            result = await fn(event) if inspect.iscoroutinefunction(fn) else fn(event)
             if isinstance(result, list):
                 commands.extend(result)
             else:
                 commands.append(result)
         return commands
 
-    def collect_run_commands(template_pairs):
+    async def collect_run_commands(template_pairs):
         commands = []
         for (template, fn) in template_pairs:
-            commands.extend(find_and_run(template, fn))
+            commands.extend(await find_and_run(template, fn))
         return commands
 
     @client.ledger_ready()
@@ -115,7 +116,7 @@ def main():
         SID = find_highest_sid() + 1
 
         return collect_run_commands([
-            (MARKETPLACE.ExberrySID, handle_exberry_SID),
+            # (MARKETPLACE.ExberrySID, handle_exberry_SID),
             (MARKETPLACE.MarketPair, handle_new_market_pair),
             (EXBERRY.ExecutionReport, handle_execution_report),
             (MARKETPLACE.ClearedOrderRequest, handle_cleared_order_request),
@@ -249,6 +250,11 @@ def main():
         logging.info(f"Handling NewOrderSuccess")
 
         event_sid = event.cdata['sid']
+
+        if not event_sid in sid_to_order:
+            logging.error(f'Order {event.cdata} not found in adapter state')
+            return exercise(event.cid, 'Archive', {})
+
         order = sid_to_order.pop(event_sid)
 
         sid_is_cleared[event_sid] = order['isCleared']
@@ -307,8 +313,6 @@ def main():
         status = pair['status'][10:]
 
         market_pairs[symbol] = pair
-
-        logging.info(f"New market_pairs is {market_pairs}")
 
         return create(EXBERRY.CreateInstrumentRequest, {
             'integrationParty': client.party,
@@ -374,12 +378,12 @@ def main():
 
         return [exercise_by_key(MARKETPLACE.OrderCancelRequest,
                                 {'_1': client.party, '_2': event.cdata['sid']},
-                                'OrderCancel_Reject', {}),
+                                'OrderCancel_Ack', {}),
                 exercise(event.cid, 'Archive', {})]
 
     # Marketplace <-- Exberry
     @client.ledger_created(EXBERRY.ExecutionReport)
-    async def handle_execution_report(event):
+    def handle_execution_report(event):
         logging.info(f"Handling execution report")
 
         execution = event.cdata
@@ -397,12 +401,20 @@ def main():
                 logging.info(f"Processing cleared order report")
                 commands = [exercise(event.cid, 'Archive', {})]
 
-                taker_cid, taker = await client.find_one(MARKETPLACE.ClearedOrder, {
+                taker_orders = client.find_active(MARKETPLACE.ClearedOrder, {
                     'orderId': execution['takerMpOrderId']
                 })
-                maker_cid, maker = await client.find_one(MARKETPLACE.ClearedOrder, {
+
+                maker_orders = client.find_active(MARKETPLACE.ClearedOrder, {
                     'orderId': execution['makerMpOrderId']
                 })
+
+                if not len(taker_orders) or not len(maker_orders):
+                    logging.error(f'Did not find orders associated with this order report')
+                    return commands
+
+                (taker_cid, taker) = list(taker_orders.items())[0]
+                (maker_cid, maker) = list(maker_orders.items())[0]
 
                 ccp = taker['ccp'] if (taker['ccp'] == maker['ccp']) else None
 
@@ -440,14 +452,22 @@ def main():
             else:
                 logging.info(f"Processing collateralized order report")
 
-                taker_cid, taker = await client.find_one(MARKETPLACE.Order, {
+                taker_orders = client.find_active(MARKETPLACE.Order, {
                     'orderId': execution['takerMpOrderId']
                 })
-                maker_cid, maker = await client.find_one(MARKETPLACE.Order, {
+                maker_orders = client.find_active(MARKETPLACE.Order, {
                     'orderId': execution['makerMpOrderId']
                 })
 
                 commands = [exercise(event.cid, 'Archive', {})]
+
+                if not len(taker_orders) or not len(maker_orders):
+                    logging.error(f'Did not find orders associated with this order report')
+                    return commands
+
+                taker_cid, taker = list(taker_orders.items())[0]
+                maker_cid, maker = list(maker_orders.items())[0]
+
                 commands.append(exercise(taker_cid, 'Order_Fill', {
                     'fillQty': execution['executedQuantity'],
                     'fillPrice': execution['executedPrice'],
@@ -467,6 +487,7 @@ def main():
         else:
             logging.info(f"Instrument: {instrument_name} does not exist, ignoring ExecutionReport.")
             commands = [exercise(event.cid, 'Archive', {})]
+            return commands
 
     network.run_forever()
 
