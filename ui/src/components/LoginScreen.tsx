@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react"
 import { useHistory, useLocation } from "react-router-dom"
 import { Button, Form, Icon } from "semantic-ui-react"
 
-import { DablPartiesInput, PartyDetails } from "@daml/hub-react"
+import { PartyToken, DamlHubLogin } from "@daml/hub-react"
 
 import { PublicAppInfo } from "@daml.js/da-marketplace/lib/Marketplace/Operator"
 
@@ -59,7 +59,7 @@ type Props = {
 }
 
 interface PartiesLoginFormProps extends Props {
-    setUploadedParties: (parties: PartyDetails[]) => void
+  setUploadedParties: (parties: PartyToken[]) => void;
 }
 /**
  * React component for the login screen of the `App`.
@@ -72,7 +72,7 @@ const LoginScreen: React.FC<Props> = ({ onLogin }) => {
     const location = useLocation()
     const { path, url } = useRouteMatch()
 
-    const [uploadedParties, setUploadedParties] = useState<PartyDetails[]>([])
+    const [uploadedParties, setUploadedParties] = useState<PartyToken[]>([])
 
     useEffect(() => {
         raiseParamsToHash()
@@ -217,7 +217,7 @@ const JWTLoginForm: React.FC<Props> = ({ onLogin }) => {
 
 const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploadedParties }) => {
     const [selectedPartyId, setSelectedPartyId] = useState("")
-    const [parties, setParties] = useState<PartyDetails[]>()
+    const [parties, setParties] = useState<PartyToken[]>()
 
     const history = useHistory()
 
@@ -240,7 +240,7 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         setUploadedParties(parties || [])
     }, [parties])
 
-    const handleLogin = async (party?: PartyDetails) => {
+    const handleLogin = async (party?: PartyToken) => {
         let partyDetails = parties?.find(p => p.party === selectedPartyId)
 
         if (party) {
@@ -256,7 +256,7 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
         }
     }
 
-    const handleLoad = async (parties: PartyDetails[]) => {
+    const handleLoad = async (parties: PartyToken[]) => {
         setParties(parties)
         setSelectedPartyId(parties[0]?.party || "")
         storeParties(parties)
@@ -282,10 +282,15 @@ const PartiesLoginForm: React.FC<PartiesLoginFormProps> = ({ onLogin, setUploade
                         <Form.Group widths='equal'>
                             <Form.Input className='upload-file-input'>
                                 <label className='custom-file-upload button ui'>
-                                    <DablPartiesInput
-                                        ledgerId={ledgerId}
-                                        onError={error => loadAndCatch(handleError(error))}
-                                        onLoad={handleLoad}
+                                    <DamlHubLogin withFile
+                                        onLogin={() => {}}
+                                        onPartiesLoad={(creds, err) => {
+                                            if (creds) {
+                                                handleLoad(creds)
+                                            } else {
+                                                loadAndCatch(handleError(err || 'Parties login error'))
+                                            }
+                                        }}
                                     />
                                     <Icon name='file' className='white' />
                                     <p className='dark'>Load Parties</p>

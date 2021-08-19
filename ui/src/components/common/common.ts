@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import { useWellKnownParties } from '@daml/hub-react'
+import { useDefaultParties } from '@daml/hub-react'
 import { deploymentMode, DeploymentMode } from '../../config'
 
 export const useOperator = () => {
@@ -14,24 +14,31 @@ type Result = {
         publicParty: string;
     };
     loading: boolean;
-    error: string | null;
 }
 
 export const useDablParties = () => {
-    const { parties, loading, error } = useWellKnownParties();
-    const [ result, setResult ] = useState<Result>({ parties: devParties, loading: true, error: null });
+    const [publicParty, userAdminParty] = useDefaultParties();
+    const [loading, setLoading] = useState(true);
+    const [result, setResult] = useState<Result>({ parties: devParties, loading: true });
+
+    useEffect(() => {
+        if (!publicParty) {
+            setLoading(true);
+        } else {
+            setLoading(false);
+        }
+    }, [publicParty]);
 
     useEffect(() => {
         if (deploymentMode === DeploymentMode.PROD_DABL) {
-            if (error && !loading) {
-                console.error(`Error fetching DABL parties: ${error}`);
-            }
-
-            parties && setResult({ parties, loading, error });
+            publicParty && userAdminParty && setResult({
+                parties: { publicParty, userAdminParty },
+                loading
+            });
         } else {
-            setResult({ parties: devParties, loading: false, error: null });
+            setResult({ parties: devParties, loading: false });
         }
-    }, [parties, loading, error]);
+    }, [publicParty, userAdminParty, loading]);
 
     return result;
 }

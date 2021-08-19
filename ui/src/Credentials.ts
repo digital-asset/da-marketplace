@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { encode } from 'jwt-simple'
-import { expiredToken } from '@daml/hub-react'
+import { PartyInfo, PartyToken } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 
@@ -13,11 +13,9 @@ export const APPLICATION_ID: string = 'da-marketplace';
 // see https://docs.daml.com/app-dev/authentication.html.
 export const SECRET_KEY: string = 'secret';
 
-export type Credentials = {
-  party: string;
+export type Credentials = PartyInfo & {
   token: string;
-  ledgerId: string;
-}
+};
 
 function isCredentials(credentials: any): credentials is Credentials {
   return typeof credentials.party === 'string' &&
@@ -27,11 +25,11 @@ function isCredentials(credentials: any): credentials is Credentials {
 
 const CREDENTIALS_STORAGE_KEY = 'credentials';
 
-export function storeCredentials(credentials?: Credentials): void {
+export function storeCredentials(credentials?: PartyToken): void {
   sessionStorage.setItem(CREDENTIALS_STORAGE_KEY, JSON.stringify(credentials));
 }
 
-export function retrieveCredentials(): Credentials | undefined {
+export function retrieveCredentials(): PartyToken | undefined {
   const credentialsJson = sessionStorage.getItem(CREDENTIALS_STORAGE_KEY);
 
   if (!credentialsJson) {
@@ -40,8 +38,11 @@ export function retrieveCredentials(): Credentials | undefined {
 
   try {
     const credentials = JSON.parse(credentialsJson);
-    if (isCredentials(credentials) && !expiredToken(credentials.token)) {
-      return credentials;
+    if (isCredentials(credentials)) {
+      const at = new PartyToken(credentials.token);
+      if (!at.isExpired) {
+        return at;
+      }
     }
   } catch {
     console.error("Could not parse credentials: ", credentialsJson);

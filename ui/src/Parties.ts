@@ -1,23 +1,25 @@
-import { convertPartiesJson, PartyDetails } from '@daml/hub-react'
+import { convertPartiesJson, PartyToken } from '@daml/hub-react'
 
 import { ledgerId } from './config'
 
 const PARTIES_STORAGE_KEY = 'imported_parties';
 
-export function storeParties(parties: PartyDetails[]): void {
+export function storeParties(parties: PartyToken[]): void {
     localStorage.setItem(PARTIES_STORAGE_KEY, JSON.stringify(parties));
 }
 
-export function retrieveParties(validateParties: boolean = true): PartyDetails[] | undefined {
+export function retrieveParties(validateParties: boolean = true): PartyToken[] | undefined {
     const partiesJson = localStorage.getItem(PARTIES_STORAGE_KEY);
 
     if (!partiesJson) {
         return undefined;
     }
 
-    const [ parties, error ] = convertPartiesJson(partiesJson, ledgerId, validateParties);
+    try {
+        const parties = convertPartiesJson(partiesJson, ledgerId, validateParties);
 
-    if (error) {
+        return parties;
+    } catch (error) {
         console.warn("Tried to load an invalid parties file from cache.", error);
 
         if (validateParties) {
@@ -25,6 +27,4 @@ export function retrieveParties(validateParties: boolean = true): PartyDetails[]
             return undefined;
         }
     }
-
-    return parties;
 }

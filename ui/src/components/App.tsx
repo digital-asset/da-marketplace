@@ -9,7 +9,7 @@ import {
 } from 'react-router-dom'
 
 import DamlLedger from '@daml/react'
-import { WellKnownPartiesProvider } from '@daml/hub-react'
+import DamlHub, { PartyToken } from '@daml/hub-react'
 
 import QueryStreamProvider from '../websocket/queryStream'
 import Credentials, { storeCredentials, retrieveCredentials } from '../Credentials'
@@ -30,46 +30,43 @@ const App: React.FC = () => {
 
   const handleCredentials = (credentials?: Credentials) => {
     setCredentials(credentials);
-    storeCredentials(credentials);
+    storeCredentials(credentials ? new PartyToken(credentials.token) : undefined);
   }
 
   return (
     <div className='app'>
-      <Router>
-        <Switch>
-          <Route exact path='/'>
-            <WellKnownPartiesProvider>
-                <QueryStreamProvider>
-                  <LoginScreen onLogin={handleCredentials}/>
-                </QueryStreamProvider>
-            </WellKnownPartiesProvider>
-          </Route>
-          <Route exact path='/quick-setup'>
-            <QuickSetup onLogin={handleCredentials}/>
-          </Route>
+      <DamlHub token={credentials?.token}>
+        <Router>
+          <Switch>
+            <Route exact path='/'>
+              <QueryStreamProvider>
+                <LoginScreen onLogin={handleCredentials}/>
+              </QueryStreamProvider>
+            </Route>
+            <Route exact path='/quick-setup'>
+              <QuickSetup onLogin={handleCredentials}/>
+            </Route>
 
-
-          <Route path='/role' render={() => {
-            return credentials
-              ? <DamlLedger
-                  reconnectThreshold={0}
-                  token={credentials.token}
-                  party={credentials.party}
-                  httpBaseUrl={httpBaseUrl}
-                >
-                  <WellKnownPartiesProvider>
-                      <QueryStreamProvider>
-                        <RegistryLookupProvider>
-                          <MainScreen onLogout={() => handleCredentials(undefined)}/>
-                        </RegistryLookupProvider>
-                      </QueryStreamProvider>
-                  </WellKnownPartiesProvider>
-              </DamlLedger>
-              : <Redirect to='/'/>
-            }}>
-          </Route>
-        </Switch>
-      </Router>
+            <Route path='/role' render={() => {
+              return credentials
+                ? <DamlLedger
+                    reconnectThreshold={0}
+                    token={credentials.token}
+                    party={credentials.party}
+                    httpBaseUrl={httpBaseUrl}
+                  >
+                    <QueryStreamProvider>
+                      <RegistryLookupProvider>
+                        <MainScreen onLogout={() => handleCredentials(undefined)}/>
+                      </RegistryLookupProvider>
+                    </QueryStreamProvider>
+                </DamlLedger>
+                : <Redirect to='/'/>
+              }}>
+            </Route>
+          </Switch>
+        </Router>
+      </DamlHub>
     </div>
 
   )

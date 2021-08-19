@@ -1,6 +1,8 @@
 // Copyright (c) 2020 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+import { isRunningOnHub } from "@daml/hub-react";
+
 export enum DeploymentMode {
   DEV,
   PROD_DABL,
@@ -12,7 +14,7 @@ export const dablHostname = window.location.hostname.split('.').slice(1).join('.
 export const deploymentMode: DeploymentMode =
   process.env.NODE_ENV === 'development'
   ? DeploymentMode.DEV
-  : dablHostname.includes('projectdabl')
+  : isRunningOnHub()
   ? DeploymentMode.PROD_DABL
   : DeploymentMode.PROD_OTHER;
 
