@@ -5,6 +5,7 @@ import { ArchiveEvent, CreateEvent } from '@daml/ledger'
 import { deploymentMode, DeploymentMode, httpBaseUrl, ledgerId } from '../config'
 
 import { ContractInfo, makeContractInfo } from '../components/common/damlTypes'
+import { detectAppDomainType, DomainType } from '@daml/hub-react';
 
 // A custom code to indicate that the websocket should not be reopened.
 // 4001 was picked arbitrarily from the range 4000-4999, which are codes that the official
@@ -26,7 +27,9 @@ const newDamlWebsocket = (token: string): WebSocket => {
   const subprotocols = [`jwt.token.${token}`, "daml.ws.auth"];
   const apiUrl = deploymentMode === DeploymentMode.DEV
     ? `ws://${url.host}/v1/stream/query`
-    : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
+      : detectAppDomainType() === DomainType.APP_DOMAIN
+          ? `wss://${url.host}/v1/stream/query`
+          : `wss://${url.host}/data/${ledgerId}/v1/stream/query`;
 
   return new WebSocket(apiUrl, subprotocols);
 }
