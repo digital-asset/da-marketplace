@@ -15,7 +15,7 @@ const WelcomeHeader: React.FC = () => (
                     DAML Open Marketplace
                 </Header>
             </div>
-            <p>An app written in <a className='a2 bold' href='https://daml.com'>DAML</a> and deployed using <a className='a2 bold' href='https://projectdabl.com'>project:DABL</a></p>
+            <p>An app written in <a className='a2 bold' href='https://daml.com'>Daml</a> and deployed using <a className='a2 bold' href='https://hub.daml.com'>Daml Hub</a></p>
         </div>
     </div>
 )

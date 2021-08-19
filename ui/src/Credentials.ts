@@ -46,6 +46,7 @@ export function retrieveCredentials(): PartyToken | undefined {
     }
   } catch {
     console.error("Could not parse credentials: ", credentialsJson);
+    sessionStorage.removeItem(CREDENTIALS_STORAGE_KEY);
   }
 
   return undefined;
